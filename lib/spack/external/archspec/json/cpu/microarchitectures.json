@@ -1490,7 +1490,7 @@
               },
               {
                   "versions": "6:",
-                  "flags" : "-march==armv8-a+crc+crypto -mtune=cortex-a72"
+                  "flags" : "-march=armv8-a+crc+crypto -mtune=cortex-a72"
               }
           ],
           "clang" : [

@@ -17,15 +17,16 @@ class Hip(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.9.0', sha256='25ad58691456de7fd9e985629d0ed775ba36a2a0e0b21c086bd96ba2fb0f7ed1')
     version('3.8.0', sha256='6450baffe9606b358a4473d5f3e57477ca67cff5843a84ee644bcf685e75d839')
     version('3.7.0', sha256='757b392c3beb29beea27640832fbad86681dbd585284c19a4c2053891673babd')
     version('3.5.0', sha256='ae8384362986b392288181bcfbe5e3a0ec91af4320c189bd83c844ed384161b3')
 
     depends_on('cmake@3:', type='build')
     depends_on('perl@5.10:', type=('build', 'run'))
-    depends_on('mesa~llvm@18.3:')
+    depends_on('mesa18~llvm@18.3:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('hip-rocclr@' + ver,  type='build', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
@@ -49,14 +50,25 @@ class Hip(CMakePackage):
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
     def setup_run_environment(self, env):
-        env.set('ROCM_PATH', '')
+        # NOTE: DO NOT PUT LOGIC LIKE self.spec[name] in this function!!!!!
+        # It DOES NOT WORK FOR EXTERNAL PACKAGES!!!! See get_rocm_prefix_info
+        rocm_prefixes = self.get_rocm_prefix_info()
+
+        env.set('ROCM_PATH', rocm_prefixes['rocm-path'])
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
-        env.set('HIP_CLANG_PATH', self.spec['llvm-amdgpu'].prefix.bin)
-        env.set('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
-        env.set('ROCMINFO_PATH', self.spec['rocminfo'].prefix)
-        env.set('DEVICE_LIB_PATH',
-                self.spec['rocm-device-libs'].prefix.lib)
+        env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
+        env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
+        env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
+        env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
+        env.set('HIP_PATH', rocm_prefixes['rocm-path'])
+        env.set('HIPCC_COMPILE_FLAGS_APPEND',
+                '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
+
+        if 'amdgpu_target' in self.spec.variants:
+            arch = self.spec.variants['amdgpu_target'].value
+            if arch != 'none':
+                env.set('HCC_AMDGPU_TARGET', arch)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
@@ -81,28 +93,42 @@ class Hip(CMakePackage):
                 raise RuntimeError(msg)
 
             return {
+                'rocm-path': fallback_prefix,
                 'llvm-amdgpu': fallback_prefix.llvm,
                 'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.bin,
                 'rocm-device-libs': fallback_prefix,
             }
         else:
-            return dict((name, self.spec[name].prefix)
-                        for name in ('llvm-amdgpu', 'hsa-rocr-dev', 'rocminfo',
-                                     'rocm-device-libs'))
+            mydict = dict((name, self.spec[name].prefix)
+                          for name in ('llvm-amdgpu', 'hsa-rocr-dev',
+                                       'rocminfo', 'rocm-device-libs'))
+            mydict['rocm-path'] = os.path.dirname(self.spec.prefix)
+            return mydict
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # Indirection for dependency paths because hip may be an external in
-        # Spack. See block comment on get_rocm_prefix_info
+        # Spack. See block comment on get_rocm_prefix_info .
+
+        # NOTE: DO NOT PUT LOGIC LIKE self.spec[name] in this function!!!!!
+        # It DOES NOT WORK FOR EXTERNAL PACKAGES!!!! See get_rocm_prefix_info
         rocm_prefixes = self.get_rocm_prefix_info()
 
-        env.set('ROCM_PATH', '')
+        env.set('ROCM_PATH', rocm_prefixes['rocm-path'])
         env.set('HIP_COMPILER', 'clang')
         env.set('HIP_PLATFORM', 'hcc')
         env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
         env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
         env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
+        env.set('HIP_PATH', rocm_prefixes['rocm-path'])
+        env.set('HIPCC_COMPILE_FLAGS_APPEND',
+                '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
+
+        if 'amdgpu_target' in dependent_spec.variants:
+            arch = dependent_spec.variants['amdgpu_target'].value
+            if arch != 'none':
+                env.set('HCC_AMDGPU_TARGET', arch)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
@@ -117,6 +143,7 @@ class Hip(CMakePackage):
         if name == 'cxxflags' and '@3.7.0:' in self.spec:
             incl = self.spec['hip-rocclr'].prefix.include
             flags.append('-I {0}/compiler/lib/include'.format(incl))
+            flags.append('-I {0}/elf'.format(incl))
 
         return (flags, None, None)
 
@@ -150,6 +177,7 @@ class Hip(CMakePackage):
             '-DHIP_COMPILER=clang',
             '-DHIP_PLATFORM=rocclr',
             '-DHSA_PATH={0}'.format(self.spec['hsa-rocr-dev'].prefix),
+            '-DHIP_RUNTIME=ROCclr',
             '-DLIBROCclr_STATIC_DIR={0}/lib'.format
             (self.spec['hip-rocclr'].prefix)
         ]

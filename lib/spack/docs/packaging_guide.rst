@@ -1778,8 +1778,18 @@ RPATHs in Spack are handled in one of three ways:
 Parallel builds
 ---------------
 
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so that builds run in parallel.
+with a ``-j <njobs>`` argument, so those builds run in parallel.
 The parallelism is determined by the value of the ``build_jobs`` entry
 in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
 how this value is computed).
@@ -1826,6 +1836,43 @@ The first make will run in parallel here, but the second will not.  If
 you set ``parallel`` to ``False`` at the package level, then each call
 to ``make()`` will be sequential by default, but packagers can call
 ``make(parallel=True)`` to override it.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  Which means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using SLURM, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent four-job installation on two different
+nodes.
+
+.. note::
+
+   The effective parallelism will be based on the maximum number of
+   packages that can be installed at the same time, which will limited
+   by the number of packages with no (remaining) uninstalled dependencies.
+
 
 .. _dependencies:
 
@@ -3900,6 +3947,118 @@ using the ``run_before`` decorator.
     The API for adding tests is not yet considered stable and may change drastically in future releases.
 
 .. _file-manipulation:
+
+^^^^^^^^^^^^^
+Install Tests
+^^^^^^^^^^^^^
+
+.. warning::
+
+   The API for adding and running install tests is not yet considered
+   stable and may change drastically in future releases. Packages with
+   upstreamed tests will be refactored to match changes to the API.
+
+While build-tests are integrated with the build system, install tests
+may be added to Spack packages to be run independently of the install
+method.
+
+Install tests may be added by defining a ``test`` method with the following signature:
+
+.. code-block:: python
+
+   def test(self):
+
+These tests will be run in an environment set up to provide access to
+this package and all of its dependencies, including ``test``-type
+dependencies. Inside the ``test`` method, standard python ``assert``
+statements and other error reporting mechanisms can be used. Spack
+will report any errors as a test failure.
+
+Inside the test method, individual tests can be run separately (and
+continue transparently after a test failure) using the ``run_test``
+method. The signature for the ``run_test`` method is:
+
+.. code-block:: python
+
+   def run_test(self, exe, options=[], expected=[], status=0, installed=False,
+                purpose='', skip_missing=False, work_dir=None):
+
+This method will operate in ``work_dir`` if one is specified. It will
+search for an executable in the ``PATH`` variable named ``exe``, and
+if ``installed=True`` it will fail if that executable does not come
+from the prefix of the package being tested. If the executable is not
+found, it will fail the test unless ``skip_missing`` is set to
+``True``. The executable will be run with the options specified, and
+the return code will be checked against the ``status`` argument, which
+can be an integer or list of integers. Spack will also check that
+every string in ``expected`` is a regex matching part of the output of
+the executable. The ``purpose`` argument is recorded in the test log
+for debugging purposes.
+
+""""""""""""""""""""""""""""""""""""""
+Install tests that require compilation
+""""""""""""""""""""""""""""""""""""""
+
+Some tests may require access to the compiler with which the package
+was built, especially to test library-only packages. To ensure the
+compiler is configured as part of the test environment, set the
+attribute ``tests_require_compiler = True`` on the package. The
+compiler will be available through the canonical environment variables
+(``CC``, ``CXX``, ``FC``, ``F77``) in the test environment.
+
+""""""""""""""""""""""""""""""""""""""""""""""""
+Install tests that require build-time components
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+Some packages cannot be easily tested without components from the
+build-time test suite. For those packages, the
+``cache_extra_test_sources`` method can be used.
+
+.. code-block:: python
+
+   @run_after('install')
+   def cache_test_sources(self):
+       srcs = ['./tests/foo.c', './tests/bar.c']
+       self.cache_extra_test_sources(srcs)
+
+This method will copy the listed methods into the metadata directory
+of the package at the end of the install phase of the build. They will
+be available to the test method in the directory
+``self._extra_tests_path``.
+
+While source files are generally recommended, for many packages
+binaries may also technically be cached in this way for later testing.
+
+"""""""""""""""""""""
+Running install tests
+"""""""""""""""""""""
+
+Install tests can be run using the ``spack test run`` command. The
+``spack test run`` command will create a ``test suite`` out of the
+specs provided to it, or if no specs are provided it will test all
+specs in the active environment, or all specs installed in Spack if no
+environment is active. Test suites can be named using the ``--alias``
+option; test suites not aliased will use the content hash of their
+specs as their name.
+
+Packages to install test can be queried using the ``spack test list``
+command, which outputs all installed packages with defined ``test``
+methods.
+
+Test suites can be found using the ``spack test find`` command. It
+will list all test suites that have been run and have not been removed
+using the ``spack test remove`` command. The ``spack test remove``
+command will remove tests to declutter the test stage. The ``spack
+test results`` command will show results for completed test suites.
+
+The test stage is the working directory for all install tests run with
+Spack. By default, Spack uses ``~/.spack/test`` as the test stage. The
+test stage can be set in the high-level config:
+
+.. code-block:: yaml
+
+   config:
+     test_stage: /path/to/stage
 
 ---------------------------
 File manipulation functions

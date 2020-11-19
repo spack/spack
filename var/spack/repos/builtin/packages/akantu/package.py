@@ -49,7 +49,7 @@ class Akantu(CMakePackage):
 
     extends('python', when='+python')
 
-    conflicts('gcc@:5.3.99')
+    conflicts('%gcc@:5.3.99')
     conflicts('@:3.0.99 external_solvers=petsc')
     conflicts('@:3.0.99 +python')
 

@@ -15,6 +15,8 @@ class Root(CMakePackage):
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
 
     # ###################### Versions ##########################
@@ -142,6 +144,8 @@ class Root(CMakePackage):
             description='Enable ROOT 7 support')
     variant('shadow', default=False,
             description='Enable shadow password support')
+    variant('spectrum', default=False,
+            description='Enable support for TSpectrum')
     variant('sqlite', default=False,
             description='Enable SQLite support')
     variant('ssl', default=False,
@@ -393,6 +397,7 @@ class Root(CMakePackage):
             define('ruby', False),
             define('sapdb', False),
             define_from_variant('shadowpw', 'shadow'),
+            define_from_variant('spectrum'),
             define_from_variant('sqlite'),
             define('srp', False),
             define_from_variant('ssl'),
@@ -435,7 +440,7 @@ class Root(CMakePackage):
                                   True))
 
         if '+x+opengl' in self.spec:
-            ftgl_prefix = self.spec('ftgl').prefix
+            ftgl_prefix = self.spec['ftgl'].prefix
             options.append(define('FTGL_ROOT_DIR', ftgl_prefix))
             options.append(define('FTGL_INCLUDE_DIR', ftgl_prefix.include))
         if '+python' in self.spec:

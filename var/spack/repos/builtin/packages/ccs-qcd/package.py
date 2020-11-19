@@ -31,6 +31,8 @@ class CcsQcd(MakefilePackage):
     homepage = "https://github.com/fiber-miniapp/ccs-qcd"
     git      = "https://github.com/fiber-miniapp/ccs-qcd.git"
 
+    tags = ['hep']
+
     version('master', branch='master')
     version('1.2.1', commit='d7c6b6923f35a824e997ba8db5bd12dc20dda45c')
 

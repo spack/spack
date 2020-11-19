@@ -157,7 +157,10 @@ class Paraview(CMakePackage, CudaPackage):
     @property
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
-        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+        if self.spec.version == Version('develop'):
+            return 'paraview-5.9'
+        else:
+            return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
@@ -165,8 +168,13 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             lib_dir = self.prefix.lib
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
     def setup_run_environment(self, env):
         # paraview 5.5 and later
@@ -179,8 +187,13 @@ class Paraview(CMakePackage, CudaPackage):
             lib_dir = self.prefix.lib
 
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, self.paraview_subdir)

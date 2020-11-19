@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import re
 
 
 class Ninja(Package):
@@ -40,7 +39,7 @@ class Ninja(Package):
 
     @run_after('configure')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def configure_test(self):
         ninja = Executable('./ninja')
         ninja('-j{0}'.format(make_jobs), 'ninja_test')
         ninja_test = Executable('./ninja_test')

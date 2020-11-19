@@ -6,8 +6,6 @@
 import shutil
 import sys
 
-from spack import *
-
 
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
@@ -327,6 +325,9 @@ class Hdf5(AutotoolsPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
+        self._check_install()
+
+    def _check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
         print("Checking HDF5 installation...")
@@ -375,3 +376,55 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version)
+
+        exes = [
+            'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',
+            'h5mkgrp', 'h5repack', 'h5stat', 'h5unjam',
+        ]
+        use_short_opt = ['h52gif', 'h5repart', 'h5unjam']
+        for exe in exes:
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
+            option = '-V' if exe in use_short_opt else '--version'
+            self.run_test(exe, option, spec_vers_str, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_example(self):
+        """This test performs copy, dump, and diff on an example hdf5 file."""
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'spack.h5'
+        h5_file = test_data_dir.join(filename)
+
+        reason = 'test: ensuring h5dump produces expected output'
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
+        self.run_test('h5dump', filename, expected, installed=True,
+                      purpose=reason, skip_missing=True,
+                      work_dir=test_data_dir)
+
+        reason = 'test: ensuring h5copy runs'
+        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d',
+                   'Spack']
+        self.run_test('h5copy', options, [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+        reason = ('test: ensuring h5diff shows no differences between orig and'
+                  ' copy')
+        self.run_test('h5diff', [h5_file, 'test.h5'], [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()
+
+        # Run sequence of commands on an hdf5 file
+        self._test_example()
+
+        # Run existing install check
+        # TODO: Restore once address built vs. installed state
+        # self._check_install()

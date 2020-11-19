@@ -15,6 +15,8 @@ class Delphes(CMakePackage):
     git = "https://github.com/delphes/delphes.git"
     url = "http://cp3.irmp.ucl.ac.be/downloads/Delphes-3.4.2.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'vvolkl', 'selvaggi']
 
     version('master', branch='master')

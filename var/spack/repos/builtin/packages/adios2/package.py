@@ -51,7 +51,7 @@ class Adios2(CMakePackage):
     # transport engines
     variant('sst', default=True,
             description='Enable the SST staging engine')
-    variant('dataman', default=True,
+    variant('dataman', default=False,
             description='Enable the DataMan engine for WAN transports')
     variant('dataspaces', default=False,
             description='Enable support for DATASPACES')

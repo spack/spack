@@ -914,7 +914,8 @@ class Python(AutotoolsPackage):
         return join_path(self.site_packages_dir, "easy-install.pth")
 
     def setup_run_environment(self, env):
-        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
+        env.prepend_path('CPATH', os.pathsep.join(
+            self.spec['python'].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
@@ -1126,3 +1127,21 @@ class Python(AutotoolsPackage):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def test(self):
+        # do not use self.command because we are also testing the run env
+        exe = self.spec['python'].command.name
+
+        # test hello world
+        msg = 'hello world!'
+        reason = 'test: running {0}'.format(msg)
+        options = ['-c', 'print("{0}")'.format(msg)]
+        self.run_test(exe, options=options, expected=[msg], installed=True,
+                      purpose=reason)
+
+        # checks import works and executable comes from the spec prefix
+        reason = 'test: checking import and executable'
+        print_str = self.print_string('sys.executable')
+        options = ['-c', 'import sys; {0}'.format(print_str)]
+        self.run_test(exe, options=options, expected=[self.spec.prefix],
+                      installed=True, purpose=reason)
