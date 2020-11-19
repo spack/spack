@@ -37,6 +37,7 @@ except ImportError:
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.package_permissions as spp
 import spack.repo
 import spack.spec
 import spack.store
@@ -348,6 +349,10 @@ class Database(object):
 
         if not os.path.exists(self._failure_dir) and not is_upstream:
             fs.mkdirp(self._failure_dir)
+
+        # Ensure the database and failure subdirectories have the proper
+        # permissions according to packages.yaml.
+        spp.update_permissions(self._db_dir, None, contents=True)
 
         self.is_upstream = is_upstream
         self.last_seen_verifier = ''

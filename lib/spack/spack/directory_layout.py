@@ -15,6 +15,9 @@ from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.spec
+
+import spack.package_permissions as spp
+
 from spack.error import SpackError
 
 
@@ -298,19 +301,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         if prefix:
             raise InstallDirectoryAlreadyExistsError(prefix)
 
-        # Create install directory with properly configured permissions
-        # Cannot import at top of file
-        from spack.package_prefs import get_package_dir_permissions
-        from spack.package_prefs import get_package_group
-
-        # Each package folder can have its own specific permissions, while
-        # intermediate folders (arch/compiler) are set with access permissions
-        # equivalent to the root permissions of the layout.
-        group = get_package_group(spec)
-        perms = get_package_dir_permissions(spec)
-
-        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
-        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+        # Create install directory and its metadata subdirectory in one call.
+        mkdirp(self.metadata_path(spec))
+        spp.update_permissions(spec.prefix, spec, contents=True)
 
         self.write_spec(spec, self.spec_file_path(spec))
 
