@@ -8,7 +8,7 @@ spack:
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
     cairo:
-      variants: +png
+      variants: +png+svg
     graphviz:
       variants: +pangocairo
     mvapich2:
