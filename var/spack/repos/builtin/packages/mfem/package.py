@@ -176,6 +176,7 @@ class Mfem(Package):
     conflicts('+libceed', when='mfem@:4.0.99')
     conflicts('+umpire', when='mfem@:4.0.99')
     conflicts('+amgx', when='mfem@:4.1.99')
+    conflicts('+amgx', when='~cuda')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -249,10 +250,8 @@ class Mfem(Package):
     depends_on('umpire+cuda', when='+umpire+cuda')
 
     depends_on('amgx', when='+amgx')
-    # AmgX doesn't need CUDA but MFEM build system requires amgx+cuda
-    depends_on('cuda', when='+amgx')
     # MPI is enabled by default
-    depends_on('amgx~mpi', when='~mpi')
+    depends_on('amgx~mpi', when='+amgx~mpi')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('amgx cuda_arch={0}'.format(sm_),
                    when='+amgx cuda_arch=sm_{0}'.format(sm_))
