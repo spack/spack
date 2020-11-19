@@ -55,10 +55,15 @@ class MacOs(OperatingSystem):
             '10.14': 'mojave',
             '10.15': 'catalina',
             '10.16': 'bigsur',
-            '11.0':  'bigsur',
+            '11':  'bigsur',
         }
 
-        mac_ver = str(macos_version().up_to(2))
+        # apparently 11.1 is going to be the first maintenance release
+        # of Big Sur after 11.0.1
+        if macos_version() >= Version('11'):
+            mac_ver = str(macos_version().up_to(1))
+        else:
+            mac_ver = str(macos_version().up_to(2))
         name = mac_releases.get(mac_ver, "macos")
         super(MacOs, self).__init__(name, mac_ver)
 
