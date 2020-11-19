@@ -674,6 +674,12 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
+            # Fixme: How to treat gpfs if it's on with lustre?
+            # Default is +gpfs, but development support may be absent.
+            if spec.satisfies('+gpfs'):
+                raise InstallError("Configuring ROMIO for both GPFS and Lustre not supported; use ~gpfs")
+                # Arguably could add +nfs
+            config_args.append('--with-io-romio-flags=--with-file-system=ufs+lustre')
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
