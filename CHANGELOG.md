@@ -1,3 +1,113 @@
+# v0.16.0 (2020-11-18)
+
+`v0.16.0` is a major feature release.
+
+## Major features in this release
+
+1. **New concretizer (experimental)** Our new backtracking concretizer is
+   now in Spack as an experimental feature. You will need to install
+   `clingo@master+python` and set `concretizer: clingo` in `config.yaml`
+   to use it. The original concretizer is not exhaustive and is not
+   guaranteed to find a solution if one exists. We encourage you to use
+   the new concretizer and to report any bugs you find with it. We
+   anticipate making the new concretizer the default and including all
+   required dependencies for it in Spack `v0.17`. For more details, see
+   #19501.
+
+2. **spack test (experimental)** Users can add `test()` methods to their
+   packages to run smoke tests on installations with the new `spack test`
+   command (the old `spack test` is now `spack unit-test`). `spack test`
+   is environment-aware, so you can `spack install` an environment and
+   `spack test run` smoke tests on all of its packages. Historical test
+   logs can be perused with `spack test results`. Generic smoke tests for
+   MPI implementations, C, C++, and Fortran compilers as well as specific
+   smoke tests for 18 packages. This is marked experimental because the
+   test API (`self.run_test()`) is likely to be change, but we encourage
+   users to upstream tests, and we will maintain and refactor any that
+   are added to mainline packages (#15702).
+
+3. **spack develop** New `spack develop` command allows you to develop
+   several packages at once within a Spack environment. Running
+   `spack develop foo@v1` and `spack develop bar@v2` will check
+    out specific versions of `foo` and `bar` into subdirectories, which you
+    can then build incrementally with `spack install ` (#15256).
+
+4. **More parallelism** Spack previously installed the dependencies of a
+   _single_ spec in parallel. Entire environments can now be installed in
+   parallel, greatly accelerating builds of large environments. get
+   parallelism from individual specs. Spack now parallelizes entire
+   environment builds (#18131).
+
+5. **Customizable base images for spack containerize**
+    `spack containerize` previously only output a `Dockerfile` based
+    on `ubuntu`. You may now specify any base image of your choosing (#15028).
+
+6. **more external finding** `spack external find` was added in `v0.15`,
+   but only `cmake` had support. `spack external find` can now find
+   `bison`, `cuda`, `findutils`, `flex`, `git`, `lustre` `m4`, `mpich`,
+   `mvapich2`, `ncurses`, `openmpi`, `perl`, `spectrum-mpi`, `tar`, and
+   `texinfo` on your system and add them automatically to
+   `packages.yaml`.
+
+7. **Support aocc, nvhpc, and oneapi compilers** We are aggressively
+   pursuing support for the newest vendor compilers, especially those for
+   the U.S. exascale and pre-exascale systems. Compiler classes and
+   auto-detection for `aocc`, `nvhpc`, `oneapi` are now in Spack (#19345,
+   #19294, #19330).
+
+## Additional new features of note
+
+* New `spack mark` command can be used to designate packages as explicitly
+  installed, so that `spack gc` will not garbage-collect them (#16662).
+* `install_tree` can be customized with Spack's projection format (#18341)
+* `sbang` now lives in the `install_tree` so that all users can access it (#11598)
+* `csh` and `tcsh` users no longer need to set `SPACK_ROOT` before
+  sourcing `setup-env.csh` (#18225)
+* Spec syntax now supports `variant=*` syntax for finding any package
+  that has a particular variant (#19381).
+* Spack respects `SPACK_GNUPGHOME` variable for custom GPG directories (#17139)
+* Spack now recognizes Graviton chips
+
+## Major refactors
+
+* Use spawn instead of fork on Python >= 3.8 on macOS (#18205)
+* Use indexes for public build caches (#19101, #19117, #19132, #19141,  #19209)
+* `sbang` is an external package now (https://github.com/spack/sbang, #19582)
+* `archspec` is an external package now (https://github.com/archspec/archspec, #19600)
+
+## Deprecations and Removals
+
+* `spack bootstrap` was deprecated in v0.14.0, and has now been removed.
+* `spack setup` is deprecated as of v0.16.0.
+* What was `spack test` is now called `spack unit-test`. `spack test` is
+  now the smoke testing feature in (2) above.
+
+## Bugfixes
+
+Some of the most notable bugfixes in this release include:
+
+* Better warning messages for deprecated syntax in `packages.yaml` (#18013)
+* `buildcache list --allarch` now works properly (#17827)
+* Many fixes and tests for buildcaches and binary relcoation (#15687,
+  *#17455, #17418, #17455, #15687, #18110)
+
+## Package Improvements
+
+Spack now has 5050 total packages, 720 of which were added since `v0.15`.
+
+* ROCm packages (`hip`, `aomp`, more) added by AMD (#19957, #19832, others)
+* Many improvements for ARM support
+* `llvm-flang`, `flang`, and `f18` removed, as `llvm` has real `flang`
+  support since Flang was merged to LLVM mainline
+* Emerging support for `spack external find` and `spack test` in packages.
+
+## Infrastructure
+
+* Major infrastructure improvements to pipelines on `gitlab.spack.io`
+* Support for testing PRs from forks (#19248) is being enabled for all
+  forks to enable rolling, up-to-date binary builds on `develop`
+
+
 # v0.15.4 (2020-08-12)
 
 This release contains one feature addition:

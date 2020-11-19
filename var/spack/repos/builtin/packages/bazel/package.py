@@ -184,7 +184,7 @@ class Bazel(Package):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def install_test(self):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb
 
         # Bazel does not work properly on NFS, switch to /tmp

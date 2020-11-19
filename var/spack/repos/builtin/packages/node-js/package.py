@@ -56,6 +56,11 @@ class NodeJs(Package):
 
     phases = ['configure', 'build', 'install']
 
+    # https://github.com/spack/spack/issues/19310
+    conflicts('%gcc@:4.8',
+              msg="fails to build with gcc 4.8 "
+                  "(see https://github.com/spack/spack/issues/19310")
+
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support
         env.set('PYTHON', self.spec['python'].command.path)
@@ -122,7 +127,7 @@ class NodeJs(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make('test')
         make('test-addons')
 

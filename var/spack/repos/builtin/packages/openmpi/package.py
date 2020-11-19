@@ -336,6 +336,8 @@ class Openmpi(AutotoolsPackage):
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
 
+    extra_install_tests = 'examples'
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
@@ -845,6 +847,149 @@ class Openmpi(AutotoolsPackage):
                     tty.debug("File not present: " + exe)
                 else:
                     copy(script_stub, exe)
+
+    @run_after('install')
+    def setup_install_tests(self):
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _test_bin_ops(self):
+        info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
+                0)
+
+        ls = (['-n', '1', 'ls', '..'],
+              ['openmpi-{0}'.format(self.spec.version)], 0)
+
+        checks = {
+            'mpirun': ls,
+            'ompi_info': info,
+            'oshmem_info': info,
+            'oshrun': ls,
+            'shmemrun': ls,
+        }
+
+        for exe in checks:
+            options, expected, status = checks[exe]
+            reason = 'test: checking {0} output'.format(exe)
+            self.run_test(exe, options, expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_check_versions(self):
+        comp_vers = str(self.spec.compiler.version)
+        spec_vers = str(self.spec.version)
+        checks = {
+            # Binaries available in at least versions 2.0.0 through 4.0.3
+            'mpiCC': comp_vers,
+            'mpic++': comp_vers,
+            'mpicc': comp_vers,
+            'mpicxx': comp_vers,
+            'mpiexec': spec_vers,
+            'mpif77': comp_vers,
+            'mpif90': comp_vers,
+            'mpifort': comp_vers,
+            'mpirun': spec_vers,
+            'ompi_info': spec_vers,
+            'ortecc': comp_vers,
+            'orterun': spec_vers,
+
+            # Binaries available in versions 2.0.0 through 2.1.6
+            'ompi-submit': spec_vers,
+            'orte-submit': spec_vers,
+
+            # Binaries available in versions 2.0.0 through 3.1.5
+            'ompi-dvm': spec_vers,
+            'orte-dvm': spec_vers,
+            'oshcc': comp_vers,
+            'oshfort': comp_vers,
+            'oshmem_info': spec_vers,
+            'oshrun': spec_vers,
+            'shmemcc': comp_vers,
+            'shmemfort': comp_vers,
+            'shmemrun': spec_vers,
+
+            # Binary available in version 3.1.0 through 3.1.5
+            'prun': spec_vers,
+
+            # Binaries available in versions 3.0.0 through 3.1.5
+            'oshCC': comp_vers,
+            'oshc++': comp_vers,
+            'oshcxx': comp_vers,
+            'shmemCC': comp_vers,
+            'shmemc++': comp_vers,
+            'shmemcxx': comp_vers,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            purpose = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
+                          purpose=purpose, skip_missing=True)
+
+    def _test_examples(self):
+        # First build the examples
+        self.run_test('make', ['all'], [],
+                      purpose='test: ensuring ability to build the examples',
+                      work_dir=join_path(self.install_test_root,
+                                         self.extra_install_tests))
+
+        # Now run those with known results
+        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
+
+        hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
+
+        max_red = (['0/1 dst = 0 1 2'], 0)
+
+        missing_spml = (['No available spml components'], 1)
+
+        no_out = ([''], 0)
+
+        ring_out = (['1 processes in ring', '0 exiting'], 0)
+
+        strided = (['not in valid range'], 255)
+
+        checks = {
+            'hello_c': hello_world,
+            'hello_cxx': hello_world,
+            'hello_mpifh': hello_world,
+            'hello_oshmem': hello_world if have_spml else missing_spml,
+            'hello_oshmemcxx': hello_world if have_spml else missing_spml,
+            'hello_oshmemfh': hello_world if have_spml else missing_spml,
+            'hello_usempi': hello_world,
+            'hello_usempif08': hello_world,
+            'oshmem_circular_shift': ring_out if have_spml else missing_spml,
+            'oshmem_max_reduction': max_red if have_spml else missing_spml,
+            'oshmem_shmalloc': no_out if have_spml else missing_spml,
+            'oshmem_strided_puts': strided if have_spml else missing_spml,
+            'oshmem_symmetric_data': no_out if have_spml else missing_spml,
+            'ring_c': ring_out,
+            'ring_cxx': ring_out,
+            'ring_mpifh': ring_out,
+            'ring_oshmem': ring_out if have_spml else missing_spml,
+            'ring_oshmemfh': ring_out if have_spml else missing_spml,
+            'ring_usempi': ring_out,
+            'ring_usempif08': ring_out,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = 'test: checking example {0} output'.format(exe)
+            self.run_test(exe, [], expected, 0, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known packages
+        self._test_check_versions()
+
+        # Test the operation of selected executables
+        self._test_bin_ops()
+
+        # Test example programs pulled from the build
+        self._test_examples()
 
 
 def get_spack_compiler_spec(path):

@@ -13,6 +13,8 @@ class PyHepunits(PythonPackage):
     url = "https://pypi.io/packages/source/h/hepunits/hepunits-1.2.1.tar.gz"
     homepage = "https://github.com/scikit-hep/hepunits"
 
+    tags = ['hep']
+
     maintainers = ['vvolkl']
 
     version('master', branch='master')

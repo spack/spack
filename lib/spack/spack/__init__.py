@@ -5,7 +5,7 @@
 
 
 #: major, minor, patch version for Spack, in a tuple
-spack_version_info = (0, 15, 4)
+spack_version_info = (0, 16, 0)
 
 #: String containing Spack version joined with .'s
 spack_version = '.'.join(str(v) for v in spack_version_info)

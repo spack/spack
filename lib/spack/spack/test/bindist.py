@@ -22,6 +22,7 @@ import spack.cmd.mirror as mirror
 from spack.main import SpackCommand
 import spack.mirror
 import spack.util.gpg
+import spack.util.web as web_util
 from spack.directory_layout import YamlDirectoryLayout
 from spack.spec import Spec
 
@@ -622,3 +623,51 @@ def test_spec_needs_rebuild(install_mockery_mutable_config, mock_packages,
     rebuild = bindist.needs_rebuild(s, mirror_url, rebuild_on_errors=True)
 
     assert rebuild
+
+
+def test_generate_indices_key_error(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise KeyError('Test KeyError handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the KeyError
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No keys at {0}'.format(test_url) in err
+
+    # Make sure generate_package_index handles the KeyError
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    assert 'Warning: No packages at {0}'.format(test_url) in err
+
+
+def test_generate_indices_exception(monkeypatch, capfd):
+
+    def mock_list_url(url, recursive=False):
+        print('mocked list_url({0}, {1})'.format(url, recursive))
+        raise Exception('Test Exception handling')
+
+    monkeypatch.setattr(web_util, 'list_url', mock_list_url)
+
+    test_url = 'file:///fake/keys/dir'
+
+    # Make sure generate_key_index handles the Exception
+    bindist.generate_key_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing keys at {0}'.format(test_url)
+    assert expect in err
+
+    # Make sure generate_package_index handles the Exception
+    bindist.generate_package_index(test_url)
+
+    err = capfd.readouterr()[1]
+    expect = 'Encountered problem listing packages at {0}'.format(test_url)
+    assert expect in err

@@ -12,6 +12,8 @@ class Aida(Package):
     homepage = "http://aida.freehep.org/"
     url      = "ftp://ftp.slac.stanford.edu/software/freehep/AIDA/v3.2.1/aida-3.2.1.tar.gz"
 
+    tags = ['hep']
+
     version('3.2.1', sha256='c51da83e99c0985a7ef3e8bc5a60c3ae61f3ca603b61100c2438b4cdadd5bb2e')
 
     def install(self, spec, prefix):
