@@ -244,9 +244,12 @@ environment variables:
                 reporter.filename = default_log_file(specs[0])
             reporter.specs = specs
 
-            tty.msg("Installing environment %s" % env.name)
-            with reporter:
+            tty.msg("Installing environment {0}".format(env.name))
+            with reporter('build'):
                 env.install_all(args, **kwargs)
+
+            tty.debug("Regenerating environment views for {0}"
+                      .format(env.name))
             with env.write_transaction():
                 # It is not strictly required to synchronize view regeneration
                 # but doing so can prevent redundant work in the filesystem.
@@ -286,9 +289,8 @@ environment variables:
     kwargs['tests'] = tests
 
     try:
-        with spack.store.db.read_transaction():
-            specs = spack.cmd.parse_specs(
-                args.spec, concretize=True, tests=tests)
+        specs = spack.cmd.parse_specs(
+            args.spec, concretize=True, tests=tests)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)
@@ -318,9 +320,8 @@ environment variables:
     with reporter('build'):
         if args.overwrite:
 
-            with spack.store.db.read_transaction():
-                installed = list(filter(lambda x: x,
-                                        map(spack.store.db.query_one, specs)))
+            installed = list(filter(lambda x: x,
+                                    map(spack.store.db.query_one, specs)))
             if not args.yes_to_all:
                 display_args = {
                     'long': True,

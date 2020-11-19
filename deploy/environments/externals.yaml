@@ -23,7 +23,7 @@ spack:
     timemory:
       variants: +mpi~cuda~cupti+caliper~gperftools~python
   specs:
-    - llvm@10.0.0
+    - llvm@11.0.0
     - pgi@19.10
     - nvhpc@20.9 install_type=network
     - arm-forge@20.0.3-Redhat-7.0-x86_64
