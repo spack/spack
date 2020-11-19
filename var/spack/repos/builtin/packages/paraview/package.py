@@ -105,7 +105,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('double-conversion')
     depends_on('expat')
     depends_on('eigen@3:')
-    conflicts('target=ppc64le', when='@3.3.0:3.3.4')
+    conflicts('target=ppc64le:', when='@3.3.0:3.3.4')
 
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
