@@ -140,6 +140,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
+    depends_on("pkgconfig", type="build")
 
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
