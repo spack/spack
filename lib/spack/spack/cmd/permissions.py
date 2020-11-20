@@ -3,7 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import spack.store
+
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
+import spack.package_permissions as spp
 
 description = "manage spack permissions"
 section = "build"
@@ -32,15 +36,25 @@ def setup_parser(subparser):
 
 def perm_check(args):
     """Check that permissions match those specified by packages.yaml."""
-    # TODO: Add the database and metadata directories
-    # TODO: Process installed packages
-    raise NotImplementedError('The command is not yet implemented')
+    # First check permissions for the database directory and its contents
+    spp.check_permissions(spack.store.db._db_dir, None, contents=True)
+
+    # Now check permissions for installed packages
+    env = ev.get_env(args, 'permissions')
+    hashes = env.all_hashes() if env else None
+    specs = spack.store.db.query(hashes=hashes)
+    for spec in specs:
+        spp.check_permissions(spec.prefix, spec, contents=True)
 
 
 def perm_repair(args):
     """Repair any permissions that do not match packages.yaml specs."""
     # TODO: Add the database and metadata directories
-    # TODO: Process installed packages
+
+    env = ev.get_env(args, 'permissions')
+    hashes = env.all_hashes() if env else None
+    specs = spack.store.db.query(hashes=hashes)
+    spack.cmd.display_specs(specs, long=True)
     raise NotImplementedError('The command is not yet implemented')
 
 
