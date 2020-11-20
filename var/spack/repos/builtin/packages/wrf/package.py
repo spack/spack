@@ -225,7 +225,7 @@ class Wrf(Package):
                     for line in ifh:
                         if line.startswith("DM_"):
                             line = line.replace(
-                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpif90
+                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpifc
                             )
                             line = line.replace(
                                 "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
