@@ -51,7 +51,7 @@ class Openldap(AutotoolsPackage):
                 '--enable-dynamic',
                 '--disable-debug',
                 '--disable-slapd',
-               ]
+                ]
 
         if '+static' in self.spec:
             args.append('--enable-static')
