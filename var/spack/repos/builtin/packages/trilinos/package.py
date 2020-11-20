@@ -77,6 +77,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Fortran support')
     variant('wrapper', default=False,
             description="Use nvcc-wrapper for CUDA build")
+    variant('cuda_rdc', default=False,
+            description='turn on RDC for CUDA build')
     variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
     variant('hwloc', default=False,
             description='Enable hwloc')
@@ -328,6 +330,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+adios2', when='@:12.14.1')
     conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
+    conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
@@ -752,6 +755,10 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('Kokkos_ENABLE_CUDA', True),
                 define('Kokkos_ENABLE_CUDA_UVM', True),
                 define('Kokkos_ENABLE_CUDA_LAMBDA', True)])
+            if '+cuda_rdc' in spec:
+                options.append(define(
+                    'Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE',
+                    True))
             for iArchCC in spec.variants['cuda_arch'].value:
                 options.append(define(
                     "Kokkos_ARCH_" +
