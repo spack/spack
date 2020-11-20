@@ -21,7 +21,7 @@ import spack.report
 import spack.package
 
 description = "run spack's tests for an install"
-section = "administrator"
+section = "admin"
 level = "long"
 
 
