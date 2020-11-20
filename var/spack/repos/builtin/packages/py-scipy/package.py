@@ -15,19 +15,6 @@ class PyScipy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    import_modules = [
-        'scipy', 'scipy._build_utils', 'scipy._lib', 'scipy.cluster',
-        'scipy.constants', 'scipy.fftpack', 'scipy.integrate',
-        'scipy.interpolate', 'scipy.io', 'scipy.linalg', 'scipy.misc',
-        'scipy.ndimage', 'scipy.odr', 'scipy.optimize', 'scipy.signal',
-        'scipy.sparse', 'scipy.spatial', 'scipy.special', 'scipy.stats',
-        'scipy.io.arff', 'scipy.io.harwell_boeing', 'scipy.io.matlab',
-        'scipy.optimize._lsq', 'scipy.sparse.csgraph', 'scipy.sparse.linalg',
-        'scipy.sparse.linalg.dsolve', 'scipy.sparse.linalg.eigen',
-        'scipy.sparse.linalg.isolve', 'scipy.sparse.linalg.eigen.arpack',
-        'scipy.sparse.linalg.eigen.lobpcg', 'scipy.special._precompute'
-    ]
-
     version('master', branch='master')
     version('1.5.4',  sha256='4a453d5e5689de62e5d38edf40af3f17560bfd63c9c5bd228c18c1f99afa155b')
     version('1.5.3',  sha256='ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707')

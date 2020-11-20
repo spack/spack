@@ -167,8 +167,7 @@ class PyHorovod(PythonPackage, CudaPackage):
             env.set('HOROVOD_CPU_OPERATIONS',
                     self.spec.variants['tensor_ops'].value.upper())
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def install_test(self):
+    def test(self):
+        super(PyHorovod, self).test()
         horovodrun = Executable(self.prefix.bin.horovodrun)
         horovodrun('--check-build')

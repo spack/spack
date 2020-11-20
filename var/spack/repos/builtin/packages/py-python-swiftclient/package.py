@@ -14,8 +14,6 @@ class PyPythonSwiftclient(PythonPackage):
 
     maintainers = ['ajkotobi']
 
-    import_modules = ['sys', 'setuptools', 'requests']
-
     version('3.10.0', sha256='66227eaf29a691c70675fb9982022980b92797c273dd5e6dc7e680425e9a3634')
     version('3.9.0', sha256='4f2097492e4c76e948882fc859bfa033ade09bed72f8e6b328e34a3467d9a377')
     version('3.8.1', sha256='3a013303643f77a99befa05582dfb93671e1fba1aed9f4a517418129700aedb8')

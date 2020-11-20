@@ -62,7 +62,3 @@ class PySetuptools(PythonPackage):
             url += '.tar.gz'
 
         return url
-
-    def build_test(self):
-        # Unit tests require pytest, creating a circular dependency
-        pass

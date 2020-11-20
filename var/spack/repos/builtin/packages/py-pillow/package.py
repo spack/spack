@@ -7,7 +7,6 @@ class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
     maintainers = ['adamjstewart']
-    import_modules = ['PIL']
 
     provides('pil')
 

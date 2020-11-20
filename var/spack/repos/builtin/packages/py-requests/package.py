@@ -12,17 +12,6 @@ class PyRequests(PythonPackage):
     homepage = "http://python-requests.org"
     url = "https://pypi.io/packages/source/r/requests/requests-2.24.0.tar.gz"
 
-    import_modules = [
-        'requests', 'requests.packages', 'requests.packages.chardet',
-        'requests.packages.urllib3', 'requests.packages.idna',
-        'requests.packages.chardet.cli', 'requests.packages.urllib3.util',
-        'requests.packages.urllib3.packages',
-        'requests.packages.urllib3.contrib',
-        'requests.packages.urllib3.packages.ssl_match_hostname',
-        'requests.packages.urllib3.packages.backports',
-        'requests.packages.urllib3.contrib._securetransport'
-    ]
-
     version('2.24.0', sha256='b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b')
     version('2.23.0', sha256='b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6')
     version('2.22.0', sha256='11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4')

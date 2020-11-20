@@ -13,13 +13,6 @@ class Mercurial(PythonPackage):
     homepage = "https://www.mercurial-scm.org"
     url      = "https://www.mercurial-scm.org/release/mercurial-5.3.tar.gz"
 
-    import_modules = [
-        'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
-        'hgext.highlight', 'hgext.largefiles', 'hgext.zeroconf',
-        'hgext.fsmonitor.pywatchman', 'mercurial.hgweb',
-        'mercurial.httpclient', 'mercurial.pure'
-    ]
-
     version('5.3',   sha256='e57ff61d6b67695149dd451922b40aa455ab02e01711806a131a1e95c544f9b9')
     version('5.1.2', sha256='15af0b090b23649e0e53621a88dde97b55a734d7cb08b77d3df284db70d44e2e')
     version('5.1.1', sha256='35fc8ba5e0379c1b3affa2757e83fb0509e8ac314cbd9f1fd133cf265d16e49f')

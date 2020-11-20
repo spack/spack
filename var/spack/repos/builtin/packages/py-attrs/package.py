@@ -12,8 +12,6 @@ class PyAttrs(PythonPackage):
     homepage = "http://attrs.org/"
     url      = "https://pypi.io/packages/source/a/attrs/attrs-20.3.0.tar.gz"
 
-    import_modules = ['attr']
-
     version('20.3.0', sha256='832aa3cde19744e49938b91fea06d69ecb9e649c93ba974535d08ad92164f700')
     version('20.2.0', sha256='26b54ddbbb9ee1d34d5d3668dd37d6cf74990ab23c828c2888dccdceee395594')
     version('20.1.0', sha256='0ef97238856430dcf9228e07f316aefc17e8939fc8507e18c6501b761ef1a42a')

@@ -21,13 +21,6 @@ class PyNumpy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
-    import_modules = [
-        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
-        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
-        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
-        'numpy.distutils.command', 'numpy.distutils.fcompiler'
-    ]
-
     version('master', branch='master')
     version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
     version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')

@@ -13,19 +13,6 @@ class PyPandas(PythonPackage):
     url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.5.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'pandas', 'pandas.compat', 'pandas.core', 'pandas.util', 'pandas.io',
-        'pandas.tseries', 'pandas._libs', 'pandas.plotting', 'pandas.arrays',
-        'pandas.api', 'pandas.errors', 'pandas._config', 'pandas.compat.numpy',
-        'pandas.core.reshape', 'pandas.core.tools', 'pandas.core.util',
-        'pandas.core.dtypes', 'pandas.core.groupby', 'pandas.core.internals',
-        'pandas.core.computation', 'pandas.core.arrays', 'pandas.core.ops',
-        'pandas.core.sparse', 'pandas.core.indexes', 'pandas.io.msgpack',
-        'pandas.io.formats', 'pandas.io.excel', 'pandas.io.json',
-        'pandas.io.sas', 'pandas.io.clipboard', 'pandas._libs.tslibs',
-        'pandas.plotting._matplotlib', 'pandas.api.types',
-        'pandas.api.extensions'
-    ]
 
     version('1.1.5',  sha256='f10fc41ee3c75a474d3bdf68d396f10782d013d7f67db99c0efbfd0acb99701b')
     version('1.1.4',  sha256='a979d0404b135c63954dea79e6246c45dd45371a88631cdbb4877d844e6de3b6')

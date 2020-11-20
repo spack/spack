@@ -13,10 +13,6 @@ class PyCartopy(PythonPackage):
     url      = "https://github.com/SciTools/cartopy/archive/v0.18.0.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'cartopy', 'cartopy.sphinxext', 'cartopy.io', 'cartopy.geodesic',
-        'cartopy.examples', 'cartopy.mpl', 'cartopy.feature',
-    ]
 
     version('0.18.0', sha256='493ced4698361ffabec1a213d2b711dc836117242c304f3b93f5406182fd8bc2')
     version('0.17.0', sha256='137642e63952404ec0841fa0333ad14c58fbbf19cca2a5ac6a38498c4b4998fb')

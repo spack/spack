@@ -21,11 +21,6 @@ class Gdal(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
-    import_modules = [
-        'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
-        'osgeo.gdal_array', 'osgeo.gdalconst'
-    ]
-
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
     version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
@@ -169,6 +164,9 @@ class Gdal(AutotoolsPackage):
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     executables = ['^gdal-config$']
+
+    import_modules = PythonPackage.import_modules
+    test = PythonPackage.test
 
     @classmethod
     def determine_version(cls, exe):
@@ -552,14 +550,6 @@ class Gdal(AutotoolsPackage):
             with working_dir('swig/java'):
                 make('install')
                 install('*.jar', prefix)
-
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if '+python' in self.spec:
-            with working_dir('spack-test', create=True):
-                for module in self.import_modules:
-                    python('-c', 'import {0}'.format(module))
 
     @run_after('install')
     def darwin_fix(self):

@@ -12,11 +12,6 @@ class PyJoblib(PythonPackage):
     homepage = "http://packages.python.org/joblib/"
     url      = "https://pypi.io/packages/source/j/joblib/joblib-0.14.0.tar.gz"
 
-    import_modules = [
-        'joblib', 'joblib.externals', 'joblib.externals.cloudpickle',
-        'joblib.externals.loky', 'joblib.externals.loky.backend'
-    ]
-
     version('0.14.0', sha256='6fcc57aacb4e89451fd449e9412687c51817c3f48662c3d8f38ba3f8a0a193ff')
     version('0.13.2', sha256='315d6b19643ec4afd4c41c671f9f2d65ea9d787da093487a81ead7b0bac94524')
     version('0.11', sha256='7b8fd56df36d9731a83729395ccb85a3b401f62a96255deb1a77220c00ed4085')

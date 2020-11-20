@@ -19,11 +19,6 @@ class PyProjectq(PythonPackage):
     homepage = "https://projectq.ch"
     git      = "https://github.com/projectq-framework/projectq.git"
 
-    # Provided python modules
-    import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
-                      'projectq.libs', 'projectq.meta', 'projectq.ops',
-                      'projectq.setups', 'projectq.types']
-
     # Versions
     version('develop', branch='develop')
     version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611')

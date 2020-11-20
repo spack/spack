@@ -17,7 +17,6 @@ class PyRasterio(PythonPackage):
     url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.1.5.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = ['rasterio', 'rasterio.rio']
 
     version('1.1.5',  sha256='ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9')
     version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')

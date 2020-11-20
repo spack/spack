@@ -14,8 +14,6 @@ class PyDxchange(PythonPackage):
     homepage = "https://github.com/data-exchange/dxchange"
     url      = "https://github.com/data-exchange/dxchange/archive/v0.1.2.tar.gz"
 
-    import_modules = ['dxchange']
-
     version('0.1.2', sha256='d005b036b6323d0dffd5944c3da0b8a90496d96277654e72b53717058dd5fd87')
 
     depends_on('py-setuptools', type='build')
