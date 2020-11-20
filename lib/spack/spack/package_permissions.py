@@ -13,9 +13,15 @@ import llnl.util.tty as tty
 import spack.config as cfg
 
 
-# The format for specifying the key to specific spec permissions in
-# packages.yaml files.
+#: The format for specifying the key to specific spec permissions in
+#: packages.yaml files.
 permissions_key = 'packages:{0}:permissions:{1}'
+
+#: Column width for reporting group differences
+group_width = 20
+
+#: Column width for reporting permission differences
+perm_width = 9
 
 
 def _add_gid_bit(perms):
@@ -29,7 +35,7 @@ def _add_gid_bit(perms):
     return perms
 
 
-def _check_perms(path, perms, group, check_exists=False):
+def _check_perms(path, perms, group, trim='', check_exists=False):
     """Checks permissions for the specified path against those given.
 
     Args:
@@ -37,30 +43,48 @@ def _check_perms(path, perms, group, check_exists=False):
         perms (int): the appropriate stat permissions or mode
         group (str): the appropriate group name or empty string if the group
             option does not apply
+        trim (str): root path to trim off of the output path
         check_exists (bool): ``True`` if the path existence should be checked;
             otherwise, skip the existence check
+
+    Returns: (bool) ``True`` if match configuration, ``False`` otherwise
     """
     if check_exists and not os.path.exists(path):
         tty.warn('Cannot check permissions on missing path {0}'
                  .format(path))
-        return
-
-    tty.debug('{0}: checking permissions against configuration'.format(path))
+        return False
 
     status = os.stat(path)
 
-    err_fmt = '{0}: {1} is {2}, not {3}'
+    trim = trim if not trim else \
+        '{0}{1}'.format(trim, os.sep)
+
+    errs = ['', '', '']
 
     # Check the path's group.
+    name = group
     if group:
         name, _, _, _ = grp.getgrgid(status.st_gid)
         if group != name:
-            tty.error(err_fmt.format(path, 'group', name, group))
+            errs[0] = name.center(group_width)
+        else:
+            errs[0] = group.center(group_width)
 
     # Check the path's permissions.
     mode = status.st_mode
     if mode != perms:
-        tty.error(err_fmt.format(path, 'permissions', mode, perms))
+        # Only want the ugo values of the mode and permissions
+        errs[1] = oct(mode)[-3:].center(perm_width)
+        errs[2] = oct(perms)[-3:].center(perm_width)
+    else:
+        errs[1] = errs[2] = ' ' * perm_width
+
+    if name != group or mode != perms:
+        name = '.' if trim and path == trim else path.replace(trim, '')
+        print('{0}: {1}'.format(': '.join(errs), name))
+        return False
+
+    return True
 
 
 def _process_permissions(path, spec, update, contents):
@@ -79,6 +103,8 @@ def _process_permissions(path, spec, update, contents):
         contents (bool): ``True`` to process the contents of the
             and files and ``False`` to apply the permissions only to the
             specified directory
+
+    Returns:  (bool) ``True`` for success, ``False`` otherwise
     """
     if not os.path.exists(path):
         tty.warn('Cannot process permissions for missing path {0}'
@@ -94,23 +120,27 @@ def _process_permissions(path, spec, update, contents):
     is_dir = os.path.isdir(path)
     path_perms = dir_perms if is_dir else perms
 
-    func(path, path_perms, group)
+    func(path, path_perms, group, path)
 
     # We're done if the path is a file OR we don't need to process
     # permissions for the directory's contents.
     if not (is_dir and contents):
         return
 
-    for root, dirs, _ in os.walk(path):
+    for root, dirs, files in os.walk(path, topdown=True):
         for d in dirs:
             dir_name = os.path.join(root, d)
-            func(dir_name, dir_perms, group)
-        for f in dirs:
-            dir_name = os.path.join(root, d)
-            func(dir_name, perms, group)
+            success = func(dir_name, dir_perms, group, path)
+            if not success:
+                dirs.remove(d)
+        for f in files:
+            file_name = os.path.join(root, f)
+            func(file_name, perms, group, path)
+        if path in dirs:
+            dirs.remove(path)
 
 
-def _set_perms(path, perms, group, check_exists=False):
+def _set_perms(path, perms, group, trim='', check_exists=False):
     """Set permissions for the specified path to the given permissions.
 
     Args:
@@ -118,13 +148,16 @@ def _set_perms(path, perms, group, check_exists=False):
         perms (int): the appropriate stat permissions or mode
         group (str): the appropriate group name or empty string if the group
             option does not apply
+        trim (str): root path to trim off of the output path
         check_exists (bool): ``True`` if the path existence should be checked;
             otherwise, skip the existence check
+
+    Returns: (bool) ``True`` if successful, ``False`` otherwise
     """
     if check_exists and not os.path.exists(path):
         tty.warn('Cannot set permissions on missing path {0}'
                  .format(path))
-        return
+        return False
 
     # Set the path's group.
     if group:
@@ -138,14 +171,22 @@ def _set_perms(path, perms, group, check_exists=False):
     if mode != perms:
         os.chmod(path, perms)
 
+    return True
+
 
 def check_permissions(path, spec, contents=True):
     """Checks permissions against those expected by the configuration."""
+    print('\nChecking Permissions for {0}\n'.format(path))
+    print('{0}: {1}: {2}: {3}'.format(
+        'Actual Group'.center(group_width),
+        'Act Perms'.center(perm_width),
+        'Exp Perms'.center(perm_width),
+        'Path'))
     _process_permissions(path, spec, False, contents)
 
 
 def update_permissions(path, spec, contents=True):
-    """Checks permissions against those expected by the configuration."""
+    """Updates permissions using those expected by the configuration."""
     _process_permissions(path, spec, True, contents)
 
 
