@@ -30,6 +30,7 @@ class Openldap(AutotoolsPackage):
             values=('gnutls', 'openssl'), multi=False)
 
     variant('perl', default=False, description='Perl backend to Slapd')
+    variant('static', default=False )
 
     depends_on('icu4c', when='+icu')
     depends_on('gnutls', when='~client_only tls=gnutls')
@@ -46,12 +47,18 @@ class Openldap(AutotoolsPackage):
     # Ref: http://www.linuxfromscratch.org/blfs/view/svn/server/openldap.html
     @when('+client_only')
     def configure_args(self):
-        return ['CPPFLAGS=-D_GNU_SOURCE',
-                '--disable-static',
+        args = ['CPPFLAGS=-D_GNU_SOURCE',
                 '--enable-dynamic',
                 '--disable-debug',
                 '--disable-slapd',
-                ]
+               ]
+
+        if '+static' in self.spec:
+            args.append('--enable-static')
+        else:
+            args.append('--disable-static')
+
+        return args
 
     @when('~client_only')
     def configure_args(self):
