@@ -3,18 +3,15 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
-
 from spack import *
 
 
 class Tempestremap(AutotoolsPackage):
-    """ TempestRemap is a conservative, consistent and monotone remapping package for arbitrary 
-        grid geometry with support for finite volumes and finite elements. 
-	There is still quite a bit of work to be done, but any feedback is 
-	appreciated on the software in its current form"""
+    """ TempestRemap is a conservative, consistent and monotone remapping
+        package for arbitrary grid geometry with support for finite volumes
+        and finite elements.
+        There is still quite a bit of work to be done, but any feedback is
+        appreciated on the software in its current form"""
 
     homepage = "https://github.com/ClimateGlobalChange/tempestremap"
     url      = "https://github.com/ClimateGlobalChange/tempestremap/archive/v2.0.5.tar.gz"
@@ -42,8 +39,8 @@ class Tempestremap(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        options = [ ]
-        options.append('--with-netcdf=%s' % spec['netcdf-c'].prefix) 
+        options = []
+        options.append('--with-netcdf=%s' % spec['netcdf-c'].prefix)
         options.append('--with-blas=%s' % spec['blas'].libs.ld_flags)
         options.append('--with-lapack=%s' % spec['lapack'].libs.ld_flags)
         return options
