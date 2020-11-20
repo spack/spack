@@ -30,7 +30,7 @@ class Openldap(AutotoolsPackage):
             values=('gnutls', 'openssl'), multi=False)
 
     variant('perl', default=False, description='Perl backend to Slapd')
-    variant('static', default=False )
+    variant('static', default=False)
 
     depends_on('icu4c', when='+icu')
     depends_on('gnutls', when='~client_only tls=gnutls')
