@@ -25,7 +25,3 @@ class PySphinxcontribWebsupport(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    def build_test(self):
-        # Unit tests require sphinx, creating a circular dependency
-        pass

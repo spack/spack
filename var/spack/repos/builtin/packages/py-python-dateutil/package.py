@@ -27,13 +27,3 @@ class PyPythonDateutil(PythonPackage):
     depends_on('py-setuptools@24.3:', type='build')
     depends_on('py-setuptools-scm', type='build', when='@2.7.0:')
     depends_on('py-six@1.5:', type=('build', 'run'))
-    # depends_on('py-pytest', type='test')
-    # depends_on('py-hypothesis', type='test')
-    # depends_on('py-freezegun', type='test')
-
-    def build_test(self):
-        # Tests require freezegun, which depends on python-dateutil,
-        # creating circular dependency
-        # pytest = which('pytest')
-        # pytest()
-        pass

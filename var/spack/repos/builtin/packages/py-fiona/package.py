@@ -33,7 +33,3 @@ class PyFiona(PythonPackage):
     depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-ordereddict', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
-
-    def build_test(self):
-        # PyPI tarball does not come with unit tests
-        pass

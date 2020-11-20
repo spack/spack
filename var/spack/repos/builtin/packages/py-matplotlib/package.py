@@ -183,6 +183,8 @@ class PyMatplotlib(PythonPackage):
                 setup.write('system_freetype = True\n')
                 setup.write('system_qhull = True\n')
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
     def build_test(self):
         pytest = which('pytest')
         pytest()

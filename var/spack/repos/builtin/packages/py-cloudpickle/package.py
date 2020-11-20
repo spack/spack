@@ -18,7 +18,3 @@ class PyCloudpickle(PythonPackage):
     version('0.5.2', sha256='b0e63dd89ed5285171a570186751bc9b84493675e99e12789e9a5dc5490ef554')
 
     depends_on('py-setuptools', type='build')
-
-    def build_test(self):
-        # PyPI tarball does not come with unit tests
-        pass

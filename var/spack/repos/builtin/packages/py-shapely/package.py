@@ -64,5 +64,7 @@ class PyShapely(PythonPackage):
         else:
             env.prepend_path('LD_LIBRARY_PATH', libs)
 
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def test_install(self):
         python('-m', 'pytest')

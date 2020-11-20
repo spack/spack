@@ -14,7 +14,6 @@ class PyScipy(PythonPackage):
     git      = "https://github.com/scipy/scipy.git"
 
     maintainers = ['adamjstewart']
-    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     import_modules = [
         'scipy', 'scipy._build_utils', 'scipy._lib', 'scipy.cluster',
@@ -99,21 +98,7 @@ class PyScipy(PythonPackage):
 
         return args
 
-    def build_test(self):
-        # `setup.py test` is not supported.  Use one of the following
-        # instead:
-        #
-        # - `python runtests.py`              (to build and test)
-        # - `python runtests.py --no-build`   (to test installed scipy)
-        # - `>>> scipy.test()`           (run tests for installed scipy
-        #                                 from within an interpreter)
-        pass
-
-    def install_test(self):
-        # Change directories due to the following error:
-        #
-        # ImportError: Error importing scipy: you should not try to import
-        #       scipy from its source directory; please exit the scipy
-        #       source tree, and relaunch your python interpreter from there.
+    def test(self):
+        super(PyScipy, self).test()
         with working_dir('spack-test', create=True):
             python('-c', 'import scipy; scipy.test("full", verbose=2)')
