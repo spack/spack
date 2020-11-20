@@ -26,7 +26,7 @@ class Krb5(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('openssl')
 
-    variant('static', default=False )
+    variant('static', default=False)
     patch('mit-krb5-1.17-static-libs.patch', level=0)
 
     configure_directory = 'src'
