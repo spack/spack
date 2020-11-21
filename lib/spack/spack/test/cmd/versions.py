@@ -13,7 +13,7 @@ versions = SpackCommand('versions')
 def test_safe_versions():
     """Only test the safe versions of a package."""
 
-    versions('--safe-only', 'zlib')
+    versions('--safe', 'zlib')
 
 
 @pytest.mark.network
@@ -21,6 +21,13 @@ def test_remote_versions():
     """Test a package for which remote versions should be available."""
 
     versions('zlib')
+
+
+@pytest.mark.network
+def test_remote_versions_only():
+    """Test a package for which remote versions should be available."""
+
+    versions('--remote', 'zlib')
 
 
 @pytest.mark.network
