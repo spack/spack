@@ -24,9 +24,9 @@ class PyPandas(PythonPackage):
         'pandas.io.excel', 'pandas.io.json', 'pandas.io.sas',
         'pandas.io.clipboard', 'pandas.tseries', 'pandas._libs',
         'pandas._libs.window', 'pandas._libs.tslibs', 'pandas.plotting',
-        'pandas.plotting._matplotlib', 'pandas.arrays', 'pandas.api',
-        'pandas.api.indexers', 'pandas.api.types', 'pandas.api.extensions',
-        'pandas.errors', 'pandas._config'
+        'pandas.arrays', 'pandas.api', 'pandas.api.indexers',
+        'pandas.api.types', 'pandas.api.extensions', 'pandas.errors',
+        'pandas._config'
     ]
 
     version('1.1.5',  sha256='f10fc41ee3c75a474d3bdf68d396f10782d013d7f67db99c0efbfd0acb99701b')
@@ -82,10 +82,3 @@ class PyPandas(PythonPackage):
 
     # Optional dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#optional-dependencies
-
-    # Test dependencies
-    # https://pandas.pydata.org/pandas-docs/stable/development/contributing.html#running-the-test-suite
-    depends_on('py-pytest@4.0.2:', type='test')
-    depends_on('py-pytest-xdist', type='test')
-    depends_on('py-hypothesis@3.58:', type='test')
-    depends_on('py-pyarrow@0.10.0:', type='test')

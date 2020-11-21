@@ -13,8 +13,8 @@ class PyPyzmq(PythonPackage):
 
     import_modules = [
         'zmq', 'zmq.green', 'zmq.green.eventloop', 'zmq.sugar', 'zmq.auth',
-        'zmq.auth.asyncio', 'zmq.tests.asyncio', 'zmq.utils', 'zmq.backend',
-        'zmq.backend.cffi', 'zmq.backend.cython', 'zmq.ssh', 'zmq.eventloop',
+        'zmq.auth.asyncio', 'zmq.utils', 'zmq.backend', 'zmq.backend.cffi',
+        'zmq.backend.cython', 'zmq.ssh', 'zmq.eventloop',
         'zmq.eventloop.minitornado', 'zmq.eventloop.minitornado.platform',
         'zmq.log', 'zmq.asyncio', 'zmq.devices'
     ]
