@@ -20,4 +20,3 @@ class PySphinxRtdTheme(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('npm', when='@0.5.0:', type='build')
     depends_on('py-sphinx', when='@0.4.1:', type=('build', 'run'))
-    depends_on('py-pytest', when='@0.5.0:', type='test')

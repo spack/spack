@@ -26,5 +26,3 @@ class PyBotocore(PythonPackage):
     depends_on('py-urllib3@1.20:1.25', type=('build', 'run'))
     depends_on('py-urllib3@1.20:1.23', type=('build', 'run'), when='^python@2.6.0:2.6.999')
     depends_on('py-urllib3@1.20:1.22', type=('build', 'run'), when='^python@3.3.0:3.3.999')
-    depends_on('py-mock', type='test')
-    depends_on('py-nose', type='test')

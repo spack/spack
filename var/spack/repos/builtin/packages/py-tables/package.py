@@ -34,7 +34,6 @@ class PyTables(PythonPackage):
     depends_on('py-numpy@1.9.3:', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'))
     depends_on('py-six@1.9.0:', when='@:3.5', type=('build', 'run'))
-    depends_on('py-mock@2.0:', type='test')
     # tables/req_versions.py
     depends_on('hdf5@1.8.4:1.8.999', when='@:3.3.99')
     depends_on('hdf5@1.8.4:', when='@3.4.0:')

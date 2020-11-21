@@ -20,7 +20,3 @@ class PyCairocffi(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools@39.2.0:', type='build')
     depends_on('py-cffi@1.1.0:', type=('build', 'run'))
-    depends_on('py-pytest-runner', type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-pytest-flake8', type='test')
-    depends_on('py-pytest-isort', type='test')

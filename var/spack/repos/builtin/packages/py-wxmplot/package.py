@@ -19,4 +19,3 @@ class PyWxmplot(PythonPackage):
     depends_on('py-six@1.10:', type=('build', 'run'))
     depends_on('py-matplotlib@2.0:', type=('build', 'run'))
     depends_on('py-wxpython@4.0.3:', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

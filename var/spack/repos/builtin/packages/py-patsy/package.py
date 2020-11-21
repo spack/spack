@@ -21,5 +21,3 @@ class PyPatsy(PythonPackage):
     depends_on('py-numpy',       type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'), when="+splines")
     depends_on('py-six',         type=('build', 'run'))
-
-    depends_on('py-nose', type='test')

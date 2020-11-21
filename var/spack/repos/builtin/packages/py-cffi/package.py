@@ -25,8 +25,6 @@ class PyCffi(PythonPackage):
     depends_on('py-pycparser', type=('build', 'run'))
     depends_on('py-pycparser@2.19:', when='^python@:2.6', type=('build', 'run'))
     depends_on('libffi')
-    depends_on('py-py', type='test')
-    depends_on('py-pytest', type='test')
 
     def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use

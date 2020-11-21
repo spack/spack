@@ -18,5 +18,3 @@ class PyCodecov(PythonPackage):
     depends_on('py-requests@2.7.9:', type=('build', 'run'))
     depends_on('py-coverage', type=('build', 'run'))
     depends_on('py-argparse', when='^python@:2.6', type=('build', 'run'))
-    depends_on('py-unittest2', type='test')
-    depends_on('py-linecache2', type='test')

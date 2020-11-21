@@ -30,10 +30,3 @@ class PyRequests(PythonPackage):
     depends_on('py-idna@2.5:2.999', type=('build', 'run'), when='@2.23.0:')
     depends_on('py-urllib3@1.21.1:1.24,1.25.2:1.25.999', type=('build', 'run'), when='@2.16.0:')
     depends_on('py-certifi@2017.4.17:', type=('build', 'run'), when='@2.16.0:')
-
-    depends_on('py-pytest-httpbin@0.0.7', type='test')
-    depends_on('py-pytest-cov',           type='test')
-    depends_on('py-pytest-mock',          type='test')
-    depends_on('py-pytest-xdist',         type='test')
-    depends_on('py-pysocks@1.5.6,1.5.8:', type='test')
-    depends_on('py-pytest@2.8.0:',        type='test')

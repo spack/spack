@@ -22,4 +22,3 @@ class PyGrequests(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-gevent', type=('build', 'run'))
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('py-nose', type='test')

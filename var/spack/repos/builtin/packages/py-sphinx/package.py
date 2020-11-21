@@ -54,11 +54,3 @@ class PySphinx(PythonPackage):
     depends_on('py-packaging', when='@1.7.4:', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
-
-    depends_on('py-pytest',     type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-html5lib',   type='test')
-    depends_on('py-flake8@3.5.0:', type='test')
-    depends_on('py-flake8-import-order', type='test')
-    depends_on('py-mypy@0.720:', type='test')
-    depends_on('py-docutils-stubs', type='test')

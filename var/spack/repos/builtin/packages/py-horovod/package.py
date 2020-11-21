@@ -89,12 +89,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='tensor_ops=gloo')
 
-    # Test dependencies
-    depends_on('py-mock', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-forked', type='test')
-    depends_on('py-parameterized', type='test', when='@0.20:')
-
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')

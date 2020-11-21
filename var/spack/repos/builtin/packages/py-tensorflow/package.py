@@ -190,9 +190,6 @@ class PyTensorflow(Package, CudaPackage):
         # Only builds correctly on little-endian machines
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:')
 
-    # Listed under TEST_PACKAGES in tensorflow/tools/pip_package/setup.py
-    depends_on('py-scipy@0.15.1:', type='test')
-
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
     depends_on('curl', when='+gcp')

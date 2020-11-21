@@ -85,7 +85,8 @@ class PyAstropy(PythonPackage):
 
         return args
 
-    def test(self):
-        super(PyAstropy, self).test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import astropy; astropy.test()')

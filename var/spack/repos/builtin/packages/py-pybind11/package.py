@@ -36,7 +36,6 @@ class PyPybind11(CMakePackage):
     version('2.1.1', sha256='f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540')
     version('2.1.0', sha256='2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0')
 
-    depends_on('py-pytest', type='test')
     depends_on('py-setuptools', type='build')
 
     extends('python')
@@ -73,8 +72,9 @@ class PyPybind11(CMakePackage):
         setup_py('install', '--single-version-externally-managed', '--root=/',
                  '--prefix={0}'.format(prefix))
 
-    def test(self):
-        super(PyPybind11, self).test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
         with working_dir('spack-test', create=True):
             # test include helper points to right location
             python = self.spec['python'].command

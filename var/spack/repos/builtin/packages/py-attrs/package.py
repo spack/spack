@@ -23,11 +23,3 @@ class PyAttrs(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-coverage', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest@4.3.0:', type='test', when='@19.3.0:')
-    depends_on('py-six', type='test')
-    depends_on('py-zope-interface', type='test')

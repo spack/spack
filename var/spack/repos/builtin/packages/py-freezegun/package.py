@@ -19,5 +19,3 @@ class PyFreezegun(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-python-dateutil@1.0:1.999', type=('build', 'run'), when='^python@:2')
     depends_on('py-python-dateutil@2:', type=('build', 'run'), when='^python@3:')
-    depends_on('py-mock', type='test')
-    depends_on('py-nose', type='test')

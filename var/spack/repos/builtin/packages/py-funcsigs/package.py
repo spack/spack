@@ -16,4 +16,3 @@ class PyFuncsigs(PythonPackage):
     version('0.4',   sha256='d83ce6df0b0ea6618700fe1db353526391a8a3ada1b7aba52fed7a61da772033')
 
     depends_on('py-setuptools@17.1:', type='build')
-    depends_on('py-unittest2', type='test')

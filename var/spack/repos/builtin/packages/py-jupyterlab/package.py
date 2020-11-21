@@ -20,8 +20,3 @@ class PyJupyterlab(PythonPackage):
     depends_on('py-tornado@:5,6.0.3:', type=('build', 'run'))
     depends_on('py-jupyterlab-server@1.1.5:1.999', type=('build', 'run'))
     depends_on('py-jinja2@2.10:', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-check-links', type='test')
-    depends_on('py-requests', type='test')
-    depends_on('py-wheel', type='test')
-    depends_on('py-virtualenv', type='test')

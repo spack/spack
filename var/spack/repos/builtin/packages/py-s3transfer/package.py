@@ -17,4 +17,3 @@ class PyS3transfer(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-botocore@1.12.36:1.999', type=('build', 'run'))
     depends_on('py-futures@2.2:3', type=('build', 'run'), when='^python@:2')
-    depends_on('py-mock', type='test')

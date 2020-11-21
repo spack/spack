@@ -15,4 +15,3 @@ class PyJmespath(PythonPackage):
     version('0.9.4', sha256='bde2aef6f44302dfb30320115b17d030798de8c4110e28d5cf6cf91a7a31074c')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-nose', type='test')

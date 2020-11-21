@@ -44,11 +44,6 @@ class PyCartopy(PythonPackage):
     depends_on('pil@1.7.8:',           type=('build', 'run'), when='+plotting')
     depends_on('py-scipy@0.10:',       type=('build', 'run'), when='+plotting')
 
-    # Testing dependencies
-    depends_on('py-filelock',      type='test')
-    depends_on('py-mock@1.0.1:',   type='test')
-    depends_on('py-pytest@3.0.0:', type='test')
-
     patch('proj6.patch', when='@0.17.0')
 
     phases = ['build_ext', 'install']
@@ -70,8 +65,6 @@ class PyCartopy(PythonPackage):
         return args
 
     # Tests need to be re-added since `phases` was overridden
-    run_after('build_ext')(
-        PythonPackage._run_default_build_time_test_callbacks)
     run_after('install')(
         PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)
