@@ -23,7 +23,8 @@ class Linktest(MakefilePackage):
             makefile = FileFilter('Makefile')
             makefile.filter('= gcc', '= cc')
             makefile.filter('mpicc', spec['mpi'].mpicc)
-            makefile.filter('#SIONLIB_INST=.*', 'SIONLIB_INST=%s' % spec['sionlib'].prefix)
+            makefile.filter('#SIONLIB_INST=.*',
+                            'SIONLIB_INST=%s' % spec['sionlib'].prefix)
 
     def build(self, spec, prefix):
         with working_dir('src'):
