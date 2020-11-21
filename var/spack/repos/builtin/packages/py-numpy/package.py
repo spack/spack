@@ -298,7 +298,8 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
-        super(PyNumpy, self).test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

@@ -20,3 +20,15 @@ class PyPrometheusClient(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-twisted', type=('build', 'run'), when='+twisted')
+
+    @property
+    def import_modules(self):
+        modules = [
+            'prometheus_client', 'prometheus_client.openmetrics',
+            'prometheus_client.bridge'
+        ]
+
+        if '+twisted' in self.spec:
+            modules.append('prometheus_client.twisted')
+
+        return modules

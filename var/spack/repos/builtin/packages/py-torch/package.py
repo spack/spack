@@ -105,6 +105,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
+    depends_on('py-protobuf', when='@0.4:', type=('build', 'run'))
     depends_on('eigen', when='@0.4:')
     # TODO: replace all third_party packages with Spack packages
 

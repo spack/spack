@@ -85,7 +85,8 @@ class PyScipy(PythonPackage):
 
         return args
 
-    def test(self):
-        super(PyScipy, self).test()
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import scipy; scipy.test("full", verbose=2)')

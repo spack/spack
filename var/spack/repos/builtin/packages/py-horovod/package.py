@@ -105,6 +105,51 @@ class PyHorovod(PythonPackage, CudaPackage):
     # https://github.com/horovod/horovod/pull/1835
     patch('fma.patch', when='@0.19.0:0.19.1')
 
+    @property
+    def import_modules(self):
+        modules = [
+            'horovod', 'horovod.runner', 'horovod.runner.util',
+            'horovod.runner.elastic', 'horovod.runner.driver',
+            'horovod.runner.common', 'horovod.runner.common.util',
+            'horovod.runner.common.service', 'horovod.runner.http',
+            'horovod.runner.task', 'horovod.common'
+        ]
+
+        if 'frameworks=tensorflow' in self.spec:
+            modules.append('horovod.tensorflow')
+
+        if 'frameworks=pytorch' in self.spec:
+            modules.extend([
+                'horovod.torch', 'horovod.torch.mpi_lib',
+                'horovod.torch.elastic', 'horovod.torch.mpi_lib_impl'
+            ])
+
+        if 'frameworks=mxnet' in self.spec:
+            modules.append('horovod.mxnet')
+
+        if 'frameworks=keras' in self.spec:
+            modules.extend(['horovod.keras', 'horovod._keras'])
+
+        if 'frameworks=spark' in self.spec:
+            modules.extend([
+                'horovod.spark', 'horovod.spark.driver',
+                'horovod.spark.common', 'horovod.spark.task'
+            ])
+
+        if 'frameworks=ray' in self.spec:
+            modules.append('horovod.ray')
+
+        if 'frameworks=tensorflow,keras' in self.spec:
+            modules.append('horovod.tensorflow.keras')
+
+        if 'frameworks=spark,pytorch' in self.spec:
+            modules.append('horovod.spark.torch')
+
+        if 'frameworks=spark,keras' in self.spec:
+            modules.append('horovod.spark.keras')
+
+        return modules
+
     def setup_build_environment(self, env):
         # https://github.com/horovod/horovod/blob/master/docs/install.rst#environment-variables
 

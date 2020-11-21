@@ -17,10 +17,4 @@ class PyAppdirs(PythonPackage):
     version('1.4.0', sha256='8fc245efb4387a4e3e0ac8ebcc704582df7d72ff6a42a53f5600bbb18fdaadc5')
 
     patch('setuptools-import.patch', when='@:1.4.0')
-
-    # Newer versions of setuptools require appdirs. Although setuptools is an
-    # optional dependency of appdirs, if it is not found, setup.py will
-    # fallback on distutils.core instead. Don't add a setuptools dependency
-    # or we won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')

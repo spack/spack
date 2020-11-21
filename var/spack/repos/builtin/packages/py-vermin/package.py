@@ -23,5 +23,7 @@ class PyVermin(PythonPackage):
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
-    def test(self):
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
         make('test')

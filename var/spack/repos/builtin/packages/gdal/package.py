@@ -166,7 +166,6 @@ class Gdal(AutotoolsPackage):
     executables = ['^gdal-config$']
 
     import_modules = PythonPackage.import_modules
-    test = PythonPackage.test
 
     @classmethod
     def determine_version(cls, exe):
@@ -556,3 +555,7 @@ class Gdal(AutotoolsPackage):
         # The shared library is not installed correctly on Darwin; fix this
         if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)
+
+    def test(self):
+        if '+python' in self.spec:
+            PythonPackage.test(self)

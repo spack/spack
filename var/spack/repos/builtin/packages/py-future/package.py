@@ -12,6 +12,22 @@ class PyFuture(PythonPackage):
     homepage = "https://python-future.org/"
     url = "https://pypi.io/packages/source/f/future/future-0.18.2.tar.gz"
 
+    # winreg cannot be imported unless on Windows
+    import_modules = [
+        'copyreg', '_thread', 'past', 'past.types', 'past.translation',
+        'past.utils', 'past.builtins', 'reprlib', 'html', 'tkinter',
+        'builtins', 'http', '_dummy_thread', 'queue', 'xmlrpc', 'libfuturize',
+        'libfuturize.fixes', 'future', 'future.moves', 'future.moves.test',
+        'future.moves.urllib', 'future.moves.html', 'future.moves.tkinter',
+        'future.moves.http', 'future.moves.dbm', 'future.moves.xmlrpc',
+        'future.types', 'future.tests', 'future.utils', 'future.builtins',
+        'future.backports', 'future.backports.test', 'future.backports.urllib',
+        'future.backports.html', 'future.backports.http',
+        'future.backports.xmlrpc', 'future.backports.email',
+        'future.backports.email.mime', 'future.standard_library',
+        'libpasteurize', 'libpasteurize.fixes', 'socketserver', '_markupbase'
+    ]
+
     version('0.18.2', sha256='b1bead90b70cf6ec3f0710ae53a525360fa360d306a86583adc6bf83a4db537d')
     version('0.17.1', sha256='67045236dcfd6816dc439556d009594abf643e5eb48992e36beac09c2ca659b8')
     version('0.17.0', sha256='eb6d4df04f1fb538c99f69c9a28b255d1ee4e825d479b9c62fc38c0cf38065a4')
