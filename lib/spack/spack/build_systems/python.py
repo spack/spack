@@ -6,7 +6,7 @@ import inspect
 import os
 import shutil
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 
 from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
