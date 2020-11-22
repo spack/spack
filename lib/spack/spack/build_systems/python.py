@@ -96,8 +96,6 @@ class PythonPackage(PackageBase):
 
     extends('python')
 
-    depends_on('python', type=('build', 'run'))
-
     py_namespace = None
 
     def setup_file(self):

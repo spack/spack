@@ -45,8 +45,6 @@ class PerlPackage(PackageBase):
 
     extends('perl')
 
-    depends_on('perl', type=('build', 'run'))
-
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to
         :py:meth:`~.PerlPackage.configure`. Arguments should not include

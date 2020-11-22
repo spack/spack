@@ -14,7 +14,7 @@ class ThePlatinumSearcher(Package):
 
     version('head')
 
-    extends("go", deptypes='build')
+    extends("go", type='build')
 
     def install(self, spec, prefix):
         env['GOPATH'] = self.stage.source_path + ':' + env['GOPATH']

@@ -31,8 +31,6 @@ class RPackage(PackageBase):
 
     extends('r')
 
-    depends_on('r', type=('build', 'run'))
-
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
         return []

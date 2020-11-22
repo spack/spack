@@ -27,8 +27,6 @@ class RubyPackage(PackageBase):
 
     extends('ruby')
 
-    depends_on('ruby', type=('build', 'run'))
-
     def build(self, spec, prefix):
         """Build a Ruby gem."""
 
