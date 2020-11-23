@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import stat
 
 from six import string_types
@@ -51,10 +50,11 @@ class PackagePrefs(object):
        provider_spec_list.sort(key=kf)
 
     """
-    def __init__(self, pkgname, component, vpkg=None):
+    def __init__(self, pkgname, component, vpkg=None, all=True):
         self.pkgname = pkgname
         self.component = component
         self.vpkg = vpkg
+        self.all = all
 
         self._spec_order = None
 
@@ -67,7 +67,7 @@ class PackagePrefs(object):
         """
         if self._spec_order is None:
             self._spec_order = self._specs_for_pkg(
-                self.pkgname, self.component, self.vpkg)
+                self.pkgname, self.component, self.vpkg, self.all)
         spec_order = self._spec_order
 
         # integer is the index of the first spec in order that satisfies
@@ -115,12 +115,13 @@ class PackagePrefs(object):
         return []
 
     @classmethod
-    def _specs_for_pkg(cls, pkgname, component, vpkg=None):
+    def _specs_for_pkg(cls, pkgname, component, vpkg=None, all=True):
         """Given a sort order specified by the pkgname/component/second_key,
            return a list of CompilerSpecs, VersionLists, or Specs for
            that sorting list.
         """
-        pkglist = cls.order_for_package(pkgname, component, vpkg)
+        pkglist = cls.order_for_package(
+            pkgname, component, vpkg, all)
         spec_type = _spec_type(component)
         return [spec_type(s) for s in pkglist]
 
@@ -158,7 +159,7 @@ def spec_externals(spec):
     """Return a list of external specs (w/external directory path filled in),
        one for each known external installation."""
     # break circular import.
-    from spack.util.module_cmd import get_path_from_module # NOQA: ignore=F401
+    from spack.util.module_cmd import path_from_modules # NOQA: ignore=F401
 
     allpkgs = spack.config.get('packages')
     names = set([spec.name])
@@ -167,24 +168,24 @@ def spec_externals(spec):
     external_specs = []
     for name in names:
         pkg_config = allpkgs.get(name, {})
-        pkg_paths = pkg_config.get('paths', {})
-        pkg_modules = pkg_config.get('modules', {})
-        if (not pkg_paths) and (not pkg_modules):
-            continue
-
-        for external_spec, path in pkg_paths.items():
-            external_spec = spack.spec.Spec(
-                external_spec, external_path=canonicalize_path(path))
+        pkg_externals = pkg_config.get('externals', [])
+        for entry in pkg_externals:
+            spec_str = entry['spec']
+            external_path = entry.get('prefix', None)
+            if external_path:
+                external_path = canonicalize_path(external_path)
+            external_modules = entry.get('modules', None)
+            external_spec = spack.spec.Spec.from_detection(
+                spack.spec.Spec(
+                    spec_str,
+                    external_path=external_path,
+                    external_modules=external_modules
+                ), extra_attributes=entry.get('extra_attributes', {})
+            )
             if external_spec.satisfies(spec):
                 external_specs.append(external_spec)
 
-        for external_spec, module in pkg_modules.items():
-            external_spec = spack.spec.Spec(
-                external_spec, external_module=module)
-            if external_spec.satisfies(spec):
-                external_specs.append(external_spec)
-
-    # defensively copy returned specs
+    # Defensively copy returned specs
     return [s.copy() for s in external_specs]
 
 

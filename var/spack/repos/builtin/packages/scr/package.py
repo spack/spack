@@ -29,6 +29,12 @@ class Scr(CMakePackage):
     depends_on('zlib')
     depends_on('mpi')
 
+    # As of mid-2020, develop requires the "master" branch
+    # of a few component libraries
+    depends_on('axl@master', when="@develop")
+    depends_on('kvtree@master', when="@develop")
+    depends_on('redset@master', when="@develop")
+
     # SCR legacy is anything 2.x.x or earlier
     # SCR components is anything 3.x.x or later
     depends_on('er', when="@3:")
@@ -79,8 +85,6 @@ class Scr(CMakePackage):
             description='Compile time default location for checkpoint cache.')
     variant('cntl_base', default='/tmp',
             description='Compile time default location for control directory.')
-
-    conflicts('platform=bgq')
 
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix

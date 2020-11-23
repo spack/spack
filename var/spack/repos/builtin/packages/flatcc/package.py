@@ -37,6 +37,9 @@ class Flatcc(CMakePackage):
         spec = self.spec
         args = []
 
+        # allow flatcc to be built with more compilers
+        args.append('-DFLATCC_ALLOW_WERROR=OFF')
+
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS=ON')
             args.append('-DFLATCC_INSTALL=ON')

@@ -21,6 +21,8 @@ class MockPackageBase(object):
     Use ``MockPackageMultiRepo.add_package()`` to create new instances.
 
     """
+    virtual = False
+
     def __init__(self, dependencies, dependency_types,
                  conditions=None, versions=None):
         """Instantiate a new MockPackageBase.
@@ -67,6 +69,11 @@ class MockPackageBase(object):
 
         return visited
 
+    def content_hash(self):
+        # Unlike real packages, MockPackage doesn't have a corresponding
+        # package.py file; in that sense, the content_hash is always the same.
+        return self.__class__.__name__
+
 
 class MockPackageMultiRepo(object):
     """Mock package repository, mimicking ``spack.repo.Repo``."""
@@ -77,6 +84,8 @@ class MockPackageMultiRepo(object):
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
             spec = Spec(spec)
+        if spec.name not in self.spec_to_pkg:
+            raise spack.repo.UnknownPackageError(spec.fullname)
         return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):
@@ -85,7 +94,7 @@ class MockPackageMultiRepo(object):
     def exists(self, name):
         return name in self.spec_to_pkg
 
-    def is_virtual(self, name):
+    def is_virtual(self, name, use_index=True):
         return False
 
     def repo_for_pkg(self, name):

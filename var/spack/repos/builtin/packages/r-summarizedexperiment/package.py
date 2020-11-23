@@ -17,6 +17,7 @@ class RSummarizedexperiment(RPackage):
     homepage = "https://bioconductor.org/packages/SummarizedExperiment"
     git      = "https://git.bioconductor.org/packages/SummarizedExperiment.git"
 
+    version('1.18.2', commit='e22fafe')
     version('1.14.1', commit='2c68d99e11c7345e5ed388370822ea48395c64a4')
     version('1.12.0', commit='5f8416864636add121ec1d6737ebb89a42227fd7')
     version('1.10.1', commit='7ad2e991c8285bfc4b2e15b29d94cc86d07f8f2b')

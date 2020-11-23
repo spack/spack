@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class M4(AutotoolsPackage, GNUMirrorPackage):
@@ -17,6 +17,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
+    patch('nvhpc.patch', when='%nvhpc')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
     patch('secure_snprintf.patch', when='os = highsierra')
@@ -32,20 +33,32 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    executables = ['^g?m4$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Output on macOS:
+        #   GNU M4 1.4.6
+        # Output on Linux:
+        #   m4 (GNU M4) 1.4.18
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU M4\)?\s+(\S+)', output)
+        return match.group(1) if match else None
+
     def configure_args(self):
         spec = self.spec
         args = ['--enable-c++']
 
-        if spec.satisfies('%clang') and not spec.satisfies('platform=darwin'):
+        if spec.satisfies('%cce@9:'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
-        if spec.satisfies('%arm') and not spec.satisfies('platform=darwin'):
+        if (spec.satisfies('%clang') or
+            spec.satisfies('%aocc') or
+            spec.satisfies('%arm') or
+            spec.satisfies('%fj')) and not spec.satisfies('platform=darwin'):
             args.append('LDFLAGS=-rtlib=compiler-rt')
 
-        if spec.satisfies('%fj') and not spec.satisfies('platform=darwin'):
-            args.append('LDFLAGS=-rtlib=compiler-rt')
-
-        if spec.satisfies('%intel'):
+        if spec.satisfies('%intel@:18.999'):
             args.append('CFLAGS=-no-gcc')
 
         if '+sigsegv' in spec:
@@ -57,7 +70,20 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         # http://lists.gnu.org/archive/html/bug-m4/2016-09/msg00002.html
         arch = spec.architecture
         if (arch.platform == 'darwin' and arch.os == 'sierra' and
-            '%gcc' in spec):
+                '%gcc' in spec):
             args.append('ac_cv_type_struct_sched_param=yes')
 
         return args
+
+    def test(self):
+        spec_vers = str(self.spec.version)
+        reason = 'test: ensuring m4 version is {0}'.format(spec_vers)
+        self.run_test('m4', '--version', spec_vers, installed=True,
+                      purpose=reason, skip_missing=False)
+
+        reason = 'test: ensuring m4 example succeeds'
+        test_data_dir = self.test_suite.current_test_data_dir
+        hello_file = test_data_dir.join('hello.m4')
+        expected = get_escaped_text_output(test_data_dir.join('hello.out'))
+        self.run_test('m4', hello_file, expected, installed=True,
+                      purpose=reason, skip_missing=False)

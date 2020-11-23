@@ -33,3 +33,8 @@ class Redis(MakefilePackage):
             'PREFIX={0}'.format(self.spec.prefix),
             'install'
         ]
+
+    @run_after('install')
+    def install_conf(self):
+        mkdirp(self.prefix.conf)
+        install('redis.conf', self.prefix.conf)

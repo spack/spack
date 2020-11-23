@@ -15,6 +15,9 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.11.0', sha256='6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336')
+    version('0.10.0', sha256='5944927774709b5f52ddf64a0e825d9b0f24c9dea890b5504b87a8576d217cf6')
+    version('0.9.0',  sha256='0e1eb408a937c2843bdaaed915d4d7e2ea763b98c31e7b849a96a74758d66a21')
     version('0.8.0', sha256='45bc3cefb453d19c0cb289f03692fba600a39045846568d258e4b896ca19ca0d')
     version('0.7.1', sha256='a35e555a353feed6b7b814ae83d05362356f9ee33ffa75d7dfb7e2fe86c21294')
     version('0.7.0', sha256='69267a3aaacaedd9896fd90cfe17aef266cba4fb28c77f8123d95a31ce739a7b')
@@ -92,9 +95,13 @@ class FluxSched(AutotoolsPackage):
             bash('./autogen.sh')
 
     def configure_args(self):
+        args = []
+        if self.spec.satisfies('@0.9.0:'):
+            args.append('CXXFLAGS=-Wno-maybe-uninitialized')
         # flux-sched's ax_boost is sometimes weird about non-system locations
         # explicitly setting the path guarantees success
-        return ['--with-boost={0}'.format(self.spec['boost'].prefix)]
+        args.append('--with-boost={0}'.format(self.spec['boost'].prefix))
+        return args
 
     @property
     def lua_version(self):

@@ -32,12 +32,14 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
+    'fish': 'set -gx {0} {1};\n'
 }
 
 
 _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
+    'fish': 'set -e {0};\n',
 }
 
 
@@ -506,16 +508,16 @@ class EnvironmentModifications(object):
 
         for envmod in reversed(self.env_modifications):
             if type(envmod) == SetEnv:
-                tty.warn("Reversing `Set` environment operation may lose "
-                         "original value")
+                tty.debug("Reversing `Set` environment operation may lose "
+                          "original value")
                 rev.unset(envmod.name)
             elif type(envmod) == AppendPath:
                 rev.remove_path(envmod.name, envmod.value)
             elif type(envmod) == PrependPath:
                 rev.remove_path(envmod.name, envmod.value)
             elif type(envmod) == SetPath:
-                tty.warn("Reversing `SetPath` environment operation may lose "
-                         "original value")
+                tty.debug("Reversing `SetPath` environment operation may lose "
+                          "original value")
                 rev.unset(envmod.name)
             elif type(envmod) == AppendFlagsEnv:
                 rev.remove_flags(envmod.name, envmod.value)

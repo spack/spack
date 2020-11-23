@@ -30,7 +30,7 @@ class Cantera(SConsPackage):
     depends_on('googletest+gmock', when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
     depends_on('boost')
-    depends_on('sundials@:3.1.2', when='+sundials')  # must be compiled with -fPIC
+    depends_on('sundials@:3.1.2+lapack', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
 
@@ -146,7 +146,7 @@ class Cantera(SConsPackage):
 
         return args
 
-    def test(self):
+    def build_test(self):
         if '+python' in self.spec:
             # Tests will always fail if Python dependencies aren't built
             # In addition, 3 of the tests fail when run in parallel

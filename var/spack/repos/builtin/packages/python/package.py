@@ -31,11 +31,17 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21', preferred=True)
+    version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
+    version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
-    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a', preferred=True)
+    version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
+    version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
+    version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
     version('3.7.6',  sha256='aeee681c235ad336af116f08ab6563361a0c81c537072c1b309d6e4050aa2114')
     version('3.7.5',  sha256='8ecc681ea0600bbfb366f2b173f727b205bb825d93d2f0b286bc4e58d37693da')
     version('3.7.4',  sha256='d63e63e14e6d29e17490abbe6f7d17afb3db182dbd801229f14e55f4157c4ba3')
@@ -43,6 +49,10 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
+    version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
+    version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
+    version('3.6.9',  sha256='47fc92a1dcb946b9ed0abc311d3767b7215c54e655b17fd1d3f9b538195525aa')
     version('3.6.8',  sha256='7f5b1f08b3b0a595387ef6c64c85b1b13b38abef0dd871835ee923262e4f32f0')
     version('3.6.7',  sha256='b7c36f7ed8f7143b2c46153b7332db2227669f583ea0cce753facf549d1a4239')
     version('3.6.6',  sha256='7d56dadf6c7d92a238702389e80cfe66fbfae73e584189ed6f89c75bbf3eda58')
@@ -52,7 +62,14 @@ class Python(AutotoolsPackage):
     version('3.6.2',  sha256='7919489310a5f17f7acbab64d731e46dca0702874840dadce8bd4b2b3b8e7a82')
     version('3.6.1',  sha256='aa50b0143df7c89ce91be020fe41382613a817354b33acdc6641b44f8ced3828')
     version('3.6.0',  sha256='aa472515800d25a3739833f76ca3735d9f4b2fe77c3cb21f69275e0cce30cb2b')
+    version('3.5.10', sha256='3496a0daf51913718a6f10e3eda51fa43634cb6151cb096f312d48bdbeff7d3a')
+    version('3.5.9',  sha256='67a1d4fc6e4540d6a092cadc488e533afa961b3c9becc74dc3d6b55cb56e0cc1')
+    version('3.5.8',  sha256='18c88dfd260147bc7247e6356010e5d4916dfbfc480f6434917f88e61228177a')
     version('3.5.7',  sha256='542d94920a2a06a471a73b51614805ad65366af98145b0369bc374cf248b521b')
+    version('3.5.6',  sha256='30d2ff093988e74283e1abfee823292c6b59590796b9827e95ba4940b27d26f8')
+    version('3.5.5',  sha256='2f988db33913dcef17552fd1447b41afb89dbc26e3cdfc068ea6c62013a3a2a5')
+    version('3.5.4',  sha256='6ed87a8b6c758cc3299a8b433e8a9a9122054ad5bc8aad43299cff3a53d8ca44')
+    version('3.5.3',  sha256='d8890b84d773cd7059e597dbefa510340de8336ec9b9e9032bf030f19291565a')
     version('3.5.2',  sha256='1524b840e42cf3b909e8f8df67c1724012c7dc7f9d076d4feef2d3eff031e8a0')
     version('3.5.1',  sha256='687e067d9f391da645423c7eda8205bae9d35edc0c76ef5218dcbe4cc770d0d7')
     version('3.5.0',  sha256='584e3d5a02692ca52fce505e68ecd77248a6f2c99adf9db144a39087336b0fe0')
@@ -122,7 +139,7 @@ class Python(AutotoolsPackage):
     variant('pyexpat',  default=True,  description='Build pyexpat module')
     variant('ctypes',   default=True,  description='Build ctypes module')
     variant('tkinter',  default=False, description='Build tkinter module')
-    variant('uuid',     default=False, description='Build uuid module')
+    variant('uuid',     default=True,  description='Build uuid module')
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
@@ -171,13 +188,17 @@ class Python(AutotoolsPackage):
     patch('python-2.7.17+-distutils-C++.patch', when='@2.7.17:2.7.18')
     patch('python-3.6.8-distutils-C++.patch', when='@3.6.8,3.7.2')
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
-    patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:3.8')
+    patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
 
     patch('tkinter.patch', when='@:2.8,3.3:3.7 platform=darwin')
 
     # Ensure that distutils chooses correct compiler option for RPATH on cray:
     patch('cray-rpath-2.3.patch', when='@2.3:3.0.1 platform=cray')
     patch('cray-rpath-3.1.patch', when='@3.1:3.99  platform=cray')
+
+    # Ensure that distutils chooses correct compiler option for RPATH on fj:
+    patch('fj-rpath-2.3.patch', when='@2.3:3.0.1 %fj')
+    patch('fj-rpath-3.1.patch', when='@3.1:3.99  %fj')
 
     # Fixes an alignment problem with more aggressive optimization in gcc8
     # https://github.com/python/cpython/commit/0b91f8a668201fc58fa732b8acc496caedfdbae0
@@ -203,6 +224,8 @@ class Python(AutotoolsPackage):
     conflicts('+tix', when='~tkinter',
               msg='python+tix requires python+tix+tkinter')
 
+    conflicts('%nvhpc')
+
     _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
     _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
     _distutil_vars = None
@@ -212,6 +235,75 @@ class Python(AutotoolsPackage):
 
     # An in-source build with --enable-optimizations fails for python@3.X
     build_directory = 'spack-build'
+
+    executables = [r'^python[\d.]*[mw]?$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        # Newer versions of Python support `--version`,
+        # but older versions only support `-V`
+        # Python 2 sends to STDERR, while Python 3 sends to STDOUT
+        # Output looks like:
+        #   Python 3.7.7
+        output = Executable(exe)('-V', output=str, error=str)
+        match = re.search(r'Python\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        python = Executable(exes[0])
+
+        variants = ''
+        for module in ['readline', 'sqlite3', 'dbm', 'nis',
+                       'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
+            try:
+                python('-c', 'import ' + module, error=os.devnull)
+                variants += '+' + module
+            except ProcessError:
+                variants += '~' + module
+
+        # Some variants enable multiple modules
+        try:
+            python('-c', 'import ssl', error=os.devnull)
+            python('-c', 'import hashlib', error=os.devnull)
+            variants += '+ssl'
+        except ProcessError:
+            variants += '~ssl'
+
+        try:
+            python('-c', 'import xml.parsers.expat', error=os.devnull)
+            python('-c', 'import xml.etree.ElementTree', error=os.devnull)
+            variants += '+pyexpat'
+        except ProcessError:
+            variants += '~pyexpat'
+
+        # Some modules changed names in Python 3
+        if Version(version_str) >= Version('3'):
+            try:
+                python('-c', 'import tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import tkinter.tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+        else:
+            try:
+                python('-c', 'import Tkinter', error=os.devnull)
+                variants += '+tkinter'
+            except ProcessError:
+                variants += '~tkinter'
+
+            try:
+                python('-c', 'import Tix', error=os.devnull)
+                variants += '+tix'
+            except ProcessError:
+                variants += '~tix'
+
+        return variants
 
     def url_for_version(self, version):
         url = "https://www.python.org/ftp/python/{0}/Python-{1}.tgz"
@@ -273,7 +365,7 @@ class Python(AutotoolsPackage):
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
         # with a warning message about this potentially erroneous behavior.
-        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:3.8.3'):
+        if not spec.satisfies('@2.7.8:2.7.18,3.6.8,3.7.2:'):
             tty.warn(('Python v{0} does not have the C++ "distutils" patch; '
                       'errors may occur when installing Python modules w/ '
                       'mixed C/C++ source files.').format(self.version))
@@ -595,6 +687,13 @@ class Python(AutotoolsPackage):
             if '+uuid' in spec:
                 self.command('-c', 'import uuid')
 
+            # Ensure that tix module works
+            if '+tix' in spec:
+                if spec.satisfies('@3:'):
+                    self.command('-c', 'import tkinter.tix')
+                else:
+                    self.command('-c', 'import Tix')
+
     # ========================================================================
     # Set up environment to make install easy for python extensions.
     # ========================================================================
@@ -815,7 +914,8 @@ class Python(AutotoolsPackage):
         return join_path(self.site_packages_dir, "easy-install.pth")
 
     def setup_run_environment(self, env):
-        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
+        env.prepend_path('CPATH', os.pathsep.join(
+            self.spec['python'].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
@@ -832,11 +932,14 @@ class Python(AutotoolsPackage):
             env.prepend_path('PATH', path)
 
         python_paths = []
-        for d in dependent_spec.traverse(
-                deptype=('build', 'run', 'test')):
+        for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
-                python_paths.append(join_path(d.prefix,
-                                              self.site_packages_dir))
+                # Python libraries may be installed in lib or lib64
+                # See issues #18520 and #17126
+                for lib in ['lib', 'lib64']:
+                    python_paths.append(join_path(
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
+                        'site-packages'))
 
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
@@ -845,8 +948,10 @@ class Python(AutotoolsPackage):
         # For run time environment set only the path for
         # dependent_spec and prepend it to PYTHONPATH
         if dependent_spec.package.extends(self.spec):
-            env.prepend_path('PYTHONPATH', join_path(
-                dependent_spec.prefix, self.site_packages_dir))
+            for lib in ['lib', 'lib64']:
+                env.prepend_path('PYTHONPATH', join_path(
+                    dependent_spec.prefix, lib,
+                    'python' + str(self.version.up_to(2)), 'site-packages'))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
@@ -1022,3 +1127,21 @@ class Python(AutotoolsPackage):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def test(self):
+        # do not use self.command because we are also testing the run env
+        exe = self.spec['python'].command.name
+
+        # test hello world
+        msg = 'hello world!'
+        reason = 'test: running {0}'.format(msg)
+        options = ['-c', 'print("{0}")'.format(msg)]
+        self.run_test(exe, options=options, expected=[msg], installed=True,
+                      purpose=reason)
+
+        # checks import works and executable comes from the spec prefix
+        reason = 'test: checking import and executable'
+        print_str = self.print_string('sys.executable')
+        options = ['-c', 'import sys; {0}'.format(print_str)]
+        self.run_test(exe, options=options, expected=[self.spec.prefix],
+                      installed=True, purpose=reason)

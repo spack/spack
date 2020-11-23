@@ -15,7 +15,10 @@ class Ffb(MakefilePackage):
     version('8.1', sha256='1ad008c909152b6c27668bafbad820da3e6ec3309c7e858ddb785f0a3d6e43ae')
 
     patch('revocap_refiner.patch')
-    patch('fj_compiler.patch', when='%fj')
+    patch('revocap_refiner-size_t.patch')
+    patch('fortran-format.patch')
+    patch('xvx.patch')
+    patch('gffv3tr.patch')
 
     depends_on('mpi')
     depends_on('blas')
@@ -79,7 +82,7 @@ class Ffb(MakefilePackage):
             m.write('#!/bin/csh -f\n')
             m.write('setenv LES3DHOME {0}\n'.format(workdir))
             m.write('cd {0}\n'.format(dd_mpi_dir))
-            m.write('make lib\n')
+            m.write('make lib FCOM={0}\n'.format(spec['mpi'].mpifc))
         os.chmod(makeall, 0o755)
 
         makeall = join_path('.',  'Makeall.les')
@@ -143,16 +146,16 @@ class Ffb(MakefilePackage):
         m.filter(r'LIBS = -lfort -lgf2 -ldd_mpi -lmpi_f77',
                  'LIBS = -lfort -lgf2  -ldd_mpi')
 
+        editfile = join_path('util', 'xvx2gf', 'FILES')
+        cxx_fortran_flags = []
         if spec.satisfies('%gcc'):
-            editfile = join_path('util', 'xvx2gf', 'FILES')
-            m = FileFilter(editfile)
-            m.filter(r'LIBS = -lgf2 -lz -lifcore -limf -ldl',
-                     'LIBS = -lgf2 -lz -ldl')
+            cxx_fortran_flags.append('-lgfortran')
+        elif spec.satisfies('%intel'):
+            cxx_fortran_flags.expand(['-lifcore', '-limf'])
         elif spec.satisfies('%fj'):
-            editfile = join_path('util', 'xvx2gf', 'FILES')
-            m = FileFilter(editfile)
-            m.filter(r'LIBS = -lgf2 -lz -lifcore -limf -ldl',
-                     'LIBS = -lgf2 -lz -ldl -linkfortran')
+            cxx_fortran_flags.append('--linkfortran')
+        m = FileFilter(editfile)
+        m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
 
     def build(self, spec, prefix):
         for m in [join_path('make',  'Makeall'),

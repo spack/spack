@@ -28,5 +28,9 @@ class OpenIscsi(MakefilePackage):
     def setup_build_environment(self, env):
         env.set('CFLAGS', '-DNO_SYSTEMD')
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.usr.lib64)
+
     def install(self, spec, prefix):
         make('install', 'DESTDIR={0}'.format(prefix))

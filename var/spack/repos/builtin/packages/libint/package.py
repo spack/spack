@@ -13,6 +13,10 @@ TUNE_VARIANTS = (
     'cp2k-lmax-5',
     'cp2k-lmax-6',
     'cp2k-lmax-7',
+    'molgw-lmax-4',
+    'molgw-lmax-5',
+    'molgw-lmax-6',
+    'molgw-lmax-7',
 )
 
 
@@ -74,10 +78,10 @@ class Libint(AutotoolsPackage):
     @property
     def optflags(self):
         flags = '-O2'
-        # Optimizations for the Intel compiler, suggested by CP2K
-        # See ../libxc/package.py for rationale and doc.
-        if '%intel' in self.spec:
-            flags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
+
+        # microarchitecture-specific optimization flags should be controlled
+        # by Spack, otherwise we may end up with contradictory or invalid flags
+        # see https://github.com/spack/spack/issues/17794
 
         return flags
 
@@ -95,18 +99,16 @@ class Libint(AutotoolsPackage):
 
         config_args = ['--enable-shared']
 
-        optflags = self.optflags
-
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
             config_args.extend([
-                '--with-cc-optflags={0}'.format(optflags),
-                '--with-cxx-optflags={0}'.format(optflags)
+                '--with-cc-optflags={0}'.format(self.optflags),
+                '--with-cxx-optflags={0}'.format(self.optflags)
             ])
         else:
             config_args.extend([
-                '--with-cxx-optflags={0}'.format(optflags),
-                '--with-cxxgen-optflags={0}'.format(optflags)
+                '--with-cxx-optflags={0}'.format(self.optflags),
+                '--with-cxxgen-optflags={0}'.format(self.optflags)
             ])
 
         # Options required by CP2K, removed in libint 2
@@ -131,6 +133,25 @@ class Libint(AutotoolsPackage):
                     '--with-eri2-max-am={0},{1}'.format(lmax + 2, lmax + 1),
                     '--with-eri3-max-am={0},{1}'.format(lmax + 2, lmax + 1),
                     '--with-opt-am=3',
+                    # keep code-size at an acceptable limit,
+                    # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
+                    '--enable-generic-code',
+                    '--disable-unrolling',
+                ]
+            if tune_value.startswith('molgw'):
+                lmax = int(tune_value.split('-lmax-')[1])
+                config_args += [
+                    '--enable-1body=1',
+                    '--enable-eri=0',
+                    '--enable-eri2=0',
+                    '--enable-eri3=0',
+                    '--with-multipole-max-order=0',
+                    '--with-max-am={0}'.format(lmax),
+                    '--with-eri-max-am={0}'.format(lmax),
+                    '--with-eri2-max-am={0}'.format(lmax),
+                    '--with-eri3-max-am={0}'.format(lmax),
+                    '--with-opt-am=2',
+                    '--enable-contracted-ints',
                     # keep code-size at an acceptable limit,
                     # cf. https://github.com/evaleev/libint/wiki#program-specific-notes:
                     '--enable-generic-code',
@@ -172,3 +193,10 @@ class Libint(AutotoolsPackage):
             configure(*options)
             make()
             make('install')
+
+    def patch(self):
+        # Use Fortran compiler to link the Fortran example, not the C++
+        # compiler
+        if '+fortran' in self.spec:
+            filter_file('$(CXX) $(CXXFLAGS)', '$(FC) $(FCFLAGS)',
+                        'export/fortran/Makefile', string=True)

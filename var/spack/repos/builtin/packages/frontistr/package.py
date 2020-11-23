@@ -15,6 +15,7 @@ class Frontistr(CMakePackage):
     git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
     maintainers = ['hiroshi.okuda', 'kgoto', 'morita', 'inagaki', 'michioga']
 
+    version('5.1', tag='v5.1')
     version('5.0', tag='v5.0')
     version('master', tag='master')
 

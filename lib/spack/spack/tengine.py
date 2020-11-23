@@ -68,7 +68,8 @@ def make_environment(dirs=None):
     """Returns an configured environment for template rendering."""
     if dirs is None:
         # Default directories where to search for templates
-        builtins = spack.config.get('config:template_dirs')
+        builtins = spack.config.get('config:template_dirs',
+                                    ['$spack/share/spack/templates'])
         extensions = spack.extensions.get_template_dirs()
         dirs = [canonicalize_path(d)
                 for d in itertools.chain(builtins, extensions)]
@@ -80,7 +81,9 @@ def make_environment(dirs=None):
     # Loader for the templates
     loader = jinja2.FileSystemLoader(dirs)
     # Environment of the template engine
-    env = jinja2.Environment(loader=loader, trim_blocks=True)
+    env = jinja2.Environment(
+        loader=loader, trim_blocks=True, lstrip_blocks=True
+    )
     # Custom filters
     _set_filters(env)
     return env

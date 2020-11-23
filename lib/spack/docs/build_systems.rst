@@ -29,6 +29,7 @@ on these ideas for each distinct build system that Spack supports:
    :maxdepth: 1
    :caption: Make-incompatible
 
+   build_systems/mavenpackage
    build_systems/sconspackage
    build_systems/wafpackage
 

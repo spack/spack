@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
-
 
 class Minigmg(Package):
     """miniGMG is a compact benchmark for understanding the performance
@@ -43,6 +40,4 @@ class Minigmg(Package):
         mkdir(prefix.bin)
         install('run.miniGMG', prefix.bin)
         mkdir(prefix.jobs)
-        files = glob.glob('job*')
-        for f in files:
-            install(f, prefix.jobs)
+        install('job*', prefix.jobs)

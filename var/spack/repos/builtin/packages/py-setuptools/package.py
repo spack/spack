@@ -11,7 +11,7 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://github.com/pypa/setuptools"
-    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-41.0.1.zip"
+    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-49.2.0.zip"
 
     import_modules = [
         'setuptools', 'pkg_resources', 'setuptools._vendor',
@@ -21,6 +21,10 @@ class PySetuptools(PythonPackage):
         'easy_install'
     ]
 
+    version('50.3.2', sha256='ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c')
+    version('50.1.0', sha256='4a7708dafd2d360ce5e2ac7577374da9fb65fc867bc4cdaf461f9f834dfa6ac3')
+    version('49.6.0', sha256='46bd862894ed22c2edff033c758c2dc026324788d758e96788e8f7c11f4e9707')
+    version('49.2.0', sha256='afe9e81fee0270d3f60d52608549cc8ec4c46dada8c95640c1a00160f577acf2')
     version('46.1.3', sha256='795e0475ba6cd7fa082b1ee6e90d552209995627a2a227a47c6ea93282f4bfb1')
     version('44.1.0', sha256='794a96b0c1dc6f182c36b72ab70d7e90f1d59f7a132e6919bb37b4fd4d424aca')
     version('41.4.0', sha256='7eae782ccf36b790c21bde7d86a4f303a441cd77036b25c559a602cf5186ce4d')
@@ -67,6 +71,6 @@ class PySetuptools(PythonPackage):
 
         return url
 
-    def test(self):
+    def build_test(self):
         # Unit tests require pytest, creating a circular dependency
         pass

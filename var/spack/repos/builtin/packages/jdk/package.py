@@ -3,11 +3,11 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.util.prefix import Prefix
-from spack import *
+import os
+import re
 
 import llnl.util.tty as tty
-import os
+from spack.util.prefix import Prefix
 
 
 class Jdk(Package):
@@ -79,6 +79,19 @@ class Jdk(Package):
     #    can symlink all *.jar files to `prefix.lib.ext`
     extendable = True
 
+    executables = ['^java$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-version', output=str, error=str)
+
+        # Make sure this is actually Oracle JDK, not OpenJDK
+        if 'openjdk' in output:
+            return None
+
+        match = re.search(r'\(build (\S+)\)', output)
+        return match.group(1).replace('+', '_') if match else None
+
     @property
     def home(self):
         """Most of the time, ``JAVA_HOME`` is simply ``spec['java'].prefix``.
@@ -142,11 +155,13 @@ Spack will think it is a variant. Add JDK as an external package by running:
 and adding entries for each installation:
 
     packages:
-        jdk:
-            paths:
-                jdk@10.0.1_10:    /path/to/jdk/Home
-                jdk@1.7.0_45-b18: /path/to/jdk/Home
-            buildable: False""".format(self.homepage)
+      jdk:
+        buildable: False
+        externals:
+        - spec: jdk@10.0.1_10
+          prefix: /path/to/jdk/Home
+        - spec: jdk@1.7.0_45-b18
+          prefix: /path/to/jdk/Home""".format(self.homepage)
 
             tty.die(msg)
 

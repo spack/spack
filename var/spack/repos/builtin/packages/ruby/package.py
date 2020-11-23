@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Ruby(AutotoolsPackage):
@@ -54,6 +54,14 @@ class Ruby(AutotoolsPackage):
         expand=False
     )
 
+    executables = ['^ruby$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'ruby ([\d.]+)', output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         url = "http://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
@@ -92,8 +100,9 @@ class Ruby(AutotoolsPackage):
             gem('install', '<gem-name>.gem')
         """
         # Ruby extension builds have global ruby and gem functions
-        module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
-        module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+        module.ruby = Executable(self.prefix.bin.ruby)
+        module.gem  = Executable(self.prefix.bin.gem)
+        module.rake = Executable(self.prefix.bin.rake)
 
     @run_after('install')
     def post_install(self):
@@ -114,3 +123,14 @@ class Ruby(AutotoolsPackage):
                                             'rubygems',
                                             'ssl_certs')
             install(rubygems_updated_cert_path, rubygems_certs_path)
+
+        rbconfig = find(self.prefix, 'rbconfig.rb')[0]
+        filter_file(r'^(\s*CONFIG\["CXX"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cxx),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)
+        filter_file(r'^(\s*CONFIG\["MJIT_CC"\]\s*=\s*).*',
+                    r'\1"{0}"'.format(self.compiler.cc),
+                    rbconfig)

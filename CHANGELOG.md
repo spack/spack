@@ -1,4 +1,272 @@
-# v0.14.2 (2019-04-15)
+# v0.16.0 (2020-11-18)
+
+`v0.16.0` is a major feature release.
+
+## Major features in this release
+
+1. **New concretizer (experimental)** Our new backtracking concretizer is
+   now in Spack as an experimental feature. You will need to install
+   `clingo@master+python` and set `concretizer: clingo` in `config.yaml`
+   to use it. The original concretizer is not exhaustive and is not
+   guaranteed to find a solution if one exists. We encourage you to use
+   the new concretizer and to report any bugs you find with it. We
+   anticipate making the new concretizer the default and including all
+   required dependencies for it in Spack `v0.17`. For more details, see
+   #19501.
+
+2. **spack test (experimental)** Users can add `test()` methods to their
+   packages to run smoke tests on installations with the new `spack test`
+   command (the old `spack test` is now `spack unit-test`). `spack test`
+   is environment-aware, so you can `spack install` an environment and
+   `spack test run` smoke tests on all of its packages. Historical test
+   logs can be perused with `spack test results`. Generic smoke tests for
+   MPI implementations, C, C++, and Fortran compilers as well as specific
+   smoke tests for 18 packages. This is marked experimental because the
+   test API (`self.run_test()`) is likely to be change, but we encourage
+   users to upstream tests, and we will maintain and refactor any that
+   are added to mainline packages (#15702).
+
+3. **spack develop** New `spack develop` command allows you to develop
+   several packages at once within a Spack environment. Running
+   `spack develop foo@v1` and `spack develop bar@v2` will check
+    out specific versions of `foo` and `bar` into subdirectories, which you
+    can then build incrementally with `spack install ` (#15256).
+
+4. **More parallelism** Spack previously installed the dependencies of a
+   _single_ spec in parallel. Entire environments can now be installed in
+   parallel, greatly accelerating builds of large environments. get
+   parallelism from individual specs. Spack now parallelizes entire
+   environment builds (#18131).
+
+5. **Customizable base images for spack containerize**
+    `spack containerize` previously only output a `Dockerfile` based
+    on `ubuntu`. You may now specify any base image of your choosing (#15028).
+
+6. **more external finding** `spack external find` was added in `v0.15`,
+   but only `cmake` had support. `spack external find` can now find
+   `bison`, `cuda`, `findutils`, `flex`, `git`, `lustre` `m4`, `mpich`,
+   `mvapich2`, `ncurses`, `openmpi`, `perl`, `spectrum-mpi`, `tar`, and
+   `texinfo` on your system and add them automatically to
+   `packages.yaml`.
+
+7. **Support aocc, nvhpc, and oneapi compilers** We are aggressively
+   pursuing support for the newest vendor compilers, especially those for
+   the U.S. exascale and pre-exascale systems. Compiler classes and
+   auto-detection for `aocc`, `nvhpc`, `oneapi` are now in Spack (#19345,
+   #19294, #19330).
+
+## Additional new features of note
+
+* New `spack mark` command can be used to designate packages as explicitly
+  installed, so that `spack gc` will not garbage-collect them (#16662).
+* `install_tree` can be customized with Spack's projection format (#18341)
+* `sbang` now lives in the `install_tree` so that all users can access it (#11598)
+* `csh` and `tcsh` users no longer need to set `SPACK_ROOT` before
+  sourcing `setup-env.csh` (#18225)
+* Spec syntax now supports `variant=*` syntax for finding any package
+  that has a particular variant (#19381).
+* Spack respects `SPACK_GNUPGHOME` variable for custom GPG directories (#17139)
+* Spack now recognizes Graviton chips
+
+## Major refactors
+
+* Use spawn instead of fork on Python >= 3.8 on macOS (#18205)
+* Use indexes for public build caches (#19101, #19117, #19132, #19141,  #19209)
+* `sbang` is an external package now (https://github.com/spack/sbang, #19582)
+* `archspec` is an external package now (https://github.com/archspec/archspec, #19600)
+
+## Deprecations and Removals
+
+* `spack bootstrap` was deprecated in v0.14.0, and has now been removed.
+* `spack setup` is deprecated as of v0.16.0.
+* What was `spack test` is now called `spack unit-test`. `spack test` is
+  now the smoke testing feature in (2) above.
+
+## Bugfixes
+
+Some of the most notable bugfixes in this release include:
+
+* Better warning messages for deprecated syntax in `packages.yaml` (#18013)
+* `buildcache list --allarch` now works properly (#17827)
+* Many fixes and tests for buildcaches and binary relcoation (#15687,
+  *#17455, #17418, #17455, #15687, #18110)
+
+## Package Improvements
+
+Spack now has 5050 total packages, 720 of which were added since `v0.15`.
+
+* ROCm packages (`hip`, `aomp`, more) added by AMD (#19957, #19832, others)
+* Many improvements for ARM support
+* `llvm-flang`, `flang`, and `f18` removed, as `llvm` has real `flang`
+  support since Flang was merged to LLVM mainline
+* Emerging support for `spack external find` and `spack test` in packages.
+
+## Infrastructure
+
+* Major infrastructure improvements to pipelines on `gitlab.spack.io`
+* Support for testing PRs from forks (#19248) is being enabled for all
+  forks to enable rolling, up-to-date binary builds on `develop`
+
+
+# v0.15.4 (2020-08-12)
+
+This release contains one feature addition:
+
+* Users can set `SPACK_GNUPGHOME` to override Spack's GPG path (#17139)
+
+Several bugfixes for CUDA, binary packaging, and `spack -V`:
+
+* CUDA package's `.libs` method searches for `libcudart` instead of `libcuda` (#18000)
+* Don't set `CUDAHOSTCXX` in environments that contain CUDA (#17826)
+* `buildcache create`: `NoOverwriteException` is a warning, not an error (#17832)
+* Fix `spack buildcache list --allarch` (#17884)
+* `spack -V` works with `releases/latest` tag and shallow clones (#17884)
+
+And fixes for GitHub Actions and tests to ensure that CI passes on the
+release branch (#15687, #17279, #17328, #17377, #17732).
+
+# v0.15.3 (2020-07-28)
+
+This release contains the following bugfixes:
+
+* Fix handling of relative view paths (#17721)
+* Fixes for binary relocation (#17418, #17455)
+* Fix redundant printing of error messages in build environment (#17709)
+
+It also adds a support script for Spack tutorials:
+
+* Add a tutorial setup script to share/spack (#17705, #17722)
+
+# v0.15.2 (2020-07-23)
+
+This minor release includes two new features:
+
+* Spack install verbosity is decreased, and more debug levels are added (#17546)
+* The $spack/share/spack/keys directory contains public keys that may be optionally trusted for public binary mirrors (#17684)
+
+This release also includes several important fixes:
+
+* MPICC and related variables are now cleand in the build environment (#17450)
+* LLVM flang only builds CUDA offload components when +cuda (#17466)
+* CI pipelines no longer upload user environments that can contain secrets to the internet (#17545)
+* CI pipelines add bootstrapped compilers to the compiler config (#17536)
+* `spack buildcache list` does not exit on first failure and lists later mirrors (#17565)
+* Apple's "gcc" executable that is an apple-clang compiler does not generate a gcc compiler config (#17589)
+* Mixed compiler toolchains are merged more naturally across different compiler suffixes (#17590)
+* Cray Shasta platforms detect the OS properly (#17467)
+* Additional more minor fixes.
+
+# v0.15.1 (2020-07-10)
+
+This minor release includes several important fixes:
+
+* Fix shell support on Cray (#17386)
+* Fix use of externals installed with other Spack instances (#16954)
+* Fix gcc+binutils build (#9024)
+* Fixes for usage of intel-mpi (#17378 and #17382)
+* Fixes to Autotools config.guess detection (#17333 and #17356)
+* Update `spack install` message to prompt user when an environment is not
+  explicitly activated (#17454)
+
+This release also adds a mirror for all sources that are
+fetched in Spack (#17077). It is expected to be useful when the
+official website for a Spack package is unavailable.
+
+# v0.15.0 (2020-06-28)
+
+`v0.15.0` is a major feature release.
+
+## Major Features in this release
+
+1. **Cray support** Spack will now work properly on Cray "Cluster"
+systems (non XC systems) and after a `module purge` command on Cray
+systems. See #12989
+
+2. **Virtual package configuration** Virtual packages are allowed in
+packages.yaml configuration. This allows users to specify a virtual
+package as non-buildable without needing to specify for each
+implementation. See #14934
+
+3. **New config subcommands** This release adds `spack config add` and
+`spack config remove` commands to add to and remove from yaml
+configuration files from the CLI. See #13920
+
+4. **Environment activation** Anonymous environments are **no longer**
+automatically activated in the current working directory. To activate
+an environment from a `spack.yaml` file in the current directory, use
+the `spack env activate .` command. This removes a concern that users
+were too easily polluting their anonymous environments with accidental
+installations. See #17258
+
+5. **Apple clang compiler** The clang compiler and the apple-clang
+compiler are now separate compilers in Spack. This allows Spack to
+improve support for the apple-clang compiler. See #17110
+
+6. **Finding external packages** Spack packages can now support an API
+for finding external installations. This allows the `spack external
+find` command to automatically add installations of those packages to
+the user's configuration. See #15158
+
+
+## Additional new features of note
+
+* support for using Spack with the fish shell (#9279)
+* `spack load --first` option to load first match (instead of prompting user) (#15622)
+* support the Cray cce compiler both new and classic versions (#17256, #12989)
+* `spack dev-build` command:
+  * supports stopping before a specified phase (#14699)
+  * supports automatically launching a shell in the build environment (#14887)
+* `spack install --fail-fast` allows builds to fail at the first error (rather than best-effort) (#15295)
+* environments: SpecList references can be dereferenced as compiler or dependency constraints (#15245)
+* `spack view` command: new support for a copy/relocate view type (#16480)
+* ci pipelines: see documentation for several improvements
+* `spack mirror -a` command now supports excluding packages (#14154)
+* `spack buildcache create` is now environment-aware (#16580)
+* module generation: more flexible format for specifying naming schemes (#16629)
+* lmod module generation: packages can be configured as core specs for lmod hierarchy (#16517)
+
+## Deprecations and Removals
+
+The following commands were deprecated in v0.13.0, and have now been removed:
+
+* `spack configure`
+* `spack build`
+* `spack diy`
+
+The following commands were deprecated in v0.14.0, and will be removed in the next major release:
+
+* `spack bootstrap`
+
+## Bugfixes
+
+Some of the most notable bugfixes in this release include:
+
+* Spack environments can now contain the string `-h` (#15429)
+* The `spack install` gracefully handles being backgrounded (#15723, #14682)
+* Spack uses `-isystem` instead of `-I` in cases that the underlying build system does as well (#16077)
+* Spack no longer prints any specs that cannot be safely copied into a Spack command (#16462)
+* Incomplete Spack environments containing python no longer cause problems (#16473)
+* Several improvements to binary package relocation
+
+## Package Improvements
+
+The Spack project is constantly engaged in routine maintenance,
+bugfixes, and improvements for the package ecosystem. Of particular
+note in this release are the following:
+
+* Spack now contains 4339 packages. There are 430 newly supported packages in v0.15.0
+* GCC now builds properly on ARM architectures (#17280)
+* Python: patched to support compiling mixed C/C++ python modules through distutils (#16856)
+* improvements to pytorch and py-tensorflow packages
+* improvements to major MPI implementations: mvapich2, mpich, openmpi, and others
+
+## Spack Project Management:
+
+* Much of the Spack CI infrastructure has moved from Travis to GitHub Actions (#16610, #14220, #16345)
+* All merges to the `develop` branch run E4S CI pipeline (#16338)
+* New `spack debug report` command makes reporting bugs easier (#15834)
+
+# v0.14.2 (2020-04-15)
 
 This is a minor release on the `0.14` series. It includes performance
 improvements and bug fixes:
@@ -13,7 +281,7 @@ improvements and bug fixes:
 * Avoid adding spurious `LMOD` env vars to Intel modules (#15778)
 * Don't output [+] for mock installs run during tests (#15609)
 
-# v0.14.1 (2019-03-20)
+# v0.14.1 (2020-03-20)
 
 This is a bugfix release on top of `v0.14.0`.  Specific fixes include:
 
@@ -448,4 +716,4 @@ version of all the changes since `v0.9.1`.
 - Switched from `nose` to `pytest` for unit tests.
   - Unit tests take 1 minute now instead of 8
 - Massively expanded documentation
-- Docs are now hosted on [spack.readthedocs.io](http://spack.readthedocs.io)
+- Docs are now hosted on [spack.readthedocs.io](https://spack.readthedocs.io)

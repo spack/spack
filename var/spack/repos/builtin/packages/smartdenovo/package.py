@@ -17,8 +17,8 @@ class Smartdenovo(MakefilePackage):
 
     depends_on('sse2neon', when='target=aarch64:')
 
-    patch('aarch64.patch', when='target=aarch64:',
-        sha256='7dd4bca28aafb0680cc1823aa58ac9000819993538e92628554666c4b3acc470')
+    patch('aarch64.patch', sha256='7dd4bca28aafb0680cc1823aa58ac9000819993538e92628554666c4b3acc470', when='target=aarch64:')
+    patch('inline-limit.patch', sha256='9f514ed72c37cf52ee2ffbe06f9ca1ed5a3e0819dab5876ecd83107c5e5bed81')
 
     def install(self, spec, prefix):
         install_files = [

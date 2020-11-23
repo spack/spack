@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import sys
 import os
 import re
 import shlex
@@ -98,6 +98,9 @@ class Executable(object):
           If both ``output`` and ``error`` are set to ``str``, then one string
           is returned containing output concatenated with error. Not valid
           for ``input``
+        * ``str.split``, as in the ``split`` method of the Python string type.
+          Behaves the same as ``str``, except that value is also written to
+          ``stdout`` or ``stderr``.
 
         By default, the subprocess inherits the parent's file descriptors.
 
@@ -132,7 +135,7 @@ class Executable(object):
         def streamify(arg, mode):
             if isinstance(arg, string_types):
                 return open(arg, mode), True
-            elif arg is str:
+            elif arg in (str, str.split):
                 return subprocess.PIPE, False
             else:
                 return arg, False
@@ -168,12 +171,18 @@ class Executable(object):
             out, err = proc.communicate()
 
             result = None
-            if output is str or error is str:
+            if output in (str, str.split) or error in (str, str.split):
                 result = ''
-                if output is str:
-                    result += text_type(out.decode('utf-8'))
-                if error is str:
-                    result += text_type(err.decode('utf-8'))
+                if output in (str, str.split):
+                    outstr = text_type(out.decode('utf-8'))
+                    result += outstr
+                    if output is str.split:
+                        sys.stdout.write(outstr)
+                if error in (str, str.split):
+                    errstr = text_type(err.decode('utf-8'))
+                    result += errstr
+                    if error is str.split:
+                        sys.stderr.write(errstr)
 
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
@@ -233,13 +242,19 @@ def which_string(*args, **kwargs):
         path = path.split(os.pathsep)
 
     for name in args:
-        for directory in path:
-            exe = os.path.join(directory, name)
+        if os.path.sep in name:
+            exe = os.path.abspath(name)
             if os.path.isfile(exe) and os.access(exe, os.X_OK):
                 return exe
+        else:
+            for directory in path:
+                exe = os.path.join(directory, name)
+                if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                    return exe
 
     if required:
-        tty.die("spack requires '%s'. Make sure it is in your path." % args[0])
+        raise CommandNotFoundError(
+            "spack requires '%s'. Make sure it is in your path." % args[0])
 
     return None
 
@@ -266,3 +281,7 @@ def which(*args, **kwargs):
 
 class ProcessError(spack.error.SpackError):
     """ProcessErrors are raised when Executables exit with an error code."""
+
+
+class CommandNotFoundError(spack.error.SpackError):
+    """Raised when ``which()`` can't find a required executable."""

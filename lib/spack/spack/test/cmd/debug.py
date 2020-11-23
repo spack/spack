@@ -11,6 +11,7 @@ import os
 import os.path
 
 import spack.architecture as architecture
+import spack.config
 from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
@@ -53,3 +54,4 @@ def test_report():
     assert get_version() in out
     assert platform.python_version() in out
     assert str(arch) in out
+    assert spack.config.get('config:concretizer') in out

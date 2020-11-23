@@ -46,7 +46,10 @@ class Interproscan(Package):
 
     def install(self, spec, prefix):
         with working_dir('core'):
-            which('mvn')('clean', 'install')
+            if self.run_tests:
+                which('mvn')('verify')
+            else:
+                which('mvn')('package', '-DskipTests')
 
         install_tree('.', prefix)
 

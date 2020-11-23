@@ -8,15 +8,16 @@ import os
 from spack import *
 
 
-class Elpa(AutotoolsPackage):
+class Elpa(AutotoolsPackage, CudaPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
     homepage = 'http://elpa.mpcdf.mpg.de/'
     url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
+    version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5')
+    version('2019.11.001', sha256='10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357')
     version('2019.05.002', sha256='d2eab5e5d74f53601220b00d18185670da8c00c13e1c1559ecfb0cd7cb2c4e8d')
-    version('2018.11.001',
-            sha256='cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16')
+    version('2018.11.001', sha256='cc27fe8ba46ce6e6faa8aea02c8c9983052f8e73a00cfea38abf7613cb1e1b16')
     version('2018.05.001.rc1', sha256='598c01da20600a4514ea4d503b93e977ac0367e797cab7a7c1b0e0e3e86490db')
     version('2017.11.001', sha256='59f99c3abe2190fac0db8a301d0b9581ee134f438669dbc92551a54f6f861820')
     version('2017.05.003', sha256='bccd49ce35a323bd734b17642aed8f2588fea4cc78ee8133d88554753bc3bf1b')
@@ -33,6 +34,7 @@ class Elpa(AutotoolsPackage):
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
+    depends_on('libtool', type='build')
 
     def url_for_version(self, version):
         t = 'http://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
@@ -61,18 +63,21 @@ class Elpa(AutotoolsPackage):
         return hlist
 
     build_directory = 'spack-build'
+    parallel = False
 
     def configure_args(self):
         spec = self.spec
         options = []
 
-        # TODO: add --enable-gpu, --disable-sse-assembly, --enable-sparc64
-        # and --enable-neon-arch64
-        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512', 'bgp', 'bgq']
+        # TODO: --disable-sse-assembly, --enable-sparc64, --enable-neon-arch64
+        simd_features = ['vsx', 'sse', 'avx', 'avx2', 'avx512']
 
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             options.append(msg.format(feature))
+
+        if spec.target.family == 'aarch64':
+            options.append('--disable-sse-assembly')
 
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):
@@ -83,6 +88,20 @@ class Elpa(AutotoolsPackage):
                 'FCFLAGS=-O2 -ffree-line-length-none',
                 'CFLAGS=-O2'
             ])
+
+        if '+cuda' in spec:
+            prefix = spec['cuda'].prefix
+            options.append('--enable-gpu')
+            options.append('--with-cuda-path={0}'.format(prefix))
+            options.append('--with-cuda-sdk-path={0}'.format(prefix))
+
+            cuda_arch = spec.variants['cuda_arch'].value[0]
+
+            if cuda_arch != 'none':
+                options.append('--with-GPU-compute-capability=sm_{0}'.
+                               format(cuda_arch))
+        else:
+            options.append('--disable-gpu')
 
         if '+openmp' in spec:
             options.append('--enable-openmp')
@@ -97,5 +116,7 @@ class Elpa(AutotoolsPackage):
             'LIBS={0}'.format(spec['lapack'].libs.link_flags),
             'SCALAPACK_LDFLAGS={0}'.format(spec['scalapack'].libs.joined())
         ])
+
+        options.append('--disable-silent-rules')
 
         return options

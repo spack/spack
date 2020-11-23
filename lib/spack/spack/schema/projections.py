@@ -14,7 +14,6 @@
 properties = {
     'projections': {
         'type': 'object',
-        'default': {},
         'patternProperties': {
             r'all|\w[\w-]*': {
                 'type': 'string'

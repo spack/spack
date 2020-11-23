@@ -25,6 +25,9 @@ class Libunwind(AutotoolsPackage):
     version('1.2.1', sha256='3f3ecb90e28cbe53fba7a4a27ccce7aad188d3210bb1964a923a731a27a75acb')
     version('1.1', sha256='9dfe0fcae2a866de9d3942c66995e4b460230446887dbdab302d41a8aee8d09a')
 
+    variant('pic', default=False,
+            description='Compile with position independent code.')
+
     variant('xz', default=False,
             description='Support xz (lzma) compressed symbol tables.')
 
@@ -48,12 +51,15 @@ class Libunwind(AutotoolsPackage):
     provides('unwind')
 
     def flag_handler(self, name, flags):
-        wrapper_flags = None
+        wrapper_flags = []
 
         if name == 'cflags':
             # https://github.com/libunwind/libunwind/pull/166
             if self.spec.satisfies('@:1.4 %gcc@10:'):
-                wrapper_flags = ['-fcommon']
+                wrapper_flags.append('-fcommon')
+
+            if '+pic' in self.spec:
+                wrapper_flags.append(self.compiler.cc_pic_flag)
 
         return (wrapper_flags, None, flags)
 

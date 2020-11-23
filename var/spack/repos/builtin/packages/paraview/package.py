@@ -20,6 +20,7 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa']
 
     version('develop', branch='master', submodules=True)
+    version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
@@ -51,12 +52,15 @@ class Paraview(CMakePackage, CudaPackage):
             description='Use module kits')
 
     conflicts('+python', when='+python3')
-    conflicts('+python', when='@5.6:')
+    # Python 2 support dropped with 5.9.0
+    conflicts('+python', when='@5.9:')
     conflicts('+python3', when='@:5.5')
     conflicts('+shared', when='+cuda')
     # Legacy rendering dropped in 5.5
     # See commit: https://gitlab.kitware.com/paraview/paraview/-/commit/798d328c
     conflicts('~opengl2', when='@5.5:')
+
+    depends_on('cmake@3.3:', type='build')
 
     # Workaround for
     # adding the following to your packages.yaml
@@ -71,7 +75,12 @@ class Paraview(CMakePackage, CudaPackage):
     extends('python', when='+python3')
 
     depends_on('python@2.7:2.8', when='+python', type=('build', 'run'))
-    depends_on('python@3:', when='+python3', type=('build', 'run'))
+
+    # VTK < 8.2.1 can't handle Python 3.8
+    # This affects Paraview <= 5.7 (VTK 8.2.0)
+    # https://gitlab.kitware.com/vtk/vtk/-/issues/17670
+    depends_on('python@3:3.7', when='@:5.7 +python3', type=('build', 'run'))
+    depends_on('python@3:', when='@5.8:+python3', type=('build', 'run'))
 
     depends_on('py-numpy@:1.15.4', when='+python', type=('build', 'run'))
     depends_on('py-numpy', when='+python3', type=('build', 'run'))
@@ -86,29 +95,40 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
-    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('osmesa', when='+osmesa')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='~osmesa platform=linux')
     conflicts('+qt', when='+osmesa')
 
     depends_on('bzip2')
+    depends_on('double-conversion')
+    depends_on('expat')
+    depends_on('eigen@3:')
     depends_on('freetype')
     # depends_on('hdf5+mpi', when='+mpi')
     # depends_on('hdf5~mpi', when='~mpi')
     depends_on('hdf5+hl+mpi', when='+hdf5+mpi')
     depends_on('hdf5+hl~mpi', when='+hdf5~mpi')
     depends_on('jpeg')
+    depends_on('jsoncpp')
+    depends_on('libogg')
     depends_on('libpng')
+    depends_on('libtheora')
     depends_on('libtiff')
-    depends_on('libxml2')
     depends_on('netcdf-c')
-    depends_on('expat')
-    # depends_on('netcdf-cxx')
-    # depends_on('protobuf') # version mismatches?
-    # depends_on('sqlite') # external version not supported
+    depends_on('pegtl')
+    depends_on('protobuf@3.4:')
+    depends_on('pugixml')
+    depends_on('libxml2')
+    depends_on('lz4')
+    depends_on('lzma')
     depends_on('zlib')
-    depends_on('cmake@3.3:', type='build')
+
+    # Can't contretize with python2 and py-setuptools@45.0.0:
+    depends_on('py-setuptools@:44.99.99', when='+python')
+    # Can't contretize with python2 and py-pillow@7.0.0:
+    depends_on('pil@:6', when='+python')
 
     patch('stl-reader-pv440.patch', when='@4.4.0')
 
@@ -120,6 +140,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     # Broken vtk-m config. Upstream catalyst changes
     patch('vtkm-catalyst-pv551.patch', when='@5.5.0:5.5.2')
+
+    # Broken H5Part with external parallel HDF5
+    patch('h5part-parallel.patch', when='@5.7:5.7.999')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
@@ -134,7 +157,10 @@ class Paraview(CMakePackage, CudaPackage):
     @property
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
-        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+        if self.spec.version == Version('develop'):
+            return 'paraview-5.9'
+        else:
+            return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
@@ -142,8 +168,13 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             lib_dir = self.prefix.lib
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
     def setup_run_environment(self, env):
         # paraview 5.5 and later
@@ -156,8 +187,13 @@ class Paraview(CMakePackage, CudaPackage):
             lib_dir = self.prefix.lib
 
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, self.paraview_subdir)
@@ -206,24 +242,50 @@ class Paraview(CMakePackage, CudaPackage):
         includes  = variant_bool('+plugins')
 
         cmake_args = [
-            '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
-            '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
             '-DBUILD_TESTING:BOOL=OFF',
-            '-DBUILD_EXAMPLES:BOOL=%s' % variant_bool('+examples'),
-            '-DVTK_USE_SYSTEM_FREETYPE:BOOL=ON',
-            '-DVTK_USE_SYSTEM_HDF5:BOOL=%s' % variant_bool('+hdf5'),
-            '-DVTK_USE_SYSTEM_JPEG:BOOL=ON',
-            '-DVTK_USE_SYSTEM_LIBXML2:BOOL=ON',
-            '-DVTK_USE_SYSTEM_NETCDF:BOOL=ON',
-            '-DVTK_USE_SYSTEM_EXPAT:BOOL=ON',
-            '-DVTK_USE_SYSTEM_TIFF:BOOL=ON',
-            '-DVTK_USE_SYSTEM_ZLIB:BOOL=ON',
-            '-DVTK_USE_SYSTEM_PNG:BOOL=ON',
-            '-DOpenGL_GL_PREFERENCE:STRING=LEGACY'
-        ]
+            '-DOpenGL_GL_PREFERENCE:STRING=LEGACY']
+
+        if spec.satisfies('@:5.7') and spec['cmake'].satisfies('@3.17:'):
+            cmake_args.append('-DFPHSA_NAME_MISMATCHED:BOOL=ON')
+
+        if spec.satisfies('@5.7:'):
+            if spec.satisfies('@5.8:'):
+                cmake_args.extend([
+                    '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
+                    '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
+            else:  # @5.7:
+                cmake_args.extend([
+                    '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
+                    '-DPARAVIEW_USE_EXTERNAL:BOOL=ON'])
+
+            cmake_args.extend([
+                '-DPARAVIEW_ENABLE_EXAMPLES:BOOL=%s' % variant_bool(
+                    '+examples'),
+                '-DVTK_MODULE_USE_EXTERNAL_ParaView_cgns=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_glew=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_gl2ps=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_libharu=OFF',
+                '-DVTK_MODULE_USE_EXTERNAL_VTK_utf8=OFF'])
+        else:
+            cmake_args.extend([
+                '-DPARAVIEW_BUILD_EXAMPLES:BOOL=%s' % variant_bool(
+                    '+examples'),
+                '-DVTK_RENDERING_BACKEND:STRING=%s' % rendering,
+                '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
+                '-DVTK_USE_SYSTEM_LIBRARIES:BOOL=ON',
+                '-DVTK_USE_SYSTEM_CGNS:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_DIY2:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_GLEW:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_GL2PS:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_ICET:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_LIBHARU:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_NETCDFCPP:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_UTF8:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_XDMF2:BOOL=OFF',
+                '-DVTK_USE_SYSTEM_XDMF3:BOOL=OFF'])
 
         # The assumed qt version changed to QT5 (as of paraview 5.2.1),
         # so explicitly specify which QT major version is actually being used
@@ -232,13 +294,22 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DPARAVIEW_QT_VERSION=%s' % spec['qt'].version[0],
             ])
 
+        # CMake flags for python have changed with newer ParaView versions
+        # Make sure Spack uses the right cmake flags
         if '+python' in spec or '+python3' in spec:
+            py_use_opt = 'USE' if spec.satisfies('@5.8:') else 'ENABLE'
+            py_ver_opt = 'PARAVIEW' if spec.satisfies('@5.7:') else 'VTK'
+            py_ver_val = 3 if '+python3' in spec else 2
             cmake_args.extend([
-                '-DPARAVIEW_ENABLE_PYTHON:BOOL=ON',
+                '-DPARAVIEW_%s_PYTHON:BOOL=ON' % py_use_opt,
                 '-DPYTHON_EXECUTABLE:FILEPATH=%s' %
                 spec['python'].command.path,
-                '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi')
+                '-D%s_PYTHON_VERSION:STRING=%d' % (py_ver_opt, py_ver_val)
             ])
+            if spec.satisfies('@:5.6'):
+                cmake_args.append(
+                    '-DVTK_USE_SYSTEM_MPI4PY:BOOL=%s' % variant_bool('+mpi'))
+
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
@@ -251,24 +322,17 @@ class Paraview(CMakePackage, CudaPackage):
                 '-DMPI_Fortran_COMPILER:PATH=%s' % spec['mpi'].mpifc
             ])
 
-        if '+shared' in spec:
-            cmake_args.append(
-                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=ON'
-            )
-        else:
-            cmake_args.append(
-                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
-            )
+        cmake_args.append(
+            '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=%s' % variant_bool('+shared'))
 
-        if '+cuda' in spec:
-            cmake_args.extend([
-                '-DPARAVIEW_USE_CUDA:BOOL=ON',
-                '-DPARAVIEW_BUILD_SHARED_LIBS:BOOL=OFF'
-            ])
+        if spec.satisfies('@5.8:'):
+            cmake_args.append('-DPARAVIEW_USE_CUDA:BOOL=%s' %
+                              variant_bool('+cuda'))
+        elif spec.satisfies('@5.7:'):
+            cmake_args.append('-DVTK_USE_CUDA:BOOL=%s' % variant_bool('+cuda'))
         else:
-            cmake_args.extend([
-                '-DPARAVIEW_USE_CUDA:BOOL=OFF',
-            ])
+            cmake_args.append('-DVTKm_ENABLE_CUDA:BOOL=%s' %
+                              variant_bool('+cuda'))
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
@@ -281,11 +345,11 @@ class Paraview(CMakePackage, CudaPackage):
                 cmake_args.append(
                     '-DVTK_ENABLE_KITS:BOOL=ON')
             elif spec.satisfies('@5.7'):
-                cmake_args.append(
-                    '-DPARAVIEW_ENABLE_KITS:BOOL=ON')
+                # cmake_args.append('-DPARAVIEW_ENABLE_KITS:BOOL=ON')
+                # Kits are broken with 5.7
+                cmake_args.append('-DPARAVIEW_ENABLE_KITS:BOOL=OFF')
             else:
-                cmake_args.append(
-                    '-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
+                cmake_args.append('-DPARAVIEW_BUILD_WITH_KITS:BOOL=ON')
 
         # Hide git from Paraview so it will not use `git describe`
         # to find its own version number

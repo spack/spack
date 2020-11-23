@@ -6,8 +6,6 @@
 import shutil
 import sys
 
-from spack import *
-
 
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
@@ -15,8 +13,8 @@ class Hdf5(AutotoolsPackage):
     flexible and efficient I/O and for high volume and complex data.
     """
 
-    homepage = "https://support.hdfgroup.org/HDF5/"
-    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.1/src/hdf5-1.10.1.tar.gz"
+    homepage = "https://portal.hdfgroup.org"
+    url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
@@ -29,7 +27,8 @@ class Hdf5(AutotoolsPackage):
     # HDF5 1.12 broke API compatibility, so we currently prefer the latest
     # 1.10 release.  packages that want later versions of HDF5 should specify,
     # e.g., depends_on("hdf5@1.12:") to get 1.12 or higher.
-    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa', preferred=True)
+    version('1.10.7', sha256='7a1a0a54371275ce2dfc5cd093775bb025c365846512961e7e5ceaecb437ef15', preferred=True)
+    version('1.10.6', sha256='5f9a3ee85db4ea1d3b1fa9159352aebc2af72732fc2f58c96a3f0768dba0e9aa')
     version('1.10.5', sha256='6d4ce8bf902a97b050f6f491f4268634e252a63dadd6656a1a9be5b7b7726fa8')
     version('1.10.4', sha256='8f60dc4dd6ab5fcd23c750d1dc5bca3d0453bdce5c8cdaf0a4a61a9d1122adb2')
     version('1.10.3', sha256='b600d7c914cfa80ae127cd1a1539981213fee9994ac22ebec9e3845e951d9b39')
@@ -57,6 +56,7 @@ class Hdf5(AutotoolsPackage):
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
     variant('fortran', default=False, description='Enable Fortran support')
+    variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
 
@@ -78,6 +78,7 @@ class Hdf5(AutotoolsPackage):
     depends_on('m4',       type='build', when='@develop')
 
     depends_on('mpi', when='+mpi')
+    depends_on('java', when='+java')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
@@ -237,6 +238,7 @@ class Hdf5(AutotoolsPackage):
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
+        extra_args += self.enable_or_disable('java')
 
         api = self.spec.variants['api'].value
         if api != 'none':
@@ -323,6 +325,9 @@ class Hdf5(AutotoolsPackage):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
+        self._check_install()
+
+    def _check_install(self):
         # Build and run a small program to test the installed HDF5 library
         spec = self.spec
         print("Checking HDF5 installation...")
@@ -371,3 +376,55 @@ HDF5 version {version} {version}
                 print('-' * 80)
                 raise RuntimeError("HDF5 install check failed")
         shutil.rmtree(checkdir)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version)
+
+        exes = [
+            'h5copy', 'h5diff', 'h5dump', 'h5format_convert', 'h5ls',
+            'h5mkgrp', 'h5repack', 'h5stat', 'h5unjam',
+        ]
+        use_short_opt = ['h52gif', 'h5repart', 'h5unjam']
+        for exe in exes:
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
+            option = '-V' if exe in use_short_opt else '--version'
+            self.run_test(exe, option, spec_vers_str, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_example(self):
+        """This test performs copy, dump, and diff on an example hdf5 file."""
+        test_data_dir = self.test_suite.current_test_data_dir
+
+        filename = 'spack.h5'
+        h5_file = test_data_dir.join(filename)
+
+        reason = 'test: ensuring h5dump produces expected output'
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
+        self.run_test('h5dump', filename, expected, installed=True,
+                      purpose=reason, skip_missing=True,
+                      work_dir=test_data_dir)
+
+        reason = 'test: ensuring h5copy runs'
+        options = ['-i', h5_file, '-s', 'Spack', '-o', 'test.h5', '-d',
+                   'Spack']
+        self.run_test('h5copy', options, [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+        reason = ('test: ensuring h5diff shows no differences between orig and'
+                  ' copy')
+        self.run_test('h5diff', [h5_file, 'test.h5'], [], installed=True,
+                      purpose=reason, skip_missing=True, work_dir='.')
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()
+
+        # Run sequence of commands on an hdf5 file
+        self._test_example()
+
+        # Run existing install check
+        # TODO: Restore once address built vs. installed state
+        # self._check_install()

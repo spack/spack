@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class PyTorch(PythonPackage, CudaPackage):
@@ -50,6 +51,8 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.7.0', tag='v1.7.0', submodules=True)
+    version('1.6.0', tag='v1.6.0', submodules=True)
     version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
     version('1.4.1', tag='v1.4.1', submodules=True)
@@ -68,6 +71,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     variant('cuda', default=True, description='Build with CUDA')
     variant('cudnn', default=True, description='Enables the cuDNN build')
+    variant('rocm', default=False, description='Build with ROCm build')
     variant('magma', default=False, description='Enables the MAGMA build')
     variant('fbgemm', default=False, description='Enables the FBGEMM build')
     variant('test', default=False, description='Enables the test build')
@@ -112,20 +116,25 @@ class PyTorch(PythonPackage, CudaPackage):
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
+    conflicts('+rocm', when='+cuda')
 
     # Required dependencies
     depends_on('cmake@3.5:', type='build')
     # Use Ninja generator to speed up build times
     # Automatically used if found
     depends_on('ninja@1.5:', type='build')
+    depends_on('python@3.6.1:', when='@1.6:', type=('build', 'run'))
     depends_on('python@3.5:', when='@1.5:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-future', when='@1.1: ^python@:2', type='build')
+    depends_on('py-future', when='@1.5:', type=('build', 'run'))
+    depends_on('py-future', when='@1.1: ^python@:2', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
+    depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
@@ -173,6 +182,9 @@ class PyTorch(PythonPackage, CudaPackage):
     # Fixes CMake configuration error when XNNPACK is disabled
     patch('xnnpack.patch', when='@1.5.0:1.5.999')
 
+    # Fixes Build error for when ROCm is enable for pytorch-1.5 release
+    patch('rocm.patch', when='@1.5.0:1.5.999+rocm')
+
     # https://github.com/pytorch/pytorch/pull/37086
     # Fixes compilation with Clang 9.0.0 and Apple Clang 11.0.3
     patch('https://github.com/pytorch/pytorch/commit/e921cd222a8fbeabf5a3e74e83e0d8dfb01aa8b5.patch',
@@ -186,6 +198,22 @@ class PyTorch(PythonPackage, CudaPackage):
     # Both build and install run cmake/make/make install
     # Only run once to speed up build times
     phases = ['install']
+
+    @property
+    def libs(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'lib')
+        return find_libraries('libtorch', root)
+
+    @property
+    def headers(self):
+        root = join_path(
+            self.prefix, self.spec['python'].package.site_packages_dir,
+            'torch', 'include')
+        headers = find_all_headers(root)
+        headers.directories = [root]
+        return headers
 
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
@@ -244,7 +272,9 @@ class PyTorch(PythonPackage, CudaPackage):
 
         enable_or_disable('fbgemm')
         enable_or_disable('test', keyword='BUILD')
-
+        enable_or_disable('rocm')
+        if '+rocm' in self.spec:
+            env.set('USE_MKLDNN', 0)
         if '+miopen' in self.spec:
             env.set('MIOPEN_LIB_DIR', self.spec['miopen'].libs.directories[0])
             env.set('MIOPEN_INCLUDE_DIR', self.spec['miopen'].prefix.include)
@@ -296,6 +326,11 @@ class PyTorch(PythonPackage, CudaPackage):
         enable_or_disable('redis', newer=True)
         enable_or_disable('zstd', newer=True)
         enable_or_disable('tbb', newer=True)
+
+    @run_before('install')
+    def build_amd(self):
+        if '+rocm' in self.spec:
+            python(os.path.join('tools', 'amd_build', 'build_amd.py'))
 
     def install_test(self):
         with working_dir('test'):

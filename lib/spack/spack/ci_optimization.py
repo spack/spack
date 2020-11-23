@@ -17,6 +17,19 @@ import hashlib
 import spack.util.spack_yaml as syaml
 
 
+def sort_yaml_obj(obj):
+    if isinstance(obj, collections_abc.Mapping):
+        return syaml.syaml_dict(
+            (k, sort_yaml_obj(v))
+            for k, v in
+            sorted(obj.items(), key=(lambda item: str(item[0]))))
+
+    if isinstance(obj, collections_abc.Sequence) and not isinstance(obj, str):
+        return syaml.syaml_list(sort_yaml_obj(x) for x in obj)
+
+    return obj
+
+
 def matches(obj, proto):
     """Returns True if the test object "obj" matches the prototype object
     "proto".
@@ -235,8 +248,10 @@ def try_optimization_pass(name, yaml, optimization_pass, *args, **kwargs):
         # pass was not applied
         return (yaml, new_yaml, False, other_results)
 
-    pre_size = len(syaml.dump_config(yaml, default_flow_style=True))
-    post_size = len(syaml.dump_config(new_yaml, default_flow_style=True))
+    pre_size = len(syaml.dump_config(
+        sort_yaml_obj(yaml), default_flow_style=True))
+    post_size = len(syaml.dump_config(
+        sort_yaml_obj(new_yaml), default_flow_style=True))
 
     # pass makes the size worse: not applying
     applied = (post_size <= pre_size)
@@ -281,7 +296,7 @@ def build_histogram(iterator, key):
             continue
 
         value_hash = hashlib.sha1()
-        value_hash.update(syaml.dump_config(val).encode())
+        value_hash.update(syaml.dump_config(sort_yaml_obj(val)).encode())
         value_hash = value_hash.hexdigest()
 
         buckets[value_hash] += 1
@@ -292,7 +307,8 @@ def build_histogram(iterator, key):
 
 
 def optimizer(yaml):
-    original_size = len(syaml.dump_config(yaml, default_flow_style=True))
+    original_size = len(syaml.dump_config(
+        sort_yaml_obj(yaml), default_flow_style=True))
 
     # try factoring out commonly repeated portions
     common_job = {
@@ -369,7 +385,8 @@ def optimizer(yaml):
             common_subobject,
             {'variables': {'SPACK_ROOT_SPEC': spec}})
 
-    new_size = len(syaml.dump_config(yaml, default_flow_style=True))
+    new_size = len(syaml.dump_config(
+        sort_yaml_obj(yaml), default_flow_style=True))
 
     print('\n')
     print_delta('overall summary', original_size, new_size)

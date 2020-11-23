@@ -3,17 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import sys
+import os
 
 
 class Hdf(AutotoolsPackage):
     """HDF4 (also known as HDF) is a library and multi-object
     file format for storing and managing data between machines."""
 
-    homepage = "https://portal.hdfgroup.org/display/support"
+    homepage = "https://portal.hdfgroup.org"
     url      = "https://support.hdfgroup.org/ftp/HDF/releases/HDF4.2.14/src/hdf-4.2.14.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF/releases/"
     list_depth = 2
+    maintainers = ['lrknox']
 
     version('4.2.15', sha256='dbeeef525af7c2d01539906c28953f0fdab7dba603d1bc1ec4a5af60d002c459')
     version('4.2.14', sha256='2d383e87c8a0ca6a5352adbd1d5546e6cc43dc21ff7d90f93efa644d85c0b14a')
@@ -22,7 +24,7 @@ class Hdf(AutotoolsPackage):
     version('4.2.11', sha256='c3f7753b2fb9b27d09eced4d2164605f111f270c9a60b37a578f7de02de86d24')
 
     variant('szip', default=False, description="Enable szip support")
-    variant('external-xdr', default=True,
+    variant('external-xdr', default=sys.platform != 'darwin',
             description="Use an external XDR backend")
     variant('netcdf', default=False,
             description='Build NetCDF API (version 2.3.2)')
@@ -150,3 +152,67 @@ class Hdf(AutotoolsPackage):
     def check(self):
         with working_dir(self.build_directory):
             make('check', parallel=False)
+
+    extra_install_tests = 'hdf/util/testfiles'
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version.up_to(2))
+
+        exes = ['hdfimport', 'hrepack', 'ncdump', 'ncgen']
+        for exe in exes:
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
+            self.run_test(exe, ['-V'], spec_vers_str, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_gif_converters(self):
+        """This test performs an image conversion sequence and diff."""
+        work_dir = '.'
+        storm_fn = os.path.join(self.install_test_root,
+                                self.extra_install_tests, 'storm110.hdf')
+        gif_fn = 'storm110.gif'
+        new_hdf_fn = 'storm110gif.hdf'
+
+        # Convert a test HDF file to a gif
+        self.run_test('hdf2gif', [storm_fn, gif_fn], '', installed=True,
+                      purpose="test: hdf-to-gif", work_dir=work_dir)
+
+        # Convert the gif to an HDF file
+        self.run_test('gif2hdf', [gif_fn, new_hdf_fn], '', installed=True,
+                      purpose="test: gif-to-hdf", work_dir=work_dir)
+
+        # Compare the original and new HDF files
+        self.run_test('hdiff', [new_hdf_fn, storm_fn], '', installed=True,
+                      purpose="test: compare orig to new hdf",
+                      work_dir=work_dir)
+
+    def _test_list(self):
+        """This test compares low-level HDF file information to expected."""
+        storm_fn = os.path.join(self.install_test_root,
+                                self.extra_install_tests, 'storm110.hdf')
+        test_data_dir = self.test_suite.current_test_data_dir
+        work_dir = '.'
+
+        reason = 'test: checking hdfls output'
+        details_file = os.path.join(test_data_dir, 'storm110.out')
+        expected = get_escaped_text_output(details_file)
+        self.run_test('hdfls', [storm_fn], expected, installed=True,
+                      purpose=reason, skip_missing=True, work_dir=work_dir)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on subset of known binaries that respond
+        self._test_check_versions()
+
+        # Run gif converter sequence test
+        self._test_gif_converters()
+
+        # Run hdfls output
+        self._test_list()

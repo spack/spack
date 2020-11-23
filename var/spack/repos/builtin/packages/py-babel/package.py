@@ -22,7 +22,7 @@ class PyBabel(PythonPackage):
     version('2.3.4', sha256='c535c4403802f6eb38173cd4863e419e2274921a01a8aad8a5b497c131c62875')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pytz@2015.7:', type=('build', 'run'))
     depends_on('py-pytest', type='test')
     depends_on('py-freezegun', type='test')

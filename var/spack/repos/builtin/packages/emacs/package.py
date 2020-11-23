@@ -14,6 +14,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/emacs"
     gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
+    version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
     version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
     version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')
     version('26.1', sha256='760382d5e8cdc5d0d079e8f754bce1136fbe1473be24bb885669b0e38fc56aa3')
@@ -47,6 +48,8 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
 
+    conflicts('@:26.3', when='platform=darwin os=catalina')
+
     @when('platform=darwin')
     def setup_build_environment(self, env):
         # on macOS, emacs' config does search hard enough for ncurses'
@@ -77,3 +80,18 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
             args.append('--without-gnutls')
 
         return args
+
+    def _test_check_versions(self):
+        """Perform version checks on installed package binaries."""
+        checks = ['ctags', 'ebrowse', 'emacs', 'emacsclient', 'etags']
+
+        for exe in checks:
+            expected = str(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, expected)
+            self.run_test(exe, ['--version'], expected, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()

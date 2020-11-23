@@ -6,6 +6,7 @@
 from spack import *
 import os
 import sys
+import re
 
 
 class Mpich(AutotoolsPackage):
@@ -17,6 +18,10 @@ class Mpich(AutotoolsPackage):
     git      = "https://github.com/pmodels/mpich.git"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
+
+    maintainers = ['raffenet', 'yfguo']
+
+    executables = ['^mpichversion$']
 
     version('develop', submodules=True)
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
@@ -67,6 +72,9 @@ spack package at this time.''',
     variant('libxml2', default=True,
             description='Use libxml2 for XML support instead of the custom '
                         'minimalistic implementation')
+    variant('argobots', default=False,
+            description='Enable Argobots support')
+    variant('fortran', default=True, description='Enable Fortran support')
 
     provides('mpi')
     provides('mpi@:3.0', when='@3:')
@@ -141,6 +149,9 @@ spack package at this time.''',
 
     depends_on('pmix', when='pmi=pmix')
 
+    # +argobots variant requires Argobots
+    depends_on('argobots', when='+argobots')
+
     # building from git requires regenerating autotools files
     depends_on('automake@1.15:', when='@develop', type=("build"))
     depends_on('libtool@2.4.4:', when='@develop', type=("build"))
@@ -152,6 +163,9 @@ spack package at this time.''',
     depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
     depends_on("m4", when="@3.3 +hwloc", type="build"),
     depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+
+    # MPICH's Yaksa submodule requires python to configure
+    depends_on("python@3.0:", when="@develop", type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -169,6 +183,109 @@ spack package at this time.''',
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'MPICH Version:\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def get_spack_compiler_spec(path):
+            spack_compilers = spack.compilers.find_compilers([path])
+            actual_compiler = None
+            # check if the compiler actually matches the one we want
+            for spack_compiler in spack_compilers:
+                if os.path.dirname(spack_compiler.cc) == path:
+                    actual_compiler = spack_compiler
+                    break
+            return actual_compiler.spec if actual_compiler else None
+
+        def is_enabled(text):
+            if text in set(['t', 'true', 'enabled', 'enable', 'with',
+                            'yes', '1']):
+                return True
+            return False
+
+        def is_disabled(text):
+            if text in set(['f', 'false', 'disabled', 'disable',
+                            'without', 'no', '0']):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)(output=str, error=str)
+            if re.search(r'--with-hwloc-prefix=embedded', output):
+                variants += '~hwloc'
+
+            if re.search(r'--with-pm=hydra', output):
+                variants += '+hydra'
+            else:
+                variants += '~hydra'
+
+            match = re.search(r'--(\S+)-romio', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+romio'
+            elif match and is_disabled(match.group(1)):
+                variants += '~romio'
+
+            if re.search(r'--with-ibverbs', output):
+                variants += '+verbs'
+            elif re.search(r'--without-ibverbs', output):
+                variants += '~verbs'
+
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+wrapperrpath'
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_disabled(match.group(1)):
+                variants += '~wrapperrpath'
+
+            if re.search(r'--disable-fortran', output):
+                variants += '~fortran'
+
+            match = re.search(r'--with-slurm=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+slurm'
+
+            if re.search(r'--enable-libxml2', output):
+                variants += '+libxml2'
+            elif re.search(r'--disable-libxml2', output):
+                variants += '~libxml2'
+
+            if re.search(r'--with-thread-package=argobots', output):
+                variants += '+argobots'
+
+            if re.search(r'--with-pmi=no', output):
+                variants += ' pmi=off'
+            elif re.search(r'--with-pmi=simple', output):
+                variants += ' pmi=pmi'
+            elif re.search(r'--with-pmi=pmi2/simple', output):
+                variants += ' pmi=pmi2'
+            elif re.search(r'--with-pmix', output):
+                variants += ' pmi=pmix'
+
+            match = re.search(r'MPICH Device:\s+(\S+)', output)
+            if match:
+                if match.group(1) == 'ch3:nemesis':
+                    variants += ' device=ch3'
+                else:
+                    variants += ' device=' + match.group(1)
+
+            match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
+            if match:
+                variants += ' netmod=' + match.group(1)
+
+            match = re.search(r'MPICH CC:\s+(\S+)', output)
+            compiler_spec = get_spack_compiler_spec(
+                os.path.dirname(match.group(1)))
+            if compiler_spec:
+                variants += '%' + str(compiler_spec)
+            results.append(variants)
+        return results
+
     def setup_build_environment(self, env):
         env.unset('F90')
         env.unset('F90FLAGS')
@@ -176,13 +293,17 @@ spack package at this time.''',
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
+        # Same fix but for macOS - avoids issue #17934
+        if self.spec.satisfies('%apple-clang@11:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -203,20 +324,25 @@ spack package at this time.''',
         env.set('MPICH_FC', spack_fc)
 
     def setup_dependent_package(self, module, dependent_spec):
+        spec = self.spec
+
         # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        if self.spec.external_module and 'cray' in self.spec.external_module:
-            self.spec.mpicc = spack_cc
-            self.spec.mpicxx = spack_cxx
-            self.spec.mpifc = spack_fc
-            self.spec.mpif77 = spack_f77
+        external_modules = spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            spec.mpicc = spack_cc
+            spec.mpicxx = spack_cxx
+            spec.mpifc = spack_fc
+            spec.mpif77 = spack_f77
         else:
-            self.spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            self.spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
-            self.spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-        self.spec.mpicxx_shared_libs = [
+            if '+fortran' in spec:
+                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
+        spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
@@ -236,9 +362,18 @@ spack package at this time.''',
         # Until we can pass variants such as +fortran through virtual
         # dependencies depends_on('mpi'), require Fortran compiler to
         # avoid delayed build errors in dependents.
-        if (self.compiler.f77 is None) or (self.compiler.fc is None):
+        # The user can work around this by disabling Fortran explicitly
+        # with ~fortran
+
+        f77 = self.compiler.f77
+        fc = self.compiler.fc
+
+        fortran_missing = f77 is None or fc is None
+
+        if '+fortran' in self.spec and fortran_missing:
             raise InstallError(
-                'MPICH requires both C and Fortran compilers!'
+                'mpich +fortran requires Fortran compilers. Configure '
+                'Fortran compiler or disable Fortran support with ~fortran'
             )
 
     def configure_args(self):
@@ -254,6 +389,9 @@ spack package at this time.''',
             '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
                                                 spec else 'yes')
         ]
+
+        if '~fortran' in spec:
+            config_args.append('--disable-fortran')
 
         if '+slurm' in spec:
             config_args.append('--with-slurm=yes')
@@ -306,5 +444,10 @@ spack package at this time.''',
             # scripts of all instances of hwloc (there are three copies of it:
             # for hydra, for hydra2, and for MPICH itself).
             config_args += self.enable_or_disable('libxml2')
+
+        # If +argobots specified, add argobots option
+        if '+argobots' in spec:
+            config_args.append('--with-thread-package=argobots')
+            config_args.append('--with-argobots=' + spec['argobots'].prefix)
 
         return config_args

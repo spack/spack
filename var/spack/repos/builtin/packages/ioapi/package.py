@@ -3,10 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import glob
 import os
-
-from spack import *
 
 
 class Ioapi(MakefilePackage):
@@ -34,11 +31,7 @@ class Ioapi(MakefilePackage):
         make('install')
         # Install the header files.
         mkdirp(prefix.include.fixed132)
-        headers = glob.glob('ioapi/*.EXT')
-        for header in headers:
-            install(header, prefix.include)
+        install('ioapi/*.EXT', prefix.include)
         # Install the header files for CMAQ and SMOKE in the
         # non-standard -ffixed-line-length-132 format.
-        headers_fixed132 = glob.glob('ioapi/fixed_src/*.EXT')
-        for header in headers_fixed132:
-            install(header, prefix.include.fixed132)
+        install('ioapi/fixed_src/*.EXT', prefix.include.fixed132)

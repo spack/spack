@@ -25,6 +25,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
     version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
     version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
     version('1.71.0', sha256='d73a8da01e8bf8c7eda40b4c84915071a8c8a0df4a6734537ddde4a8580524ee')
@@ -183,7 +184,7 @@ class Boost(Package):
     conflicts('+numpy', when='~python')
 
     # boost-python in 1.72.0 broken with cxxstd=98
-    conflicts('cxxstd=98', when='+mpi+python @1.72.0:')
+    conflicts('cxxstd=98', when='+mpi+python @1.72.0')
 
     # Container's Extended Allocators were not added until 1.56.0
     conflicts('+container', when='@:1.55.99')
@@ -206,6 +207,9 @@ class Boost(Package):
     patch('boost_1.67.0_pgi.patch', when='@1.67.0:1.68.9999%pgi')
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
+
+    # Patch to override the PGI toolset when using the NVIDIA compilers
+    patch('nvhpc.patch', when='%nvhpc')
 
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
@@ -247,6 +251,23 @@ class Boost(Package):
           sha256='246508e052c44b6f4e8c2542a71c06cacaa72cd1447ab8d2a542b987bc35ace9',
           when='@1.73.0')
 
+    # Support bzip2 and gzip in other directory
+    # See https://github.com/boostorg/build/pull/154
+    patch('boost_154.patch', when='@:1.63.99')
+
+    def patch(self):
+        # Disable SSSE3 and AVX2 when using the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('dump_avx2', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_AVX2', '',
+                        'libs/log/build/Jamfile.v2')
+            filter_file('dump_ssse3', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_SSSE3', '',
+                        'libs/log/build/Jamfile.v2')
+
+            filter_file('-fast', '-O1', 'tools/build/src/tools/pgi.jam')
+            filter_file('-fast', '-O1', 'tools/build/src/engine/build.sh')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
@@ -263,6 +284,7 @@ class Boost(Package):
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp',
                     'pgc++': 'pgi',
+                    'nvc++': 'pgi',
                     'FCC': 'clang'}
 
         if spec.satisfies('@1.47:'):

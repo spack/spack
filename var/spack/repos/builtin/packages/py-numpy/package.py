@@ -16,7 +16,7 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.19.0.zip"
+    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
@@ -30,6 +30,10 @@ class PyNumpy(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
+    version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')
+    version('1.19.2', sha256='0d310730e1e793527065ad7dde736197b705d0e4c9999775f212b03c44a8484c')
+    version('1.19.1', sha256='b8456987b637232602ceb4d663cb34106f7eb780e247d51a260b84760fd8f491')
     version('1.19.0', sha256='76766cc80d6128750075378d3bb7812cf146415bd29b588616f72c943c00d598')
     version('1.18.5', sha256='34e96e9dae65c4839bd80012023aadd6ee2ccb73ce7fdf3074c62f301e63120b')
     version('1.18.4', sha256='bbcc85aaf4cd84ba057decaead058f43191cc0e30d6bc5d44fe336dc3d3f4509')
@@ -84,10 +88,11 @@ class PyNumpy(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
     depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
     depends_on('python@3.6:', type=('build', 'run'), when='@1.19:')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
+    depends_on('py-cython@0.29.21:', when='@1.19.1:', type='build')
     depends_on('blas',   when='+blas')
     depends_on('lapack', when='+lapack')
 
@@ -98,6 +103,12 @@ class PyNumpy(PythonPackage):
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
+
+    # Add Fujitsu Fortran compiler
+    patch('add_fj_compiler.patch', when='@1.19.3:%fj')
+    patch('add_fj_compiler2.patch', when='@1.19.0:1.19.2%fj')
+    patch('add_fj_compiler3.patch', when='@1.14.0:1.18.5%fj')
+    patch('add_fj_compiler4.patch', when='@:1.13.3%fj')
 
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
@@ -295,7 +306,7 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
+    def build_test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

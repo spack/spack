@@ -20,7 +20,7 @@ class Warpx(MakefilePackage):
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
-    version('master', tag='master')
+    version('develop', tag='development')
 
     variant('dims',
             default='3',
@@ -51,11 +51,11 @@ class Warpx(MakefilePackage):
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
     depends_on('ascent', when='+ascent')
     depends_on('ascent +cuda', when='+ascent backend=cuda')
-    depends_on('ascent +mpi ^conduit~hdf5', when='+ascent +mpi')
+    depends_on('ascent +mpi', when='+ascent +mpi')
 
     resource(name='amrex',
              git='https://github.com/AMReX-Codes/amrex.git',
-             when='@master',
+             when='@develop',
              tag='development')
 
     resource(name='picsar',

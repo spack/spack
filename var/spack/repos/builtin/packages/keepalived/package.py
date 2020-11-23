@@ -25,4 +25,4 @@ class Keepalived(AutotoolsPackage):
     version('2.0.12', sha256='fd50e433d784cfd948de5726752cf89ab7001f587fe10a5110c6c7cbda4b7b5e')
     version('2.0.11', sha256='a298b0c02a20959cfc365b62c14f45abd50d5e0595b2869f5bce10ec2392fa48')
 
-    depends_on('openssl', type='build')
+    depends_on('openssl')

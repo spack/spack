@@ -15,6 +15,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 
 import spack.architecture as architecture
+import spack.config
 import spack.paths
 from spack.main import get_version
 from spack.util.executable import which
@@ -89,6 +90,7 @@ def report(args):
     print('* **Python:**', platform.python_version())
     print('* **Platform:**', architecture.Arch(
         architecture.platform(), 'frontend', 'frontend'))
+    print('* **Concretizer:**', spack.config.get('config:concretizer'))
 
 
 def debug(parser, args):

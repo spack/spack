@@ -14,10 +14,12 @@ class IqTree(CMakePackage):
     git      = "https://github.com/Cibiv/IQ-TREE.git"
     url      = "https://github.com/Cibiv/IQ-TREE/archive/v1.6.12.tar.gz"
 
+    version('2.0.6',    tag='v2.0.6', submodules=True)
     version('1.6.12',   sha256='9614092de7a157de82c9cc402b19cc8bfa0cb0ffc93b91817875c2b4bb46a284') 
 
     variant('openmp', default=True, description='Enable OpenMP support.')
     variant('mpi',    default=False, description='Enable MPI support.')                                                                                                   
+    variant('lsd2',   default=True,  description='Axctivate Least Squares Dating.')
 
     maintainers = ['ilbiondo']
 
@@ -30,12 +32,12 @@ class IqTree(CMakePackage):
 
     def cmake_args(self):
 
-        # Note that one has to specify "single" to get a single
-        # threaded build. Otherwise OpenMP is assumed
-
         spec = self.spec
         args = []
         iqflags = []
+
+        if '+lsd2' in spec:
+            args.append('-DUSE_LSD2=ON')
 
         if '+openmp' in spec:
             iqflags.append('omp')

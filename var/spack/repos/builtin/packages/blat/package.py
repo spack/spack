@@ -21,5 +21,6 @@ class Blat(Package):
         env.set('MACHTYPE', 'x86_64')
 
     def install(self, spec, prefix):
+        filter_file('CC=.*', 'CC={0}'.format(spack_cc), 'inc/common.mk')
         mkdirp(prefix.bin)
         make("BINDIR=%s" % prefix.bin)

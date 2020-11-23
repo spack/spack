@@ -45,7 +45,8 @@ class DeprecatedHash(object):
                           " supported in future Spack releases."
                           .format(self.hash_alg))
         if self.disable_security_check:
-            return hashlib.new(self.hash_alg, usedforsecurity=False)
+            return hashlib.new(  # novermin
+                self.hash_alg, usedforsecurity=False)
         else:
             return hashlib.new(self.hash_alg)
 
@@ -133,7 +134,7 @@ class Checker(object):
     @property
     def hash_name(self):
         """Get the name of the hash function this Checker is using."""
-        return self.hash_fun().name
+        return self.hash_fun().name.lower()
 
     def check(self, filename):
         """Read the file with the specified name and check its checksum

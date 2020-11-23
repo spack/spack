@@ -2,17 +2,21 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 
 import pytest
+
+import archspec.cpu
+
 import llnl.util.lang
 
 import spack.architecture
 import spack.concretize
+import spack.error
 import spack.repo
 
-from spack.concretize import find_spec, NoValidVersionError
-from spack.error import SpecError
-from spack.spec import Spec, CompilerSpec, ConflictsInSpecError
+from spack.concretize import find_spec
+from spack.spec import Spec
 from spack.version import ver
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.compilers
@@ -70,7 +74,7 @@ def check_concretize(abstract_spec):
         # with virtual
         'mpileaks ^mpi', 'mpileaks ^mpi@:1.1', 'mpileaks ^mpi@2:',
         'mpileaks ^mpi@2.1', 'mpileaks ^mpi@2.2', 'mpileaks ^mpi@2.2',
-        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2'
+        'mpileaks ^mpi@:1', 'mpileaks ^mpi@1.2:2',
         # conflict not triggered
         'conflict',
         'conflict%clang~foo',
@@ -92,14 +96,15 @@ def current_host(request, monkeypatch):
     # is_preference is not empty if we want to supply the
     # preferred target via packages.yaml
     cpu, _, is_preference = request.param.partition('-')
-    target = llnl.util.cpu.targets[cpu]
+    target = archspec.cpu.TARGETS[cpu]
 
     # this function is memoized, so clear its state for testing
     spack.architecture.get_platform.cache.clear()
 
+    monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+    monkeypatch.setattr(spack.platforms.test.Test, 'front_end', cpu)
     if not is_preference:
-        monkeypatch.setattr(llnl.util.cpu, 'host', lambda: target)
-        monkeypatch.setattr(spack.platforms.test.Test, 'default', cpu)
+        monkeypatch.setattr(archspec.cpu, 'host', lambda: target)
         yield target
     else:
         with spack.config.override('packages:all', {'target': [cpu]}):
@@ -195,7 +200,7 @@ class TestConcretize(object):
             s.satisfies('mpich2') for s in repo.providers_for('mpi@3')
         )
 
-    def test_provides_handles_multiple_providers_of_same_vesrion(self):
+    def test_provides_handles_multiple_providers_of_same_version(self):
         """
         """
         providers = spack.repo.path.providers_for('mpi@3.0')
@@ -228,7 +233,7 @@ class TestConcretize(object):
         spec.concretize()
         assert spec['cmake'].architecture == spec.architecture
 
-    def test_architecture_deep_inheritance(self):
+    def test_architecture_deep_inheritance(self, mock_targets):
         """Make sure that indirect dependencies receive architecture
         information from the root even when partial architecture information
         is provided by an intermediate dependency.
@@ -241,7 +246,7 @@ class TestConcretize(object):
         mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
         with spack.repo.swap(mock_repo):
-            spec = Spec('foopkg %clang@3.3 os=CNL target=footar' +
+            spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
 
@@ -299,7 +304,7 @@ class TestConcretize(object):
         provides one.
         """
         s = Spec('hypre ^openblas-with-lapack ^netlib-lapack')
-        with pytest.raises(spack.spec.MultipleProviderError):
+        with pytest.raises(spack.error.SpackError):
             s.concretize()
 
     def test_no_matching_compiler_specs(self, mock_low_high_config):
@@ -312,7 +317,7 @@ class TestConcretize(object):
 
     def test_no_compilers_for_arch(self):
         s = Spec('a arch=linux-rhel0-x86_64')
-        with pytest.raises(spack.concretize.NoCompilersForArchError):
+        with pytest.raises(spack.error.SpackError):
             s.concretize()
 
     def test_virtual_is_fully_expanded_for_callpath(self):
@@ -348,14 +353,14 @@ class TestConcretize(object):
         spec.normalize()
         spec.concretize()
 
-    def test_compiler_inheritance(self):
-        spec = Spec('mpileaks')
-        spec.normalize()
-        spec['dyninst'].compiler = CompilerSpec('clang')
-        spec.concretize()
-        # TODO: not exactly the syntax I would like.
-        assert spec['libdwarf'].compiler.satisfies('clang')
-        assert spec['libelf'].compiler.satisfies('clang')
+    @pytest.mark.parametrize('compiler_str', [
+        'clang', 'gcc', 'gcc@4.5.0', 'clang@:3.3.0'
+    ])
+    def test_compiler_inheritance(self, compiler_str):
+        spec_str = 'mpileaks %{0}'.format(compiler_str)
+        spec = Spec(spec_str).concretized()
+        assert spec['libdwarf'].compiler.satisfies(compiler_str)
+        assert spec['libelf'].compiler.satisfies(compiler_str)
 
     def test_external_package(self):
         spec = Spec('externaltool%gcc')
@@ -373,18 +378,17 @@ class TestConcretize(object):
 
         spec = Spec('externalmodule')
         spec.concretize()
-        assert spec['externalmodule'].external_module == 'external-module'
+        assert spec['externalmodule'].external_modules == ['external-module']
         assert 'externalprereq' not in spec
         assert spec['externalmodule'].compiler.satisfies('gcc')
 
     def test_nobuild_package(self):
-        got_error = False
+        """Test that a non-buildable package raise an error if no specs
+        in packages.yaml are compatible with the request.
+        """
         spec = Spec('externaltool%clang')
-        try:
+        with pytest.raises(spack.error.SpecError):
             spec.concretize()
-        except spack.concretize.NoBuildError:
-            got_error = True
-        assert got_error
 
     def test_external_and_virtual(self):
         spec = Spec('externaltest')
@@ -487,18 +491,31 @@ class TestConcretize(object):
         assert find_spec(s['b'], lambda s: '+foo' in s) is None
 
     def test_compiler_child(self):
-        s = Spec('mpileaks%clang ^dyninst%gcc')
+        s = Spec('mpileaks%clang target=x86_64 ^dyninst%gcc')
         s.concretize()
         assert s['mpileaks'].satisfies('%clang')
         assert s['dyninst'].satisfies('%gcc')
 
     def test_conflicts_in_spec(self, conflict_spec):
-        # Check that an exception is raised an caught by the appropriate
-        # exception types.
-        for exc_type in (ConflictsInSpecError, RuntimeError, SpecError):
-            s = Spec(conflict_spec)
-            with pytest.raises(exc_type):
-                s.concretize()
+        s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError):
+            s.concretize()
+
+    @pytest.mark.parametrize('spec_str', [
+        'conflict@10.0%clang+foo'
+    ])
+    def test_no_conflict_in_external_specs(self, spec_str):
+        # Modify the configuration to have the spec with conflict
+        # registered as an external
+        ext = Spec(spec_str)
+        data = {
+            'externals': [
+                {'spec': spec_str,
+                 'prefix': '/fake/path'}
+            ]
+        }
+        spack.config.set("packages::{0}".format(ext.name), data)
+        ext.concretize()  # failure raises exception
 
     def test_regression_issue_4492(self):
         # Constructing a spec which has no dependencies, but is otherwise
@@ -600,21 +617,20 @@ class TestConcretize(object):
     @pytest.mark.parametrize('spec', ['noversion', 'noversion-bundle'])
     def test_noversion_pkg(self, spec):
         """Test concretization failures for no-version packages."""
-        with pytest.raises(NoValidVersionError, match="no valid versions"):
+        with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
     @pytest.mark.parametrize('spec, best_achievable', [
         ('mpileaks%gcc@4.4.7', 'core2'),
         ('mpileaks%gcc@4.8', 'haswell'),
         ('mpileaks%gcc@5.3.0', 'broadwell'),
-        # Apple's clang always falls back to x86-64 for now
-        ('mpileaks%apple-clang@9.1.0', 'x86_64')
+        ('mpileaks%apple-clang@5.1.0', 'x86_64')
     ])
     @pytest.mark.regression('13361')
     def test_adjusting_default_target_based_on_compiler(
-            self, spec, best_achievable, current_host
+            self, spec, best_achievable, current_host, mock_targets
     ):
-        best_achievable = llnl.util.cpu.targets[best_achievable]
+        best_achievable = archspec.cpu.TARGETS[best_achievable]
         expected = best_achievable if best_achievable < current_host \
             else current_host
         with spack.concretize.disable_compiler_existence_check():
@@ -635,6 +651,235 @@ class TestConcretize(object):
         assert str(s.compiler.version) == '4.5.0'
 
     def test_concretize_anonymous(self):
-        with pytest.raises(spack.error.SpecError):
+        with pytest.raises(spack.error.SpackError):
             s = Spec('+variant')
             s.concretize()
+
+    @pytest.mark.parametrize('spec_str', [
+        'mpileaks ^%gcc', 'mpileaks ^cflags=-g'
+    ])
+    def test_concretize_anonymous_dep(self, spec_str):
+        with pytest.raises(spack.error.SpackError):
+            s = Spec(spec_str)
+            s.concretize()
+
+    @pytest.mark.parametrize('spec_str,expected_str', [
+        # Unconstrained versions select default compiler (gcc@4.5.0)
+        ('bowtie@1.3.0', '%gcc@4.5.0'),
+        # Version with conflicts and no valid gcc select another compiler
+        ('bowtie@1.2.2', '%clang@3.3'),
+        # If a higher gcc is available still prefer that
+        ('bowtie@1.2.2 os=redhat6', '%gcc@4.7.2'),
+    ])
+    def test_compiler_conflicts_in_package_py(self, spec_str, expected_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('Original concretizer cannot work around conflicts')
+
+        s = Spec(spec_str).concretized()
+        assert s.satisfies(expected_str)
+
+    @pytest.mark.parametrize('spec_str,expected,unexpected', [
+        ('py-extension3 ^python@3.5.1', [], ['py-extension1']),
+        ('py-extension3 ^python@2.7.11', ['py-extension1'], []),
+        ('py-extension3@1.0 ^python@2.7.11', ['patchelf@0.9'], []),
+        ('py-extension3@1.1 ^python@2.7.11', ['patchelf@0.9'], []),
+        ('py-extension3@1.0 ^python@3.5.1', ['patchelf@0.10'], []),
+    ])
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (3, 5), reason='Known failure with Python3.5'
+    )
+    def test_conditional_dependencies(self, spec_str, expected, unexpected):
+        s = Spec(spec_str).concretized()
+
+        for dep in expected:
+            msg = '"{0}" is not in "{1}" and was expected'
+            assert dep in s, msg.format(dep, spec_str)
+
+        for dep in unexpected:
+            msg = '"{0}" is in "{1}" but was unexpected'
+            assert dep not in s, msg.format(dep, spec_str)
+
+    @pytest.mark.parametrize('spec_str,patched_deps', [
+        ('patch-several-dependencies', [('libelf', 1), ('fake', 2)]),
+        ('patch-several-dependencies@1.0',
+         [('libelf', 1), ('fake', 2), ('libdwarf', 1)]),
+        ('patch-several-dependencies@1.0 ^libdwarf@20111030',
+         [('libelf', 1), ('fake', 2), ('libdwarf', 2)]),
+        ('patch-several-dependencies ^libelf@0.8.10',
+         [('libelf', 2), ('fake', 2)]),
+        ('patch-several-dependencies +foo', [('libelf', 2), ('fake', 2)])
+    ])
+    def test_patching_dependencies(self, spec_str, patched_deps):
+        s = Spec(spec_str).concretized()
+
+        for dep, num_patches in patched_deps:
+            assert s[dep].satisfies('patches=*')
+            assert len(s[dep].variants['patches'].value) == num_patches
+
+    @pytest.mark.regression(
+        '267,303,1781,2310,2632,3628'
+    )
+    @pytest.mark.parametrize('spec_str, expected', [
+        # Need to understand that this configuration is possible
+        # only if we use the +mpi variant, which is not the default
+        ('fftw ^mpich', ['+mpi']),
+        # This spec imposes two orthogonal constraints on a dependency,
+        # one of which is conditional. The original concretizer fail since
+        # when it applies the first constraint, it sets the unknown variants
+        # of the dependency to their default values
+        ('quantum-espresso', ['^fftw@1.0+mpi']),
+        # This triggers a conditional dependency on ^fftw@1.0
+        ('quantum-espresso', ['^openblas']),
+        # This constructs a constraint for a dependency og the type
+        # @x.y:x.z where the lower bound is unconditional, the upper bound
+        # is conditional to having a variant set
+        ('quantum-espresso', ['^libelf@0.8.12']),
+        ('quantum-espresso~veritas', ['^libelf@0.8.13'])
+    ])
+    def test_working_around_conflicting_defaults(self, spec_str, expected):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str).concretized()
+
+        assert s.concrete
+        for constraint in expected:
+            assert s.satisfies(constraint)
+
+    @pytest.mark.regression('4635')
+    @pytest.mark.parametrize('spec_str,expected', [
+        ('cmake', ['%clang']),
+        ('cmake %gcc', ['%gcc']),
+        ('cmake %clang', ['%clang'])
+    ])
+    def test_external_package_and_compiler_preferences(
+            self, spec_str, expected
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'all': {
+                'compiler': ['clang', 'gcc'],
+            },
+            'cmake': {
+                'externals': [
+                    {'spec': 'cmake@3.4.3', 'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+        s = Spec(spec_str).concretized()
+
+        assert s.external
+        for condition in expected:
+            assert s.satisfies(condition)
+
+    @pytest.mark.regression('5651')
+    def test_package_with_constraint_not_met_by_external(
+            self
+    ):
+        """Check that if we have an external package A at version X.Y in
+        packages.yaml, but our spec doesn't allow X.Y as a version, then
+        a new version of A is built that meets the requirements.
+        """
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'libelf': {
+                'externals': [
+                    {'spec': 'libelf@0.8.13', 'prefix': '/usr'}
+                ]
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        # quantum-espresso+veritas requires libelf@:0.8.12
+        s = Spec('quantum-espresso+veritas').concretized()
+        assert s.satisfies('^libelf@0.8.12')
+        assert not s['libelf'].external
+
+    @pytest.mark.regression('9744')
+    def test_cumulative_version_ranges_with_different_length(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec('cumulative-vrange-root').concretized()
+        assert s.concrete
+        assert s.satisfies('^cumulative-vrange-bottom@2.2')
+
+    @pytest.mark.regression('9937')
+    @pytest.mark.skipif(
+        sys.version_info[:2] == (3, 5), reason='Known failure with Python3.5'
+    )
+    def test_dependency_conditional_on_another_dependency_state(self):
+        root_str = 'variant-on-dependency-condition-root'
+        dep_str = 'variant-on-dependency-condition-a'
+        spec_str = '{0} ^{1}'.format(root_str, dep_str)
+
+        s = Spec(spec_str).concretized()
+        assert s.concrete
+        assert s.satisfies('^variant-on-dependency-condition-b')
+
+        s = Spec(spec_str + '+x').concretized()
+        assert s.concrete
+        assert s.satisfies('^variant-on-dependency-condition-b')
+
+        s = Spec(spec_str + '~x').concretized()
+        assert s.concrete
+        assert not s.satisfies('^variant-on-dependency-condition-b')
+
+    @pytest.mark.regression('8082')
+    @pytest.mark.parametrize('spec_str,expected', [
+        ('cmake %gcc', '%gcc'),
+        ('cmake %clang', '%clang')
+    ])
+    def test_compiler_constraint_with_external_package(
+            self, spec_str, expected
+    ):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        packages_yaml = {
+            'cmake': {
+                'externals': [
+                    {'spec': 'cmake@3.4.3', 'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        s = Spec(spec_str).concretized()
+        assert s.external
+        assert s.satisfies(expected)
+
+    def test_external_packages_have_consistent_hash(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.skip('This tests needs the ASP-based concretizer')
+
+        s, t = Spec('externaltool'), Spec('externaltool')
+        s._old_concretize(), t._new_concretize()
+
+        assert s.dag_hash() == t.dag_hash()
+        assert s.build_hash() == t.build_hash()
+        assert s.full_hash() == t.full_hash()
+
+    def test_external_that_would_require_a_virtual_dependency(self):
+        s = Spec('requires-virtual').concretized()
+
+        assert s.external
+        assert 'stuff' not in s
+
+    def test_transitive_conditional_virtual_dependency(self):
+        s = Spec('transitive-conditional-virtual-dependency').concretized()
+
+        # The default for conditional-virtual-dependency is to have
+        # +stuff~mpi, so check that these defaults are respected
+        assert '+stuff' in s['conditional-virtual-dependency']
+        assert '~mpi' in s['conditional-virtual-dependency']
+
+        # 'stuff' is provided by an external package, so check it's present
+        assert 'externalvirtual' in s

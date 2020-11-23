@@ -17,19 +17,28 @@ class Flecsph(CMakePackage):
     homepage = "http://flecsi.lanl.com"
     git      = "https://github.com/laristra/flecsph.git"
 
-    version('develop', branch='master', submodules=True)
+    version('master', branch='master', submodules=True, preferred=True)
 
-    depends_on('cmake@3.1:', type='build')
-    depends_on('boost@1.59.0: cxxstd=11 +program_options')
+    variant('test', default=True, description='Adding tests')
+
+    depends_on('cmake@3.15:', type='build')
+    depends_on('boost@1.70.0: cxxstd=14 +program_options')
     depends_on('mpi')
-    depends_on('hdf5@1.10.5 +mpi')
-    depends_on('flecsi backend=mpi')
+    depends_on('hdf5+hl@1.8:')
+    depends_on('flecsi@1 +cinch backend=mpi')
     depends_on('gsl')
+    depends_on('googletest', when='+test')
+    depends_on("pkgconfig", type='build')
+
+    def setup_run_environment(self, env):
+        env.set('HDF5_ROOT', self.spec['hdf5'].prefix)
 
     def cmake_args(self):
         options = ['-DCMAKE_BUILD_TYPE=debug']
-        options.append('-DENABLE_MPI=ON')
-        options.append('-DENABLE_OPENMP=ON')
-        options.append('-DENABLE_CLOG=ON')
-        options.append('-DCXX_CONFORMANCE_STANDARD=c++17')
+        options.append('-DENABLE_UNIT_TESTS=ON')
+        options.append('-DENABLE_DEBUG=OFF')
+        options.append('-DLOG_STRIP_LEVEL=1')
+        options.append('-DENABLE_UNIT_TESTS=ON')
+        options.append('-DENABLE_DEBUG_TREE=OFF')
+        # add option to build the tests
         return options
