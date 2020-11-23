@@ -49,6 +49,7 @@ modules:
       - julia
       - llvm
       - mvapich2
+      - nvhpc
       - pgi
       - python
       - snakemake
