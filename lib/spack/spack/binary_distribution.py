@@ -1135,7 +1135,6 @@ def relocate_package(spec, allow_root):
                                              prefix_to_prefix_bin, rel,
                                              old_prefix,
                                              new_prefix)
-
         if 'elf' in platform.binary_formats:
             relocate.relocate_elf_binaries(files_to_relocate,
                                            old_layout_root,

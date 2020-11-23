@@ -809,7 +809,6 @@ def relocate_text(files, prefixes, concurrency=32):
         args.append((filename, compiled_prefixes))
 
     tp = multiprocessing.pool.ThreadPool(processes=concurrency)
-
     try:
         tp.map(llnl.util.lang.star(_replace_prefix_text), args)
     finally:
