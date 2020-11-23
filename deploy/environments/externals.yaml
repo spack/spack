@@ -8,10 +8,6 @@ spack:
         jpeg: [libjpeg-turbo]
         mpi: [hpe-mpi@2.21]
         lapack: [intel-mkl@2019.3.199]
-    cairo:
-      externals:
-      - spec: cairo+X+fc+ft+gobject+pdf+png+svg@1.15.12
-        prefix: /usr
     graphviz:
       variants: +pangocairo
     mvapich2:
