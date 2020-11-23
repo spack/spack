@@ -36,9 +36,9 @@ modules:
       - petsc
       - py-dask-mpi
       - py-flake8
-      - py-mpi4py
+      - py-mpi4py%gcc
       - python-dev
-      - py-h5py%gcc
+      - py-h5py~mpi%gcc
       - py-numpy%gcc
       - py-scikit-learn
       - py-virtualenv
