@@ -22,3 +22,8 @@ packages:
     - spec: externalmodule@1.0%gcc@4.5.0
       modules:
       - external-module
+  'requires-virtual':
+    buildable: False
+    externals:
+    - spec:  requires-virtual@2.0
+      prefix: /usr

@@ -243,7 +243,7 @@ class TestSpecSyntax(object):
 
         self.check_parse(
             "x arch=test-redhat6-None"
-            " ^y arch=test-None-x86_64"
+            " ^y arch=test-None-core2"
             " ^z arch=linux-None-None",
 
             "x os=fe "
@@ -251,8 +251,8 @@ class TestSpecSyntax(object):
             "^z platform=linux")
 
         self.check_parse(
-            "x arch=test-debian6-x86_64"
-            " ^y arch=test-debian6-x86_64",
+            "x arch=test-debian6-core2"
+            " ^y arch=test-debian6-core2",
 
             "x os=default_os target=default_target"
             " ^y os=default_os target=default_target")

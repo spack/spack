@@ -5,6 +5,7 @@
 
 
 import itertools
+import re
 import os
 import sys
 import llnl.util.tty as tty
@@ -29,6 +30,8 @@ class Openmpi(AutotoolsPackage):
     git = "https://github.com/open-mpi/ompi.git"
 
     maintainers = ['hppritcha']
+
+    executables = ['^ompi_info$']
 
     version('master', branch='master')
 
@@ -332,6 +335,119 @@ class Openmpi(AutotoolsPackage):
               msg='singularity support has been dropped in OpenMPI 5')
 
     filter_compiler_wrappers('openmpi/*-wrapper-data*', relative_root='share')
+
+    extra_install_tests = 'examples'
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'Open MPI: (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)("-a", output=str, error=str)
+            # Some of these options we have to find by hoping the
+            # configure string is in the ompi_info output. While this
+            # is usually true, it's not guaranteed.  For anything that
+            # begins with --, we want to use the defaults as provided
+            # by the openmpi package in the absense of any other info.
+
+            if re.search(r'--enable-builtin-atomics', output):
+                variants += "+atomics"
+            match = re.search(r'\bJava bindings: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += "+java"
+            else:
+                variants += "~java"
+            if re.search(r'--enable-static', output):
+                variants += "+static"
+            elif re.search(r'--disable-static', output):
+                variants += "~static"
+            elif re.search(r'\bMCA (?:coll|oca|pml): monitoring',
+                           output):
+                # Built multiple variants of openmpi and ran diff.
+                # This seems to be the distinguishing feature.
+                variants += "~static"
+            if re.search(r'\bMCA db: sqlite', output):
+                variants += "+sqlite3"
+            else:
+                variants += "~sqlite3"
+            if re.search(r'--enable-contrib-no-build=vt', output):
+                variants += '+vt'
+            match = re.search(r'MPI_THREAD_MULTIPLE: (\S+?),?', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+thread_multiple'
+            else:
+                variants += '~thread_multiple'
+            match = re.search(
+                r'parameter "mpi_built_with_cuda_support" ' +
+                r'\(current value: "(\S+)"',
+                output)
+            if match and is_enabled(match.group(1)):
+                variants += '+cuda'
+            else:
+                variants += '~cuda'
+            match = re.search(r'\bWrapper compiler rpath: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+wrapper-rpath'
+            else:
+                variants += '~wrapper-rpath'
+            match = re.search(r'\bC\+\+ bindings: (\S+)', output)
+            if match and match.group(1) == 'yes':
+                variants += '+cxx'
+            else:
+                variants += '~cxx'
+            match = re.search(r'\bC\+\+ exceptions: (\S+)', output)
+            if match and match.group(1) == 'yes':
+                variants += '+cxx_exceptions'
+            else:
+                variants += '~cxx_exceptions'
+            if re.search(r'--with-singularity', output):
+                variants += '+singularity'
+            if re.search(r'--with-lustre', output):
+                variants += '+lustre'
+            match = re.search(r'Memory debugging support: (\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+memchecker'
+            else:
+                variants += '~memchecker'
+            if re.search(r'\bMCA (?:ess|prrte): pmi', output):
+                variants += '+pmi'
+            else:
+                variants += '~pmi'
+
+            fabrics = get_options_from_variant(cls, "fabrics")
+            used_fabrics = []
+            for fabric in fabrics:
+                match = re.search(r'\bMCA (?:mtl|btl|pml): %s\b' % fabric,
+                                  output)
+                if match:
+                    used_fabrics.append(fabric)
+            if used_fabrics:
+                variants += ' fabrics=' + ','.join(used_fabrics) + ' '
+
+            schedulers = get_options_from_variant(cls, "schedulers")
+            used_schedulers = []
+            for scheduler in schedulers:
+                match = re.search(r'\bMCA (?:prrte|ras): %s\b' % scheduler,
+                                  output)
+                if match:
+                    used_schedulers.append(scheduler)
+            if used_schedulers:
+                variants += ' schedulers=' + ','.join(used_schedulers) + ' '
+
+            # Get the appropriate compiler
+            match = re.search(r'\bC compiler absolute: (\S+)', output)
+            compiler_spec = get_spack_compiler_spec(
+                os.path.dirname(match.group(1)))
+            if compiler_spec:
+                variants += "%" + str(compiler_spec)
+            results.append(variants)
+        return results
 
     def url_for_version(self, version):
         url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
@@ -731,3 +847,172 @@ class Openmpi(AutotoolsPackage):
                     tty.debug("File not present: " + exe)
                 else:
                     copy(script_stub, exe)
+
+    @run_after('install')
+    def setup_install_tests(self):
+        """
+        Copy the example files after the package is installed to an
+        install test subdirectory for use during `spack test run`.
+        """
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _test_bin_ops(self):
+        info = ([], ['Ident string: {0}'.format(self.spec.version), 'MCA'],
+                0)
+
+        ls = (['-n', '1', 'ls', '..'],
+              ['openmpi-{0}'.format(self.spec.version)], 0)
+
+        checks = {
+            'mpirun': ls,
+            'ompi_info': info,
+            'oshmem_info': info,
+            'oshrun': ls,
+            'shmemrun': ls,
+        }
+
+        for exe in checks:
+            options, expected, status = checks[exe]
+            reason = 'test: checking {0} output'.format(exe)
+            self.run_test(exe, options, expected, status, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_check_versions(self):
+        comp_vers = str(self.spec.compiler.version)
+        spec_vers = str(self.spec.version)
+        checks = {
+            # Binaries available in at least versions 2.0.0 through 4.0.3
+            'mpiCC': comp_vers,
+            'mpic++': comp_vers,
+            'mpicc': comp_vers,
+            'mpicxx': comp_vers,
+            'mpiexec': spec_vers,
+            'mpif77': comp_vers,
+            'mpif90': comp_vers,
+            'mpifort': comp_vers,
+            'mpirun': spec_vers,
+            'ompi_info': spec_vers,
+            'ortecc': comp_vers,
+            'orterun': spec_vers,
+
+            # Binaries available in versions 2.0.0 through 2.1.6
+            'ompi-submit': spec_vers,
+            'orte-submit': spec_vers,
+
+            # Binaries available in versions 2.0.0 through 3.1.5
+            'ompi-dvm': spec_vers,
+            'orte-dvm': spec_vers,
+            'oshcc': comp_vers,
+            'oshfort': comp_vers,
+            'oshmem_info': spec_vers,
+            'oshrun': spec_vers,
+            'shmemcc': comp_vers,
+            'shmemfort': comp_vers,
+            'shmemrun': spec_vers,
+
+            # Binary available in version 3.1.0 through 3.1.5
+            'prun': spec_vers,
+
+            # Binaries available in versions 3.0.0 through 3.1.5
+            'oshCC': comp_vers,
+            'oshc++': comp_vers,
+            'oshcxx': comp_vers,
+            'shmemCC': comp_vers,
+            'shmemc++': comp_vers,
+            'shmemcxx': comp_vers,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            purpose = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
+                          purpose=purpose, skip_missing=True)
+
+    def _test_examples(self):
+        # First build the examples
+        self.run_test('make', ['all'], [],
+                      purpose='test: ensuring ability to build the examples',
+                      work_dir=join_path(self.install_test_root,
+                                         self.extra_install_tests))
+
+        # Now run those with known results
+        have_spml = self.spec.satisfies('@2.0.0:2.1.6')
+
+        hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
+
+        max_red = (['0/1 dst = 0 1 2'], 0)
+
+        missing_spml = (['No available spml components'], 1)
+
+        no_out = ([''], 0)
+
+        ring_out = (['1 processes in ring', '0 exiting'], 0)
+
+        strided = (['not in valid range'], 255)
+
+        checks = {
+            'hello_c': hello_world,
+            'hello_cxx': hello_world,
+            'hello_mpifh': hello_world,
+            'hello_oshmem': hello_world if have_spml else missing_spml,
+            'hello_oshmemcxx': hello_world if have_spml else missing_spml,
+            'hello_oshmemfh': hello_world if have_spml else missing_spml,
+            'hello_usempi': hello_world,
+            'hello_usempif08': hello_world,
+            'oshmem_circular_shift': ring_out if have_spml else missing_spml,
+            'oshmem_max_reduction': max_red if have_spml else missing_spml,
+            'oshmem_shmalloc': no_out if have_spml else missing_spml,
+            'oshmem_strided_puts': strided if have_spml else missing_spml,
+            'oshmem_symmetric_data': no_out if have_spml else missing_spml,
+            'ring_c': ring_out,
+            'ring_cxx': ring_out,
+            'ring_mpifh': ring_out,
+            'ring_oshmem': ring_out if have_spml else missing_spml,
+            'ring_oshmemfh': ring_out if have_spml else missing_spml,
+            'ring_usempi': ring_out,
+            'ring_usempif08': ring_out,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = 'test: checking example {0} output'.format(exe)
+            self.run_test(exe, [], expected, 0, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known packages
+        self._test_check_versions()
+
+        # Test the operation of selected executables
+        self._test_bin_ops()
+
+        # Test example programs pulled from the build
+        self._test_examples()
+
+
+def get_spack_compiler_spec(path):
+    spack_compilers = spack.compilers.find_compilers([path])
+    actual_compiler = None
+    # check if the compiler actually matches the one we want
+    for spack_compiler in spack_compilers:
+        if os.path.dirname(spack_compiler.cc) == path:
+            actual_compiler = spack_compiler
+            break
+    return actual_compiler.spec if actual_compiler else None
+
+
+def is_enabled(text):
+    if text in set(['t', 'true', 'enabled', 'yes', '1']):
+        return True
+    return False
+
+
+# This code gets all the fabric names from the variants list
+# Idea taken from the AutotoolsPackage source.
+def get_options_from_variant(self, name):
+    values = self.variants[name].values
+    if getattr(values, 'feature_values', None):
+        values = values.feature_values
+    return values

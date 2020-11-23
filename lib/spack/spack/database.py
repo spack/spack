@@ -1532,6 +1532,24 @@ class Database(object):
 
         return unused
 
+    def update_explicit(self, spec, explicit):
+        """
+        Update the spec's explicit state in the database.
+
+        Args:
+            spec (Spec): the spec whose install record is being updated
+            explicit (bool): ``True`` if the package was requested explicitly
+                by the user, ``False`` if it was pulled in as a dependency of
+                an explicit package.
+        """
+        rec = self.get_record(spec)
+        if explicit != rec.explicit:
+            with self.write_transaction():
+                message = '{s.name}@{s.version} : marking the package {0}'
+                status = 'explicit' if explicit else 'implicit'
+                tty.debug(message.format(status, s=spec))
+                rec.explicit = explicit
+
 
 class UpstreamDatabaseLockingError(SpackError):
     """Raised when an operation would need to lock an upstream database"""

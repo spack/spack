@@ -15,6 +15,8 @@ class Vecgeom(CMakePackage, CudaPackage):
     url = "https://gitlab.cern.ch/VecGeom/VecGeom/-/archive/v1.1.6/VecGeom-v1.1.6.tar.gz"
     git = "https://gitlab.cern.ch/VecGeom/VecGeom.git"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')

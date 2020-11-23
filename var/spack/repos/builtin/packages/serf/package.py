@@ -63,7 +63,7 @@ class Serf(SConsPackage):
 
         return args
 
-    def test(self):
+    def build_test(self):
         # FIXME: Several test failures:
         #
         # There were 14 failures:

@@ -17,11 +17,11 @@ class Charmpp(Package):
     allows programs to run portably from small multicore computers
     (your laptop) to the largest supercomputers."""
 
-    homepage = "http://charmplusplus.org"
-    url      = "http://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
+    homepage = "https://charmplusplus.org"
+    url      = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git      = "https://github.com/UIUC-PPL/charm.git"
 
-    version("develop", branch="master")
+    version("master", branch="master")
 
     version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
     version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')
@@ -37,7 +37,7 @@ class Charmpp(Package):
     version("6.5.1", sha256="68aa43e2a6e476e116a7e80e385c25c6ac6497807348025505ba8bfa256ed34a")
 
     # Support OpenMPI; see
-    # <https://charm.cs.illinois.edu/redmine/issues/1206>
+    # <https://github.com/UIUC-PPL/charm/issues/1206>
     # Patch is no longer needed in versions 6.8.0+
     patch("mpi.patch", when="@:6.7.1")
 
@@ -147,17 +147,12 @@ class Charmpp(Package):
             ("darwin",  "x86_64",   "mpi"):         "mpi-darwin-x86_64",
             ("darwin",  "x86_64",   "multicore"):   "multicore-darwin-x86_64",
             ("darwin",  "x86_64",   "netlrts"):     "netlrts-darwin-x86_64",
-            ("linux",   "i386",     "mpi"):         "mpi-linux",
-            ("linux",   "i386",     "multicore"):   "multicore-linux",
-            ("linux",   "i386",     "netlrts"):     "netlrts-linux",
-            ("linux",   "i386",     "uth"):         "uth-linux",
             ("linux",   "x86_64",   "mpi"):         "mpi-linux-x86_64",
             ("linux",   "x86_64",   "multicore"):   "multicore-linux-x86_64",
             ("linux",   "x86_64",   "netlrts"):     "netlrts-linux-x86_64",
             ("linux",   "x86_64",   "verbs"):       "verbs-linux-x86_64",
             ("linux",   "x86_64",   "ofi"):         "ofi-linux-x86_64",
             ("linux",   "x86_64",   "ucx"):         "ucx-linux-x86_64",
-            ("linux",   "x86_64",   "uth"):         "uth-linux-x86_64",
             ("linux",   "ppc",      "mpi"):         "mpi-linux-ppc",
             ("linux",   "ppc",      "multicore"):   "multicore-linux-ppc",
             ("linux",   "ppc",      "netlrts"):     "netlrts-linux-ppc",
@@ -173,6 +168,21 @@ class Charmpp(Package):
             ("cnl",     "x86_64",   "gni"):         "gni-crayxc",
             ("cnl",     "x86_64",   "mpi"):         "mpi-crayxc",
         }
+
+        # Some versions were renamed/removed in 6.11
+        if self.spec.version < Version("6.11.0"):
+            versions.update({("linux", "i386", "mpi"):       "mpi-linux"})
+            versions.update({("linux", "i386", "multicore"):
+                             "multicore-linux"})
+            versions.update({("linux", "i386", "netlrts"):   "netlrts-linux"})
+            versions.update({("linux", "i386", "uth"):       "uth-linux"})
+        else:
+            versions.update({("linux", "i386", "mpi"):       "mpi-linux-i386"})
+            versions.update({("linux", "i386", "multicore"):
+                             "multicore-linux-i386"})
+            versions.update({("linux", "i386", "netlrts"):
+                             "netlrts-linux-i386"})
+
         if (plat, mach, comm) not in versions:
             raise InstallError(
                 "The communication mechanism %s is not supported "
@@ -301,7 +311,10 @@ class Charmpp(Package):
                         os.rename(tmppath, filepath)
                     except (IOError, OSError):
                         pass
-        shutil.rmtree(join_path(builddir, "tmp"))
+
+        tmp_path = join_path(builddir, "tmp")
+        if not os.path.islink(tmp_path):
+            shutil.rmtree(tmp_path)
 
         if self.spec.satisfies('@6.9.99'):
             # A broken 'doc' link in the prefix can break the build.
