@@ -16,7 +16,7 @@ class H5cpp(CMakePackage):
     maintainers = ['eschnett']
 
     version('master', branch='master')
-    version('1.10.4-5', sha256='42d0ca1aaff1ead8998a26d892a51c12b1b89023382f191dc438bd0fa4513455')
+    version('1.10.4-5', sha256='661ccc4d76e081afc73df71ef11d027837d92dd1089185f3650afcaec9d418ec')
 
     variant('mpi', default=True, description='Include MPI support')
 
@@ -26,4 +26,7 @@ class H5cpp(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        return ['-DH5CPP_BUILD_TESTS=OFF']
+        return ['-DHDF5_INCLUDE_DIRS=%s' % self.spec['hdf5'].prefix.include,
+                '-DHDF5_LIBRARIES=%s' % self.spec['hdf5'].prefix.lib,
+                '-DH5CPP_BUILD_TESTS=OFF',
+                ]
