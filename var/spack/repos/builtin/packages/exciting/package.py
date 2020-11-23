@@ -21,7 +21,7 @@ class Exciting(MakefilePackage):
     version('14', sha256='a7feaffdc23881d6c0737d2f79f94d9bf073e85ea358a57196d7f7618a0a3eff')
 
     # as-of-yet unpublished fix to version 14
-    patch('dfgather.patch', when='@14', working_dir='src/src_xs', level=0) 
+    patch('dfgather.patch', when='@14', working_dir='src/src_xs', level=0)
     variant('mpi', default=False, description='Use MPI')
     variant('mkl', default=False, description='Use MKL')
     variant('omp', default=True, description='Use OpenMP')
@@ -38,7 +38,6 @@ class Exciting(MakefilePackage):
             conflicts('%{0}'.format(__compiler), when='^mkl',
                       msg='MKL only works with the Intel compiler')
 
-
     def edit(self, spec, prefix):
         opts = {}
         opts['BUILDSMP'] = 'true'
@@ -49,8 +48,8 @@ class Exciting(MakefilePackage):
         opts['F90'] = spack_fc
         opts['F77'] = spack_f77
         if '+omp' in spec:
-            opts['LDFLAGS'] =  self.compiler.openmp_flag + ' -DUSEOMP'
-            opts['F90_OPTS'] += self.compiler.openmp_flag + ' -DUSEOMP' 
+            opts['LDFLAGS'] = self.compiler.openmp_flag + ' -DUSEOMP'
+            opts['F90_OPTS'] += self.compiler.openmp_flag + ' -DUSEOMP'
             opts['F77_OPTS'] += self.compiler.openmp_flag + ' -DUSEOMP'
         if '%intel' in spec:
             opts['F90_OPTS'] += ' -O3 -cpp -ip -unroll -scalar_rep '
