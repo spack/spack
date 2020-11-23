@@ -126,7 +126,7 @@ packages:
       - py-efel@3.0.80
       - py-bluepyefe@0.3.13
       - py-bglibpy@4.4.10 ^neuron%intel@19.0.4
-      - py-bluepy@0.14.14
+      - py-bluepy@0.14.15
       - py-bluepymm@0.7.49 ^neuron%intel@19.0.4
       - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
       - py-currentscape@0.0.2
