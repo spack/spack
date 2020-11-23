@@ -22,4 +22,4 @@ comparing system environments."""
     # depends_on('libselinux')
     # depends_on('libapparmor')
     depends_on('numactl')
-    depends_on('check')
+    depends_on('check', type='build')
