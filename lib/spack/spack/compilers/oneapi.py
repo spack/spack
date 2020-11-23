@@ -14,16 +14,16 @@ class Oneapi(Compiler):
     cxx_names = ['icpx']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = ['ifx']
+    f77_names = ['ifx', 'ifort']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = ['ifx']
+    fc_names = ['ifx', 'ifort']
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'oneapi/icx',
                   'cxx': 'oneapi/icpx',
-                  'f77': 'oneapi/ifx',
-                  'fc': 'oneapi/ifx'}
+                  'f77': 'oneapi/ifort',
+                  'fc': 'oneapi/ifort'}
 
     PrgEnv = 'PrgEnv-oneapi'
     PrgEnv_compiler = 'oneapi'
