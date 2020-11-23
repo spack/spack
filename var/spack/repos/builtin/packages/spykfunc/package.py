@@ -42,7 +42,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-funcsigs', type=('build', 'run'))
-    depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('py-h5py~mpi', type=('build', 'run'), when='@:0.15.1')
     depends_on('py-hdfs', type=('build', 'run'))
     depends_on('py-jprops', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
@@ -61,6 +61,10 @@ class Spykfunc(PythonPackage):
 
     patch('setup-spark3.patch', when='@:0.15.6 ^spark@3:')
     patch('properties-spark3.patch', when='@:0.15.6 ^spark@3:')
+
+    def patch(self):
+        if self.spec.satisfies('@0.15.2:0.16.999'):
+            filter_file(r"\s*'py-h5py',", '', 'setup.py')
 
     def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
