@@ -25,6 +25,7 @@ class Steps(CMakePackage):
     variant("mpi", default=True, description="Use MPI for parallel solvers")
     variant("coverage", default=False, description="Enable code coverage")
     variant("bundle", default=False, description="Use bundled libraries")
+    variant("stochtests", default=True, description="Add stochastic tests to ctests")
 
     depends_on("boost")
     depends_on("blas")
@@ -93,6 +94,11 @@ class Steps(CMakePackage):
             args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=True")
         else:
             args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=False")
+
+        if "+stochtest" in spec:
+            args.append("-DBUILD_STOCHASTIC_TESTS=True")
+        else:
+            args.append("-DBUILD_STOCHASTIC_TESTS=False")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         args.append('-DPYTHON_EXECUTABLE='
