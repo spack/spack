@@ -140,6 +140,7 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
             '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
+            '-DHydrogen_ENABLE_GPU_FP16=%s' % ('+cuda' in spec and '+half' in spec),
         ]
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
