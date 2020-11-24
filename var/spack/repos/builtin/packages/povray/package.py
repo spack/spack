@@ -78,8 +78,6 @@ class Povray(AutotoolsPackage):
         unix_dir = join_path(self.build_directory, 'unix')
         prebuild_path = join_path(unix_dir, 'prebuild.sh')
         prebuild_script = which(prebuild_path)
-        #run_env = { "PWD": unix_dir }
-        #prebuild_script(env=run_env)
         prebuild_script()
 
     def configure_args(self):
