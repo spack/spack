@@ -1,0 +1,15 @@
+spack:
+  specs:
+  - clingo@spack+python
+  config:
+    concretizer: original
+    install_tree:
+      root: {{ root }}/store
+  packages:
+    python:
+      externals:
+      - spec: {{ interpreter_spec }}
+        prefix: {{ interpreter_prefix }}
+  modules:
+    enable:: []
+  view: {{ root }}/view

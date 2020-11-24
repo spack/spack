@@ -22,7 +22,10 @@ import archspec.cpu
 try:
     import clingo
 except ImportError:
-    clingo = None
+    import spack.bootstrap
+    extension_dir = spack.bootstrap.clingo()
+    sys.path.append(extension_dir)
+    import clingo
 
 import llnl.util.lang
 import llnl.util.tty as tty

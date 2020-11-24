@@ -2,18 +2,20 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """Defines paths that are part of Spack's directory structure.
 
 Do not import other ``spack`` modules here. This module is used
 throughout Spack and should bring in a minimal number of external
 dependencies.
 """
-import os
-from llnl.util.filesystem import ancestor
+import hashlib
+import os.path
+import sys
+
+import llnl.util.filesystem as fs
 
 #: This file lives in $prefix/lib/spack/spack/__file__
-prefix = ancestor(__file__, 4)
+prefix = fs.ancestor(__file__, 4)
 
 #: synonym for prefix
 spack_root = prefix
@@ -61,3 +63,9 @@ gpg_keys_path      = os.path.join(var_path, "gpg")
 mock_gpg_data_path = os.path.join(var_path, "gpg.mock", "data")
 mock_gpg_keys_path = os.path.join(var_path, "gpg.mock", "keys")
 gpg_path           = os.path.join(opt_path, "spack", "gpg")
+
+#: Path where to store bootstrapped software
+bootstrap_path = os.path.join(
+    user_config_path, "bootstrap",
+    hashlib.md5(os.path.abspath(sys.executable).encode('utf-8')).hexdigest()
+)
