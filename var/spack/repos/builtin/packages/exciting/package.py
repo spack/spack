@@ -27,6 +27,7 @@ class Exciting(MakefilePackage):
     variant('omp', default=True, description='Use OpenMP')
     variant('scalapack', default=False, description='Use ScaLAPACK')
     depends_on('blas+lp64')
+    depends_on('lapack')
     depends_on('fftw', when='~mkl')
     depends_on('mkl', when='+mkl')
     depends_on('mpi', when='+mpi')
