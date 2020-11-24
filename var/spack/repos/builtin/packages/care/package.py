@@ -29,14 +29,14 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     depends_on('blt', type='build')
 
     depends_on('camp')
-    depends_on('umpire')
-    depends_on('raja')
-    depends_on('chai')
+    depends_on('umpire@develop')
+    depends_on('raja@develop')
+    depends_on('chai@develop+enable_pick~benchmarks')
 
     depends_on('camp+cuda', when='+cuda')
-    depends_on('umpire+cuda', when='+cuda')
-    depends_on('raja+cuda', when='+cuda')
-    depends_on('chai+cuda', when='+cuda')
+    depends_on('umpire@develop+cuda', when='+cuda')
+    depends_on('raja@develop+cuda', when='+cuda')
+    depends_on('chai@develop+cuda+enable_pick~benchmarks', when='+cuda')
 
     # TODO: support external cub rather than in-package submodule.
     # depends_on('cub', when='+cuda')
