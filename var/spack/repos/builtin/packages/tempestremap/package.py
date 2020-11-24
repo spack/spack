@@ -8,10 +8,12 @@ from spack import *
 
 class Tempestremap(AutotoolsPackage):
     """ TempestRemap is a conservative, consistent and monotone remapping
-        package for arbitrary grid geometry with support for finite volumes
-        and finite elements.
-        There is still quite a bit of work to be done, but any feedback is
-        appreciated on the software in its current form"""
+    package for arbitrary grid geometry with support for finite volumes
+    and finite elements.
+
+    There is still quite a bit of work to be done, but any feedback is
+    appreciated on the software in its current form
+    """
 
     homepage = "https://github.com/ClimateGlobalChange/tempestremap"
     url      = "https://github.com/ClimateGlobalChange/tempestremap/archive/v2.0.5.tar.gz"
