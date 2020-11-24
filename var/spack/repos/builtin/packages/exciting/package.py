@@ -99,9 +99,8 @@ class Exciting(MakefilePackage):
     def install(self, spec, prefix):
         cd = which('cd')
         make()
-        cd('build')
-        install_tree('bin', prefix.bin)
-        cd('..')
+        with working_dir('build'):
+            install_tree('bin', prefix.bin)
         install_tree('species', prefix.species)
         install_tree('tools', prefix.tools)
 
