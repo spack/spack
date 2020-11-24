@@ -56,7 +56,6 @@ class Exciting(MakefilePackage):
             opts['CPP_ON_OPTS'] += ' -DIFORT -DFFTW'
         if '%gcc' in spec:
             opts['F90_OPTS'] += '-O3 -march=native -ffree-line-length-0'
-
         filter_file('FCFLAGS = @FCFLAGS@',
                     ' '.join(['FCFLAGS = @FCFLAGS@', '-cpp',
                               self.compiler.openmp_flag]),
@@ -97,10 +96,7 @@ class Exciting(MakefilePackage):
                 inc.write('{0} = {1}\n'.format(key, opts[key]))
 
     def install(self, spec, prefix):
-        cd = which('cd')
-        make()
-        with working_dir('build'):
-            install_tree('bin', prefix.bin)
+        install_tree('bin', prefix)
         install_tree('species', prefix.species)
         install_tree('tools', prefix.tools)
 
