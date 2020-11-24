@@ -126,7 +126,7 @@ are currently supported are summarized in the table below:
    * - Ubuntu 18.04
      - ``ubuntu:18.04``
      - ``spack/ubuntu-bionic``
-   * Ubuntu 20.04
+   * - Ubuntu 20.04
      - ``ubuntu:20.04``
      - ``IDK what goes here``
    * - CentOS 6
