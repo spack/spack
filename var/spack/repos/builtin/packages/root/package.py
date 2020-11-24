@@ -138,7 +138,7 @@ class Root(CMakePackage):
             description='Enable R ROOT bindings')
     variant('rpath', default=True,
             description='Enable RPATH')
-    variant('rootfit', default=True,
+    variant('roofit', default=True,
             description='Build the libRooFit advanced fitting package')
     variant('root7', default=False,
             description='Enable ROOT 7 support')
@@ -392,7 +392,7 @@ class Root(CMakePackage):
             define_from_variant('qtgsi', 'qt4'),  # See conflicts
             define_from_variant('r'),
             define('rfio', False),
-            define('roofit', False),
+            define_from_variant('roofit'),
             define_from_variant('root7'),  # See conflicts
             define('ruby', False),
             define('sapdb', False),
