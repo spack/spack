@@ -59,7 +59,7 @@ class Krb5(AutotoolsPackage):
     def configure_args(self):
         args = ['--without-system-verto']
 
-        if '+static' in self.spec:
+        if '~shared' in self.spec:
             args.append('--enable-static')
             args.append('--disable-shared')
         else:
