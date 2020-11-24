@@ -27,6 +27,9 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
 
         options = []
 
+        if 'blt' in spec:
+            options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
+
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',

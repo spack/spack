@@ -42,6 +42,10 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
         spec = self.spec
 
         options = []
+
+        if 'blt' in spec:
+            options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
+
         options.append('-DENABLE_OPENMP={0}'.format(
             'ON' if '+openmp' in spec else 'OFF'))
 
