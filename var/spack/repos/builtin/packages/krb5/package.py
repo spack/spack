@@ -27,7 +27,7 @@ class Krb5(AutotoolsPackage):
     depends_on('openssl')
 
     variant(
-        'shared', default=True, 
+        'shared', default=True,
         description='install shared libraries if True, static if false'
     )
     patch('mit-krb5-1.17-static-libs.patch', level=0)
