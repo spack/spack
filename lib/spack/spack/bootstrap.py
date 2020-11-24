@@ -14,8 +14,8 @@ import spack.tengine
 
 
 def clingo():
-    """Bootstrap clingo for the current interpreter, if necessary, and
-    returns the path to be added to PYTHONPATH.
+    """Bootstrap clingo for the current interpreter, if not done before,
+    modify sys.path and return the imported Python module.
     """
     # Base directory where to bootstrap software for this interpreter
     root_dir = spack.paths.bootstrap_path
@@ -29,7 +29,7 @@ def clingo():
     # Check if clingo with Python support is already present
     clingo_libs = fs.find_libraries(['libclingo'], view_dir, recursive=True)
     if clingo_libs:
-        return _extract_extension_dir_from(clingo_libs)
+        return _import_clingo_module(clingo_libs)
 
     # We need to build clingo, so ensure prerequisites are met first.
     msg = "CLINGO BOOTSTRAP: libclingo.so not found [view={0}]"
@@ -53,10 +53,15 @@ def clingo():
             env.write()
 
     clingo_libs = fs.find_libraries(['libclingo'], view_dir, recursive=True)
-    if clingo_libs:
-        python_extension_dir = _extract_extension_dir_from(clingo_libs)
+    return _import_clingo_module(clingo_libs)
 
-    return python_extension_dir
+
+def _import_clingo_module(clingo_libs):
+    python_extension_dir = _extract_extension_dir_from(clingo_libs)
+    # Add the path to sys.path and import clingo
+    sys.path.append(python_extension_dir)
+    import clingo
+    return clingo
 
 
 def _extract_extension_dir_from(clingo_libs):

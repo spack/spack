@@ -76,6 +76,13 @@ def no_path_access(monkeypatch):
     monkeypatch.setattr(os, 'access', _can_access)
 
 
+@pytest.fixture(scope='session', autouse=True)
+def pytest_configure():
+    # TODO: Disable bootstrapping for tests in a cleaner way
+    import spack.bootstrap
+    spack.bootstrap.clingo = lambda: None
+
+
 #
 # Disable any activate Spack environment BEFORE all tests
 #

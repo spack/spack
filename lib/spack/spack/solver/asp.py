@@ -23,9 +23,7 @@ try:
     import clingo
 except ImportError:
     import spack.bootstrap
-    extension_dir = spack.bootstrap.clingo()
-    sys.path.append(extension_dir)
-    import clingo
+    clingo = spack.bootstrap.clingo()
 
 import llnl.util.lang
 import llnl.util.tty as tty
