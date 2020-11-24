@@ -28,7 +28,8 @@ class H5cpp(CMakePackage):
 
     def cmake_args(self):
         return [
-            '-DHDF5_INCLUDE_DIRS=%s' % self.spec['hdf5'].headers.directories[0],
+            '-DHDF5_INCLUDE_DIRS=%s' %
+            self.spec['hdf5'].headers.directories[0],
             '-DHDF5_LIBRARIES=%s' % self.spec['hdf5'].libs.directories[0],
             '-DH5CPP_BUILD_TESTS=OFF',
         ]
