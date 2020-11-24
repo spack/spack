@@ -8,6 +8,7 @@
 ``importlib`` is only fully implemented in Python 3.
 """
 from importlib.machinery import SourceFileLoader  # novm
+from importlib.util import spec_from_loader, module_from_spec
 
 
 class PrependFileLoader(SourceFileLoader):
@@ -45,4 +46,7 @@ def load_source(full_name, path, prepend=None):
     """
     # use our custom loader
     loader = PrependFileLoader(full_name, path, prepend)
-    return loader.load_module()
+    spec = spec_from_loader(full_name, loader)
+    mod = module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
