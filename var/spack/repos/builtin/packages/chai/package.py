@@ -23,6 +23,7 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     version('1.1.0', tag='v1.1.0', submodules='True')
     version('1.0', tag='v1.0', submodules='True')
 
+    variant('enable_pick', default=False, description='Enable pick method')
     variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=True, description='Build benchmarks.')
@@ -50,6 +51,8 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
 
         options = []
 
+        # if blt is not in the spec, it means that there is no explicit blt
+        # dependency and an internal blt submodule is being used.
         if 'blt' in spec:
             options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
@@ -78,6 +81,9 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         if '+raja' in spec:
             options.extend(['-DENABLE_RAJA_PLUGIN=ON',
                             '-DRAJA_DIR=' + spec['raja'].prefix])
+
+        options.append('-DENABLE_PICK={0}'.format(
+            'ON' if '+enable_pick' in spec else 'OFF'))
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix.share.umpire.cmake)

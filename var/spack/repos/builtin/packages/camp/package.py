@@ -27,6 +27,8 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
 
         options = []
 
+        # if blt is not in the spec, it means that there is no explicit blt
+        # dependency and an internal blt submodule is being used.
         if 'blt' in spec:
             options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
