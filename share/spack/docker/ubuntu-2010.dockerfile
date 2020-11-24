@@ -3,7 +3,7 @@ MAINTAINER Spack Maintainers <maintainers@spack.io>
 
 ENV DOCKERFILE_BASE=ubuntu            \
     DOCKERFILE_DISTRO=ubuntu          \
-    DOCKERFILE_DISTRO_VERSION=20.10   \
+    DOCKERFILE_DISTRO_VERSION=20.04   \
     SPACK_ROOT=/opt/spack             \
     DEBIAN_FRONTEND=noninteractive    \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
