@@ -103,11 +103,11 @@ class IntelTbb(Package):
     patch("gcc_generic-pedantic-4.4.patch",  level=1, when='@:2019.0')
 
     # Patch cmakeConfig.cmake.in to find the libraries where we install them.
-    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:')
+    patch("tbb_cmakeConfig-2019.5.patch", level=0, when='@2019.5:2021.1-beta05')
     patch("tbb_cmakeConfig.patch", level=0, when='@2017.7:2019.4')
 
     # Restore the debug targets.
-    patch("makefile-debug.patch", when="@2020:")
+    patch("makefile-debug.patch", when="@2020:2021.1-beta04")
 
     # Some very old systems don't support transactional memory.
     patch("disable-tm.patch", when='~tm')
@@ -116,7 +116,7 @@ class IntelTbb(Package):
     # also included in hombrew and already available upstream:
     # https://github.com/oneapi-src/oneTBB/pull/258
     # https://github.com/oneapi-src/oneTBB/commit/86f6dcdc17a8f5ef2382faaef860cfa5243984fe.patch?full_index=1
-    patch("macos-arm64.patch")
+    patch("macos-arm64.patch", when="@:2021.1-beta05")
 
     # Version and tar file names:
     #  2020.0 --> v2020.0.tar.gz  starting with 2020
