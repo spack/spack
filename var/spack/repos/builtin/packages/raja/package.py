@@ -35,21 +35,14 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
 
     conflicts('+openmp', when='+hip')
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('cmake@3.9:', when='+cuda', type='build')
+    depends_on('blt', type='build')
 
     def cmake_args(self):
         spec = self.spec
 
         options = []
 
-        # Note: Currently raja DOES NOT work with development version of blt.
-        # in the link line, we get /opt/rocm/hip/bin/hipcc -M ... -Xcompiler
-        # '-fPIC' -g -O2 and the compile does not like '-fPIC' in quotes.
-        # if blt is not in the spec, it means that there is no explicit blt
-        # dependency and an internal blt submodule is being used.
-        # if 'blt' in spec:
-        #     options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
+        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
         options.append('-DENABLE_OPENMP={0}'.format(
             'ON' if '+openmp' in spec else 'OFF'))
