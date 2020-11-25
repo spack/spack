@@ -65,8 +65,7 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
     # variants +hip and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     depends_on('camp+hip', when='+hip')
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    for val in amdgpu_targets:
+    for val in HipPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('camp')
