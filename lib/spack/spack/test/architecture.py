@@ -107,11 +107,12 @@ def test_arch_swap(config):
     """Test swapping architectures"""
     fe_spec = Spec('mpileaks os=fe target=fe')
     be_spec = fe_spec.copy()
-    be_spec._swap_architecture(os='be')
+    be_spec._swap_architecture()
 
     assert be_spec != fe_spec
     platform = spack.architecture.platform()
-    assert be_spec.architecture.os == str(platform.operating_system('be'))
+    assert be_spec.architecture.os == str(platform.operating_system(
+        'default_os'))
     assert be_spec.architecture.target == py_platform.machine()
 
 
