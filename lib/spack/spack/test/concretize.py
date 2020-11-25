@@ -959,3 +959,11 @@ class TestConcretize(object):
         # Check that non-default variant values are forced on the dependency
         d = s['dep-with-variants']
         assert '+foo+bar+baz' in d
+
+    @pytest.mark.regression('20055')
+    def test_custom_compiler_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec('a %gcc@foo os=redhat6').concretized()
+        assert '%gcc@foo' in s
