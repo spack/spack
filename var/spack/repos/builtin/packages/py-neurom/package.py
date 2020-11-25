@@ -35,6 +35,7 @@ class PyNeurom(PythonPackage):
     depends_on('py-pyyaml@3.10:', type='run')
     depends_on('py-scipy@0.17.0:', type='run')
     depends_on('py-tqdm@4.8.4:', type='run')
+    depends_on('py-setuptools', type=('build', 'run'))
 
     def patch(self):
         if self.spec.satisfies('^python@:3.0'):
