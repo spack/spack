@@ -501,6 +501,11 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
+    def test_conflict_in_all_directives_true(self):
+        s = Spec('when-directives-true')
+        with pytest.raises(spack.error.SpackError):
+            s.concretize()
+
     @pytest.mark.parametrize('spec_str', [
         'conflict@10.0%clang+foo'
     ])
