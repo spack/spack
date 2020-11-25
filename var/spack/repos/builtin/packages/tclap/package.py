@@ -1,35 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Tclap(AutotoolsPackage):
+class Tclap(AutotoolsPackage, SourceforgePackage):
     """Templatized C++ Command Line Parser"""
 
     homepage = "http://tclap.sourceforge.net"
-    url      = "https://downloads.sourceforge.net/project/tclap/tclap-1.2.2.tar.gz"
+    sourceforge_mirror_path = "tclap/tclap-1.2.2.tar.gz"
 
-    version('1.2.2', '6f35665814dca292eceda007d7e13bcb')
-    version('1.2.1', 'eb0521d029bf3b1cc0dcaa7e42abf82a')
+    version('1.2.2', sha256='f5013be7fcaafc69ba0ce2d1710f693f61e9c336b6292ae4f57554f59fde5837')
+    version('1.2.1', sha256='9f9f0fe3719e8a89d79b6ca30cf2d16620fba3db5b9610f9b51dd2cd033deebb')

@@ -1,25 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, Kenneth Hoste
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Kenneth Hoste, kenneth.hoste@gmail.com
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -28,9 +11,15 @@ class PyEasybuildEasyblocks(PythonPackage):
     installation framework for (scientific) software on HPC systems.
     """
 
-    homepage = 'http://hpcugent.github.io/easybuild/'
-    url      = 'https://pypi.io/packages/source/e/easybuild-easyblocks/easybuild-easyblocks-3.1.2.tar.gz'
+    homepage = 'https://easybuilders.github.io/easybuild'
+    url      = 'https://pypi.io/packages/source/e/easybuild-easyblocks/easybuild-easyblocks-4.0.0.tar.gz'
+    maintainers = ['boegel']
 
-    version('3.1.2', 'be08da30c07e67ed3e136e8d38905fbc')
+    version('4.0.0', sha256='a0fdef6c33c786e323bde1b28bab942fd8e535c26842877d705e692e85b31b07')
+    version('3.1.2', sha256='5dcea0d612c5da92815f2c99a591dd2843fe9d76f4c0f4ff4a245d43c39001d8')
 
-    depends_on('py-easybuild-framework@3.1:', when='@3.1:', type='run')
+    depends_on('python@2.6:2.8', when='@:3', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
+
+    for v in ['@3.1.2', '@4.0.0']:
+        depends_on('py-easybuild-framework' + v, when=v, type='run')

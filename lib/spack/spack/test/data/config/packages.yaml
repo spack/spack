@@ -1,0 +1,24 @@
+packages:
+  all:
+    providers:
+      mpi: [openmpi, mpich]
+  externaltool:
+    buildable: False
+    externals:
+    - spec: externaltool@1.0%gcc@4.5.0
+      prefix: /path/to/external_tool
+    - spec: externaltool@0.9%gcc@4.5.0
+      prefix: /usr
+  externalvirtual:
+    buildable: False
+    externals:
+    - spec: externalvirtual@2.0%clang@3.3
+      prefix: /path/to/external_virtual_clang
+    - spec: externalvirtual@1.0%gcc@4.5.0
+      prefix: /path/to/external_virtual_gcc
+  externalmodule:
+    buildable: False
+    externals:
+    - spec: externalmodule@1.0%gcc@4.5.0
+      modules:
+      - external-module

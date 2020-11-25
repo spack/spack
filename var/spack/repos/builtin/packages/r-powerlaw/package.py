@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,9 +13,12 @@ class RPowerlaw(RPackage):
        is used to estimate the lower cut-off for the scaling region."""
 
     homepage = "https://github.com/csgillespie/poweRlaw"
-    url      = "https://cran.rstudio.com/src/contrib/poweRlaw_0.70.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/poweRlaw"
+    url      = "https://cloud.r-project.org/src/contrib/poweRlaw_0.70.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/poweRlaw"
 
-    version('0.70.1', '4117cb95c37f72441f320ea12f553065')
+    version('0.70.2', sha256='240f1454389b1a00ad483fb63e5b53243cc9367f21a3e7253ab2c293673459ab')
+    version('0.70.1', sha256='15b1b8dadeb550c01b9f1308cfa64720be6fbf56afb80f6a096987d6a0055913')
 
+    depends_on('r@3.1.0:', when='@:0.70.1', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@0.70.2:', type=('build', 'run'))
     depends_on('r-vgam', type=('build', 'run'))

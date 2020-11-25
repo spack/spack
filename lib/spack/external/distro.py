@@ -64,6 +64,7 @@ NORMALIZED_LSB_ID = {
     'enterpriseenterprise': 'oracle',  # Oracle Enterprise Linux
     'redhatenterpriseworkstation': 'rhel',  # RHEL 6, 7 Workstation
     'redhatenterpriseserver': 'rhel',  # RHEL 6, 7 Server
+    'redhatenterprisecomputenode': 'rhel',  # RHEL 6 ComputeNode
 }
 
 #: Translation table for normalizing the distro ID derived from the file name

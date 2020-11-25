@@ -1,38 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RCtc(RPackage):
-    """Tools for export and import classification trees and clusters
-       to other programs"""
+    """Cluster and Tree Conversion..
 
-    homepage = "https://www.bioconductor.org/packages/release/bioc/html/ctc.html"
+       Tools for export and import classification trees and clusters to other
+       programs"""
+
+    homepage = "https://bioconductor.org/packages/ctc"
     git      = "https://git.bioconductor.org/packages/ctc.git"
 
+    version('1.58.0', commit='c41df03ac149db20c5e337142142d61cfb9b43fb')
+    version('1.56.0', commit='cbd5befdda4630799f8fe0d868d83b094e3d352f')
     version('1.54.0', commit='0c3df81dfc8fabe12e11884bed44b64e11fd6d4e')
+    version('1.52.0', commit='ffff8693cab5ebad610d139367f089418f1830a1')
+    version('1.50.0', commit='4ee7519c3e5172e140c2658b4cf5271d229acc7e')
 
     depends_on('r-amap', type=('build', 'run'))
-    depends_on('r@3.5.0:3.5.9', when='@1.54.0:', type=('build', 'run'))

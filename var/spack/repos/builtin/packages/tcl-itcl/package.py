@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,7 @@ class TclItcl(AutotoolsPackage):
     homepage = "https://sourceforge.net/projects/incrtcl/"
     url      = "https://sourceforge.net/projects/incrtcl/files/%5Bincr%20Tcl_Tk%5D-4-source/itcl%204.0.4/itcl4.0.4.tar.gz"
 
-    version('4.0.4', 'c9c52afdd9435490e2db17c3c6c95ab4')
+    version('4.0.4', sha256='63860438ca22f70049aecff70dc607b31bb1bea0edcc736e36ac6e36c24aecde')
 
     extends('tcl')
 
@@ -41,6 +22,6 @@ class TclItcl(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-threads',
-            '--with-tcl=' + self.spec['tcl'].tcl_lib_dir,
+            '--with-tcl=' + self.spec['tcl'].libs.directories[0],
         ]
         return args

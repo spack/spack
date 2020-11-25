@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Written by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://software.llnl.gov/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License (as published by
-# the Free Software Foundation) version 2.1 dated February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public License
-# along with this program; if not, write to the Free Software Foundation,
-# Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import ast
 import hashlib
 
@@ -60,8 +41,23 @@ class RemoveDirectives(ast.NodeTransformer):
         self.spec = spec
 
     def is_directive(self, node):
+        """Check to determine if the node is a valid directive
+
+        Directives are assumed to be represented in the AST as a named function
+        call expression.  This means that they will NOT be represented by a
+        named function call within a function call expression (e.g., as
+        callbacks are sometimes represented).
+
+        Args:
+            node (AST): the AST node being checked
+
+        Returns:
+            (bool): ``True`` if the node represents a known directive,
+                ``False`` otherwise
+        """
         return (isinstance(node, ast.Expr) and
                 node.value and isinstance(node.value, ast.Call) and
+                isinstance(node.value.func, ast.Name) and
                 node.value.func.id in spack.directives.__all__)
 
     def is_spack_attr(self, node):
@@ -88,8 +84,17 @@ class TagMultiMethods(ast.NodeVisitor):
         if node.decorator_list:
             dec = node.decorator_list[0]
             if isinstance(dec, ast.Call) and dec.func.id == 'when':
-                cond = dec.args[0].s
-                nodes.append((node, self.spec.satisfies(cond, strict=True)))
+                try:
+                    cond = dec.args[0].s
+                    nodes.append(
+                        (node, self.spec.satisfies(cond, strict=True)))
+                except AttributeError:
+                    # In this case the condition for the 'when' decorator is
+                    # not a string literal (for example it may be a Python
+                    # variable name). Therefore the function is added
+                    # unconditionally since we don't know whether the
+                    # constraint applies or not.
+                    nodes.append((node, None))
         else:
             nodes.append((node, None))
 

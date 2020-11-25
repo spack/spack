@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,6 +12,11 @@ class PyPoster(PythonPackage):
     homepage = "https://pypi.org/project/poster/"
     url      = "https://atlee.ca/software/poster/dist/0.8.1/poster-0.8.1.tar.gz"
 
-    version('0.8.1', '2db12704538781fbaa7e63f1505d6fc8')
+    version('0.8.1', sha256='af5bf45da4a916db2b638cffd9e9d6668b33020e2b8ca9f864db79b49331c6ff')
 
     depends_on('py-setuptools', type='build')
+
+    # https://bitbucket.org/chrisatlee/poster/issues/24/not-working-with-python3
+    # https://bitbucket.org/chrisatlee/poster/issues/25/poster-connot-work-in-python35
+    # Patch created using 2to3
+    patch('python3.patch', when='^python@3:')

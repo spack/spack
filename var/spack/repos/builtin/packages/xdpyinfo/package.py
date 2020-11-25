@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Xdpyinfo(AutotoolsPackage):
+class Xdpyinfo(AutotoolsPackage, XorgPackage):
     """xdpyinfo is a utility for displaying information about an X server.
 
     It is used to examine the capabilities of a server, the predefined
@@ -34,9 +15,9 @@ class Xdpyinfo(AutotoolsPackage):
     protocol extensions that are available."""
 
     homepage = "http://cgit.freedesktop.org/xorg/app/xdpyinfo"
-    url      = "https://www.x.org/archive/individual/app/xdpyinfo-1.3.2.tar.gz"
+    xorg_mirror_path = "app/xdpyinfo-1.3.2.tar.gz"
 
-    version('1.3.2', 'dab410719d36c9df690cf3a8cd7d117e')
+    version('1.3.2', sha256='ef39935e8e9b328e54a85d6218d410d6939482da6058db1ee1b39749d98cbcf2')
 
     depends_on('libxext')
     depends_on('libx11')

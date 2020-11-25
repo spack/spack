@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -40,9 +21,9 @@ class CommonsLogging(Package):
     homepage = "http://commons.apache.org/proper/commons-logging/"
     url      = "http://archive.apache.org/dist/commons/logging/binaries/commons-logging-1.2-bin.tar.gz"
 
-    version('1.2',   'ac043ce7ab3374eb4ed58354a6b2c3de')
-    version('1.1.3', 'b132f9a1e875677ae6b449406cff2a78')
-    version('1.1.1', 'e5de09672af9b386c30a311654d8541a')
+    version('1.2',   sha256='3f758805c7290d9c6d22d1451587c9f7232744aef4c984e88aa683cdea0587bd')
+    version('1.1.3', sha256='9e7093c93529792563b5c19ab5cccb73ef4ca7d82b886bdec6d0af182ba9908a')
+    version('1.1.1', sha256='88c721d66f570a87f710a2449f0e3bffea86489d9dd2fa70b805104c4f8d69e6')
 
     extends('jdk')
     depends_on('java', type='run')

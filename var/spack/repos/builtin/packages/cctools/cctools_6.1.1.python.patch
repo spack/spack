@@ -1,0 +1,11 @@
+--- spack-src.org/umbrella/src/Makefile	2017-05-30 20:49:30.000000000 +0900
++++ spack-src/umbrella/src/Makefile	2019-11-20 17:23:42.101854924 +0900
+@@ -16,7 +16,7 @@
+ 
+ umbrella_helper.html: umbrella.py
+ 	# pydoc2/pydoc creates a html file, umbrella.html.
+-	if which pydoc2; then pydoc2 -w umbrella; elif which pydoc; then pydoc -w umbrella; fi
++	if which pydoc; then pydoc -w umbrella; elif which pydoc2; then pydoc2 -w umbrella; fi
+ 	if [ -f umbrella.html ]; then mv umbrella.html umbrella_helper.html; fi
+ 
+ clean:

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,6 +10,9 @@ class PyPyelftools(PythonPackage):
     """A pure-Python library for parsing and analyzing ELF files and DWARF
        debugging information"""
     homepage = "https://pypi.python.org/pypi/pyelftools"
-    url      = "https://pypi.io/packages/source/p/pyelftools/pyelftools-0.23.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pyelftools/pyelftools-0.26.tar.gz"
 
-    version('0.23', 'aa7cefa8bd2f63d7b017440c9084f310')
+    version('0.26', sha256='86ac6cee19f6c945e8dedf78c6ee74f1112bd14da5a658d8c9d4103aed5756a2')
+    version('0.23', sha256='fc57aadd096e8f9b9b03f1a9578f673ee645e1513a5ff0192ef439e77eab21de')
+
+    depends_on('py-setuptools', when='@0.25:', type='build')

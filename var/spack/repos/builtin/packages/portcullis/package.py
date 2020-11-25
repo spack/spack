@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,7 +13,7 @@ class Portcullis(AutotoolsPackage):
     homepage = "https://github.com/maplesond/portcullis"
     url      = "https://github.com/maplesond/portcullis/archive/Release-1.1.2.tar.gz"
 
-    version('1.1.2', '5c581a7f827ffeecfe68107b7fe27ed60108325fd2f86a79d93f61b328687749')
+    version('1.1.2', sha256='5c581a7f827ffeecfe68107b7fe27ed60108325fd2f86a79d93f61b328687749')
 
     depends_on('autoconf@2.53:', type='build')
     depends_on('automake@1.11:', type='build')
@@ -63,6 +44,11 @@ class Portcullis(AutotoolsPackage):
             'export PYTHONPATH="$(PYTHONPATH):$(DESTDIR)$(pythondir)"',
             'scripts/Makefile.am', string=True
         )
+
+        # remove -m64 on aarch64
+        if self.spec.target.family == 'aarch64':
+            for f in ['lib/Makefile.am', 'src/Makefile.am']:
+                filter_file('-m64', '', f)
 
     def build(self, spec, prefix):
         # build manpages

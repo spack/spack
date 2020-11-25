@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Data structures that represent Spack's dependency relationships.
 """
 from six import string_types
@@ -34,6 +15,26 @@ all_deptypes = ('build', 'link', 'run', 'test')
 
 #: Default dependency type if none is specified
 default_deptype = ('build', 'link')
+
+
+def deptype_chars(*type_tuples):
+    """Create a string representing deptypes for many dependencies.
+
+    The string will be some subset of 'blrt', like 'bl ', 'b t', or
+    ' lr ' where each letter in 'blrt' stands for 'build', 'link',
+    'run', and 'test' (the dependency types).
+
+    For a single dependency, this just indicates that the dependency has
+    the indicated deptypes. For a list of dependnecies, this shows
+    whether ANY dpeendency in the list has the deptypes (so the deptypes
+    are merged).
+    """
+    types = set()
+    for t in type_tuples:
+        if t:
+            types.update(t)
+
+    return ''.join(t[0] if t in types else ' ' for t in all_deptypes)
 
 
 def canonical_deptype(deptype):
@@ -53,17 +54,14 @@ def canonical_deptype(deptype):
             raise ValueError('Invalid dependency type: %s' % deptype)
         return (deptype,)
 
-    elif isinstance(deptype, (tuple, list)):
+    elif isinstance(deptype, (tuple, list, set)):
         bad = [d for d in deptype if d not in all_deptypes]
         if bad:
             raise ValueError(
                 'Invalid dependency types: %s' % ','.join(str(t) for t in bad))
         return tuple(sorted(deptype))
 
-    elif deptype is None:
-        raise ValueError('Invalid dependency type: None')
-
-    return deptype
+    raise ValueError('Invalid dependency type: %s' % repr(deptype))
 
 
 class Dependency(object):
@@ -130,3 +128,8 @@ class Dependency(object):
                 self.patches[cond].extend(other.patches[cond])
             else:
                 self.patches[cond] = other.patches[cond]
+
+    def __repr__(self):
+        types = deptype_chars(self.type)
+        return '<Dependency: %s -> %s [%s]>' % (
+            self.pkg.name, self.spec, types)

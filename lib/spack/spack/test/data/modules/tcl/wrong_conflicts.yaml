@@ -1,7 +1,8 @@
 enable:
   - tcl
 tcl:
-  naming_scheme: '${PACKAGE}/${VERSION}-${COMPILERNAME}'
+  projections:
+    all: '{name}/{version}-{compiler.name}'
   all:
     conflict:
-      - '${PACKAGE}/${COMPILERNAME}'
+      - '{name}/{compiler.name}'

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,6 +12,10 @@ class PyPygdbmi(PythonPackage):
     homepage = "https://github.com/cs01/pygdbmi"
     url      = "https://pypi.io/packages/source/p/pygdbmi/pygdbmi-0.8.2.0.tar.gz"
 
-    version('0.8.2.0', 'e74d3d02fa5eef1223b5dedb13f9bbad')
+    version('0.9.0.3', sha256='5bdf2f072e8f2f6471f19f8dcd87d6425c5d8069d47c0a5ffe8d0eff48cb171e')
+    version('0.8.2.0', sha256='47cece65808ca42edf6966ac48e2aedca7ae1c675c4d2f0d001c7f3a7fa245fe')
 
+    depends_on('python@3.5:', type=('build', 'run'), when='@0.9.0.3:')
+    depends_on('python@2.7:2.8,3.4:3.6', type=('build', 'run'), when='@0.9.0.0:0.9.0.2')
+    depends_on('python@2.7:2.8,3.3:3.6', type=('build', 'run'), when='@:0.8.4.0')
     depends_on('py-setuptools', type='build')

@@ -1,41 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Aspect(CMakePackage):
-    """Parallel, extendible finite element code to simulate convection in the
+    """Parallel and extensible Finite Element code to simulate convection in the
     Earth's mantle and elsewhere."""
 
     homepage = "https://aspect.geodynamics.org"
-    url      = "https://github.com/geodynamics/aspect/releases/download/v2.0.0/aspect-2.0.0.tar.gz"
+    url      = "https://github.com/geodynamics/aspect/releases/download/v2.1.0/aspect-2.1.0.tar.gz"
     git      = "https://github.com/geodynamics/aspect.git"
 
     maintainers = ['tjhei']
 
     version('develop', branch='master')
+    version('2.2.0', sha256='6dc31c4b991c8a96495ba0e9a3c92e57f9305ba94b8dbed3c8c5cfbab91ec5c1')
+    version('2.1.0', sha256='bd574d60ed9df1f4b98e68cd526a074d0527c0792763187c9851912327d861a3')
     version('2.0.1', sha256='0bf5600c42afce9d39c1d285b0654ecfdeb0f30e9f3421651c95f54ca01ac165')
     version('2.0.0', sha256='d485c07f54248e824bdfa35f3eec8971b65e8b7114552ffa2c771bc0dede8cc0')
 
@@ -44,9 +27,11 @@ class Aspect(CMakePackage):
             values=('Debug', 'Release'))
     variant('gui', default=False, description='Enable the deal.II parameter GUI')
     variant('fpe', default=False, description='Enable floating point exception checks')
+    variant('opendap', default=False, description='Enable OPeNDAP support for remote file access')
 
     depends_on('dealii+p4est+trilinos+mpi')
     depends_on('dealii-parameter-gui', when='+gui')
+    depends_on('libdap4', when='+opendap')
 
     def cmake_args(self):
         return [
@@ -54,5 +39,5 @@ class Aspect(CMakePackage):
             ('ON' if '+fpe' in self.spec else 'OFF')
         ]
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('Aspect_DIR', self.prefix)
+    def setup_run_environment(self, env):
+        env.set('Aspect_DIR', self.prefix)

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,11 @@ class RGss(RPackage):
     """A comprehensive package for structural multivariate function
     estimation using smoothing splines."""
 
-    homepage = "https://cran.r-project.org/package=gss"
-    url      = "https://cran.rstudio.com/src/contrib/gss_2.1-7.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/gss"
+    homepage = "https://cloud.r-project.org/package=gss"
+    url      = "https://cloud.r-project.org/src/contrib/gss_2.1-7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gss"
 
-    version('2.1-7', '4a6bd96339d22b40c932895b64504fb2')
+    version('2.1-10', sha256='26c47ecae6a9b7854a1b531c09f869cf8b813462bd8093e3618e1091ace61ee2')
+    version('2.1-7', sha256='0405bb5e4c4d60b466335e5da07be4f9570045a24aed09e7bc0640e1a00f3adb')
+
+    depends_on('r@2.14.0:', type=('build', 'run'))

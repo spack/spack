@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,4 +12,11 @@ class TrnascanSe(AutotoolsPackage):
     homepage = "http://lowelab.ucsc.edu/tRNAscan-SE/"
     url      = "http://trna.ucsc.edu/software/trnascan-se-2.0.0.tar.gz"
 
-    version('2.0.0',    '36d2b53bcb281efbae09e0305346e544')
+    version('2.0.0',    sha256='0dde1c07142e4bf77b21d53ddf3eeb1ef8c52248005a42323d13f8d7c798100c')
+
+    depends_on('infernal@1.1.2', type='run', when='@2.0.0')
+
+    def patch(self):
+        filter_file('infernal_dir: {bin_dir}',
+                    'infernal_dir: %s' % self.spec['infernal'].prefix.bin,
+                    'tRNAscan-SE.conf.src', string=True)

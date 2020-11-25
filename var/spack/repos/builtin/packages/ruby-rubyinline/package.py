@@ -1,39 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class RubyRubyinline(Package):
+class RubyRubyinline(RubyPackage):
     """Inline allows you to write foreign code within your ruby code."""
 
-    homepage = "https://rubygems.org/gems/RubyInline"
-    url      = "https://rubygems.org/downloads/RubyInline-3.12.4.gem"
+    homepage = "https://www.zenspider.com/projects/rubyinline.html"
+    url      = "https://rubygems.org/downloads/RubyInline-3.12.5.gem"
 
-    version('3.12.4', '3058f4c48e62baef811b127f4925ee70', expand=False)
+    # Source code available at https://github.com/seattlerb/rubyinline
+    # but I had trouble getting the Rakefile to build
 
-    extends('ruby')
+    version('3.12.5', sha256='d4559cb86b7fedd2e9b4b0a3bd99a1955186dbc09f1269920a0dd5c67639c156', expand=False)
 
-    def install(self, spec, prefix):
-        gem('install', 'RubyInline-{0}.gem'.format(self.version))
+    depends_on('ruby-zentest@4.3:4.999', type=('build', 'run'))

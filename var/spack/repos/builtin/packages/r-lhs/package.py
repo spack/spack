@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,13 @@ class RLhs(RPackage):
        Samples."""
 
     homepage = "http://lhs.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/lhs_0.16.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lhs"
+    url      = "https://cloud.r-project.org/src/contrib/lhs_0.16.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lhs"
 
-    version('0.16', '088e593e5283414951e7e541a50ec2d1')
+    version('1.0.1', sha256='a4d5ac0c6f585f2880364c867fa94e6554698beb65d3678ba5938dd84fc6ea53')
+    version('1.0', sha256='38c53482b360bdea89ddcfadf6d45476c80b99aee8902f97c5e97975903e2745')
+    version('0.16', sha256='9cd199c3b5b2be1736d585ef0fd39a00e31fc015a053333a7a319668d0809425')
+
+    depends_on('r@3.3.0:', when='@:0.16', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@1.0:', type=('build', 'run'))
+    depends_on('r-rcpp', when='@1.0:', type=('build', 'run'))

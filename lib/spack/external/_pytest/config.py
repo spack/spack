@@ -1028,33 +1028,12 @@ class Config(object):
             except SystemError:
                 mode = 'plain'
             else:
-                self._mark_plugins_for_rewrite(hook)
+                # REMOVED FOR SPACK: This routine imports `pkg_resources` from
+                # `setuptools`, but we do not need it for Spack. We have removed
+                # it from Spack to avoid a dependency on setuptools.
+                # self._mark_plugins_for_rewrite(hook)
+                pass
         self._warn_about_missing_assertion(mode)
-
-    def _mark_plugins_for_rewrite(self, hook):
-        """
-        Given an importhook, mark for rewrite any top-level
-        modules or packages in the distribution package for
-        all pytest plugins.
-        """
-        import pkg_resources
-        self.pluginmanager.rewrite_hook = hook
-
-        # 'RECORD' available for plugins installed normally (pip install)
-        # 'SOURCES.txt' available for plugins installed in dev mode (pip install -e)
-        # for installed plugins 'SOURCES.txt' returns an empty list, and vice-versa
-        # so it shouldn't be an issue
-        metadata_files = 'RECORD', 'SOURCES.txt'
-
-        package_files = (
-            entry.split(',')[0]
-            for entrypoint in pkg_resources.iter_entry_points('pytest11')
-            for metadata in metadata_files
-            for entry in entrypoint.dist._get_metadata(metadata)
-        )
-
-        for name in _iter_rewritable_modules(package_files):
-            hook.mark_rewrite(name)
 
     def _warn_about_missing_assertion(self, mode):
         try:
@@ -1081,7 +1060,12 @@ class Config(object):
         self._checkversion()
         self._consider_importhook(args)
         self.pluginmanager.consider_preparse(args)
-        self.pluginmanager.load_setuptools_entrypoints('pytest11')
+
+        # REMOVED FOR SPACK: This routine imports `pkg_resources` from
+        # `setuptools`, but we do not need it for Spack. We have removed
+        # it from Spack to avoid a dependency on setuptools.
+        # self.pluginmanager.load_setuptools_entrypoints('pytest11')
+
         self.pluginmanager.consider_env()
         self.known_args_namespace = ns = self._parser.parse_known_args(args, namespace=self.option.copy())
         if self.known_args_namespace.confcutdir is None and self.inifile:

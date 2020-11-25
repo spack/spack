@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,9 @@ class Glibmm(AutotoolsPackage):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/GNOME/sources/glibmm/2.19/glibmm-2.19.3.tar.gz"
 
-    version('2.19.3', 'b50180bb93f501172a2ac4c54e83e88a')
-    version('2.16.0', '24390d2da1734205f1e572f24d4942f0')
-    version('2.4.8', 'fa8b2889cd845752446c6ce15a94bb32')
+    version('2.19.3', sha256='23958368535c19188b1241c4615dcf1f35e80e0922a04236bb9247dcd8fe0a2b')
+    version('2.16.0', sha256='99795b9c6e58e490df740a113408092bf47a928427cbf178d77c35adcb6a57a3')
+    version('2.4.8', sha256='78b97bfa1d001cc7b398f76bf09005ba55b45ae20780b297947a1a71c4f07e1f')
 
     depends_on('libsigcpp')
     depends_on('glib')

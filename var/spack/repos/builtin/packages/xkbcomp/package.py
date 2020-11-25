@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Xkbcomp(AutotoolsPackage):
+class Xkbcomp(AutotoolsPackage, XorgPackage):
     """The X Keyboard (XKB) Extension essentially replaces the core protocol
     definition of a keyboard. The extension makes it possible to specify
     clearly and explicitly most aspects of keyboard behaviour on a per-key
@@ -34,9 +15,9 @@ class Xkbcomp(AutotoolsPackage):
     make keyboards more accessible to people with physical impairments."""
 
     homepage = "https://www.x.org/wiki/XKB/"
-    url      = "https://www.x.org/archive/individual/app/xkbcomp-1.3.1.tar.gz"
+    xorg_mirror_path = "app/xkbcomp-1.3.1.tar.gz"
 
-    version('1.3.1', '9e8ca110ed40d4703f8f73d99bc81576')
+    version('1.3.1', sha256='018e83a922430652d4bc3f3db610d2296e618c76c9b3fbcdccde975aeb655749')
 
     depends_on('libx11')
     depends_on('libxkbfile')

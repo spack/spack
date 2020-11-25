@@ -1,37 +1,20 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Caches used by Spack to store data"""
 import os
 
 import llnl.util.lang
+from llnl.util.filesystem import mkdirp
 
+import spack.error
 import spack.paths
 import spack.config
 import spack.fetch_strategy
 import spack.util.file_cache
-from spack.util.path import canonicalize_path
+import spack.util.path
 
 
 def _misc_cache():
@@ -43,7 +26,7 @@ def _misc_cache():
     path = spack.config.get('config:misc_cache')
     if not path:
         path = os.path.join(spack.paths.user_config_path, 'cache')
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.util.file_cache.FileCache(path)
 
@@ -61,9 +44,43 @@ def _fetch_cache():
     path = spack.config.get('config:source_cache')
     if not path:
         path = os.path.join(spack.paths.var_path, "cache")
-    path = canonicalize_path(path)
+    path = spack.util.path.canonicalize_path(path)
 
     return spack.fetch_strategy.FsCache(path)
+
+
+class MirrorCache(object):
+    def __init__(self, root, skip_unstable_versions):
+        self.root = os.path.abspath(root)
+        self.skip_unstable_versions = skip_unstable_versions
+
+    def store(self, fetcher, relative_dest):
+        """Fetch and relocate the fetcher's target into our mirror cache."""
+
+        # Note this will archive package sources even if they would not
+        # normally be cached (e.g. the current tip of an hg/git branch)
+        dst = os.path.join(self.root, relative_dest)
+        mkdirp(os.path.dirname(dst))
+        fetcher.archive(dst)
+
+    def symlink(self, mirror_ref):
+        """Symlink a human readible path in our mirror to the actual
+        storage location."""
+
+        cosmetic_path = os.path.join(self.root, mirror_ref.cosmetic_path)
+        storage_path = os.path.join(self.root, mirror_ref.storage_path)
+        relative_dst = os.path.relpath(
+            storage_path,
+            start=os.path.dirname(cosmetic_path))
+
+        if not os.path.exists(cosmetic_path):
+            if os.path.lexists(cosmetic_path):
+                # In this case the link itself exists but it is broken: remove
+                # it and recreate it (in order to fix any symlinks broken prior
+                # to https://github.com/spack/spack/pull/13908)
+                os.unlink(cosmetic_path)
+            mkdirp(os.path.dirname(cosmetic_path))
+            os.symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

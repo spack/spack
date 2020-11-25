@@ -1,46 +1,39 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 from spack import *
 
 
-class Bzip2(Package):
+class Bzip2(Package, SourcewarePackage):
     """bzip2 is a freely available, patent free high-quality data
     compressor. It typically compresses files to within 10% to 15%
     of the best available techniques (the PPM family of statistical
     compressors), whilst being around twice as fast at compression
     and six times faster at decompression."""
 
-    # FIXME: The bzip.org domain has expired:
-    # https://lwn.net/Articles/762264/
-    # This package will need to be updated when a new home is found.
     homepage = "https://sourceware.org/bzip2/"
-    url      = "https://fossies.org/linux/misc/bzip2-1.0.6.tar.gz"
+    sourceware_mirror_path = "bzip2/bzip2-1.0.8.tar.gz"
 
-    version('1.0.6', '00b516f4704d4a7cb50a1d97e6e8e15b')
+    executables = [r'^bzip2$']
+
+    version('1.0.8', sha256='ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269')
+    version('1.0.7', sha256='e768a87c5b1a79511499beb41500bcc4caf203726fff46a6f5f9ad27fe08ab2b')
+    version('1.0.6', sha256='a2848f34fcd5d6cf47def00461fcb528a0484d8edef8208d6d2e2909dc61d9cd')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
+
+    depends_on('diffutils', type='build')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--help', output=str, error=str)
+        match = re.search(r'bzip2, a block-sorting file compressor.'
+                          '  Version ([^,]+)', output)
+        return match.group(1) if match else None
 
     # override default implementation
     @property
@@ -59,9 +52,10 @@ class Bzip2(Package):
         )
 
         # The Makefiles use GCC flags that are incompatible with PGI
-        if self.compiler.name == 'pgi':
+        if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc'):
             filter_file('-Wall -Winline', '-Minform=inform', 'Makefile')
-            filter_file('-Wall -Winline', '-Minform=inform', 'Makefile-libbz2_so')  # noqa
+            filter_file('-Wall -Winline', '-Minform=inform',
+                        'Makefile-libbz2_so')
 
         # Patch the link line to use RPATHs on macOS
         if 'darwin' in self.spec.architecture:
@@ -113,8 +107,8 @@ class Bzip2(Package):
 
             install(lib3, join_path(prefix.lib, lib3))
             with working_dir(prefix.lib):
-                for l in (lib, lib1, lib2):
-                    symlink(lib3, l)
+                for libname in (lib, lib1, lib2):
+                    symlink(lib3, libname)
 
         with working_dir(prefix.bin):
             force_remove('bunzip2', 'bzcat')

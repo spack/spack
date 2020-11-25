@@ -1,0 +1,11 @@
+--- spack-src/src/configure.org	2019-12-03 10:51:10.415048439 +0900
++++ spack-src/src/configure	2019-12-03 10:51:37.467877147 +0900
+@@ -214,7 +214,7 @@
+                  You need g++ >= 4.7, Apple clang >= 5.0 or LLVM clang >= 3.3."
+       fi
+     elif [[ $COMPILER_VER_INFO == *"LLVM"* ]]; then
+-      CLANG_VER=$(echo $COMPILER_VER_INFO | grep version | sed "s/.*version \([0-9\.]*\).*/\1/")
++      CLANG_VER=$(echo $COMPILER_VER_INFO | grep LLVM | sed "s/.*LLVM \([0-9\.]*\).*/\1/")
+       CLANG_VER_NUM=$(echo $CLANG_VER | sed 's/\./ /g' | xargs printf "%d%02d")
+       if [ $CLANG_VER_NUM -lt 303 ]; then
+         failure "$COMPILER (LLVM clang-$CLANG_VER) is not supported.

@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Stow(AutotoolsPackage):
+class Stow(AutotoolsPackage, GNUMirrorPackage):
     """GNU Stow: a symlink farm manager
 
        GNU Stow is a symlink farm manager which takes distinct
@@ -34,13 +15,14 @@ class Stow(AutotoolsPackage):
        installed in the same place."""
 
     homepage = "https://www.gnu.org/software/stow/"
-    url      = "https://ftpmirror.gnu.org/stow/stow-2.2.2.tar.bz2"
+    gnu_mirror_path = "stow/stow-2.2.2.tar.bz2"
 
-    version('2.2.2', 'af1e1de9d973c835bee80c745b5ee849')
-    version('2.2.0', '5bb56592eff9aaf9dfb6c975b3004240')
-    version('2.1.3', '533651c25b29c3630f01d0be33849a7c')
-    version('2.1.2', '0b8154a2165e4004ddc9579e3499af98')
-    version('2.1.1', '882d2490d05723b4b78029c2973775d3')
-    version('2.1.0', 'aa3a2389b6cbf3bd555e15c80a0be6ab')
+    version('2.3.1', sha256='26a6cfdfdaca0eea742db5487798c15fcd01889dc86bc5aa62614ec9415a422f')
+    version('2.2.2', sha256='a0022034960e47a8d23dffb822689f061f7a2d9101c9835cf11bf251597aa6fd')
+    version('2.2.0', sha256='86bc30fe1d322a5c80ff3bd7580c2758149aad7c3bbfa18b48a9d95c25d66b05')
+    version('2.1.3', sha256='2dff605c801fee9fb7d0fef6988bbb8a0511fad469129b20cae60e0544ba1443')
+    version('2.1.2', sha256='dda4231dab409d906c5de7f6a706a765e6532768ebbffe34e1823e3371f891f9')
+    version('2.1.1', sha256='8bdd21bb2ef6edf5812bf671e64cdd584d92d547d932406cef179646ea6d1998')
+    version('2.1.0', sha256='f0e909034fd072b1f5289abb771133d5c4e88d82d4da84195891c53d9b0de5ca')
 
     depends_on('perl@5.6.1:')

@@ -1,35 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RPan(RPackage):
     """Multiple imputation for multivariate panel or clustered data."""
 
-    homepage = "https://cran.r-project.org/package=pan"
-    url      = "https://cran.r-project.org/src/contrib/pan_1.4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pan"
+    homepage = "https://cloud.r-project.org/package=pan"
+    url      = "https://cloud.r-project.org/src/contrib/pan_1.4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pan"
 
-    version('1.4', 'cdead963110561fc42dc544a60ac44ed')
+    version('1.6', sha256='adc0df816ae38bc188bce0aef3aeb71d19c0fc26e063107eeee71a81a49463b6')
+    version('1.4', sha256='e6a83f0799cc9714f5052f159be6e82ececd013d1626f40c828cda0ceb8b76dc')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Tools to produce reports of spec installations"""
 import codecs
 import collections
@@ -63,7 +44,8 @@ def fetch_package_log(pkg):
 
 
 class InfoCollector(object):
-    """Decorates PackageBase.do_install to collect information
+    """Decorates PackageInstaller._install_task, which is called by
+    PackageBase.do_install for each spec, to collect information
     on the installation of certain specs.
 
     When exiting the context this change will be rolled-back.
@@ -76,8 +58,8 @@ class InfoCollector(object):
         specs (list of Spec): specs whose install information will
            be recorded
     """
-    #: Backup of PackageBase.do_install
-    _backup_do_install = spack.package.PackageBase.do_install
+    #: Backup of PackageInstaller._install_task
+    _backup__install_task = spack.package.PackageInstaller._install_task
 
     def __init__(self, specs):
         #: Specs that will be installed
@@ -127,15 +109,16 @@ class InfoCollector(object):
                 }
                 spec['packages'].append(package)
 
-        def gather_info(do_install):
-            """Decorates do_install to gather useful information for
-            a CI report.
+        def gather_info(_install_task):
+            """Decorates PackageInstaller._install_task to gather useful
+            information on PackageBase.do_install for a CI report.
 
             It's defined here to capture the environment and build
             this context as the installations proceed.
             """
-            @functools.wraps(do_install)
-            def wrapper(pkg, *args, **kwargs):
+            @functools.wraps(_install_task)
+            def wrapper(installer, task, *args, **kwargs):
+                pkg = task.pkg
 
                 # We accounted before for what is already installed
                 installed_on_entry = pkg.installed
@@ -145,15 +128,19 @@ class InfoCollector(object):
                     'id': pkg.spec.dag_hash(),
                     'elapsed_time': None,
                     'result': None,
-                    'message': None
+                    'message': None,
+                    'installed_from_binary_cache': False
                 }
 
                 start_time = time.time()
                 value = None
                 try:
 
-                    value = do_install(pkg, *args, **kwargs)
+                    value = _install_task(installer, task, *args, **kwargs)
                     package['result'] = 'success'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['installed_from_binary_cache'] = \
+                        pkg.installed_from_binary_cache
                     if installed_on_entry:
                         return
 
@@ -161,8 +148,9 @@ class InfoCollector(object):
                     # An InstallError is considered a failure (the recipe
                     # didn't work correctly)
                     package['result'] = 'failure'
-                    package['stdout'] = fetch_package_log(pkg)
                     package['message'] = e.message or 'Installation failure'
+                    package['stdout'] = fetch_package_log(pkg)
+                    package['stdout'] += package['message']
                     package['exception'] = e.traceback
 
                 except (Exception, BaseException) as e:
@@ -196,14 +184,15 @@ class InfoCollector(object):
 
             return wrapper
 
-        spack.package.PackageBase.do_install = gather_info(
-            spack.package.PackageBase.do_install
+        spack.package.PackageInstaller._install_task = gather_info(
+            spack.package.PackageInstaller._install_task
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
 
-        # Restore the original method in PackageBase
-        spack.package.PackageBase.do_install = InfoCollector._backup_do_install
+        # Restore the original method in PackageInstaller
+        spack.package.PackageInstaller._install_task = \
+            InfoCollector._backup__install_task
 
         for spec in self.specs:
             spec['npackages'] = len(spec['packages'])
@@ -222,9 +211,9 @@ class collect_info(object):
     """Collects information to build a report while installing
     and dumps it on exit.
 
-    If the format name is not ``None``, this context manager
-    decorates PackageBase.do_install when entering the context
-    and unrolls the change when exiting.
+    If the format name is not ``None``, this context manager decorates
+    PackageInstaller._install_task when entering the context for a
+    PackageBase.do_install operation and unrolls the change when exiting.
 
     Within the context, only the specs that are passed to it
     on initialization will be recorded for the report. Data from
@@ -246,35 +235,37 @@ class collect_info(object):
 
     Args:
         format_name (str or None): one of the supported formats
-        install_command (str): the command line passed to spack
-        cdash_upload_url (str or None): where to upload the report
+        args (dict): args passed to spack install
 
     Raises:
         ValueError: when ``format_name`` is not in ``valid_formats``
     """
-    def __init__(self, format_name, install_command, cdash_upload_url):
+    def __init__(self, format_name, args):
         self.filename = None
-        self.format_name = format_name
+        if args.cdash_upload_url:
+            self.format_name = 'cdash'
+            self.filename = 'cdash_report'
+        else:
+            self.format_name = format_name
         # Check that the format is valid.
         if self.format_name not in valid_formats:
             raise ValueError('invalid report type: {0}'
                              .format(self.format_name))
-        self.report_writer = report_writers[self.format_name](
-            install_command, cdash_upload_url)
+        self.report_writer = report_writers[self.format_name](args)
 
     def concretization_report(self, msg):
         self.report_writer.concretization_report(self.filename, msg)
 
     def __enter__(self):
         if self.format_name:
-            # Start the collector and patch PackageBase.do_install
+            # Start the collector and patch PackageInstaller._install_task
             self.collector = InfoCollector(self.specs)
             self.collector.__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.format_name:
             # Close the collector and restore the
-            # original PackageBase.do_install
+            # original PackageInstaller._install_task
             self.collector.__exit__(exc_type, exc_val, exc_tb)
 
             report_data = {'specs': self.collector.specs}

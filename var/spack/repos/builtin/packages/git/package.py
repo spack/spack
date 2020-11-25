@@ -1,28 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import sys
+import re
+import os
 from spack import *
 
 
@@ -35,14 +18,60 @@ class Git(AutotoolsPackage):
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
 
+    executables = ['^git$']
+
     # In order to add new versions here, add a new list entry with:
     # * version: {version}
     # * sha256: the sha256sum of the git-{version}.tar.gz
     # * sha256_manpages: the sha256sum of the corresponding manpage from
-    #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.xz
+    #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-
     releases = [
+        {
+            'version': '2.29.0',
+            'sha256': 'fa08dc8424ef80c0f9bf307877f9e2e49f1a6049e873530d6747c2be770742ff',
+            'sha256_manpages': '8f3bf70ddb515674ce2e19572920a39b1be96af12032b77f1dd57898981fb151'
+        },
+        {
+            'version': '2.28.0',
+            'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
+            'sha256_manpages': '3cfca28a88d5b8112ea42322b797a500a14d0acddea391aed0462aff1ab11bf7'
+        },
+        {
+            'version': '2.27.0',
+            'sha256': '77ded85cbe42b1ffdc2578b460a1ef5d23bcbc6683eabcafbb0d394dffe2e787',
+            'sha256_manpages': '414e4b17133e54d846f6bfa2479f9757c50e16c013eb76167a492ae5409b8947'
+        },
+        {
+            'version': '2.26.0',
+            'sha256': 'aa168c2318e7187cd295a645f7370cc6d71a324aafc932f80f00c780b6a26bed',
+            'sha256_manpages': 'c1ffaf0b4cd1e80a0eb0d4039e208c9d411ef94d5da44e38363804e1a7961218'
+        },
+        {
+            'version': '2.25.0',
+            'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
+            'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
+        },
+        {
+            'version': '2.21.0',
+            'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
+            'sha256_manpages': '14c76ebb4e31f9e55cf5338a04fd3a13bced0323cd51794ccf45fc74bd0c1080'
+        },
+        {
+            'version': '2.20.1',
+            'sha256': 'edc3bc1495b69179ba4e272e97eff93334a20decb1d8db6ec3c19c16417738fd',
+            'sha256_manpages': 'e9c123463abd05e142defe44a8060ce6e9853dfd8c83b2542e38b7deac4e6d4c'
+        },
+        {
+            'version': '2.19.2',
+            'sha256': 'db893ad69c9ac9498b09677c5839787eba2eb3b7ef2bc30bfba7e62e77cf7850',
+            'sha256_manpages': '60334ecd59ee10319af4a7815174d10991d1afabacd3b3129d589f038bf25542'
+        },
+        {
+            'version': '2.19.1',
+            'sha256': 'ec4dc96456612c65bf6d944cee9ac640145ec7245376832b781cb03e97cbb796',
+            'sha256_manpages': 'bd27f58dc90a661e3080b97365eb7322bfa185de95634fc59d98311925a7d894'
+        },
         {
             'version': '2.18.0',
             'sha256': '94faf2c0b02a7920b0b46f4961d8e9cad08e81418614102898a55f980fa3e7e4',
@@ -171,12 +200,14 @@ class Git(AutotoolsPackage):
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext')
-    depends_on('libiconv')
+    depends_on('iconv')
+    depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
-    depends_on('pcre+jit', when='@2.14:')
+    depends_on('pcre2', when='@2.14:')
     depends_on('perl')
     depends_on('zlib')
+    depends_on('openssh', type='run')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -184,13 +215,29 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
 
-    # See the comment in setup_environment re EXTLIBS.
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        prefix = os.path.dirname(exes[0])
+        variants = ''
+        if 'gitk' in os.listdir(prefix):
+            variants += '+tcltk'
+        else:
+            variants += '~tcltk'
+        return variants
+
+    # See the comment in setup_build_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
                     '#EXTLIBS =',
                     'Makefile')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # We use EXTLIBS rather than LDFLAGS so that git's Makefile
         # inserts the information into the proper place in the link commands
         # (alongside the # other libraries/paths that configure discovers).
@@ -203,9 +250,9 @@ class Git(AutotoolsPackage):
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            spack_env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+            env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                 self.spec['gettext'].prefix.lib))
-            spack_env.append_flags('CFLAGS', '-I{0}'.format(
+            env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
     def configure_args(self):
@@ -214,13 +261,18 @@ class Git(AutotoolsPackage):
         configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
-            '--with-libpcre={0}'.format(spec['pcre'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
             '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
+        if '^pcre' in self.spec:
+            configure_args.append('--with-libpcre={0}'.format(
+                spec['pcre'].prefix))
+        if '^pcre2' in self.spec:
+            configure_args.append('--with-libpcre2={0}'.format(
+                spec['pcre2'].prefix))
         if '+tcltk' in self.spec:
             configure_args.append('--with-tcltk={0}'.format(
                 self.spec['tk'].prefix.bin.wish))

@@ -1,0 +1,36 @@
+diff -Naur motif-2.3.8/ac_find_xbitmaps.m4 motif-2.3.8_patched/ac_find_xbitmaps.m4
+--- motif-2.3.8/ac_find_xbitmaps.m4	1970-01-01 01:00:00.000000000 +0100
++++ motif-2.3.8_patched/ac_find_xbitmaps.m4	2019-12-11 16:01:58.463883900 +0100
+@@ -0,0 +1,10 @@
++AC_DEFUN([AC_FIND_XBITMAPS],
++[
++
++AC_CHECK_HEADERS(X11/bitmaps/gray)
++
++CFLAGS="$CFLAGS `pkg-config xbitmaps --cflags`"
++AC_SUBST(CFLAGS)
++LIBS="$LIBS `pkg-config xbitmaps --libs`"
++AC_SUBST(LIBS)
++])
+diff -Naur motif-2.3.8/AUTHORS motif-2.3.8_patched/AUTHORS
+--- motif-2.3.8/AUTHORS	1970-01-01 01:00:00.000000000 +0100
++++ motif-2.3.8_patched/AUTHORS	2019-12-12 08:40:39.947561253 +0100
+@@ -0,0 +1 @@
++Dummy AUTHORS file: upstream Motif did not supply this and autoreconf needs it.
+\ No newline at end of file
+diff -Naur motif-2.3.8/configure.ac motif-2.3.8_patched/configure.ac
+--- motif-2.3.8/configure.ac	2017-12-05 13:43:54.000000000 +0100
++++ motif-2.3.8_patched/configure.ac	2019-12-11 16:01:58.467217264 +0100
+@@ -274,6 +274,7 @@
+ AC_SUBST(LIB_XP)
+ 
+ AC_FIND_XFT
++AC_FIND_XBITMAPS
+ AC_IMAGE_SUPPORT
+ 
+ 
+diff -Naur motif-2.3.8/NEWS motif-2.3.8_patched/NEWS
+--- motif-2.3.8/NEWS	1970-01-01 01:00:00.000000000 +0100
++++ motif-2.3.8_patched/NEWS	2019-12-12 08:40:59.010963846 +0100
+@@ -0,0 +1 @@
++Dummy NEWS file: upstream motif did not supply this but autoreconf needs it.

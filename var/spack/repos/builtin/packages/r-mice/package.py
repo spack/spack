@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -39,12 +20,15 @@ class RMice(RPackage):
     variables. Various diagnostic plots are available to inspect the quality
     of the imputations."""
 
-    homepage = "https://cran.r-project.org/package=mice"
-    url      = "https://cran.r-project.org/src/contrib/mice_3.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mice"
+    homepage = "https://cloud.r-project.org/package=mice"
+    url      = "https://cloud.r-project.org/src/contrib/mice_3.0.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mice"
 
-    version('3.0.0', 'fb54a29679536c474c756cca4538d7e3')
+    version('3.6.0', sha256='7bc72bdb631bc9f67d8f76ffb48a7bb275228d861075e20c24c09c736bebec5d')
+    version('3.5.0', sha256='4fccecdf9e8d8f9f63558597bfbbf054a873b2d0b0820ceefa7b6911066b9e45')
+    version('3.0.0', sha256='98b6bb1c5f8fb099bd0024779da8c865146edb25219cc0c9542a8254152c0add')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-broom', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

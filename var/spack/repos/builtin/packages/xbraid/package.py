@@ -1,53 +1,62 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import glob
-import os.path
 
 
 class Xbraid(MakefilePackage):
     """XBraid: Parallel time integration with Multigrid"""
 
-    homepage = "https://computation.llnl.gov/projects/parallel-time-integration-multigrid/software"
-    url      = "https://computation.llnl.gov/projects/parallel-time-integration-multigrid/download/braid_2.2.0.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/parallel-time-integration-multigrid/software"
+    url      = "https://github.com/XBraid/xbraid/archive/v2.2.0.tar.gz"
 
-    version('2.2.0', '0a9c2fc3eb8f605f73cce78ab0d8a7d9')
+    version('3.0.0', sha256='06988c0599cd100d3b3f3ebb183c9ad34a4021922e0896815cbedc659aaadce6')
+    version('2.3.0', sha256='706f0acde201c7c336ade3604679759752a74e2cd6c2a29a8bf5676b6e54b704')
+    version('2.2.0', sha256='082623b2ddcd2150b3ace65b96c1e00be637876ec6c94dc8fefda88743b35ba3')
 
     depends_on('mpi')
 
+    @when('@:2.2.0')
     def build(self, spec, prefix):
         make('libbraid.a')
 
+    @when('@2.3.0:')
+    def build(self, spec, prefix):
+        make('braid')
+
     # XBraid doesn't have a real install target, so it has to be done
     # manually
+    @when('@2.3.0:')
     def install(self, spec, prefix):
         # Install headers
         mkdirp(prefix.include)
-        headers = glob.glob('*.h')
-        for f in headers:
-            install(f, join_path(prefix.include, os.path.basename(f)))
+        install('braid/*.h', prefix.include)
+        install('braid/*.hpp', prefix.include)
+
+        # Install library
+        mkdirp(prefix.lib)
+        install('braid/libbraid.a', join_path(prefix.lib, 'libbraid.a'))
+
+        # Install other material (e.g., examples, tests, docs)
+        mkdirp(prefix.share)
+        install('makefile.inc', prefix.share)
+        install_tree('examples', prefix.share.examples)
+        install_tree('drivers', prefix.share.drivers)
+
+        # TODO: Some of the scripts in 'test' are useful, even for
+        # users; some could be deleted from an installation because
+        # they're not useful to users
+        install_tree('test', prefix.share.test)
+        install_tree('misc', prefix.share.misc)
+        install_tree('docs', prefix.share.docs)
+
+    @when('@:2.2.0')
+    def install(self, spec, prefix):
+        # Install headers
+        mkdirp(prefix.include)
+        install('*.h', prefix.include)
 
         # Install library
         mkdirp(prefix.lib)

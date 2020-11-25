@@ -1,36 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RSquash(RPackage):
     """Color-Based Plots for Multivariate Visualization"""
 
-    homepage = "https://cran.r-project.org/package=squash"
-    url      = "https://cran.r-project.org/src/contrib/squash_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/squash"
+    homepage = "https://cloud.r-project.org/package=squash"
+    url      = "https://cloud.r-project.org/src/contrib/squash_1.0.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/squash"
 
-    version('1.0.8', '50d5743d306fa11cfa1a3c4daa75e508')
-    version('1.0.7', '4ac381b17d4d7b77bdaa6f824fbb03ab')
+    version('1.0.8', sha256='e6932c0a461d5c85f7180a31d18a3eb4f28afd6769efe251075a4de12de039f4')
+    version('1.0.7', sha256='d2d7182a72dfd93b8b65e775bea11e891c38598fa49a3ed4f92ec1159ffab6f1')

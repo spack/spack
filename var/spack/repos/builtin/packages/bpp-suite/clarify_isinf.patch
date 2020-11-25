@@ -1,0 +1,90 @@
+diff -ur spack-src.org/bppSuite/bppAncestor.cpp spack-src/bppSuite/bppAncestor.cpp
+--- spack-src.org/bppSuite/bppAncestor.cpp	2019-11-18 15:59:34.786164416 +0900
++++ spack-src/bppSuite/bppAncestor.cpp	2019-11-18 16:26:25.385749490 +0900
+@@ -237,7 +237,7 @@
+   delete tree;
+     
+   double logL = tl->getValue();
+-  if (isinf(logL))
++  if (std::isinf(logL))
+   {
+     // This may be due to null branch lengths, leading to null likelihood!
+     ApplicationTools::displayWarning("!!! Warning!!! Likelihood is zero.");
+@@ -251,7 +251,7 @@
+     tl->matchParametersValues(pl);
+     logL = tl->getValue();
+   }
+-  if (isinf(logL))
++  if (std::isinf(logL))
+   {
+     ApplicationTools::displayError("!!! Unexpected likelihood == 0.");
+     ApplicationTools::displayError("!!! Looking at each site:");
+diff -ur spack-src.org/bppSuite/bppML.cpp spack-src/bppSuite/bppML.cpp
+--- spack-src.org/bppSuite/bppML.cpp	2019-11-18 15:59:34.786164416 +0900
++++ spack-src/bppSuite/bppML.cpp	2019-11-18 16:29:09.373021202 +0900
+@@ -425,7 +425,7 @@
+ 
+     //Check initial likelihood:
+     double logL = tl->getValue();
+-    if (isinf(logL))
++    if (std::isinf(logL))
+     {
+       // This may be due to null branch lengths, leading to null likelihood!
+       ApplicationTools::displayWarning("!!! Warning!!! Initial likelihood is zero.");
+@@ -440,7 +440,7 @@
+       logL = tl->getValue();
+     }
+     ApplicationTools::displayResult("Initial log likelihood", TextTools::toString(-logL, 15));
+-    if (isinf(logL))
++    if (std::isinf(logL))
+     {
+       ApplicationTools::displayError("!!! Unexpected initial likelihood == 0.");
+       if (codonAlphabet)
+@@ -448,7 +448,7 @@
+         bool f = false;
+         size_t s;
+         for (size_t i = 0; i < sites->getNumberOfSites(); i++) {
+-          if (isinf(tl->getLogLikelihoodForASite(i))) {
++          if (std::isinf(tl->getLogLikelihoodForASite(i))) {
+             const Site& site = sites->getSite(i);
+             s = site.size();
+             for (size_t j = 0; j < s; j++) {
+@@ -477,7 +477,7 @@
+       } else {
+         ApplicationTools::displayBooleanResult("Saturated site removal enabled", true);
+         for (size_t i = sites->getNumberOfSites(); i > 0; --i) {
+-          if (isinf(tl->getLogLikelihoodForASite(i - 1))) {
++          if (std::isinf(tl->getLogLikelihoodForASite(i - 1))) {
+             ApplicationTools::displayResult("Ignore saturated site", sites->getSite(i - 1).getPosition());
+             sites->deleteSite(i - 1);
+           }
+@@ -486,7 +486,7 @@
+         tl->setData(*sites);
+         tl->initialize();
+         logL = tl->getValue();
+-        if (isinf(logL)) {
++        if (std::isinf(logL)) {
+           throw Exception("Likelihood is still 0 after saturated sites are removed! Looks like a bug...");
+          }
+         ApplicationTools::displayResult("Initial log likelihood", TextTools::toString(-logL, 15));
+diff -ur spack-src.org/bppSuite/bppMixedLikelihoods.cpp spack-src/bppSuite/bppMixedLikelihoods.cpp
+--- spack-src.org/bppSuite/bppMixedLikelihoods.cpp	2019-11-18 15:59:34.786164416 +0900
++++ spack-src/bppSuite/bppMixedLikelihoods.cpp	2019-11-18 16:26:48.338168188 +0900
+@@ -220,7 +220,7 @@
+     tl->initialize();
+ 
+     double logL = tl->getValue();
+-    if (isinf(logL))
++    if (std::isinf(logL))
+     {
+       // This may be due to null branch lengths, leading to null likelihood!
+       ApplicationTools::displayWarning("!!! Warning!!! Likelihood is zero.");
+@@ -235,7 +235,7 @@
+       tl->matchParametersValues(pl);
+       logL = tl->getValue();
+     }
+-    if (isinf(logL))
++    if (std::isinf(logL))
+     {
+       ApplicationTools::displayError("!!! Unexpected likelihood == 0.");
+       ApplicationTools::displayError("!!! Looking at each site:");

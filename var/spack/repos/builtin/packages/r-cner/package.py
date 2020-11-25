@@ -1,47 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RCner(RPackage):
-    """"Large-scale identification and advanced visualization of sets of
-        conserved noncoding elements."""
+    """CNE Detection and Visualization.
 
-    homepage = "https://bioconductor.org/packages/CNEr/"
+       Large-scale identification and advanced visualization of sets of
+       conserved noncoding elements."""
+
+    homepage = "https://bioconductor.org/packages/CNEr"
     git      = "https://git.bioconductor.org/packages/CNEr.git"
 
+    version('1.20.0', commit='9c25d8e8f6f5fd8a5311f554c86e7ca1140a4ca5')
+    version('1.18.1', commit='66aa88af04364c81832f3b09bad898f3c117f606')
+    version('1.16.1', commit='a2bec4b98d5938709f959a69c151f553ef357941')
     version('1.14.0', commit='b8634d65c51728c815127e22b45eba7c9b9db897')
+    version('1.12.1', commit='90d611f9cd19a73d0fe92ab03ef428519d64c017')
 
+    depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-biostrings@2.33.4:', type=('build', 'run'))
-    depends_on('r-dbi@0.7:', type=('build', 'run'))
     depends_on('r-rsqlite@0.11.4:', type=('build', 'run'))
     depends_on('r-genomeinfodb@1.1.3:', type=('build', 'run'))
     depends_on('r-genomicranges@1.23.16:', type=('build', 'run'))
     depends_on('r-rtracklayer@1.25.5:', type=('build', 'run'))
     depends_on('r-xvector@0.5.4:', type=('build', 'run'))
     depends_on('r-genomicalignments@1.1.9:', type=('build', 'run'))
+    depends_on('r-dbi@0.6:', type=('build', 'run'))
     depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
     depends_on('r-iranges@2.5.27:', type=('build', 'run'))
     depends_on('r-readr@0.2.2:', type=('build', 'run'))
@@ -51,6 +39,8 @@ class RCner(RPackage):
     depends_on('r-powerlaw@0.60.3:', type=('build', 'run'))
     depends_on('r-annotate@1.50.0:', type=('build', 'run'))
     depends_on('r-go-db@3.3.0:', type=('build', 'run'))
+    depends_on('r-r-utils@2.3.0:', type=('build', 'run'))
     depends_on('r-keggrest@1.14.0:', type=('build', 'run'))
-    depends_on('r-utils@2.3.0:', type=('build', 'run'))
-    depends_on('r@3.4.3:3.4.9', when='@1.14.0')
+
+    depends_on('r@3.4:', when='@1.14.0:', type=('build', 'run'))
+    depends_on('r-dbi@0.7:', when='@1.14.0:', type=('build', 'run'))

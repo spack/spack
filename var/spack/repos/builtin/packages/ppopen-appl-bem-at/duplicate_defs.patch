@@ -1,0 +1,13 @@
+diff --git a/framework_with_templates/OAT_bem-bb-fw-dense-0.1.0.f90 b/framework_with_templates/OAT_bem-bb-fw-dense-0.1.0.f90
+index edabbed..16c6a52 100644
+--- a/framework_with_templates/OAT_bem-bb-fw-dense-0.1.0.f90
++++ b/framework_with_templates/OAT_bem-bb-fw-dense-0.1.0.f90
+@@ -1201,8 +1201,6 @@ contains
+     integer  i, j
+ 
+     include "OAT.h"
+-      integer iusw1_ppohBEMresidual_direct
+-      integer iusw1_ppohBEMmatvec_direct
+ 
+     character*100 ctmp 
+ 

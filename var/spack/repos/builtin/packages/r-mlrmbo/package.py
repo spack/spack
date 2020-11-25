@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -41,11 +22,12 @@ class RMlrmbo(RPackage):
        use cases."""
 
     homepage = "https://github.com/mlr-org/mlrMBO/"
-    url      = "https://cran.r-project.org/src/contrib/mlrMBO_1.1.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mlrMBO"
+    url      = "https://cloud.r-project.org/src/contrib/mlrMBO_1.1.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mlrMBO"
 
-    version('1.1.1', '9a35b41ceb8754111af294dee0ae76e0')
-    version('1.1.0', '9e27ff8498225d24863b8da758d2918e')
+    version('1.1.2', sha256='8e84caaa5d5d443d7019128f88ebb212fb095870b3a128697c9b64fe988f3efe')
+    version('1.1.1', sha256='e87d9912a9b4a968364584205b8ef6f7fea0b5aa043c8d31331a7b7be02dd7e4')
+    version('1.1.0', sha256='6ae82731a566333f06085ea2ce23ff2a1007029db46eea57d06194850350a8a0')
 
     depends_on('r-mlr@2.10:', type=('build', 'run'))
     depends_on('r-paramhelpers@1.10:', type=('build', 'run'))

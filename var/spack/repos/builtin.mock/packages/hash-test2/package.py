@@ -1,6 +1,11 @@
-from spack import *
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+
+from spack import *
 
 
 class HashTest2(Package):
@@ -26,3 +31,6 @@ class HashTest2(Package):
     def install(self, spec, prefix):
         print("install 1")
         os.listdir(os.getcwd())
+
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)

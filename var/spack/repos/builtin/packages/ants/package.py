@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -37,12 +18,17 @@ class Ants(CMakePackage):
     homepage = "http://stnava.github.io/ANTs/"
     url      = "https://github.com/ANTsX/ANTs/archive/v2.2.0.tar.gz"
 
-    version('2.2.0', '5661b949268100ac0f7baf6d2702b4dd')
+    version('2.2.0', sha256='62f8f9ae141cb45025f4bb59277c053acf658d4a3ba868c9e0f609af72e66b4a')
+
+    depends_on('zlib', type='link')
 
     def install(self, spec, prefix):
-        with working_dir(join_path('spack-build', 'ANTS-build'), create=False):
+        with working_dir(
+                join_path(self.build_directory, 'ANTS-build'),
+                create=False
+        ):
             make("install")
         install_tree('Scripts', prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('ANTSPATH', self.prefix.bin)
+    def setup_run_environment(self, env):
+        env.set('ANTSPATH', self.prefix.bin)

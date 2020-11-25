@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 """Defines paths that are part of Spack's directory structure.
 
 Do not import other ``spack`` modules here. This module is used
@@ -44,6 +25,9 @@ bin_path = os.path.join(prefix, "bin")
 #: The spack script itself
 spack_script = os.path.join(bin_path, "spack")
 
+#: The sbang script in the spack installation
+sbang_script = os.path.join(bin_path, "sbang")
+
 # spack directory hierarchy
 lib_path              = os.path.join(prefix, "lib", "spack")
 external_path         = os.path.join(lib_path, "external")
@@ -57,7 +41,6 @@ operating_system_path = os.path.join(module_path, 'operating_systems')
 test_path             = os.path.join(module_path, "test")
 hooks_path            = os.path.join(module_path, "hooks")
 var_path              = os.path.join(prefix, "var", "spack")
-stage_path            = os.path.join(var_path, "stage")
 repos_path            = os.path.join(var_path, "repos")
 share_path            = os.path.join(prefix, "share", "spack")
 

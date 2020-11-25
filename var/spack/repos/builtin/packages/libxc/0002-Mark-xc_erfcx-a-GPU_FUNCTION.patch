@@ -1,0 +1,33 @@
+From 11b90a0a477925f19dfeb7e1f672058f25d83387 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Fri, 31 Jul 2020 13:54:39 +0200
+Subject: [PATCH] Mark xc_erfcx a GPU_FUNCTION
+
+---
+ src/faddeeva.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/faddeeva.c b/src/faddeeva.c
+index ceec4736..03484713 100644
+--- a/src/faddeeva.c
++++ b/src/faddeeva.c
+@@ -29,6 +29,8 @@
+ 
+ #include "config.h"
+ 
++#include "util.h"
++
+ #include <math.h>
+ 
+ /* erfcx(x) = exp(x^2) erfc(x) function, for real x, written by
+@@ -477,6 +479,7 @@ return 0.97771701335885035464e0 + (0.22000938572830479551e-1 + (0.27951610702682
+   return 1.0;
+ }
+ 
++GPU_FUNCTION
+ double xc_erfcx(double x)
+ {
+   if (x >= 0) {
+-- 
+2.25.1
+

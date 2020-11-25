@@ -1,40 +1,22 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 # See also: AspellDictPackage
-class Aspell(AutotoolsPackage):
+class Aspell(AutotoolsPackage, GNUMirrorPackage):
     """GNU Aspell is a Free and Open Source spell checker designed to
     eventually replace Ispell."""
 
     homepage = "http://aspell.net/"
-    url      = "https://ftpmirror.gnu.org/aspell/aspell-0.60.6.1.tar.gz"
+    gnu_mirror_path = "aspell/aspell-0.60.6.1.tar.gz"
 
-    extendable = True           # support activating dictionaries
+    extendable = True  # support activating dictionaries
 
-    version('0.60.6.1', 'e66a9c9af6a60dc46134fdacf6ce97d7')
+    version('0.60.6.1', sha256='f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1')
 
-    patch('darwin.patch', when='platform=darwin')
+    patch('fix_cpp.patch')
+    patch('issue-519.patch', when='@:0.60.6.1')

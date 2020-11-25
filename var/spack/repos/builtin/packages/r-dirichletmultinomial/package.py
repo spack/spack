@@ -1,44 +1,31 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RDirichletmultinomial(RPackage):
-    """Dirichlet-multinomial mixture models can be used to describe
-    variability in microbial metagenomic data.
+    """Dirichlet-Multinomial Mixture Model Machine Learning for Microbiome
+       Data.
 
-    This package is an interface to code originally made available by
-    Holmes, Harris, and Quince, 2012, PLoS ONE 7(2): 1-15, as discussed
-    further in the man page for this package, ?DirichletMultinomial."""
+       Dirichlet-multinomial mixture models can be used to describe variability
+       in microbial metagenomic data. This package is an interface to code
+       originally made available by Holmes, Harris, and Quince, 2012, PLoS ONE
+       7(2): 1-15, as discussed further in the man page for this package,
+       ?DirichletMultinomial."""
 
-    homepage = "https://bioconductor.org/packages/DirichletMultinomial/"
+    homepage = "https://bioconductor.org/packages/DirichletMultinomial"
     git      = "https://git.bioconductor.org/packages/DirichletMultinomial.git"
 
+    version('1.26.0', commit='7daa84948020811bb8a27d2e633fccfdcdd1018f')
+    version('1.24.1', commit='50195d9b1986852da29100e77f6f09df5d6e2a35')
+    version('1.22.0', commit='5864f4298105d12f345f27df77ad13bae4061ca5')
     version('1.20.0', commit='251529f301da1482551142240aeb6baf8dab2272')
+    version('1.18.0', commit='81ccc8d83b8ef84f5d3e877bc0a04233a0f63c51')
 
     depends_on('r-s4vectors', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('gsl')
-    depends_on('r@3.4.0:')

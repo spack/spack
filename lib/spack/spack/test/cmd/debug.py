@@ -1,36 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import platform
+
+import pytest
+
 import os
 import os.path
 
-from spack.main import SpackCommand
+import spack.architecture as architecture
+from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
 debug = SpackCommand('debug')
 
 
+@pytest.mark.db
 def test_create_db_tarball(tmpdir, database):
     with tmpdir.as_cwd():
         debug('create-db-tarball')
@@ -57,3 +44,12 @@ def test_create_db_tarball(tmpdir, database):
 
             spec_suffix = '%s/.spack/spec.yaml' % spec.dag_hash()
             assert spec_suffix in contents
+
+
+def test_report():
+    out = debug('report')
+    arch = architecture.Arch(architecture.platform(), 'frontend', 'frontend')
+
+    assert get_version() in out
+    assert platform.python_version() in out
+    assert str(arch) in out

@@ -1,40 +1,28 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
-
-
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 class Libuv(AutotoolsPackage):
     """Multi-platform library with a focus on asynchronous IO"""
     homepage = "http://libuv.org"
-    url      = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
+    url = "https://github.com/libuv/libuv/archive/v1.9.0.tar.gz"
 
-    version('1.9.0', '14737f9c76123a19a290dabb7d1cd04c')
+    version('1.40.0', sha256='70fe1c9ba4f2c509e8166c0ca2351000237da573bb6c82092339207a9715ba6b')
+    version('1.39.0', sha256='dc7b21f1bb7ef19f4b42c5ea058afabe51132d165da18812b70fb319659ba629')
+    version('1.38.1', sha256='2177fca2426ac60c20f654323656e843dac4f568d46674544b78f416697bd32c')
+    version('1.25.0', sha256='ce3036d444c3fb4f9a9e2994bec1f4fa07872b01456998b422ce918fdc55c254')
+    version('1.10.0', sha256='50f4ed57d65af4ab634e2cbdd90c49213020e15b4d77d3631feb633cbba9239f')
+    version('1.9.0',  sha256='f8b8272a0d80138b709d38fad2baf771899eed61e7f9578d17898b07a1a2a5eb')
 
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('libtool', type='build')
+
+    # Tries to build an Objective-C file with GCC's C frontend
+    # https://github.com/libuv/libuv/issues/2805
+    conflicts('%gcc platform=darwin', when='@:1.37.9',
+              msg='libuv does not compile with GCC on macOS yet, use clang. '
+                  'See: https://github.com/libuv/libuv/issues/2805')
 
     def autoreconf(self, spec, prefix):
         # This is needed because autogen.sh generates on-the-fly

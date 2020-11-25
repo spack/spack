@@ -1,31 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import argparse
 import copy
 import os
-import string
 import sys
 
 import llnl.util.tty as tty
@@ -50,23 +30,14 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="do not try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'spec'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true', dest='verbose',
         help="display verbose build output while installing")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
-
-
-def spack_transitive_include_path():
-    return ';'.join(
-        os.path.join(dep, 'include')
-        for dep in os.environ['SPACK_DEPENDENCIES'].split(os.pathsep)
-    )
+    subparser.epilog = 'DEPRECATED: use `spack dev-build` instead'
 
 
 def write_spconfig(package, dirty):
@@ -80,8 +51,8 @@ def write_spconfig(package, dirty):
     paths = os.environ['PATH'].split(':')
     paths = [item for item in paths if 'spack/env' not in item]
     env['PATH'] = ':'.join(paths)
-    env['SPACK_TRANSITIVE_INCLUDE_PATH'] = spack_transitive_include_path()
     env['CMAKE_PREFIX_PATH'] = os.environ['CMAKE_PREFIX_PATH']
+    env['SPACK_INCLUDE_DIRS'] = os.environ['SPACK_INCLUDE_DIRS']
     env['CC'] = os.environ['SPACK_CC']
     env['CXX'] = os.environ['SPACK_CXX']
     env['FC'] = os.environ['SPACK_FC']
@@ -104,17 +75,17 @@ env = dict(os.environ)
         env_vars = sorted(list(env.keys()))
         for name in env_vars:
             val = env[name]
-            if string.find(name, 'PATH') < 0:
+            if name.find('PATH') < 0:
                 fout.write('env[%s] = %s\n' % (repr(name), repr(val)))
             else:
-                if name == 'SPACK_TRANSITIVE_INCLUDE_PATH':
+                if name == 'SPACK_INCLUDE_DIRS':
                     sep = ';'
                 else:
                     sep = ':'
 
                 fout.write(
                     'env[%s] = "%s".join(cmdlist("""\n' % (repr(name), sep))
-                for part in string.split(val, sep):
+                for part in val.split(sep):
                     fout.write('    %s\n' % part)
                 fout.write('"""))\n')
 
@@ -128,6 +99,8 @@ env = dict(os.environ)
 
 
 def setup(self, args):
+    tty.warn('DEPRECATED: use `spack dev-build` instead')
+
     if not args.spec:
         tty.die("spack setup requires a package spec argument.")
 

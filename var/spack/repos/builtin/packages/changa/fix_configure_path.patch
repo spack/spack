@@ -1,0 +1,13 @@
+diff --git a/configure b/configure
+index 04f1a59..602c6cc 100755
+--- a/configure
++++ b/configure
+@@ -2434,7 +2434,7 @@ if test $($CHARMC -V | awk '{print $3}') -lt $MINIMUM_CHARM_VERSION; then
+ fi
+ 
+ CHARM_PATH=${CHARMC%/bin/charmc}
+-CONV_CONFIG=${CHARM_PATH}/tmp/conv-config.sh
++CONV_CONFIG=${CHARM_PATH}/include/conv-config.sh
+ CHARMINC=${CHARM_PATH}/include
+ 
+ . ${CONV_CONFIG}

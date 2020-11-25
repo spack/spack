@@ -1,0 +1,11 @@
+--- a/TimingStats.h
++++ b/TimingStats.h
+@@ -56,7 +56,7 @@
+ #define HACC_TIMINGSTATS_H
+ 
+ #include <math.h>
+-
++#include <stdio.h>
+ #include <mpi.h>
+ 
+ // lightweight timing statistics from MPI_Wtime() calls

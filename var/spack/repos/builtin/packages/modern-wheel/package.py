@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import sys
 
@@ -33,10 +14,11 @@ class ModernWheel(CMakePackage):
 
     homepage = "https://github.com/alalazo/modern_wheel"
     url      = "https://github.com/alalazo/modern_wheel/archive/1.2.tar.gz"
+    maintainers = ['alalazo']
 
-    version('1.2', 'dc440099c52b6af3b8ddff6fd7730aff')
-    version('1.1', '289455239ad19497b7db55aacb299ca8')
-    version('1.0', '503dc3e7da2b422c4295e4afcba09dfb')
+    version('1.2', sha256='48612f698d7159f0eb10d93ddc3e2682b06a54d3a836ff227636be3261aed15e')
+    version('1.1', sha256='d8ba4891257b96108e9b9406a556f8ced3b71ce85c3fcdca6bfd9cc37bf010a3')
+    version('1.0', sha256='b90a1e29af0b67dfa4c07f9c19b2d04fa78cd878b29a9c42bc766dabd6cb1b90')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -53,6 +35,9 @@ class ModernWheel(CMakePackage):
     # ModernWheel with Boost >= 1.66.0.
     depends_on('boost           +system +filesystem', when='@:1.1.999')
     depends_on('boost@:1.65.999 +system +filesystem', when='@1.2:')
+
+    # add virtual destructor to BaseMultiParms class.
+    patch('add_virtual_destructor.patch')
 
     def cmake_args(self):
         spec = self.spec

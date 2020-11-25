@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,14 +10,17 @@ class PyPluggy(PythonPackage):
     """Plugin and hook calling mechanisms for python."""
 
     homepage = "https://github.com/pytest-dev/pluggy"
-    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.7.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.13.0.tar.gz"
 
     import_modules = ['pluggy']
 
-    version('0.7.1', 'cd5cc1003143f86dd6e2a865a20f8837')
-    version('0.6.0', 'ffdde7c3a5ba9a440404570366ffb6d5')
+    version('0.13.0', sha256='fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34')
+    version('0.12.0', sha256='0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc')
+    version('0.7.1', sha256='95eb8364a4708392bae89035f45341871286a333f749c3141c20573d2b3876e1')
+    version('0.6.0', sha256='7f8ae7f5bdf75671a718d2daf0a64b7885f74510bcd98b1a0bb420eb9a9d0cff')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
+    depends_on('py-importlib-metadata@0.12:', when='^python@:3.7', type=('build', 'run'))

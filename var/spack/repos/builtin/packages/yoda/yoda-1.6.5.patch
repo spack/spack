@@ -1,0 +1,23 @@
+--- bin/yoda2aida.orig      2016-10-07 13:25:57.355168158 +0200
++++ bin/yoda2aida   2016-10-07 13:26:04.779169090 +0200
+@@ -18,7 +18,7 @@
+ parser.add_option("-M", "--unmatch", dest="UNMATCH", metavar="PATT", default=None,
+                   help="exclude histograms whose path matches this regex")
+ 
+-sys.stderr.write("WARNING: yoda2aida is DEPRECATED.\n  It will die when AIDA does... *soon*\n"
++sys.stderr.write("WARNING: yoda2aida is DEPRECATED.\n  It will die when AIDA does... *soon*\n")
+ 
+ opts, args = parser.parse_args()
+ in_out = parse_x2y_args(args, ".yoda", ".aida")
+
+--- pyext/setup.py.in.orig      2016-09-30 09:13:02.000000000 +0200
++++ pyext/setup.py.in   2016-09-30 09:13:21.000000000 +0200
+@@ -34,7 +34,7 @@
+ extns = [ext("util"),  ext("core", statics=static_files, depends=core_depends)]
+
+ ## Enable building of ROOT extension if ROOT is present
+-if os.environ.has_key("BUILD_ROOTCOMPAT"):
++if "BUILD_ROOTCOMPAT" in os.environ:
+     try:
+         # import ROOT
+         # TODO: Need to test for and use root-config in configure

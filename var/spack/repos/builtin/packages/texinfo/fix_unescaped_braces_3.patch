@@ -1,0 +1,17 @@
+--- texinfo-5.0/tp/Texinfo/Parser.pm.org	2019-11-20 15:53:10.625719249 +0900
++++ texinfo-5.0/tp/Texinfo/Parser.pm	2019-11-20 15:53:42.949119841 +0900
+@@ -5299,12 +5299,12 @@
+     }
+   } elsif ($command eq 'clickstyle') {
+     # REMACRO
+-    if ($line =~ /^\s+@([[:alnum:]][[:alnum:]\-]*)({})?\s*/) {
++    if ($line =~ /^\s+@([[:alnum:]][[:alnum:]\-]*)(\{\})?\s*/) {
+       $args = ['@'.$1];
+       $self->{'clickstyle'} = $1
+         unless(_ignore_global_commands($self));
+       my $remaining = $line;
+-      $remaining =~ s/^\s+@([[:alnum:]][[:alnum:]\-]*)({})?\s*//;
++      $remaining =~ s/^\s+@([[:alnum:]][[:alnum:]\-]*)(\{\})?\s*//;
+       $self->line_warn(sprintf($self->__(
+                            "remaining argument on \@%s line: %s"), 
+                              $command, $remaining), $line_nr) if ($remaining);

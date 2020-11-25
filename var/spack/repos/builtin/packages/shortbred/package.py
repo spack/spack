@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,7 @@ class Shortbred(Package):
     homepage = "https://huttenhower.sph.harvard.edu/shortbred"
     url      = "https://bitbucket.org/biobakery/shortbred/get/0.9.4.tar.gz"
 
-    version('0.9.4', 'ad3dff344cbea3713e78b384afad28fd')
+    version('0.9.4', sha256='a85e5609db79696d3f2d478408fc6abfeea7628de9f533c4e1e0ea3622b397ba')
 
     depends_on('blast-plus@2.2.28:')
     depends_on('cdhit@4.6:')
@@ -47,5 +28,5 @@ class Shortbred(Package):
         install('shortbred_quantify.py', prefix.bin)
         install_tree('src', prefix.src)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PYTHONPATH', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PYTHONPATH', self.prefix)

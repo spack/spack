@@ -1,0 +1,22 @@
+diff --git a/configure b/configure
+index 375e3b7..e47deac 100755
+--- a/configure
++++ b/configure
+@@ -196,7 +196,7 @@ echo "Platform is $ARCH"
+ FFLAGS="${FFLAGS_OPT}"
+ CFLAGS="${CFLAGS_OPT}"
+ CXXFLAGS="${CXXFLAGS_OPT}"
+-FLIBS="-lfrtbegin -lg2c"
++#FLIBS="-lfrtbegin -lg2c"
+ SOFLAGS="-soname"
+ 
+ if [ ${COMPMODE} = OPT ]; then
+@@ -213,7 +213,7 @@ if [ $ARCH = Linux ]; then
+   FFLAGS="${FFLAGS_OPT} -Wno-globals"
+   CFLAGS="${CFLAGS_OPT}"
+   CXXFLAGS="${CXXFLAGS_OPT}"
+-  FLIBS="-lfrtbegin -lg2c"
++  #FLIBS="-lfrtbegin -lg2c"
+   if [ ${COMPMODE} = OPT ]; then
+     FFLAGS="${FFLAGS_OPT}"
+     CFLAGS="${CFLAGS_OPT}"

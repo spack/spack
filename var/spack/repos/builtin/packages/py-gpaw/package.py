@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,16 +14,20 @@ class PyGpaw(PythonPackage):
     homepage = "https://wiki.fysik.dtu.dk/gpaw/index.html"
     url      = "https://pypi.io/packages/source/g/gpaw/gpaw-1.3.0.tar.gz"
 
-    version('1.3.0', '82e8c80e637696248db00b5713cdffd1')
+    version('19.8.1', sha256='79dee367d695d68409c4d69edcbad5c8679137d6715da403f6c2500cb2178c2a')
+    version('1.3.0', sha256='cf601c69ac496421e36111682bcc1d23da2dba2aabc96be51accf73dea30655c')
 
     variant('mpi', default=True, description='Build with MPI support')
-    variant('scalapack', default=False,
+    variant('scalapack', default=True,
             description='Build with ScaLAPACK support')
     variant('fftw', default=True, description='Build with FFTW support')
+    variant('libvdwxc', default=True, description='Build with libvdwxc support')
 
     depends_on('mpi', when='+mpi', type=('build', 'link', 'run'))
-    depends_on('python@2.6:')
-    depends_on('py-ase@3.13.0:', type=('build', 'run'))
+    depends_on('python@2.6:', type=('build', 'run'), when='@:1.3.0')
+    depends_on('python@3.5:', type=('build', 'run'), when='@19.8.1:')
+    depends_on('py-ase@3.13.0:', type=('build', 'run'), when='@1.3.0')
+    depends_on('py-ase@3.18.0:', type=('build', 'run'), when='@19.8.1')
     depends_on('py-numpy +blas +lapack', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('libxc')
@@ -51,6 +36,9 @@ class PyGpaw(PythonPackage):
     depends_on('fftw+mpi', when='+fftw +mpi')
     depends_on('fftw~mpi', when='+fftw ~mpi')
     depends_on('scalapack', when='+scalapack')
+    depends_on('libvdwxc', when='+libvdwxc')
+
+    patch('libxc.patch', when='@1.3.0')
 
     def patch(self):
         spec = self.spec
@@ -60,8 +48,16 @@ class PyGpaw(PythonPackage):
         blas = spec['blas']
         lapack = spec['lapack']
 
+        python_include = spec['python'].headers.directories[0]
+        numpy_include = join_path(
+            spec['py-numpy'].prefix,
+            spec['python'].package.site_packages_dir,
+            'numpy', 'core', 'include')
+
         libs = blas.libs + lapack.libs + libxc.libs
         include_dirs = [
+            python_include,
+            numpy_include,
             blas.prefix.include,
             lapack.prefix.include,
             libxc.prefix.include
@@ -81,6 +77,9 @@ class PyGpaw(PythonPackage):
         if '+fftw' in spec:
             libs += spec['fftw'].libs
             include_dirs.append(spec['fftw'].prefix.include)
+        if '+libvdwxc' in spec:
+            libs += spec['libvdwxc'].libs
+            include_dirs.append(spec['libvdwxc'].prefix.include)
 
         lib_dirs = list(libs.directories)
         libs = list(libs.names)
@@ -105,3 +104,7 @@ class PyGpaw(PythonPackage):
             if '+scalapack' in spec:
                 f.write("scalapack = True\n")
                 f.write("define_macros += {0}\n".format(scalapack_macros))
+            if '+fftw' in spec:
+                f.write("fftw = True\n")
+            if '+libvdwxc' in spec:
+                f.write("libvdwxc = True\n")

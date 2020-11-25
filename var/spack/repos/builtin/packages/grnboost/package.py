@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -44,16 +25,16 @@ class Grnboost(Package):
     depends_on('xgboost+jvm-packages', type='run')
     depends_on('spark+hadoop', type='run')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         grnboost_jar = join_path(self.prefix, 'target',
                                  'scala-2.11', 'GRNBoost.jar')
         xgboost_version = self.spec['xgboost'].version.string
         xgboost_jar = join_path(self.spec['xgboost'].prefix,
                                 'xgboost4j-' + xgboost_version + '.jar')
-        run_env.set('GRNBOOST_JAR', grnboost_jar)
-        run_env.set('JAVA_HOME', self.spec['java'].prefix)
-        run_env.set('CLASSPATH', xgboost_jar)
-        run_env.set('XGBOOST_JAR', xgboost_jar)
+        env.set('GRNBOOST_JAR', grnboost_jar)
+        env.set('JAVA_HOME', self.spec['java'].prefix)
+        env.set('CLASSPATH', xgboost_jar)
+        env.set('XGBOOST_JAR', xgboost_jar)
 
     def install(self, spec, prefix):
         sbt = which('sbt')

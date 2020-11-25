@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -54,12 +35,12 @@ class RRcppblaze(RPackage):
        the most compilers and system."""
 
     homepage = "https://github.com/Chingchuan-chen/RcppBlaze"
-    url      = "https://cran.rstudio.com/src/contrib/RcppBlaze_0.2.2.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/RcppBlaze"
+    url      = "https://cloud.r-project.org/src/contrib/RcppBlaze_0.2.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppBlaze"
 
-    version('0.2.2', '22ecae73cf1bebce06ed6387d49f2c77')
+    version('0.2.2', sha256='67550ed8aea12a219047af61b41e5b9f991608a21ce9a8fbf7ac55da0f7c2742')
 
+    depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-matrix@1.1-0:', type=('build', 'run'))
     depends_on('r-bh@1.54.0-2:', type=('build', 'run'))
-    depends_on('r@3.0.2:')

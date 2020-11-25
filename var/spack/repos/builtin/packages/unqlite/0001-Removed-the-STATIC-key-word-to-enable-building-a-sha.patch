@@ -1,0 +1,26 @@
+From 7c14b18c4967c04344ceba2da90467cd27ee5678 Mon Sep 17 00:00:00 2001
+From: Matthieu Dorier <mdorier@anl.gov>
+Date: Thu, 2 Apr 2020 12:43:19 +0100
+Subject: [PATCH] Removed the STATIC key word to enable building a shared
+ library
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index f2bb3cd..efb63a7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -18,7 +18,7 @@ SET(SOURCES_UNQLITE
+ )
+ 
+ SET(UNQLITE_STATIC_LIB unqlite)
+-ADD_LIBRARY(${UNQLITE_STATIC_LIB} STATIC ${HEADERS_UNQLITE} ${SOURCES_UNQLITE})
++ADD_LIBRARY(${UNQLITE_STATIC_LIB} ${HEADERS_UNQLITE} ${SOURCES_UNQLITE})
+ 
+ INSTALL(TARGETS ${UNQLITE_STATIC_LIB} COMPONENT devel ARCHIVE DESTINATION lib)
+ INSTALL(FILES ${HEADERS_UNQLITE} COMPONENT devel DESTINATION include)
+-- 
+2.20.1
+

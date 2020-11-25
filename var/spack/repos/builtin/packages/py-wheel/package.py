@@ -1,37 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyWheel(PythonPackage):
     """A built-package format for Python."""
 
-    homepage = "https://pypi.python.org/pypi/wheel"
-    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.29.0.tar.gz"
+    homepage = "https://github.com/pypa/wheel"
+    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.34.2.tar.gz"
 
-    version('0.29.0', '555a67e4507cedee23a0deb9651e452f')
-    version('0.26.0', '4cfc6e7e3dc7377d0164914623922a10')
+    version('0.34.2', sha256='8788e9155fe14f54164c1b9eb0a319d98ef02c160725587ad60f14ddc57b6f96')
+    version('0.33.4', sha256='62fcfa03d45b5b722539ccbc07b190e4bfff4bb9e3a4d470dd9f6a0981002565')
+    version('0.33.1', sha256='66a8fd76f28977bb664b098372daef2b27f60dc4d1688cfab7b37a09448f0e9d')
+    version('0.32.3', sha256='029703bf514e16c8271c3821806a1c171220cc5bdd325cbf4e7da1e056a01db6')
+    version('0.29.0', sha256='1ebb8ad7e26b448e9caa4773d2357849bf80ff9e313964bcaf79cbf0201a1648')
+    version('0.26.0', sha256='eaad353805c180a47545a256e6508835b65a8e830ba1093ed8162f19a50a530c')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.8,3.5:', when='@0.34:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@0.30:', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
+    depends_on('py-setuptools@40.9.0:', when='@0.34.1:', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm@3.4:', when='@0.34.0', type='build')
+    depends_on('py-pytest@3.0.0:', type='test')
+    depends_on('py-pytest-cov', type='test')

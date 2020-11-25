@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -29,10 +10,14 @@ from spack import *
 class Clhep(CMakePackage):
     """CLHEP is a C++ Class Library for High Energy Physics. """
     homepage = "http://proj-clhep.web.cern.ch/proj-clhep/"
-    url      = "http://proj-clhep.web.cern.ch/proj-clhep/DISTRIBUTION/tarFiles/clhep-2.2.0.5.tgz"
+    url      = "http://proj-clhep.web.cern.ch/proj-clhep/dist1/clhep-2.4.1.3.tgz"
     list_url = "https://proj-clhep.web.cern.ch/proj-clhep/"
     list_depth = 1
 
+    maintainers = ['drbenmorgan']
+
+    version('2.4.1.3', sha256='27c257934929f4cb1643aa60aeaad6519025d8f0a1c199bc3137ad7368245913')
+    version('2.4.1.2', sha256='ff96e7282254164380460bc8cf2dff2b58944084eadcd872b5661eb5a33fa4b8')
     version('2.4.1.0', sha256='d14736eb5c3d21f86ce831dc1afcf03d423825b35c84deb6f8fd16773528c54d')
     version('2.4.0.4', sha256='eb013841c57990befa1e977a11a552ab8328733c1c3b6cecfde86da40dc22113')
     version('2.4.0.2', sha256='1e9891c5badb718c24933e7a5c6ee4d64fd4d5cf3a40c150ad18e864ec86b8a4')
@@ -54,38 +39,25 @@ class Clhep(CMakePackage):
     version('2.2.0.5', sha256='92e8b5d32ae96154edd27d0c641ba048ad33cb69dd4f1cfb72fc578770a34818')
     version('2.2.0.4', sha256='9bf7fcd9892313c8d1436bc4a4a285a016c4f8e81e1fc65bdf6783207ae57550')
 
-    variant('cxx11', default=True, description="Compile using c++11 dialect.")
-    variant('cxx14', default=False, description="Compile using c++14 dialect.")
+    variant('cxxstd',
+            default='11',
+            values=('11', '14', '17'),
+            multi=False,
+            description='Use the specified C++ standard when building.')
+
+    conflicts('cxxstd=17', when='@:2.3.4.2')
 
     depends_on('cmake@2.8.12.2:', when='@2.2.0.4:2.3.0.0', type='build')
     depends_on('cmake@3.2:', when='@2.3.0.1:', type='build')
 
+    root_cmakelists_dir = 'CLHEP'  # Extra directory layer.
+
     def patch(self):
         filter_file('SET CMP0042 OLD',
                     'SET CMP0042 NEW',
-                    '%s/%s/CLHEP/CMakeLists.txt'
-                    % (self.stage.path, self.spec.version))
-
-    root_cmakelists_dir = 'CLHEP'
+                    '%s/CLHEP/CMakeLists.txt' % self.stage.source_path)
 
     def cmake_args(self):
-        spec = self.spec
-        cmake_args = []
-
-        if '+cxx11' in spec:
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx11_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx11_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx11_flag)
-
-        if '+cxx14' in spec:
-            if 'CXXFLAGS' in env and env['CXXFLAGS']:
-                env['CXXFLAGS'] += ' ' + self.compiler.cxx14_flag
-            else:
-                env['CXXFLAGS'] = self.compiler.cxx14_flag
-            cmake_args.append('-DCLHEP_BUILD_CXXSTD=' +
-                              self.compiler.cxx14_flag)
-
+        cmake_args = ['-DCLHEP_BUILD_CXXSTD=-std=c++{0}'.format(
+                      self.spec.variants['cxxstd'].value)]
         return cmake_args

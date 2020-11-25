@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os.path
 
@@ -37,14 +18,14 @@ class Qorts(RPackage):
     homepage = "https://github.com/hartleys/QoRTs"
     url      = "https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs_1.2.42.tar.gz"
 
-    version('1.2.42', '7d46162327b0da70bfe483fe2f2b7829')
+    version('1.2.42', sha256='c9f73ce8d5aac1036d13c50475458a61a24cbe5c0baf7ac65b87a7118c51ec08')
 
     depends_on('java', type='run')
 
     resource(
         name='QoRTs.jar',
         url='https://github.com/hartleys/QoRTs/releases/download/v1.2.42/QoRTs.jar',
-        md5='918df4291538218c12caa3ab98c535e9',
+        sha256='e808d2e05c67ee41eee605b7821aafa7ae894288ebb01d8b1bfb136970c801ce',
         placement='jarfile',
         expand=False
     )

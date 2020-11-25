@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import re
 import pytest
@@ -46,6 +27,7 @@ def compiler(request):
 
 @pytest.fixture(params=[
     ('mpich@3.0.4', ('mpi',)),
+    ('mpich@3.0.1', []),
     ('openblas@0.2.15', ('blas',)),
     ('openblas-with-lapack@0.2.15', ('blas', 'lapack'))
 ])
@@ -73,7 +55,8 @@ class TestLmod(object):
         # Check that the compiler part of the path has no hash and that it
         # is transformed to r"Core" if the compiler is listed among core
         # compilers
-        if compiler == 'clang@3.3':
+        # Check that specs listed as core_specs are transformed to "Core"
+        if compiler == 'clang@3.3' or spec_string == 'mpich@3.0.1':
             assert 'Core' in layout.available_path_parts
         else:
             assert compiler.replace('@', '/') in layout.available_path_parts
@@ -143,7 +126,7 @@ class TestLmod(object):
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
 
         content = modulefile_content(
-            'libdwarf %clang platform=test target=x86_32'
+            'libdwarf %clang platform=test target=x86'
         )
 
         assert len(
@@ -281,3 +264,55 @@ class TestLmod(object):
         # Assert we have core compilers now
         writer, _ = factory(mpileaks_spec_string)
         assert writer.conf.core_compilers
+
+    @pytest.mark.parametrize('spec_str', [
+        'mpileaks target=nocona',
+        'mpileaks target=core2',
+        'mpileaks target=x86_64',
+    ])
+    @pytest.mark.regression('13005')
+    def test_only_generic_microarchitectures_in_root(
+            self, spec_str, factory, module_configuration
+    ):
+        module_configuration('complex_hierarchy')
+        writer, spec = factory(spec_str)
+
+        assert str(spec.target.family) in writer.layout.arch_dirname
+        if spec.target.family != spec.target:
+            assert str(spec.target) not in writer.layout.arch_dirname
+
+    def test_projections_specific(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('mpileaks')
+        expected = {
+            'all': '{name}/v{version}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['mpileaks'])
+        assert projection in writer.layout.use_name
+
+    def test_projections_all(self, factory, module_configuration):
+        """Tests reading the correct naming scheme."""
+
+        # This configuration has no error, so check the conflicts directives
+        # are there
+        module_configuration('projections')
+
+        # Test we read the expected configuration for the naming scheme
+        writer, _ = factory('libelf')
+        expected = {
+            'all': '{name}/v{version}',
+            'mpileaks': '{name}-mpiprojection'
+        }
+
+        assert writer.conf.projections == expected
+        projection = writer.spec.format(writer.conf.projections['all'])
+        assert projection in writer.layout.use_name

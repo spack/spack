@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -37,11 +18,35 @@ class Clingo(CMakePackage):
 
     homepage = "https://potassco.org/clingo/"
     url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
+    git      = 'https://github.com/potassco/clingo.git'
 
-    version('5.2.2', 'd46a1567f772eebad85c6300d55d2cc3')
+    maintainers = ["tgamblin"]
 
-    depends_on('doxygen', type=('build'))
-    depends_on('python')
+    version('develop', branch='wip', submodules=True)
+    version('5.4.0', sha256='e2de331ee0a6d254193aab5995338a621372517adcf91568092be8ac511c18f3')
+    version('5.3.0', sha256='b0d406d2809352caef7fccf69e8864d55e81ee84f4888b0744894977f703f976')
+    version('5.2.2', sha256='da1ef8142e75c5a6f23c9403b90d4f40b9f862969ba71e2aaee9a257d058bfcf')
+
+    variant("docs", default=False, description="build documentation with Doxyegen")
+    variant("python", default=True, description="build with python bindings")
+
+    depends_on('doxygen', type="build", when="+docs")
+    depends_on('re2c@0.13:', type="build")
+    depends_on('bison@2.5:', type="build")
+
+    depends_on('python', type=("build", "link", "run"), when="+python")
+    extends('python', when='+python')
+
+    patch('python38.patch', when="@5.3:5.4")
+
+    def patch(self):
+        # Doxygen is optional but can't be disabled with a -D, so patch
+        # it out if it's really supposed to be disabled
+        if '+docs' not in self.spec:
+            filter_file(r'find_package\(Doxygen\)',
+                        'message("Doxygen disabled for Spack build.")',
+                        'clasp/CMakeLists.txt',
+                        'clasp/libpotassco/CMakeLists.txt')
 
     def cmake_args(self):
         try:
@@ -49,8 +54,11 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        args = ['-DCLINGO_BUILD_WITH_PYTHON=ON',
-                '-DCLING_BUILD_PY_SHARED=ON',
-                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
-                '-DCLINGO_BUILD_WITH_LUA=OFF']
-        return args
+        return [
+            '-DCLINGO_REQUIRE_PYTHON=ON',
+            '-DCLINGO_BUILD_WITH_PYTHON=ON',
+            '-DCLINGO_BUILD_PY_SHARED=ON',
+            '-DPYCLINGO_USER_INSTALL=OFF',
+            '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+            '-DCLINGO_BUILD_WITH_LUA=OFF'
+        ]

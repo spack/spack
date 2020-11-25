@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,10 +13,12 @@ class Libpfm4(MakefilePackage):
 
     homepage = "http://perfmon2.sourceforge.net"
     url      = "https://downloads.sourceforge.net/project/perfmon2/libpfm4/libpfm-4.8.0.tar.gz"
+    maintainers = ['mwkrentel']
 
-    version('4.10.1', 'd8f66cb9bfa7e1434434e0de6409db5b')
-    version('4.9.0', '42ad4a2e5b8e1f015310db8535739c73')
-    version('4.8.0', '730383896db92e12fb2cc10f2d41dd43')
+    version('4.11.0', sha256='5da5f8872bde14b3634c9688d980f68bda28b510268723cc12973eedbab9fecc')
+    version('4.10.1', sha256='c61c575378b5c17ccfc5806761e4038828610de76e2e34fac9f7fa73ba844b49')
+    version('4.9.0', sha256='db0fbe8ee28fd9beeb5d3e80b7cb3b104debcf6a9fcf5cb8b882f0662c79e4e2')
+    version('4.8.0', sha256='9193787a73201b4254e3669243fd71d15a9550486920861912090a09f366cf68')
 
     # Fails to build libpfm4 with intel compiler version 16 and 17
     conflicts('%intel@16:17')

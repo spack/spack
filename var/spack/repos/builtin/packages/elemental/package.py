@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 from spack import *
 from spack.spec import UnsupportedCompilerError
@@ -36,8 +17,8 @@ class Elemental(CMakePackage):
     git      = "https://github.com/elemental/Elemental.git"
 
     version('develop', branch='master')
-    version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
-    version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
+    version('0.87.7', sha256='7becfdbc223e9c72e65ae876d842c48d2037d13f83e9f41cea285e21b840d7d9')
+    version('0.87.6', sha256='b597987c99ddd3462e0619524c5b7f711177ae8ae541b1b961e11d96e15afc64')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

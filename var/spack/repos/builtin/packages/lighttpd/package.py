@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,8 +13,15 @@ class Lighttpd(CMakePackage):
     homepage = "https://www.lighttpd.net"
     url      = "https://download.lighttpd.net/lighttpd/releases-1.4.x/lighttpd-1.4.50.tar.gz"
 
+    version('1.4.55', sha256='065259fb618774df516add13df22a52cac76a8f59e4561f143fe3ec810f4a03a')
+    version('1.4.54', sha256='5151d38cb7c4c40effa13710e77ebdbef899f945b062cf32befc02d128ac424c')
+    version('1.4.53', sha256='423b3951f212e3a30511eb86f4662a1848c6e857074289ff23fc310eef520266')
+    version('1.4.52', sha256='0f9de0227681c078f6b8c6154b581ced5fe7bcb5ff428ccf292581764b771145')
+    version('1.4.51', sha256='4301fe64136c7030d63cccc96996c6603dcbe82cca9a72e0aca29ce88284c978')
     version('1.4.50', sha256='c9a9f175aca6db22ebebbc47de52c54a99bbd1dce8d61bb75103609a3d798235')
     version('1.4.49', sha256='8b744baf9f29c386fff1a6d2e435491e726cb8d29cfdb1fe20ab782ee2fc2ac7')
+
+    depends_on('pcre')
 
     def cmake_args(self):
         return ["-DSBINDIR=bin"]

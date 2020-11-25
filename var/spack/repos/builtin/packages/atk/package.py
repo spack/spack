@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,36 +11,44 @@ class Atk(Package):
        implemented by other toolkits and applications. Using the ATK
        interfaces, accessibility tools have full access to view and
        control running applications."""
+
     homepage = "https://developer.gnome.org/atk/"
-    url      = "http://ftp.gnome.org/pub/gnome/sources/atk/2.28/atk-2.28.1.tar.xz"
-    list_url = "http://ftp.gnome.org/pub/gnome/sources/atk"
+    url      = "https://ftp.gnome.org/pub/gnome/sources/atk/2.30/atk-2.30.0.tar.xz"
+    list_url = "https://ftp.gnome.org/pub/gnome/sources/atk"
     list_depth = 1
 
-    version('2.28.1', 'dfb5e7474220afa3f4ca7e45af9f3a11')
-    version('2.20.0', '5187b0972f4d3905f285540b31395e20')
-    version('2.14.0', 'ecb7ca8469a5650581b1227d78051b8b')
+    version('2.36.0', sha256='fb76247e369402be23f1f5c65d38a9639c1164d934e40f6a9cf3c9e96b652788')
+    version('2.30.0', sha256='dd4d90d4217f2a0c1fee708a555596c2c19d26fef0952e1ead1938ab632c027b')
+    version('2.28.1', sha256='cd3a1ea6ecc268a2497f0cd018e970860de24a6d42086919d6bf6c8e8d53f4fc')
+    version('2.20.0', sha256='493a50f6c4a025f588d380a551ec277e070b28a82e63ef8e3c06b3ee7c1238f0')
+    version('2.14.0', sha256='2875cc0b32bfb173c066c22a337f79793e0c99d2cc5e81c4dac0d5a523b8fbad')
 
-    depends_on('meson', type='build', when='@2.28.0:')
+    depends_on('meson@0.40.1:', type='build', when='@2.28:')
+    depends_on('meson@0.46.0:', type='build', when='@2.29:')
     depends_on('glib')
-    # FIXME: this constraint exists because of the meson dependency.
-    # It should not be required to specify it here, but "spack spec atk" will
-    # fail without it.
-    # See: #2632
-    depends_on('python@3:')
     depends_on('gettext')
     depends_on('pkgconfig', type='build')
     depends_on('gobject-introspection')
+    depends_on('libffi')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/atk'
         return url + '/%s/atk-%s.tar.xz' % (version.up_to(2), version)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path("XDG_DATA_DIRS",
-                               self.prefix.share)
-        run_env.prepend_path("XDG_DATA_DIRS",
-                             self.prefix.share)
+    def setup_run_environment(self, env):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

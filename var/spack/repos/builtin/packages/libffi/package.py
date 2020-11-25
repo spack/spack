@@ -1,44 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Libffi(AutotoolsPackage):
+class Libffi(AutotoolsPackage, SourcewarePackage):
     """The libffi library provides a portable, high level programming
     interface to various calling conventions. This allows a programmer
     to call any function specified by a call interface description at
     run time."""
     homepage = "https://sourceware.org/libffi/"
+    sourceware_mirror_path = "libffi/libffi-3.2.1.tar.gz"
 
-    version('3.2.1', '83b89587607e3eb65c70d361f13bab43',
-            url="https://www.mirrorservice.org/sites/sourceware.org/pub/libffi/libffi-3.2.1.tar.gz")
-    # version('3.1', 'f5898b29bbfd70502831a212d9249d10',url =
-    # "ftp://sourceware.org/pub/libffi/libffi-3.1.tar.gz") # Has a bug
-    # $(lib64) instead of ${lib64} in libffi.pc
+    version('3.3',   sha256='72fba7922703ddfa7a028d513ac15a85c8d54c8d67f55fa5a4802885dc652056')
+    version('3.2.1', sha256='d06ebb8e1d9a22d19e38d63fdb83954253f39bedc5d46232a05645685722ca37')
+
+    patch('clang-powerpc-3.2.1.patch', when='@3.2.1%clang platform=linux')
+    # ref.: https://github.com/libffi/libffi/pull/561
+    patch('powerpc-3.3.patch', when='@3.3')
 
     @property
     def headers(self):
         # The headers are probably in self.prefix.lib but we search everywhere
         return find_headers('ffi', self.prefix, recursive=True)
+
+    def configure_args(self):
+        args = []
+        if self.spec.version >= Version('3.3'):
+            # Spack adds its own target flags, so tell libffi not to
+            # second-guess us
+            args.append('--without-gcc-arch')
+        return args

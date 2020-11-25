@@ -1,66 +1,65 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Serban Maerean, serban@us.ibm.com, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
 
-class Magma(CMakePackage):
-    """The MAGMA project aims to develop a dense linear algebra library similar to
-       LAPACK but for heterogeneous/hybrid architectures, starting with current
-       "Multicore+GPU" systems.
+class Magma(CMakePackage, CudaPackage):
+    """The MAGMA project aims to develop a dense linear algebra library similar
+       to LAPACK but for heterogeneous/hybrid architectures, starting with
+       current "Multicore+GPU" systems.
     """
 
     homepage = "http://icl.cs.utk.edu/magma/"
     url = "http://icl.cs.utk.edu/projectsfiles/magma/downloads/magma-2.2.0.tar.gz"
+    maintainers = ['stomov', 'luszczek']
 
-    version('2.3.0', '9aaf85a338d3a17303e0c69f86f0ec52')
-    version('2.2.0', '6c1ebf4cdf63eb302ff6258ff8c49217')
+    version('2.5.4', sha256='7734fb417ae0c367b418dea15096aef2e278a423e527c615aab47f0683683b67')
+    version('2.5.3', sha256='c602d269a9f9a3df28f6a4f593be819abb12ed3fa413bba1ff8183de721c5ef6')
+    version('2.5.2', sha256='065feb85558f9dd6f4cc4db36ac633a3f787827fc832d0b578a049a43a195620')
+    version('2.5.1', sha256='ce32c199131515336b30c92a907effe0c441ebc5c5bdb255e4b06b2508de109f')
+    version('2.5.0', sha256='4fd45c7e46bd9d9124253e7838bbfb9e6003c64c2c67ffcff02e6c36d2bcfa33')
+    version('2.4.0', sha256='4eb839b1295405fd29c8a6f5b4ed578476010bf976af46573f80d1169f1f9a4f')
+    version('2.3.0', sha256='010a4a057d7aa1e57b9426bffc0958f3d06913c9151463737e289e67dd9ea608')
+    version('2.2.0', sha256='df5d4ace417e5bf52694eae0d91490c6bde4cde1b0da98e8d400c5c3a70d83a2')
 
     variant('fortran', default=True,
             description='Enable Fortran bindings support')
     variant('shared', default=True,
             description='Enable shared library')
+    variant('cuda', default=True, description='Build with CUDA')
+    variant('cuda_arch', default='none', multi=True,
+            description='Specify CUDA architecture(s)')
 
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cuda')
+    depends_on('cuda@8:', when='@2.5.1:')  # See PR #14471
 
-    conflicts('%gcc@6:', when='^cuda@:8')
-    conflicts('%gcc@7:', when='^cuda@:9')
+    conflicts('~cuda', msg='Magma requires cuda')
+    conflicts('cuda_arch=none',
+              msg='Please indicate a CUDA arch value or values')
 
-    patch('ibm-xl.patch', when='@2.2:%xl')
-    patch('ibm-xl.patch', when='@2.2:%xl_r')
+    # currently not compatible with CUDA-11
+    # https://bitbucket.org/icl/magma/issues/22/cuda-11-changes-issue
+    # https://bitbucket.org/icl/magma/issues/25/error-cusparsesolveanalysisinfo_t-does-not
+    conflicts('^cuda@11:', when='@:2.5.3')
+
+    patch('ibm-xl.patch', when='@2.2:2.5.0%xl')
+    patch('ibm-xl.patch', when='@2.2:2.5.0%xl_r')
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
+    patch('magma-2.5.0.patch', when='@2.5.0')
+    patch('magma-2.5.0-cmake.patch', when='@2.5.0')
 
     def cmake_args(self):
         spec = self.spec
         options = []
 
         options.extend([
-            '-DCMAKE_INSTALL_PREFIX=%s' % prefix,
-            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix,
+            '-DCMAKE_INSTALL_PREFIX=%s' % self.prefix,
+            '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix,
             '-DBLAS_LIBRARIES=%s' % spec['blas'].libs.joined(';'),
             # As of MAGMA v2.3.0, CMakeLists.txt does not use the variable
             # BLAS_LIBRARIES, but only LAPACK_LIBRARIES, so we need to
@@ -81,11 +80,19 @@ class Magma(CMakePackage):
                     '-DCMAKE_Fortran_COMPILER=%s' % self.compiler.f77
                 ])
 
-        if spec.satisfies('^cuda@9.0:'):
+        if spec.satisfies('^cuda'):
+            cuda_arch = self.spec.variants['cuda_arch'].value
             if '@:2.2.0' in spec:
-                options.extend(['-DGPU_TARGET=sm30'])
+                capabilities = ' '.join('sm{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
             else:
-                options.extend(['-DGPU_TARGET=sm_30'])
+                capabilities = ' '.join('sm_{0}'.format(i) for i in cuda_arch)
+                options.extend(['-DGPU_TARGET=' + capabilities])
+
+        if '@2.5.0' in spec:
+            options.extend(['-DMAGMA_SPARSE=OFF'])
+            if spec.compiler.name in ['xl', 'xl_r']:
+                options.extend(['-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=TRUE'])
 
         return options
 

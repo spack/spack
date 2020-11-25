@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,11 +16,16 @@ class XtensorPython(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
-    version('0.17.0', '51d22e42909a81201c3421d9e119eed0')
+    version('0.23.1', sha256='450b25f5c739df174b2a50774b89e68b23535fdc37cb55bd542ffdb7c78991ab')
+    version('0.17.0', sha256='30f2e8c99376e38f942d62c0d2959bc1e52a562a4f8cc5e27ddc4d572a25e34c')
 
-    depends_on('xtensor@0.15.1:0.15.99', when='@0.17.0:')
-    depends_on('xtl@0.4.0:0.4.99', when='@0.17.0:')
-    depends_on('py-pybind11@2.2.1', when='@0.17.0:')
+    depends_on('xtensor', when='@develop')
+    depends_on('xtensor@0.20.6:0.20.99', when='@0.23.1')
+    depends_on('xtensor@0.15.1:0.15.99', when='@0.17.0')
+    depends_on('xtl', when='@develop')
+    depends_on('xtl@0.6.4:0.6.99', when='@0.23.1')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.17.0')
+    depends_on('py-pybind11@2.2.1:2.2.99')
 
     depends_on('py-numpy')
     depends_on('python', type=('build', 'link', 'run'))

@@ -1,29 +1,7 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
-import glob
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 class Librom(AutotoolsPackage):
@@ -61,16 +39,15 @@ class Librom(AutotoolsPackage):
     # TODO(oxberry1@llnl.gov): Submit PR upstream that implements
     # install phase in autotools
     def install(self, spec, prefix):
-        mkdirp(self.spec.prefix.lib)
-        install('libROM.a', join_path(self.spec.prefix.lib, 'libROM.a'))
+        mkdirp(prefix.lib)
+        install('libROM.a', join_path(prefix.lib, 'libROM.a'))
 
-        mkdirp(self.spec.prefix.include)
-        for f in glob.glob('*.h'):
-            install(f, join_path(self.spec.prefix.include, f))
+        mkdirp(prefix.include)
+        install('*.h', prefix.include)
 
-        mkdirp(self.spec.prefix.share)
+        mkdirp(prefix.share)
         install('libROM_Design_and_Theory.pdf',
-                join_path(self.spec.prefix.share,
+                join_path(prefix.share,
                           'libROM_Design_and_Theory.pdf'))
 
-        install_tree('docs', self.spec.prefix.share.docs)
+        install_tree('docs', prefix.share.docs)

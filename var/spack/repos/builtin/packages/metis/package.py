@@ -1,30 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
-import glob
 import sys
 import os
 
@@ -36,13 +16,19 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
-    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
-    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
+    #
+    # The original metis website: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
+    # is down sometimes. This is a github mirror that provides metis 5.1.0
+    #
 
-    version('5.1.0', '5465e67079419a69e0116de24fce58fe')
-    version('5.0.2', 'acb521a4e8c2e6dd559a7f9abd0468c5')
-    version('4.0.3', 'd3848b454532ef18dc83e4fb160d1e10')
+    homepage = "https://github.com/scivision/METIS/"
+    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+
+    version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
+    # For v4.0.3, use the original metis website since this version is not
+    # mirrored at the above github location.
+    version('4.0.3', url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-4.0.3.tar.gz',
+            sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -67,13 +53,12 @@ class Metis(Package):
     depends_on('cmake@2.8:', when='@5:', type='build')
 
     patch('install_gklib_defs_rename.patch', when='@5:')
+    patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
 
-    def url_for_version(self, version):
-        url = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis"
-        if version < Version('4.0.3'):
-            url += "/OLD"
-        url += "/metis-{0}.tar.gz".format(version)
-        return url
+    def setup_build_environment(self, env):
+        # Ignore warnings/errors re unrecognized omp pragmas on %intel
+        if '%intel@14:' in self.spec:
+            env.append_flags('CFLAGS', '-diag-disable 3180')
 
     @when('@5:')
     def patch(self):
@@ -102,7 +87,7 @@ class Metis(Package):
         # Process library spec and options
         options = []
         if '+shared' in spec:
-            options.append('COPTIONS={0}'.format(self.compiler.pic_flag))
+            options.append('COPTIONS={0}'.format(self.compiler.cc_pic_flag))
         if spec.variants['build_type'].value == 'Debug':
             options.append('OPTFLAGS=-g -O0')
         make(*options)
@@ -120,8 +105,7 @@ class Metis(Package):
         install('libmetis.a', prefix.lib)
 
         mkdir(prefix.include)
-        for h in glob.glob(join_path('Lib', '*.h')):
-            install(h, prefix.include)
+        install(join_path('Lib', '*.h'), prefix.include)
 
         mkdir(prefix.share)
         sharefiles = (('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
@@ -130,7 +114,7 @@ class Metis(Package):
             install(sharefile, prefix.share)
 
         if '+shared' in spec:
-            shared_flags = [self.compiler.pic_flag, '-shared']
+            shared_flags = [self.compiler.cc_pic_flag, '-shared']
             if sys.platform == 'darwin':
                 shared_suffix = 'dylib'
                 shared_flags.extend(['-Wl,-all_load', 'libmetis.a'])
@@ -190,11 +174,10 @@ class Metis(Package):
     @when('@5:')
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
-        build_directory = join_path(source_directory, 'build')
+        build_directory = join_path(self.stage.path, 'build')
 
-        options = std_cmake_args[:]
+        options = CMakePackage._std_args(self)
         options.append('-DGKLIB_PATH:PATH=%s/GKlib' % source_directory)
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Normally this is available via the 'CMakePackage' object, but metis
         # IS-A 'Package' (not a 'CMakePackage') to support non-cmake metis@:5.
@@ -223,9 +206,7 @@ class Metis(Package):
             # install GKlib headers, which will be needed for ParMETIS
             gklib_dist = join_path(prefix.include, 'GKlib')
             mkdirp(gklib_dist)
-            hfiles = glob.glob(join_path(source_directory, 'GKlib', '*.h'))
-            for hfile in hfiles:
-                install(hfile, gklib_dist)
+            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot
@@ -243,3 +224,9 @@ class Metis(Package):
             Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
             graph = join_path(source_directory, 'graphs', 'metis.mesh')
             Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(prefix.lib)

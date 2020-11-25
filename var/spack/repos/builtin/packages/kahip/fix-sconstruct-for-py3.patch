@@ -1,0 +1,101 @@
+diff -Naur spack-src/interface/SConstruct spack-src.patched/interface/SConstruct
+--- spack-src/interface/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/interface/SConstruct	2020-07-21 13:25:41.586597330 -0400
+@@ -33,7 +33,7 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['debug', 'optimized', 'pdebug', 'profilingoptimized']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   # Special configuration for 64 bit machines.
+diff -Naur spack-src/misc/example_library_call/SConstruct spack-src.patched/misc/example_library_call/SConstruct
+--- spack-src/misc/example_library_call/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/misc/example_library_call/SConstruct	2020-07-21 12:06:05.543455286 -0400
+@@ -53,11 +53,11 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['optimized','optimized_output','debug']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   if not env['program'] in ['interfacetest']:
+-    print 'Illegal value for program: %s' % env['program']
++    print('Illegal value for program: %s' % env['program'])
+     sys.exit(1)
+ 
+   # Special configuration for 64 bit machines.
+diff -Naur spack-src/parallel/modified_kahip/interface/SConstruct spack-src.patched/parallel/modified_kahip/interface/SConstruct
+--- spack-src/parallel/modified_kahip/interface/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/parallel/modified_kahip/interface/SConstruct	2020-07-21 12:06:36.461407930 -0400
+@@ -33,7 +33,7 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['debug', 'optimized', 'pdebug', 'profilingoptimized']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   # Special configuration for 64 bit machines.
+diff -Naur spack-src/parallel/modified_kahip/SConstruct spack-src.patched/parallel/modified_kahip/SConstruct
+--- spack-src/parallel/modified_kahip/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/parallel/modified_kahip/SConstruct	2020-07-21 13:23:37.148764755 -0400
+@@ -55,11 +55,11 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['optimized','optimized_output','debug']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','library','graphchecker','label_propagation','interfacetest']:
+-    print 'Illegal value for program: %s' % env['program']
++    print('Illegal value for program: %s' % env['program'])
+     sys.exit(1)
+ 
+   # Special configuration for 64 bit machines.
+@@ -98,10 +98,10 @@
+ 
+ #by D. Luxen
+ #if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
+-        #print "argtable library not found. Exiting"
++        #print("argtable library not found. Exiting")
+         #Exit(-1)
+ #if not conf.CheckCXXHeader('mpi.h'):
+-        #print "openmpi header not found. Exiting"
++        #print("openmpi header not found. Exiting")
+         #Exit(-1)
+ #
+ #
+diff -Naur spack-src/parallel/parallel_src/SConstruct spack-src.patched/parallel/parallel_src/SConstruct
+--- spack-src/parallel/parallel_src/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/parallel/parallel_src/SConstruct	2020-07-21 13:25:13.102720046 -0400
+@@ -55,11 +55,11 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['optimized','optimized_nooutput','debug']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   if not env['program'] in ['parhip','edge_list_to_metis_graph','friendster_list_to_metis_graph','parallel_label_compress_reps','yahoo_to_metis','parmetis_driver','graph2binary','graph2binary_external','readbgf','toolbox']:
+-    print 'Illegal value for program: %s' % env['program']
++    print('Illegal value for program: %s' % env['program'])
+     sys.exit(1)
+ 
+   # Special configuration for 64 bit machines.
+@@ -104,10 +104,10 @@
+ 
+ #by D. Luxen
+ #if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
+-	#print "argtable library not found. Exiting"
++	#print("argtable library not found. Exiting")
+ 	#Exit(-1)
+ #if not conf.CheckCXXHeader('mpi.h'):
+-	#print "openmpi header not found. Exiting"
++	#print("openmpi header not found. Exiting")
+ 	#Exit(-1)
+ #
+ #

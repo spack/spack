@@ -1,0 +1,33 @@
+--- FFB8.org/util/tetra/gffv3tr.f	2013-03-26 10:10:51.000000000 +0900
++++ FFB8.new/util/tetra/gffv3tr.f	2020-06-23 10:32:13.673071588 +0900
+@@ -832,7 +832,7 @@ C
+                   LIST2(3)=LEBUF(5,IS2)
+ C
+                   IMATCH=0
+-                  CALL MATCH4(LIST1,LIST2,IMATCH)
++                  CALL MATCH3(LIST1,LIST2,IMATCH)
+                   IF(IMATCH.EQ.1)THEN
+                       LEBUF(6,IS1)=0
+                       LEBUF(6,IS2)=0
+@@ -859,17 +859,17 @@ C
+       RETURN
+       END
+ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+-        SUBROUTINE MATCH4(LIST1,LIST2,IMATCH)
+-        INTEGER LIST1(4), LIST2(4)
++        SUBROUTINE MATCH3(LIST1,LIST2,IMATCH)
++        INTEGER LIST1(3), LIST2(3)
+         INTEGER IMATCH 
+ C       [INPUT]  LIST1,LIST2 :VECTORS TO BE CHECK 
+ C       [OUTPUT] IMATCH      :0 NOT MATCH ,1 MATCH     
+ C 
+        IMATCH = 0
+ C
+-       DO 100 I=1,4 
++       DO 100 I=1,3 
+            IBUF=1 	 
+-           DO 200 J=1,4 
++           DO 200 J=1,3 
+                IBUF=IBUF*(LIST1(I)-LIST2(J))
+  200       CONTINUE
+            IF(IBUF.NE.0)RETURN

@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 from spack.error import SpackError
 
 
-def async_api_validator(values):
+def async_api_validator(pkg_name, variant_name, values):
     if 'none' in values and len(values) != 1:
         raise SpackError("The value 'none' is not usable"
                          " with other async_api values.")
@@ -38,14 +19,16 @@ def async_api_validator(values):
 class Axl(CMakePackage):
     """Asynchronous transfer library"""
 
-    homepage = "https://github.com/ECP-VeloC/AXL"
-    url      = "https://github.com/ECP-VeloC/AXL/archive/v0.1.0.zip"
+    homepage = "https://github.com/ecp-veloc/AXL"
+    url      = "https://github.com/ecp-veloc/AXL/archive/v0.1.1.zip"
     git      = "https://github.com/ecp-veloc/axl.git"
 
     tags = ['ecp']
 
     version('master', branch='master')
-    version('0.1.1', sha256='7ec0417447c5a3cc0b6e46ff3f646984410c77e6c2081cf0c748781384be739b')
+    version('0.3.0', sha256='3f5efff87be700a5792a0ee9a7aeae45c640e2936623b024e8bc1056f7952a46')
+    version('0.2.0', sha256='a0babe3576da30919f89df2f83c76bd01d06345919f2e54d4dddcd6f73faedcc')
+    version('0.1.1', sha256='ebbf231bb542a6c91efb79fce05d4c8a346d5506d88ae1899fb670be52e81933')
 
     variant('async_api', default='daemon',
             description="Set of async transfer APIs to enable",

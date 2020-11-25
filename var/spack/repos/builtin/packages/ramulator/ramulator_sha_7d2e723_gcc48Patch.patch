@@ -1,0 +1,250 @@
+diff --git a/src/Scheduler.h b/src/Scheduler.h
+index c8561c1..38f924d 100644
+--- a/src/Scheduler.h
++++ b/src/Scheduler.h
+@@ -9,8 +9,10 @@
+ #include <list>
+ #include <functional>
+ #include <cassert>
++#include <utility>
+ 
+ using namespace std;
++using namespace std::placeholders;
+ 
+ namespace ramulator
+ {
+@@ -22,18 +24,66 @@ template <typename T>
+ class Scheduler
+ {
+ public:
+-    Controller<T>* ctrl;
+-
+-    enum class Type {
+-        FCFS, FRFCFS, FRFCFS_Cap, FRFCFS_PriorHit, MAX
+-    } type = Type::FRFCFS_Cap;
+-    //} type = Type::FCFS;
+-
+-    long cap = 16;
++  Controller<T>* ctrl;
++    
++  enum class Type {
++    FCFS, FRFCFS, FRFCFS_Cap, FRFCFS_PriorHit, MAX
++      } type = Type::FRFCFS_Cap;
++  //} type = Type::FCFS;
++  
++  long cap = 16;
++  
++ Scheduler(Controller<T>* _ctrl) : ctrl(_ctrl) {
+ 
+-    Scheduler(Controller<T>* ctrl) : ctrl(ctrl) {}
+-
+-    list<Request>::iterator get_head(list<Request>& q)
++        // FCFS
++    compare[0] = std::bind([] (ReqIter req1, ReqIter req2, Scheduler *obj) -> ReqIter {
++	if (req1->arrive <= req2->arrive) return req1;
++	return req2;}, _1, _2, std::move(this));
++    
++    // FRFCFS
++    compare[1] = std::bind([] (ReqIter req1, ReqIter req2, Scheduler *obj) -> ReqIter {
++	bool ready1 = obj->ctrl->is_ready(req1);
++	bool ready2 = obj->ctrl->is_ready(req2);
++	
++	if (ready1 ^ ready2) {
++	  if (ready1) return req1;
++	  return req2;
++	}
++	
++	if (req1->arrive <= req2->arrive) return req1;
++	return req2;}, _1, _2, std::move(this));
++    
++    // FRFCFS_CAP
++    compare[2] = std::bind([] (ReqIter req1, ReqIter req2, Scheduler *obj) -> ReqIter {
++	bool ready1 = obj->ctrl->is_ready(req1);
++	bool ready2 = obj->ctrl->is_ready(req2);
++	
++	ready1 = ready1 && (obj->ctrl->rowtable->get_hits(req1->addr_vec) <= obj->cap);
++	ready2 = ready2 && (obj->ctrl->rowtable->get_hits(req2->addr_vec) <= obj->cap);
++	
++	if (ready1 ^ ready2) {
++	  if (ready1) return req1;
++	  return req2;
++	}
++	
++	if (req1->arrive <= req2->arrive) return req1;
++	return req2;}, _1, _2, this);
++    
++        // FRFCFS_PriorHit
++    compare[3] = std::bind([] (ReqIter req1, ReqIter req2, Scheduler *obj) -> ReqIter {
++	bool ready1 = obj->ctrl->is_ready(req1) && obj->ctrl->is_row_hit(req1);
++	bool ready2 = obj->ctrl->is_ready(req2) && obj->ctrl->is_row_hit(req2);
++	
++	if (ready1 ^ ready2) {
++	  if (ready1) return req1;
++	  return req2;
++	}
++	
++	if (req1->arrive <= req2->arrive) return req1;
++	return req2;}, _1, _2, this);
++  }
++
++  list<Request>::iterator get_head(list<Request>& q)
+     {
+       // TODO make the decision at compile time
+       if (type != Type::FRFCFS_PriorHit) {
+@@ -106,55 +156,8 @@ public:
+ 
+ private:
+     typedef list<Request>::iterator ReqIter;
+-    function<ReqIter(ReqIter, ReqIter)> compare[int(Type::MAX)] = {
+-        // FCFS
+-        [this] (ReqIter req1, ReqIter req2) {
+-            if (req1->arrive <= req2->arrive) return req1;
+-            return req2;},
+-
+-        // FRFCFS
+-        [this] (ReqIter req1, ReqIter req2) {
+-            bool ready1 = this->ctrl->is_ready(req1);
+-            bool ready2 = this->ctrl->is_ready(req2);
+-
+-            if (ready1 ^ ready2) {
+-                if (ready1) return req1;
+-                return req2;
+-            }
+-
+-            if (req1->arrive <= req2->arrive) return req1;
+-            return req2;},
+-
+-        // FRFCFS_CAP
+-        [this] (ReqIter req1, ReqIter req2) {
+-            bool ready1 = this->ctrl->is_ready(req1);
+-            bool ready2 = this->ctrl->is_ready(req2);
+-
+-            ready1 = ready1 && (this->ctrl->rowtable->get_hits(req1->addr_vec) <= this->cap);
+-            ready2 = ready2 && (this->ctrl->rowtable->get_hits(req2->addr_vec) <= this->cap);
+-
+-            if (ready1 ^ ready2) {
+-                if (ready1) return req1;
+-                return req2;
+-            }
+-
+-            if (req1->arrive <= req2->arrive) return req1;
+-            return req2;},
+-        // FRFCFS_PriorHit
+-        [this] (ReqIter req1, ReqIter req2) {
+-            bool ready1 = this->ctrl->is_ready(req1) && this->ctrl->is_row_hit(req1);
+-            bool ready2 = this->ctrl->is_ready(req2) && this->ctrl->is_row_hit(req2);
+-
+-            if (ready1 ^ ready2) {
+-                if (ready1) return req1;
+-                return req2;
+-            }
+-
+-            if (req1->arrive <= req2->arrive) return req1;
+-            return req2;}
+-    };
+-};
+-
++    function<ReqIter(ReqIter, ReqIter)> compare[int(Type::MAX)];
++ };
+ 
+ template <typename T>
+ class RowPolicy
+@@ -168,50 +171,52 @@ public:
+ 
+     int timeout = 50;
+ 
+-    RowPolicy(Controller<T>* ctrl) : ctrl(ctrl) {}
+-
+-    vector<int> get_victim(typename T::Command cmd)
+-    {
+-        return policy[int(type)](cmd);
+-    }
+-
+-private:
+-    function<vector<int>(typename T::Command)> policy[int(Type::MAX)] = {
+-        // Closed
+-        [this] (typename T::Command cmd) -> vector<int> {
+-            for (auto& kv : this->ctrl->rowtable->table) {
+-                if (!this->ctrl->is_ready(cmd, kv.first))
++    RowPolicy(Controller<T>* _ctrl) : ctrl(_ctrl) {
++      // Closed
++      policy[0] = std::bind([] (typename T::Command cmd, RowPolicy *obj) -> vector<int> {
++            for (auto& kv : obj->ctrl->rowtable->table) {
++                if (!obj->ctrl->is_ready(cmd, kv.first))
+                     continue;
+                 return kv.first;
+             }
+-            return vector<int>();},
++            return vector<int>();}, _1, this);
+ 
+         // ClosedAP
+-        [this] (typename T::Command cmd) -> vector<int> {
+-            for (auto& kv : this->ctrl->rowtable->table) {
+-                if (!this->ctrl->is_ready(cmd, kv.first))
+-                    continue;
+-                return kv.first;
+-            }
+-            return vector<int>();},
++      policy[1] = std::bind([] (typename T::Command cmd, RowPolicy *obj) -> vector<int> {
++	  for (auto& kv : obj->ctrl->rowtable->table) {
++	    if (!obj->ctrl->is_ready(cmd, kv.first))
++	      continue;
++	    return kv.first;
++	  }
++	  return vector<int>();}, _1, this);
+ 
+         // Opened
+-        [this] (typename T::Command cmd) {
+-            return vector<int>();},
+-
+-        // Timeout
+-        [this] (typename T::Command cmd) -> vector<int> {
+-            for (auto& kv : this->ctrl->rowtable->table) {
+-                auto& entry = kv.second;
+-                if (this->ctrl->clk - entry.timestamp < timeout)
+-                    continue;
+-                if (!this->ctrl->is_ready(cmd, kv.first))
+-                    continue;
+-                return kv.first;
+-            }
+-            return vector<int>();}
+-    };
++      policy[2] = std::bind([] (typename T::Command cmd, RowPolicy *obj) -> vector<int> {
++	  return vector<int>();}, _1, this); 
++
++      // Timeout
++      policy[3] = std::bind([] (typename T::Command cmd, RowPolicy *obj) -> vector<int> {
++	  for (auto& kv : obj->ctrl->rowtable->table) {
++	    auto& entry = kv.second;
++	    if (obj->ctrl->clk - entry.timestamp < obj->timeout)
++	      continue;
++	    if (!obj->ctrl->is_ready(cmd, kv.first))
++	      continue;
++	    return kv.first;
++	  }
++	  return vector<int>();}, _1, this); 
+ 
++
++
++    }
++
++    vector<int> get_victim(typename T::Command cmd)
++    {
++        return policy[int(type)](cmd);
++    }
++
++private:
++    function<vector<int>(typename T::Command)> policy[int(Type::MAX)];
+ };
+ 
+ 
+@@ -304,7 +309,8 @@ public:
+ 
+         return itr->second.row;
+     }
+-};
++ };
++
+ 
+ } /*namespace ramulator*/
+ 

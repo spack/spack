@@ -1,27 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import unicode_literals
+
 import fcntl
 import os
 import struct
@@ -29,37 +12,108 @@ import sys
 import termios
 import textwrap
 import traceback
+import six
+from datetime import datetime
 from six import StringIO
 from six.moves import input
 
 from llnl.util.tty.color import cprint, cwrite, cescape, clen
 
-_debug = False
+# Globals
+_debug = 0
 _verbose = False
 _stacktrace = False
+_timestamp = False
+_msg_enabled = True
+_warn_enabled = True
+_error_enabled = True
 indent = "  "
+
+
+def debug_level():
+    return _debug
 
 
 def is_verbose():
     return _verbose
 
 
-def is_debug():
-    return _debug
+def is_debug(level=1):
+    return _debug >= level
 
 
 def is_stacktrace():
     return _stacktrace
 
 
-def set_debug(flag):
+def set_debug(level=0):
     global _debug
-    _debug = flag
+    assert level >= 0, 'Debug level must be a positive value'
+    _debug = level
 
 
 def set_verbose(flag):
     global _verbose
     _verbose = flag
+
+
+def set_timestamp(flag):
+    global _timestamp
+    _timestamp = flag
+
+
+def set_msg_enabled(flag):
+    global _msg_enabled
+    _msg_enabled = flag
+
+
+def set_warn_enabled(flag):
+    global _warn_enabled
+    _warn_enabled = flag
+
+
+def set_error_enabled(flag):
+    global _error_enabled
+    _error_enabled = flag
+
+
+def msg_enabled():
+    return _msg_enabled
+
+
+def warn_enabled():
+    return _warn_enabled
+
+
+def error_enabled():
+    return _error_enabled
+
+
+class SuppressOutput:
+    """Class for disabling output in a scope using 'with' keyword"""
+
+    def __init__(self,
+                 msg_enabled=True,
+                 warn_enabled=True,
+                 error_enabled=True):
+
+        self._msg_enabled_initial = _msg_enabled
+        self._warn_enabled_initial = _warn_enabled
+        self._error_enabled_initial = _error_enabled
+
+        self._msg_enabled = msg_enabled
+        self._warn_enabled = warn_enabled
+        self._error_enabled = error_enabled
+
+    def __enter__(self):
+        set_msg_enabled(self._msg_enabled)
+        set_warn_enabled(self._warn_enabled)
+        set_error_enabled(self._error_enabled)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        set_msg_enabled(self._msg_enabled_initial)
+        set_warn_enabled(self._warn_enabled_initial)
+        set_error_enabled(self._error_enabled_initial)
 
 
 def set_stacktrace(flag):
@@ -84,20 +138,46 @@ def process_stacktrace(countback):
     return st_text
 
 
+def show_pid():
+    return is_debug(2)
+
+
+def get_timestamp(force=False):
+    """Get a string timestamp"""
+    if _debug or _timestamp or force:
+        # Note inclusion of the PID is useful for parallel builds.
+        pid = ', {0}'.format(os.getpid()) if show_pid() else ''
+        return '[{0}{1}] '.format(
+            datetime.now().strftime("%Y-%m-%d-%H:%M:%S.%f"), pid)
+    else:
+        return ''
+
+
 def msg(message, *args, **kwargs):
+    if not msg_enabled():
+        return
+
+    if isinstance(message, Exception):
+        message = "%s: %s" % (message.__class__.__name__, str(message))
+
     newline = kwargs.get('newline', True)
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(2)
     if newline:
-        cprint("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cprint("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
     else:
-        cwrite("@*b{%s==>} %s" % (st_text, cescape(message)))
+        cwrite("@*b{%s==>} %s%s" % (
+            st_text, get_timestamp(), cescape(message)))
     for arg in args:
-        print(indent + str(arg))
+        print(indent + six.text_type(arg))
 
 
 def info(message, *args, **kwargs):
+    if isinstance(message, Exception):
+        message = "%s: %s" % (message.__class__.__name__, str(message))
+
     format = kwargs.get('format', '*b')
     stream = kwargs.get('stream', sys.stdout)
     wrap = kwargs.get('wrap', False)
@@ -107,17 +187,18 @@ def info(message, *args, **kwargs):
     st_text = ""
     if _stacktrace:
         st_text = process_stacktrace(st_countback)
-    cprint("@%s{%s==>} %s" % (format, st_text, cescape(str(message))),
-           stream=stream)
+    cprint("@%s{%s==>} %s%s" % (
+        format, st_text, get_timestamp(), cescape(six.text_type(message))
+    ), stream=stream)
     for arg in args:
         if wrap:
             lines = textwrap.wrap(
-                str(arg), initial_indent=indent, subsequent_indent=indent,
-                break_long_words=break_long_words)
+                six.text_type(arg), initial_indent=indent,
+                subsequent_indent=indent, break_long_words=break_long_words)
             for line in lines:
                 stream.write(line + '\n')
         else:
-            stream.write(indent + str(arg) + '\n')
+            stream.write(indent + six.text_type(arg) + '\n')
 
 
 def verbose(message, *args, **kwargs):
@@ -127,22 +208,29 @@ def verbose(message, *args, **kwargs):
 
 
 def debug(message, *args, **kwargs):
-    if _debug:
+    level = kwargs.get('level', 1)
+    if is_debug(level):
         kwargs.setdefault('format', 'g')
         kwargs.setdefault('stream', sys.stderr)
         info(message, *args, **kwargs)
 
 
 def error(message, *args, **kwargs):
+    if not error_enabled():
+        return
+
     kwargs.setdefault('format', '*r')
     kwargs.setdefault('stream', sys.stderr)
-    info("Error: " + str(message), *args, **kwargs)
+    info("Error: " + six.text_type(message), *args, **kwargs)
 
 
 def warn(message, *args, **kwargs):
+    if not warn_enabled():
+        return
+
     kwargs.setdefault('format', '*Y')
     kwargs.setdefault('stream', sys.stderr)
-    info("Warning: " + str(message), *args, **kwargs)
+    info("Warning: " + six.text_type(message), *args, **kwargs)
 
 
 def die(message, *args, **kwargs):
@@ -166,7 +254,7 @@ def get_number(prompt, **kwargs):
     while number is None:
         msg(prompt, newline=False)
         ans = input()
-        if ans == str(abort):
+        if ans == six.text_type(abort):
             return None
 
         if ans:
@@ -232,7 +320,7 @@ def hline(label=None, **kwargs):
         cols -= 2
     cols = min(max_width, cols)
 
-    label = str(label)
+    label = six.text_type(label)
     prefix = char * 2 + " "
     suffix = " " + (cols - len(prefix) - clen(label)) * char
 

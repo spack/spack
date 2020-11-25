@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os.path
 
@@ -33,8 +14,8 @@ class Pilon(Package):
     homepage = "https://github.com/broadinstitute/pilon"
     url      = "https://github.com/broadinstitute/pilon/releases/download/v1.22/pilon-1.22.jar"
 
-    version('1.22', '3c45568dc1b878a9a0316410ec62ab04', expand=False)
-    version('1.13', '9e96b4cf4ea595b1996c7e9ca76498b5', expand=False)
+    version('1.22', sha256='ff738f3bbb964237f6b2cf69243ebf9a21cb7f4edf10bbdcc66fa4ebaad5d13d', expand=False)
+    version('1.13', sha256='c6195a054acbc76afc457e6a7615f75c91adc28faeb7b8738ee2b65309b0bbe3', expand=False)
 
     depends_on('java@1.7:', type='run')
 

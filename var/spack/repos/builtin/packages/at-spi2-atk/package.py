@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,9 +15,11 @@ class AtSpi2Atk(MesonPackage):
     list_url = "http://ftp.gnome.org/pub/gnome/sources/at-spi2-atk"
     list_depth = 1
 
-    version('2.26.2', '355c7916a69513490cb83ad34016b169')
-    version('2.26.1', 'eeec6cead3350dca48a235271c105b3e')
+    version('2.34.2', sha256='901323cee0eef05c01ec4dee06c701aeeca81a314a7d60216fa363005e27f4f0')
+    version('2.26.2', sha256='61891f0abae1689f6617a963105a3f1dcdab5970c4a36ded9c79a7a544b16a6e')
+    version('2.26.1', sha256='b4f0c27b61dbffba7a5b5ba2ff88c8cee10ff8dac774fa5b79ce906853623b75')
 
+    depends_on('pkgconfig', type='build')
     depends_on('at-spi2-core@2.28.0:')
     depends_on('atk@2.28.1:')
 

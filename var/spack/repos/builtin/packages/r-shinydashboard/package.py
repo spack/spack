@@ -1,40 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RShinydashboard(RPackage):
     """Create Dashboards with 'Shiny'"""
 
-    homepage = "https://cran.r-project.org/package=shinydashboard"
-    url      = "https://cran.r-project.org/src/contrib/shinydashboard_0.7.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shinydashboard"
+    homepage = "https://cloud.r-project.org/package=shinydashboard"
+    url      = "https://cloud.r-project.org/src/contrib/shinydashboard_0.7.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/shinydashboard"
 
-    version('0.7.0', 'a572695884e3b45320b0ab5a7b364ffd')
-    version('0.6.1', '0f6ad0448237e10d53d4d27ade1c6863')
+    version('0.7.1', sha256='51a49945c6b8a684111a2ba4b2a5964e3a50610286ce0378e37ae02316620a4e')
+    version('0.7.0', sha256='0b7b102e9e5bea78ddc4da628d072a358270f2db9b63a6ebe4d8bdce3066d883')
+    version('0.6.1', sha256='1ee38f257433d24455426bc9d85c36f588735a54fbf6143935fed9cccb3bf193')
 
-    depends_on('r@3.3.0:', type=('build', 'run'))
+    depends_on('r@3.0:', type=('build', 'run'))
     depends_on('r-htmltools@0.2.6:', type=('build', 'run'))
     depends_on('r-shiny@1.0.0:', type=('build', 'run'))
+    depends_on('r-promises', when='@0.7.1:', type=('build', 'run'))

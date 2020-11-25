@@ -1,0 +1,312 @@
+--- a/config.h.in
++++ b/config.h.in
+@@ -52,9 +52,6 @@
+ /* Define to 1 if you have the <inttypes.h> header file. */
+ #undef HAVE_INTTYPES_H
+ 
+-/* Define to 1 if you have the `curl' library (-lcurl). */
+-#undef HAVE_LIBCURL
+-
+ /* Define to 1 if you have the `m' library (-lm). */
+ #undef HAVE_LIBM
+ 
+--- a/configure
++++ b/configure
+@@ -22122,6 +22122,14 @@ $as_echo "$as_me: checking types, headers, and functions" >&6;}
+ 
+ # We must check for all these, because they may be used by the netCDF
+ # C library.
++# Removing the checks for some of the libraries because of issues
++# observed when they are detected, are not needed, and an attempt to
++# link against is made anyways.
++# See https://github.com/Unidata/netcdf-fortran/issues/164
++#
++# Specifying LDFLAGS="$(nc-config --libs [--static])" should
++# let downstream developers link more reliably against libnetcdf.
++
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for floor in -lm" >&5
+ $as_echo_n "checking for floor in -lm... " >&6; }
+ if ${ac_cv_lib_m_floor+:} false; then :
+@@ -22167,163 +22175,6 @@ _ACEOF
+ 
+ fi
+ 
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_setopt in -lcurl" >&5
+-$as_echo_n "checking for curl_easy_setopt in -lcurl... " >&6; }
+-if ${ac_cv_lib_curl_curl_easy_setopt+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lcurl  $LIBS"
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char curl_easy_setopt ();
+-int
+-main ()
+-{
+-return curl_easy_setopt ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_lib_curl_curl_easy_setopt=yes
+-else
+-  ac_cv_lib_curl_curl_easy_setopt=no
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext conftest.$ac_ext
+-LIBS=$ac_check_lib_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curl_curl_easy_setopt" >&5
+-$as_echo "$ac_cv_lib_curl_curl_easy_setopt" >&6; }
+-if test "x$ac_cv_lib_curl_curl_easy_setopt" = xyes; then :
+-  cat >>confdefs.h <<_ACEOF
+-#define HAVE_LIBCURL 1
+-_ACEOF
+-
+-  LIBS="-lcurl $LIBS"
+-
+-fi
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing deflate" >&5
+-$as_echo_n "checking for library containing deflate... " >&6; }
+-if ${ac_cv_search_deflate+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_func_search_save_LIBS=$LIBS
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char deflate ();
+-int
+-main ()
+-{
+-return deflate ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-for ac_lib in '' zlibwapi zlibstat zlib zlib1 z; do
+-  if test -z "$ac_lib"; then
+-    ac_res="none required"
+-  else
+-    ac_res=-l$ac_lib
+-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+-  fi
+-  if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_search_deflate=$ac_res
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext
+-  if ${ac_cv_search_deflate+:} false; then :
+-  break
+-fi
+-done
+-if ${ac_cv_search_deflate+:} false; then :
+-
+-else
+-  ac_cv_search_deflate=no
+-fi
+-rm conftest.$ac_ext
+-LIBS=$ac_func_search_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_deflate" >&5
+-$as_echo "$ac_cv_search_deflate" >&6; }
+-ac_res=$ac_cv_search_deflate
+-if test "$ac_res" != no; then :
+-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+-
+-fi
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing SZ_Compress" >&5
+-$as_echo_n "checking for library containing SZ_Compress... " >&6; }
+-if ${ac_cv_search_SZ_Compress+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_func_search_save_LIBS=$LIBS
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char SZ_Compress ();
+-int
+-main ()
+-{
+-return SZ_Compress ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-for ac_lib in '' szip sz; do
+-  if test -z "$ac_lib"; then
+-    ac_res="none required"
+-  else
+-    ac_res=-l$ac_lib
+-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+-  fi
+-  if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_search_SZ_Compress=$ac_res
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext
+-  if ${ac_cv_search_SZ_Compress+:} false; then :
+-  break
+-fi
+-done
+-if ${ac_cv_search_SZ_Compress+:} false; then :
+-
+-else
+-  ac_cv_search_SZ_Compress=no
+-fi
+-rm conftest.$ac_ext
+-LIBS=$ac_func_search_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_SZ_Compress" >&5
+-$as_echo "$ac_cv_search_SZ_Compress" >&6; }
+-ac_res=$ac_cv_search_SZ_Compress
+-if test "$ac_res" != no; then :
+-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+-
+-fi
+-
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing dlopen" >&5
+ $as_echo_n "checking for library containing dlopen... " >&6; }
+ if ${ac_cv_search_dlopen+:} false; then :
+@@ -22380,118 +22231,6 @@ if test "$ac_res" != no; then :
+ 
+ fi
+ 
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing H5Fflush" >&5
+-$as_echo_n "checking for library containing H5Fflush... " >&6; }
+-if ${ac_cv_search_H5Fflush+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_func_search_save_LIBS=$LIBS
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char H5Fflush ();
+-int
+-main ()
+-{
+-return H5Fflush ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-for ac_lib in '' hdf5dll hdf5; do
+-  if test -z "$ac_lib"; then
+-    ac_res="none required"
+-  else
+-    ac_res=-l$ac_lib
+-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+-  fi
+-  if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_search_H5Fflush=$ac_res
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext
+-  if ${ac_cv_search_H5Fflush+:} false; then :
+-  break
+-fi
+-done
+-if ${ac_cv_search_H5Fflush+:} false; then :
+-
+-else
+-  ac_cv_search_H5Fflush=no
+-fi
+-rm conftest.$ac_ext
+-LIBS=$ac_func_search_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_H5Fflush" >&5
+-$as_echo "$ac_cv_search_H5Fflush" >&6; }
+-ac_res=$ac_cv_search_H5Fflush
+-if test "$ac_res" != no; then :
+-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+-
+-fi
+-
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for library containing H5DSis_scale" >&5
+-$as_echo_n "checking for library containing H5DSis_scale... " >&6; }
+-if ${ac_cv_search_H5DSis_scale+:} false; then :
+-  $as_echo_n "(cached) " >&6
+-else
+-  ac_func_search_save_LIBS=$LIBS
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-/* Override any GCC internal prototype to avoid an error.
+-   Use char because int might match the return type of a GCC
+-   builtin and then its argument prototype would still apply.  */
+-#ifdef __cplusplus
+-extern "C"
+-#endif
+-char H5DSis_scale ();
+-int
+-main ()
+-{
+-return H5DSis_scale ();
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-for ac_lib in '' hdf5_hldll hdf5_hl; do
+-  if test -z "$ac_lib"; then
+-    ac_res="none required"
+-  else
+-    ac_res=-l$ac_lib
+-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+-  fi
+-  if ac_fn_c_try_link "$LINENO"; then :
+-  ac_cv_search_H5DSis_scale=$ac_res
+-fi
+-rm -f core conftest.err conftest.$ac_objext \
+-    conftest$ac_exeext
+-  if ${ac_cv_search_H5DSis_scale+:} false; then :
+-  break
+-fi
+-done
+-if ${ac_cv_search_H5DSis_scale+:} false; then :
+-
+-else
+-  ac_cv_search_H5DSis_scale=no
+-fi
+-rm conftest.$ac_ext
+-LIBS=$ac_func_search_save_LIBS
+-fi
+-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_H5DSis_scale" >&5
+-$as_echo "$ac_cv_search_H5DSis_scale" >&6; }
+-ac_res=$ac_cv_search_H5DSis_scale
+-if test "$ac_res" != no; then :
+-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+-
+-fi
+-
+ 
+ # Find the netCDF header and library.
+ for ac_header in netcdf.h

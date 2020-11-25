@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,6 +12,11 @@ class Gslib(Package):
     homepage = "https://github.com/gslib/gslib"
     git      = "https://github.com/gslib/gslib.git"
 
+    version('develop', branch='master')
+    version('1.0.6', tag='v1.0.6')
+    version('1.0.5', tag='v1.0.5')
+    version('1.0.4', tag='v1.0.4')
+    version('1.0.3', tag='v1.0.3')
     version('1.0.2', tag='v1.0.2')
     version('1.0.1', tag='v1.0.1')
     version('1.0.0', tag='v1.0.0')
@@ -50,7 +36,7 @@ class Gslib(Package):
         lib_dir = 'lib'
         libname = 'libgs.a'
 
-        if self.version == Version('1.0.1'):
+        if self.spec.satisfies('@1.0.1:'):
             makefile = 'Makefile'
         else:
             makefile = 'src/Makefile'
@@ -74,16 +60,19 @@ class Gslib(Package):
             ld_flags = blas.ld_flags
             filter_file(r'\$\(LDFLAGS\)', ld_flags, makefile)
 
-        if self.version == Version('1.0.1'):
+        if self.spec.satisfies('@1.0.3:'):
             make(make_cmd)
-            make('install')
-            install_tree(lib_dir, prefix.lib)
-        elif self.version == Version('1.0.0'):
-            with working_dir(src_dir):
+            make('install', 'INSTALL_ROOT=%s' % self.prefix)
+        else:
+            if self.spec.satisfies('@1.0.1:'):
                 make(make_cmd)
-                mkdir(prefix.lib)
-                install(libname, prefix.lib)
-
-        # Should only install the headers (this will be fixed in gslib on
-        # future releases).
-        install_tree(src_dir, prefix.include)
+                make('install')
+                install_tree(lib_dir, prefix.lib)
+            elif self.version == Version('1.0.0'):
+                with working_dir(src_dir):
+                    make(make_cmd)
+                    mkdir(prefix.lib)
+                    install(libname, prefix.lib)
+            # Should only install the headers (this will be fixed in gslib on
+            # future releases).
+            install_tree(src_dir, prefix.include)

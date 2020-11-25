@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 from spack import *
 
@@ -30,10 +11,14 @@ class PyParamiko(PythonPackage):
     """SSH2 protocol library"""
 
     homepage = "http://www.paramiko.org/"
-    url      = "https://pypi.io/packages/source/p/paramiko/paramiko-2.1.2.tar.gz"
+    url      = "https://pypi.io/packages/source/p/paramiko/paramiko-2.7.1.tar.gz"
 
-    version('2.1.2', '41a8ea0e8abb03a6bf59870670d4f46c')
+    version('2.7.1', sha256='920492895db8013f6cc0179293147f830b8c7b21fdfc839b6bad760c27459d9f')
+    version('2.1.2', sha256='5fae49bed35e2e3d45c4f7b0db2d38b9ca626312d91119b3991d0ecf8125e310')
 
-    depends_on('py-setuptools',    type='build')
-    depends_on('py-pyasn1@0.1.7:',        type=('build', 'run'))
-    depends_on('py-cryptography@1.1:',    type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-bcrypt@3.1.3:', when='@2.7:', type=('build', 'run'))
+    depends_on('py-cryptography@1.1:', type=('build', 'run'))
+    depends_on('py-cryptography@2.5:', when='@2.7:', type=('build', 'run'))
+    depends_on('py-pyasn1@0.1.7:', when='@:2.1', type=('build', 'run'))
+    depends_on('py-pynacl@1.0.1:', when='@2.7:', type=('build', 'run'))

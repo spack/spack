@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
 import shutil
 
@@ -126,7 +107,8 @@ class FileCache(object):
 
         """
         return ReadTransaction(
-            self._get_lock(key), lambda: open(self.cache_path(key)))
+            self._get_lock(key), acquire=lambda: open(self.cache_path(key))
+        )
 
     def write_transaction(self, key):
         """Get a write transaction on a file cache item.
@@ -136,6 +118,10 @@ class FileCache(object):
         moves the file into place on top of the old file atomically.
 
         """
+        # TODO: this nested context manager adds a lot of complexity and
+        # TODO: is pretty hard to reason about in llnl.util.lock. At some
+        # TODO: point we should just replace it with functions and simplify
+        # TODO: the locking code.
         class WriteContextManager(object):
 
             def __enter__(cm):  # noqa
@@ -161,7 +147,8 @@ class FileCache(object):
                 else:
                     os.rename(cm.tmp_filename, cm.orig_filename)
 
-        return WriteTransaction(self._get_lock(key), WriteContextManager)
+        return WriteTransaction(
+            self._get_lock(key), acquire=WriteContextManager)
 
     def mtime(self, key):
         """Return modification time of cache file, or 0 if it does not exist.

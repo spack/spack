@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -35,7 +16,7 @@ class Genomefinisher(Package):
     homepage = "http://gfinisher.sourceforge.net"
     url      = "https://sourceforge.net/projects/gfinisher/files/GenomeFinisher_1.4.zip"
 
-    version('1.4', 'bd9bbca656fe15ecbe615c4732714bc7')
+    version('1.4', sha256='8efbebaab4b577c72193f14c2c362b96fb949981fd66d2cca1364839af8bf1e3')
 
     depends_on('java@8:', type='run')
 
@@ -54,7 +35,7 @@ class Genomefinisher(Package):
 
         # Munge the helper script to explicitly point to java and the jar file
         # jar file.
-        java = spec['jdk'].prefix.bin.java
+        java = spec['java'].prefix.bin.java
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         filter_file('^java', java, script, **kwargs)
         filter_file(jar_file, join_path(prefix.bin, jar_file),

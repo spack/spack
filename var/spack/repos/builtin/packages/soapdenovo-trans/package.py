@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,10 @@ class SoapdenovoTrans(MakefilePackage):
     homepage = "http://soap.genomics.org.cn/SOAPdenovo-Trans.html"
     url      = "https://github.com/aquaskyline/SOAPdenovo-Trans/archive/1.0.4.tar.gz"
 
-    version('1.0.4', 'a3b00b0f743b96141c4d5f1b49f2918c')
+    version('1.0.4', sha256='378a54cde0ebe240fb515ba67197c053cf95393645c1ae1399b3a611be2a9795')
+
+    depends_on('zlib', type='link')
+    depends_on('samtools@0.1.8', type='link')
 
     build_directory = 'src'
 
@@ -42,6 +26,8 @@ class SoapdenovoTrans(MakefilePackage):
             makefile = FileFilter('Makefile')
             makefile.filter('CFLAGS=         -O3 -fomit-frame-pointer -static',
                             'CFLAGS=         -O3 -fomit-frame-pointer')
+            if spec.target.family == 'aarch64':
+                makefile.filter('ppc64 ia64', 'ppc64 ia64 aarch64')
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):

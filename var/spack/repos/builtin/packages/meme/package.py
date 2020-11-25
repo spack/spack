@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+from spack.version import Version
 
 
 class Meme(AutotoolsPackage):
@@ -31,10 +13,11 @@ class Meme(AutotoolsPackage):
     wide variety of other motif-based analyses."""
 
     homepage = "http://meme-suite.org"
-    url      = "http://meme-suite.org/meme-software/4.11.4/meme_4.11.4.tar.gz"
+    url      = "http://meme-suite.org/meme-software/5.1.1/meme-5.1.1.tar.gz"
 
-    version('4.12.0', '40d282cc33f7dedb06b24b9f34ac15c1')
-    version('4.11.4', '371f513f82fa0888205748e333003897')
+    version('5.1.1', sha256='38d73d256d431ad4eb7da2c817ce56ff2b4e26c39387ff0d6ada088938b38eb5')
+    version('4.12.0', sha256='49ff80f842b59d328588acfcd1d15bf94c55fed661d22b0f95f37430cc363a06')
+    version('4.11.4', sha256='3e869ff57e327a9c8615dbef784e3f1095f7f7a0120cecd55efe10c3f2ee8eb3')
 
     variant('mpi', default=True, description='Enable MPI support')
     variant('image-magick', default=False, description='Enable image-magick for png output')
@@ -44,8 +27,13 @@ class Meme(AutotoolsPackage):
     depends_on('perl', type=('build', 'run'))
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('mpi', when='+mpi')
-    depends_on('image-magick', type=('build', 'run'), when='+image-magick')
+    depends_on('imagemagick', type=('build', 'run'), when='+image-magick')
     depends_on('perl-xml-parser', type=('build', 'run'))
+
+    def url_for_version(self, version):
+        url = 'http://meme-suite.org/meme-software/{0}/meme{1}{2}.tar.gz'
+        sep = '-' if version >= Version('5.0.2') else '_'
+        return url.format(version.up_to(3), sep, version)
 
     def configure_args(self):
         spec = self.spec

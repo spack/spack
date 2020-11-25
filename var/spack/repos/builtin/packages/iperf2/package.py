@@ -1,36 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Iperf2(AutotoolsPackage):
+class Iperf2(AutotoolsPackage, SourceforgePackage):
     """This code is a continuation based from the no longer maintained iperf
     2.0.5 code base. Iperf 2.0.5 is still widely deployed and used by many for
     testing networks and for qualifying networking products."""
 
     homepage = "https://sourceforge.net/projects/iperf2"
-    url      = "https://downloads.sourceforge.net/project/iperf2/iperf-2.0.12.tar.gz"
+    sourceforge_mirror_path = "iperf2/iperf-2.0.12.tar.gz"
 
-    version('2.0.12', 'e501e26b9289097086ce0c44a42b10bc')
+    version('2.0.12', sha256='367f651fb1264b13f6518e41b8a7e08ce3e41b2a1c80e99ff0347561eed32646')

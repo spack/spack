@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2018, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -44,7 +25,7 @@ class Examinimd(MakefilePackage):
     git      = "https://github.com/ECP-copa/ExaMiniMD.git"
 
     version('develop', branch='master')
-    version('1.0', '5db7679a4b9296c0cc3b2ff3a7e8f38f')
+    version('1.0', sha256='d5f884ecc3a5f9723cc57a4c188da926b392605650606c1c8c34f2d1953f2534')
 
     variant('mpi', default=True, description='Build with MPI support')
     variant('openmp', default=False, description='Build with OpenMP support')
@@ -53,14 +34,15 @@ class Examinimd(MakefilePackage):
 
     conflicts('+openmp', when='+pthreads')
 
-    depends_on('kokkos')
+    depends_on('kokkos-legacy')
     depends_on('mpi', when='+mpi')
 
     @property
     def build_targets(self):
         targets = []
         # Append Kokkos
-        targets.append('KOKKOS_PATH={0}'.format(self.spec['kokkos'].prefix))
+        targets.append('KOKKOS_PATH={0}'.format(
+            self.spec['kokkos-legacy'].prefix))
         # Set kokkos device
         if 'openmp' in self.spec:
             targets.append('KOKKOS_DEVICES=OpenMP')

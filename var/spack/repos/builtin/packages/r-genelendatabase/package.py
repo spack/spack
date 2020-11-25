@@ -1,39 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGenelendatabase(RPackage):
-    """Length of mRNA transcripts for a number of genomes and gene ID
-       formats, largely based on UCSC table browser"""
+    """Lengths of mRNA transcripts for a number of genomes.
 
-    homepage = "https://bioconductor.org/packages/release/data/experiment/html/geneLenDataBase.html"
+       Length of mRNA transcripts for a number of genomes and gene ID formats,
+       largely based on UCSC table browser"""
+
+    homepage = "https://bioconductor.org/packages/geneLenDataBase"
     git      = "https://git.bioconductor.org/packages/geneLenDataBase.git"
 
+    version('1.20.0', commit='70a1abed00ee68f7bfa07c42c011f9edae9915e4')
+    version('1.18.0', commit='77db87e5a4819bf94761fabef0d2ff741a1c5d07')
     version('1.16.0', commit='c2a8b2359c6c59388853d6f6d15d71dffb17a198')
+    version('1.14.0', commit='b456b3ffb04eaf335893fdec2bb10f6795dd7e08')
+    version('1.12.0', commit='85d6536763c12850e6c01da9e2f9e0b9c07601fe')
 
-    depends_on('r@3.5.0:3.5.9', when='@1.16.0:', type=('build', 'run'))
+    depends_on('r@2.11.0:', type=('build', 'run'))
     depends_on('r-rtracklayer', type=('build', 'run'))
     depends_on('r-genomicfeatures@1.3.15:', type=('build', 'run'))

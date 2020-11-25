@@ -1,0 +1,11 @@
+--- a/setup.py	2020-07-16 14:01:48.601449013 -0500
++++ b/setup.py	2020-07-16 14:02:31.547441668 -0500
+@@ -33,7 +33,7 @@
+           'Operating System :: POSIX',
+           'Programming Language :: Python',
+           ],
+-	long_description=open('README').read(),
++	long_description=open('README_1.md').read(),
+ 	platforms=['Linux','Unix','MacOS']
+ )
+ 

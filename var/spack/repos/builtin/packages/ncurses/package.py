@@ -1,34 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from glob import glob
-from os.path import exists, join
-from os import makedirs
+import glob
+import os
 
 
-class Ncurses(AutotoolsPackage):
+class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     """The ncurses (new curses) library is a free software emulation of
     curses in System V Release 4.0, and more. It uses terminfo format,
     supports pads and color and multiple highlights and forms
@@ -36,26 +16,72 @@ class Ncurses(AutotoolsPackage):
     SYSV-curses enhancements over BSD curses."""
 
     homepage = "http://invisible-island.net/ncurses/ncurses.html"
-    url      = "https://ftpmirror.gnu.org/ncurses/ncurses-6.1.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    gnu_mirror_path = "ncurses/ncurses-6.1.tar.gz"
 
-    version('6.1', '98c889aaf8d23910d2b92d65be2e737a')
-    version('6.0', 'ee13d052e1ead260d7c28071f46eefb1')
-    version('5.9', '8cb9c412e5f2d96bc6f459aa8c6282a1')
+    executables = [r'^ncursesw?\d*-config$']
+
+    version('6.2', sha256='30306e0c76e0f9f1f0de987cf1c82a5c21e1ce6568b9227f7da5b71cbea86c9d')
+    version('6.1', sha256='aa057eeeb4a14d470101eff4597d5833dcef5965331be3528c08d99cebaa0d17')
+    version('6.0', sha256='f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260')
+    version('5.9', sha256='9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b')
 
     variant('symlinks', default=False,
             description='Enables symlinks. Needed on AFS filesystem.')
-    variant('termlib', default=False,
-            description='Enables termlib needs for gnutls in emacs.')
+    variant('termlib', default=True,
+            description='Enables termlib features. This is an extra '
+                        'lib and optional internal dependency.')
 
     depends_on('pkgconfig', type='build')
 
     patch('patch_gcc_5.txt', when='@6.0%gcc@5.0:')
     patch('sed_pgi.patch',   when='@:6.0')
 
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('--version', output=str, error=str).rstrip()
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)('--libs', output=str, error=str)
+
+            if '-ltinfo' in output:
+                variants += "+termlib"
+
+            output = Executable(exe)('--terminfo-dirs', output=str, error=str)
+            usingSymlinks = False
+            for termDir in output.split(':'):
+                for top, dirs, files in os.walk(termDir):
+                    for filename in files:
+                        if os.path.islink(os.path.join(top, filename)):
+                            usingSymlinks = True
+                            break
+                    if usingSymlinks:
+                        break
+                if usingSymlinks:
+                    break
+            if usingSymlinks:
+                variants += '+symlinks'
+            results.append(variants)
+        return results
+
+    def setup_build_environment(self, env):
+        env.unset('TERMINFO')
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            flags.append(self.compiler.cc_pic_flag)
+        elif name == 'cxxflags':
+            flags.append(self.compiler.cxx_pic_flag)
+
+        return (flags, None, None)
+
     def configure(self, spec, prefix):
         opts = [
-            'CFLAGS={0}'.format(self.compiler.pic_flag),
-            'CXXFLAGS={0}'.format(self.compiler.pic_flag),
+            '--disable-stripping',
             '--with-shared',
             '--with-cxx-shared',
             '--enable-overwrite',
@@ -68,7 +94,9 @@ class Ncurses(AutotoolsPackage):
                       '--without-manpages',
                       '--without-tests']
 
-        wide_opts = ['--enable-widec']
+        wide_opts = ['--enable-widec',
+                     '--without-manpages',
+                     '--without-tests']
 
         if '+symlinks' in self.spec:
             opts.append('--enable-symlinks')
@@ -77,7 +105,8 @@ class Ncurses(AutotoolsPackage):
             opts.extend(('--with-termlib',
                          '--enable-termcap',
                          '--enable-getcap',
-                         '--enable-tcap-names'))
+                         '--enable-tcap-names',
+                         '--with-versioned-syms'))
 
         prefix = '--prefix={0}'.format(prefix)
 
@@ -102,15 +131,19 @@ class Ncurses(AutotoolsPackage):
             make('install')
 
         # fix for packages like hstr that use "#include <ncurses/ncurses.h>"
-        headers = glob(join(prefix.include, '*'))
+        headers = glob.glob(os.path.join(prefix.include, '*'))
         for p_dir in ['ncurses', 'ncursesw']:
-            path = join(prefix.include, p_dir)
-            if not exists(path):
-                makedirs(path)
+            path = os.path.join(prefix.include, p_dir)
+            if not os.path.exists(path):
+                os.makedirs(path)
             for header in headers:
                 install(header, path)
 
     @property
     def libs(self):
-        return find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)
+        libraries = ['libncurses', 'libncursesw']
+
+        if '+termlib' in self.spec:
+            libraries += ['libtinfo', 'libtinfow']
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -38,13 +19,22 @@ class Bolt(CMakePackage):
 
     homepage = "http://www.bolt-omp.org/"
     url      = "https://github.com/pmodels/bolt/releases/download/v1.0b1/bolt-1.0b1.tar.gz"
+    git      = "https://github.com/pmodels/bolt.git"
+    maintainers = ['shintaro-iwasaki']
 
-    version("1.0b1", "df76beb3a7f13ae2dcaf9ab099eea87b")
+    version("main", branch="main")
+    version("1.0", sha256="1c0d2f75597485ca36335d313a73736594e75c8a36123c5a6f54d01b5ba5c384")
+
+    depends_on('argobots')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool', type='build')
 
     def cmake_args(self):
+        spec = self.spec
         options = [
-            '-DLIBOMP_USE_ITT_NOTIFY=off',
-            '-DLIBOMP_USE_ARGOBOTS=on'
+            '-DLIBOMP_USE_ARGOBOTS=on',
+            '-DLIBOMP_ARGOBOTS_INSTALL_DIR=' + spec['argobots'].prefix
         ]
 
         return options

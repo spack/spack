@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,17 +11,20 @@ from spack import *
 # is useful for other packages that want the demangling functions
 # without the rest of binutils.
 
-class Libiberty(AutotoolsPackage):
+class Libiberty(AutotoolsPackage, GNUMirrorPackage):
     """The libiberty.a library from GNU binutils.  Libiberty provides
     demangling and support functions for the GNU toolchain."""
 
     homepage = "https://www.gnu.org/software/binutils/"
-    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.31.1.tar.xz"
+    gnu_mirror_path = "binutils/binutils-2.31.1.tar.xz"
+    maintainers = ['mwkrentel']
 
-    version('2.31.1', '5b7c9d4ce96f507d95c1b9a255e52418')
-    version('2.30',   'ffc476dd46c96f932875d1b2e27e929f')
-    version('2.29.1', 'acc9cd826edb9954ac7cecb81c727793')
-    version('2.28.1', 'a3bf359889e4b299fce1f4cb919dc7b6')
+    version('2.33.1', sha256='ab66fc2d1c3ec0359b8e08843c9f33b63e8707efdff5e4cc5c200eae24722cbf')
+    version('2.32',   sha256='0ab6c55dd86a92ed561972ba15b9b70a8b9f75557f896446c82e8b36e473ee04')
+    version('2.31.1', sha256='5d20086ecf5752cc7d9134246e9588fa201740d540f7eb84d795b1f7a93bca86')
+    version('2.30',   sha256='6e46b8aeae2f727a36f0bd9505e405768a72218f1796f0d09757d45209871ae6')
+    version('2.29.1', sha256='e7010a46969f9d3e53b650a518663f98a5dde3c3ae21b7d71e5e6803bc36b577')
+    version('2.28.1', sha256='16328a906e55a3c633854beec8e9e255a639b366436470b4f6245eb0d2fde942')
 
     variant('pic', default=False,
             description='Compile with position independent code.')
@@ -64,7 +48,7 @@ class Libiberty(AutotoolsPackage):
             flags.append('-O2')
 
         if '+pic' in self.spec:
-            flags.append(self.compiler.pic_flag)
+            flags.append(self.compiler.cc_pic_flag)
 
         return (None, None, flags)
 

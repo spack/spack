@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,12 +11,62 @@ class Astra(Package):
 
     homepage = "http://www.desy.de/~mpyflo/"
 
-    version('2016-11-30', '17135b7a4adbacc1843a50a6a2ae2c25', expand=False,
+    version('2020-02-03',
+            sha256='ca9ee7d3d369f9040fbd595f57f3153f712d789b66385fd2d2de88a69a774b83',
+            expand=False,
             url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/Astra')
+
+    # no longer available?
+    # version('2016-11-30',
+    #         sha256='50738bf924724e2dd15f1d924b290ffb0f7c703e5d5ae02ffee2db554338801e',
+    #         expand=False,
+    #         url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/Astra')
+
+    variant('gui', default=False, description='Install plotting/gui tools')
+
+    resource(name='generator', url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/generator',
+             sha256='d31cf9fcfeb90ce0e729d8af628caf4a23f7e588a3d412d5b19241e8c684e531',
+             expand=False,
+             placement='generator')
+    resource(name='postpro', url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/postpro',
+             sha256='f47efb14748ce1da62bcd33c9411482bee89bcab75b28a678fc764db0c21ee8d',
+             expand=False,
+             when='+gui',
+             placement='postpro')
+    resource(name='fieldplot', url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/fieldplot',
+             sha256='89df1da96bfd9f165fa148b84376af558e6633ab2dda837273706143ff863c96',
+             expand=False,
+             when='+gui',
+             placement='fieldplot')
+    resource(name='lineplot', url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/lineplot',
+             sha256='d2d5702be9cb3d96391c6a0ca37366d580ced1f0f722fb33a6039ad7fd43b69a',
+             expand=False,
+             when='+gui',
+             placement='lineplot')
+    resource(name='pgxwin_server', url='http://www.desy.de/~mpyflo/Astra_for_64_Bit_Linux/pgxwin_server',
+             sha256='d2d5702be9cb3d96391c6a0ca37366d580ced1f0f722fb33a6039ad7fd43b69a',
+             expand=False,
+             when='+gui',
+             placement='pgxwin_server')
+
+    depends_on('libxcb', when='+gui')
+    depends_on('libx11', when='+gui')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         install('Astra', prefix.bin)
+        install('generator/generator', prefix.bin)
+        if spec.satisfies('+gui'):
+            install('postpro/postpro', prefix.bin)
+            install('fieldplot/fieldplot', prefix.bin)
+            install('lineplot/lineplot', prefix.bin)
+            install('pgxwin_server/pgxwin_server', prefix.bin)
 
         chmod = which('chmod')
         chmod('+x', join_path(prefix.bin, 'Astra'))
+        chmod('+x', join_path(prefix.bin, 'generator'))
+        if spec.satisfies('+gui'):
+            chmod('+x', join_path(prefix.bin, 'postpro'))
+            chmod('+x', join_path(prefix.bin, 'fieldplot'))
+            chmod('+x', join_path(prefix.bin, 'lineplot'))
+            chmod('+x', join_path(prefix.bin, 'pgxwin_server'))

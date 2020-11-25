@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -55,22 +36,22 @@ class Glvis(MakefilePackage):
     version('develop', branch='master')
 
     version('3.4',
-            '289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
+            sha256='289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
             url='https://bit.ly/glvis-3-4',
             extension='.tar.gz')
 
     version('3.3',
-            'e24d7c5cb53f208b691c872fe82ea898242cfdc0fd68dd0579c739e070dcd800',
+            sha256='e24d7c5cb53f208b691c872fe82ea898242cfdc0fd68dd0579c739e070dcd800',
             url='http://goo.gl/C0Oadw',
             extension='.tar.gz')
 
     version('3.2',
-            'c82cb110396e63b6436a770c55eb6d578441eaeaf3f9cc20436c242392e44e80',
+            sha256='c82cb110396e63b6436a770c55eb6d578441eaeaf3f9cc20436c242392e44e80',
             url='http://goo.gl/hzupg1',
             extension='.tar.gz')
 
     version('3.1',
-            '793e984ddfbf825dcd13dfe1ca00eccd686cd40ad30c8789ba80ee175a1b488c',
+            sha256='793e984ddfbf825dcd13dfe1ca00eccd686cd40ad30c8789ba80ee175a1b488c',
             url='http://goo.gl/gQZuu9',
             extension='tar.gz')
 
@@ -133,8 +114,8 @@ class Glvis(MakefilePackage):
         args.append('USE_FREETYPE={0}'.format(yes_no('+fonts')))
         if '+fonts' in spec:
             args += [
-                'FT_OPTS=-DGLVIS_USE_FREETYPE -I{0} -I{1}'.format(
-                    spec['freetype'].prefix.include.freetype2,
+                'FT_OPTS=-DGLVIS_USE_FREETYPE {0} -I{1}'.format(
+                    spec['freetype'].headers.include_flags,
                     spec['fontconfig'].prefix.include),
                 'FT_LIBS={0} {1}'.format(
                     spec['freetype'].libs.ld_flags,

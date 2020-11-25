@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
 
 import re
@@ -55,6 +36,8 @@ def is_package(f):
 #: List of directories to exclude from checks.
 exclude_directories = [spack.paths.external_path]
 
+#: max line length we're enforcing (note: this duplicates what's in .flake8)
+max_line_length = 79
 
 #: This is a dict that maps:
 #:  filename pattern ->
@@ -110,12 +93,15 @@ pattern_exemptions = dict(
     for file_pattern, error_dict in pattern_exemptions.items())
 
 
-def changed_files(args):
+def changed_files(base=None, untracked=True, all_files=False):
     """Get list of changed files in the Spack repository."""
 
     git = which('git', required=True)
 
-    range = "{0}...".format(args.base)
+    if base is None:
+        base = os.environ.get('TRAVIS_BRANCH', 'develop')
+
+    range = "{0}...".format(base)
 
     git_args = [
         # Add changed files committed since branching off of develop
@@ -127,11 +113,11 @@ def changed_files(args):
     ]
 
     # Add new files that are untracked
-    if args.untracked:
+    if untracked:
         git_args.append(['ls-files', '--exclude-standard', '--other'])
 
     # add everything if the user asked for it
-    if args.all:
+    if all_files:
         git_args.append(['ls-files', '--exclude-standard'])
 
     excludes = [os.path.realpath(f) for f in exclude_directories]
@@ -142,7 +128,7 @@ def changed_files(args):
 
         for f in files:
             # Ignore non-Python files
-            if not f.endswith('.py'):
+            if not (f.endswith('.py') or f == 'bin/spack'):
                 continue
 
             # Ignore files in the exclude locations
@@ -166,7 +152,16 @@ def add_pattern_exemptions(line, codes):
         return line + '\n'
 
     orig_len = len(line)
-    exemptions = ','.join(sorted(set(codes)))
+    codes = set(codes)
+
+    # don't add E501 unless the line is actually too long, as it can mask
+    # other errors like trailing whitespace
+    if orig_len <= max_line_length and "E501" in codes:
+        codes.remove("E501")
+        if not codes:
+            return line + "\n"
+
+    exemptions = ','.join(sorted(codes))
 
     # append exemption to line
     if '# noqa: ' in line:
@@ -175,7 +170,7 @@ def add_pattern_exemptions(line, codes):
         line += '  # noqa: {0}'.format(exemptions)
 
     # if THIS made the line too long, add an exemption for that
-    if len(line) > 79 and orig_len <= 79:
+    if len(line) > max_line_length and orig_len <= max_line_length:
         line += ',E501'
 
     return line + '\n'
@@ -183,6 +178,12 @@ def add_pattern_exemptions(line, codes):
 
 def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in pattern_exemptions."""
+
+    # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
+    # Starting with Python 3.8, it must be placed on the `def` line
+    # https://gitlab.com/pycqa/flake8/issues/583
+    ignore_f811_on_previous_line = False
+
     with open(source) as infile:
         parent = os.path.dirname(dest)
         mkdirp(parent)
@@ -202,6 +203,12 @@ def filter_file(source, dest, output=False):
                                 line_errors.append(code)
                                 break
 
+                if 'F811' in line_errors:
+                    ignore_f811_on_previous_line = True
+                elif ignore_f811_on_previous_line:
+                    line_errors.append('F811')
+                    ignore_f811_on_previous_line = False
+
                 if line_errors:
                     line = add_pattern_exemptions(line, line_errors)
 
@@ -212,7 +219,7 @@ def filter_file(source, dest, output=False):
 
 def setup_parser(subparser):
     subparser.add_argument(
-        '-b', '--base', action='store', default='develop',
+        '-b', '--base', action='store', default=None,
         help="select base branch for collecting list of modified files")
     subparser.add_argument(
         '-k', '--keep-temp', action='store_true',
@@ -250,7 +257,7 @@ def flake8(parser, args):
 
         with working_dir(spack.paths.prefix):
             if not file_list:
-                file_list = changed_files(args)
+                file_list = changed_files(args.base, args.untracked, args.all)
 
         print('=======================================================')
         print('flake8: running flake8 code checks on spack.')

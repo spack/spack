@@ -1,40 +1,56 @@
-##############################################################################
-# Copyright (c) 2018, Los Alamos National Security, LLC
-# Produced at the Los Alamos National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Charliecloud(MakefilePackage):
+class Charliecloud(AutotoolsPackage):
     """Lightweight user-defined software stacks for HPC."""
 
+    maintainers = ['j-ogas', 'reidpr']
     homepage = "https://hpc.github.io/charliecloud"
-    url      = "https://github.com/hpc/charliecloud/archive/v0.2.4.tar.gz"
+    url      = "https://github.com/hpc/charliecloud/releases/download/v0.18/charliecloud-0.18.tar.gz"
+    git      = "https://github.com/hpc/charliecloud.git"
 
-    version('0.9.1', sha256='8e69150a271285da71ece7a09b48251ef6593f72207c5126741d9976aa737d95')
-    version('0.9.0', sha256='7e74cb16e31fd9d502198f7509bab14d1049ec68ba90b15e277e76f805db9458')
-    version('0.2.4', 'b112de661c2c360174b42c99022c1967')
+    version('master', branch='master')
+    version('0.19',   sha256='99619fd86860cda18f7f7a7cf7391f702ec9ebd3193791320dea647769996447')
+    version('0.18',   sha256='15ce63353afe1fc6bcc10979496a54fcd5628f997cb13c827c9fc7afb795bdc5')
 
-    @property
-    def install_targets(self):
-        return ['install', 'PREFIX=%s' % self.prefix]
+    depends_on('m4',       type='build')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+
+    depends_on('python@3.5:',    type='run')
+    depends_on('py-lark-parser', type='run')
+    depends_on('py-requests',    type='run')
+
+    # Man pages and html docs variant.
+    variant('docs', default=False, description='Build man pages and html docs')
+    depends_on('rsync',               type='build', when='+docs')
+    depends_on('py-sphinx',           type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
+
+    # See https://github.com/spack/spack/pull/16049.
+    conflicts('platform=darwin', msg='This package does not build on macOS')
+
+    # Bash automated testing harness (bats).
+    depends_on('bats@0.4.0', type='test')
+
+    def configure_args(self):
+
+        args = []
+        py_path = self.spec['python'].command.path
+        args.append('--with-python={0}'.format(py_path))
+
+        if '+docs' in self.spec:
+            sphinx_bin = '{0}'.format(self.spec['py-sphinx'].prefix.bin)
+            args.append('--enable-html')
+            args.append('--with-sphinx-build={0}'.format(sphinx_bin.join(
+                                                         'sphinx-build')))
+        else:
+            args.append('--disable-html')
+
+        return args

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 import os
@@ -29,6 +10,7 @@ import os
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
+from llnl.util.filesystem import filter_file
 
 
 class PerlPackage(PackageBase):
@@ -98,6 +80,17 @@ class PerlPackage(PackageBase):
         options += self.configure_args()
 
         inspect.getmodule(self).perl(*options)
+
+    # It is possible that the shebang in the Build script that is created from
+    # Build.PL may be too long causing the build to fail. Patching the shebang
+    # does not happen until after install so set '/usr/bin/env perl' here in
+    # the Build script.
+    @run_after('configure')
+    def fix_shebang(self):
+        if self.build_method == 'Build.PL':
+            pattern = '#!{0}'.format(self.spec['perl'].command.path)
+            repl = '#!/usr/bin/env perl'
+            filter_file(pattern, repl, 'Build', backup=False)
 
     def build(self, spec, prefix):
         """Builds a Perl package."""

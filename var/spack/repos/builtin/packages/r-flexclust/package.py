@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,11 +15,14 @@ class RFlexclust(RPackage):
     centroids, ...), and bootstrap methods for the analysis of cluster
     stability."""
 
-    homepage = "https://cran.r-project.org/package=flexclust"
-    url      = "https://cran.rstudio.com/src/contrib/flexclust_1.3-5.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/flexclust"
+    homepage = "https://cloud.r-project.org/package=flexclust"
+    url      = "https://cloud.r-project.org/src/contrib/flexclust_1.3-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/flexclust"
 
-    version('1.3-5', '90226a0e3a4f256f392a278e9543f8f4')
+    version('1.4-0', sha256='82fe445075a795c724644864c7ee803c5dd332a89ea9e6ccf7cd1ae2d1ecfc74')
+    version('1.3-5', sha256='dbf49969c93a7b314d9dc3299a0764ed9a804ba7dcbdc08a1235f244f4b85059')
 
+    depends_on('r@2.14.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-modeltools', type=('build', 'run'))
+    depends_on('r-class', type=('build', 'run'))

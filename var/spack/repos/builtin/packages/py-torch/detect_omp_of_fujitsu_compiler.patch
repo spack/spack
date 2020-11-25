@@ -1,0 +1,20 @@
+--- pytorch/cmake/Modules/FindOpenMP.cmake.org	2020-05-26 17:43:53.000000000 +0900
++++ pytorch/cmake/Modules/FindOpenMP.cmake	2020-05-26 17:46:37.000000000 +0900
+@@ -84,7 +84,7 @@
+     unset(OpenMP_FLAG_CANDIDATES)
+ 
+     set(OMP_FLAG_GNU "-fopenmp")
+-    set(OMP_FLAG_Clang "-fopenmp=libomp" "-fopenmp=libiomp5" "-fopenmp")
++    set(OMP_FLAG_Clang "-fopenmp" "-fopenmp=libomp" "-fopenmp=libiomp5")
+ 
+     # AppleClang may need a header file, search for omp.h with hints to brew
+     # default include dir
+@@ -245,7 +245,7 @@
+         set(OpenMP_libomp_LIBRARY "${MKL_OPENMP_LIBRARY}" CACHE STRING "libomp location for OpenMP")
+       else()
+         find_library(OpenMP_libomp_LIBRARY
+-          NAMES omp gomp iomp5
++          NAMES fjomp omp gomp iomp5
+           HINTS ${CMAKE_${LANG}_IMPLICIT_LINK_DIRECTORIES}
+           DOC "libomp location for OpenMP"
+         )

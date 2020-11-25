@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
@@ -40,21 +21,24 @@ class Dmd(MakefilePackage):
     # https://wiki.dlang.org/Building_under_Posix
     resource(name='druntime',
              url='https://github.com/dlang/druntime/archive/v2.081.1.tar.gz',
-             md5='49c8ba48fcb1e53d553a52d8ed7f9164',
+             sha256='8313af32dce71f767fb0072cae699cbfe7196cf01b0ce1c5dd416a71d94f5fee',
              placement='druntime')
     resource(name='phobos',
              url='https://github.com/dlang/phobos/archive/v2.081.1.tar.gz',
-             md5='ccf4787275b490eb2ddfc6713f9e9882',
+             sha256='d945c6fd1be14dff5fcbf45c1e11302e12bebac56d55e4e97e48e150f2899e04',
              placement='phobos')
     resource(name='tools',
              url='https://github.com/dlang/tools/archive/v2.081.1.tar.gz',
-             md5='a3bc7ed3d60b39712ef011bf19b3d427',
+             sha256='71fa249dbfd278eec2b95ce577af32e623e44caf0d993905ddc189e3beec21d0',
              placement='tools')
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix.linux.bin64)
-        run_env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
-        run_env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.linux.bin64)
+        env.prepend_path('LIBRARY_PATH', self.prefix.linux.lib64)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.linux.lib64)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     def edit(self, spec, prefix):
         # Move contents to dmd/

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,15 +10,43 @@ class PyPetsc4py(PythonPackage):
     """This package provides Python bindings for the PETSc package.
     """
 
-    homepage = "https://pypi.python.org/pypi/petsc4py"
-    url      = "https://pypi.io/packages/source/p/petsc4py/petsc4py-3.8.1.tar.gz"
+    homepage = "https://gitlab.com/petsc/petsc4py"
+    url      = "https://pypi.io/packages/source/p/petsc4py/petsc4py-3.14.0.tar.gz"
+    git      = "https://gitlab.com/petsc/petsc4py.git"
 
-    version('3.8.1', '5157220c2b81765c581d2b17c03259f8')
-    version('3.8.0', '02029be4bdec904854f0e0692005fb06')
-    version('3.7.0', '816a20040a6a477bd637f397c9fb5b6d')
+    maintainers = ['dalcinl', 'balay']
 
+    version('develop', branch='master')
+    version('3.14.0', sha256='33ac9fb55a541e4c1deabd6e2144da96d5ae70e70c830a55de558000cf3f0ec5')
+    version('3.13.0', sha256='0e11679353c0c2938336a3c8d1a439b853e20d3bccd7d614ad1dbea3ec5cb31f')
+    version('3.12.0', sha256='4c94a1dbbf244b249436b266ac5fa4e67080d205420805deab5ec162b979df8d')
+    version('3.11.0', sha256='ec114b303aadaee032c248a02021e940e43c6437647af0322d95354e6f2c06ad')
+    version('3.10.1', sha256='11b59693af0e2067f029924dd6b5220f7a7ec00089f6e2c2361332d6123ea6f7')
+    version('3.10.0', sha256='4e58b9e7d4343adcf905751261b789c8c3489496f8de5c3fc3844664ef5ec5a3')
+    version('3.9.1',  sha256='8b7f56e0904c57cca08d1c24a1d8151d1554f06c9c5a31b16fb6db3bc928bbd8')
+    version('3.9.0',  sha256='ae077dffd455014de16b6ed4ba014ac9e10227dc6b93f919a4229e8e1c870aec')
+    version('3.8.1',  sha256='f6260a52dab02247f5b8d686a0587441b1a2048dff52263f1db42e75d2e3f330')
+    version('3.8.0',  sha256='3445da12becf23ade4d40cdd04c746581982ab6a27f55fbb5cd29bc5560df4b1')
+    version('3.7.0',  sha256='c04931a5ba3fd7c8c8d165aa7908688921ce3cf4cf8725d0cba73380c2107386')
+
+    variant('mpi', default=True,  description='Activates MPI support')
+
+    depends_on('py-cython', type='build', when='@develop')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-mpi4py', type=('build', 'run'))
-    depends_on('petsc+mpi')
+    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+
+    depends_on('petsc+mpi', when='+mpi')
+    depends_on('petsc~mpi', when='~mpi')
+    depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
+    depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
+    depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
+    depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
+    depends_on('petsc@3.10.3:3.10.99', when='@3.10.1:3.10.99')
+    depends_on('petsc@3.10:3.10.2', when='@3.10.0')
+    depends_on('petsc@3.9:3.9.99', when='@3.9:3.9.99')
+    depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
+    depends_on('petsc@3.7:3.7.99', when='@3.7:3.7.99')
+    depends_on('petsc@3.6:3.6.99', when='@3.6:3.6.99')

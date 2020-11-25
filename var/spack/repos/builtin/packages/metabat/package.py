@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,13 +13,18 @@ class Metabat(SConsPackage):
     homepage = "https://bitbucket.org/berkeleylab/metabat"
     url      = "https://bitbucket.org/berkeleylab/metabat/get/v2.12.1.tar.gz"
 
-    version('2.12.1', 'c032f47a8b24e58a5a9fefe52cb6e0f8')
+    version('2.14',   sha256='d43d5e91afa8f2d211a913739127884669516bfbed870760597fcee2b513abe2')
+    version('2.13',   sha256='aa75a2b62ec9588add4c288993821bab5312a83b1259ff0d508c215133492d74')
+    version('2.12.1', sha256='e3aca0656f56f815135521360dc56667ec26af25143c3a31d645fef1a96abbc2')
+    version('2.11.2', sha256='9baf81b385e503e71792706237c308a21ff9177a3211c79057dcecf8434e9a67')
 
     depends_on('boost@1.55.0:', type=('build', 'run'))
     depends_on('perl', type='run')
+    depends_on('zlib', type='link')
+    depends_on('ncurses', type='link')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('BOOST_ROOT', self.spec['boost'].prefix)
+    def setup_build_environment(self, env):
+        env.set('BOOST_ROOT', self.spec['boost'].prefix)
 
     def install_args(self, spec, prefix):
         return ["PREFIX={0}".format(prefix)]

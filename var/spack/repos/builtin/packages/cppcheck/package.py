@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,10 +11,12 @@ class Cppcheck(MakefilePackage):
     homepage = "http://cppcheck.sourceforge.net/"
     url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
 
-    version('1.81', '0c60a1d00652044ef511bdd017689938')
-    version('1.78', 'f02d0ee0a4e71023703c6c5efff6cf9d')
-    version('1.72', '2bd36f91ae0191ef5273bb7f6dc0d72e')
-    version('1.68', 'c015195f5d61a542f350269030150708')
+    version('2.1', sha256='ab26eeef039e5b58aac01efb8cb664f2cc16bf9879c61bc93cd00c95be89a5f7')
+    version('1.87', sha256='e3b0a46747822471df275417d4b74b56ecac88367433e7428f39288a32c581ca')
+    version('1.81', sha256='bb694f37ae0b5fed48c6cdc2fb5e528daf32cefc64e16b1a520c5411323cf27e')
+    version('1.78', sha256='e42696f7d6321b98cb479ad9728d051effe543b26aca8102428f60b9850786b1')
+    version('1.72', sha256='9460b184ff2d8dd15344f3e2f42f634c86e4dd3303e1e9b3f13dc67536aab420')
+    version('1.68', sha256='add6e5e12b05ca02b356cd0ec7420ae0dcafddeaef183b4dfbdef59c617349b1')
 
     variant('htmlreport', default=False, description="Install cppcheck-htmlreport")
 

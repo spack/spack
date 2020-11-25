@@ -1,0 +1,11 @@
+--- a/bootstrap	2020-07-24 11:02:56.488414260 +0200
++++ b/bootstrap	2020-07-24 11:03:20.763775094 +0200
+@@ -1179,7 +1179,7 @@
+ }
+ #endif
+ 
+-#if (__cplusplus >= 201703L || defined(__INTEL_COMPILER) && defined(__cpp_if_constexpr))
++#if (__cplusplus >= 201703L || defined(__INTEL_COMPILER) && defined(__cpp_deduction_guides))
+ #include <optional>
+ template <typename T,
+           typename std::invoke_result<decltype(&T::get), T>::type = nullptr>

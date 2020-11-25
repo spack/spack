@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,10 @@ class Fastqc(Package):
     homepage = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/"
     url = "http://www.bioinformatics.babraham.ac.uk/projects/fastqc/fastqc_v0.11.5.zip"
 
-    version('0.11.7', '8fead05fa62c5e723f0d2157a9b5fcd4')
-    version('0.11.5', '3524f101c0ab0bae77c7595983170a76')
-    version('0.11.4', '104ff2e0e9aebf5bee1f6b068a059b0d')
+    version('0.11.9', sha256='15510a176ef798e40325b717cac556509fb218268cfdb9a35ea6776498321369')
+    version('0.11.7', sha256='59cf50876bbe5f363442eb989e43ae3eaab8d932c49e8cff2c1a1898dd721112')
+    version('0.11.5', sha256='dd7a5ad80ceed2588cf6d6ffe35e0f161c0d9977ed08355f5e4d9473282cbd66')
+    version('0.11.4', sha256='adb233f9fae7b02fe99e716664502adfec1b9a3fbb84eed4497122d6d33d1fe7')
 
     depends_on('java', type='run')
     depends_on('perl')          # for fastqc "script", any perl will do
@@ -53,8 +35,8 @@ class Fastqc(Package):
 
     # In theory the 'run' dependency on 'jdk' above should take
     # care of this for me. In practice, it does not.
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Add <prefix> to the path; the package has a script at the
            top level.
         """
-        run_env.prepend_path('PATH', self.spec['java'].prefix.bin)
+        env.prepend_path('PATH', self.spec['java'].prefix.bin)

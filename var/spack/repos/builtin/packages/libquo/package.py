@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,12 +13,13 @@ class Libquo(AutotoolsPackage):
     single- and multi-threaded libraries."""
 
     homepage = "https://github.com/lanl/libquo"
-    url      = "http://lanl.github.io/libquo/dists/libquo-1.3.tar.gz"
+    url      = "http://lanl.github.io/libquo/dists/libquo-1.3.1.tar.gz"
     git      = "https://github.com/lanl/libquo.git"
 
     version('develop', branch='master')
-    version('1.3',   '1a1fb83d2c9e99ef5d5fcd71037ef8e8')
-    version('1.2.9', '85907cfbdb8b1e57fc5fcf3bced7cfa8')
+    version('1.3.1', sha256='407f7c61cc80aa934cf6086f3516a31dee3b803047713c297102452c3d7d6ed1')
+    version('1.3',   sha256='61b0beff15eae4be94b5d3cbcbf7bf757659604465709ed01827cbba45efcf90')
+    version('1.2.9', sha256='0a64bea8f52f9eecd89e4ab82fde1c5bd271f3866c612da0ce7f38049409429b')
 
     depends_on('mpi')
 

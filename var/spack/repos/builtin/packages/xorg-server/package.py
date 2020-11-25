@@ -1,45 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class XorgServer(AutotoolsPackage):
+class XorgServer(AutotoolsPackage, XorgPackage):
     """X.Org Server is the free and open source implementation of the display
     server for the X Window System stewarded by the X.Org Foundation."""
 
     homepage = "http://cgit.freedesktop.org/xorg/xserver"
-    url      = "https://www.x.org/archive/individual/xserver/xorg-server-1.18.99.901.tar.gz"
+    xorg_mirror_path = "xserver/xorg-server-1.18.99.901.tar.gz"
 
-    version('1.18.99.901', 'd0242b95991c221c4fcc0d283aba7a42')
+    version('1.18.99.901', sha256='c8425163b588de2ee7e5c8e65b0749f2710f55a7e02a8d1dc83b3630868ceb21')
 
     depends_on('pixman@0.27.2:')
     depends_on('font-util')
     depends_on('libxshmfence@1.1:')
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
-    depends_on('mesa+hwrender', type='build')
 
     depends_on('dri2proto@2.8:', type='build')
     depends_on('dri3proto@1.0:', type='build')

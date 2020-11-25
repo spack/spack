@@ -1,0 +1,13 @@
+enable:
+  - tcl
+tcl:
+  all:
+    suffixes:
+      '^mpich': mpich
+  mpileaks:
+    suffixes:
+      '+static': static
+  mpileaks+opt::
+    suffixes:
+      '~debug': over
+      '^mpich': ridden

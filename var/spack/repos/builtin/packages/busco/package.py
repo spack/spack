@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2018, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,24 +14,33 @@ class Busco(PythonPackage):
     url      = "https://gitlab.com/api/v4/projects/ezlab%2Fbusco/repository/archive.tar.gz?sha=2.0.1"
     git      = "https://gitlab.com/ezlab/busco.git"
 
+    version('4.1.3', sha256='08ded26aeb4f6aef791cd88524c3c00792a054c7672ea05219f468d495e7b072')
+
     # TODO: check the installation procedure for version 3.0.2
     # and uncomment the following line
-    # version('3.0.2', '31d80042bb7e96422843fa43d0acbd21')
+    # version('3.0.2', sha256='dbea093315b766b0f7c4fe3cafbbdf51ade79ec84bde04f1f437b48333200f34')
 
     # There is no tag for version 3.0.1
     version('3.0.1', commit='078252e00399550d7b0e8941cd4d986c8e868a83')
-    version('2.0.1', '4dbcc8a0c18fa8f8312c103eb2fbb4e2')
+    version('2.0.1', sha256='bd72a79b880370e9b61b8c722e171818c7c85d46cc1e2f80595df2738a7e220c')
 
     depends_on('python', type=('build', 'run'))
     depends_on('blast-plus')
     depends_on('hmmer')
     depends_on('augustus')
 
+    depends_on('py-biopython', when='@4.1.3', type=('build', 'run'))
+
     def build(self, spec, prefix):
         if self.spec.satisfies('@2.0.1'):
             pass
 
     def install(self, spec, prefix):
+        if self.spec.satisfies('@4.1.3'):
+            install_tree('bin', prefix.bin)
+            install_tree('config', prefix.config)
+            args = self.install_args(spec, prefix)
+            self.setup_py('install', *args)
         if self.spec.satisfies('@3.0.1'):
             with working_dir('scripts'):
                 mkdirp(prefix.bin)
