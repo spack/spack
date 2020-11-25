@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,3 +17,4 @@ class PyPynrrd(PythonPackage):
     version('0.2.5', sha256='d5e50fd6300ca1f09d091fa2552953192767e322b7b10c3e7aa82b19be9b115b')
 
     depends_on('py-numpy', type='run')
+    depends_on('py-setuptools', type=('build', 'run'))
