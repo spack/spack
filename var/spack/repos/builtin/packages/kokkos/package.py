@@ -73,10 +73,9 @@ class Kokkos(CMakePackage, CudaPackage):
     }
 
     amd_gpu_arches = (
-        'fiji',
-        'gfx901',
         'vega900',
         'vega906',
+        'vega908',
     )
     variant("amd_gpu_arch", default='none', values=('none',) + amd_gpu_arches,
             description="AMD GPU architecture")
