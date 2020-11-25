@@ -84,7 +84,7 @@ packages:
       - mpi
       #- python
     specs:
-      - placement-algorithm@2.1.0
+      - placement-algorithm@2.1.1
 
   #### sub-cellular ####
 
