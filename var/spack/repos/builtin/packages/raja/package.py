@@ -33,9 +33,9 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
 
-    conflicts('+openmp', when='+hip')
-
     depends_on('blt', type='build')
+
+    conflicts('+openmp', when='+hip')
 
     def cmake_args(self):
         spec = self.spec
