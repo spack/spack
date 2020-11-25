@@ -122,6 +122,8 @@ def test_arch_apply(config, mock_packages):
     be_spec._apply_architecture(os='be', target='be')
 
     platform = spack.architecture.platform()
+    assert be_spec.concrete
+    assert be_spec.dag_hash() != fe_spec.dag_hash()  # no overeager caching
     for be, fe in zip(be_spec.traverse(), fe_spec.traverse()):
         assert be != fe
         assert be.architecture.os == str(platform.operating_system('be'))
