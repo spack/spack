@@ -883,3 +883,15 @@ class TestConcretize(object):
 
         # 'stuff' is provided by an external package, so check it's present
         assert 'externalvirtual' in s
+
+    @pytest.mark.regression('20040')
+    def test_conditional_provides_or_depends_on(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # Check that we can concretize correctly a spec that can either
+        # provide a virtual or depend on it based on the value of a variant
+        s = Spec('conditional-provider +disable-v1').concretized()
+        assert 'v1-provider' in s
+        assert s['v1'].name == 'v1-provider'
+        assert s['v2'].name == 'conditional-provider'
