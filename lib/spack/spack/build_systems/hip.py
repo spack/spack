@@ -73,6 +73,8 @@
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 
+import spack.variant
+
 
 class HipPackage(PackageBase):
     """Auxiliary class which contains HIP variant, dependencies and conflicts
@@ -86,13 +88,15 @@ class HipPackage(PackageBase):
     amdgpu_targets = (
         'gfx701', 'gfx801', 'gfx802', 'gfx803',
         'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012', 'none'
+        'gfx1011', 'gfx1012'
     )
 
     variant('hip', default=False, description='Enable HIP support')
 
     # possible amd gpu targets for hip builds
-    variant('amdgpu_target', default='none', values=amdgpu_targets)
+    variant('amdgpu_target',
+            description='AMD GPU architecture',
+            values=spack.variant.any_combination_of(*amdgpu_targets))
 
     depends_on('llvm-amdgpu', when='+hip')
     depends_on('hsa-rocr-dev', when='+hip')
@@ -101,8 +105,8 @@ class HipPackage(PackageBase):
     # need amd gpu type for hip builds
     conflicts('amdgpu_target=none', when='+hip')
 
-    # Make sure non-'none' amdgpu_targets cannot be used without +hip
-    for value in amdgpu_targets[:-1]:
+    # Make sure amdgpu_targets cannot be used without +hip
+    for value in amdgpu_targets:
         conflicts('~hip', when='amdgpu_target=' + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
@@ -111,17 +115,8 @@ class HipPackage(PackageBase):
     # hip package file. But I will leave this here for future development.
     @staticmethod
     def hip_flags(amdgpu_target):
-        return '--amdgpu-target={0}'.format(amdgpu_target)
-
-    # https://llvm.org/docs/AMDGPUUsage.html
-    # Possible architectures (not including 'none' option)
-    @staticmethod
-    def amd_gputargets_list():
-        return (
-            'gfx701', 'gfx801', 'gfx802', 'gfx803',
-            'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-            'gfx1011', 'gfx1012'
-        )
+        archs = ",".join(amdgpu_target)
+        return '--amdgpu-target={0}'.format(archs)
 
     # HIP version vs Architecture
 
