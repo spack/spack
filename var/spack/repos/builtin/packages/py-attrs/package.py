@@ -29,7 +29,9 @@ class PyAttrs(PythonPackage):
     depends_on('py-coverage', type='test')
     depends_on('py-hypothesis', type='test')
     depends_on('py-pympler', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest@4.3.0:', type='test', when='@19.3.0:')
     depends_on('py-six', type='test')
     depends_on('py-zope-interface', type='test')
+
+    def build_test(self):
+        # Unit tests require pytest, creating a circular dependency
+        pass
