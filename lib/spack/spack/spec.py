@@ -1151,8 +1151,8 @@ class Spec(object):
         for dep in self.traverse(root=True):
             dep._swap_architecture(**kwargs)
         if concrete:
-            # re-cache dag_hash
-            _ = self.dag_hash()
+            for hash_type in [ht.dag_hash, ht.build_hash, ht.full_hash]:
+                setattr(self, hash_type.attr, None)
             self._mark_concrete()
 
     def _swap_architecture(self, **kwargs):
