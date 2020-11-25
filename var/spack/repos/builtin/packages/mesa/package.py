@@ -177,6 +177,10 @@ class Mesa(MesonPackage):
 
         return args
 
+    def setup_build_environment(self, env):
+        if self.spec.target.family == 'aarch64':
+            env.append_flags('LDFLAGS', '-ltinfo')
+
     @property
     def libs(self):
         spec = self.spec
