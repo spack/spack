@@ -177,7 +177,7 @@ class Kokkos(CMakePackage, CudaPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
