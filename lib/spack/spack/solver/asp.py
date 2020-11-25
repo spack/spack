@@ -1290,7 +1290,6 @@ class SpackSolverSetup(object):
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            print("TTYPE:", type(platform.target(spec.target.name)))
             target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 raise ValueError("Invalid target: ", spec.target.name)
