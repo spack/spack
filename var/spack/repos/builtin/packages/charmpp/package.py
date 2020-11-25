@@ -43,6 +43,10 @@ class Charmpp(Package):
     # Patch is no longer needed in versions 6.8.0+
     patch("mpi.patch", when="@:6.7.1")
 
+    # Patch for AOCC
+    patch('charm_6.7.1_aocc.patch', when="@6.7.1 %aocc", level=1)
+    patch('charm_6.8.2_aocc.patch', when="@6.8.2 %aocc", level=3)
+
     # support Fujitsu compiler
     patch("fj.patch", when="%fj")
 
@@ -237,7 +241,8 @@ class Charmpp(Package):
         # here.
         options = [
             os.path.basename(self.compiler.cc),
-            os.path.basename(self.compiler.fc),
+            'gfortran'
+            if '@:6.8.2 %aocc' in spec else os.path.basename(self.compiler.fc),
             "-j%d" % make_jobs,
             "--destination=%s" % builddir,
         ]

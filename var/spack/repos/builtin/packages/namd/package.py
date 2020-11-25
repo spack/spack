@@ -26,8 +26,8 @@ class Namd(MakefilePackage):
     version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
-    variant('fftw', default='3', values=('none', '2', '3', 'mkl'),
-            description='Enable the use of FFTW/FFTW3/MKL FFT')
+    variant('fftw', default='3', values=('none', '2', '3', 'mkl', 'amdfftw'),
+            description='Enable the use of FFTW/FFTW3/MKL FFT/AMDFFTW')
 
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
@@ -44,6 +44,8 @@ class Namd(MakefilePackage):
 
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
+
+    depends_on('amdfftw', when="fftw=amdfftw")
 
     depends_on('intel-mkl', when="fftw=mkl")
 
@@ -97,12 +99,16 @@ class Namd(MakefilePackage):
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
                                         -ffast-math -lpthread ' + archopt,
-                        'intel': '-O2 -ip -qopenmp-simd' + archopt}
+                        'intel': '-O2 -ip -qopenmp-simd' + archopt,
+                        'aocc': m64 + '-O3 -ffp-contract=fast -ffast-math \
+                                        -fopenmp ' + archopt}
                 else:
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
                                         -ffast-math ' + archopt,
-                        'intel': '-O2 -ip ' + archopt}
+                        'intel': '-O2 -ip ' + archopt,
+                        'aocc': m64 + '-O3 -ffp-contract=fast \
+                                        -ffast-math ' + archopt}
 
                 optim_opts = optims_opts[self.compiler.name] \
                     if self.compiler.name in optims_opts else ''
@@ -187,6 +193,10 @@ class Namd(MakefilePackage):
             opts.append('--without-fftw')
         elif fftw_version == 'mkl':
             self._append_option(opts, 'mkl')
+        elif fftw_version == 'amdfftw':
+            self._copy_arch_file('fftw3')
+            opts.extend(['--with-fftw3',
+                         '--fftw-prefix', spec['amdfftw'].prefix])
         else:
             _fftw = 'fftw{0}'.format('' if fftw_version == '2' else '3')
 
