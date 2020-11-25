@@ -1,0 +1,64 @@
+packages:
+    autoconf:
+        paths:
+            autoconf@2.69: /usr
+        buildable: False
+        version: [2.69]
+    automake:
+        paths:
+            automake@1.16.1: /usr
+        buildable: False
+        version: [1.16.1]
+    bison:
+        paths:
+            bison@3.0.4: /usr
+        buildable: False
+        version: [3.0.4]
+    boost:
+        variants: +pic
+    cmake:
+        paths:
+            cmake@3.18.1: /apps/free81/cmake/3.18.1
+        buildable: False
+        version: [3.18.1]
+    flex:
+        paths:
+            flex@2.6.1: /usr
+        buildable: False
+        version: [2.6.1]
+    gettext:
+        paths:
+            gettext@0.19.8: /usr
+        buildable: False
+        version: [0.19.8]
+    hdf5:
+        paths:
+            hdf5@1.10.6+mpi+hl: /apps/free81/hdf5.gcc/1.10.6
+        variants: ~fortran ~cxx
+        buildable: False
+        version: [1.10.6]
+    libtool:
+        paths:
+            libtool@2.4.6: /usr
+        buildable: False
+        version: [2.4.6]
+    ncurses:
+        paths:
+            ncurses@5.9: /usr
+        buildable: False
+        version: [5.9]
+    openmpi:
+        paths:
+            openmpi@4.0.3: /apps/free81/openmpi.gcc/4.0.3
+        buildable: False
+        version: [4.0.3]
+    pkg-config:
+        paths:
+            pkg-config@1.4.2: /usr
+        buildable: False
+        version: [1.4.2]
+    all:
+        compiler: [gcc]
+        providers:
+            mpi: [openmpi]
+
