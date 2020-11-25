@@ -1,0 +1,376 @@
+From 30aa715fac06deba7eaa3e6167cf34eb4d2521d0 Mon Sep 17 00:00:00 2001
+From: Brad King <brad.king@kitware.com>
+Date: Thu, 19 Nov 2020 15:19:36 -0500
+Subject: [PATCH] Revert "specify language flag when source LANGUAGE property
+ is set"
+
+Revert commit 74b1c9fc8e (Explicitly specify language flag when source
+LANGUAGE property is set, 2020-06-01, v3.19.0-rc1~722^2) and the lookup
+tables from its two immediate ancestors.  The purpose of that change was
+to convert an explicit `LANGUAGE` source file property into an explicit
+language specification compiler flag like `-x c`.  This seems reasonable
+since the property is documented as meaning "indicate what programming
+language the source file is".  It is also needed to help compilers deal
+with non-standard source file extensions they don't recognize.
+
+However, some projects have been setting `LANGUAGE C` on `.S` assembler
+source files to mean "use the C compiler".  Passing `-x c` for them
+breaks the build because the `.S` sources are not written in C.  These
+projects should be updated to use `enable_language(ASM)`, for which
+CMake often chooses the C compiler as the assembler when using
+toolchains that support it (which would have to be the case for projects
+using the approach).
+
+Revert the change for now to preserve the old behavior for such projects.
+We can re-introduce it with a policy in a future version of CMake.
+
+Fixes: #21469
+Issue: #14516, #20716
+---
+ Help/release/3.19.rst                  | 16 ++++++++++++++++
+ Modules/Compiler/AppleClang-C.cmake    |  2 --
+ Modules/Compiler/AppleClang-CXX.cmake  |  2 --
+ Modules/Compiler/Clang-C.cmake         |  2 --
+ Modules/Compiler/Clang-CXX.cmake       |  2 --
+ Modules/Compiler/GNU-C.cmake           |  2 --
+ Modules/Compiler/GNU-CXX.cmake         |  2 --
+ Modules/Compiler/Intel-C.cmake         |  2 --
+ Modules/Compiler/Intel-CXX.cmake       |  2 --
+ Modules/Compiler/XL-C.cmake            |  2 --
+ Modules/Compiler/XL-CXX.cmake          |  5 +++--
+ Modules/Compiler/XLClang-C.cmake       |  2 --
+ Modules/Compiler/XLClang-CXX.cmake     |  2 --
+ Source/cmExtraSublimeTextGenerator.cxx |  7 -------
+ Source/cmGlobalXCodeGenerator.cxx      |  8 --------
+ Source/cmMakefileTargetGenerator.cxx   |  7 -------
+ Source/cmNinjaTargetGenerator.cxx      | 11 +----------
+ Tests/SetLang/CMakeLists.txt           |  7 -------
+ Tests/SetLang/bar.c                    | 14 +-------------
+ Tests/SetLang/zoom.zzz                 |  7 -------
+ 20 files changed, 21 insertions(+), 83 deletions(-)
+ delete mode 100644 Tests/SetLang/zoom.zzz
+
+diff --git a/Help/release/3.19.rst b/Help/release/3.19.rst
+index be63e9db79..961d6c059b 100644
+--- a/Help/release/3.19.rst
++++ b/Help/release/3.19.rst
+@@ -330,3 +330,19 @@ Other Changes
+ * If ``CUDA`` compiler detection fails with user-specified
+   :variable:`CMAKE_CUDA_ARCHITECTURES` or
+   :variable:`CMAKE_CUDA_HOST_COMPILER`, an error is raised.
++
++Updates
++=======
++
++Changes made since CMake 3.19.0 include the following.
++
++3.19.1
++------
++
++* CMake 3.19.0 compiles source files with the :prop_sf:`LANGUAGE`
++  property by passing an explicit language flag such as ``-x c``.
++  This is consistent with the property's documented meaning that
++  the source file is written in the specified language.  However,
++  it can break projects that were using the property only to
++  cause the specified language's compiler to be used.  This has
++  been reverted to restore behavior from CMake 3.18 and below.
+diff --git a/Modules/Compiler/AppleClang-C.cmake b/Modules/Compiler/AppleClang-C.cmake
+index 26a4bbd335..2794f52bbb 100644
+--- a/Modules/Compiler/AppleClang-C.cmake
++++ b/Modules/Compiler/AppleClang-C.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/Clang)
+ __compiler_clang(C)
+ 
+-set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c)
+-
+ if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 4.0)
+   set(CMAKE_C90_STANDARD_COMPILE_OPTION "-std=c90")
+   set(CMAKE_C90_EXTENSION_COMPILE_OPTION "-std=gnu90")
+diff --git a/Modules/Compiler/AppleClang-CXX.cmake b/Modules/Compiler/AppleClang-CXX.cmake
+index 611c674576..15edc21e99 100644
+--- a/Modules/Compiler/AppleClang-CXX.cmake
++++ b/Modules/Compiler/AppleClang-CXX.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/Clang)
+ __compiler_clang(CXX)
+ 
+-set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c++)
+-
+ if(NOT "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+   set(CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY_INLINES_HIDDEN "-fvisibility-inlines-hidden")
+ endif()
+diff --git a/Modules/Compiler/Clang-C.cmake b/Modules/Compiler/Clang-C.cmake
+index fb6ffa7b00..7c4a263f6a 100644
+--- a/Modules/Compiler/Clang-C.cmake
++++ b/Modules/Compiler/Clang-C.cmake
+@@ -8,8 +8,6 @@ endif()
+ 
+ if("x${CMAKE_C_COMPILER_FRONTEND_VARIANT}" STREQUAL "xMSVC")
+   set(CMAKE_C_CLANG_TIDY_DRIVER_MODE "cl")
+-elseif("x${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "xGNU")
+-  set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c)
+ endif()
+ 
+ if(NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 3.4)
+diff --git a/Modules/Compiler/Clang-CXX.cmake b/Modules/Compiler/Clang-CXX.cmake
+index 311d2b07f6..789e991594 100644
+--- a/Modules/Compiler/Clang-CXX.cmake
++++ b/Modules/Compiler/Clang-CXX.cmake
+@@ -2,9 +2,7 @@ include(Compiler/Clang)
+ __compiler_clang(CXX)
+ __compiler_clang_cxx_standards(CXX)
+ 
+-
+ if("x${CMAKE_CXX_COMPILER_FRONTEND_VARIANT}" STREQUAL "xGNU")
+-  set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c++)
+   set(CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY_INLINES_HIDDEN "-fvisibility-inlines-hidden")
+ endif()
+ 
+diff --git a/Modules/Compiler/GNU-C.cmake b/Modules/Compiler/GNU-C.cmake
+index 8105a77f62..ca286b3975 100644
+--- a/Modules/Compiler/GNU-C.cmake
++++ b/Modules/Compiler/GNU-C.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/GNU)
+ __compiler_gnu(C)
+ 
+-set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c)
+-
+ if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 4.5)
+   set(CMAKE_C90_STANDARD_COMPILE_OPTION "-std=c90")
+   set(CMAKE_C90_EXTENSION_COMPILE_OPTION "-std=gnu90")
+diff --git a/Modules/Compiler/GNU-CXX.cmake b/Modules/Compiler/GNU-CXX.cmake
+index 59ec05691c..fcaaeab433 100644
+--- a/Modules/Compiler/GNU-CXX.cmake
++++ b/Modules/Compiler/GNU-CXX.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/GNU)
+ __compiler_gnu(CXX)
+ 
+-set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c++)
+-
+ if (WIN32)
+   if(NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.6)
+     set(CMAKE_CXX_COMPILE_OPTIONS_VISIBILITY_INLINES_HIDDEN "-fno-keep-inline-dllexport")
+diff --git a/Modules/Compiler/Intel-C.cmake b/Modules/Compiler/Intel-C.cmake
+index 322f63d0d2..ec3bfd88fa 100644
+--- a/Modules/Compiler/Intel-C.cmake
++++ b/Modules/Compiler/Intel-C.cmake
+@@ -28,8 +28,6 @@ if("x${CMAKE_C_SIMULATE_ID}" STREQUAL "xMSVC")
+ 
+ else()
+ 
+-  set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c)
+-
+   if (NOT CMAKE_C_COMPILER_VERSION VERSION_LESS 15.0.0)
+     set(CMAKE_C11_STANDARD_COMPILE_OPTION "-std=c11")
+     set(CMAKE_C11_EXTENSION_COMPILE_OPTION "-std=gnu11")
+diff --git a/Modules/Compiler/Intel-CXX.cmake b/Modules/Compiler/Intel-CXX.cmake
+index 42adfd10c7..b71b946e92 100644
+--- a/Modules/Compiler/Intel-CXX.cmake
++++ b/Modules/Compiler/Intel-CXX.cmake
+@@ -42,8 +42,6 @@ if("x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+ 
+ else()
+ 
+-  set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c++)
+-
+   if (NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
+     set(CMAKE_CXX20_STANDARD_COMPILE_OPTION "-std=c++20")
+     set(CMAKE_CXX20_EXTENSION_COMPILE_OPTION "-std=gnu++20")
+diff --git a/Modules/Compiler/XL-C.cmake b/Modules/Compiler/XL-C.cmake
+index 78c44d5d72..2077bdabdf 100644
+--- a/Modules/Compiler/XL-C.cmake
++++ b/Modules/Compiler/XL-C.cmake
+@@ -6,8 +6,6 @@ string(APPEND CMAKE_C_FLAGS_MINSIZEREL_INIT " -DNDEBUG")
+ # -qthreaded = Ensures that all optimizations will be thread-safe
+ string(APPEND CMAKE_C_FLAGS_INIT " -qthreaded")
+ 
+-set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -qsourcetype=c)
+-
+ if (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 10.1)
+   set(CMAKE_C90_STANDARD_COMPILE_OPTION "-qlanglvl=stdc89")
+   set(CMAKE_C90_EXTENSION_COMPILE_OPTION "-qlanglvl=extc89")
+diff --git a/Modules/Compiler/XL-CXX.cmake b/Modules/Compiler/XL-CXX.cmake
+index 3b911f3d6c..41e3e11194 100644
+--- a/Modules/Compiler/XL-CXX.cmake
++++ b/Modules/Compiler/XL-CXX.cmake
+@@ -6,8 +6,6 @@ string(APPEND CMAKE_CXX_FLAGS_MINSIZEREL_INIT " -DNDEBUG")
+ # -qthreaded = Ensures that all optimizations will be thread-safe
+ string(APPEND CMAKE_CXX_FLAGS_INIT " -qthreaded")
+ 
+-set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -+)
+-
+ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10.1)
+   if(CMAKE_SYSTEM MATCHES "Linux")
+     set(CMAKE_CXX98_STANDARD_COMPILE_OPTION "")
+@@ -34,3 +32,6 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 10.1)
+ endif ()
+ 
+ __compiler_check_default_language_standard(CXX 10.1 98)
++
++set(CMAKE_CXX_COMPILE_OBJECT
++  "<CMAKE_CXX_COMPILER> -+ <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+diff --git a/Modules/Compiler/XLClang-C.cmake b/Modules/Compiler/XLClang-C.cmake
+index 1668a4d0f9..54c18a668a 100644
+--- a/Modules/Compiler/XLClang-C.cmake
++++ b/Modules/Compiler/XLClang-C.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/XLClang)
+ __compiler_xlclang(C)
+ 
+-set(CMAKE_C_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c)
+-
+ if (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL 13.1.1)
+   set(CMAKE_C90_STANDARD_COMPILE_OPTION  "-std=c89")
+   set(CMAKE_C90_EXTENSION_COMPILE_OPTION "-std=gnu89")
+diff --git a/Modules/Compiler/XLClang-CXX.cmake b/Modules/Compiler/XLClang-CXX.cmake
+index 02638c7917..9ea3d7cace 100644
+--- a/Modules/Compiler/XLClang-CXX.cmake
++++ b/Modules/Compiler/XLClang-CXX.cmake
+@@ -1,8 +1,6 @@
+ include(Compiler/XLClang)
+ __compiler_xlclang(CXX)
+ 
+-set(CMAKE_CXX_COMPILE_OPTIONS_EXPLICIT_LANGUAGE -x c++)
+-
+ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 13.1.1)
+   set(CMAKE_CXX98_STANDARD_COMPILE_OPTION  "")
+   set(CMAKE_CXX98_EXTENSION_COMPILE_OPTION "")
+diff --git a/Source/cmExtraSublimeTextGenerator.cxx b/Source/cmExtraSublimeTextGenerator.cxx
+index 1c7e4b1684..7c3614435b 100644
+--- a/Source/cmExtraSublimeTextGenerator.cxx
++++ b/Source/cmExtraSublimeTextGenerator.cxx
+@@ -349,13 +349,6 @@ std::string cmExtraSublimeTextGenerator::ComputeFlagsForObject(
+   if (language.empty()) {
+     language = "C";
+   }
+-
+-  // explicitly add the explicit language flag before any other flag
+-  // this way backwards compatibility with user flags is maintained
+-  if (source->GetProperty("LANGUAGE")) {
+-    lg->AppendFeatureOptions(flags, language, "EXPLICIT_LANGUAGE");
+-  }
+-
+   std::string const& config =
+     lg->GetMakefile()->GetSafeDefinition("CMAKE_BUILD_TYPE");
+ 
+diff --git a/Source/cmGlobalXCodeGenerator.cxx b/Source/cmGlobalXCodeGenerator.cxx
+index 766ae7224f..b40d8ea8e9 100644
+--- a/Source/cmGlobalXCodeGenerator.cxx
++++ b/Source/cmGlobalXCodeGenerator.cxx
+@@ -937,14 +937,6 @@ cmXCodeObject* cmGlobalXCodeGenerator::CreateXCodeSourceFile(
+     default:
+       break;
+   }
+-
+-  // explicitly add the explicit language flag before any other flag
+-  // this way backwards compatibility with user flags is maintained
+-  if (sf->GetProperty("LANGUAGE")) {
+-    this->CurrentLocalGenerator->AppendFeatureOptions(flags, lang,
+-                                                      "EXPLICIT_LANGUAGE");
+-  }
+-
+   const std::string COMPILE_FLAGS("COMPILE_FLAGS");
+   if (cmProp cflags = sf->GetProperty(COMPILE_FLAGS)) {
+     lg->AppendFlags(flags, genexInterpreter.Evaluate(*cflags, COMPILE_FLAGS));
+diff --git a/Source/cmMakefileTargetGenerator.cxx b/Source/cmMakefileTargetGenerator.cxx
+index 5f97d868fe..3c4f68c94c 100644
+--- a/Source/cmMakefileTargetGenerator.cxx
++++ b/Source/cmMakefileTargetGenerator.cxx
+@@ -573,13 +573,6 @@ void cmMakefileTargetGenerator::WriteObjectRuleFiles(
+   // Build the set of compiler flags.
+   std::string flags;
+ 
+-  // explicitly add the explicit language flag before any other flag
+-  // this way backwards compatibility with user flags is maintained
+-  if (source.GetProperty("LANGUAGE")) {
+-    this->LocalGenerator->AppendFeatureOptions(flags, lang,
+-                                               "EXPLICIT_LANGUAGE");
+-  }
+-
+   // Add language-specific flags.
+   std::string langFlags = cmStrCat("$(", lang, "_FLAGS", filterArch, ")");
+   this->LocalGenerator->AppendFlags(flags, langFlags);
+diff --git a/Source/cmNinjaTargetGenerator.cxx b/Source/cmNinjaTargetGenerator.cxx
+index 04d84a0890..76df9f231c 100644
+--- a/Source/cmNinjaTargetGenerator.cxx
++++ b/Source/cmNinjaTargetGenerator.cxx
+@@ -190,16 +190,7 @@ std::string cmNinjaTargetGenerator::ComputeFlagsForObject(
+     }
+   }
+ 
+-  std::string flags;
+-  // explicitly add the explicit language flag before any other flag
+-  // this way backwards compatibility with user flags is maintained
+-  if (source->GetProperty("LANGUAGE")) {
+-    this->LocalGenerator->AppendFeatureOptions(flags, language,
+-                                               "EXPLICIT_LANGUAGE");
+-    flags += " ";
+-  }
+-
+-  flags += this->GetFlags(language, config, filterArch);
++  std::string flags = this->GetFlags(language, config, filterArch);
+ 
+   // Add Fortran format flags.
+   if (language == "Fortran") {
+diff --git a/Tests/SetLang/CMakeLists.txt b/Tests/SetLang/CMakeLists.txt
+index 616421ed53..9de4fc61d1 100644
+--- a/Tests/SetLang/CMakeLists.txt
++++ b/Tests/SetLang/CMakeLists.txt
+@@ -15,10 +15,3 @@ if(CMAKE_GENERATOR MATCHES "^Visual Studio" AND "x${CMAKE_C_COMPILER_ID}" STREQU
+   add_library(stay stay_c.c stay_cxx.cxx)
+   set_property(TARGET stay PROPERTY COMPILE_OPTIONS "-TP")
+ endif()
+-
+-if((CMAKE_C_COMPILER_ID MATCHES "(GNU|Clang|MSVC|Borland|Embarcadero|Intel|TI|XL)"))
+-  add_library(zoom zoom.zzz)
+-  set_source_files_properties(zoom.zzz PROPERTIES LANGUAGE CXX)
+-  target_link_libraries(SetLang zoom)
+-  target_compile_definitions(SetLang PRIVATE WITH_ZOOM)
+-endif()
+diff --git a/Tests/SetLang/bar.c b/Tests/SetLang/bar.c
+index 515e8c233e..b934356fa1 100644
+--- a/Tests/SetLang/bar.c
++++ b/Tests/SetLang/bar.c
+@@ -1,22 +1,10 @@
+ #include <stdio.h>
+ 
+ int foo();
+-
+-#ifdef WITH_ZOOM
+-int zoom();
+-#endif
+-
+ class A
+ {
+ public:
+-  A()
+-  {
+-    this->i = foo();
+-#ifdef WITH_ZOOM
+-    i += zoom();
+-    i -= zoom();
+-#endif
+-  }
++  A() { this->i = foo(); }
+   int i;
+ };
+ 
+diff --git a/Tests/SetLang/zoom.zzz b/Tests/SetLang/zoom.zzz
+deleted file mode 100644
+index a0c8899b6b..0000000000
+--- a/Tests/SetLang/zoom.zzz
++++ /dev/null
+@@ -1,7 +0,0 @@
+-int zoom()
+-{
+-  int r = 10;
+-  r++;
+-  int ret = r + 10;
+-  return ret;
+-}
+-- 
+GitLab
+

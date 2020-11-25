@@ -172,6 +172,10 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
     patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
 
+    # Behavior change in LANGUAGE property on source files breaks
+    # the way some projects handle ASM files
+    patch('mr5519-3190-asm-regression.patch', when='@3.19.0')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
