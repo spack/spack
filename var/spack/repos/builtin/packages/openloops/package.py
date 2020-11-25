@@ -68,10 +68,11 @@ class Openloops(Package):
                                      'library.php?repo=public for details',
             values=disjoint_sets(('all.coll',), ('lhc.coll',), ('lcg.coll',),
                                  all_processes).with_default('lhc.coll'))
-
     variant('num_jobs', description='Number of parallel jobs to run. '  +
                                     'Set to 1 if compiling a large number' +
-                                    'of processes (e.g. lcg.coll)', default=0)
+                                    'of processes (e.g. lcg.coll)', default=0,
+                                    values=('0', '1'), multi=False)
+
     depends_on('python', type=("build", "run"))
 
     phases = ['configure', 'build', 'build_processes', 'install']
