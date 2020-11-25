@@ -1,5 +1,5 @@
 FROM opensuse/leap:15.2
-MAINTAINER SUSE HPC <suse-hpc@suse.de>
+MAINTAINER Christian Goll <cgoll@suse.com>
 
 ENV DOCKERFILE_BASE=opensuse          \
     DOCKERFILE_DISTRO=opensuse_leap   \
@@ -22,7 +22,7 @@ RUN 	zypper ref && \
 	zypper up -y && \
 	zypper in -y python3-base \
 	xz gzip tar bzip2 curl patch \
-	gcc-c++ make cmake automake&&\
+	gcc-c++ gcc-fortran make cmake automake&&\
   zypper clean
 
 # clean up manpages
