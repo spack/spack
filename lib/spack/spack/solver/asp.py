@@ -1323,13 +1323,18 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.virtual(vspec))
             all_providers = sorted(spack.repo.path.providers_for(vspec))
             for idx, provider in enumerate(all_providers):
-                self.gen.fact(fn.provides_virtual(provider.name, vspec))
+                provides_atom = fn.provides_virtual(provider.name, vspec)
                 possible_provider_fn = fn.possible_provider(
                     vspec, provider.name, idx
                 )
                 item = (idx, provider, possible_provider_fn)
                 self.providers_by_vspec_name[vspec].append(item)
                 clauses = self.spec_clauses(provider, body=True)
+                clauses_but_node = [c for c in clauses if c.name != 'node']
+                if clauses_but_node:
+                    self.gen.rule(provides_atom, AspAnd(*clauses_but_node))
+                else:
+                    self.gen.fact(provides_atom)
                 for clause in clauses:
                     self.gen.rule(clause, possible_provider_fn)
                 self.gen.newline()
