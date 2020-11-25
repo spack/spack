@@ -9,6 +9,7 @@ from spack import *
 import spack.architecture
 
 import os
+import re
 
 
 class Openssl(Package):   # Uses Fake Autotools, should subclass Package
@@ -23,8 +24,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     list_url = "http://www.openssl.org/source/old/"
     list_depth = 1
 
+    executables = ['openssl']
+
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9')
     version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46')
     version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
     version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe')
@@ -75,11 +79,16 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     depends_on('perl@5.14.0:', type=('build', 'test'))
 
-    parallel = False
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'OpenSSL.(\S+)*', output)
+        return match.group(1) if match else None
 
     @property
     def libs(self):
-        return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
+        return find_libraries(
+            ['libssl', 'libcrypto'], root=self.prefix, recursive=True)
 
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
@@ -105,6 +114,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
            'aarch64' in spack.architecture.sys_type():
             options.append('no-asm')
 
+        # The default glibc provided by CentOS 7 does not provide proper
+        # atomic support when using the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc os=centos7'):
+            options.append('-D__STDC_NO_ATOMICS__')
+
         config = Executable('./config')
         config('--prefix=%s' % prefix,
                '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
@@ -119,8 +133,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
         make()
         if self.run_tests:
-            make('test')            # 'VERBOSE=1'
-        make('install')
+            make('test', parallel=False)  # 'VERBOSE=1'
+
+        # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
+        make('install', parallel=False)
 
     @run_after('install')
     def link_system_certs(self):

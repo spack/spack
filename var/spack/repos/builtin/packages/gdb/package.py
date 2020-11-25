@@ -39,6 +39,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant('quad', default=False, description='Enable quad')
     variant('gold', default=False, description='Enable gold linker')
     variant('ld', default=False, description='Enable ld')
+    variant('tui', default=False, description='Enable tui')
 
     # Required dependency
     depends_on('texinfo', type='build')
@@ -47,6 +48,7 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     depends_on('python', when='+python')
     depends_on('xz', when='+xz')
     depends_on('source-highlight', when='+source-highlight')
+    depends_on('ncurses', when='+tui')
 
     build_directory = 'spack-build'
 
@@ -68,5 +70,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
 
         if '+ld' in self.spec:
             args.append('--enable-ld')
+
+        if '+tui' in self.spec:
+            args.append('--enable-tui')
 
         return args

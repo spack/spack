@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
 import sys
 
 
@@ -14,6 +12,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     homepage = "http://www.gnu.org/software/binutils/"
     gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
+    version('2.35.1', sha256='320e7a1d0f46fcd9f413f1046e216cbe23bb2bce6deb6c6a63304425e48b1942')
+    version('2.35', sha256='7d24660f87093670738e58bcc7b7b06f121c0fcb0ca8fc44368d675a5ef9cff7')
     version('2.34', sha256='89f010078b6cf69c23c27897d686055ab89b198dddf819efb0a4f2c38a0b36e6')
     version('2.33.1', sha256='0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2')
     version('2.32',   sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
@@ -43,6 +43,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     patch('update_symbol-2.26.patch', when='@2.26')
 
     depends_on('zlib')
+    depends_on('diffutils', type='build')
     depends_on('gettext', when='+nls')
 
     # Prior to 2.30, gold did not distribute the generated files and
@@ -113,9 +114,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             # grab the full binutils set of headers
             install_tree('include', extradir)
             # also grab the headers from the bfd directory
-            for current_file in glob.glob(join_path(self.build_directory,
-                                                    'bfd', '*.h')):
-                install(current_file, extradir)
+            install(join_path(self.build_directory, 'bfd', '*.h'),
+                    extradir)
 
     def flag_handler(self, name, flags):
         # To ignore the errors of narrowing conversions for
@@ -129,3 +129,29 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             if self.spec.satisfies('@:2.34 %gcc@10:'):
                 flags.append('-fcommon')
         return (flags, None, None)
+
+    def test(self):
+        spec_vers = str(self.spec.version)
+
+        checks = {
+            'ar': spec_vers,
+            'c++filt': spec_vers,
+            'coffdump': spec_vers,
+            'dlltool': spec_vers,
+            'elfedit': spec_vers,
+            'gprof': spec_vers,
+            'ld': spec_vers,
+            'nm': spec_vers,
+            'objdump': spec_vers,
+            'ranlib': spec_vers,
+            'readelf': spec_vers,
+            'size': spec_vers,
+            'strings': spec_vers,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
+                          purpose=reason, skip_missing=True)

@@ -12,6 +12,8 @@ class Tauola(AutotoolsPackage):
     homepage = "https://tauolapp.web.cern.ch/tauolapp/"
     url      = "https://tauolapp.web.cern.ch/tauolapp/resources/TAUOLA.1.1.8/TAUOLA.1.1.8-LHC.tar.gz"
 
+    tags = ['hep']
+
     version('1.1.8', sha256='3f734e8a967682869cca2c1ffebd3e055562613c40853cc81820d8b666805ed5')
 
     maintainers = ['vvolkl']

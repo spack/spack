@@ -60,7 +60,9 @@ class Ember(MakefilePackage):
     def build_targets(self):
         targets = []
         cc = self.spec['mpi'].mpicc
-        cflags = '-O3 -std=c99'
+        cflags = '-O3'
+        if not self.spec.satisfies('%nvhpc'):
+            cflags = '-O3 -std=c99'
         oshmem_cc = 'cc'
         oshmem_c_flags = '-O3 -g'
 

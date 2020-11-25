@@ -363,11 +363,12 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^
-``spack test``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+``spack unit-test``
+^^^^^^^^^^^^^^^^^^^
 
-See the :ref:`contributor guide section <cmd-spack-test>` on ``spack test``.
+See the :ref:`contributor guide section <cmd-spack-unit-test>` on
+``spack unit-test``.
 
 .. _cmd-spack-python:
 
@@ -620,13 +621,6 @@ for a major release, the steps to make the release are as follows:
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.13.0
    <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
 
-#. Updaate the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-   **TODO**: We should get rid of this step in some future release.
-
 #. Update ``CHANGELOG.md`` with major highlights in bullet form. Use
    proper markdown formatting, like `this example from 0.15.0
    <https://github.com/spack/spack/commit/d4bf70d9882fcfe88507e9cb444331d7dd7ba71c>`_.
@@ -634,6 +628,7 @@ for a major release, the steps to make the release are as follows:
 #. Push the release branch to GitHub.
 
 #. Make sure CI passes on the release branch, including:
+
    * Regular unit tests
    * Build tests
    * The E4S pipeline at `gitlab.spack.io <https://gitlab.spack.io>`_
@@ -720,13 +715,6 @@ release:
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
 
-#. Updaate the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-   **TODO**: We should get rid of this step in some future release.
-
 #. Update ``CHANGELOG.md`` with a list of bugfixes. This is typically just a
    summary of the commits you cherry-picked onto the release branch. See
    `the changelog from 0.14.1
@@ -794,6 +782,10 @@ Publishing a release on GitHub
       links. See the `releases
       page <https://api.github.com/repos/spack/spack/releases>`_ and search
       for ``download_count`` to see this.
+
+#. Go to `readthedocs.org <https://readthedocs.org/projects/spack>`_ and activate
+   the release tag. This builds the documentation and makes the released version
+   selectable in the versions menu.
 
 
 .. _merging-releases:

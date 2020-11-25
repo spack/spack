@@ -19,5 +19,5 @@ class PySphinxGallery(PythonPackage):
 
     depends_on('py-setuptools')
     depends_on('py-matplotlib')
-    depends_on('py-pillow')
+    depends_on('pil')
     depends_on('py-sphinx')

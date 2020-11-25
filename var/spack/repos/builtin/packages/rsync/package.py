@@ -23,5 +23,7 @@ class Rsync(AutotoolsPackage):
     depends_on('zstd', when='@3.2:')
     depends_on('lz4', when='@3.2:')
 
+    conflicts('%nvhpc')
+
     def configure_args(self):
         return ['--with-included-zlib=no']

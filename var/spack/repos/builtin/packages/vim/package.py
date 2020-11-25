@@ -92,11 +92,11 @@ class Vim(AutotoolsPackage):
 
         if '+python' in spec:
             if 'python@3:' in self.spec:
-                configure_args.append("--enable-python3interp=yes")
+                configure_args.append("--enable-python3interp=dynamic")
                 configure_args.append("--enable-pythoninterp=no")
             else:
                 configure_args.append("--enable-python3interp=no")
-                configure_args.append("--enable-pythoninterp=yes")
+                configure_args.append("--enable-pythoninterp=dynamic")
         else:
             configure_args.append("--enable-python3interp=no")
 

@@ -3,8 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import platform
+import re
 
 
 class Bazel(Package):
@@ -19,6 +18,12 @@ class Bazel(Package):
 
     maintainers = ['adamjstewart']
 
+    version('3.5.0',  sha256='334429059cf82e222ca8a9d9dbbd26f8e1eb308613463c2b8655dd4201b127ec')
+    version('3.4.1',  sha256='27af1f11c8f23436915925b25cf6e1fb07fccf2d2a193a307c93437c60f63ba8')
+    version('3.4.0',  sha256='7583abf8905ba9dd5394294e815e8873635ac4e5067e63392e8a33b397e450d8')
+    version('3.3.1',  sha256='e0f1f43c65c4e0a38522b37e81f6129d8a1f7cd3d8884847be306544a7492747')
+    version('3.3.0',  sha256='05a03960de09d5775839c5766ad8a0a30f261feaba5fa53ce3e49168d1eee826')
+    version('3.2.0',  sha256='44ec129436f6de45f2230e14100104919443a1364c2491f5601666b358738bfa')
     version('3.1.0',  sha256='d7f40d0cac95a06cea6cb5b7f7769085257caebc3ee84269dd9298da760d5615')
     version('3.0.0',  sha256='530f5132e0a50da7ebb0ed08d9b6f1ddfd0d7d9b5d0beb2df5d687a4c8daf6b3')
     version('2.2.0',  sha256='9379878a834d105a47a87d3d7b981852dd9f64bc16620eacd564b48533e169a7')
@@ -96,16 +101,9 @@ class Bazel(Package):
 
     variant('nodepfail', default=True, description='Disable failing dependency checks due to injected absolute paths - required for most builds using bazel with spack')
 
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-bazel
-    # Until https://github.com/spack/spack/issues/14058 is fixed, use jdk to build bazel
-    # Strict dependency on java@8 as per
-    # https://docs.bazel.build/versions/master/install-compile-source.html#bootstrap-unix-prereq
-    if platform.machine() == 'aarch64':
-        depends_on('java@8:8.999', type=('build', 'run'))
-    else:
-        depends_on('jdk@1.8.0:1.8.999', type=('build', 'run'))
+    depends_on('java', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
-    depends_on('zip', type=('build', 'run'))
+    depends_on('zip', when='platform=linux', type=('build', 'run'))
 
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
@@ -145,6 +143,14 @@ class Bazel(Package):
 
     phases = ['bootstrap', 'install']
 
+    executables = ['^bazel$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('version', output=str, error=str)
+        match = re.search(r'Build label: ([\d.]+)', output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         if version >= Version('0.4.1'):
             url = 'https://github.com/bazelbuild/bazel/releases/download/{0}/bazel-{0}-dist.zip'
@@ -178,7 +184,7 @@ class Bazel(Package):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def install_test(self):
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/bazel.rb
 
         # Bazel does not work properly on NFS, switch to /tmp

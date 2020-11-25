@@ -1,0 +1,21 @@
+diff -u -r -N a/cmake/Modules/DefaultCompilerFlags.cmake b/cmake/Modules/DefaultCompilerFlags.cmake
+--- a/cmake/Modules/DefaultCompilerFlags.cmake	2020-09-07 14:19:20.000000000 +0900
++++ b/cmake/Modules/DefaultCompilerFlags.cmake	2020-09-07 15:29:14.000000000 +0900
+@@ -51,7 +51,7 @@
+ endif()
+ #
+ #
+-set(CMAKE_EXE_LINKER_FLAGS "${KIM_API_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
++set(CMAKE_EXE_LINKER_FLAGS "--linkfortran ${KIM_API_EXE_LINKER_FLAGS} ${CMAKE_EXE_LINKER_FLAGS}")
+ #
+ 
+ # Set global compiler options
+@@ -107,7 +107,7 @@
+ endif()
+ set(KIM_API_Fortran_FLAGS "${KIM_API_Fortran_FLAGS}" CACHE STRING "KIM API Fortran compiler flags")
+ #
+-
++set(CMAKE_Fortran_MODDIR_FLAG -M)
+ # Update CMAKE variables
+ set(CMAKE_CXX_FLAGS "${KIM_API_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
+ set(CMAKE_C_FLAGS "${KIM_API_C_FLAGS} ${CMAKE_C_FLAGS}")

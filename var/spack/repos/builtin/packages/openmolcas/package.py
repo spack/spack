@@ -23,6 +23,8 @@ class Openmolcas(CMakePackage):
     depends_on('py-pyparsing', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
 
+    patch('CMakeLists.txt.patch', when='target=aarch64:')
+
     def setup_build_environment(self, env):
         env.set('MOLCAS', self.prefix)
 

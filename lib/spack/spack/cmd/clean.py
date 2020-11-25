@@ -10,10 +10,11 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.caches
-import spack.cmd
+import spack.cmd.test
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
+import spack.config
 from spack.paths import lib_path, var_path
 
 

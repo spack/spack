@@ -64,6 +64,12 @@ class Gmt(Package):
     patch('regexp.patch', when='@6.1.0')
     patch('type.patch', when='@4.5.9')
 
+    executables = ['^gmt-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('--version', output=str, error=str).rstrip()
+
     @when('@5:')
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):

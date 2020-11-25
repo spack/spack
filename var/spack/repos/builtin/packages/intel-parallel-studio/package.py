@@ -187,6 +187,10 @@ class IntelParallelStudio(IntelPackage):
     provides('lapack',      when='+mkl')
     provides('scalapack',   when='+mkl')
 
+    provides('fftw-api@3',  when='+mkl@professional.2017:')
+    provides('fftw-api@3',  when='+mkl@cluster.2017:')
+    provides('fftw-api@3',  when='+mkl@composer.2017:')
+
     provides('mpi',         when='+mpi')
     provides('tbb',         when='+tbb')
 

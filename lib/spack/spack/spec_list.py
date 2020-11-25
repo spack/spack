@@ -25,7 +25,11 @@ def spec_ordering_key(s):
 
 class SpecList(object):
 
-    def __init__(self, name='specs', yaml_list=[], reference={}):
+    def __init__(self, name='specs', yaml_list=None, reference=None):
+        # Normalize input arguments
+        yaml_list = yaml_list or []
+        reference = reference or {}
+
         self.name = name
         self._reference = reference  # TODO: Do we need defensive copy here?
 

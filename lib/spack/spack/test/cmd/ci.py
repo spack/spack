@@ -14,7 +14,7 @@ import spack.ci as ci
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
-from spack.main import SpackCommand
+import spack.main
 import spack.paths as spack_paths
 import spack.repo as repo
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
@@ -26,21 +26,13 @@ import spack.util.spack_yaml as syaml
 import spack.util.gpg
 
 
-ci_cmd = SpackCommand('ci')
-env_cmd = SpackCommand('env')
-mirror_cmd = SpackCommand('mirror')
-gpg_cmd = SpackCommand('gpg')
-install_cmd = SpackCommand('install')
-buildcache_cmd = SpackCommand('buildcache')
+ci_cmd = spack.main.SpackCommand('ci')
+env_cmd = spack.main.SpackCommand('env')
+mirror_cmd = spack.main.SpackCommand('mirror')
+gpg_cmd = spack.main.SpackCommand('gpg')
+install_cmd = spack.main.SpackCommand('install')
+buildcache_cmd = spack.main.SpackCommand('buildcache')
 git = exe.which('git', required=True)
-
-
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
 
 
 @pytest.fixture()
@@ -127,7 +119,11 @@ spack:
     - old-gcc-pkgs:
       - archive-files
       - callpath
-      - hypre@0.2.15
+      # specify ^openblas-with-lapack to ensure that builtin.mock repo flake8
+      # package (which can also provide lapack) is not chosen, as it violates
+      # a package-level check which requires exactly one fetch strategy (this
+      # is apparently not an issue for other tests that use it).
+      - hypre@0.2.15 ^openblas-with-lapack
   specs:
     - matrix:
       - [$old-gcc-pkgs]
@@ -139,7 +135,7 @@ spack:
         compiler-agnostic: true
     mappings:
       - match:
-          - arch=test-debian6-x86_64
+          - arch=test-debian6-core2
         runner-attributes:
           tags:
             - donotcare
@@ -199,6 +195,7 @@ spack:
   definitions:
     - bootstrap:
       - gcc@3.0
+      - gcc@2.0
   specs:
     - dyninst%gcc@3.0
   mirrors:
@@ -351,7 +348,6 @@ spack:
     some-mirror: https://my.fake.mirror
   gitlab-ci:
     enable-artifacts-buildcache: True
-    enable-debug-messages: True
     mappings:
       - match:
           - archive-files
@@ -389,6 +385,95 @@ spack:
             orig_file = str(tmpdir.join('.gitlab-ci.yml'))
 
             assert(filecmp.cmp(orig_file, copy_to_file) is True)
+
+
+def test_ci_generate_with_custom_scripts(tmpdir, mutable_mock_env_path,
+                                         env_deactivate, install_mockery,
+                                         mock_packages, monkeypatch):
+    """Test use of user-provided scripts"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          variables:
+            ONE: plain-string-value
+            TWO: ${INTERP_ON_BUILD}
+          before_script:
+            - mkdir /some/path
+            - pushd /some/path
+            - git clone ${SPACK_REPO}
+            - cd spack
+            - git checkout ${SPACK_REF}
+            - popd
+          script:
+            - spack -d ci rebuild
+          after_script:
+            - rm -rf /some/path/spack
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            monkeypatch.setattr(spack.main, 'get_version', lambda: '0.15.3')
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+
+                found_it = False
+
+                assert('variables' in yaml_contents)
+                global_vars = yaml_contents['variables']
+                assert('SPACK_VERSION' in global_vars)
+                assert(global_vars['SPACK_VERSION'] == '0.15.3')
+                assert('SPACK_CHECKOUT_VERSION' in global_vars)
+                assert(global_vars['SPACK_CHECKOUT_VERSION'] == 'v0.15.3')
+
+                for ci_key in yaml_contents.keys():
+                    ci_obj = yaml_contents[ci_key]
+                    if 'archive-files' in ci_key:
+                        # Ensure we have variables, possibly interpolated
+                        assert('variables' in ci_obj)
+                        var_d = ci_obj['variables']
+                        assert('ONE' in var_d)
+                        assert(var_d['ONE'] == 'plain-string-value')
+                        assert('TWO' in var_d)
+                        assert(var_d['TWO'] == '${INTERP_ON_BUILD}')
+
+                        # Ensure we have scripts verbatim
+                        assert('before_script' in ci_obj)
+                        before_script = ci_obj['before_script']
+                        assert(before_script[0] == 'mkdir /some/path')
+                        assert(before_script[1] == 'pushd /some/path')
+                        assert(before_script[2] == 'git clone ${SPACK_REPO}')
+                        assert(before_script[3] == 'cd spack')
+                        assert(before_script[4] == 'git checkout ${SPACK_REF}')
+                        assert(before_script[5] == 'popd')
+
+                        assert('script' in ci_obj)
+                        assert(ci_obj['script'][0] == 'spack -d ci rebuild')
+
+                        assert('after_script' in ci_obj)
+                        after_script = ci_obj['after_script'][0]
+                        assert(after_script == 'rm -rf /some/path/spack')
+
+                        found_it = True
+
+            assert(found_it)
 
 
 def test_ci_generate_pkg_with_deps(tmpdir, mutable_mock_env_path,
@@ -527,80 +612,10 @@ spack:
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
-            contents = f.read()
-            print('generated contents: ')
-            print(contents)
-            yaml_contents = syaml.load(contents)
-            for ci_key in yaml_contents.keys():
-                if 'externaltool' in ci_key:
-                    print('Erroneously staged "externaltool" pkg')
-                    assert(False)
+            yaml_contents = syaml.load(f)
 
-
-def test_ci_generate_debug_with_custom_spack(tmpdir, mutable_mock_env_path,
-                                             env_deactivate, install_mockery,
-                                             mock_packages):
-    """Make sure we generate cloning of spack in job script if needed"""
-    filename = str(tmpdir.join('spack.yaml'))
-    with open(filename, 'w') as f:
-        f.write("""\
-spack:
-  specs:
-    - archive-files
-  mirrors:
-    some-mirror: https://my.fake.mirror
-  gitlab-ci:
-    enable-artifacts-buildcache: True
-    enable-debug-messages: True
-    mappings:
-      - match:
-          - archive-files
-        runner-attributes:
-          tags:
-            - donotcare
-          image: donotcare
-""")
-
-    with tmpdir.as_cwd():
-        env_cmd('create', 'test', './spack.yaml')
-        outfile = str(tmpdir.join('.gitlab-ci.yml'))
-
-        with ev.read('test'):
-            spack_repo = 'https://github.com/usera/spack.git'
-            spack_ref = 'custom-branch'
-            expected_clone_str = 'git clone "{0}"'.format(spack_repo)
-
-            ci_cmd('generate', '--output-file', outfile, '--spack-repo',
-                   spack_repo, '--spack-ref', spack_ref)
-
-            with open(outfile) as f:
-                contents = f.read()
-                yaml_contents = syaml.load(contents)
-                for ci_key in yaml_contents.keys():
-                    if '(specs)' in ci_key:
-                        next_job = yaml_contents[ci_key]
-                        print(next_job)
-                        assert('before_script' in next_job)
-                        before_script = next_job['before_script']
-                        for step in before_script:
-                            if expected_clone_str in step:
-                                break
-                        else:
-                            msg = 'job "{0}" did not clone spack repo'.format(
-                                ci_key)
-                            print(msg)
-                            assert(False)
-
-                        assert('script' in next_job)
-                        script = next_job['script']
-                        for step in script:
-                            if 'spack -d ci rebuild' in step:
-                                break
-                        else:
-                            msg = 'job {0} missing rebuild command'.format(
-                                ci_key)
-                            print(msg)
-                            assert(False)
+        # Check that the "externaltool" package was not erroneously staged
+        assert not any('externaltool' in key for key in yaml_contents)
 
 
 def test_ci_rebuild_basic(tmpdir, mutable_mock_env_path, env_deactivate,
@@ -672,7 +687,8 @@ spack:
 
 
 @pytest.mark.disable_clean_stage_check
-@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 def test_push_mirror_contents(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages, mock_fetch,
                               mock_stage, mock_gnupghome):
@@ -717,9 +733,9 @@ spack:
 
             install_cmd('--keep-stage', yaml_path)
 
-            # env, spec, yaml_path, mirror_url, build_id
+            # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42')
+                env, concrete_spec, yaml_path, mirror_url, '42', True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 
@@ -767,3 +783,145 @@ spack:
             dl_dir_list = os.listdir(dl_dir.strpath)
 
             assert(len(dl_dir_list) == 3)
+
+
+def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
+                                           env_deactivate, install_mockery,
+                                           mock_packages, monkeypatch):
+    """Test that we get the behavior we want with respect to the provision
+       of runner attributes like tags, variables, and scripts, both when we
+       inherit them from the top level, as well as when we override one or
+       more at the runner level"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - flatten-deps
+    - a
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    tags:
+      - toplevel
+    variables:
+      ONE: toplevelvarone
+      TWO: toplevelvartwo
+    before_script:
+      - pre step one
+      - pre step two
+    script:
+      - main step
+    after_script:
+      - post step one
+    mappings:
+      - match:
+          - flatten-deps
+        runner-attributes:
+          tags:
+            - specific-one
+          variables:
+            THREE: specificvarthree
+      - match:
+          - dependency-install
+      - match:
+          - a
+        runner-attributes:
+          tags:
+            - specific-a
+            - toplevel
+          variables:
+            ONE: specificvarone
+            TWO: specificvartwo
+          before_script:
+            - custom pre step one
+          script:
+            - custom main step
+          after_script:
+            - custom post step one
+    final-stage-rebuild-index:
+      image: donotcare
+      tags: [donotcare]
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            monkeypatch.setattr(
+                spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
+            ci_cmd('generate', '--output-file', outputfile)
+
+        with open(outputfile) as f:
+            contents = f.read()
+            print('generated contents: ')
+            print(contents)
+            yaml_contents = syaml.load(contents)
+
+            assert('variables' in yaml_contents)
+            global_vars = yaml_contents['variables']
+            assert('SPACK_VERSION' in global_vars)
+            assert(global_vars['SPACK_VERSION'] == '0.15.3-416-12ad69eb1')
+            assert('SPACK_CHECKOUT_VERSION' in global_vars)
+            assert(global_vars['SPACK_CHECKOUT_VERSION'] == '12ad69eb1')
+
+            for ci_key in yaml_contents.keys():
+                if '(specs) b' in ci_key:
+                    print('Should not have staged "b" w/out a match')
+                    assert(False)
+                if '(specs) a' in ci_key:
+                    # Make sure a's attributes override variables, and all the
+                    # scripts.  Also, make sure the 'toplevel' tag doesn't
+                    # appear twice, but that a's specific extra tag does appear
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'specificvarone')
+                    assert(the_elt['variables']['TWO'] == 'specificvartwo')
+                    assert('THREE' not in the_elt['variables'])
+                    assert(len(the_elt['tags']) == 2)
+                    assert('specific-a' in the_elt['tags'])
+                    assert('toplevel' in the_elt['tags'])
+                    assert(len(the_elt['before_script']) == 1)
+                    assert(the_elt['before_script'][0] ==
+                           'custom pre step one')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'custom main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] ==
+                           'custom post step one')
+                if '(specs) dependency-install' in ci_key:
+                    # Since the dependency-install match omits any
+                    # runner-attributes, make sure it inherited all the
+                    # top-level attributes.
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'toplevelvarone')
+                    assert(the_elt['variables']['TWO'] == 'toplevelvartwo')
+                    assert('THREE' not in the_elt['variables'])
+                    assert(len(the_elt['tags']) == 1)
+                    assert(the_elt['tags'][0] == 'toplevel')
+                    assert(len(the_elt['before_script']) == 2)
+                    assert(the_elt['before_script'][0] == 'pre step one')
+                    assert(the_elt['before_script'][1] == 'pre step two')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] == 'post step one')
+                if '(specs) flatten-deps' in ci_key:
+                    # The flatten-deps match specifies that we keep the two
+                    # top level variables, but add a third specifc one.  It
+                    # also adds a custom tag which should be combined with
+                    # the top-level tag.
+                    the_elt = yaml_contents[ci_key]
+                    assert(the_elt['variables']['ONE'] == 'toplevelvarone')
+                    assert(the_elt['variables']['TWO'] == 'toplevelvartwo')
+                    assert(the_elt['variables']['THREE'] == 'specificvarthree')
+                    assert(len(the_elt['tags']) == 2)
+                    assert('specific-one' in the_elt['tags'])
+                    assert('toplevel' in the_elt['tags'])
+                    assert(len(the_elt['before_script']) == 2)
+                    assert(the_elt['before_script'][0] == 'pre step one')
+                    assert(the_elt['before_script'][1] == 'pre step two')
+                    assert(len(the_elt['script']) == 1)
+                    assert(the_elt['script'][0] == 'main step')
+                    assert(len(the_elt['after_script']) == 1)
+                    assert(the_elt['after_script'][0] == 'post step one')

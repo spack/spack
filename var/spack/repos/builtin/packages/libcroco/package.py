@@ -16,3 +16,4 @@ class Libcroco(AutotoolsPackage):
 
     depends_on('glib')
     depends_on('libxml2')
+    depends_on('pkgconfig', type='build')

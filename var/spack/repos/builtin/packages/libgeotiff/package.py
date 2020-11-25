@@ -13,10 +13,11 @@ class Libgeotiff(AutotoolsPackage):
     """
 
     homepage = "https://trac.osgeo.org/geotiff/"
-    url      = "https://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.5.1.tar.gz"
+    url      = "https://download.osgeo.org/geotiff/libgeotiff/libgeotiff-1.6.0.tar.gz"
 
     maintainers = ['adamjstewart']
 
+    version('1.6.0', sha256='9311017e5284cffb86f2c7b7a9df1fb5ebcdc61c30468fb2e6bca36e4272ebca')
     version('1.5.1', sha256='f9e99733c170d11052f562bcd2c7cb4de53ed405f7acdde4f16195cd3ead612c')
     version('1.5.0', sha256='1c0bef329c60f770ed128e8b273945100f1a4b5abd161ac61e93bc947b0624dd')
     version('1.4.3', sha256='b8510d9b968b5ee899282cdd5bef13fd02d5a4c19f664553f81e31127bc47265')

@@ -12,9 +12,10 @@ class PyAzuremlCore(Package):
     """
 
     homepage = "https://docs.microsoft.com/en-us/azure/machine-learning/service/"
-    url      = "https://pypi.io/packages/py3/a/azureml_core/azureml_core-1.8.0-py3-none-any.whl"
+    url      = "https://pypi.io/packages/py3/a/azureml_core/azureml_core-1.11.0-py3-none-any.whl"
 
-    version('1.8.0', sha256='a0f2b0977f18fb7dcb88c314594a4a85c636a36be3d582be1cae25655fea6105', expand=False)
+    version('1.11.0', sha256='df8a01b04bb156852480de0bdd78434ed84f386e1891752bdf887faeaa2ca417', expand=False)
+    version('1.8.0',  sha256='a0f2b0977f18fb7dcb88c314594a4a85c636a36be3d582be1cae25655fea6105', expand=False)
 
     extends('python')
     depends_on('python@3.5:3.8', type=('build', 'run'))
@@ -28,7 +29,7 @@ class PyAzuremlCore(Package):
     depends_on('py-azure-mgmt-storage@1.5.0:', type=('build', 'run'))
     depends_on('py-azure-mgmt-keyvault@0.40.0:', type=('build', 'run'))
     depends_on('py-azure-mgmt-authorization@0.40.0:', type=('build', 'run'))
-    depends_on('py-azure-mgmt-network@10.0:10.999', type=('build', 'run'))
+    depends_on('py-azure-mgmt-network@10.0:10.999', when='@1.8.0', type=('build', 'run'))
     depends_on('py-azure-graphrbac@0.40.0:', type=('build', 'run'))
     depends_on('py-azure-common@1.1.12:', type=('build', 'run'))
     depends_on('py-msrest@0.5.1:', type=('build', 'run'))

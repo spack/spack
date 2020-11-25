@@ -21,11 +21,14 @@ packages:
     - gcc
     - intel
     providers:
-      elf: [libelf]
-      unwind: [apple-libunwind]
+      elf:
+      - libelf
+      unwind:
+      - apple-libunwind
   apple-libunwind:
-    paths:
+    buildable: false
+    externals:
     # Apple bundles libunwind version 35.3 with macOS 10.9 and later,
     # although the version number used here isn't critical
-      apple-libunwind@35.3: /usr
-    buildable: False
+    - spec: apple-libunwind@35.3
+      prefix: /usr

@@ -18,4 +18,4 @@ class PyPauvre(PythonPackage):
     depends_on('py-matplotlib',    type=('build', 'run'))
     depends_on('py-biopython',     type=('build', 'run'))
     depends_on('py-pandas',        type=('build', 'run'))
-    depends_on('py-pillow',        type=('build', 'run'))
+    depends_on('pil',              type=('build', 'run'))

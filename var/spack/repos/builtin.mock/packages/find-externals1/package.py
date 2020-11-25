@@ -2,11 +2,10 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
 import os
 import re
+
+import spack.package
 
 
 class FindExternals1(AutotoolsPackage):
@@ -31,4 +30,6 @@ class FindExternals1(AutotoolsPackage):
             match = re.search(r'find-externals1.*version\s+(\S+)', output)
             if match:
                 version_str = match.group(1)
-                return Spec('find-externals1@{0}'.format(version_str))
+                return Spec.from_detection(
+                    'find-externals1@{0}'.format(version_str)
+                )

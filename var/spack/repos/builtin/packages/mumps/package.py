@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
-import glob
 
 
 class Mumps(Package):
@@ -113,7 +111,9 @@ class Mumps(Package):
         # Determine which compiler suite we are using
         using_gcc = self.compiler.name == "gcc"
         using_pgi = self.compiler.name == "pgi"
+        using_nvhpc = self.compiler.name == "nvhpc"
         using_intel = self.compiler.name == "intel"
+        using_oneapi = self.compiler.name == "oneapi"
         using_xl = self.compiler.name in ['xl', 'xl_r']
         using_fj = self.compiler.name == "fj"
 
@@ -181,7 +181,7 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if using_intel or using_pgi or using_fj:
+        if using_intel or using_oneapi or using_pgi or using_nvhpc or using_fj:
             # Intel, PGI, and Fujitsu Fortran compiler provides
             # the main() function so C examples linked with the Fortran
             # compiler require a hack defined by _DMAIN_COMP
@@ -277,8 +277,7 @@ class Mumps(Package):
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
-            for f in glob.glob(join_path('libseq', '*.h')):
-                install(f, prefix.include)
+            install(join_path('libseq', '*.h'), prefix.include)
 
         # FIXME: extend the tests to mpirun -np 2 when build with MPI
         # FIXME: use something like numdiff to compare output files

@@ -12,9 +12,9 @@ class Apex(CMakePackage):
     homepage = "http://github.com/khuck/xpress-apex"
     url      = "http://github.com/khuck/xpress-apex/archive/v0.1.tar.gz"
 
-    version('0.1', sha256='bb0be37f8f8133fe492998515bcf66a4df452c28a995d317228fbed9b18e6a92')
+    version('0.1',   sha256='efd10f38a61ebdb9f8adee9dc84acaee22d065b2e6eea1888872a7bfca0f4495')
 
-    depends_on("binutils+libiberty")
+    depends_on("binutils+libiberty@:2.33.1")
     depends_on("boost@1.54:")
     depends_on('cmake@2.8.12:', type='build')
     depends_on("activeharmony@4.5:")

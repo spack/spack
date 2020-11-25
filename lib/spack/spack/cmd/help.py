@@ -46,7 +46,7 @@ spec expression syntax:
       @B{variant=value1,value2,value3}  set multi-value <variant> values
 
     architecture variants:
-      @m{platform=platform}             linux, darwin, cray, bgq, etc.
+      @m{platform=platform}             linux, darwin, cray, etc.
       @m{os=operating_system}           specific <operating_system>
       @m{target=target}                 specific <target> processor
       @m{arch=platform-os-target}       shortcut for all three above

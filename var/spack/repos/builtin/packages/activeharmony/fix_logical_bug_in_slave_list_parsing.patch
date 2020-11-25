@@ -1,0 +1,29 @@
+diff --git a/code-server/code_generator.cxx b/code-server/code_generator.cxx
+index df25400..1c213f7 100644
+--- a/code-server/code_generator.cxx
++++ b/code-server/code_generator.cxx
+@@ -574,13 +574,13 @@ int parse_slave_list(const char* hostlist)
+         }
+ 
+         // Skip leading whitespace.
+-        while (head < tail && (head == '\0' || isspace(*head))) {
++        while (head < tail && (*head == '\0' || isspace(*head))) {
+             ++head;
+         }
+         host_ptr = head;
+ 
+         // Find host boundary whitespace.
+-        while (head < tail && (head != '\0' && !isspace(*head))) {
++        while (head < tail && (*head != '\0' && !isspace(*head))) {
+             ++head;
+         }
+         host = string(host_ptr, head++);
+@@ -596,7 +596,7 @@ int parse_slave_list(const char* hostlist)
+         }
+ 
+         // Skip trailing whitespace.
+-        while (head < tail && (head == '\0' || isspace(*head))) {
++        while (head < tail && (*head == '\0' || isspace(*head))) {
+             ++head;
+         }
+ 

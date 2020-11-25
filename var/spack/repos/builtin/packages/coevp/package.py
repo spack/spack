@@ -61,6 +61,13 @@ class Coevp(MakefilePackage):
 
         return targets
 
+    def edit(self, spec, prefix):
+        # libquadmath is only available x86_64 and powerle
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
+        if self.spec.target.family not in ['x86_64', 'ppc64le']:
+            comps = join_path('LULESH', 'Makefile')
+            filter_file('-lquadmath', '', comps)
+
     def install(self, spec, prefix):
         mkdir(prefix.bin)
         mkdir(prefix.doc)
