@@ -254,12 +254,12 @@ class Mfem(Package):
     depends_on('umpire@2.0.0:', when='+umpire')
     depends_on('umpire+cuda', when='+umpire+cuda')
 
-    depends_on('amgx', when='+amgx')
-    # MPI is enabled by default
-    depends_on('amgx~mpi', when='+amgx~mpi')
+    # AmgX: propagate the cuda_arch and mpi settings:
     for sm_ in CudaPackage.cuda_arch_values:
-        depends_on('amgx cuda_arch={0}'.format(sm_),
-                   when='+amgx cuda_arch=sm_{0}'.format(sm_))
+        depends_on('amgx+mpi cuda_arch={0}'.format(sm_),
+                   when='+amgx+mpi cuda_arch=sm_{0}'.format(sm_))
+        depends_on('amgx~mpi cuda_arch={0}'.format(sm_),
+                   when='+amgx~mpi cuda_arch=sm_{0}'.format(sm_))
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
