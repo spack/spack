@@ -103,6 +103,15 @@ compilers:
       fflags: -O0 -g
     modules: 'None'
 - compiler:
+    spec: gcc@4.4.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc440
+      cxx: /path/to/g++440
+      f77: /path/to/gfortran440
+      fc: /path/to/gfortran440
+    modules: 'None'
+- compiler:
     spec: clang@3.5
     operating_system: redhat6
     paths:
