@@ -895,3 +895,31 @@ class TestConcretize(object):
         assert 'v1-provider' in s
         assert s['v1'].name == 'v1-provider'
         assert s['v2'].name == 'conditional-provider'
+
+    @pytest.mark.regression('20079')
+    @pytest.mark.parametrize('spec_str,tests_arg,with_dep,without_dep', [
+        # Check that True is treated correctly and attaches test deps
+        # to all nodes in the DAG
+        ('a', True, ['a'], []),
+        ('a foobar=bar', True, ['a', 'b'], []),
+        # Check that a list of names activates the dependency only for
+        # packages in that list
+        ('a foobar=bar', ['a'], ['a'], ['b']),
+        ('a foobar=bar', ['b'], ['b'], ['a']),
+        # Check that False disregard test dependencies
+        ('a foobar=bar', False, [], ['a', 'b']),
+    ])
+    def test_activating_test_dependencies(
+            self, spec_str, tests_arg, with_dep, without_dep
+    ):
+        s = Spec(spec_str).concretized(tests=tests_arg)
+
+        for pkg_name in with_dep:
+            msg = "Cannot find test dependency in package '{0}'"
+            node = s[pkg_name]
+            assert node.dependencies(deptype='test'), msg.format(pkg_name)
+
+        for pkg_name in without_dep:
+            msg = "Test dependency in package '{0}' is unexpected"
+            node = s[pkg_name]
+            assert not node.dependencies(deptype='test'), msg.format(pkg_name)
