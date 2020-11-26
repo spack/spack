@@ -32,6 +32,8 @@ class Namd(MakefilePackage):
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
 
+    variant('cuda', default=False, description='Enables running on NVDIA GPUs')
+
     # init_tcl_pointers() declaration and implementation are inconsistent
     # "src/colvarproxy_namd.C", line 482: error: inherited member is not
     # allowed
@@ -205,6 +207,13 @@ class Namd(MakefilePackage):
                 '--without-tcl',
                 '--without-python'
             ])
+
+        if '+cuda' in spec:
+            self._append_option(opts, 'cuda')
+            filter_file('^CUDADIR=.*$',
+                    'CUDADIR={0}'.format(spec['cuda'].prefix,
+                        self.arch + '.cuda')
+                    )
 
         config = Executable('./config')
 
