@@ -23,7 +23,8 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    depends_on('cmake@3:', type='build')
+    depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
+    depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
     depends_on('python', type='build')
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
@@ -31,6 +32,9 @@ class LlvmAmdgpu(CMakePackage):
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
+    patch('fix-ncurses-3.9.0.patch', when='@3.9.0:')
+
+    conflicts('^cmake@3.19.0')
 
     root_cmakelists_dir = 'llvm'
 
