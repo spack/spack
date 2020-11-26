@@ -64,6 +64,8 @@ class Mesa18(AutotoolsPackage):
     variant('opengl', default=True, description="Enable full OpenGL support.")
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
+    conflicts('~opengl ~opengles')
+
     # Provides
     provides('gl@4.5',  when='+opengl')
     provides('glx@1.4', when='+glx')
