@@ -923,3 +923,18 @@ class TestConcretize(object):
             msg = "Test dependency in package '{0}' is unexpected"
             node = s[pkg_name]
             assert not node.dependencies(deptype='test'), msg.format(pkg_name)
+
+    @pytest.mark.regression('20019')
+    def test_compiler_match_is_preferred_to_newer_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # This spec depends on openblas. Openblas has a conflict
+        # that doesn't allow newer versions with gcc@4.4.0. Check
+        # that an old version of openblas is selected, rather than
+        # a different compiler for just that node.
+        spec_str = 'simple-inheritance+openblas %gcc@4.4.0 os=redhat6'
+        s = Spec(spec_str).concretized()
+
+        assert 'openblas@0.2.13' in s
+        assert s['openblas'].satisfies('%gcc@4.4.0')
