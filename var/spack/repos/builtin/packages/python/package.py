@@ -143,8 +143,8 @@ class Python(AutotoolsPackage):
     variant('tix',      default=False, description='Build Tix module')
 
     depends_on('pkgconfig@0.9.0:', type='build')
-    depends_on('gettext +libxml2', when='+libxml2')
-    depends_on('gettext ~libxml2', when='~libxml2')
+#    depends_on('gettext +libxml2', when='+libxml2')
+#    depends_on('gettext ~libxml2', when='~libxml2')
 
     # Optional dependencies
     # See detect_modules() in setup.py for details
@@ -252,8 +252,10 @@ class Python(AutotoolsPackage):
     @classmethod
     def determine_variants(cls, exes, version_str):
         python = Executable(exes[0])
+        version = Version(version_str)
 
         variants = ''
+
         for module in ['readline', 'sqlite3', 'dbm', 'nis',
                        'zlib', 'bz2', 'lzma', 'ctypes', 'uuid']:
             try:
@@ -278,7 +280,7 @@ class Python(AutotoolsPackage):
             variants += '~pyexpat'
 
         # Some modules changed names in Python 3
-        if Version(version_str) >= Version('3'):
+        if version >= Version('3'):
             try:
                 python('-c', 'import tkinter', error=os.devnull)
                 variants += '+tkinter'
@@ -302,6 +304,60 @@ class Python(AutotoolsPackage):
                 variants += '+tix'
             except ProcessError:
                 variants += '~tix'
+
+        # Get config args for shared, debug, and optimizations variant checks
+        sysconf_imp = 'import sysconfig'
+        if version < Version('2.7'):
+            sysconf_imp = 'import distutils.sysconfig as sysconfig'
+        conf_args = python(
+            '-c',
+            '%s; print(sysconfig.get_config_var("CONFIG_ARGS"))' % sysconf_imp,
+            output=str, error=str)
+
+        # check for shared variant
+        # defualt is on, so we check for the string to turn it off
+        # +shared implies +pic
+        if '--disable-shared' in conf_args:
+            variants += '~shared'
+        else:
+            variants += '+shared'
+            variants += '+pic'
+
+        # check for debug
+        # default is off, so we check for the string to turn it on
+        variants += '+debug' if '--with-pydebug' in conf_args else '~debug'
+
+        # Use config args to determine whether optimizations were used
+        opt_var = '~optimizations'
+        # only check for versions that support optimization
+        if version >= Version('3.5.3') or (version >= Version('2.7.13') and
+                                           version < Version('2.8')):
+            if '--enable-optimizations' in conf_args:
+                opt_var = '+optimizations'
+        variants += opt_var
+
+        # +ucs4 only compatible with python@:3.2
+        if version >= Version('3.3'):
+            variants += '~ucs4'
+        else:
+            # maxunicode is 0xFFFF for UCS2 and 0x10FFFF for UCS4
+            maxunicode = python('-c', 'import sys; print(sys.maxunicode)',
+                                output=str, error=str)
+            variants += '~ucs4' if maxunicode == 0xFFFF else '+ucs4'
+
+        # +pythoncommand does not apply to python@2
+        if version >= Version('3') and 'python' in [os.path.basename(exe)
+                                                     for exe in exes]:
+            variants += '+pythoncmd'
+        else:
+            variants += '~pythoncmd'
+
+        # The libxml2 variant only exists to get out of a circular dependency
+        # This will not be an issue when we add cycle detection to the new
+        # concretizer. Until then, just "detect" the more restrictive option
+        # since we need to detect a fully concrete external python for
+        # concretizer bootstrapping purposes.
+        variants += '~libxml2'
 
         return variants
 
