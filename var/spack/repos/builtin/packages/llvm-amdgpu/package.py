@@ -34,6 +34,8 @@ class LlvmAmdgpu(CMakePackage):
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
     patch('fix-ncurses-3.9.0.patch', when='@3.9.0:')
 
+    conflicts('^cmake@3.19.0')
+
     root_cmakelists_dir = 'llvm'
 
     install_targets = ['clang-tidy', 'install']
