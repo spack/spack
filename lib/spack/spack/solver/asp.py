@@ -916,8 +916,13 @@ class SpackSolverSetup(object):
                 named_cond.name = named_cond.name or pkg.name
 
                 for t in sorted(dep.type):
-                    # Skip test dependencies if they're not requested
-                    if t == 'test' and (not tests or pkg.name not in tests):
+                    # Skip test dependencies if they're not requested at all
+                    if t == 'test' and not tests:
+                        continue
+
+                    # ... or if they are requested only for certain packages
+                    if t == 'test' and (not isinstance(tests, bool)
+                                        and pkg.name not in tests):
                         continue
 
                     if cond == spack.spec.Spec():

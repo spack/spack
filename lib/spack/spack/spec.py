@@ -2463,8 +2463,14 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    #: choose your concretizer here.
     def concretize(self, tests=False):
+        """Concretize the current spec.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         if spack.config.get('config:concretizer') == "clingo":
             self._new_concretize(tests)
         else:
@@ -2482,12 +2488,19 @@ class Spec(object):
             s._normal = value
             s._concrete = value
 
-    def concretized(self):
-        """This is a non-destructive version of concretize().  First clones,
-           then returns a concrete version of this package without modifying
-           this package. """
+    def concretized(self, tests=False):
+        """This is a non-destructive version of concretize().
+
+        First clones, then returns a concrete version of this package
+        without modifying this package.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         clone = self.copy(caches=False)
-        clone.concretize()
+        clone.concretize(tests=tests)
         return clone
 
     def flat_dependencies(self, **kwargs):
