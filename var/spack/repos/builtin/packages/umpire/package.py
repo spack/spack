@@ -7,7 +7,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 
-class Umpire(CMakePackage, CudaPackage, HipPackage):
+class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
@@ -62,10 +62,10 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
 
     depends_on('blt', type='build')
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    depends_on('camp+hip', when='+hip')
-    for val in HipPackage.amdgpu_targets:
+    depends_on('camp+rocm', when='+rocm')
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('camp')
@@ -96,7 +96,7 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=Off')
 
-        if '+hip' in spec:
+        if '+rocm' in spec:
             arch = self.spec.variants['amdgpu_target'].value
             options.extend([
                 '-DENABLE_HIP=ON',

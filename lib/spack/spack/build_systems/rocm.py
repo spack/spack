@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# Troubleshooting advice for +hip builds:
+# Troubleshooting advice for +rocm builds:
 #
 # 1. When building with clang, go your compilers.yaml,
 #    add an entry for the amd version of clang, as below.
@@ -76,8 +76,8 @@ from spack.directives import depends_on, variant, conflicts
 import spack.variant
 
 
-class HipPackage(PackageBase):
-    """Auxiliary class which contains HIP variant, dependencies and conflicts
+class ROCmPackage(PackageBase):
+    """Auxiliary class which contains ROCm variant, dependencies and conflicts
     and is meant to unify and facilitate its usage. Closely mimics CudaPackage.
 
     Maintainers: dtaller
@@ -91,23 +91,23 @@ class HipPackage(PackageBase):
         'gfx1011', 'gfx1012'
     )
 
-    variant('hip', default=False, description='Enable HIP support')
+    variant('rocm', default=False, description='Enable ROCm support')
 
-    # possible amd gpu targets for hip builds
+    # possible amd gpu targets for rocm builds
     variant('amdgpu_target',
             description='AMD GPU architecture',
             values=spack.variant.any_combination_of(*amdgpu_targets))
 
-    depends_on('llvm-amdgpu', when='+hip')
-    depends_on('hsa-rocr-dev', when='+hip')
-    depends_on('hip', when='+hip')
+    depends_on('llvm-amdgpu', when='+rocm')
+    depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('hip', when='+rocm')
 
-    # need amd gpu type for hip builds
-    conflicts('amdgpu_target=none', when='+hip')
+    # need amd gpu type for rocm builds
+    conflicts('amdgpu_target=none', when='+rocm')
 
-    # Make sure amdgpu_targets cannot be used without +hip
+    # Make sure amdgpu_targets cannot be used without +rocm
     for value in amdgpu_targets:
-        conflicts('~hip', when='amdgpu_target=' + value)
+        conflicts('~rocm', when='amdgpu_target=' + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case
