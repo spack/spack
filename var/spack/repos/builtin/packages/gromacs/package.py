@@ -78,6 +78,8 @@ class Gromacs(CMakePackage):
             description='Enables an external LAPACK library')
     variant('blas', default=False,
             description='Enables an external BLAS library')
+    variant('cycle_subcounters', default=False,
+            description='Enables cycle subcounters')
 
     depends_on('mpi', when='+mpi')
     # define matching plumed versions
@@ -235,6 +237,11 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
+        if '+cycle_subcounters' in self.spec:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
+        else:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF')
+
         if '^mkl' in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
@@ -257,17 +264,4 @@ class Gromacs(CMakePackage):
                 options.append('-DFFTWF_LIBRARIES={0}'.
                                format(self.spec['amdfftw'].libs.joined(';')))
 
-        if '%aocc' in self.spec:
-            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF')
-            options.append('-DCMAKE_C_FLAGS=-Ofast -march=znver2 -ffast-math')
-            options.append('-DCMAKE_CXX_FLAGS=-Ofast \
-                            -march=znver2 -ffast-math')
-            options.append('-DCMAKE_EXE_LINKER_FLAGS=-O3 -flto \
-                            -Wl,-mllvm -Wl,-x86-use-vzeroupper=false')
-
-        if '%gcc ^amdfftw' in self.spec:
-            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF')
-            options.append('-DCMAKE_C_FLAGS=-O3 -march=znver2 -ffast-math')
-            options.append('-DCMAKE_CXX_FLAGS=-O3 -march=znver2 -ffast-math')
-            options.append('-DCMAKE_EXE_LINKER_FLAGS=-O3 -flto')
         return options
