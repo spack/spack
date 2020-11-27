@@ -81,6 +81,11 @@ config:
   misc_cache: ~/.spack/cache
 
 
+  # The binary cache index tracks what specs are available on (usually remote)
+  # binary caches. Default location is $spack/opt/spack/indices
+  # binary_index_root: ~/.spack/indices
+
+
   # Timeout in seconds used for downloading sources etc. This only applies
   # to the connection phase and can be increased for slow connections or
   # servers. 0 means no timeout.
