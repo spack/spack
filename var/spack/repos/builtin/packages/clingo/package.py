@@ -60,6 +60,10 @@ class Clingo(CMakePackage):
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
             '-DCLINGO_BUILD_PY_SHARED=ON',
+            '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+                self.spec['python'].command.path),
+            '-DCLINGO_PYTHON_VERSION:STRING={0}'.format(
+                self.spec['python'].version.up_to(2)),
             '-DPYCLINGO_USER_INSTALL=OFF',
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
             '-DCLINGO_BUILD_WITH_LUA=OFF'
