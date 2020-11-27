@@ -31,18 +31,18 @@ class QuantumEspresso(Package):
     version('5.3',   sha256='3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048')
 
     resource(name='environ',
-            git='https://github.com/environ-developers/Environ.git',
-            tag='v1.1',
-            when='@6.4:6.4.99 +environ',
-            destination='.'
-            )
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.1',
+             when='@6.4:6.4.99 +environ',
+             destination='.'
+             )
 
     resource(name='environ',
-            git='https://github.com/environ-developers/Environ.git',
-            tag='v1.0',
-            when='@6.2.1:6.2.99 +environ',
-            destination='.'
-            )
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.0',
+             when='@6.2.1:6.2.99 +environ',
+             destination='.'
+             )
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
@@ -73,9 +73,9 @@ class QuantumEspresso(Package):
             description='Build QE-to-QMCPACK wave function converter')
 
     variant('environ', default=False,
-            description='Enables support for introducing environment effects
-            into atomistic first-principles simulations.
-            See http://quantum-environ.org/about.html')
+            description='Enables support for introducing environment effects '
+            'into atomistic first-principles simulations.'
+            'See http://quantum-environ.org/about.html')
 
     # Dependencies
     depends_on('blas')
