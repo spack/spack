@@ -28,15 +28,18 @@ class Dalton(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
- 
+
         args = ['-DENABLE_BUILTIN_BLAS=OFF',
                 '-DENABLE_BUILTIN_LAPACK=OFF',
                 '-DUSE_BUILTIN_LAPACK=OFF',
                 '-DENABLE_STATIC_LINKING=OFF',
                 '-DENABLE_MPI=ON',
-                '-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpicc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpicxx),
-                '-DCMAKE_Fortran_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpif90),
+                '-DCMAKE_C_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpicc),
+                '-DCMAKE_CXX_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpicxx),
+                '-DCMAKE_Fortran_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpif90),
                 '-DMPIEXEC_MAX_NUMPROCS=128'
                 ]
 
