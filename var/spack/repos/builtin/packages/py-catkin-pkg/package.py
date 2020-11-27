@@ -12,7 +12,7 @@ class PyCatkinPkg(PythonPackage):
 
     version('0.4.23', sha256='28ee181cca827c0aabf9397351f58a97e1475ca5ac7c106a5916e3ee191cd3d0')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-docutils', type=('build', 'run'))
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-pyparsing', type=('build', 'run'))
