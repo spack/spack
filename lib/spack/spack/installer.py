@@ -47,7 +47,7 @@ import spack.compilers
 import spack.error
 import spack.hooks
 import spack.package
-import spack.package_prefs as prefs
+import spack.package_permissions as spp
 import spack.repo
 import spack.store
 
@@ -1231,21 +1231,14 @@ class PackageInstaller(object):
                         .format(pkg.spec.prefix))
             spack.store.layout.create_install_directory(pkg.spec)
         else:
-            # Set the proper group for the prefix
-            group = prefs.get_package_group(pkg.spec)
-            if group:
-                fs.chgrp(pkg.spec.prefix, group)
-
-            # Set the proper permissions.
-            # This has to be done after group because changing groups blows
-            # away the sticky group bit on the directory
-            mode = os.stat(pkg.spec.prefix).st_mode
-            perms = prefs.get_package_dir_permissions(pkg.spec)
-            if mode != perms:
-                os.chmod(pkg.spec.prefix, perms)
-
             # Ensure the metadata path exists as well
-            fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
+            fs.mkdirp(spack.store.layout.metadata_path(pkg.spec))
+
+            spp.update_permissions(pkg.spec.prefix, pkg.spec, contents=True)
+
+        # Ensure the install directory permissions are consistent with
+        # package configuration settings
+        spp.update_permissions(pkg.spec.prefix, pkg.spec, contents=True)
 
     def _update_failed(self, task, mark=False, exc=None):
         """

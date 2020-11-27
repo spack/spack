@@ -8,6 +8,7 @@ import stat
 
 import spack.config
 import spack.package_prefs
+import spack.package_permissions as spp
 import spack.repo
 import spack.util.spack_yaml as syaml
 from spack.config import ConfigScope, ConfigError
@@ -332,42 +333,54 @@ mpi:
 
         # Test inheriting from 'all'
         spec = Spec('zmpi')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU | stat.S_IRWXG
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         assert dir_perms == stat.S_IRWXU | stat.S_IRWXG | stat.S_ISGID
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'all'
 
     def test_config_permissions_from_package(self, configure_permissions):
         # Test overriding 'all'
         spec = Spec('mpich')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         assert dir_perms == stat.S_IRWXU
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'all'
 
     def test_config_permissions_differ_read_write(self, configure_permissions):
         # Test overriding group from 'all' and different readable/writable
         spec = Spec('mpileaks')
-        perms = spack.package_prefs.get_package_permissions(spec)
+        perms = spp.get_package_permissions(spec)
         assert perms == stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP
 
-        dir_perms = spack.package_prefs.get_package_dir_permissions(spec)
+        dir_perms = spp.get_package_dir_permissions(spec)
         expected = stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP | stat.S_ISGID
         assert dir_perms == expected
 
-        group = spack.package_prefs.get_package_group(spec)
+        group = spp.get_package_group(spec)
         assert group == 'mpileaks'
 
     def test_config_perms_fail_write_gt_read(self, configure_permissions):
         # Test failure for writable more permissive than readable
         spec = Spec('callpath')
         with pytest.raises(ConfigError):
-            spack.package_prefs.get_package_permissions(spec)
+            spp.get_package_permissions(spec)
+
+    def test_config_all_perms(self, configure_permissions):
+        # Test all permissions only
+        group = spp.get_package_group(None)
+        assert group == 'all'
+
+        ug_rwx = stat.S_IRWXU | stat.S_IRWXG
+        perms = spp.get_package_permissions(None)
+        assert perms == ug_rwx
+
+        dir_perms = spp.get_package_dir_permissions(None)
+        assert dir_perms == ug_rwx | stat.S_ISGID
