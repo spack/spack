@@ -156,6 +156,8 @@ class Ffb(MakefilePackage):
             cxx_fortran_flags.append('--linkfortran')
             m = FileFilter(editfile)
             m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
+        elif spec.satisfies('%intel'):    
+            pass
 
     def build(self, spec, prefix):
         for m in [join_path('make',  'Makeall'),
