@@ -38,9 +38,9 @@ packages:
       - py-jupyter-notebook@4.2.3
       - py-bbp-analysis-framework@1.6.42
       - py-bluepysnap@0.6.1
-      - py-morphology-repair-workflow@1.0.4
+      - py-morphology-repair-workflow@2.0.1
       - py-simwriter@1.0.1
-      - py-morph-tool@0.2.5
+      - py-morph-tool@2.2.21
       - py-minis-validation@0.0.2
       - py-morphio@2.3.4
       - py-neurodamus@2.1.1

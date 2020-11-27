@@ -14,6 +14,7 @@ class PyMorphTool(PythonPackage):
     url      = "https://pypi.io/packages/source/m/morph-tool/morph-tool-0.2.5.tar.gz"
 
     version('develop', branch='master')
+    version('2.2.21', sha256='37d932b8b9561d9b5b4d0d3cdb1b146e9d4e3443526b8ef6e88aeeac36528c7e')
     version('0.2.10', sha256='e46835b9c25532cbee070141ad9f7d3d47109d5473074b47aad08f51bdc40157')
     version('0.2.5', sha256='7157039a7a421cfbdb75fd305975a6e6ce7667177dc68bd299645b62389622be')
     version('0.2.3', sha256='767effaa4d2e8c7dfee878c6d48c6647f29b19fee6f790213783c04d8951fee3')
