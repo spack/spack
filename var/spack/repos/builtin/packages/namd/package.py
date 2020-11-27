@@ -211,9 +211,8 @@ class Namd(MakefilePackage):
         if '+cuda' in spec:
             self._append_option(opts, 'cuda')
             filter_file('^CUDADIR=.*$',
-                    'CUDADIR={0}'.format(spec['cuda'].prefix,
+                        'CUDADIR={0}'.format(spec['cuda'].prefix),
                         self.arch + '.cuda')
-                    )
 
         config = Executable('./config')
 
