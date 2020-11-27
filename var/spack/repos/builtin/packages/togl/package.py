@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Togl(AutotoolsPackage):
     """ A Tcl/Tk widget for OpenGL rendering."""
 
@@ -29,14 +30,12 @@ class Togl(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
 
-        args = []
-
-        args.extend([
+        args = [
             '--libdir={0}'.format(self.prefix.lib),
             '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
             '--with-tk={0}'.format(spec['tk'].prefix.lib),
             '--x-includes={0}'.format(spec['libxmu'].prefix.include)
-            ])
+        ]
 
         return args
 
@@ -51,7 +50,7 @@ class Togl(AutotoolsPackage):
         libtogl = 'libTogl{0}.so'.format(self.version)
         with working_dir(prefix.lib):
             os.symlink(join_path('Togl{0}'.format(self.version), libtogl),
-                    libtogl)
+                       libtogl)
 
         # Empty directory
         pl_lib = join_path(prefix.lib, 'perl5')
@@ -61,7 +60,8 @@ class Togl(AutotoolsPackage):
         if '+python' in spec:
             py_ver = spec['python'].version.up_to(2)
             py_lib = join_path(prefix.lib, 'python{0}'.format(py_ver))
-            py_site = join_path(prefix, spec['python'].package.site_packages_dir)
+            py_site = join_path(prefix,
+                                spec['python'].package.site_packages_dir)
 
             install('toglpy.h', prefix.include)
             install('Togl.py', py_site)

@@ -66,9 +66,9 @@ class Xcrysden(MakefilePackage):
         # These libraries' recipes do not have a '@libs' property :/
         xmulibs = find_libraries('libXmu', spec['libxmu'].prefix.lib)
         togllibs = find_libraries(
-                       'libTogl{0}'.format(spec['togl'].version.up_to(2)),
-                       spec['togl'].prefix.lib, recursive=True
-                   )
+            'libTogl{0}'.format(spec['togl'].version.up_to(2)),
+            spec['togl'].prefix.lib, recursive=True
+        )
         mesalibs = find_libraries('libGL', spec['mesa'].prefix.lib)
 
         libs['libx11'] = (spec['libx11'].libs + xmulibs).ld_flags
@@ -90,12 +90,16 @@ class Xcrysden(MakefilePackage):
 
         for key in make_libs.keys() or key in make_incs.keys():
             if key in libs.keys() and key in make_libs.keys():
-                makesys.filter(''.join(['^', '{0}'.format(make_libs[key]), '.*$']),
-                               '='.join([make_libs[key], libs[key]]))
+                makesys.filter(
+                    ''.join(['^', '{0}'.format(make_libs[key]), '.*$']),
+                    '='.join([make_libs[key], libs[key]])
+                )
 
             if key in incs.keys() and key in make_incs.keys():
-                makesys.filter(''.join(['^', '{0}'.format(make_incs[key]), '.*$']),
-                               '='.join([make_incs[key], incs[key]]))
+                makesys.filter(
+                    ''.join(['^', '{0}'.format(make_incs[key]), '.*$']),
+                    '='.join([make_incs[key], incs[key]])
+                )
 
     def install(self, spec, prefix):
         make('bindir', 'src-C', 'src-F', 'src-Tcl')
