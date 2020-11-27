@@ -68,6 +68,12 @@ class Mesa18(AutotoolsPackage):
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
+    # Require at least 1 front-end
+    conflicts('~osmesa ~glx')
+
+    # Require at least 1 back-end
+    conflicts('~opengl ~opengles')
+
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
 
