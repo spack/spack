@@ -31,8 +31,7 @@ class Lsdalton(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        args = [
-                '-DENABLE_BUILTIN_BLAS=OFF',
+        args = ['-DENABLE_BUILTIN_BLAS=OFF',
                 '-DENABLE_BUILTIN_LAPACK=OFF',
                 '-DUSE_BUILTIN_LAPACK=OFF',
                 '-DENABLE_STATIC_LINKING=OFF',
@@ -40,11 +39,13 @@ class Lsdalton(CMakePackage):
                 '-DENABLE_MPI=ON',
                 '-DUSE_MPIF_H=ON',
                 '-DMPIEXEC_MAX_NUMPROCS=128',
-                '-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpicc),
-                '-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpicxx),
-                '-DCMAKE_Fortran_COMPILER={0}'.format(spec['mpi'].prefix.bin.mpif90),
+                '-DCMAKE_C_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpicc),
+                '-DCMAKE_CXX_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpicxx),
+                '-DCMAKE_Fortran_COMPILER={0}'.format(
+                    spec['mpi'].prefix.bin.mpif90),
                 '-DENABLE_PYTHON=OFF',
-                '-DENABLE_DEC=ON'
-               ]
+                '-DENABLE_DEC=ON']
 
         return args
