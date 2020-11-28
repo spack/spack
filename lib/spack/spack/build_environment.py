@@ -149,11 +149,16 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # These vars affect how the compiler finds libraries and include dirs.
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
+    env.unset('OBJC_INCLUDE_PATH')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
