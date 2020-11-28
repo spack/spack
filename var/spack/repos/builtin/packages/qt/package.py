@@ -120,7 +120,7 @@ class Qt(Package):
     # https://bugreports.qt.io/browse/QTBUG-78937
     patch('qt5-12-configure.patch', when='@5.12')
     # https://bugreports.qt.io/browse/QTBUG-93402
-    patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@10:')
+    patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
@@ -235,7 +235,8 @@ class Qt(Package):
             try:
                 llvm_path = self.spec['llvm'].prefix
             except KeyError:
-                llvm_path = ""
+                # Prevent possibly incompatible system LLVM from being found
+                llvm_path = "/spack-disable-llvm"
             env.set('LLVM_INSTALL_DIR', llvm_path)
 
     def setup_run_environment(self, env):
@@ -399,16 +400,14 @@ class Qt(Package):
             pkg = spec[spack_pkg]
             config_args.append('-system-' + (qt_name or spack_pkg))
             if not pkg.external:
-                config_args.extend([
-                    pkg.libs.search_flags,
-                    pkg.headers.include_flags
-                ])
+                config_args.extend(pkg.libs.search_flags.split())
+                config_args.extend(pkg.headers.include_flags.split())
 
         if '+gui' in spec:
             use_spack_dep('freetype')
             if not MACOS_VERSION:
                 config_args.append('-fontconfig')
-            elif version < Version('5.12'):
+            elif version < Version('5.15'):
                 # Linux-only QT5 dependencies
                 config_args.append('-system-xcb')
         else:
@@ -416,12 +415,10 @@ class Qt(Package):
             config_args.append('-no-gui')
 
         if '+ssl' in spec:
-            openssl = spec['openssl']
-            config_args.extend([
-                '-openssl-linked',
-                openssl.libs.search_flags,
-                openssl.headers.include_flags,
-            ])
+            pkg = spec['openssl']
+            config_args.append('-openssl-linked')
+            config_args.extend(pkg.libs.search_flags.split())
+            config_args.extend(pkg.headers.include_flags.split())
         else:
             config_args.append('-no-openssl')
 
@@ -569,9 +566,6 @@ class Qt(Package):
             # https://wayland.freedesktop.org/ubuntu16.04.html
             # https://wiki.qt.io/QtWayland
             config_args.extend(['-skip', 'wayland'])
-
-        if '~doc' in spec:
-            config_args.extend(['-skip', 'qtdoc'])
 
         if '~opengl' in spec:
             if version >= Version('5.10'):
