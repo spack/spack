@@ -52,14 +52,6 @@ class Mesa18(AutotoolsPackage):
     is_linux = sys.platform.startswith('linux')
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
-    # TODO: effectively deal with EGL.  The implications of this have not been
-    # worked through yet
-    # variant('egl', default=False, description="Enable the EGL frontend.")
-
-    # TODO: Effectively deal with hardware drivers
-    # The implication of this is enabling DRI, among other things, and
-    # needing to check which llvm targets were built (ptx or amdgpu, etc.)
-
     # Back ends
     variant('opengl', default=True, description="Enable full OpenGL support.")
     variant('opengles', default=False, description="Enable OpenGL ES support.")
@@ -67,7 +59,6 @@ class Mesa18(AutotoolsPackage):
     # Provides
     provides('gl@4.5',  when='+opengl')
     provides('glx@1.4', when='+glx')
-    # provides('egl@1.5', when='+egl')
     provides('osmesa', when='+osmesa')
 
     # Variant dependencies
@@ -76,6 +67,12 @@ class Mesa18(AutotoolsPackage):
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
+
+    # Require at least 1 front-end
+    conflicts('~osmesa ~glx')
+
+    # Require at least 1 back-end
+    conflicts('~opengl ~opengles')
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
@@ -103,7 +100,11 @@ class Mesa18(AutotoolsPackage):
             '--disable-xa',
             '--disable-xvmc',
             '--disable-osmesa',
-            '--with-vulkan-drivers=']
+            '--with-vulkan-drivers=',
+            '--disable-egl',
+            '--disable-gbm',
+            '--disable-dri']
+
         args_platforms = []
         args_gallium_drivers = ['swrast']
         args_dri_drivers = []
@@ -120,20 +121,10 @@ class Mesa18(AutotoolsPackage):
 
         if '+glx' in spec:
             num_frontends += 1
-            if '+egl' in spec:
-                args.append('--enable-glx=dri')
-            else:
-                args.append('--enable-glx=gallium-xlib')
+            args.append('--enable-glx=gallium-xlib')
             args_platforms.append('x11')
         else:
             args.append('--disable-glx')
-
-        if '+egl' in spec:
-            num_frontends += 1
-            args.extend(['--enable-egl', '--enable-gbm', '--enable-dri'])
-            args_platforms.append('surfaceless')
-        else:
-            args.extend(['--disable-egl', '--disable-gbm', '--disable-dri'])
 
         if '+opengl' in spec:
             args.append('--enable-opengl')
