@@ -11,6 +11,10 @@
 # See https://stackoverflow.com/a/47886254
 """:"
 # prefer python3, then python, then python2
+# TODO: this hacky interpreter selection process makes it impossible to stop python@3: from bleeding
+# through. This results in confusing errors, e.g. when clingo bootstraps successfully and then spack
+# continues to fail to find the appropriate interpreter. The Pex library API or PEX file
+# distribution format from https://github.com/pantsbuild/pex can fix this!
 for cmd in python3 python python2; do
    command -v > /dev/null $cmd && exec $cmd $0 "$@"
 done
