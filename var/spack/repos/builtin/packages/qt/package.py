@@ -584,10 +584,14 @@ class Qt(Package):
 
     def build(self, spec, prefix):
         make()
-        if '+doc' in spec:
-            make('docs')
 
     def install(self, spec, prefix):
         make("install")
-        if '+doc' in spec:
+
+    # Documentation generation requires the doc tools to be installed.
+    # @when @run_after currently seems to ignore the 'when' restriction.
+    @run_after('install')
+    def install_docs(self):
+        if '+doc' in self.spec:
+            make('docs')
             make('install_docs')
