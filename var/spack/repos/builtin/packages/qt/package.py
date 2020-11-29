@@ -121,6 +121,7 @@ class Qt(Package):
     patch('qt5-12-configure.patch', when='@5.12')
     # https://bugreports.qt.io/browse/QTBUG-93402
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
+    patch('qt514.patch', when='@5.14')
     conflicts('%gcc@10:', when='@5.9:5.12.6 +opengl')
 
     # Build-only dependencies
