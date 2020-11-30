@@ -15,5 +15,5 @@ class PyInflect(PythonPackage):
 
     version('5.0.2', sha256='d284c905414fe37c050734c8600fe170adfb98ba40f72fc66fed393f5b8d5ea0')
 
-    depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
