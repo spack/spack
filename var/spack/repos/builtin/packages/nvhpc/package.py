@@ -49,6 +49,8 @@ class Nvhpc(Package):
 
     maintainers = ['samcmill']
 
+    redistribute_source = False
+
     for ver, packages in _versions.items():
         key = "{0}-{1}".format(platform.system(), platform.machine())
         pkg = packages.get(key)

@@ -83,6 +83,9 @@ def setup_parser(subparser):
                               ' its dependencies. Alternatively, one can'
                               ' decide to build a cache for only the package'
                               ' or only the dependencies'))
+    create.add_argument('--public', action='store_true',
+                        help="if this is a public mirror, avoid adding"
+                             " packages when licensing prohibits it")
     arguments.add_common_arguments(create, ['specs'])
     create.set_defaults(func=createtarball)
 
@@ -334,7 +337,8 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
 def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                    add_deps=True, output_location=os.getcwd(),
                    signing_key=None, force=False, make_relative=False,
-                   unsigned=False, allow_root=False, rebuild_index=False):
+                   unsigned=False, allow_root=False, rebuild_index=False,
+                   public=False):
     if spec_yaml:
         with open(spec_yaml, 'r') as fd:
             yaml_text = fd.read()
@@ -409,6 +413,11 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
     tty.debug('writing tarballs to %s/build_cache' % outdir)
 
     for spec in specs:
+        if public and (not spec.package.redistribute_binary):
+            tty.debug("Skip adding {0} to binary cache: the package.py file"
+                      " indicates that a public mirror should not contain it."
+                      .format(spec.name))
+            continue
         tty.debug('creating binary cache file for package %s ' % spec.format())
         try:
             bindist.build_tarball(spec, outdir, force, make_relative,
@@ -467,7 +476,7 @@ def createtarball(args):
                    output_location=output_location, signing_key=args.key,
                    force=args.force, make_relative=args.rel,
                    unsigned=args.unsigned, allow_root=args.allow_root,
-                   rebuild_index=args.rebuild_index)
+                   rebuild_index=args.rebuild_index, public=args.public)
 
 
 def installtarball(args):
