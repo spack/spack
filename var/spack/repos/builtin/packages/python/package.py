@@ -18,6 +18,7 @@ import spack.store
 import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
+from spack.util.provides import setup_libtirpc_build_environment
 from spack import *
 
 
@@ -154,6 +155,7 @@ class Python(AutotoolsPackage):
     # https://raw.githubusercontent.com/python/cpython/84471935ed2f62b8c5758fd544c7d37076fe0fa5/Misc/NEWS
     # https://docs.python.org/3.5/whatsnew/changelog.html#python-3-5-4rc1
     depends_on('openssl@:1.0.2z', when='@:2.7.13,3.0.0:3.5.2+ssl')
+    depends_on('openssl@1.0.2u', when='@:2.6.99+ssl')
     depends_on('openssl@1.0.2:', when='@3.7:+ssl')  # https://docs.python.org/3/whatsnew/3.7.html#build-changes
     depends_on('sqlite@3.0.8:', when='+sqlite3')
     depends_on('gdbm', when='+dbm')  # alternatively ndbm or berkeley-db
@@ -359,14 +361,6 @@ class Python(AutotoolsPackage):
     def setup_build_environment(self, env):
         spec = self.spec
 
-        # TODO: The '--no-user-cfg' option for Python installation is only in
-        # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
-        # adding support for ignoring user configuration will require
-        # significant changes to this package for other Python versions.
-        if not spec.satisfies('@2.7:2.8,3.4:'):
-            tty.warn(('Python v{0} may not install properly if Python '
-                      'user configurations are present.').format(self.version))
-
         # TODO: Python has incomplete support for Python modules with mixed
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
@@ -381,6 +375,8 @@ class Python(AutotoolsPackage):
 
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+        setup_libtirpc_build_environment(spec, env)
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
@@ -399,30 +395,22 @@ class Python(AutotoolsPackage):
         # as it scans for the library and headers to build
         link_deps = spec.dependencies('link')
 
-        cppflags = []
-        ldflags = []
         if link_deps:
             # Header files are often included assuming they reside in a
             # subdirectory of prefix.include, e.g. #include <openssl/ssl.h>,
             # which is why we don't use HeaderList here. The header files of
             # libffi reside in prefix.lib but the configure script of Python
             # finds them using pkg-config.
-            cppflags.extend('-I' + spec[dep.name].prefix.include for dep in link_deps)
+            cppflags = ' '.join('-I' + spec[dep.name].prefix.include
+                                for dep in link_deps)
 
             # Currently, the only way to get SpecBuildInterface wrappers of the
             # dependencies (which we need to get their 'libs') is to get them
             # using spec.__getitem__.
-            ldflags.extend(spec[dep.name].libs.ld_flags for dep in link_deps)
+            ldflags = ' '.join(spec[dep.name].libs.search_flags
+                               for dep in link_deps)
 
-        if 'libtirpc' in spec:
-            cppflags.extend(
-                '-I' + os.path.join(inc, 'tirpc')
-                for inc in spec['libtirpc'].headers.directories)
-
-        config_args.extend([
-            'CPPFLAGS=' + ' '.join(cppflags),
-            'LDFLAGS=' + ' '.join(ldflags),
-        ])
+            config_args.extend(['CPPFLAGS=' + cppflags, 'LDFLAGS=' + ldflags])
 
         # https://docs.python.org/3/whatsnew/3.7.html#build-changes
         if spec.satisfies('@:3.6'):
@@ -974,6 +962,14 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         env.prepend_path('PYTHONPATH', pythonpath)
 
+    def _is_py26(self):
+        return self.version.up_to(2).string == '2.6'
+
+    def trailing_setup_args(self):
+        if self._is_py26():
+            return []
+        return ['--no-user-cfg']
+
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
 
@@ -983,11 +979,7 @@ class Python(AutotoolsPackage):
 
         module.python = self.command
 
-        if self.version.up_to(2).string == '2.6':
-            trailing_args = []
-        else:
-            trailing_args = ['--no-user-cfg']
-        args = ['setup.py', *tuple(trailing_args)]
+        args = ['setup.py'] + list(self.trailing_setup_args())
         full_cmdline = self.command.path + ' {0}'.format(' '.join(args))
         module.setup_py = Executable(full_cmdline)
 
