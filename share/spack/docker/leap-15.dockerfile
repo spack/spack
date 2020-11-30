@@ -4,7 +4,7 @@ MAINTAINER Christian Goll <cgoll@suse.com>
 ENV DOCKERFILE_BASE=opensuse          \
     DOCKERFILE_DISTRO=opensuse_leap   \
     DOCKERFILE_DISTRO_VERSION=15.2    \
-    SPACK_ROOT_DOCKER=/opt/spack      \
+    SPACK_ROOT=/opt/spack      \
     DEBIAN_FRONTEND=noninteractive    \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
@@ -54,5 +54,4 @@ RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["interactive-shell"]
-
 
