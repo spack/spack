@@ -50,7 +50,7 @@ class Bowtie2(MakefilePackage):
         substitute = "#!{python}".format(python=python)
         files = ['bowtie2-build', 'bowtie2-inspect']
         filter_file(match, substitute, *files, **kwargs)
-        
+
         match = '-Ithird_party/simde'
         simdepath = spec['simde'].prefix.include
         substitute = "-I{simdepath}".format(simdepath=simdepath)
@@ -60,6 +60,10 @@ class Bowtie2(MakefilePackage):
     @property
     def build_targets(self):
         make_arg = ['PREFIX={}'.format(self.prefix)]
-        if self.spec.target.family == 'aarch64':
+        if self.spec.satisfies('target=aarch64:'):
             make_arg.append('POPCNT_CAPABILITY=0')
         return make_arg
+
+    @property
+    def install_targets(self):
+        return ['PREFIX={}'.format(self.prefix), 'install']
