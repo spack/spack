@@ -18,6 +18,7 @@ import spack.store
 import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
+from spack.util.provides import setup_libtirpc_build_environment
 from spack import *
 
 
@@ -359,14 +360,6 @@ class Python(AutotoolsPackage):
     def setup_build_environment(self, env):
         spec = self.spec
 
-        # TODO: The '--no-user-cfg' option for Python installation is only in
-        # Python v2.7 and v3.4+ (see https://bugs.python.org/issue1180) and
-        # adding support for ignoring user configuration will require
-        # significant changes to this package for other Python versions.
-        if not spec.satisfies('@2.7:2.8,3.4:'):
-            tty.warn(('Python v{0} may not install properly if Python '
-                      'user configurations are present.').format(self.version))
-
         # TODO: Python has incomplete support for Python modules with mixed
         # C/C++ source, and patches are required to enable building for these
         # modules. All Python versions without a viable patch are installed
@@ -381,6 +374,8 @@ class Python(AutotoolsPackage):
 
         env.unset('PYTHONPATH')
         env.unset('PYTHONHOME')
+
+        setup_libtirpc_build_environment(spec, env)
 
     def flag_handler(self, name, flags):
         # python 3.8 requires -fwrapv when compiled with intel
@@ -413,11 +408,6 @@ class Python(AutotoolsPackage):
             # dependencies (which we need to get their 'libs') is to get them
             # using spec.__getitem__.
             ldflags.extend(spec[dep.name].libs.ld_flags for dep in link_deps)
-
-        if 'libtirpc' in spec:
-            cppflags.extend(
-                '-I' + os.path.join(inc, 'tirpc')
-                for inc in spec['libtirpc'].headers.directories)
 
         config_args.extend([
             'CPPFLAGS=' + ' '.join(cppflags),
