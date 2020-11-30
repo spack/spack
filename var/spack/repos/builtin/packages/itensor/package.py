@@ -31,9 +31,12 @@ class Itensor(MakefilePackage):
     variant('openmp', default=False, description='Enable OpenMP support.')
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
 
-    depends_on('openblas', when='blaslapack=openblas')
-    depends_on('intel-mkl', when='blaslapack=mkl')
-    depends_on('netlib-lapack', when='blaslapack=lapack')
+    depends_on('openblas', when='blaslapack=openblas',
+               type=('build', 'link', 'run'))
+    depends_on('intel-mkl', when='blaslapack=mkl',
+               type=('build', 'link', 'run'))
+    depends_on('netlib-lapack', when='blaslapack=lapack',
+               type=('build', 'link', 'run'))
 
     depends_on('hdf5+hl', when='+hdf5')
 
@@ -72,9 +75,41 @@ class Itensor(MakefilePackage):
         if '+openmp' in spec:
             filter_file('#ITENSOR_USE_OMP', 'ITENSOR_USE_OMP', mf)
 
-        # prefix
+        # 5.prefix
         filter_file(
             r'^PREFIX.+',
             'PREFIX={0}'.format(os.getcwd()),
             mf
         )
+
+    def install(self, spec, prefix):
+        # 0.copy config.mk
+        mf = 'options.mk'
+        copy(mf, 'options.mk.bak')
+
+        # 1.CCCOM
+        ccopts = 'CCCOM={0}'.format(env["SPACK_CXX"])
+        if spec.satisfies('%gcc'):
+            if not spec.satisfies('arch=aarch64:'):
+                ccopts += ' -m64'
+            ccopts += ' -std=c++17 -fconcepts -fPIC'
+        if spec.satisfies('%clang') or spec.satisfies('%fj'):
+            ccopts += ' -std=c++17 -fPIC -Wno-gcc-compat'
+        filter_file(r'^CCCOM.+', ccopts, mf)
+
+        # 2.prefix
+        filter_file(
+            r'^PREFIX.+',
+            'PREFIX={0}'.format(prefix),
+            mf
+        )
+
+        # tutorial/project_template/Makefile
+        mf2 = join_path(prefix, self.build_directory, 'Makefile')
+        filter_file(
+            r'^LIBRARY_DIR.+',
+            'LIBRARY_DIR={0}'.format(prefix),
+            mf2
+        )
+
+        install_tree('.', prefix)
