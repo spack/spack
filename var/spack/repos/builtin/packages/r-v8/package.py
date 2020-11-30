@@ -17,5 +17,4 @@ class RV8(RPackage):
 
     depends_on('r-curl@1.0:', type=('build', 'run'))
     depends_on('r-jsonlite@1.0:', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
     depends_on('r-rcpp@0.12.12:', type=('build', 'run'))
