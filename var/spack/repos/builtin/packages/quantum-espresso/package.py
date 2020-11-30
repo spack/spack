@@ -199,7 +199,7 @@ class QuantumEspresso(Package):
               msg='Internal compiler error with gcc8 and a64fx')
 
     conflicts('@6.5:', when='+environ',
-            msg='6.4.x is the latest QE series supported by Environ')
+              msg='6.4.x is the latest QE series supported by Environ')
 
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
