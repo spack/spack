@@ -15,7 +15,12 @@ COPY lib   $SPACK_ROOT/lib
 COPY share $SPACK_ROOT/share
 COPY var   $SPACK_ROOT/var
 
-
+RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/docker-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/interactive-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-env
 RUN mkdir -p $SPACK_ROOT/opt/spack
 
 RUN 	zypper ref && \
@@ -54,4 +59,3 @@ RUN spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["interactive-shell"]
-
