@@ -171,9 +171,9 @@ class PythonPackage(PackageBase):
     def setup_py(self, *args, **kwargs):
         setup = self.setup_file()
 
-        trailing_args = tuple(self.trailing_setup_args())
+        args = ('-s', setup) + tuple(self.trailing_setup_args()) + args
         with working_dir(self.build_directory):
-            self.python('-s', setup, *trailing_args, *args, **kwargs)
+            self.python(*args, **kwargs)
 
     def _setup_command_available(self, command):
         """Determines whether or not a setup.py command exists.
@@ -193,8 +193,11 @@ class PythonPackage(PackageBase):
         python = inspect.getmodule(self).python
         setup = self.setup_file()
 
-        trailing_args = tuple(self.trailing_setup_args())
-        python('-s', setup, *trailing_args, command, '--help', **kwargs)
+        args = ('-s', setup) + tuple(self.trailing_setup_args()) + (
+            command,
+            '--help',
+        )
+        python(*args, **kwargs)
         return python.returncode == 0
 
     # The following phases and their descriptions come from:
