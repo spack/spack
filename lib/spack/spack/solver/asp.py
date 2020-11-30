@@ -696,6 +696,7 @@ class SpackSolverSetup(object):
         self.possible_virtuals = None
         self.possible_compilers = []
         self.version_constraints = set()
+        self.target_constraints = set()
         self.providers_by_vspec_name = collections.defaultdict(list)
         self.virtual_constraints = set()
         self.compiler_version_constraints = set()
@@ -764,6 +765,16 @@ class SpackSolverSetup(object):
         # record all version constraints for later
         self.version_constraints.add((spec.name, spec.versions))
         return [fn.version_satisfies(spec.name, spec.versions)]
+
+    def target_ranges(self, spec, single_target_fn):
+        target = spec.architecture.target
+
+        # Check if the target is a concrete target
+        if str(target) in archspec.cpu.TARGETS:
+            return [single_target_fn(spec.name, target)]
+
+        self.target_constraints.add((spec.name, target))
+        return [fn.node_target_satisfies(spec.name, target)]
 
     def conflict_rules(self, pkg):
         for trigger, constraints in pkg.conflicts.items():
@@ -916,8 +927,13 @@ class SpackSolverSetup(object):
                 named_cond.name = named_cond.name or pkg.name
 
                 for t in sorted(dep.type):
-                    # Skip test dependencies if they're not requested
-                    if t == 'test' and (not tests or pkg.name not in tests):
+                    # Skip test dependencies if they're not requested at all
+                    if t == 'test' and not tests:
+                        continue
+
+                    # ... or if they are requested only for certain packages
+                    if t == 'test' and (not isinstance(tests, bool)
+                                        and pkg.name not in tests):
                         continue
 
                     if cond == spack.spec.Spec():
@@ -1162,7 +1178,7 @@ class SpackSolverSetup(object):
             if arch.os:
                 clauses.append(f.node_os(spec.name, arch.os))
             if arch.target:
-                clauses.append(f.node_target(spec.name, arch.target))
+                clauses.extend(self.target_ranges(spec, f.node_target))
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
@@ -1290,7 +1306,6 @@ class SpackSolverSetup(object):
             if not spec.architecture or not spec.architecture.target:
                 continue
 
-            print("TTYPE:", type(platform.target(spec.target.name)))
             target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
                 raise ValueError("Invalid target: ", spec.target.name)
@@ -1323,13 +1338,18 @@ class SpackSolverSetup(object):
             self.gen.fact(fn.virtual(vspec))
             all_providers = sorted(spack.repo.path.providers_for(vspec))
             for idx, provider in enumerate(all_providers):
-                self.gen.fact(fn.provides_virtual(provider.name, vspec))
+                provides_atom = fn.provides_virtual(provider.name, vspec)
                 possible_provider_fn = fn.possible_provider(
                     vspec, provider.name, idx
                 )
                 item = (idx, provider, possible_provider_fn)
                 self.providers_by_vspec_name[vspec].append(item)
                 clauses = self.spec_clauses(provider, body=True)
+                clauses_but_node = [c for c in clauses if c.name != 'node']
+                if clauses_but_node:
+                    self.gen.rule(provides_atom, AspAnd(*clauses_but_node))
+                else:
+                    self.gen.fact(provides_atom)
                 for clause in clauses:
                     self.gen.rule(clause, possible_provider_fn)
                 self.gen.newline()
@@ -1425,6 +1445,45 @@ class SpackSolverSetup(object):
                 fn.node_compiler_version_satisfies(
                     pkg_name, cspec.name, cspec.versions),
                 possible_compiler_versions,
+            )
+            self.gen.newline()
+
+    def define_target_constraints(self):
+
+        def _all_targets_satisfiying(single_constraint):
+            allowed_targets = []
+            t_min, _, t_max = single_constraint.partition(':')
+            for test_target in archspec.cpu.TARGETS.values():
+                # Check lower bound
+                if t_min and not t_min <= test_target:
+                    continue
+
+                # Check upper bound
+                if t_max and not t_max >= test_target:
+                    continue
+
+                allowed_targets.append(test_target)
+            return allowed_targets
+
+        cache = {}
+        for spec_name, target_constraint in sorted(self.target_constraints):
+
+            # Construct the list of allowed targets for this constraint
+            allowed_targets = []
+            for single_constraint in str(target_constraint).split(','):
+                if single_constraint not in cache:
+                    cache[single_constraint] = _all_targets_satisfiying(
+                        single_constraint
+                    )
+                allowed_targets.extend(cache[single_constraint])
+
+            allowed_targets = [
+                fn.node_target(spec_name, t) for t in allowed_targets
+            ]
+
+            self.gen.one_of_iff(
+                fn.node_target_satisfies(spec_name, target_constraint),
+                allowed_targets,
             )
             self.gen.newline()
 
@@ -1550,6 +1609,9 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Compiler Version Constraints")
         self.define_compiler_version_constraints()
+
+        self.gen.h1("Target Constraints")
+        self.define_target_constraints()
 
     def virtual_spec_clauses(self, dep):
         assert dep.virtual

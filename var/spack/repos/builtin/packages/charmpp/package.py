@@ -21,6 +21,8 @@ class Charmpp(Package):
     url      = "https://charm.cs.illinois.edu/distrib/charm-6.8.2.tar.gz"
     git      = "https://github.com/UIUC-PPL/charm.git"
 
+    maintainers = ["matthiasdiener"]
+
     version("master", branch="master")
 
     version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
@@ -328,8 +330,8 @@ class Charmpp(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_build(self):
-        make('-C', join_path(self.stage.source_path, 'charm/tests'),
-             'test', parallel=False)
+        make('-C', join_path(self.stage.source_path, 'tests'),
+             'test', 'TESTOPTS=++local', parallel=False)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICC',  self.prefix.bin.ampicc)

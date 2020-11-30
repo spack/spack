@@ -537,9 +537,6 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     1@8,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
 }.
-#minimize{
-    Weight@8,Package : version_weight(Package, Weight)
-}.
 
 % Try to maximize the number of compiler matches in the DAG,
 % while minimizing the number of nodes. This is done because
@@ -548,10 +545,15 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 #minimize{ 1@7,Package : node(Package) }.
 #maximize{ Weight@7,Package : compiler_version_match(Package, Weight) }.
 
+% Choose more recent versions for nodes
+#minimize{
+    Weight@6,Package : version_weight(Package, Weight)
+}.
+
 % Try to use preferred compilers
-#minimize{ Weight@6,Package : compiler_weight(Package, Weight) }.
+#minimize{ Weight@5,Package : compiler_weight(Package, Weight) }.
 
 % Maximize the number of matches for targets in the DAG, try
 % to select the preferred target.
-#maximize{ Weight@5,Package : node_target_match(Package, Weight) }.
-#minimize{ Weight@4,Package : node_target_weight(Package, Weight) }.
+#maximize{ Weight@4,Package : node_target_match(Package, Weight) }.
+#minimize{ Weight@3,Package : node_target_weight(Package, Weight) }.
