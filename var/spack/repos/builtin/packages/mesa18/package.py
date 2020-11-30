@@ -53,11 +53,10 @@ class Mesa18(AutotoolsPackage):
     variant('glx', default=is_linux, description="Enable the GLX frontend.")
 
     # Back ends
-    variant('opengl', default=True, description="Enable full OpenGL support.")
     variant('opengles', default=False, description="Enable OpenGL ES support.")
 
     # Provides
-    provides('gl@4.5',  when='+opengl')
+    provides('gl@4.5')
     provides('glx@1.4', when='+glx')
     provides('osmesa', when='+osmesa')
 
@@ -70,9 +69,6 @@ class Mesa18(AutotoolsPackage):
 
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')
-
-    # Require at least 1 back-end
-    conflicts('~opengl ~opengles')
 
     # Prevent an unnecessary xcb-dri dependency
     patch('autotools-x11-nodri.patch')
@@ -126,10 +122,7 @@ class Mesa18(AutotoolsPackage):
         else:
             args.append('--disable-glx')
 
-        if '+opengl' in spec:
-            args.append('--enable-opengl')
-        else:
-            args.append('--disable-opengl')
+        args.append('--enable-opengl')
 
         if '+opengles' in spec:
             args.extend(['--enable-gles1', '--enable-gles2'])
@@ -184,8 +177,7 @@ class Mesa18(AutotoolsPackage):
         if '+glx' in spec:
             libs_to_seek.add('libGL')
 
-        if '+opengl' in spec:
-            libs_to_seek.add('libGL')
+        libs_to_seek.add('libGL')
 
         if '+opengles' in spec:
             libs_to_seek.add('libGLES')
