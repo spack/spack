@@ -31,5 +31,5 @@ class Strelka(CMakePackage):
     depends_on('python@2.4:2.7')
     depends_on('zlib')
     depends_on('bzip2')
-    depends_on('cmake@2.8.5:')
+    depends_on('cmake@2.8.5:', type='build')
     depends_on('boost@1.56.0:')

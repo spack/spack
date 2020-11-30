@@ -64,8 +64,8 @@ class VtkM(CMakePackage, CudaPackage):
     variant('amdgpu_target', default='none', multi=True, values=amdgpu_targets)
     conflicts("+hip", when="amdgpu_target=none")
 
-    depends_on("cmake@3.12:", type="build")         # CMake >= 3.12
-    depends_on("cmake@3.18:", when="+hip")          # CMake >= 3.18
+    depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
+    depends_on("cmake@3.18:", when="+hip", type="build")  # CMake >= 3.18
 
     depends_on('cuda@10.2.0:', when='+cuda')
     depends_on("tbb", when="+tbb")
