@@ -9,25 +9,11 @@ ENV DOCKERFILE_BASE=opensuse          \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
 
-COPY bin   $SPACK_ROOT/bin
-COPY etc   $SPACK_ROOT/etc
-COPY lib   $SPACK_ROOT/lib
-COPY share $SPACK_ROOT/share
-COPY var   $SPACK_ROOT/var
-
-RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/docker-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/interactive-shell \
- && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
-          /usr/local/bin/spack-env
-RUN mkdir -p $SPACK_ROOT/opt/spack
-
 RUN 	zypper ref && \
 	zypper up -y && \
-	zypper in -y python3-base \
+	zypper in -y python3-base python3-boto3\
 	xz gzip tar bzip2 curl patch \
-	gcc-c++ gcc-fortran make cmake automake&&\
+	gcc-c++ gcc-fortran make cmake automake &&\
   zypper clean
 
 # clean up manpages
@@ -35,6 +21,20 @@ RUN	rm -rf /var/cache/zypp/*  \
 	rm -rf /usr/share/doc/packages/* \ 
 	rm -rf /usr/share/doc/manual/*
 
+# copy spack into container
+COPY bin   $SPACK_ROOT/bin
+COPY etc   $SPACK_ROOT/etc
+COPY lib   $SPACK_ROOT/lib
+COPY share $SPACK_ROOT/share
+COPY var   $SPACK_ROOT/var
+RUN mkdir -p $SPACK_ROOT/opt/spack
+
+RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/docker-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/interactive-shell \
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-env
 
 RUN mkdir -p /root/.spack \
  && cp $SPACK_ROOT/share/spack/docker/modules.yaml \
@@ -52,10 +52,10 @@ WORKDIR /root
 SHELL ["docker-shell"]
 
 # Find tools which are in distro
-RUN spack external find  --scope system
+RUN ${SPACK_ROOT}/bin/spack external find  --scope system
 
 # TODO: add a command to Spack that (re)creates the package cache
-RUN spack spec hdf5+mpi
+RUN ${SPACK_ROOT}/bin/spack spec hdf5+mpi
 
 ENTRYPOINT ["/bin/bash", "/opt/spack/share/spack/docker/entrypoint.bash"]
 CMD ["interactive-shell"]
