@@ -25,22 +25,17 @@ class G2o(CMakePackage):
     depends_on('ceres-solver')
     depends_on('freeglut')
     depends_on('suite-sparse')
-    depends_on('qt@5:+opengl')
+    depends_on('qt@5:+gui+opengl')
     depends_on('libqglviewer')
 
     def cmake_args(self):
-        if self.spec.satisfies('platform=darwin'):
-            qglviewer = self.spec['libqglviewer'].prefix.lib.join(
-                'QGLViewer.framework').Versions.Current.Headers
-        else:
-            qglviewer = self.spec['libqglviewer'].prefix.include.QGLViewer
-
         return [
             '-DBUILD_CSPARSE=OFF',
             '-DCSPARSE_INCLUDE_DIR=' + self.spec[
                 'suite-sparse:cxsparse'].headers.directories[0],
             '-DCSPARSE_LIBRARY=' + self.spec['suite-sparse:cxsparse'].libs[0],
-            '-DQGLVIEWER_INCLUDE_DIR=' + qglviewer
+            '-DQGLVIEWER_INCLUDE_DIR=' + self.spec[
+                'libqglviewer'].prefix.include.QGLViewer
         ]
 
     @run_after('install')
