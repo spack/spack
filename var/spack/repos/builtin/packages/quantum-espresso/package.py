@@ -33,7 +33,7 @@ class QuantumEspresso(Package):
     resource(name='environ',
              git='https://github.com/environ-developers/Environ.git',
              tag='v1.1',
-             when='@6.4:6.4.99 +environ',
+             when='@6.3:6.4.99 +environ',
              destination='.'
              )
 
@@ -197,6 +197,9 @@ class QuantumEspresso(Package):
     # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
     conflicts('@5.3:', when='%gcc@8 target=a64fx',
               msg='Internal compiler error with gcc8 and a64fx')
+
+    conflicts('@6.5:', when='+environ',
+            msg='6.4.x is the latest QE series supported by Environ')
 
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
