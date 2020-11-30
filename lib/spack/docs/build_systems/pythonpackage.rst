@@ -324,21 +324,21 @@ mentions that Python 3 is required, this can be specified as:
 
 .. code-block:: python
 
-   depends_on('python@3:', type=('build', 'run')
+   depends_on('python@3:', type=('build', 'run'))
 
 
 If Python 2 is required, this would look like:
 
 .. code-block:: python
 
-   depends_on('python@:2', type=('build', 'run')
+   depends_on('python@:2', type=('build', 'run'))
 
 
 If Python 2.7 is the only version that works, you can use:
 
 .. code-block:: python
 
-   depends_on('python@2.7:2.8', type=('build', 'run')
+   depends_on('python@2.7:2.8', type=('build', 'run'))
 
 
 The documentation may not always specify supported Python versions.
