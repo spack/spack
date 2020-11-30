@@ -59,11 +59,11 @@ class Bowtie2(MakefilePackage):
 
     @property
     def build_targets(self):
-        make_arg = ['PREFIX={}'.format(self.prefix)]
+        make_arg = ['PREFIX={0}'.format(self.prefix)]
         if self.spec.satisfies('target=aarch64:'):
             make_arg.append('POPCNT_CAPABILITY=0')
         return make_arg
 
     @property
     def install_targets(self):
-        return ['PREFIX={}'.format(self.prefix), 'install']
+        return ['PREFIX={0}'.format(self.prefix), 'install']
