@@ -80,6 +80,9 @@ class Mesa(MesonPackage):
     # TODO: Add vulkan to this conflict once made available
     conflicts('~opengl ~opengles')
 
+    # OpenGL ES requires OpenGL
+    conflicts('~opengl +opengles')
+
     def meson_args(self):
         spec = self.spec
         args = [
