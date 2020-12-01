@@ -63,11 +63,16 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
             options.append('-DENABLE_CUDA=OFF')
 
         if '+rocm' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
