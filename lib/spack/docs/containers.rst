@@ -128,7 +128,7 @@ are currently supported are summarized in the table below:
      - ``spack/ubuntu-bionic``
    * - Ubuntu 20.04
      - ``ubuntu:20.04``
-     - ``IDK what goes here``
+     - ``spack/ubuntu-focal``
    * - CentOS 6
      - ``centos:6``
      - ``spack/centos6``
