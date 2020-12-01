@@ -178,3 +178,43 @@ def test_update_key_index(tmpdir, mutable_mock_env_path,
     mirror('rm', 'test-mirror')
 
     assert 'index.json' in key_dir_list
+
+
+def test_buildcache_cmd_check(install_mockery, mock_fetch,
+                              monkeypatch, tmpdir):
+    """Test builcache check command"""
+    pkg = 'trivial-install-test-package'
+
+    working_dir = tmpdir.join('working_dir')
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    # try to create a buildcache for a package we don't
+    # have installed should fail
+    output = buildcache('check', '-s', pkg, fail_on_error=False)
+    assert "trivial-install-test-package does not " \
+           "match any installed packages" in output
+
+    # when there's no mirror provided, we should be warned about that
+    install(pkg)
+    output = buildcache('check', '-s', pkg, fail_on_error=False)
+    assert 'No mirrors provided, exiting' in output
+
+    # when --rebuild-on-error is not provided, it should fail when
+    # the spec doesn't exist
+    output = buildcache('check', '-m', mirror_url,
+                        '-s', pkg, fail_on_error=False)
+    assert 'caught exception attempting to read from' in output
+    assert 'will not be rebuilt' in output
+
+    # when --rebuild-on-error is provided, it should tell us to rebuild
+    output = buildcache('check', '--rebuild-on-error',
+                        '-m', mirror_url, '-s', pkg, fail_on_error=False)
+    assert 'will be rebuilt' in output
+
+    # finally when the spec is in the buildcache and up to date,
+    # nothing should happen
+    output = buildcache('create', '-d', str(mirror_dir), '--unsigned', pkg)
+    output = buildcache('check', '--rebuild-on-error',
+                        '-m', mirror_url, '-s', pkg, fail_on_error=False)
+    assert not output
