@@ -73,7 +73,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
         fonts.append(f)
 
     conflicts('font=font-bh-tff', when='platform=cray')
-    default_fonts = [f for f in fonts if f[0] != 'font-bh-tff']
+    default_fonts = [f for f in fonts if f != 'font-bh-tff']
 
     variant('fonts',
             description='Installs fonts',
