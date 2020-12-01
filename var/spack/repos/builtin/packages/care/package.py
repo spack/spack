@@ -40,9 +40,6 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     depends_on('raja@develop+cuda', when='+cuda')
     depends_on('chai@develop+cuda+enable_pick~benchmarks', when='+cuda')
 
-    # TODO: support external cub rather than in-package submodule.
-    # depends_on('cub', when='+cuda')
-
     # variants +hip and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     amdgpu_targets = HipPackage.amd_gputargets_list()
