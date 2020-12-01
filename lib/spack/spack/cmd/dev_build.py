@@ -39,13 +39,6 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--drop-in', type=str, dest='shell', default=None,
         help="drop into a build environment in a new shell, e.g. bash, zsh")
-    subparser.add_argument(
-        '--test', default=None,
-        choices=['root', 'all'],
-        help="""If 'root' is chosen, run package tests during
-installation for top-level packages (but skip tests for dependencies).
-if 'all' is chosen, run package tests during installation for all
-packages. If neither are chosen, don't run tests for any packages.""")
     arguments.add_common_arguments(subparser, ['spec'])
 
     stop_group = subparser.add_mutually_exclusive_group()
