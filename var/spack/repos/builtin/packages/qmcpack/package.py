@@ -87,6 +87,10 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
 
+    conflicts('cuda_arch=none',
+              when='+cuda',
+              msg='A value for cuda_arch must be specified. Add cuda_arch=XX')
+
     # Omitted for now due to concretizer bug
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
@@ -265,14 +269,7 @@ class Qmcpack(CMakePackage, CudaPackage):
                     'QMCPACK only supports compilation for a single '
                     'GPU architecture at a time'
                 )
-            if cuda_arch != 'none':
-                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
-            else:
-                # This is the default value set in QMCPACK's CMake
-                # Not possible to set default value for cuda_arch,
-                # thus this won't be stored in the spec, which is
-                # a problem.
-                args.append('-DCUDA_ARCH=sm_35')
+            args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
         else:
             args.append('-DQMC_CUDA=0')
 
