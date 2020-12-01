@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Libyogrt(AutotoolsPackage):
     """Your One Get Remaining Time Library."""
 
@@ -33,8 +34,9 @@ class Libyogrt(AutotoolsPackage):
 
     variant('scheduler', default='system',
             description="Select scheduler integration",
-            values=['system', 'slurm'], multi=False)
+            values=['system', 'slurm', 'lsf'], multi=False)
     depends_on('slurm', when='scheduler=slurm')
+    depends_on('lsf', when='scheduler=lsf')
 
     conflicts('scheduler=lsf', when='@:1.22')
 
@@ -51,26 +53,37 @@ class Libyogrt(AutotoolsPackage):
         args = []
 
         sched = self.spec.variants['scheduler'].value
+        print("SCHEDULER=%s\n" % sched)
         if sched != "system":
-            args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
+            if sched == "lsf":
+                args.append('--with-lsf')
+                args.append('LIBS=-llsf -lrt -lnsl')
+            else:
+                args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 
         if '+static' in self.spec:
             args.append('--enable-static=yes')
 
+        print("ARGS=%s\n" % args)
         return args
 
     def install(self, spec, prefix):
-
-        # Run standard Autotools install first, then create a yogrt.conf file for the selected scheduler
+        # Run standard Autotools install first, then create a yogrt.conf file
+        # for the selected scheduler
 
         AutotoolsPackage.install(self, spec, prefix)
-        etcpath = os.path.join(prefix,"etc")
+
+        etcpath = os.path.join(prefix, "etc")
+
         if not os.path.isdir(etcpath):
             mode = 0o755
             os.mkdir(etcpath, mode)
-            
-        f = open(os.path.join(etcpath,"yogrt.conf"),"w+")
-        f.write("backend=%s\n" % self.spec.variants['scheduler'].value)
-        f.close()
 
-        return 
+        sched = self.spec.variants['scheduler'].value
+        if sched == "system":
+            sched = "none"
+
+        with open(os.path.join(etcpath, "yogrt.conf"), "w+") as f:
+            f.write("backend=%s\n" % sched)
+
+        return
