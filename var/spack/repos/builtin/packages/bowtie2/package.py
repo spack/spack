@@ -66,4 +66,4 @@ class Bowtie2(MakefilePackage):
 
     @property
     def install_targets(self):
-        return ['PREFIX={0}'.format(self.prefix), 'install']
+        return ['prefix={0}'.format(self.prefix), 'install']
