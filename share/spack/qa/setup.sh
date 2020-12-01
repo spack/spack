@@ -28,9 +28,14 @@ if [[ "$COVERAGE" == "true" ]]; then
 
     # bash coverage depends on some other factors
     mkdir -p coverage
-    cc_script="$SPACK_ROOT/lib/spack/env/cc"
     bashcov=$(realpath ${QA_DIR}/bashcov)
-    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
+
+    # instrument scripts requiring shell coverage
+    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
+    if [ "$(uname -o)" != "Darwin" ]; then
+        # On darwin, #! interpreters must be binaries, so no sbang for bashcov
+        sed -i~ "s@#\!/bin/sh@#\!${bashcov}@"   "$SPACK_ROOT/bin/sbang"
+    fi
 fi
 
 #

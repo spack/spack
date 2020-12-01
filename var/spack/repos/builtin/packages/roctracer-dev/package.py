@@ -17,6 +17,7 @@ class RoctracerDev(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.9.0', sha256='0678f9faf45058b16923948c66d77ba2c072283c975d167899caef969169b292')
     version('3.8.0', sha256='5154a84ce7568cd5dba756e9508c34ae9fc62f4b0b5731f93c2ad68b21537ed1')
     version('3.7.0', sha256='6fa5b771e990f09c242237ab334b9f01039ec7d54ccde993e719c5d6577d1518')
     version('3.5.0', sha256='7af5326c9ca695642b4265232ec12864a61fd6b6056aa7c4ecd9e19c817f209e')
@@ -26,7 +27,7 @@ class RoctracerDev(CMakePackage):
     depends_on('python@:2', type='build')
     depends_on('py-cppheaderparser', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)

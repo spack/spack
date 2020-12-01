@@ -15,6 +15,8 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.6.0/geant4-v10.6.0.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
     version('10.6.2', sha256='e381e04c02aeade1ed8cdd9fdbe7dcf5d6f0f9b3837a417976b839318a005dbd')
@@ -66,7 +68,7 @@ class Geant4(CMakePackage):
                    when='@10.3.3: cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
-        depends_on('xerces-c cxxstd=' + std, when='cxxstd=' + std)
+        depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
@@ -84,6 +86,7 @@ class Geant4(CMakePackage):
 
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')
+    depends_on("glu", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')

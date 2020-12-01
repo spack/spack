@@ -17,6 +17,8 @@ class PyParticle(PythonPackage):
 
     maintainers = ['vvolkl']
 
+    tags = ['hep']
+
     version('master', branch='master')
     version('0.11.0', sha256='e90dc36c8b7d7431bd14ee5a28486d28b6c0708555845d1d7bdf59a165405f12')
 

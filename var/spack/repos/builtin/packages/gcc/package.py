@@ -119,6 +119,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('isl@0.15:', when='@10:')
     depends_on('zlib', when='@6:')
     depends_on('zstd', when='@10:')
+    depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
@@ -270,7 +271,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat-4.9.patch', when='@4.9')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
-    patch('zstd.patch', when='@10:')
+    patch('zstd.patch', when='@10')
 
     build_directory = 'spack-build'
 

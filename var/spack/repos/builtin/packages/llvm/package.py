@@ -113,6 +113,12 @@ class Llvm(CMakePackage, CudaPackage):
         "less memory to build, less stable",
     )
     variant(
+        "llvm_dylib",
+        default=False,
+        description="Build LLVM shared library, containing all "
+        "components in a single shared library",
+    )
+    variant(
         "all_targets",
         default=False,
         description="Build all supported targets, default targets "
@@ -139,7 +145,8 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("cmake@3.4.3:", type="build")
     depends_on("python@2.7:2.8", when="@:4.999 ~python", type="build")
     depends_on("python", when="@5: ~python", type="build")
-    
+    depends_on("pkgconfig", type="build")
+
     # Universal dependency
     depends_on("python@2.7:2.8", when="@:4.999+python")
     depends_on("python", when="@5:+python")
@@ -166,8 +173,10 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
+
     # Flang in > 11
     conflicts("+flang", when="@:10.99")
+    conflicts("+llvm_dylib", when="+shared_libs")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
@@ -199,6 +208,11 @@ class Llvm(CMakePackage, CudaPackage):
             "system debug server",
     )
 
+    # LLVM bug https://bugs.llvm.org/show_bug.cgi?id=48234
+    # CMake bug: https://gitlab.kitware.com/cmake/cmake/-/issues/21469
+    # Fixed in upstream versions of both
+    conflicts('^cmake@3.19.0', when='@6.0.0:11.0.0')
+
     # Github issue #4986
     patch("llvm_gcc7.patch", when="@4.0.0:4.0.1+lldb %gcc@7.0:")
     # Backport from llvm master + additional fix
@@ -214,6 +228,10 @@ class Llvm(CMakePackage, CudaPackage):
 
     # https://bugs.llvm.org/show_bug.cgi?id=39696
     patch("thread-p9.patch", when="@develop+libcxx")
+
+    # https://github.com/spack/spack/issues/19625,
+    # merged in llvm-11.0.0_rc2
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -238,11 +256,11 @@ class Llvm(CMakePackage, CudaPackage):
     def determine_version(cls, exe):
         version_regex = re.compile(
             # Normal clang compiler versions are left as-is
-            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)-svn[~.\w\d-]*|'
             # Don't include hyphenated patch numbers in the version
             # (see https://github.com/spack/spack/pull/14365 for details)
-            r'clang version ([^ )]+?)-[~.\w\d-]*|'
-            r'clang version ([^ )]+)|'
+            r'clang version ([^ )\n]+?)-[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)|'
             # LLDB
             r'lldb version ([^ )\n]+)|'
             # LLD
@@ -435,6 +453,8 @@ class Llvm(CMakePackage, CudaPackage):
 
         if "+shared_libs" in spec:
             cmake_args.append("-DBUILD_SHARED_LIBS:Bool=ON")
+        if "+llvm_dylib" in spec:
+            cmake_args.append("-DLLVM_BUILD_LLVM_DYLIB:Bool=ON")
         if "+omp_debug" in spec:
             cmake_args.append("-DLIBOMPTARGET_ENABLE_DEBUG:Bool=ON")
 

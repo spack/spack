@@ -13,6 +13,8 @@ class G4particlexs(Package):
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4PARTICLEXS.2.1.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
     # Only versions relevant to Geant4 releases built by spack are added

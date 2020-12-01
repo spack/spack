@@ -15,6 +15,8 @@ class PyUproot4(PythonPackage):
 
     maintainers = ['vvolkl']
 
+    tags = ['hep']
+
     version('master', branch='master')
     version('0.0.27', sha256='de87555937332998b476f3e310392962bc983bddc008ed2b3c07a25c0379c4c9')
 

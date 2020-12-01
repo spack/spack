@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -67,7 +68,11 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('catch2', type='test')
 
-    depends_on('aluminum', when='+al ~cuda')
+    # Specify the correct version of Aluminum
+    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
+    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+
+    # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
@@ -101,10 +106,12 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
+
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
@@ -146,4 +153,35 @@ class Dihydrogen(CMakePackage, CudaPackage):
                         ' '.join(self.cuda_flags(cuda_arch))
                     ))
 
+        if '+cuda' in spec or '+legacy' in spec:
+            args.append('-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix))
+
+        if spec.satisfies('^cuda@:10.99'):
+            if '+cuda' in spec or '+legacy' in spec:
+                args.append('-DCUB_DIR={0}'.format(
+                    spec['cub'].prefix))
+
+        # Add support for OpenMP with external (Brew) clang
+        if spec.satisfies('%clang +openmp platform=darwin'):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                    clang_root)])
+
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)

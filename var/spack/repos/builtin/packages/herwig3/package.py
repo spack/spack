@@ -13,6 +13,8 @@ class Herwig3(AutotoolsPackage):
     homepage = "https://herwig.hepforge.org"
     url      = "https://herwig.hepforge.org/downloads/Herwig-7.2.1.tar.bz2"
 
+    tags = ['hep']
+
     version('7.2.1', sha256='d4fff32f21c5c08a4b2e563c476b079859c2c8e3b78d853a8a60da96d5eea686')
 
     depends_on('autoconf', type='build')

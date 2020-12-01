@@ -13,6 +13,8 @@ class Relax(CMakePackage):
     homepage = "https://twiki.cern.ch/twiki/bin/view/LCG/RELAX"
     url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/RELAX-1.tar.gz"
 
+    tags = ['hep']
+
     # The RELAX project stopped using a fixed release model since it moved to
     # ROOT 6, so any package checksum is a lie...
     version('root6')

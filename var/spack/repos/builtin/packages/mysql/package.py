@@ -117,6 +117,7 @@ class Mysql(CMakePackage):
     depends_on('perl', type=['build', 'test'], when='@:7.99.99')
     depends_on('bison@2.1:', type='build')
     depends_on('m4', type='build', when='@develop platform=solaris')
+    depends_on('cyrus-sasl', when='@:5.7.999')
 
     patch('fix-no-server-5.5.patch', level=1, when='@5.5.0:5.5.999')
 

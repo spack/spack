@@ -70,7 +70,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=map(str, HFX_LMAX_RANGE),
+            values=tuple(map(str, HFX_LMAX_RANGE)),
             multi=False)
 
     depends_on('python', type='build')
@@ -193,7 +193,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
-            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+            fftw_header_dir = '<NOTFOUND>'
+            for incdir in [join_path(f, 'fftw')
+                           for f in fftw.headers.directories]:
+                if os.path.exists(incdir):
+                    fftw_header_dir = incdir
+                    break
 
         optimization_flags = {
             'gcc': [

@@ -87,9 +87,10 @@ spack package at this time.''',
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
+    # landed in v3.4b1 v3.4a3
     patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
           sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
-          when='@3.3 +hwloc')
+          when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
@@ -159,10 +160,10 @@ spack package at this time.''',
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
-    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
-    depends_on("m4", when="@3.3 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+    depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3:3.3.99 +hwloc', type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -351,7 +352,7 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         if (os.path.exists(self.configure_abs_path) and
-            not spec.satisfies('@3.3 +hwloc')):
+            not spec.satisfies('@3.3:3.3.99 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')

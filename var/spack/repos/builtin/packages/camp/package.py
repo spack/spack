@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Camp(CMakePackage, CudaPackage):
+class Camp(CMakePackage, CudaPackage, HipPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
     type operations and tuples for C++ and cuda
@@ -14,9 +14,10 @@ class Camp(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/LLNL/camp"
     git      = "https://github.com/LLNL/camp.git"
+    url      = "https://github.com/LLNL/camp/archive/v0.1.0.tar.gz"
 
     version('master', branch='master', submodules='True')
-    version('0.1.0', url='https://github.com/LLNL/camp/archive/v0.1.0.tar.gz')
+    version('0.1.0', sha256='fd4f0f2a60b82a12a1d9f943f8893dc6fe770db493f8fae5ef6f7d0c439bebcc')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
@@ -39,6 +40,16 @@ class Camp(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        options.append('-DENABLE_TESTS=ON')
+        if '+hip' in spec:
+            arch = self.spec.variants['amdgpu_target'].value
+            options.extend([
+                '-DENABLE_HIP=ON',
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+        else:
+            options.append('-DENABLE_HIP=OFF')
+
+        options.append('-DENABLE_TESTS={0}'.format(
+            "On" if self.run_tests else "Off"))
 
         return options

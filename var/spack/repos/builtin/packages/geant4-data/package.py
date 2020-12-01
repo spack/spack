@@ -15,6 +15,8 @@ class Geant4Data(BundlePackage):
 
     maintainers = ['drbenmorgan']
 
+    tags = ['hep']
+
     version('10.6.2')
     version('10.6.1')
     version('10.6.0')

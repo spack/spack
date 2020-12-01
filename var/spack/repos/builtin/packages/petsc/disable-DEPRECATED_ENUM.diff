@@ -1,0 +1,43 @@
+diff --git a/include/petscksp.h b/include/petscksp.h
+index 11806c115f..ba49dfaf6c 100644
+--- a/include/petscksp.h
++++ b/include/petscksp.h
+@@ -464,7 +464,7 @@ PETSC_EXTERN PetscErrorCode KSPSetSupportedNorm(KSP ksp,KSPNormType,PCSide,Petsc
+ PETSC_EXTERN PetscErrorCode KSPSetCheckNormIteration(KSP,PetscInt);
+ PETSC_EXTERN PetscErrorCode KSPSetLagNorm(KSP,PetscBool);
+ 
+-#define KSP_DIVERGED_PCSETUP_FAILED_DEPRECATED KSP_DIVERGED_PCSETUP_FAILED PETSC_DEPRECATED_ENUM("Use KSP_DIVERGED_PC_FAILED (since version 3.11)")
++#define KSP_DIVERGED_PCSETUP_FAILED_DEPRECATED KSP_DIVERGED_PCSETUP_FAILED
+ /*E
+     KSPConvergedReason - reason a Krylov method was said to have converged or diverged
+ 
+diff --git a/include/petscsnes.h b/include/petscsnes.h
+index 27c6169209..d0e1ef8f77 100644
+--- a/include/petscsnes.h
++++ b/include/petscsnes.h
+@@ -186,7 +186,7 @@ PETSC_EXTERN PetscErrorCode SNESSetJacobianDomainError(SNES);
+ PETSC_EXTERN PetscErrorCode SNESSetCheckJacobianDomainError(SNES,PetscBool);
+ PETSC_EXTERN PetscErrorCode SNESGetCheckJacobianDomainError(SNES,PetscBool*);
+ 
+-#define SNES_CONVERGED_TR_DELTA_DEPRECATED SNES_CONVERGED_TR_DELTA PETSC_DEPRECATED_ENUM("Use SNES_DIVERGED_TR_DELTA (since version 3.12)")
++#define SNES_CONVERGED_TR_DELTA_DEPRECATED SNES_CONVERGED_TR_DELTA
+ /*E
+     SNESConvergedReason - reason a SNES method was said to
+          have converged or diverged
+diff --git a/include/petscviewer.h b/include/petscviewer.h
+index 2db3276b07..75e0a5a659 100644
+--- a/include/petscviewer.h
++++ b/include/petscviewer.h
+@@ -108,9 +108,9 @@ PETSC_EXTERN PetscErrorCode PetscViewerWritable(PetscViewer,PetscBool*);
+ PETSC_EXTERN PetscErrorCode PetscViewerCheckReadable(PetscViewer);
+ PETSC_EXTERN PetscErrorCode PetscViewerCheckWritable(PetscViewer);
+ 
+-#define PETSC_VIEWER_ASCII_VTK_ATTR        PETSC_VIEWER_ASCII_VTK        PETSC_DEPRECATED_ENUM("Legacy VTK deprecated; use PetscViewerVTKOpen() with XML (.vtr .vts .vtu) format (since 3.14)")
+-#define PETSC_VIEWER_ASCII_VTK_CELL_ATTR   PETSC_VIEWER_ASCII_VTK_CELL   PETSC_DEPRECATED_ENUM("Legacy VTK deprecated; use PetscViewerVTKOpen() with XML (.vtr .vts .vtu) format (since 3.14)")
+-#define PETSC_VIEWER_ASCII_VTK_COORDS_ATTR PETSC_VIEWER_ASCII_VTK_COORDS PETSC_DEPRECATED_ENUM("Legacy VTK deprecated; use PetscViewerVTKOpen() with XML (.vtr .vts .vtu) format (since 3.14)")
++#define PETSC_VIEWER_ASCII_VTK_ATTR        PETSC_VIEWER_ASCII_VTK
++#define PETSC_VIEWER_ASCII_VTK_CELL_ATTR   PETSC_VIEWER_ASCII_VTK_CELL
++#define PETSC_VIEWER_ASCII_VTK_COORDS_ATTR PETSC_VIEWER_ASCII_VTK_COORDS
+ /*E
+     PetscViewerFormat - Way a viewer presents the object
+ 

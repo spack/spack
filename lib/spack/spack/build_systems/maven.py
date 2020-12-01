@@ -35,15 +35,19 @@ class MavenPackage(PackageBase):
         """The directory containing the ``pom.xml`` file."""
         return self.stage.source_path
 
+    def build_args(self):
+        """List of args to pass to build phase."""
+        return []
+
     def build(self, spec, prefix):
         """Compile code and package into a JAR file."""
 
         with working_dir(self.build_directory):
             mvn = which('mvn')
             if self.run_tests:
-                mvn('verify')
+                mvn('verify', *self.build_args())
             else:
-                mvn('package', '-DskipTests')
+                mvn('package', '-DskipTests', *self.build_args())
 
     def install(self, spec, prefix):
         """Copy to installation prefix."""
