@@ -28,6 +28,8 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
+    # TODO: figure out gtest dependency and then set this default True.
+    variant('tests', default=False, description='Build tests')
 
     depends_on('cmake@3.8:', type='build')
     depends_on('umpire')
@@ -46,15 +48,13 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
 
+    conflicts('+benchmarks', when='~tests')
+
     def cmake_args(self):
         spec = self.spec
 
         options = []
-
-        # if blt is not in the spec, it means that there is no explicit blt
-        # dependency and an internal blt submodule is being used.
-        if 'blt' in spec:
-            options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
+        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
         if '+cuda' in spec:
             options.extend([
@@ -89,14 +89,7 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
                        + spec['umpire'].prefix.share.umpire.cmake)
 
         options.append('-DENABLE_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
-
-        # give clear error for conflict between self.run_tests and
-        # benchmarks variant.
-        if not self.run_tests and '+benchmarks' in spec:
-            raise InstallError(
-                'ENABLE_BENCHMARKS requires ENABLE_TESTS to be ON'
-            )
+            'ON' if '+tests' in spec  else 'OFF'))
 
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))

@@ -25,6 +25,8 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     variant('docs', default=False, description='Build documentation')
+    # TODO: figure out gtest dependency and then set this default True.
+    variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
 
@@ -98,7 +100,7 @@ class Care(CMakePackage, CudaPackage, HipPackage):
                        + spec['chai'].prefix.share.chai.cmake)
 
         options.append('-DCARE_ENABLE_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
+            'ON' if '+tests' in spec else 'OFF'))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
@@ -118,12 +120,5 @@ class Care(CMakePackage, CudaPackage, HipPackage):
             'ON' if '+docs' in spec else 'OFF'))
         options.append('-DCARE_ENABLE_DOCS={0}'.format(
             'ON' if '+docs' in spec else 'OFF'))
-
-        # give clear error for conflict between self.run_tests and
-        # benchmarks variant.
-        if not self.run_tests and '+benchmarks' in spec:
-            raise InstallError(
-                'ENABLE_BENCHMARKS requires ENABLE_TESTS to be ON'
-            )
 
         return options

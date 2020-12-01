@@ -32,6 +32,8 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
     variant('shared', default=True, description='Build Shared Libs')
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
+    # TODO: figure out gtest dependency and then set this default True.
+    variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
 
@@ -92,7 +94,8 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
         if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
             options.append('-DENABLE_TESTS=OFF')
         else:
-            options.append('-DENABLE_TESTS=ON')
+            options.append('-DENABLE_TESTS={0}'.format(
+                'ON' if '+tests' in spec else 'OFF'))
 
         return options
 
