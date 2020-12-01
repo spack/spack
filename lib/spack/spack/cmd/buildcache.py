@@ -566,7 +566,8 @@ def check_binaries(args):
         sys.exit(0)
 
     for spec in specs:
-        spec.concretize()
+        if not spec.concrete:
+            spec.concretize()
 
     # Next see if there are any configured binary mirrors
     configured_mirrors = spack.config.get('mirrors', scope=args.scope)
@@ -642,7 +643,8 @@ def get_concrete_spec(args):
     if spec_str:
         try:
             spec = find_matching_specs(spec_str)[0]
-            spec.concretize()
+            if not spec.concrete:
+                spec.concretize()
         except SpecError as spec_error:
             tty.error('Unable to concrectize spec {0}'.format(args.spec))
             tty.debug(spec_error)
