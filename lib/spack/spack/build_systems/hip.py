@@ -98,10 +98,7 @@ class HipPackage(PackageBase):
     depends_on('hsa-rocr-dev', when='+hip')
     depends_on('hip', when='+hip')
 
-    # develop build of blt has fixes for hip, see blt pull
-    # requests from Nov 13 to 23 2020.
-    # This can be changed once blt release 0.3.7 is availible.
-    depends_on('blt@develop', type='build', when='+hip')
+    depends_on('blt@0.3.7:', type='build', when='+hip')
 
     # need amd gpu type for hip builds
     conflicts('amdgpu_target=none', when='+hip')
