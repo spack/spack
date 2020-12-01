@@ -36,17 +36,17 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     depends_on('chai@develop+enable_pick~benchmarks')
 
     depends_on('camp+cuda', when='+cuda')
-    depends_on('umpire@develop+cuda', when='+cuda')
-    depends_on('raja@develop+cuda', when='+cuda')
-    depends_on('chai@develop+cuda+enable_pick~benchmarks', when='+cuda')
+    depends_on('umpire+cuda', when='+cuda')
+    depends_on('raja+cuda~openmp', when='+cuda')
+    depends_on('chai+cuda', when='+cuda')
 
     # variants +hip and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     amdgpu_targets = HipPackage.amd_gputargets_list()
     depends_on('camp+hip', when='+hip')
-    depends_on('umpire@develop+hip', when='+hip')
-    depends_on('raja@develop+hip~openmp', when='+hip')
-    depends_on('chai@develop+hip+enable_pick~benchmarks', when='+hip')
+    depends_on('umpire+hip', when='+hip')
+    depends_on('raja+hip~openmp', when='+hip')
+    depends_on('chai+hip', when='+hip')
     for val in amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
