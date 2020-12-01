@@ -225,7 +225,7 @@ class Wrf(Package):
                     for line in ifh:
                         if line.startswith("DM_"):
                             line = line.replace(
-                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpif90
+                                "mpif90 -f90=$(SFC)", self.spec['mpi'].mpifc
                             )
                             line = line.replace(
                                 "mpicc -cc=$(SCC)", self.spec['mpi'].mpicc
@@ -289,7 +289,7 @@ class Wrf(Package):
         csh = Executable(csh_bin)
 
         # num of compile jobs capped at 20 in wrf
-        num_jobs = str(min(int(make_jobs, 10)))
+        num_jobs = str(min(int(make_jobs), 10))
 
         # Now run the compile script and track the output to check for
         # failure/success We need to do this because upstream use `make -i -k`
@@ -300,6 +300,8 @@ class Wrf(Package):
             "-j",
             num_jobs,
             self.spec.variants["compile_type"].value,
+            output=str,
+            error=str
         )
 
         if "Executables successfully built" in result_buf:
