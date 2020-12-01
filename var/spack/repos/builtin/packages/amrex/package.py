@@ -87,7 +87,7 @@ class Amrex(CMakePackage):
     conflicts('+sundials', when='~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
     conflicts('+sundials', when='@20.12:',
-              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')   
+              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')
     conflicts('+hdf5', when='@:20.06',
               msg='AMReX HDF5 support needs AMReX newer than version 20.06')
     conflicts('+hypre', when='@:20.06',
