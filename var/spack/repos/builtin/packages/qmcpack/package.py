@@ -92,12 +92,12 @@ class Qmcpack(CMakePackage, CudaPackage):
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
     # QMCPACK 3.6.0 or later requires support for C++14
-    compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
-                       'compiler with support for C++14'
-    conflicts('%gcc@:4', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%intel@:17', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
+    cpp14_warning = 'QMCPACK v3.6.0 or later requires a ' \
+                    'compiler with support for C++14'
+    conflicts('%gcc@:4', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%intel@:17', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%pgi@:17', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%clang@:3.4', when='@3.6.0:', msg=cpp14_warning)
 
     conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
     conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
