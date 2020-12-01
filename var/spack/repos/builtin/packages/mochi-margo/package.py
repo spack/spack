@@ -6,10 +6,9 @@
 from spack import *
 
 
-class Margo(AutotoolsPackage):
+class MochiMargo(AutotoolsPackage):
     """A library that provides Argobots bindings to the Mercury RPC
-    implementation.  This name will be deprecated soon; please use the
-    mochi-margo package instead."""
+    implementation."""
 
     homepage = 'https://xgitlab.cels.anl.gov/sds/margo'
     git = 'https://xgitlab.cels.anl.gov/sds/margo.git'
