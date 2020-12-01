@@ -365,7 +365,6 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         # We assume cwd is self.stage.source_path, then
         # install manual, labs, and nexus
-        install_tree('manual', prefix.manual)
         install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
 
