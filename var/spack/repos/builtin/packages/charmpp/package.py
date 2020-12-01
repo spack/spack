@@ -240,12 +240,14 @@ class Charmpp(Package):
         # not, then we need to query the compiler vendor from Spack
         # here.
         options = [
-            os.path.basename(self.compiler.cc),
-            'gfortran'
-            if '@:6.8.2 %aocc' in spec else os.path.basename(self.compiler.fc),
-            "-j%d" % make_jobs,
-            "--destination=%s" % builddir,
+            os.path.basename(self.compiler.cc)
         ]
+
+        if not '@:6.8.2 %aocc' in spec:
+            options.append(os.path.basename(self.compiler.fc))
+
+        options.append("-j%d" % make_jobs)
+        options.append("--destination=%s" % builddir)
 
         if "pmi=slurmpmi" in spec:
             options.append("slurmpmi")
