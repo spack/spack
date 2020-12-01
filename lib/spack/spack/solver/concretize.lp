@@ -515,13 +515,6 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
-% For external packages it's more important than for others
-% to match the compiler with their parent node
-#maximize{
-    Weight@12,Package
-    : compiler_version_match(Package, Weight), external(Package)
-}.
-
 % Try to use default variants or variants that have been set
 #minimize {
     Weight@11,Package,Variant,Value
