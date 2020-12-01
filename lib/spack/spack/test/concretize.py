@@ -967,3 +967,11 @@ class TestConcretize(object):
 
         s = Spec('a %gcc@foo os=redhat6').concretized()
         assert '%gcc@foo' in s
+
+    def test_all_patches_applied(self):
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
+        spec.concretize()
+        assert ((uuidpatch, localpatch) ==
+                spec['libelf'].variants['patches'].value)
