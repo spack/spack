@@ -243,7 +243,7 @@ class Charmpp(Package):
             os.path.basename(self.compiler.cc)
         ]
 
-        if not '@:6.8.2 %aocc' in spec:
+        if '@:6.8.2 %aocc' not in spec:
             options.append(os.path.basename(self.compiler.fc))
 
         options.append("-j%d" % make_jobs)
