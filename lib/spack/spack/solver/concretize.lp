@@ -194,12 +194,19 @@ variant_value(Package, Variant, Value)
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
+    not variant_set(Package, Variant, Value),
     node(Package).
 
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
+
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    variant_set(Package, Variant, Value),
+    node(Package).
+
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
@@ -508,27 +515,23 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
-% Next, we want to minimize the weights of the providers
-% i.e. use as much as possible the most preferred providers
-#minimize{
-    Weight@11,Provider
-    : provider_weight(Provider, Weight), not root(Provider)
-}.
-
 % For external packages it's more important than for others
 % to match the compiler with their parent node
 #maximize{
-    Weight@10,Package
+    Weight@12,Package
     : compiler_version_match(Package, Weight), external(Package)
 }.
 
-% Then try to use as much as possible:
-% 1. Default variants
-% 2. Latest versions
-% of all the other nodes in the DAG
+% Try to use default variants or variants that have been set
 #minimize {
-    Weight@9,Package,Variant,Value
+    Weight@11,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+}.
+% Minimize the weights of the providers, i.e. use as much as
+% possible the most preferred providers
+#minimize{
+    Weight@9,Provider
+    : provider_weight(Provider, Weight), not root(Provider)
 }.
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
