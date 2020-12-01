@@ -85,6 +85,8 @@ packages:
     version: [3.8.3]
   qt:
     variants: ~ssl~sql~tools
+  range-v3:
+    variants: ~doc
   slurm:
     buildable: false
     version: [17.02]
