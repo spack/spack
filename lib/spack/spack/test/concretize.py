@@ -943,3 +943,14 @@ class TestConcretize(object):
     def test_target_ranges_in_conflicts(self):
         with pytest.raises(spack.error.SpackError):
             Spec('impossible-concretization').concretized()
+
+    @pytest.mark.regression('20040')
+    def test_variant_not_default(self):
+        s = Spec('ecp-viz-sdk').concretized()
+
+        # Check default variant value for the package
+        assert '+dep' in s['conditional-constrained-dependencies']
+
+        # Check that non-default variant values are forced on the dependency
+        d = s['dep-with-variants']
+        assert '+foo+bar+baz' in d
