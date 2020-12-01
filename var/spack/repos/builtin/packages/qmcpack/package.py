@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.10.0', tag='v3.10.0')
     version('3.9.2', tag='v3.9.2')
     version('3.9.1', tag='v3.9.1')
     version('3.9.0', tag='v3.9.0')
@@ -47,9 +48,11 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Build the mixed precision (mixture of single and '
                         'double precision) version')
     variant('soa', default=True,
-            description='Build with Structure-of-Array instead of '
-                        'Array-of-Structure code. Only for CPU code')
-    variant('timers', default=False,
+            description='Build with Structure-of-Array (SoA) instead of '
+                        'Array-of-Structure code (AoS). This is a legacy '
+                        'option and the AoS code is not available after  '
+                        'v3.10.0. Only affected performance, not results.')
+    variant('timers', default=True,
             description='Build with support for timers')
     variant('da', default=False,
             description='Install with support for basic data analysis tools')
@@ -74,6 +77,11 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     # high-level variant conflicts
     conflicts(
+        '~soa',
+        when='@3.10.0:',
+        msg='AoS code path is not available after QMCPACK v3.10.0')
+
+    conflicts(
         '+phdf5',
         when='~mpi',
         msg='Parallel collective I/O requires MPI-enabled QMCPACK. '
@@ -94,6 +102,13 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Omitted for now due to concretizer bug
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
+
+    # QMCPACK 3.10.0 increased the minimum requirements for compiler versions
+    newer_compiler_warning = 'QMCPACK v3.10.0 or later requires a newer ' \
+                             'version of this compiler'
+    conflicts('%gcc@:6', when='@3.10.0:', msg=newer_compiler_warning)
+    conflicts('%intel@:18', when='@3.10.0:', msg=newer_compiler_warning)
+    conflicts('%clang@:6', when='@3.10.0:', msg=newer_compiler_warning)
 
     # QMCPACK 3.6.0 or later requires support for C++14
     cpp14_warning = 'QMCPACK v3.6.0 or later requires a ' \
@@ -129,6 +144,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Essential libraries
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
+    depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
     depends_on('boost')
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
