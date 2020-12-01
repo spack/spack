@@ -2442,6 +2442,9 @@ class Spec(object):
             raise spack.error.SpecError(
                 "Spec has no name; cannot concretize an anonymous spec")
 
+        if self._concrete:
+            return
+
         result = spack.solver.asp.solve([self], tests=tests)
         if not result.satisfiable:
             result.print_cores()
