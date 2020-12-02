@@ -345,9 +345,8 @@ class Python(AutotoolsPackage):
                                 output=str, error=str)
             variants += '~ucs4' if maxunicode == 0xFFFF else '+ucs4'
 
-        # +pythoncommand does not apply to python@2
-        if version >= Version('3') and 'python' in [os.path.basename(exe)
-                                                     for exe in exes]:
+        # Will always be true for python2, but relevant for python3
+        if 'python' in [os.path.basename(exe) for exe in exes]:
             variants += '+pythoncmd'
         else:
             variants += '~pythoncmd'
