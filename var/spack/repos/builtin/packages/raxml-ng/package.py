@@ -27,6 +27,7 @@ class RaxmlNg(CMakePackage):
     depends_on('bison')
     depends_on('flex')
     depends_on('gmp')
+    depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
         args = []
