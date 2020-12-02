@@ -10,7 +10,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Namd(MakefilePackage):
+class Namd(MakefilePackage, CudaPackage):
     """NAMDis a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
@@ -205,6 +205,14 @@ class Namd(MakefilePackage):
                 '--without-tcl',
                 '--without-python'
             ])
+
+        if '+cuda' in spec:
+            options.append('DWITH_CUDA=ON')
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch != 'none':
+                options.append('DCUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
+        else:
+            options.append('-DWITH_CUDA=OFF')
 
         config = Executable('./config')
 
