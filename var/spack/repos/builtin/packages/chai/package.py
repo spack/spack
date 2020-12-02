@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Chai(CMakePackage, CudaPackage, HipPackage):
+class Chai(CMakePackage, CudaPackage, ROCmPackage):
     """
     Copy-hiding array interface for data migration between memory spaces
     """
@@ -36,12 +36,11 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    depends_on('umpire+hip', when='+hip')
-    depends_on('raja+hip', when="+raja+hip")
-    for val in amdgpu_targets:
+    depends_on('umpire+rocm', when='+rocm')
+    depends_on('raja+rocm', when="+raja+rocm")
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
 
@@ -63,12 +62,17 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
