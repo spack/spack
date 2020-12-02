@@ -8,6 +8,7 @@ import contextlib
 import errno
 import inspect
 import itertools
+import json
 import os
 import os.path
 import shutil
@@ -17,6 +18,8 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu.microarchitecture
+import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
@@ -449,6 +452,40 @@ def default_config():
 
 
 @pytest.fixture(scope='session')
+def mock_uarch_json(tmpdir_factory):
+    """Mock microarchitectures.json with test architecture descriptions."""
+    tmpdir = tmpdir_factory.mktemp('microarchitectures')
+
+    uarch_json = py.path.local(spack.paths.test_path).join(
+        "data", "microarchitectures", "microarchitectures.json")
+    uarch_json.copy(tmpdir)
+    yield str(tmpdir.join("microarchitectures.json"))
+
+
+@pytest.fixture(scope='session')
+def mock_uarch_configuration(mock_uarch_json):
+    """Create mock dictionaries for the archspec.cpu."""
+    def load_json():
+        with open(mock_uarch_json) as f:
+            return json.load(f)
+
+    targets_json = archspec.cpu.schema.LazyDictionary(load_json)
+    targets = archspec.cpu.microarchitecture.LazyDictionary(
+        archspec.cpu.microarchitecture._known_microarchitectures)
+
+    yield targets_json, targets
+
+
+@pytest.fixture(scope='function')
+def mock_targets(mock_uarch_configuration, monkeypatch):
+    """Use this fixture to enable mock uarch targets for testing."""
+    targets_json, targets = mock_uarch_configuration
+
+    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+
+
+@pytest.fixture(scope='session')
 def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
@@ -464,12 +501,13 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
+    solver = os.environ.get('SPACK_TEST_SOLVER', 'original')
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)
     lmod_root = modules_root.ensure('lmod', dir=True)
     content = ''.join(config_yaml.read()).format(
-        str(tcl_root), str(lmod_root)
+        solver, str(tcl_root), str(lmod_root)
     )
     t = tmpdir.join('site', 'config.yaml')
     t.write(content)
@@ -1148,9 +1186,7 @@ def installation_dir_with_headers(tmpdir_factory):
 
 @pytest.fixture(
     params=[
-        'conflict%clang',
         'conflict%clang+foo',
-        'conflict-parent%clang',
         'conflict-parent@0.9^conflict~foo'
     ]
 )
@@ -1237,3 +1273,14 @@ def mock_executable(tmpdir):
         return str(f)
 
     return _factory
+
+
+@pytest.fixture()
+def mock_test_stage(mutable_config, tmpdir):
+    # NOTE: This fixture MUST be applied after any fixture that uses
+    # the config fixture under the hood
+    # No need to unset because we use mutable_config
+    tmp_stage = str(tmpdir.join('test_stage'))
+    mutable_config.set('config:test_stage', tmp_stage)
+
+    yield tmp_stage

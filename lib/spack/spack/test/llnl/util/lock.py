@@ -661,6 +661,10 @@ def test_upgrade_read_to_write(private_lock_path):
     assert lock._file is None
 
 
+@pytest.mark.skipif(
+    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
+    reason='Test for Clingo are run in a container with root permissions'
+)
 def test_upgrade_read_to_write_fails_with_readonly_file(private_lock_path):
     """Test that read-only file can be read-locked but not write-locked."""
     # ensure lock file exists the first time

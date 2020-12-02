@@ -31,7 +31,7 @@ class PyPythonDateutil(PythonPackage):
     # depends_on('py-hypothesis', type='test')
     # depends_on('py-freezegun', type='test')
 
-    def test(self):
+    def build_test(self):
         # Tests require freezegun, which depends on python-dateutil,
         # creating circular dependency
         # pytest = which('pytest')

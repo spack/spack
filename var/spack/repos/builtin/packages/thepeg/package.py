@@ -12,6 +12,8 @@ class Thepeg(AutotoolsPackage):
     homepage = "http://home.thep.lu.se/~leif/ThePEG/"
     url      = "https://thepeg.hepforge.org/downloads/?f=ThePEG-2.2.1.tar.bz2"
 
+    tags = ['hep']
+
     # The commented out versions exist, but may need patches
     # and/or recipe changes
     version('2.2.1', sha256='63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f')

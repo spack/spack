@@ -87,6 +87,8 @@ class PyScipy(PythonPackage):
 
     def build_args(self, spec, prefix):
         args = []
+        if spec.satisfies('%fj'):
+            args.extend(['config_fc', '--fcompiler=fj'])
 
         # Build in parallel
         # Known problems with Python 3.5+
@@ -97,7 +99,7 @@ class PyScipy(PythonPackage):
 
         return args
 
-    def test(self):
+    def build_test(self):
         # `setup.py test` is not supported.  Use one of the following
         # instead:
         #

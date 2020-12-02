@@ -53,6 +53,12 @@ class PyTensorboardPluginWit(Package):
         filter_file(r'virtualenv venv',
                     '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('unset PYTHON_HOME',
+                    'export PYTHONPATH="{0}"'.format(env['PYTHONPATH']),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('python setup.py',
+                    '{0} setup.py'.format(spec['python'].command.path),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']
@@ -60,6 +66,8 @@ class PyTensorboardPluginWit(Package):
               '--nosystem_rc',
               '--output_user_root=' + tmp_path,
               'run',
+              # watch https://github.com/bazelbuild/bazel/issues/7254
+              '--define=EXECUTOR=remote',
               '--verbose_failures',
               '--subcommands=pretty_print',
               'tensorboard_plugin_wit/pip_package:build_pip_package')

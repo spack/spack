@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class BerkeleyDb(AutotoolsPackage):
     """Oracle Berkeley DB"""
@@ -47,3 +45,15 @@ class BerkeleyDb(AutotoolsPackage):
             config_args.append('--disable-atomicsupport')
 
         return config_args
+
+    def test(self):
+        """Perform smoke tests on the installed package binaries."""
+        exes = [
+            'db_checkpoint', 'db_deadlock', 'db_dump', 'db_load',
+            'db_printlog', 'db_stat', 'db_upgrade', 'db_verify'
+        ]
+        for exe in exes:
+            reason = 'test version of {0} is {1}'.format(exe,
+                                                         self.spec.version)
+            self.run_test(exe, ['-V'], [self.spec.version.string],
+                          installed=True, purpose=reason, skip_missing=True)

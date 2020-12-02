@@ -61,8 +61,5 @@ class Openglu(Package):
 
     @property
     def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGLU', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+        return find_libraries(
+            'libGLU', self.prefix, shared=True, recursive=True)

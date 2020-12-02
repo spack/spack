@@ -8,6 +8,22 @@ from spack import *
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
 
+# 3.9 SHA Keys
+aomp39 = dict()
+aomp39 = {
+    "aomp":
+        "14fc6867af0b17e3bff8cb42cb36f509c95a29b7a933a106bf6778de21f6c123",
+    "devlib":
+        "c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7",
+    "llvm":
+        "f0a0b9fec0626878340a15742e73a56f155090011716461edcb069dcf05e6b30",
+    "flang":
+        "43d57bcc87fab092ac242e36da62588a87b6fa91f9e81fdb330159497afdecb3",
+    "extras":
+        "014fca1fba54997c6db0e84822df274fb6807698b6856da4f737f38f10ab0e5d"
+
+}
+
 # 3.8 SHA Keys
 aomp38 = dict()
 aomp38 = {
@@ -65,17 +81,19 @@ class Aomp(Package):
     """llvm openmp compiler from AMD."""
 
     homepage = tools_url + "/aomp"
-    url      = tools_url + "/aomp/archive/rocm-3.8.0.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-3.9.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+    version('3.9.0', sha256=aomp38['aomp'])
     version('3.8.0', sha256=aomp38['aomp'])
     version('3.7.0', sha256=aomp37['aomp'])
     version('3.5.0', sha256=aomp35['aomp'])
 
     depends_on('cmake@3.5.2:3.13.4', type='build')
-    depends_on('mesa~llvm@18.3:', type=('build', 'link'))
+    depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
     depends_on('py-setuptools@44.1.0', type='build')
-    depends_on('python@2.7.18', type='build')
+    depends_on('python@2.7.18', type='build', when='@3.5.0:3.8.0')
+    depends_on('python@3.6.9', type='build', when='@3.9.0:')
     depends_on('py-pip', when='@3.8.0:', type='build')
     depends_on('py-wheel@0.29.0', when='@3.8.0:', type=('build', 'run'))
     depends_on('perl-data-dumper', type='build')
@@ -83,11 +101,60 @@ class Aomp(Package):
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
-        depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
-        depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0']:
+        depends_on('hsakmt-roct@' + ver, type=('build', 'run'), when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
+        depends_on('hsa-rocr-dev@' + ver, type=('build', 'run'),
+                   when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type=('build', 'run'),
+                   when='@' + ver)
+
+        if ver != '3.5.0':
+            depends_on('hip@' + ver, type=('build', 'run'), when='@' + ver)
+            depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
+
+        if ver == '3.9.0':
+            depends_on('rocm-gdb@' + ver, type=('build', 'run'),
+                       when='@' + ver)
+
+        # 3.9.0 Resources
+        if ver == '3.9.0':
+            resource(
+                name='rocm-device-libs',
+                url=compute_url +
+                '/ROCm-Device-Libs/archive/rocm-3.9.0.tar.gz',
+                sha256=aomp39['devlib'],
+                expand=True,
+                destination='aomp-dir',
+                placement='rocm-device-libs',
+                when='@3.9.0')
+
+            resource(
+                name='amd-llvm-project',
+                url=tools_url + '/amd-llvm-project/archive/rocm-3.9.0.tar.gz',
+                sha256=aomp39['llvm'],
+                expand=True,
+                destination='aomp-dir',
+                placement='amd-llvm-project',
+                when='@3.9.0')
+
+            resource(
+                name='flang',
+                url=tools_url + '/flang/archive/rocm-3.9.0.tar.gz',
+                sha256=aomp39['flang'],
+                expand=True,
+                destination='aomp-dir',
+                placement='flang',
+                when='@3.9.0')
+
+            resource(
+                name='aomp-extras',
+                url=tools_url + '/aomp-extras/archive/rocm-3.9.0.tar.gz',
+                sha256=aomp39['extras'],
+                expand=True,
+                destination='aomp-dir',
+                placement='aomp-extras',
+                when='@3.9.0')
 
         # 3.8.0 Resources
         if ver == '3.8.0':
@@ -233,6 +300,11 @@ class Aomp(Package):
                 destination='aomp-dir',
                 placement='opencl-on-vdi',
                 when='@3.5.0')
+
+    # Copy source files over for debug build in 3.9.0
+    patch('0001-Add-cmake-option-for-copying-source-for-debugging.patch',
+          working_dir='aomp-dir/amd-llvm-project', when='@3.9.0:')
+
     # Revert back to .amdgcn.bc naming scheme for 3.8.0
     patch('0001-Add-amdgcn-to-devicelibs-bitcode-names-3.8.patch',
           working_dir='aomp-dir/amd-llvm-project', when='@3.8.0')
@@ -256,8 +328,14 @@ class Aomp(Package):
         src = self.stage.source_path
         libomptarget = '{0}/aomp-dir/amd-llvm-project/openmp/libomptarget'
         aomp_extras = '{0}/aomp-dir/aomp-extras/aomp-device-libs'
+        flang = '{0}/aomp-dir/flang/'
 
-        if self.spec.version == Version('3.8.0'):
+        if self.spec.version >= Version('3.9.0'):
+            filter_file(
+                'ADDITIONAL_VERSIONS 2.7', 'ADDITIONAL_VERSIONS 3',
+                flang.format(src) + 'CMakeLists.txt')
+
+        if self.spec.version >= Version('3.8.0'):
             filter_file(
                 '{CMAKE_INSTALL_PREFIX}', '{HSA_INCLUDE}',
                 libomptarget.format(src) + '/hostrpc/services/CMakeLists.txt')
@@ -330,6 +408,13 @@ class Aomp(Package):
             '-Wl,-rpath,${COMGR_LIB}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
+    def setup_run_environment(self, env):
+        devlibs_prefix = self.spec['rocm-device-libs'].prefix
+        aomp_prefix = self.spec['aomp'].prefix
+        env.set('HIP_DEVICE_LIB_PATH',
+                '{0}/amdgcn/bitcode'.format(format(devlibs_prefix)))
+        env.set('AOMP', '{0}'.format(format(aomp_prefix)))
+
     def setup_build_environment(self, env):
         aomp_prefix = self.spec['aomp'].prefix
         env.set('AOMP', '{0}'.format(format(aomp_prefix)))
@@ -347,7 +432,15 @@ class Aomp(Package):
         hsakmt_prefix = self.spec['hsakmt-roct'].prefix
         comgr_prefix = self.spec['comgr'].prefix
         opencl_src = '/aomp-dir/opencl-on-vdi/api/opencl'
+        omp_src = '/aomp-dir/amd-llvm-project/openmp'
+        debug_map = '-fdebug-prefix-map={0}{1}={2}'
+        debug_map_format = debug_map.format(src, omp_src, aomp_prefix)
         components = dict()
+        if self.spec.version >= Version('3.9.0'):
+            bitcode_dir = '/amdgcn/bitcode'
+        else:
+            bitcode_dir = '/lib'
+
         components['amd-llvm-project'] = [
             '../aomp-dir/amd-llvm-project/llvm',
             '-DLLVM_ENABLE_PROJECTS=clang;lld;compiler-rt',
@@ -388,15 +481,16 @@ class Aomp(Package):
         components['aomp-extras'] = [
             '../aomp-dir/aomp-extras',
             '-DROCM_PATH=$ROCM_DIR ',
-            '-DDEVICE_LIBS_DIR={0}/lib'.format(devlibs_prefix),
+            '-DDEVICE_LIBS_DIR={0}{1}'.format(devlibs_prefix, bitcode_dir),
             '-DAOMP_STANDALONE_BUILD=0',
-            '-DDEVICELIBS_ROOT={0}/aomp-dir/rocm-device-libs'.format(src)
+            '-DDEVICELIBS_ROOT={0}/aomp-dir/rocm-device-libs'.format(src),
+            '-DCMAKE_VERBOSE_MAKEFILE=1'
         ]
 
         components['openmp'] = [
             '../aomp-dir/amd-llvm-project/openmp',
             '-DROCM_DIR={0}'.format(hsa_prefix),
-            '-DDEVICE_LIBS_DIR={0}/lib'.format(devlibs_prefix),
+            '-DDEVICE_LIBS_DIR={0}{1}'.format(devlibs_prefix, bitcode_dir),
             '-DAOMP_STANDALONE_BUILD=0',
             '-DDEVICELIBS_ROOT={0}/aomp-dir/rocm-device-libs'.format(src),
             '-DOPENMP_TEST_C_COMPILER=$AOMP/bin/clang',
@@ -416,7 +510,7 @@ class Aomp(Package):
         components['openmp-debug'] = [
             '../aomp-dir/amd-llvm-project/openmp',
             '-DROCM_DIR={0}'.format(hsa_prefix),
-            '-DDEVICE_LIBS_DIR={0}/lib'.format(devlibs_prefix),
+            '-DDEVICE_LIBS_DIR={0}{1}'.format(devlibs_prefix, bitcode_dir),
             '-DAOMP_STANDALONE_BUILD=0',
             '-DDEVICELIBS_ROOT={0}/aomp-dir/rocm-device-libs'.format(src),
             '-DOPENMP_TEST_C_COMPILER=$AOMP/bin/clang',
@@ -434,7 +528,13 @@ class Aomp(Package):
             '-DOPENMP_ENABLE_LIBOMPTARGET_HSA=1'
         ]
 
-        if self.spec.version == Version('3.8.0'):
+        if self.spec.version >= Version('3.9.0'):
+            components['openmp-debug'] += [
+                '-DENABLE_SOURCE_COPY=ON',
+                '-DOPENMP_SOURCE_DEBUG_MAP={0}'.format(debug_map_format),
+            ]
+
+        if self.spec.version >= Version('3.8.0'):
             components['openmp-debug'] += [
                 '-DLIBOMP_ARCH=x86_64',
                 '-DLIBOMP_OMP_VERSION=50',

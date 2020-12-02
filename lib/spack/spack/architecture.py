@@ -242,7 +242,7 @@ class Platform(object):
 
     front_end       = None
     back_end        = None
-    default         = None   # The default back end target. On cray ivybridge
+    default         = None   # The default back end target.
 
     front_os        = None
     back_os         = None

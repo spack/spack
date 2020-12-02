@@ -394,6 +394,32 @@ that are already in the LMod hierarchy.
    For hierarchies that are deeper than three layers ``lmod spider`` may have some issues.
    See `this discussion on the LMod project <https://github.com/TACC/Lmod/issues/114>`_.
 
+.. _customize-env-modifications:
+
+"""""""""""""""""""""""""""""""""""
+Customize environment modifications
+"""""""""""""""""""""""""""""""""""
+
+You can control which prefixes in a Spack package are added to environment
+variables with the ``prefix_inspections`` section; this section maps relative
+prefixes to the list of environment variables which should be updated with
+those prefixes.
+
+.. code-block:: yaml
+
+  modules:
+    prefix_inspections:
+      bin:
+        - PATH
+      lib:
+        - LIBRARY_PATH
+      '':
+        - CMAKE_PREFIX_PATH
+
+In this case, for a Spack package ``foo`` installed to ``/spack/prefix/foo``,
+the generated module file for ``foo`` would update ``PATH`` to contain
+``/spack/prefix/foo/bin``.
+
 """"""""""""""""""""""""""""""""""""
 Filter out environment modifications
 """"""""""""""""""""""""""""""""""""
