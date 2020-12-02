@@ -1394,10 +1394,6 @@ class SpackSolverSetup(object):
             if exact_match:
                 allowed_versions = exact_match
 
-            # don't bother restricting anything if all versions are allowed
-            if len(allowed_versions) == len(self.possible_versions[pkg_name]):
-                continue
-
             predicates = [fn.version(pkg_name, v) for v in allowed_versions]
 
             # version_satisfies(pkg, constraint) is true if and only if a
