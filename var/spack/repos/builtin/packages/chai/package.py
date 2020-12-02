@@ -33,10 +33,12 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('cmake@3.8:', type='build')
+    depends_on('cmake@3.9:', type='build', when="+cuda")
+    depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+hip')
     depends_on('umpire')
     depends_on('raja', when="+raja")
 
-    depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
 

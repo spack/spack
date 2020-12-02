@@ -37,6 +37,7 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+hip')
 
     depends_on('camp')
     depends_on('camp+cuda', when='+cuda')

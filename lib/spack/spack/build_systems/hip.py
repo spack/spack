@@ -98,7 +98,7 @@ class HipPackage(PackageBase):
     depends_on('hsa-rocr-dev', when='+hip')
     depends_on('hip', when='+hip')
 
-    depends_on('blt@0.3.7:', type='build', when='+hip')
+    conflicts('^blt@:0.3.6', when='+hip')
 
     # need amd gpu type for hip builds
     conflicts('amdgpu_target=none', when='+hip')
