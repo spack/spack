@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import tempfile
 
 
 class PyTensorflow(Package, CudaPackage):
@@ -523,8 +524,7 @@ class PyTensorflow(Package, CudaPackage):
         #       ])
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = '/tmp/spack/tf'
-        mkdirp(tmp_path)
+        tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
@@ -743,11 +743,13 @@ class PyTensorflow(Package, CudaPackage):
         build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+        remove_linked_tree(tmp_path)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
