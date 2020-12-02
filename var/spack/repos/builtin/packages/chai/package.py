@@ -28,7 +28,8 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
-    # TODO: figure out gtest dependency and then set this default True.
+    # TODO: figure out gtest dependency and then set this default True
+    # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
     depends_on('cmake@3.8:', type='build')
@@ -49,6 +50,8 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
 
     conflicts('+benchmarks', when='~tests')
+    # TODO: figure out gtest dependency and then remove this.
+    conflicts('+tests')
 
     def cmake_args(self):
         spec = self.spec

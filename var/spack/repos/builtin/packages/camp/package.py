@@ -24,6 +24,9 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
 
     depends_on('blt', type='build')
 
+    # TODO: figure out gtest dependency and then remove this.
+    conflicts('+tests')
+
     def cmake_args(self):
         spec = self.spec
 

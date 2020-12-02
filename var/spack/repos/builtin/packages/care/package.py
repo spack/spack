@@ -25,7 +25,8 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     variant('docs', default=False, description='Build documentation')
-    # TODO: figure out gtest dependency and then set this default True.
+    # TODO: figure out gtest dependency and then set this default True
+    # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
@@ -35,6 +36,10 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     depends_on('raja@develop')
     depends_on('chai@develop+enable_pick~benchmarks')
 
+    # WARNING: this package currently only supports an internal cub
+    # package. This will cause a race condition if compiled with another
+    # package that uses cub. TODO: have all packages point to the same external
+    # cub package.
     depends_on('camp+cuda', when='+cuda')
     depends_on('umpire+cuda', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
@@ -55,6 +60,8 @@ class Care(CMakePackage, CudaPackage, HipPackage):
 
     conflicts('+openmp', when='+hip')
     conflicts('+openmp', when='+cuda')
+    # TODO: figure out gtest dependency and then remove this.
+    conflicts('+tests')
 
     def cmake_args(self):
         spec = self.spec
