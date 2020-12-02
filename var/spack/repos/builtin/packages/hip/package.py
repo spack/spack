@@ -74,7 +74,7 @@ class Hip(CMakePackage):
                 'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.bin,
                 'rocm-device-libs': fallback_prefix.lib,
-                'device_lib_path': fallback_prefix
+                'device_lib_path': fallback_prefix.lib
             }
         else:
             mydict = dict((name, self.spec[name].prefix)
@@ -99,10 +99,10 @@ class Hip(CMakePackage):
         env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
         env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
-        env.set('DEVICE_LIB_PATH', '/opt/rocm/lib')
+        env.set('DEVICE_LIB_PATH', rocm_prefixes['device_lib_path'])
         env.set('HIP_PATH', rocm_prefixes['rocm-path'])
         env.set('HIPCC_COMPILE_FLAGS_APPEND',
-                '--rocm-path={0}'.format(rocm_prefixes['device_lib_path']))
+                '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
 
     def setup_run_environment(self, env):
         self.set_variables(env)
