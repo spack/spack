@@ -20,6 +20,8 @@ class Opencv(CMakePackage, CudaPackage):
     url      = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
     git      = 'https://github.com/opencv/opencv.git'
 
+    maintainers = ['bvanessen']
+
     version('master', branch='master')
     version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
     version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
