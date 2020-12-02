@@ -26,7 +26,7 @@ class RocmDeviceLibs(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('zlib', type='link', when='@3.9.0:')
     depends_on('texinfo', type='link', when='@3.9.0:')
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
