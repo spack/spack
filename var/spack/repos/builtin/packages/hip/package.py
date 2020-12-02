@@ -73,8 +73,8 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': fallback_prefix.llvm,
                 'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.bin,
-                'rocm-device-libs': fallback_prefix,
-                'device_lib_path': fallback_prefix
+                'rocm-device-libs': fallback_prefix.lib,
+                'device_lib_path': fallback_prefix.lib
             }
         else:
             mydict = dict((name, self.spec[name].prefix)
