@@ -25,7 +25,6 @@ class FontUtil(AutotoolsPackage, XorgPackage):
     depends_on('mkfontscale', type='build')
     depends_on('mkfontdir', type='build')
 
-
     font_baseurl = 'https://www.x.org/archive/individual/font/'
     default_fonts = []
     fonts = []
