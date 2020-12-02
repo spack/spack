@@ -16,10 +16,21 @@ class Libqglviewer(QMakePackage):
 
     # http://libqglviewer.com/installUnix.html
 
-    depends_on('qt+opengl')
+    depends_on('qt+gui+opengl')
     depends_on('freeglut', when='^qt@:3.0')
 
     build_directory = 'QGLViewer'
 
+    def patch(self):
+        # Build dylib instead of Framework on macOS
+        if self.spec.satisfies('platform=darwin'):
+            filter_file('!staticlib: CONFIG *= lib_bundle', '',
+                        join_path('QGLViewer', 'QGLViewer.pro'), string=True)
+
     def qmake_args(self):
         return ['PREFIX=' + self.prefix]
+
+    @run_after('install')
+    def darwin_fix(self):
+        if self.spec.satisfies('platform=darwin'):
+            fix_darwin_install_name(self.prefix.lib)
