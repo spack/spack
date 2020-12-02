@@ -38,7 +38,7 @@ class Povray(AutotoolsPackage):
     variant('jpeg', default=True, description='Build with jpeg support')
     variant('libpng', default=True, description='Build with libpng support')
     variant('libtiff', default=True, description='Build with libtiff support')
-    variant('mkl', default=True, description='Build with Intel MKL support')
+    variant('mkl', default=True, description='Build with Intel MKL support, Ignored if not Intel')
     variant('openexr', default=True, description='Build with OpenEXR support')
     variant('profile', default=False,
             description='Enable program execution profiling')
@@ -63,6 +63,7 @@ class Povray(AutotoolsPackage):
     depends_on('libpng@1.2.5:', when='+libpng')
     depends_on('jpeg', when='+jpeg')
     depends_on('libtiff@3.6.1:', when='+libtiff')
+    depends_on('mkl', when='+mkl target=x86_64:')
     depends_on('openexr@1.2:', when='+openexr')
 
     # This patch enables prebuild.sh to be invoked from any directory
@@ -120,7 +121,7 @@ class Povray(AutotoolsPackage):
         else:
             extra_args.append('--without-libtiff')
 
-        if '+mkl' in self.spec:
+        if '+mkl' in self.spec and self.spec.satisfies('target=x86_64:'):
             extra_args.append('--with-libmkl={0}'.format(
                 self.spec['mkl'].prefix))
         else:
