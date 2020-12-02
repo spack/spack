@@ -31,6 +31,7 @@ import llnl.util.tty.color as color
 import spack
 import spack.architecture
 import spack.cmd
+import spack.compilers
 import spack.config
 import spack.dependency
 import spack.error
@@ -829,6 +830,18 @@ class SpackSolverSetup(object):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
             self.gen.fact(f)
 
+        # Enumerate target families. This may be redundant, but compilers with
+        # custom versions will be able to concretize properly.
+        for entry in spack.compilers.all_compilers_config():
+            compiler_entry = entry['compiler']
+            cspec = spack.spec.CompilerSpec(compiler_entry['spec'])
+            if not compiler_entry.get('target', None):
+                continue
+
+            self.gen.fact(fn.compiler_supports_target(
+                cspec.name, cspec.version, compiler_entry['target']
+            ))
+
     def compiler_supports_os(self):
         compilers_yaml = spack.compilers.all_compilers_config()
         for entry in compilers_yaml:
@@ -1230,7 +1243,7 @@ class SpackSolverSetup(object):
                 if dep.versions.concrete:
                     self.possible_versions[dep.name].add(dep.version)
 
-    def _supported_targets(self, compiler, targets):
+    def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
 
         Results are ordered most to least recent.
@@ -1239,7 +1252,7 @@ class SpackSolverSetup(object):
 
         for target in targets:
             try:
-                target.optimization_flags(compiler.name, compiler.version)
+                target.optimization_flags(compiler_name, compiler_version)
                 supported.append(target)
             except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
@@ -1289,7 +1302,22 @@ class SpackSolverSetup(object):
         # TODO: investigate this.
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
-            supported = self._supported_targets(compiler, compatible_targets)
+            supported = self._supported_targets(
+                compiler.name, compiler.version, compatible_targets
+            )
+
+            # If we can't find supported targets it may be due to custom
+            # versions in the spec, e.g. gcc@foo. Try to match the
+            # real_version from the compiler object to get more accurate
+            # results.
+            if not supported:
+                compiler_obj = spack.compilers.compilers_for_spec(compiler)
+                compiler_obj = compiler_obj[0]
+                supported = self._supported_targets(
+                    compiler.name,
+                    compiler_obj.real_version,
+                    compatible_targets
+                )
 
             if not supported:
                 continue
