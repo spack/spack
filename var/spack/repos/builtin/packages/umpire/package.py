@@ -7,7 +7,7 @@ import llnl.util.lang as lang
 import llnl.util.tty as tty
 
 
-class Umpire(CMakePackage, CudaPackage, HipPackage):
+class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     """An application-focused API for memory management on NUMA & GPU
     architectures"""
 
@@ -62,11 +62,10 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
 
     depends_on('blt', type='build')
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    depends_on('camp+hip', when='+hip')
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    for val in amdgpu_targets:
+    depends_on('camp+rocm', when='+rocm')
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('camp')
@@ -97,12 +96,17 @@ class Umpire(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=Off')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 

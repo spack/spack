@@ -112,8 +112,8 @@ class Openblas(MakefilePackage):
     patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11: %fj')
     patch('openblas_fujitsu2.patch', when='@0.3.10: %fj')
 
-    # See https://github.com/spack/spack/issues/19932
-    conflicts('%gcc@:8.2.99', when='@0.3.11:')
+    # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
+    conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')

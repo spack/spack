@@ -20,9 +20,9 @@ class Rocblas(CMakePackage):
     version('3.7.0', sha256='9425db5f8e8b6f7fb172d09e2a360025b63a4e54414607709efc5acb28819642')
     version('3.5.0', sha256='8560fabef7f13e8d67da997de2295399f6ec595edfd77e452978c140d5f936f0')
 
-    amdgpu_targets = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
+    tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
 
-    variant('amdgpu_target', default='all', multi=True, values=amdgpu_targets)
+    variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
 
     depends_on('cmake@3:', type='build')
 
@@ -73,7 +73,7 @@ class Rocblas(CMakePackage):
         env.set('CXX', self.spec['hip'].hipcc)
 
     def cmake_args(self):
-        archs = ",".join(self.spec.variants['amdgpu_target'].value)
+        arch = self.spec.variants['tensile_architecture'].value
 
         tensile = join_path(self.stage.source_path, 'Tensile')
 
@@ -86,7 +86,7 @@ class Rocblas(CMakePackage):
             '-DBUILD_WITH_TENSILE=ON',
             '-DTensile_TEST_LOCAL_PATH={0}'.format(tensile),
             '-DTensile_COMPILER=hipcc',
-            '-DTensile_ARCHITECTURE={0}'.format(archs),
+            '-DTensile_ARCHITECTURE={0}'.format(arch),
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
             '-DBUILD_WITH_TENSILE_HOST={0}'.format(

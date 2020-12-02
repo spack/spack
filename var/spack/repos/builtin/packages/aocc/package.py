@@ -29,6 +29,11 @@ class Aocc(Package):
     '''
     family = 'compiler'
     homepage = "https://developer.amd.com/amd-aocc/"
+
+    maintainers = ['amd-toolchain-support']
+
+    version(ver="2.3.0", sha256='9f8a1544a5268a7fb8cd21ac4bdb3f8d1571949d1de5ca48e2d3309928fc3d15',
+            url='http://developer.amd.com/wordpress/media/files/aocc-compiler-2.3.0.tar')
     version(ver="2.2.0", sha256='500940ce36c19297dfba3aa56dcef33b6145867a1f34890945172ac2be83b286',
             url='http://developer.amd.com/wordpress/media/files/aocc-compiler-2.2.0.tar')
 
