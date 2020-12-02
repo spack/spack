@@ -49,30 +49,6 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@3.5.0:')
 
-    def setup_run_environment(self, env):
-        # NOTE: DO NOT PUT LOGIC LIKE self.spec[name] in this function!!!!!
-        # It DOES NOT WORK FOR EXTERNAL PACKAGES!!!! See get_rocm_prefix_info
-        rocm_prefixes = self.get_rocm_prefix_info()
-
-        env.set('ROCM_PATH', rocm_prefixes['rocm-path'])
-        env.set('HIP_COMPILER', 'clang')
-        env.set('HIP_PLATFORM', 'hcc')
-        env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
-        env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
-        env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
-        env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
-        env.set('HIP_PATH', rocm_prefixes['rocm-path'])
-        env.set('HIPCC_COMPILE_FLAGS_APPEND',
-                '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
-
-        if 'amdgpu_target' in self.spec.variants:
-            arch = self.spec.variants['amdgpu_target'].value
-            if arch != 'none':
-                env.set('HCC_AMDGPU_TARGET', arch)
-
-    def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-
     def get_rocm_prefix_info(self):
         # External packages in Spack do not currently contain dependency
         # information. External installations of hip therefore must compute
@@ -98,15 +74,18 @@ class Hip(CMakePackage):
                 'hsa-rocr-dev': fallback_prefix.hsa,
                 'rocminfo': fallback_prefix.bin,
                 'rocm-device-libs': fallback_prefix,
+                'device_lib_path': fallback_prefix
             }
         else:
             mydict = dict((name, self.spec[name].prefix)
                           for name in ('llvm-amdgpu', 'hsa-rocr-dev',
                                        'rocminfo', 'rocm-device-libs'))
-            mydict['rocm-path'] = os.path.dirname(self.spec.prefix)
+            mydict['rocm-path'] = self.spec.prefix
+            device_lib_path = mydict['rocm-device-libs'].amdgcn.bitcode
+            mydict['device_lib_path'] = device_lib_path
             return mydict
 
-    def setup_dependent_build_environment(self, env, dependent_spec):
+    def set_variables(self, env):
         # Indirection for dependency paths because hip may be an external in
         # Spack. See block comment on get_rocm_prefix_info .
 
@@ -120,15 +99,24 @@ class Hip(CMakePackage):
         env.set('HIP_CLANG_PATH', rocm_prefixes['llvm-amdgpu'].bin)
         env.set('HSA_PATH', rocm_prefixes['hsa-rocr-dev'])
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
-        env.set('DEVICE_LIB_PATH', rocm_prefixes['rocm-device-libs'].lib)
+        env.set('DEVICE_LIB_PATH', rocm_prefixes['device_lib_path'])
         env.set('HIP_PATH', rocm_prefixes['rocm-path'])
         env.set('HIPCC_COMPILE_FLAGS_APPEND',
-                '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
+                '--rocm-path={0}'.format(rocm_prefixes['device_lib_path']))
+
+    def setup_run_environment(self, env):
+        self.set_variables(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.set_variables(env)
 
         if 'amdgpu_target' in dependent_spec.variants:
             arch = dependent_spec.variants['amdgpu_target'].value
             if arch != 'none':
-                env.set('HCC_AMDGPU_TARGET', arch)
+                env.set('HCC_AMDGPU_TARGET', ','.join(arch))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_dependent_build_environment(env, dependent_spec)
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
