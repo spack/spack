@@ -70,10 +70,12 @@ class FontUtil(AutotoolsPackage, XorgPackage):
         f = f_r[0]
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
                  sha256=f_r[2], destination=f, when='fonts=' + f)
-        fonts.append(f)
+        conflicts('font=font-bh-tff', when='platform=cray')
 
-    conflicts('font=font-bh-tff', when='platform=cray')
-    default_fonts = [f for f in fonts if f != 'font-bh-tff']
+        if f != 'font-bh-tff':
+            default_fonts.append(f)
+
+        fonts.append(f)
 
     variant('fonts',
             description='Installs fonts',
