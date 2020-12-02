@@ -40,6 +40,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
     patch('update_locale_handling.patch', when='@6.3:')
 
+    patch('nvhpc.patch', when='%nvhpc')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)

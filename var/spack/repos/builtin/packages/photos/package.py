@@ -13,6 +13,8 @@ class Photos(AutotoolsPackage):
     homepage = "http://photospp.web.cern.ch/photospp/"
     url      = "http://photospp.web.cern.ch/photospp/resources/PHOTOS.3.61/PHOTOS.3.61-LHC.tar.gz"
 
+    tags = ['hep']
+
     version('3.61', sha256='acd3bcb769ba2a3e263de399e9b89fd6296405c9cbc5045b83baba3e60db4b26')
 
     maintainers = ['vvolkl']

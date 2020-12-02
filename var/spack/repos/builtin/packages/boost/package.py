@@ -208,6 +208,9 @@ class Boost(Package):
     patch('boost_1.63.0_pgi.patch', when='@1.63.0%pgi')
     patch('boost_1.63.0_pgi_17.4_workaround.patch', when='@1.63.0%pgi@17.4')
 
+    # Patch to override the PGI toolset when using the NVIDIA compilers
+    patch('nvhpc.patch', when='%nvhpc')
+
     # Fix for version comparison on newer Clang on darwin
     # See: https://github.com/boostorg/build/issues/440
     # See: https://github.com/macports/macports-ports/pull/6726
@@ -248,6 +251,23 @@ class Boost(Package):
           sha256='246508e052c44b6f4e8c2542a71c06cacaa72cd1447ab8d2a542b987bc35ace9',
           when='@1.73.0')
 
+    # Support bzip2 and gzip in other directory
+    # See https://github.com/boostorg/build/pull/154
+    patch('boost_154.patch', when='@:1.63.99')
+
+    def patch(self):
+        # Disable SSSE3 and AVX2 when using the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('dump_avx2', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_AVX2', '',
+                        'libs/log/build/Jamfile.v2')
+            filter_file('dump_ssse3', '', 'libs/log/build/Jamfile.v2')
+            filter_file('<define>BOOST_LOG_USE_SSSE3', '',
+                        'libs/log/build/Jamfile.v2')
+
+            filter_file('-fast', '-O1', 'tools/build/src/tools/pgi.jam')
+            filter_file('-fast', '-O1', 'tools/build/src/engine/build.sh')
+
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
             url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
@@ -264,6 +284,7 @@ class Boost(Package):
                     'xlc++': 'xlcpp',
                     'xlc++_r': 'xlcpp',
                     'pgc++': 'pgi',
+                    'nvc++': 'pgi',
                     'FCC': 'clang'}
 
         if spec.satisfies('@1.47:'):
@@ -518,3 +539,16 @@ class Boost(Package):
 
     def setup_run_environment(self, env):
         env.set('BOOST_ROOT', self.prefix)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # Disable find package's config mode for versions of Boost that
+        # didn't provide it. See https://github.com/spack/spack/issues/20169
+        # and https://cmake.org/cmake/help/latest/module/FindBoost.html
+        is_cmake = isinstance(dependent_spec.package, CMakePackage)
+        if self.spec.satisfies('boost@:1.69.0') and is_cmake:
+            args_fn = type(dependent_spec.package).cmake_args
+
+            def _cmake_args(self):
+                return ['-DBoost_NO_BOOST_CMAKE=ON'] + args_fn(self)
+
+            type(dependent_spec.package).cmake_args = _cmake_args

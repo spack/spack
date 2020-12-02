@@ -1,0 +1,34 @@
+--- a/gnulib/lib/xalloc-oversized.h	2020-08-21 06:38:16.472440800 -0700
++++ b/gnulib/lib/xalloc-oversized.h	2020-08-21 06:39:22.717691266 -0700
+@@ -41,10 +41,10 @@
+    positive and N must be nonnegative.  This is a macro, not a
+    function, so that it works correctly even when SIZE_MAX < N.  */
+ 
+-#if 7 <= __GNUC__
++#if 7 <= __GNUC__ && !defined __NVCOMPILER
+ # define xalloc_oversized(n, s) \
+    __builtin_mul_overflow_p (n, s, (__xalloc_count_type) 1)
+-#elif 5 <= __GNUC__ && !defined __ICC && !__STRICT_ANSI__
++#elif 5 <= __GNUC__ && !defined __ICC && !__STRICT_ANSI__ && !defined __NVCOMPILER
+ # define xalloc_oversized(n, s) \
+    (__builtin_constant_p (n) && __builtin_constant_p (s) \
+     ? __xalloc_oversized (n, s) \
+--- a/gnulib/lib/intprops.h	2020-08-21 06:37:03.301158640 -0700
++++ b/gnulib/lib/intprops.h	2020-08-21 06:38:01.807384249 -0700
+@@ -219,14 +219,14 @@
+    : (max) >> (b) < (a))
+ 
+ /* True if __builtin_add_overflow (A, B, P) works when P is non-null.  */
+-#if 5 <= __GNUC__ && !defined __ICC
++#if 5 <= __GNUC__ && !defined __ICC && !defined __NVCOMPILER
+ # define _GL_HAS_BUILTIN_OVERFLOW 1
+ #else
+ # define _GL_HAS_BUILTIN_OVERFLOW 0
+ #endif
+ 
+ /* True if __builtin_add_overflow_p (A, B, C) works.  */
+-#define _GL_HAS_BUILTIN_OVERFLOW_P (7 <= __GNUC__)
++#define _GL_HAS_BUILTIN_OVERFLOW_P (7 <= __GNUC__ && !defined __NVCOMPILER)
+ 
+ /* The _GL*_OVERFLOW macros have the same restrictions as the
+    *_RANGE_OVERFLOW macros, except that they do not assume that operands

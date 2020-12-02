@@ -185,17 +185,53 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
+def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
     e = ev.read('test')
-    with capfd.disabled():
-        with e:
-            # The first installation outputs the package prefix
-            install('cmake-client')
-            # The second installation attempt will also update the view
-            out = install('cmake-client')
-            assert 'Updating view at' in out
+    with e:
+        # The first installation outputs the package prefix, updates the view
+        out = install('cmake-client')
+        assert 'Updating view at' in out
+
+        # The second installation reports all packages already installed
+        out = install('cmake-client')
+        assert 'already installed' in out
+
+
+def test_env_install_two_specs_same_dep(
+        install_mockery, mock_fetch, tmpdir, capsys):
+    """Test installation of two packages that share a dependency with no
+    connection and the second specifying the dependency as a 'build'
+    dependency.
+    """
+    path = tmpdir.join('spack.yaml')
+
+    with tmpdir.as_cwd():
+        with open(str(path), 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - a
+  - depb
+""")
+
+        env('create', 'test', 'spack.yaml')
+
+    with ev.read('test'):
+        with capsys.disabled():
+            out = install()
+
+    # Ensure both packages reach install phase processing and are installed
+    out = str(out)
+    assert 'depb: Executing phase:' in out
+    assert 'a: Executing phase:' in out
+
+    depb = spack.repo.path.get_pkg_class('depb')
+    assert depb.installed, 'Expected depb to be installed'
+
+    a = spack.repo.path.get_pkg_class('a')
+    assert a.installed, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():
@@ -432,8 +468,9 @@ env:
 
 
 @pytest.mark.usefixtures('config')
-def test_env_view_external_prefix(tmpdir_factory, mutable_database,
-                                  mock_packages):
+def test_env_view_external_prefix(
+        tmpdir_factory, mutable_database, mock_packages
+):
     fake_prefix = tmpdir_factory.mktemp('a-prefix')
     fake_bin = fake_prefix.join('bin')
     fake_bin.ensure(dir=True)
@@ -449,7 +486,7 @@ env:
 packages:
   a:
     externals:
-    - spec: a
+    - spec: a@2.0
       prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
@@ -545,6 +582,48 @@ spack:
     assert 'missing include' in err
     assert '/no/such/directory' in err
     assert 'no/such/file.yaml' in err
+
+
+def test_env_with_include_config_files_same_basename():
+    test_config = """\
+        env:
+            include:
+                - ./path/to/included-config.yaml
+                - ./second/path/to/include-config.yaml
+            specs:
+                [libelf, mpileaks]
+            """
+
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
+
+    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './path/to/included-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          libelf:
+              version: [0.8.10]
+        """)
+
+    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './second/path/to/include-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+          mpileaks:
+              version: [2.2]
+        """)
+
+    with e:
+        e.concretize()
+
+    environment_specs = e._get_environment_specs(False)
+
+    assert(environment_specs[0].satisfies('libelf@0.8.10'))
+    assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
 def test_env_with_included_config_file():
@@ -999,6 +1078,17 @@ def test_env_updates_view_install(
     check_mpileaks_and_deps_in_view(view_dir)
 
 
+def test_env_view_fails(
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+    view_dir = tmpdir.mkdir('view')
+    env('create', '--with-view=%s' % view_dir, 'test')
+    with ev.read('test'):
+        add('libelf')
+        add('libelf cflags=-g')
+        with pytest.raises(RuntimeError, match='merge blocked by file'):
+            install('--fake')
+
+
 def test_env_without_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     # Test enabling a view after installing specs
@@ -1132,7 +1222,7 @@ def test_env_activate_view_fails(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
-    assert "To initialize spack's shell commands:" in out
+    assert "To set up shell support" in out
 
 
 def test_stack_yaml_definitions(tmpdir):
@@ -1352,6 +1442,11 @@ env:
 
 
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
+    # FIXME: The new concretizer doesn't handle yet soft
+    # FIXME: constraints for stacks
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.skip('Clingo concretizer does not support soft constraints')
+
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -2041,7 +2136,8 @@ def test_cant_install_single_spec_when_concretizing_together():
     e.concretization = 'together'
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-        e.install('zlib')
+        e.concretize_and_add('zlib')
+        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():
@@ -2189,3 +2285,40 @@ spack:
         libelf_second_hash = extract_build_hash(e)
 
     assert libelf_first_hash == libelf_second_hash
+
+
+@pytest.mark.regression('18441')
+def test_lockfile_not_deleted_on_write_error(tmpdir, monkeypatch):
+    raw_yaml = """
+spack:
+  specs:
+  - dyninst
+  packages:
+    libelf:
+      externals:
+      - spec: libelf@0.8.13
+        prefix: /usr
+"""
+    spack_yaml = tmpdir.join('spack.yaml')
+    spack_yaml.write(raw_yaml)
+    spack_lock = tmpdir.join('spack.lock')
+
+    # Concretize a first time and create a lockfile
+    with ev.Environment(str(tmpdir)):
+        concretize()
+    assert os.path.exists(str(spack_lock))
+
+    # If I run concretize again and there's an error during write,
+    # the spack.lock file shouldn't disappear from disk
+    def _write_helper_raise(self, x, y):
+        raise RuntimeError('some error')
+
+    monkeypatch.setattr(
+        ev.Environment, '_update_and_write_manifest', _write_helper_raise
+    )
+    with ev.Environment(str(tmpdir)) as e:
+        e.concretize(force=True)
+        with pytest.raises(RuntimeError):
+            e.clear()
+            e.write()
+    assert os.path.exists(str(spack_lock))

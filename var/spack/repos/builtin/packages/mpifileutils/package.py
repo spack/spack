@@ -26,6 +26,8 @@ class Mpifileutils(Package):
     version('0.9.1',  sha256='15a22450f86b15e7dc4730950b880fda3ef6f59ac82af0b268674d272aa61c69')
     version('0.9',    sha256='1b8250af01aae91c985ca5d61521bfaa4564e46efa15cee65cd0f82cf5a2bcfb')
 
+    patch('nosys_getdents.patch', when='@:0.10.1 target=aarch64:')
+
     conflicts('platform=darwin')
 
     depends_on('mpi')

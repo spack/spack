@@ -13,6 +13,8 @@ class Herwigpp(AutotoolsPackage):
     homepage = "https://herwig.hepforge.org/"
     url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/Herwig++-2.7.1.tar.bz2"
 
+    tags = ['hep']
+
     version('2.7.1', '80a189376bb65f5ec4e64f42e76c00ea9102d8224010563a424fc11e619a6ad6')
     patch('herwig++-2.7.1.patch', when='@2.7.1', level=0)
 

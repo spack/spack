@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PyPyarrow(PythonPackage):
+class PyPyarrow(PythonPackage, CudaPackage):
     """A cross-language development platform for in-memory data.
 
     This package contains the Python bindings.
@@ -22,6 +22,7 @@ class PyPyarrow(PythonPackage):
     version('0.9.0', sha256='7db8ce2f0eff5a00d6da918ce9f9cfec265e13f8a119b4adb1595e5b19fd6242')
 
     variant('parquet', default=False, description="Build with Parquet support")
+    variant('orc', default=False, description='Build with orc support')
 
     depends_on('cmake@3.0.0:', type='build')
     depends_on('pkgconfig', type='build')
@@ -43,6 +44,8 @@ class PyPyarrow(PythonPackage):
     for v in ('@0.9.0', '@0.11.0', '@0.12.1', '@0.15.1', '@0.17.1'):
         depends_on('arrow+python' + v, when=v)
         depends_on('arrow+parquet+python' + v, when='+parquet' + v)
+        depends_on('arrow+cuda' + v, when='+cuda' + v)
+        depends_on('arrow+orc' + v, when='+orc' + v)
 
     phases = ['build_ext', 'install']
 
@@ -50,4 +53,8 @@ class PyPyarrow(PythonPackage):
         args = []
         if spec.satisfies('+parquet'):
             args.append('--with-parquet')
+        if spec.satisfies('+cuda'):
+            args.append('--with-cuda')
+        if spec.satisfies('+orc'):
+            args.append('--with-orc')
         return args

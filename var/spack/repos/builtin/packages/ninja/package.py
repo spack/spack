@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Ninja(Package):
     """Ninja is a small build system with a focus on speed. It differs from
@@ -15,6 +13,8 @@ class Ninja(Package):
     homepage = "https://ninja-build.org/"
     url      = "https://github.com/ninja-build/ninja/archive/v1.7.2.tar.gz"
     git      = "https://github.com/ninja-build/ninja.git"
+
+    executables = ['^ninja$']
 
     version('kitware', branch='features-for-fortran', git='https://github.com/Kitware/ninja.git')
     version('master', branch='master')
@@ -29,12 +29,17 @@ class Ninja(Package):
 
     phases = ['configure', 'install']
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        return output.strip()
+
     def configure(self, spec, prefix):
         python('configure.py', '--bootstrap')
 
     @run_after('configure')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def configure_test(self):
         ninja = Executable('./ninja')
         ninja('-j{0}'.format(make_jobs), 'ninja_test')
         ninja_test = Executable('./ninja_test')

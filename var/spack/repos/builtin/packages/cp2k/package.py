@@ -70,7 +70,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=map(str, HFX_LMAX_RANGE),
+            values=tuple(map(str, HFX_LMAX_RANGE)),
             multi=False)
 
     depends_on('python', type='build')
@@ -154,6 +154,10 @@ class Cp2k(MakefilePackage, CudaPackage):
     # cp2k with option smm=blas on aarch64
     conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
 
+    conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^openblas threads=none', when='+openmp')
+    conflicts('^openblas threads=pthreads', when='+openmp')
+
     conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
 
     @property
@@ -178,31 +182,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     def archive_files(self):
         return [os.path.join(self.stage.source_path, self.makefile)]
 
-    def consistency_check(self, spec):
-        """
-        Consistency checks.
-        Due to issue #1712 we can not put them into depends_on/conflicts.
-        """
-
-        if '+openmp' in spec:
-            if '^openblas' in spec and '^openblas threads=openmp' not in spec:
-                raise InstallError(
-                    '^openblas threads=openmp required for cp2k+openmp'
-                    ' with openblas')
-
-            if '^fftw' in spec and '^fftw +openmp' not in spec:
-                raise InstallError(
-                    '^fftw +openmp required for cp2k+openmp'
-                    ' with fftw')
-
-            # MKL doesn't need to be checked since they are
-            # OMP thread-safe when using mkl_sequential
-            # BUT: we should check the version of MKL IF it is used for FFTW
-            #      since there we need at least v14 of MKL to be safe!
-
     def edit(self, spec, prefix):
-        self.consistency_check(spec)
-
         pkgconf = which('pkg-config')
 
         if '^fftw' in spec:
@@ -213,7 +193,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
-            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+            fftw_header_dir = '<NOTFOUND>'
+            for incdir in [join_path(f, 'fftw')
+                           for f in fftw.headers.directories]:
+                if os.path.exists(incdir):
+                    fftw_header_dir = incdir
+                    break
 
         optimization_flags = {
             'gcc': [
@@ -223,6 +208,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             ],
             'intel': ['-O2', '-pc64', '-unroll', ],
             'pgi': ['-fast'],
+            'nvhpc': ['-fast'],
             'cray': ['-O2'],
             'xl': ['-O3'],
         }
@@ -261,7 +247,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 '-ffree-line-length-none',
                 '-ggdb',  # make sure we get proper Fortran backtraces
             ]
-        elif '%pgi' in spec:
+        elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
         elif '%cray' in spec:
             fcflags += ['-emf', '-ffree', '-hflex_mp=strict']

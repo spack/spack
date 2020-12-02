@@ -41,16 +41,20 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'chgrp',
+    'chmod_x',
     'copy',
     'install',
     'copy_tree',
     'install_tree',
     'is_exe',
     'join_path',
+    'last_modification_time_recursive',
     'mkdirp',
     'partition_path',
     'prefixes',
     'remove_dead_links',
+    'remove_directory_contents',
     'remove_if_dead_link',
     'remove_linked_tree',
     'set_executable',
@@ -680,7 +684,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit):
+    except (Exception, KeyboardInterrupt, SystemExit) as e:
         # Delete what was there, before copying back the original content
         if os.path.exists(directory_name):
             shutil.rmtree(directory_name)
@@ -691,6 +695,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
 
         msg = 'the transactional move of "{0}" failed.'
+        msg += '\n    ' + str(e)
         raise RuntimeError(msg.format(directory_name))
     else:
         # Otherwise delete the temporary directory
@@ -919,6 +924,15 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def last_modification_time_recursive(path):
+    path = os.path.abspath(path)
+    times = [os.stat(path).st_mtime]
+    times.extend(os.stat(os.path.join(root, name)).st_mtime
+                 for root, dirs, files in os.walk(path)
+                 for name in dirs + files)
+    return max(times)
+
+
 def remove_empty_directories(root):
     """Ascend up from the leaves accessible from `root` and remove empty
     directories.
@@ -972,6 +986,53 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
+
+
+@contextmanager
+def safe_remove(*files_or_dirs):
+    """Context manager to remove the files passed as input, but restore
+    them in case any exception is raised in the context block.
+
+    Args:
+        *files_or_dirs: glob expressions for files or directories
+            to be removed
+
+    Returns:
+        Dictionary that maps deleted files to their temporary copy
+        within the context block.
+    """
+    # Find all the files or directories that match
+    glob_matches = [glob.glob(x) for x in files_or_dirs]
+    # Sort them so that shorter paths like "/foo/bar" come before
+    # nested paths like "/foo/bar/baz.yaml". This simplifies the
+    # handling of temporary copies below
+    sorted_matches = sorted([
+        os.path.abspath(x) for x in itertools.chain(*glob_matches)
+    ], key=len)
+
+    # Copy files and directories in a temporary location
+    removed, dst_root = {}, tempfile.mkdtemp()
+    try:
+        for id, file_or_dir in enumerate(sorted_matches):
+            # The glob expression at the top ensures that the file/dir exists
+            # at the time we enter the loop. Double check here since it might
+            # happen that a previous iteration of the loop already removed it.
+            # This is the case, for instance, if we remove the directory
+            # "/foo/bar" before the file "/foo/bar/baz.yaml".
+            if not os.path.exists(file_or_dir):
+                continue
+            # The monotonic ID is a simple way to make the filename
+            # or directory name unique in the temporary folder
+            basename = os.path.basename(file_or_dir) + '-{0}'.format(id)
+            temporary_path = os.path.join(dst_root, basename)
+            shutil.move(file_or_dir, temporary_path)
+            removed[file_or_dir] = temporary_path
+        yield removed
+    except BaseException:
+        # Restore the files that were removed
+        for original_path, temporary_path in removed.items():
+            shutil.move(temporary_path, original_path)
+        raise
 
 
 def fix_darwin_install_name(path):
@@ -1748,3 +1809,13 @@ def md5sum(file):
     with open(file, "rb") as f:
         md5.update(f.read())
     return md5.digest()
+
+
+def remove_directory_contents(dir):
+    """Remove all contents of a directory."""
+    if os.path.exists(dir):
+        for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
+            if os.path.isfile(entry) or os.path.islink(entry):
+                os.unlink(entry)
+            else:
+                shutil.rmtree(entry)
