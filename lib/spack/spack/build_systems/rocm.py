@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# Troubleshooting advice for +hip builds:
+# Troubleshooting advice for +rocm builds:
 #
 # 1. When building with clang, go your compilers.yaml,
 #    add an entry for the amd version of clang, as below.
@@ -73,9 +73,11 @@
 from spack.package import PackageBase
 from spack.directives import depends_on, variant, conflicts
 
+import spack.variant
 
-class HipPackage(PackageBase):
-    """Auxiliary class which contains HIP variant, dependencies and conflicts
+
+class ROCmPackage(PackageBase):
+    """Auxiliary class which contains ROCm variant, dependencies and conflicts
     and is meant to unify and facilitate its usage. Closely mimics CudaPackage.
 
     Maintainers: dtaller
@@ -86,24 +88,26 @@ class HipPackage(PackageBase):
     amdgpu_targets = (
         'gfx701', 'gfx801', 'gfx802', 'gfx803',
         'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012', 'none'
+        'gfx1011', 'gfx1012'
     )
 
-    variant('hip', default=False, description='Enable HIP support')
+    variant('rocm', default=False, description='Enable ROCm support')
 
-    # possible amd gpu targets for hip builds
-    variant('amdgpu_target', default='none', values=amdgpu_targets)
+    # possible amd gpu targets for rocm builds
+    variant('amdgpu_target',
+            description='AMD GPU architecture',
+            values=spack.variant.any_combination_of(*amdgpu_targets))
 
-    depends_on('llvm-amdgpu', when='+hip')
-    depends_on('hsa-rocr-dev', when='+hip')
-    depends_on('hip', when='+hip')
+    depends_on('llvm-amdgpu', when='+rocm')
+    depends_on('hsa-rocr-dev', when='+rocm')
+    depends_on('hip', when='+rocm')
 
-    # need amd gpu type for hip builds
-    conflicts('amdgpu_target=none', when='+hip')
+    # need amd gpu type for rocm builds
+    conflicts('amdgpu_target=none', when='+rocm')
 
-    # Make sure non-'none' amdgpu_targets cannot be used without +hip
-    for value in amdgpu_targets[:-1]:
-        conflicts('~hip', when='amdgpu_target=' + value)
+    # Make sure amdgpu_targets cannot be used without +rocm
+    for value in amdgpu_targets:
+        conflicts('~rocm', when='amdgpu_target=' + value)
 
     # https://github.com/ROCm-Developer-Tools/HIP/blob/master/bin/hipcc
     # It seems that hip-clang does not (yet?) accept this flag, in which case
@@ -111,17 +115,8 @@ class HipPackage(PackageBase):
     # hip package file. But I will leave this here for future development.
     @staticmethod
     def hip_flags(amdgpu_target):
-        return '--amdgpu-target={0}'.format(amdgpu_target)
-
-    # https://llvm.org/docs/AMDGPUUsage.html
-    # Possible architectures (not including 'none' option)
-    @staticmethod
-    def amd_gputargets_list():
-        return (
-            'gfx701', 'gfx801', 'gfx802', 'gfx803',
-            'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-            'gfx1011', 'gfx1012'
-        )
+        archs = ",".join(amdgpu_target)
+        return '--amdgpu-target={0}'.format(archs)
 
     # HIP version vs Architecture
 

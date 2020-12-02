@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Camp(CMakePackage, CudaPackage, HipPackage):
+class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
     type operations and tuples for C++ and cuda
@@ -40,12 +40,17 @@ class Camp(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
