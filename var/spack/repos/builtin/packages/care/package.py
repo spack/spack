@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Care(CMakePackage, CudaPackage, HipPackage):
+class Care(CMakePackage, CudaPackage, ROCmPackage):
     """
     Algorithms for chai managed arrays.
     """
@@ -30,7 +30,7 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+hip')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
 
     depends_on('camp')
     depends_on('umpire@develop')
@@ -46,23 +46,20 @@ class Care(CMakePackage, CudaPackage, HipPackage):
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda', when='+cuda')
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    depends_on('camp+hip', when='+hip')
-    depends_on('umpire+hip', when='+hip')
-    depends_on('raja+hip~openmp', when='+hip')
-    depends_on('chai+hip', when='+hip')
-    for val in amdgpu_targets:
+    depends_on('camp+rocm', when='+rocm')
+    depends_on('umpire+rocm', when='+rocm')
+    depends_on('raja+rocm~openmp', when='+rocm')
+    depends_on('chai+rocm', when='+rocm')
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('raja amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('chai amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
-    conflicts('+openmp', when='+hip')
+    conflicts('+openmp', when='+rocm')
     conflicts('+openmp', when='+cuda')
-    # TODO: figure out gtest dependency and then remove this.
-    conflicts('+tests')
 
     def cmake_args(self):
         spec = self.spec
@@ -83,12 +80,17 @@ class Care(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
+
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
@@ -105,6 +107,11 @@ class Care(CMakePackage, CudaPackage, HipPackage):
                        + spec['chai'].prefix.share.chai.cmake)
 
         options.append('-DCARE_ENABLE_TESTS={0}'.format(
+            'ON' if '+tests' in spec else 'OFF'))
+        # For tests to work, we also need BLT_ENABLE_TESTS to be on.
+        # This will take care of the gtest dependency. CARE developers should
+        # consider consolidating these flags in the future.
+        options.append('-DBLT_ENABLE_TESTS={0}'.format(
             'ON' if '+tests' in spec else 'OFF'))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because

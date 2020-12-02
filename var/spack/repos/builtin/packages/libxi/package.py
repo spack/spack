@@ -25,3 +25,8 @@ class Libxi(AutotoolsPackage, XorgPackage):
     depends_on('xproto@7.0.13:', type='build')
     depends_on('xextproto@7.0.3:', type='build')
     depends_on('inputproto@2.2.99.1:', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libXi', self.prefix, shared=True, recursive=True)

@@ -99,7 +99,11 @@ class Openloops(Package):
                 f.write('gfortran_f_flags = -ffree-line-length-none\n')
             if self.spec.satisfies('@2.1.1') and not is_intel:
                 f.write('gfortran_f_flags = -ffree-line-length-none ' +
-                        '-fdollar-ok -mcmodel=medium\n')
+                        '-fdollar-ok ')
+                if self.spec.target.family == 'aarch64':
+                    f.write('-mcmodel=small\n')
+                else:
+                    f.write('-mcmodel=medium\n')
 
         if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')

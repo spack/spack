@@ -18,6 +18,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.12', sha256='a8ba1d605780250da77619939582ce44b33cd286f2dbcc0dfd5cdbaf209140a5')
     version('20.11', sha256='b86f4f2ebf414cec050e562d4ab81545944bda581b496d69767b4bf6a3060855')
     version('20.10', sha256='92def480d1f0bcb5bcb9dfae2ddc8997060414386a1d71ccbfdad785fa2e46fa')
     version('20.09', sha256='3ae203f18656117d8201da16e899a6144ec217817a2a5d9b7649e2eef9cacdf9')
@@ -85,6 +86,8 @@ class Amrex(CMakePackage):
     # Check options compatibility
     conflicts('+sundials', when='~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
+    conflicts('+sundials', when='@20.12:',
+              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')
     conflicts('+hdf5', when='@:20.06',
               msg='AMReX HDF5 support needs AMReX newer than version 20.06')
     conflicts('+hypre', when='@:20.06',
@@ -158,7 +161,6 @@ class Amrex(CMakePackage):
                                      'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
-            self.define_from_variant('AMReX_SUNDIALS', 'sundials'),
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),

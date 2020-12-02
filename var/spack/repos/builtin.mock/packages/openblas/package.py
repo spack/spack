@@ -12,5 +12,10 @@ class Openblas(Package):
     url      = "http://github.com/xianyi/OpenBLAS/archive/v0.2.15.tar.gz"
 
     version('0.2.15', 'b1190f3d3471685f17cfd1ec1d252ac9')
+    version('0.2.14', 'b1190f3d3471685f17cfd1ec1d252ac9')
+    version('0.2.13', 'b1190f3d3471685f17cfd1ec1d252ac9')
+
+    # See #20019 for this conflict
+    conflicts('%gcc@:4.4.99', when='@0.2.14:')
 
     provides('blas')

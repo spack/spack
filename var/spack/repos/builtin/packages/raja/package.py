@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Raja(CMakePackage, CudaPackage, HipPackage):
+class Raja(CMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
     homepage = "http://software.llnl.gov/RAJA/"
@@ -37,21 +37,18 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
     variant('tests', default=False, description='Build tests')
 
     depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+hip')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
 
     depends_on('camp')
     depends_on('camp+cuda', when='+cuda')
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    depends_on('camp+hip', when='+hip')
-    for val in amdgpu_targets:
+    depends_on('camp+rocm', when='+rocm')
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
-    conflicts('+openmp', when='+hip')
-    # TODO: figure out gtest dependency and then remove this.
-    conflicts('+tests')
+    conflicts('+openmp', when='+rocm')
 
     def cmake_args(self):
         spec = self.spec
@@ -74,12 +71,16 @@ class Raja(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 

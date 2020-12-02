@@ -126,6 +126,8 @@ class Hydrogen(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
+        enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
@@ -140,6 +142,7 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
             '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
+            '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
         ]
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
