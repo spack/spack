@@ -21,7 +21,10 @@ class Mesa(MesonPackage):
     version('master', tag='master')
     version('20.2.1', sha256='d1a46d9a3f291bc0e0374600bdcb59844fa3eafaa50398e472a36fc65fd0244a')
 
-    depends_on('meson@0.52:', type='build')
+    depends_on('cmake', type='build')
+    # Starting with 0.54.0, meson will not try the cmake method when a
+    # shared link is requested, so it will use version 0.53.2.
+    depends_on('meson@0.53.2', type='build')
 
     depends_on('pkgconfig', type='build')
     depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
@@ -176,10 +179,6 @@ class Mesa(MesonPackage):
         args.append('-Ddri-drivers=' + ','.join(args_dri_drivers))
 
         return args
-
-    def setup_build_environment(self, env):
-        if self.spec.target.family == 'aarch64':
-            env.append_flags('LDFLAGS', '-ltinfo')
 
     @property
     def libs(self):
