@@ -63,11 +63,6 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
     variant(
-        "flang",
-        default=False,
-        description="Build the LLVM Fortran compiler frontend",
-    )
-    variant(
         "omp_debug",
         default=False,
         description="Include debugging code in OpenMP runtime libraries",
@@ -173,9 +168,6 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("gmp", when="@:3.6.999 +polly")
     depends_on("isl", when="@:3.6.999 +polly")
 
-
-    # Flang in > 11
-    conflicts("+flang", when="@:10.99")
     conflicts("+llvm_dylib", when="+shared_libs")
     conflicts("+lldb", when="~clang")
     conflicts("+libcxx", when="~clang")
@@ -430,8 +422,6 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("clang")
             projects.append("clang-tools-extra")
             projects.append("openmp")
-        if "+flang" in spec:
-            projects.append("flang")
         if "+lldb" in spec:
             projects.append("lldb")
         if "+lld" in spec:
@@ -443,7 +433,7 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("libcxxabi")
             if spec.satisfies("@3.9.0:"):
                 cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
-        if "+mlir" in spec or "+flang" in spec:
+        if "+mlir" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:
             projects.append("libunwind")
