@@ -108,7 +108,8 @@ the dependencies"""
 
     subparser.add_argument(
         '--include-build-deps', action='store_true', dest='include_build_deps',
-        default=False, help="include build deps when installing from cache")
+        default=False, help="""include build deps when installing from cache,
+which is useful for CI pipeline troubleshooting""")
 
     subparser.add_argument(
         '--no-check-signature', action='store_true',
