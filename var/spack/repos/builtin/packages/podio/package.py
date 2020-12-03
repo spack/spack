@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 
 class Podio(CMakePackage):
     """PODIO, or plain-old-data I/O, is a C++ library to support the creation
@@ -19,6 +17,7 @@ class Podio(CMakePackage):
     tags = ["hep", "key4hep"]
 
     version('master', branch='master')
+    version('0.13', sha256='e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498')
     version('0.12.0', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
     version('0.11.0', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
     version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
@@ -49,7 +48,6 @@ class Podio(CMakePackage):
 
     def cmake_args(self):
         args = [
-            self.define('BUILD_TESTING', self.run_tests),
             self.define_from_variant('ENABLE_SIO', 'sio')
         ]
         return args
@@ -58,13 +56,25 @@ class Podio(CMakePackage):
         # podio releases are dashes and padded with a leading zero
         # the patch version is omitted when 0
         # so for example v01-12-01, v01-12 ...
-        major = (str(version[0]).zfill(2))
-        minor = (str(version[1]).zfill(2))
-        patch = (str(version[2]).zfill(2))
-        if version[2] == 0:
-            url = "https://github.com/AIDASoft/podio/archive/v%s-%s.tar.gz" % (major, minor)
+        base_url = self.url.rsplit('/', 1)[0]
+        major = str(version[0]).zfill(2)
+        minor = str(version[1]).zfill(2)
+        # handle the different cases for the patch version:
+        # first case, no patch version is given in spack, i.e 0.1
+        if len(version) == 2:
+            url = base_url + "/v%s-%s.tar.gz" % (major, minor)
+        # a patch version is specified in spack, i.e. 0.1.x ...
+        elif len(version) == 3:
+            patch = str(version[2]).zfill(2)
+            # ... but it is zero, and not part of the ilc release url
+            if version[2] == 0:
+                url = base_url + "/v%s-%s.tar.gz" % (major, minor)
+            # ... if it is non-zero, it is part  of the release url
+            else:
+                url = base_url + "/v%s-%s-%s.tar.gz" % (major, minor, patch)
         else:
-            url = "https://github.com/AIDASoft/podio/archive/v%s-%s-%s.tar.gz" % (major, minor, patch)
+            print('Error - Wrong version format provided')
+            return
         return url
 
     def setup_run_environment(self, env):
