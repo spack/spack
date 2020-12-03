@@ -1,0 +1,10 @@
+--- spack-src/setup.py.old	2020-12-03 10:00:49.894130997 +0100
++++ spack-src/setup.py	2020-12-03 10:01:16.512483622 +0100
+@@ -213,7 +213,6 @@
+             'enum34;python_version<"3.4"',
+             'funcsigs',
+             'future',
+-            'h5py',
+             'hdfs',
+             'jprops',
+             'lazy-property',
