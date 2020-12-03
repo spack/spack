@@ -1017,7 +1017,9 @@ class IntelPackage(PackageBase):
         # if sys.platform == 'darwin':
         #     args = ()
 
-        env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
+        env.extend(
+            EnvironmentModifications.from_sourcing_file(f, *args, clean=True)
+        )
 
         if self.spec.name in ('intel', 'intel-parallel-studio'):
             # this package provides compilers
