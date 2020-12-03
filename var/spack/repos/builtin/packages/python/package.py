@@ -317,8 +317,7 @@ class Python(AutotoolsPackage):
             '-c', '%s; print(sysconfig.get_config_var("LIBPL"))' % sysconf_imp,
             output=str, error=str).strip()
         # Search for shared libraries in the prefix and set shared variant
-        matches = fs.find_libraries(
-            'libpython*', prefix=libdir, shared=True, recursive=True)
+        matches = fs.find_libraries('libpython*', prefix=libdir, shared=True)
         variants += '+shared' if len(matches) > 0 else '~shared'
 
         # check for debug
