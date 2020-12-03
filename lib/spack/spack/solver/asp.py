@@ -1826,8 +1826,8 @@ class SpecBuilder(object):
         # fix flags after all specs are constructed
         self.reorder_flags()
 
-        for s in self._specs.values():
-            spack.spec.Spec.inject_patches_variant(s)
+        for root in set([spec.root for spec in self._specs.values()]):
+            spack.spec.Spec.inject_patches_variant(root)
 
         # Add external paths to specs with just external modules
         for s in self._specs.values():
