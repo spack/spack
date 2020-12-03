@@ -255,7 +255,7 @@ environment variables:
             reporter.specs = specs
 
             tty.msg("Installing environment {0}".format(env.name))
-            with reporter:
+            with reporter('build'):
                 env.install_all(args, **kwargs)
 
             tty.debug("Regenerating environment views for {0}"
