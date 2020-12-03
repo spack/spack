@@ -23,7 +23,8 @@ def test_immediate_dependents(mock_packages):
         'libdwarf',
         'patch-a-dependency',
         'patch-several-dependencies',
-        'quantum-espresso'
+        'quantum-espresso',
+        'conditionally-patch-dependency'
     ])
 
 
@@ -38,7 +39,8 @@ def test_transitive_dependents(mock_packages):
         'multivalue-variant',
         'singlevalue-variant-dependent',
         'patch-a-dependency', 'patch-several-dependencies',
-        'quantum-espresso'
+        'quantum-espresso',
+        'conditionally-patch-dependency'
     ])
 
 
