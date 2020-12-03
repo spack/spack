@@ -5,7 +5,7 @@ spack:
     all:
       compiler: [gcc@4.8.5]
     intel-parallel-studio:
-      variants: +advisor+clck+daal+gdb+inspector+ipp+itac+mkl+mpi+rpath+shared+tbb+vtune
+      variants: +advisor+daal+gdb+inspector+ipp~mkl~mpi+rpath+shared~tbb+vtune
   specs:
     - gcc@9.3.0
     - gcc@10.2.0
