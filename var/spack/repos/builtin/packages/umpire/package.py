@@ -61,6 +61,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
     depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
