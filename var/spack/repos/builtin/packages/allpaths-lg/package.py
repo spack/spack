@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class AllpathsLg(AutotoolsPackage):
     # compiles with gcc 4.7.0 to 4.9.4)
     conflicts('%gcc@:4.6.4,5.1.0:')
     conflicts('%cce')
+    conflicts('%apple-clang')
     conflicts('%clang')
     conflicts('%intel')
     conflicts('%nag')

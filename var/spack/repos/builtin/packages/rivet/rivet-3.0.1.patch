@@ -1,0 +1,11 @@
+--- bin/rivet-buildplugin.in.orig	2020-04-30 14:41:44.988555918 +0200
++++ bin/rivet-buildplugin.in	2020-04-30 14:42:21.301319083 +0200
+@@ -249,7 +249,7 @@
+ 		srcnames[$idx]="$tmpfile"
+ 	fi
+ done
+-objnames=("${srcnames[@]/.cc/.o}")
++objnames=("${srcnames[@]/%.cc/.o}")
+ 
+ if [[ -z "$debug" ]]; then silencer="@"; fi
+ tmpmakefile=$(mktemp Makefile.tmp.XXXXXXXXXX)

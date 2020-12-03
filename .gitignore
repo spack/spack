@@ -4,6 +4,7 @@
 /var/spack/environments
 /var/spack/repos/*/index.yaml
 /var/spack/repos/*/lock
+__pycache__/
 *.pyc
 /opt
 *~
@@ -22,8 +23,18 @@
 .coverage
 \#*
 .#*
+.cache
 lib/spack/spack/test/.cache
 /bin/spackc
 *.in.log
 *.out.log
 *.orig
+
+# Eclipse files
+.project
+.cproject
+.pydevproject
+
+# VSCode files
+.vscode
+.devcontainer

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,6 @@ class PyCloudpickle(PythonPackage):
 
     depends_on('py-setuptools', type='build')
 
-    def test(self):
+    def build_test(self):
         # PyPI tarball does not come with unit tests
         pass

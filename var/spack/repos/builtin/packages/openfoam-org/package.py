@@ -1,8 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+#
+# Original Author: Mark Olesen <mark.olesen@esi-group.com>
+#
 # Legal Notice
 # ------------
 # OPENFOAM is a trademark owned by OpenCFD Ltd
@@ -20,13 +23,12 @@
 # - The openfoam-org package is a modified version of the openfoam package.
 #   If changes are needed here, consider if they should also be applied there.
 #
+# - mpi handling: WM_MPLIB=SYSTEMMPI and populate prefs.{csh,sh} with values
+#   from spack.
+#
 # - Building with boost/cgal is not included, since some of the logic is not
 #   entirely clear and thus untested.
 # - Resolution of flex, zlib needs more attention (within OpenFOAM)
-#
-# - mpi handling: WM_MPLIB=SYSTEMMPI and use spack to populate prefs.sh for it.
-#   Provide wmake rules for special purpose 'USER' and 'USERMPI'
-#   mpi implementations, in case these are required.
 #
 # Known issues
 # - Combining +zoltan with +int64 has not been tested, but probably won't work.
@@ -45,6 +47,7 @@ from spack.pkg.builtin.openfoam import write_environ
 from spack.pkg.builtin.openfoam import rewrite_environ_files
 from spack.pkg.builtin.openfoam import mplib_content
 from spack.pkg.builtin.openfoam import OpenfoamArch
+from spack.util.environment import EnvironmentModifications
 
 
 class OpenfoamOrg(Package):
@@ -62,6 +65,8 @@ class OpenfoamOrg(Package):
     git      = "https://github.com/OpenFOAM/OpenFOAM-dev.git"
 
     version('develop', branch='master')
+    version('8', sha256='94ba11cbaaa12fbb5b356e01758df403ac8832d69da309a5d79f76f42eb008fc',
+            url=baseurl + '/OpenFOAM-8/archive/version-8.tar.gz')
     version('7', sha256='12389cf092dc032372617785822a597aee434a50a62db2a520ab35ba5a7548b5',
             url=baseurl + '/OpenFOAM-7/archive/version-7.tar.gz')
     version('6', sha256='32a6af4120e691ca2df29c5b9bd7bc7a3e11208947f9bccf6087cfff5492f025',
@@ -84,7 +89,7 @@ class OpenfoamOrg(Package):
 
     depends_on('mpi')
     depends_on('zlib')
-    depends_on('flex',  type='build')
+    depends_on('flex')
     depends_on('cmake', type='build')
 
     # Require scotch with ptscotch - corresponds to standard OpenFOAM setup
@@ -126,7 +131,7 @@ class OpenfoamOrg(Package):
     @property
     def config(self):
         settings = {
-            # Use system mpi for spack
+            # Use SYSTEMMPI since openfoam-org doesn't have USERMPI
             'mplib': 'SYSTEMMPI',
 
             # Add links into bin/, lib/ (eg, for other applications)
@@ -138,15 +143,14 @@ class OpenfoamOrg(Package):
         return settings
 
     def setup_run_environment(self, env):
-        # This should be similar to the openfoam package,
-        # but sourcing the etc/bashrc here seems to exit with an error.
-        # ... this needs to be examined in more detail.
-        #
-        # Minimal environment only.
-        env.set('FOAM_PROJECT_DIR', self.projectdir)
-        env.set('WM_PROJECT_DIR', self.projectdir)
-        for d in ['wmake', self.archbin]:  # bin already added automatically
-            env.prepend_path('PATH', join_path(self.projectdir, d))
+        bashrc = self.prefix.etc.bashrc
+        try:
+            env.extend(EnvironmentModifications.from_sourcing_file(
+                bashrc, clean=True
+            ))
+        except Exception as e:
+            msg = 'unexpected error when sourcing OpenFOAM bashrc [{0}]'
+            tty.warn(msg.format(str(e)))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Location of the OpenFOAM project directory.
@@ -172,7 +176,7 @@ class OpenfoamOrg(Package):
     @property
     def foam_arch(self):
         if not self._foam_arch:
-            self._foam_arch = OpenfoamArch(self.spec, **self.config)
+            self._foam_arch = OpenfoamOrgArch(self.spec, **self.config)
         return self._foam_arch
 
     @property
@@ -332,15 +336,17 @@ class OpenfoamOrg(Package):
 
         # Having wmake and ~source is actually somewhat pointless...
         # Install 'etc' before 'bin' (for symlinks)
-        dirs = ['etc', 'bin', 'wmake']
+        # META-INFO for 1812 and later (or backported)
+        dirs = ['META-INFO', 'etc', 'bin', 'wmake']
         if '+source' in spec:
             dirs.extend(['applications', 'src', 'tutorials'])
 
         for d in dirs:
-            install_tree(
-                d,
-                join_path(self.projectdir, d),
-                symlinks=True)
+            if os.path.isdir(d):
+                install_tree(
+                    d,
+                    join_path(self.projectdir, d),
+                    symlinks=True)
 
         dirs = ['platforms']
         if '+source' in spec:
@@ -387,4 +393,16 @@ class OpenfoamOrg(Package):
             ]:
                 os.symlink(f, os.path.basename(f))
 
+
 # -----------------------------------------------------------------------------
+
+class OpenfoamOrgArch(OpenfoamArch):
+    """An openfoam-org variant of OpenfoamArch
+    """
+    def update_arch(self, spec):
+        """Handle differences in WM_ARCH naming
+        """
+        OpenfoamArch.update_arch(self, spec)
+
+        # ARM64 (openfoam) -> Arm64 (openfoam-org)
+        self.arch = self.arch.replace("ARM64", "Arm64")

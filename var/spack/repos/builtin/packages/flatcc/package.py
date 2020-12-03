@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,9 @@ class Flatcc(CMakePackage):
         # Spack handles CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE automatically
         spec = self.spec
         args = []
+
+        # allow flatcc to be built with more compilers
+        args.append('-DFLATCC_ALLOW_WERROR=OFF')
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS=ON')

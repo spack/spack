@@ -1,11 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
-import argparse
 import contextlib
 import sys
 
@@ -24,6 +23,10 @@ level = "short"
 
 
 def setup_parser(subparser):
+    subparser.epilog = """\
+for further documentation regarding the spec syntax, see:
+    spack help --spec
+"""
     arguments.add_common_arguments(
         subparser, ['long', 'very_long', 'install_status'])
     subparser.add_argument(
@@ -31,7 +34,7 @@ def setup_parser(subparser):
         const='yaml', help='print concrete spec as YAML')
     subparser.add_argument(
         '-j', '--json', action='store_const', dest='format', default=None,
-        const='json', help='print concrete spec as YAML')
+        const='json', help='print concrete spec as JSON')
     subparser.add_argument(
         '-c', '--cover', action='store',
         default='nodes', choices=['nodes', 'edges', 'paths'],
@@ -39,12 +42,10 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-N', '--namespaces', action='store_true', default=False,
         help='show fully qualified package names')
-
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
-    subparser.add_argument(
-        'specs', nargs=argparse.REMAINDER, help="specs of packages")
+    arguments.add_common_arguments(subparser, ['specs'])
 
 
 @contextlib.contextmanager

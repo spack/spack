@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,6 +98,10 @@ class TestPackage(object):
         assert spec1.package.content_hash(content=content1) != \
             spec2.package.content_hash(content=content2)
 
+    def test_parse_dynamic_function_call(self):
+        spec = Spec("hash-test4").concretized()
+        spec.package.content_hash()
+
     # Below tests target direct imports of spack packages from the
     # spack.pkg namespace
     def test_import_package(self):
@@ -182,7 +186,7 @@ def test_urls_for_versions(mock_packages, config):
         assert url == 'http://www.doesnotexist.org/url_override-0.8.1.tar.gz'
 
 
-def test_url_for_version_with_no_urls():
+def test_url_for_version_with_no_urls(mock_packages, config):
     pkg = spack.repo.get('git-test')
     with pytest.raises(spack.package.NoURLError):
         pkg.url_for_version('1.0')
@@ -398,3 +402,24 @@ def test_bundle_patch_directive(mock_directive_bundle,
                        match="Patches are not allowed"):
         patch = spack.directives.patch('mock/patch.txt')
         patch(mock_directive_bundle)
+
+
+def test_fetch_options(mock_packages, config):
+    """Test fetch options inference."""
+
+    pkg = spack.repo.get('fetch-options')
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.0')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc10'
+    assert fetcher.extra_options == {'timeout': 42, 'cookie': 'foobar'}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.1')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc11'
+    assert fetcher.extra_options == {'timeout': 65}
+
+    fetcher = spack.fetch_strategy.for_package_version(pkg, '1.2')
+    assert isinstance(fetcher, spack.fetch_strategy.URLFetchStrategy)
+    assert fetcher.digest == 'abc12'
+    assert fetcher.extra_options == {'cookie': 'baz'}

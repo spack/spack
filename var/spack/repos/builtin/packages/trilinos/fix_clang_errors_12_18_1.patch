@@ -1,0 +1,39 @@
+From 01b88601a85691da73042089778db6db5bf6cf01 Mon Sep 17 00:00:00 2001
+From: Jean-Paul Pelteret <jppelteret@gmail.com>
+Date: Sat, 1 Feb 2020 05:48:48 +0100
+Subject: [PATCH] Fix Clang 8.0.0 compiler errors 12.18.1
+
+---
+ packages/belos/tpetra/src/solvers/Belos_Tpetra_Krylov.hpp | 2 +-
+ packages/muelu/src/Interface/MueLu_ParameterListUtils.cpp | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/packages/belos/tpetra/src/solvers/Belos_Tpetra_Krylov.hpp b/packages/belos/tpetra/src/solvers/Belos_Tpetra_Krylov.hpp
+index d4f72bc..302dfc2 100644
+--- a/packages/belos/tpetra/src/solvers/Belos_Tpetra_Krylov.hpp
++++ b/packages/belos/tpetra/src/solvers/Belos_Tpetra_Krylov.hpp
+@@ -126,7 +126,7 @@ public:
+   virtual void
+   getDefaultParameters (Teuchos::ParameterList& params) const
+   {
+-    const SolverInput<SC> input;
++    const SolverInput<SC> input{};
+     const int verbosity = 0;
+     const std::string implResScal = input.needToScale ?
+       "Norm of Preconditioned Initial Residual" : "None"; // ???
+diff --git a/packages/muelu/src/Interface/MueLu_ParameterListUtils.cpp b/packages/muelu/src/Interface/MueLu_ParameterListUtils.cpp
+index 051a2df..a703aff 100644
+--- a/packages/muelu/src/Interface/MueLu_ParameterListUtils.cpp
++++ b/packages/muelu/src/Interface/MueLu_ParameterListUtils.cpp
+@@ -143,7 +143,7 @@ namespace MueLu {
+ 
+   // Usage: GetMLSubList(paramList, "smoother", 2);
+   const Teuchos::ParameterList & GetMLSubList(const Teuchos::ParameterList & paramList, const std::string & type, int levelID) {
+-    static const Teuchos::ParameterList emptyParamList;
++    static const Teuchos::ParameterList emptyParamList{};
+ 
+     char levelChar[11];
+     sprintf(levelChar, "(level %d)", levelID);
+-- 
+2.10.1 (Apple Git-78)
+

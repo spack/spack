@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,5 @@ class FastxToolkit(AutotoolsPackage):
 
     # patch implicit fallthrough
     patch("pr-22.patch")
+    # fix error [-Werror,-Wpragma-pack]
+    patch('fix_pragma_pack.patch', when='%fj')

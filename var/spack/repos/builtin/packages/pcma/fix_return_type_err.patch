@@ -1,0 +1,42 @@
+diff -ur spack-src.org/alcomp2.c spack-src/alcomp2.c
+--- spack-src.org/alcomp2.c	2020-01-21 15:13:59.483665899 +0900
++++ spack-src/alcomp2.c	2020-01-21 15:15:25.702732353 +0900
+@@ -155,7 +155,7 @@
+ int *ScoreOverColumn (int colScore, int flag1, int flag2, int flag3, int flag4, int flag5, int flag6, int *column_Score);
+ 
+ void *ReadRef (char *inputfile);
+-int CompareAlnVsReferenceAln (int *apos1, int *apos2, int *aposref1, int *aposref2, int start_ref1, int start_ref2, int end_ref1, int end_ref2 /* , int coverage1, int coverage2, int accuracy1, int accuracy2*/ );
++void CompareAlnVsReferenceAln (int *apos1, int *apos2, int *aposref1, int *aposref2, int start_ref1, int start_ref2, int end_ref1, int end_ref2 /* , int coverage1, int coverage2, int accuracy1, int accuracy2*/ );
+ 		
+ double p_dayhoff[]={0, 0.0143859, 0.0384319, 0.0352742, 0.0195027, 0.086209, 0.048466, 0.0708956, 0.0866279, 0.0193078,
+ 0.0832518, 0.0457631, 0.0610127, 0.0695179, 0.0390894, 0.0367281, 0.0570451, 0.0580589, 0.0244313, 0.043972, 0.0620286};
+@@ -1738,7 +1738,7 @@
+ int **ali;
+ readali(filename);
+ 
+-if (flag_errread==1) return;
++if (flag_errread==1) return NULL;
+ 
+ ali=ali_char2int(aseq,start_num,start_seq);
+ return ali;
+@@ -3247,7 +3247,7 @@
+ 	reflen_nogp = pos;
+ }
+ 
+-int CompareAlnVsReferenceAln (int *apos1, int *apos2, int *aposref1, int *aposref2, int start_ref1, int start_ref2, int end_ref1, int end_ref2 /*, int coverage1, int coverage2, int accuracy1, int accuracy2 */)
++void CompareAlnVsReferenceAln (int *apos1, int *apos2, int *aposref1, int *aposref2, int start_ref1, int start_ref2, int end_ref1, int end_ref2 /*, int coverage1, int coverage2, int accuracy1, int accuracy2 */)
+ {
+ 	int i,j,k;
+ 	int start_ali1, start_ali2, end_ali1, end_ali2;
+diff -ur spack-src.org/interface.c spack-src/interface.c
+--- spack-src.org/interface.c	2020-01-21 15:13:59.483665899 +0900
++++ spack-src/interface.c	2020-01-21 15:14:23.466183088 +0900
+@@ -202,7 +202,7 @@
+ 		match[i] = 0;
+ 	}
+ 
+-	if(args[0]==NULL) return;
++	if(args[0]==NULL) return 0;
+ 
+ 	params[0]=(char *)ckalloc((strlen(args[0])+1)*sizeof(char));
+ 	if (args[0][0]!=COMMANDSEP)

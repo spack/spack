@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,6 @@ class PySphinxcontribApplehelp(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
 
-    def test(self):
+    def build_test(self):
         # Requires sphinx, creating a circular dependency
         pass

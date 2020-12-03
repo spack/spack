@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class ParallelNetcdf(AutotoolsPackage):
     url      = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
+    maintainers = ['skosukhin']
+
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
             url = "https://parallel-netcdf.github.io/Release/pnetcdf-{0}.tar.gz"
@@ -25,7 +27,6 @@ class ParallelNetcdf(AutotoolsPackage):
 
         return url.format(version.dotted)
 
-    version('develop', branch='develop')
     version('master', branch='master')
     version('1.12.1', sha256='56f5afaa0ddc256791c405719b6436a83b92dcd5be37fe860dea103aee8250a2')
     version('1.11.2', sha256='d2c18601b364c35b5acb0a0b46cd6e14cae456e0eb854e5c789cf65f3cd6a2a7')
@@ -42,41 +43,129 @@ class ParallelNetcdf(AutotoolsPackage):
     variant('fortran', default=True, description='Build the Fortran Interface')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
+    variant('shared', default=True, description='Enable shared library')
+    variant('burstbuffer', default=False, description='Enable burst buffer feature')
 
     depends_on('mpi')
 
     depends_on('m4', type='build')
+    depends_on('autoconf', when='@master', type='build')
+    depends_on('automake', when='@master', type='build')
+    depends_on('libtool', when='@master', type='build')
 
-    # See:
-    # https://trac.mcs.anl.gov/projects/parallel-netcdf/browser/trunk/INSTALL
+    depends_on('perl', type='build')
+
+    # Suport for shared libraries was introduced in version 1.9.0
+    conflicts('+shared', when='@:1.8')
+    conflicts('+burstbuffer', when='@:1.10')
+
+    # Before 1.10.0, C utility programs (e.g. ncmpigen) were linked without
+    # explicit specification of the Fortran runtime libraries, which is
+    # required when libpnetcdf.so contains Fortran symbols. Libtool sets the
+    # required linking flags implicitly but only if the Fortran compiler
+    # produces verbose output with the '-v' flag (and, due to a bug in Libtool,
+    # when CXX is not set to 'no'; see macro _LT_LANG_FC_CONFIG in libtool.m4
+    # for more details). The latter is not the case for NAG. Starting 1.10.0,
+    # the required linking flags are explicitly set in the makefiles and
+    # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
+    # override the verbose output flag for Fortran compiler on the command line
+    # (see below).
+    conflicts('+shared', when='@:1.9%nag+fortran')
+
+    # https://github.com/Parallel-NetCDF/PnetCDF/pull/59
+    patch('nag_libtool.patch', when='@1.9:1.12.1%nag')
+
+    # We could apply the patch unconditionally. However, it fixes a problem
+    # that manifests itself only when we build shared libraries with Spack on
+    # a Cray system with PGI compiler. Based on the name of the $CC executable,
+    # Libtool "thinks" that it works with PGI compiler directly but on a Cray
+    # system it actually works with the Cray's wrapper. PGI compiler (at least
+    # since the version 15.7) "understands" two formats of the
+    # '--whole-archive' argument. Unluckily, Cray's wrapper "understands" only
+    # one of them but Libtool switches to another one. The following patch
+    # discards the switching.
+    patch('cray_pgi_libtool_release.patch',
+          when='@1.8:999%pgi+shared platform=cray')
+    # Given that the bug manifests itself in rather specific conditions, it is
+    # not reported upstream.
+    patch('cray_pgi_libtool_master.patch',
+          when='@master%pgi+shared platform=cray')
+
+    @property
+    def libs(self):
+        libraries = ['libpnetcdf']
+
+        query_parameters = self.spec.last_query.extra_parameters
+
+        if 'shared' in query_parameters:
+            shared = True
+        elif 'static' in query_parameters:
+            shared = False
+        else:
+            shared = '+shared' in self.spec
+
+        libs = find_libraries(
+            libraries, root=self.prefix, shared=shared, recursive=True
+        )
+
+        if libs:
+            return libs
+
+        msg = 'Unable to recursively locate {0} {1} libraries in {2}'
+        raise spack.error.NoLibrariesError(
+            msg.format('shared' if shared else 'static',
+                       self.spec.name,
+                       self.spec.prefix))
+
+    @when('@master')
+    def autoreconf(self, spec, prefix):
+        with working_dir(self.configure_directory):
+            # We do not specify '-f' because we need to use libtool files from
+            # the repository.
+            autoreconf('-iv')
+
     def configure_args(self):
-        spec = self.spec
+        args = ['--with-mpi=%s' % self.spec['mpi'].prefix,
+                'SEQ_CC=%s' % spack_cc]
 
-        args = ['--with-mpi={0}'.format(spec['mpi'].prefix)]
-        args.append('MPICC={0}'.format(spec['mpi'].mpicc))
-        args.append('MPICXX={0}'.format(spec['mpi'].mpicxx))
-        args.append('MPIF77={0}'.format(spec['mpi'].mpifc))
-        args.append('MPIF90={0}'.format(spec['mpi'].mpifc))
-        args.append('SEQ_CC={0}'.format(spack_cc))
+        args += self.enable_or_disable('cxx')
+        args += self.enable_or_disable('fortran')
 
-        if '+pic' in spec:
-            args.extend([
-                'CFLAGS={0}'.format(self.compiler.pic_flag),
-                'CXXFLAGS={0}'.format(self.compiler.pic_flag),
-                'FFLAGS={0}'.format(self.compiler.pic_flag)
-            ])
+        flags = {
+            'CFLAGS': [],
+            'CXXFLAGS': [],
+            'FFLAGS': [],
+            'FCFLAGS': [],
+        }
 
-        if '~cxx' in spec:
-            args.append('--disable-cxx')
+        if '+pic' in self.spec:
+            flags['CFLAGS'].append(self.compiler.cc_pic_flag)
+            flags['CXXFLAGS'].append(self.compiler.cxx_pic_flag)
+            flags['FFLAGS'].append(self.compiler.f77_pic_flag)
+            flags['FCFLAGS'].append(self.compiler.fc_pic_flag)
 
-        if '~fortran' in spec:
-            args.append('--disable-fortran')
+        # https://github.com/Parallel-NetCDF/PnetCDF/issues/61
+        if self.spec.satisfies('%gcc@10:'):
+            flags['FFLAGS'].append('-fallow-argument-mismatch')
+            flags['FCFLAGS'].append('-fallow-argument-mismatch')
 
-        if spec.satisfies('@1.8.0:'):
+        for key, value in sorted(flags.items()):
+            if value:
+                args.append('{0}={1}'.format(key, ' '.join(value)))
+
+        if self.version >= Version('1.8'):
             args.append('--enable-relax-coord-bound')
 
-        return args
+        if self.version >= Version('1.9'):
+            args += self.enable_or_disable('shared')
+            args.extend(['--enable-static',
+                         '--disable-silent-rules'])
 
-    def install(self, spec, prefix):
-        # Installation fails in parallel
-        make('install', parallel=False)
+        if self.spec.satisfies('%nag+fortran+shared'):
+            args.extend(['ac_cv_prog_fc_v=-Wl,-v',
+                         'ac_cv_prog_f77_v=-Wl,-v'])
+
+        if '+burstbuffer' in self.spec:
+            args.append('--enable-burst-buffering')
+
+        return args

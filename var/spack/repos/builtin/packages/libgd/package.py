@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,8 +31,17 @@ class Libgd(AutotoolsPackage):
     depends_on('gettext', type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libiconv')
+    depends_on('iconv')
     depends_on('libpng')
     depends_on('jpeg')
     depends_on('libtiff')
     depends_on('fontconfig')
+
+    def patch(self):
+        p = self.spec['jpeg'].libs.search_flags
+        filter_file(
+            'LIBJPEG_LIBS " -ljpeg"',
+            'LIBJPEG_LIBS "{0} -ljpeg"'.format(p),
+            'configure',
+            string=True
+        )

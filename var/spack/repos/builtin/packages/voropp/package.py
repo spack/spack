@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,7 @@ class Voropp(MakefilePackage):
         # CFLAGS=-Wall -ansi -pedantic -O3
         cflags = ''
         if '+pic' in spec:
-            cflags += self.compiler.pic_flag
+            cflags += self.compiler.cc_pic_flag
         filter_file(r'CFLAGS=.*',
                     'CFLAGS={0}'.format(cflags),
                     'config.mk')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,3 @@ X   Y
         patch('http://example.com/urlpatch.patch',
               sha256='mid21234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234'),  # noqa: E501
     ])
-
-    def install(self, spec, prefix):
-        pass

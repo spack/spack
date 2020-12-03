@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,13 +9,14 @@ from spack import *
 class Bbcp(Package):
     """Securely and quickly copy data from source to target"""
 
-    homepage = "http://www.slac.stanford.edu/~abh/bbcp/"
-    git      = "http://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
+    homepage = "https://www.slac.stanford.edu/~abh/bbcp/"
+    git      = "https://www.slac.stanford.edu/~abh/bbcp/bbcp.git"
 
-    version('git', branch='master')
+    version('master', branch='master')
 
     depends_on('zlib')
     depends_on('openssl')
+    depends_on('libnsl')
 
     def install(self, spec, prefix):
         cd("src")

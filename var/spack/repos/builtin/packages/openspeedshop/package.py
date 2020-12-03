@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,7 @@ class Openspeedshop(CMakePackage):
 
     depends_on("libxml2")
 
-    depends_on("qt@3.3.8b+krellpatch", when='gui=qt3')
+    depends_on("qt@3:3.9", when='gui=qt3')
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))

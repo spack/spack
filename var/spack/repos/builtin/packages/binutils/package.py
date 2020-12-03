@@ -1,19 +1,22 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import glob
+import sys
 
 
-class Binutils(AutotoolsPackage):
+class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
 
     homepage = "http://www.gnu.org/software/binutils/"
-    url      = "https://ftpmirror.gnu.org/binutils/binutils-2.28.tar.bz2"
+    gnu_mirror_path = "binutils/binutils-2.28.tar.bz2"
 
-    version('2.32', sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
+    version('2.35.1', sha256='320e7a1d0f46fcd9f413f1046e216cbe23bb2bce6deb6c6a63304425e48b1942')
+    version('2.35', sha256='7d24660f87093670738e58bcc7b7b06f121c0fcb0ca8fc44368d675a5ef9cff7')
+    version('2.34', sha256='89f010078b6cf69c23c27897d686055ab89b198dddf819efb0a4f2c38a0b36e6')
+    version('2.33.1', sha256='0cb4843da15a65a953907c96bad658283f3c4419d6bcc56bf2789db16306adb2')
+    version('2.32',   sha256='de38b15c902eb2725eac6af21183a5f34ea4634cb0bcef19612b50e5ed31072d')
     version('2.31.1', sha256='ffcc382695bf947da6135e7436b8ed52d991cf270db897190f19d6f9838564d0')
     version('2.29.1', sha256='1509dff41369fb70aed23682351b663b56db894034773e6dbf7d5d6071fc55cc')
     version('2.28', sha256='6297433ee120b11b4b0a1c8f3512d7d73501753142ab9e2daa13c5a3edd32a72')
@@ -27,21 +30,33 @@ class Binutils(AutotoolsPackage):
 
     variant('plugins', default=False,
             description="enable plugins, needed for gold linker")
-    variant('gold', default=True, description="build the gold linker")
+    variant('gold', default=(sys.platform != 'darwin'),
+            description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
+    variant('lto', default=False, description='Enable lto.')
+    variant('ld', default=False, description='Enable ld.')
+    variant('interwork', default=False, description='Enable interwork.')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
 
     depends_on('zlib')
+    depends_on('diffutils', type='build')
     depends_on('gettext', when='+nls')
 
     # Prior to 2.30, gold did not distribute the generated files and
     # thus needs bison, even for a one-time build.
     depends_on('m4', type='build', when='@:2.29.99 +gold')
     depends_on('bison', type='build', when='@:2.29.99 +gold')
+
+    # 2.34 needs makeinfo due to a bug, see:
+    # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
+    depends_on('texinfo', type='build', when='@2.34')
+
+    conflicts('+gold', when='platform=darwin',
+              msg="Binutils cannot build linkers on macOS")
 
     def configure_args(self):
         spec = self.spec
@@ -56,6 +71,15 @@ class Binutils(AutotoolsPackage):
             '--with-system-zlib',
             '--with-sysroot=/',
         ]
+
+        if '+lto' in spec:
+            configure_args.append('--enable-lto')
+
+        if '+ld' in spec:
+            configure_args.append('--enable-ld')
+
+        if '+interwork' in spec:
+            configure_args.append('--enable-interwork')
 
         if '+gold' in spec:
             configure_args.append('--enable-gold')
@@ -90,15 +114,44 @@ class Binutils(AutotoolsPackage):
             # grab the full binutils set of headers
             install_tree('include', extradir)
             # also grab the headers from the bfd directory
-            for current_file in glob.glob(join_path(self.build_directory,
-                                                    'bfd', '*.h')):
-                install(current_file, extradir)
+            install(join_path(self.build_directory, 'bfd', '*.h'),
+                    extradir)
 
     def flag_handler(self, name, flags):
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
-        if name == 'cxxflags'\
-           and (self.compiler.name == 'fj' or self.compiler.name == 'clang')\
-           and self.version <= ver('2.31.1'):
+        if name == 'cxxflags' and (
+            self.spec.satisfies('@:2.31.1') and
+            self.compiler.name in ('fj', 'clang', 'apple-clang')
+        ):
             flags.append('-Wno-narrowing')
+        elif name == 'cflags':
+            if self.spec.satisfies('@:2.34 %gcc@10:'):
+                flags.append('-fcommon')
         return (flags, None, None)
+
+    def test(self):
+        spec_vers = str(self.spec.version)
+
+        checks = {
+            'ar': spec_vers,
+            'c++filt': spec_vers,
+            'coffdump': spec_vers,
+            'dlltool': spec_vers,
+            'elfedit': spec_vers,
+            'gprof': spec_vers,
+            'ld': spec_vers,
+            'nm': spec_vers,
+            'objdump': spec_vers,
+            'ranlib': spec_vers,
+            'readelf': spec_vers,
+            'size': spec_vers,
+            'strings': spec_vers,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
+                          purpose=reason, skip_missing=True)

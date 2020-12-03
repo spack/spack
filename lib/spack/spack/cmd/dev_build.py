@@ -1,19 +1,17 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 import os
-import argparse
 
 import llnl.util.tty as tty
 
 import spack.config
 import spack.cmd
-import spack.repo
 import spack.cmd.common.arguments as arguments
-from spack.stage import DIYStage
+import spack.repo
 
 description = "developer build: build from code in current working directory"
 section = "build"
@@ -39,11 +37,24 @@ def setup_parser(subparser):
         '-q', '--quiet', action='store_true', dest='quiet',
         help="do not display verbose build output while installing")
     subparser.add_argument(
+        '--drop-in', type=str, dest='shell', default=None,
+        help="drop into a build environment in a new shell, e.g. bash, zsh")
+    subparser.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages.""")
+    arguments.add_common_arguments(subparser, ['spec'])
+
+    stop_group = subparser.add_mutually_exclusive_group()
+    stop_group.add_argument(
+        '-b', '--before', type=str, dest='before', default=None,
+        help="phase to stop before when installing (default None)")
+    stop_group.add_argument(
         '-u', '--until', type=str, dest='until', default=None,
         help="phase to stop after when installing (default None)")
-    subparser.add_argument(
-        'spec', nargs=argparse.REMAINDER,
-        help="specs to use for install. must contain package AND version")
 
     cd_group = subparser.add_mutually_exclusive_group()
     arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
@@ -67,6 +78,14 @@ def dev_build(self, args):
             "spack dev-build spec must have a single, concrete version. "
             "Did you forget a package version number?")
 
+    source_path = args.source_path
+    if source_path is None:
+        source_path = os.getcwd()
+    source_path = os.path.abspath(source_path)
+
+    # Forces the build to run out of the source directory.
+    spec.constrain('dev_path=%s' % source_path)
+
     spec.concretize()
     package = spack.repo.get(spec)
 
@@ -75,23 +94,27 @@ def dev_build(self, args):
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
 
-    source_path = args.source_path
-    if source_path is None:
-        source_path = os.getcwd()
-    source_path = os.path.abspath(source_path)
-
-    # Forces the build to run out of the current directory.
-    package.stage = DIYStage(source_path)
-
     # disable checksumming if requested
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
+    tests = False
+    if args.test == 'all':
+        tests = True
+    elif args.test == 'root':
+        tests = [spec.name for spec in specs]
+
     package.do_install(
+        tests=tests,
         make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
-        keep_stage=True,   # don't remove source dir for dev build.
         dirty=args.dirty,
+        stop_before=args.before,
         stop_at=args.until)
+
+    # drop into the build environment of the package?
+    if args.shell is not None:
+        spack.build_environment.setup_package(package, dirty=False)
+        os.execvp(args.shell, [args.shell])

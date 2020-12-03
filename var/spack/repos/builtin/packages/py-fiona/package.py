@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,6 +34,6 @@ class PyFiona(PythonPackage):
     depends_on('py-ordereddict', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-enum34', type=('build', 'run'), when='^python@:3.3')
 
-    def test(self):
+    def build_test(self):
         # PyPI tarball does not come with unit tests
         pass

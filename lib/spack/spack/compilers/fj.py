@@ -1,4 +1,4 @@
-# Copyright 2013-2018 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,13 +26,21 @@ class Fj(spack.compiler.Compiler):
                   'fc': 'fj/frt'}
 
     version_argument = '--version'
-    version_regex = r'\((?:FCC|FRT)\) ([\d.]+)'
+    version_regex = r'\((?:FCC|FRT)\) ([a-z\d.]+)'
 
     required_libs = ['libfj90i', 'libfj90f', 'libfjsrcinfo']
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return "-v"
+
+    @property
+    def debug_flags(self):
+        return "-g"
+
+    @property
+    def opt_flags(self):
+        return ['-O0', '-O1', '-O2', '-O3', '-Ofast']
 
     @property
     def openmp_flag(self):
@@ -51,6 +59,10 @@ class Fj(spack.compiler.Compiler):
         return "-std=c++14"
 
     @property
+    def cxx17_flag(self):
+        return "-std=c++17"
+
+    @property
     def c99_flag(self):
         return "-std=c99"
 
@@ -59,5 +71,17 @@ class Fj(spack.compiler.Compiler):
         return "-std=c11"
 
     @property
-    def pic_flag(self):
+    def cc_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-KPIC"
+
+    @property
+    def fc_pic_flag(self):
         return "-KPIC"

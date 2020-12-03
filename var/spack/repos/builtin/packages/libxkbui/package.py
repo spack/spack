@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,11 +6,11 @@
 from spack import *
 
 
-class Libxkbui(AutotoolsPackage):
+class Libxkbui(AutotoolsPackage, XorgPackage):
     """X.org libxkbui library."""
 
     homepage = "https://cgit.freedesktop.org/xorg/lib/libxkbui/"
-    url      = "https://www.x.org/archive/individual/lib/libxkbui-1.0.2.tar.gz"
+    xorg_mirror_path = "lib/libxkbui-1.0.2.tar.gz"
 
     version('1.0.2', sha256='196ab4867f3754caae34e51a663cbce26b4af819db3960f1fc4fb42c6a3c535d')
 

@@ -1,0 +1,64 @@
+--- a/Makefile	2017-03-13 09:55:48.000000000 -0500
++++ b/Makefile	2020-01-13 17:42:49.359554802 -0600
+@@ -30,13 +30,14 @@
+ 
+ # Adjust $(HTSDIR) to point to your top-level htslib directory
+ HTSDIR = htslib-1.4
+-include $(HTSDIR)/htslib.mk
+-include $(HTSDIR)/htslib_static.mk
+-HTSLIB = $(HTSDIR)/libhts.a
+-BGZIP  = $(HTSDIR)/bgzip
+-TABIX  = $(HTSDIR)/tabix
+-HTSLIB_LDFLAGS = $(HTSLIB_static_LDFLAGS)
+-HTSLIB_LIBS = $(HTSLIB_static_LIBS)
++#include $(HTSDIR)/htslib.mk
++#include $(HTSDIR)/htslib_static.mk
++HTSINC = $(HTSDIR)/include
++HTSLIB = -L$(HTSDIR)/lib -lhts
++BGZIP  = $(HTSDIR)/bin/bgzip
++TABIX  = $(HTSDIR)/bin/tabix
++#HTSLIB_LDFLAGS = $(HTSLIB_static_LDFLAGS)
++#HTSLIB_LIBS = $(HTSLIB_static_LIBS)
+ 
+ CC       = gcc
+ CPPFLAGS =
+@@ -51,7 +52,7 @@
+ endif
+ 
+ # TODO Use configure or htslib.pc to add -rdynamic/-ldl conditionally
+-ALL_CPPFLAGS = -I. $(HTSLIB_CPPFLAGS) $(CPPFLAGS)
++ALL_CPPFLAGS = -I. -I$(HTSINC)
+ ALL_LDFLAGS  = $(DYNAMIC_FLAGS) $(HTSLIB_LDFLAGS) $(LDFLAGS)
+ ALL_LIBS     = -lm -lz -ldl $(LIBS)
+ 
+@@ -64,7 +65,7 @@
+            mpileup.o bam2bcf.o bam2bcf_indel.o bam_sample.o \
+            ccall.o em.o prob1.o kmin.o # the original samtools calling
+ 
+-EXTRA_CPPFLAGS = -I. -I$(HTSDIR) -DPLUGINPATH=\"$(pluginpath)\"
++EXTRA_CPPFLAGS = -I. -I$(HTSINC) -DPLUGINPATH=\"$(pluginpath)\"
+ GSL_LIBS       =
+ 
+ # The polysomy command is not compiled by default because it brings dependency
+@@ -73,7 +74,7 @@
+ ifdef USE_GPL
+     EXTRA_CPPFLAGS += -DUSE_GPL
+     OBJS += polysomy.o peakfit.o
+-    GSL_LIBS = -lgsl -lcblas
++    GSL_LIBS = -lgsl -lgslcblas
+ endif
+ 
+ prefix      = /usr/local
+@@ -208,10 +209,10 @@
+ 
+ test/test-regidx.o: test/test-regidx.c regidx.h
+ 
+-test/test-regidx: test/test-regidx.o regidx.o $(HTSLIB)
++test/test-regidx: test/test-regidx.o regidx.o
+ 	$(CC) $(ALL_LDFLAGS) -o $@ $^ $(HTSLIB) -lpthread $(HTSLIB_LIBS) $(ALL_LIBS)
+ 
+-bcftools: $(HTSLIB) $(OBJS)
++bcftools: $(OBJS)
+ 	$(CC) $(ALL_LDFLAGS) -o $@ $(OBJS) $(HTSLIB) -lpthread $(HTSLIB_LIBS) $(GSL_LIBS) $(ALL_LIBS)
+ 
+ doc/bcftools.1: doc/bcftools.txt

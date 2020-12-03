@@ -1,0 +1,13 @@
+--- a/misc/guess-ploidy.py	2017-04-07 04:52:44.000000000 -0500
++++ b/misc/guess-ploidy.py	2020-01-14 10:59:49.738128654 -0600
+@@ -33,8 +33,8 @@
+ csv.register_dialect('tab', delimiter='\t', quoting=csv.QUOTE_NONE)
+ 
+ if len(sys.argv) != 3:
+-    print >> sys.stderr, 'About: Plot output of "bcftools +guess-ploidy -v"'
+-    print >> sys.stderr, 'Usage: guess-ploidy.py <guess-ploidy.out> <image-prefix>'
++    print('About: Plot output of "bcftools +guess-ploidy -v"', file=sys.stderr)
++    print('Usage: guess-ploidy.py <guess-ploidy.out> <image-prefix>', file=sys.stderr)
+     sys.exit()
+ 
+ prefix = sys.argv[2]

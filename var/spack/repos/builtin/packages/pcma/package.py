@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,3 +22,6 @@ class Pcma(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         install('pcma', prefix.bin)
+
+    # set return value and change return type of function [-Wreturn-type]
+    patch('fix_return_type_err.patch')

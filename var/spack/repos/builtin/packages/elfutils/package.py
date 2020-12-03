@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ import glob
 import os.path
 
 
-class Elfutils(AutotoolsPackage):
+class Elfutils(AutotoolsPackage, SourcewarePackage):
     """elfutils is a collection of various binary tools such as
     eu-objdump, eu-readelf, and other utilities that allow you to
     inspect and manipulate ELF files. Refer to Table 5.Tools Included
@@ -17,10 +17,14 @@ class Elfutils(AutotoolsPackage):
     version of elfutils."""
 
     homepage = "https://fedorahosted.org/elfutils/"
-    url      = "https://sourceware.org/elfutils/ftp/0.178/elfutils-0.178.tar.bz2"
+    sourceware_mirror_path = "elfutils/0.179/elfutils-0.179.tar.bz2"
     list_url = "https://sourceware.org/elfutils/ftp"
     list_depth = 1
 
+    version('0.182', sha256='ecc406914edf335f0b7fc084ebe6c460c4d6d5175bfdd6688c1c78d9146b8858')
+    version('0.181', sha256='29a6ad7421ec2acfee489bb4a699908281ead2cb63a20a027ce8804a165f0eb3')
+    version('0.180', sha256='b827b6e35c59d188ba97d7cf148fa8dc6f5c68eb6c5981888dfdbb758c0b569d')
+    version('0.179', sha256='25a545566cbacaa37ae6222e58f1c48ea4570f53ba991886e2f5ce96e22a23a2')
     version('0.178', sha256='31e7a00e96d4e9c4bda452e1f2cdac4daf8abd24f5e154dee232131899f3a0f2')
     version('0.177', sha256='fa489deccbcae7d8c920f60d85906124c1989c591196d90e0fd668e3dc05042e')
     version('0.176', sha256='eb5747c371b0af0f71e86215a5ebb88728533c3a104a43d4231963f308cd1023')
@@ -41,13 +45,26 @@ class Elfutils(AutotoolsPackage):
     variant('nls', default=True,
             description='Enable Native Language Support.')
 
+    # libdebuginfod support
+    # NB: For 0.181 and newer, this enables _both_ the client and server
+    variant('debuginfod', default=False,
+            description='Enable libdebuginfod support.')
+
     depends_on('bzip2', type='link', when='+bzip2')
     depends_on('xz',    type='link', when='+xz')
     depends_on('zlib',  type='link')
     depends_on('gettext', when='+nls')
     depends_on('m4',    type='build')
 
+    # debuginfod has extra dependencies
+    # NB: Waiting on an elfutils patch before we can use libmicrohttpd@0.9.71
+    depends_on('libmicrohttpd@0.9.33:0.9.70', type='link', when='+debuginfod')
+    depends_on('libarchive@3.1.2:', type='link', when='+debuginfod')
+    depends_on('sqlite@3.7.17:', type='link', when='+debuginfod')
+    depends_on('curl@7.29.0:', type='link', when='+debuginfod')
+
     conflicts('%gcc@7.2.0:', when='@0.163')
+    conflicts('+debuginfod', when='@:0.178')
 
     provides('elf@1')
 
@@ -55,6 +72,7 @@ class Elfutils(AutotoolsPackage):
     # in gcc, but not in clang. C code compiled with gcc is
     # binary-compatible with clang, so it should be possible to build
     # elfutils with gcc, and then link it to clang-built libraries.
+    conflicts('%apple-clang')
     conflicts('%clang')
 
     # Elfutils uses -Wall and we don't want to fail the build over a
@@ -89,10 +107,14 @@ class Elfutils(AutotoolsPackage):
         else:
             args.append('--disable-nls')
 
-        # The experimental debuginfod server requires libmicrohttpd
-        # which doesn't have a spack package
-        if spec.satisfies('@0.178:'):
+        if '+debuginfod' in spec:
+            args.append('--enable-debuginfod')
+            if spec.satisfies('@0.181:'):
+                args.append('--enable-libdebuginfod')
+        else:
             args.append('--disable-debuginfod')
+            if spec.satisfies('@0.181:'):
+                args.append('--disable-libdebuginfod')
 
         return args
 

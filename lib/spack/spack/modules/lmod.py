@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,14 +12,18 @@ import collections
 import spack.config
 import spack.compilers
 import spack.spec
+import spack.repo
 import spack.error
 import spack.tengine as tengine
 
 from .common import BaseConfiguration, BaseFileLayout
 from .common import BaseContext, BaseModuleFileWriter
 
+
 #: lmod specific part of the configuration
-configuration = spack.config.get('modules:lmod', {})
+def configuration():
+    return spack.config.get('modules:lmod', {})
+
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}
@@ -88,6 +92,7 @@ def guess_core_compilers(store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
+    default_projections = {'all': os.path.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
@@ -98,7 +103,7 @@ class LmodConfiguration(BaseConfiguration):
                 specified in the configuration file or the sequence
                 is empty
         """
-        value = configuration.get(
+        value = configuration().get(
             'core_compilers'
         ) or guess_core_compilers(store=True)
 
@@ -108,15 +113,22 @@ class LmodConfiguration(BaseConfiguration):
         return value
 
     @property
+    def core_specs(self):
+        """Returns the list of "Core" specs"""
+        return configuration().get('core_specs', [])
+
+    @property
     def hierarchy_tokens(self):
         """Returns the list of tokens that are part of the modulefile
         hierarchy. 'compiler' is always present.
         """
-        tokens = configuration.get('hierarchy', [])
+        tokens = configuration().get('hierarchy', [])
 
         # Check if all the tokens in the hierarchy are virtual specs.
         # If not warn the user and raise an error.
-        not_virtual = [t for t in tokens if not spack.spec.Spec.is_virtual(t)]
+        not_virtual = [t for t in tokens
+                       if t != 'compiler' and
+                       not spack.repo.path.is_virtual(t)]
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"
@@ -137,6 +149,11 @@ class LmodConfiguration(BaseConfiguration):
         to the actual provider. 'compiler' is always present among the
         requirements.
         """
+        # If it's a core_spec, lie and say it requires a core compiler
+        if any(self.spec.satisfies(core_spec)
+               for core_spec in self.core_specs):
+            return {'compiler': self.core_compilers[0]}
+
         # Keep track of the requirements that this package has in terms
         # of virtual packages that participate in the hierarchical structure
         requirements = {'compiler': self.spec.compiler}
@@ -229,18 +246,6 @@ class LmodFileLayout(BaseFileLayout):
             '.'.join([self.use_name, self.extension])  # file name
         )
         return fullname
-
-    @property
-    def use_name(self):
-        """Returns the 'use' name of the module i.e. the name you have to type
-        to console to use it.
-        """
-        # Package name and version
-        base = os.path.join("{name}", "{version}")
-        name_parts = [self.spec.format(base)]
-        # The remaining elements are filename suffixes
-        name_parts.extend(self.conf.suffixes)
-        return '-'.join(name_parts)
 
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.

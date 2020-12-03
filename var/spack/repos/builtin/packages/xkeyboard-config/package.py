@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class XkeyboardConfig(AutotoolsPackage):
+class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     """This project provides a consistent, well-structured, frequently
     released, open source database of keyboard configuration data. The
     project is targeted to XKB-based systems."""
 
     homepage = "https://www.freedesktop.org/wiki/Software/XKeyboardConfig/"
-    url      = "https://www.x.org/archive/individual/data/xkeyboard-config/xkeyboard-config-2.18.tar.gz"
+    xorg_mirror_path = "data/xkeyboard-config/xkeyboard-config-2.18.tar.gz"
 
     version('2.18', sha256='d5c511319a3bd89dc40622a33b51ba41a2c2caad33ee2bfe502363fcc4c3817d')
 

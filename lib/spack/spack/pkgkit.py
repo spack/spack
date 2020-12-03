@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,22 +20,29 @@ from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.rocm import ROCmPackage
 from spack.build_systems.qmake import QMakePackage
+from spack.build_systems.maven import MavenPackage
 from spack.build_systems.scons import SConsPackage
 from spack.build_systems.waf import WafPackage
 from spack.build_systems.octave import OctavePackage
 from spack.build_systems.python import PythonPackage
 from spack.build_systems.r import RPackage
 from spack.build_systems.perl import PerlPackage
+from spack.build_systems.ruby import RubyPackage
 from spack.build_systems.intel import IntelPackage
 from spack.build_systems.meson import MesonPackage
 from spack.build_systems.sip import SIPPackage
+from spack.build_systems.gnu import GNUMirrorPackage
+from spack.build_systems.sourceforge import SourceforgePackage
+from spack.build_systems.sourceware import SourcewarePackage
+from spack.build_systems.xorg import XorgPackage
 
 from spack.mixins import filter_compiler_wrappers
 
 from spack.version import Version, ver
 
-from spack.spec import Spec
+from spack.spec import Spec, InvalidSpecDetected
 
 from spack.dependency import all_deptypes
 
@@ -49,7 +56,11 @@ from spack.util.executable import *
 
 from spack.package import \
     install_dependency_symlinks, flatten_dependencies, \
-    DependencyConflictError, InstallError, ExternalPackageError
+    DependencyConflictError
+
+from spack.installer import \
+    ExternalPackageError, InstallError, InstallLockError, UpstreamPackageError
+from spack.install_test import get_escaped_text_output
 
 from spack.variant import any_combination_of, auto_or_any_combination_of
 from spack.variant import disjoint_sets

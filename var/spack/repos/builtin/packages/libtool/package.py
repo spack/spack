@@ -1,16 +1,16 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
-class Libtool(AutotoolsPackage):
+class Libtool(AutotoolsPackage, GNUMirrorPackage):
     """libtool -- library building part of autotools."""
 
     homepage = 'https://www.gnu.org/software/libtool/'
-    url      = 'https://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
+    gnu_mirror_path = "libtool/libtool-2.4.2.tar.gz"
 
     version('develop', git='https://git.savannah.gnu.org/git/libtool.git',
             branch='master', submodules=True)
@@ -30,12 +30,32 @@ class Libtool(AutotoolsPackage):
 
     build_directory = 'spack-build'
 
+    executables = ['^g?libtool(ize)?$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'\(GNU libtool\)\s+(\S+)', output)
+        return match.group(1) if match else None
+
     @when('@2.4.2,develop')
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libltdl'], root=self.prefix, recursive=True, shared=True
+        )
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fno-builtin', '-Mnobuiltin', 'configure')
+            filter_file('-fno-builtin', '-Mnobuiltin', 'libltdl/configure')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)

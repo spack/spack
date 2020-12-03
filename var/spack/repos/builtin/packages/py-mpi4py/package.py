@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,3 +30,8 @@ class PyMpi4py(PythonPackage):
 
     def build_args(self, spec, prefix):
         return ['--mpicc=%s -shared' % spec['mpi'].mpicc]
+
+    @property
+    def headers(self):
+        headers = find_all_headers(self.prefix.lib)
+        return headers

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -236,7 +236,7 @@ class SimmetrixSimmodsuite(Package):
                      "CXX=%s" % spec['mpi'].mpicxx,
                      "PARALLEL=%s" % mpi_id,
                      "PQUAL=-%s" % mpi_id,
-                     "OPTFLAGS=-O2 -DNDEBUG " + self.compiler.pic_flag)
+                     "OPTFLAGS=-O2 -DNDEBUG " + self.compiler.cc_pic_flag)
                 libname = 'libSimPartitionWrapper-' + mpi_id + '.a'
                 wrapperlibpath = join_path(workdir, 'lib', libname)
                 install(wrapperlibpath, join_path(prefix.lib, self.oslib))

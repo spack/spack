@@ -1,0 +1,25 @@
+From 6143a6b694b6941056687c830820b7a8d71b84c7 Mon Sep 17 00:00:00 2001
+From: Harmen Stoppels <harmenstoppels@gmail.com>
+Date: Tue, 1 Sep 2020 11:58:31 +0200
+Subject: [PATCH] Drop overly strict -Werror flag
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index c6cc0aa..5cc5d9d 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -67,7 +67,7 @@ find_package(LibDw REQUIRED)
+ 
+ target_include_directories(rocm-debug-agent
+   SYSTEM PRIVATE ${ROCR_INCLUDES} ${LIBELF_INCLUDES} ${LIBDW_INCLUDES})
+-target_compile_options(rocm-debug-agent PRIVATE -Werror -Wall)
++target_compile_options(rocm-debug-agent PRIVATE -Wall)
+ 
+ if(DEFINED ENV{ROCM_BUILD_ID})
+   # ROCM_BUILD_ID is set by the ROCm-CI build environment.
+-- 
+2.25.1
+

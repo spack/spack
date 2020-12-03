@@ -1,10 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Aspa(MakefilePackage):
@@ -28,6 +25,8 @@ class Aspa(MakefilePackage):
     depends_on('mpi', when='+mpi')
     depends_on('hdf5')
 
+    patch('fix_common_errors.patch')
+
     @property
     def build_targets(self):
         targets = [
@@ -50,5 +49,4 @@ class Aspa(MakefilePackage):
         install('exec/kriging_model_centers.txt', prefix.input)
         install('exec/point_data.txt', prefix.input)
         install('exec/value_data.txt', prefix.input)
-        for files in glob.glob('doc/*.*'):
-            install(files, prefix.doc)
+        install('doc/*.*', prefix.doc)

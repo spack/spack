@@ -1,10 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Openmx(MakefilePackage):
@@ -36,10 +33,7 @@ class Openmx(MakefilePackage):
     def edit(self, spec, prefix):
         # Move contents to source/
         # http://www.openmx-square.org/bugfixed/18June12/README.txt
-        patch_files = []
-        patch_files = glob.glob('./patch/*')
-        for f in patch_files:
-            copy(f, './source')
+        copy_tree('patch', 'source')
 
         makefile = FileFilter('./source/makefile')
         makefile.filter('^DESTDIR.*$', 'DESTDIR = {0}/bin'.format(prefix))

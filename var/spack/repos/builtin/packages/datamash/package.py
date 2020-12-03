@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,13 +6,13 @@
 from spack import *
 
 
-class Datamash(AutotoolsPackage):
+class Datamash(AutotoolsPackage, GNUMirrorPackage):
     """GNU datamash is a command-line program which performs basic numeric,
     textual and statistical operations on input textual data files.
     """
 
     homepage = "https://www.gnu.org/software/datamash/"
-    url      = "https://ftpmirror.gnu.org/datamash/datamash-1.0.5.tar.gz"
+    gnu_mirror_path = "datamash/datamash-1.0.5.tar.gz"
 
     version('1.3',   sha256='eebb52171a4353aaad01921384098cf54eb96ebfaf99660e017f6d9fc96657a6')
     version('1.1.0', sha256='a9e5acc86af4dd64c7ac7f6554718b40271aa67f7ff6e9819bdd919a25904bb0')

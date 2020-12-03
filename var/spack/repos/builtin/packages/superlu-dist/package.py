@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class SuperluDist(CMakePackage):
+class SuperluDist(CMakePackage, CudaPackage):
     """A general purpose library for the direct solution of large, sparse,
     nonsymmetric systems of linear equations on high performance machines."""
 
@@ -14,10 +14,14 @@ class SuperluDist(CMakePackage):
     url      = "https://github.com/xiaoyeli/superlu_dist/archive/v6.0.0.tar.gz"
     git      = "https://github.com/xiaoyeli/superlu_dist.git"
 
-    maintainers = ['xiaoye', 'gchavez2', 'balay']
+    maintainers = ['xiaoye', 'gchavez2', 'balay', 'pghysels']
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
+    version('6.4.0', sha256='cb9c0b2ba4c28e5ed5817718ba19ae1dd63ccd30bc44c8b8252b54f5f04a44cc')
+    version('6.3.1', sha256='3787c2755acd6aadbb4d9029138c293a7570a2ed228806676edcc7e1d3f5a1d3')
+    version('6.3.0', sha256='daf3264706caccae2b8fd5a572e40275f1e128fa235cb7c21ee2f8051c11af95')
+    version('6.2.0', sha256='15ad1badd81b41e37941dd124d06d3b92e51c4f0ff532ad23fb09c4ebfe6eb9e')
     version('6.1.1', sha256='35d25cff592c724439870444ed45e1d1d15ca2c65f02ccd4b83a6d3c9d220bd1')
     version('6.1.0', sha256='92c6d1424dd830ee2d1e7396a418a5f6645160aea8472e558c4e4bfe006593c4')
     version('6.0.0', sha256='ff6cdfa0263d595708bbb6d11fb780915d8cfddab438db651e246ea292f37ee4')
@@ -39,6 +43,8 @@ class SuperluDist(CMakePackage):
     depends_on('lapack')
     depends_on('parmetis')
     depends_on('metis@5:')
+
+    conflicts('+cuda', when='@:6.3.999')
 
     patch('xl-611.patch', when='@:6.1.1 %xl')
     patch('xl-611.patch', when='@:6.1.1 %xl_r')
@@ -72,6 +78,16 @@ class SuperluDist(CMakePackage):
             args.append('-Denable_openmp=ON')
         else:
             args.append('-Denable_openmp=OFF')
+            args.append('-DCMAKE_DISABLE_FIND_PACKAGE_OpenMP=ON')
+
+        if '+cuda' in spec:
+            args.append('-DTPL_ENABLE_CUDALIB=TRUE')
+            args.append('-DTPL_CUDA_LIBRARIES=-L%s -lcublas -lcudart'
+                        % spec['cuda'].libs.directories[0])
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch[0] != 'none':
+                args.append(
+                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0]))
 
         if '+shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:BOOL=ON')

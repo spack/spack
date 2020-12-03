@@ -1,0 +1,21 @@
+diff --git a/config/platform_checks.cmake b/config/platform_checks.cmake
+index c9841b0d..aeecc767 100644
+--- a/config/platform_checks.cmake
++++ b/config/platform_checks.cmake
+@@ -88,6 +88,8 @@ macro( query_craype )
+       # We expect developers to use the Cray compiler wrappers (especially in
+       # setupMPI.cmake). See also
+       # https://cmake.org/cmake/help/latest/module/FindMPI.html
++      if( NOT "$ENV{CXX}" MATCHES "/lib/spack/env/" )
++        # skip this check if building from within spack.
+       if( NOT "$ENV{CXX}" MATCHES "CC$" OR
+           NOT "$ENV{CC}" MATCHES "cc$" OR
+           NOT "$ENV{FC}" MATCHES "ftn$" OR
+@@ -110,6 +112,7 @@ macro( query_craype )
+ "   export CRAYPE_LINK_TYPE=dynamic\n"
+ "Otherwise please email this error message and other related information to"
+ " draco@lanl.gov.\n" )
++        endif()
+       endif()
+       message( STATUS
+         "Looking to see if we are building in a Cray Environment..."

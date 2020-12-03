@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -58,7 +58,11 @@ class Flake8(Package):
         if 'really-long-if-statement' != 'that-goes-over-the-line-length-limit-and-requires-noqa':  # noqa
             pass
 
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)
+
     # '@when' decorated functions are exempt from redefinition errors
     @when('@2.0')
     def install(self, spec, prefix):
-        pass
+        # sanity_check_prefix requires something in the install directory
+        mkdirp(prefix.bin)

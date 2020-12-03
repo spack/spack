@@ -1,12 +1,10 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import os
 import sys
-import glob
 
 
 class Mumps(Package):
@@ -15,6 +13,7 @@ class Mumps(Package):
     homepage = "http://mumps.enseeiht.fr"
     url      = "http://mumps.enseeiht.fr/MUMPS_5.0.1.tar.gz"
 
+    version('5.3.3', sha256='27e7749ac05006bf8e81a457c865402bb72a42bf3bc673da49de1020f0f32011')
     version('5.2.0', sha256='41f2c7cb20d69599fb47e2ad6f628f3798c429f49e72e757e70722680f70853f')
     version('5.1.2', sha256='eb345cda145da9aea01b851d17e54e7eef08e16bfa148100ac1f7f046cd42ae9')
     version('5.1.1', sha256='a2a1f89c470f2b66e9982953cbd047d429a002fab9975400cef7190d01084a06')
@@ -112,7 +111,9 @@ class Mumps(Package):
         # Determine which compiler suite we are using
         using_gcc = self.compiler.name == "gcc"
         using_pgi = self.compiler.name == "pgi"
+        using_nvhpc = self.compiler.name == "nvhpc"
         using_intel = self.compiler.name == "intel"
+        using_oneapi = self.compiler.name == "oneapi"
         using_xl = self.compiler.name in ['xl', 'xl_r']
         using_fj = self.compiler.name == "fj"
 
@@ -125,7 +126,8 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        fpic = self.compiler.pic_flag if '+shared' in self.spec else ''
+        cpic = self.compiler.cc_pic_flag if '+shared' in self.spec else ''
+        fpic = self.compiler.fc_pic_flag if '+shared' in self.spec else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
@@ -146,8 +148,8 @@ class Mumps(Package):
                 ])
 
             makefile_conf.extend([
-                'OPTL = %s -O%s' % (fpic, opt_level),
-                'OPTC = %s -O%s -DINTSIZE64' % (fpic, opt_level)
+                'OPTL = %s -O%s' % (cpic, opt_level),
+                'OPTC = %s -O%s -DINTSIZE64' % (cpic, opt_level)
             ])
         else:
             if using_xlf:
@@ -157,8 +159,8 @@ class Mumps(Package):
                     fpic, opt_level))
 
             makefile_conf.extend([
-                'OPTL = %s -O%s' % (fpic, opt_level),
-                'OPTC = %s -O%s' % (fpic, opt_level)
+                'OPTL = %s -O%s' % (cpic, opt_level),
+                'OPTC = %s -O%s' % (cpic, opt_level)
             ])
 
         if '+mpi' in self.spec:
@@ -179,7 +181,7 @@ class Mumps(Package):
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
-        if using_intel or using_pgi or using_fj:
+        if using_intel or using_oneapi or using_pgi or using_nvhpc or using_fj:
             # Intel, PGI, and Fujitsu Fortran compiler provides
             # the main() function so C examples linked with the Fortran
             # compiler require a hack defined by _DMAIN_COMP
@@ -241,7 +243,7 @@ class Mumps(Package):
         else:
             makefile_conf.extend([
                 'LIBEXT  = .a',
-                'AR = ar vr',
+                'AR = ar vr ',
                 'RANLIB = ranlib'
             ])
 
@@ -264,9 +266,9 @@ class Mumps(Package):
         letters_variants = [
             ['s', '+float'], ['c', '+complex+float'],
             ['d', '+double'], ['z', '+complex+double']]
-        for l, v in letters_variants:
+        for ltr, v in letters_variants:
             if v in spec:
-                make(l + 'examples')
+                make(ltr + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
@@ -275,8 +277,7 @@ class Mumps(Package):
             lib_dsuffix = '.dylib' if sys.platform == 'darwin' else '.so'
             lib_suffix = lib_dsuffix if '+shared' in spec else '.a'
             install('libseq/libmpiseq%s' % lib_suffix, prefix.lib)
-            for f in glob.glob(join_path('libseq', '*.h')):
-                install(f, prefix.include)
+            install(join_path('libseq', '*.h'), prefix.include)
 
         # FIXME: extend the tests to mpirun -np 2 when build with MPI
         # FIXME: use something like numdiff to compare output files

@@ -6,6 +6,9 @@ lmod:
   core_compilers:
     - 'clang@3.3'
 
+  core_specs:
+    - 'mpich@3.0.1'
+
   hierarchy:
     - lapack
     - blas

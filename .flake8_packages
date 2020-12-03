@@ -9,7 +9,7 @@
 #
 # Note that we also add *per-line* exemptions for certain patterns in the
 # `spack flake8` command.  This is where F403 for `from spack import *`
-# is added (beause we *only* allow that wildcard).
+# is added (because we *only* allow that wildcard).
 #
 # See .flake8 for regular exceptions.
 #

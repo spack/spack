@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,3 @@ class OptionalDepTest(Package):
     depends_on('mpi', when='^g')
 
     depends_on('mpi', when='+mpi')
-
-    def install(self, spec, prefix):
-        pass

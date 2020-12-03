@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,11 @@ class XercesC(AutotoolsPackage):
     homepage = "https://xerces.apache.org/xerces-c"
     url      = "https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-3.2.1.tar.bz2"
 
+    version('3.2.3', sha256='45c2329e684405f2b8854ecbddfb8d5b055cdf0fe4d35736cc352c504989bbb6')
     version('3.2.2', sha256='1f2a4d1dbd0086ce0f52b718ac0fa4af3dc1ce7a7ff73a581a05fbe78a82bce0')
     version('3.2.1', sha256='a36b6e162913ec218cfb84772d2535d43c3365355a601d45d4b8ce11f0ece0da')
     version('3.1.4', sha256='9408f12c1628ecf80730bedbe8b2caad810edd01bb4c66f77b60c873e8cc6891')
+    version('3.1.3', sha256='fc5e5e0247b108b8d64d75aeb124cabdee9b7fcd725a89fe2242b4637b25c1fa')
 
     # Whilst still using Autotools, can use full cxxstd with 'default'
     # If build is moved to CMake, then will also need a patch to Xerces-C's
@@ -29,6 +31,14 @@ class XercesC(AutotoolsPackage):
             values=('default', '98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building')
+
+    variant('netaccessor',
+            default='curl',
+            # todo: add additional values (platform-specific)
+            # 'socket', 'cfurl', 'winsock'
+            values=('curl', 'none'),
+            multi=False,
+            description='Net Accessor (used to access network resources')
 
     # It's best to be explicit about the transcoder or else xerces may
     # choose another value.
@@ -44,8 +54,9 @@ class XercesC(AutotoolsPackage):
             multi=False,
             description='Use the specified transcoder')
 
-    depends_on('libiconv', type='link', when='transcoder=gnuiconv')
+    depends_on('iconv', type='link', when='transcoder=gnuiconv')
     depends_on('icu4c',    type='link', when='transcoder=icu')
+    depends_on('curl', when='netaccessor=curl')
 
     # Pass flags to configure.  This is necessary for CXXFLAGS or else
     # the xerces default will override the spack wrapper.
@@ -60,13 +71,18 @@ class XercesC(AutotoolsPackage):
 
         # There is no --with-pkg for gnuiconv.
         if name == 'ldflags' and 'transcoder=gnuiconv' in spec:
-            flags.append(spec['libiconv'].libs.ld_flags)
+            flags.append(spec['iconv'].libs.ld_flags)
 
         return (None, None, flags)
 
     def configure_args(self):
         spec = self.spec
-        args = ['--disable-network']
+        args = []
+
+        if 'netaccessor=curl' in spec:
+            args.append('--enable-netaccessor-curl')
+        else:
+            args.append('--disable-network')
 
         if 'transcoder=gnuiconv' in spec:
             args.append('--enable-transcoder-gnuiconv')

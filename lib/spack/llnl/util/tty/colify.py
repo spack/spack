@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -199,10 +199,16 @@ def colify(elts, **options):
 def colify_table(table, **options):
     """Version of ``colify()`` for data expressed in rows, (list of lists).
 
-       Same as regular colify but takes a list of lists, where each
-       sub-list must be the same length, and each is interpreted as a
-       row in a table.  Regular colify displays a sequential list of
-       values in columns.
+       Same as regular colify but:
+
+       1. This takes a list of lists, where each sub-list must be the
+          same length, and each is interpreted as a row in a table.
+          Regular colify displays a sequential list of values in columns.
+
+       2. Regular colify will always print with 1 column when the output
+          is not a tty.  This will always print with same dimensions of
+          the table argument.
+
     """
     if table is None:
         raise TypeError("Can't call colify_table on NoneType")
@@ -219,6 +225,9 @@ def colify_table(table, **options):
     if 'cols' in options:
         raise ValueError("Cannot override columsn in colify_table.")
     options['cols'] = columns
+
+    # don't reduce to 1 column for non-tty
+    options['tty'] = True
 
     colify(transpose(), **options)
 

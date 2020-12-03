@@ -2,8 +2,7 @@ FROM ubuntu:16.04
 
 # General environment for docker
 ENV DEBIAN_FRONTEND=noninteractive \
-    SPACK_ROOT=/usr/local \
-    FORCE_UNSAFE_CONFIGURE=1
+    SPACK_ROOT=/usr/local
 
 # Install system packages
 RUN apt-get update \
@@ -18,20 +17,20 @@ RUN apt-get update \
        openmpi-bin openmpi-common libopenmpi-dev \
        python \
        unzip \
-    &&  rm -rf /var/lib/apt/lists/*      
+    &&  rm -rf /var/lib/apt/lists/*
 
 # Load spack environment on login
 COPY spack.sh /etc/profile
 
 # Install spack
 RUN curl -s -L https://api.github.com/repos/spack/spack/tarball/develop \
-    | tar xzC $SPACK_ROOT --strip 1 
+    | tar xzC $SPACK_ROOT --strip 1
 
 # Copy configuration for external packages
 COPY packages.yaml $SPACK_ROOT/etc/spack/
 
 # Build lmod
-RUN spack install lmod && spack clean -a 
+RUN spack install lmod && spack clean -a
 
 # Build a compiler
 RUN spack install gcc@7.2.0 && spack clean -a
@@ -48,4 +47,3 @@ RUN spack install netlib-scalapack ^openmpi ^openblas %gcc@7.2.0 \
 
 # image run hook: the -l will make sure /etc/profile environments are loaded
 CMD /bin/bash -l
-

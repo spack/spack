@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,7 +40,7 @@ __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 VALID_VERSION = r'[A-Za-z0-9_.-]'
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'master', 'head', 'trunk']
+infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
 
 
 def int_if_int(string):
@@ -781,6 +781,9 @@ class VersionList(object):
 
     def __len__(self):
         return len(self.versions)
+
+    def __bool__(self):
+        return bool(self.versions)
 
     @coerced
     def __eq__(self, other):

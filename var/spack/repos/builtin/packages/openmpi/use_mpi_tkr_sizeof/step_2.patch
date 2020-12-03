@@ -1,0 +1,22 @@
+--- a/ompi/mpi/fortran/configure-fortran-output.h.in
++++ b/ompi/mpi/fortran/configure-fortran-output.h.in
+@@ -47,6 +47,8 @@
+ ! Line 2 of the ignore TKR syntax
+ #define OMPI_FORTRAN_IGNORE_TKR_TYPE @OMPI_FORTRAN_IGNORE_TKR_TYPE@
+ 
++
++#define OMPI_FORTRAN_BUILD_SIZEOF @OMPI_FORTRAN_BUILD_SIZEOF@
+ ! Integers
+ 
+ #define OMPI_HAVE_FORTRAN_INTEGER1 @OMPI_HAVE_FORTRAN_INTEGER1@
+--- a/ompi/mpi/fortran/use-mpi-tkr/Makefile.in
++++ b/ompi/mpi/fortran/use-mpi-tkr/Makefile.in
+@@ -2023,6 +2023,8 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-local
+ @OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi.lo: $(top_builddir)/ompi/mpi/fortran/configure-fortran-output.h
+ @OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi.lo: mpi-f90-cptr-interfaces.F90
+ 
++@BUILD_FORTRAN_SIZEOF_TRUE@@OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi.lo: mpi-tkr-sizeof.h
++
+ @OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi-tkr-sizeof.h: $(top_builddir)/config.status
+ @OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi-tkr-sizeof.h: $(sizeof_pl)
+ @OMPI_BUILD_FORTRAN_USEMPI_TKR_BINDINGS_TRUE@mpi-tkr-sizeof.h:

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,3 @@ class NetlibBlas(Package):
     version('3.5.0', 'b1d3e3e425b2e44a06760ff173104bdf')
 
     provides('blas')
-
-    def install(self, spec, prefix):
-        pass

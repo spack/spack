@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,10 @@ class PyBlack(PythonPackage):
     speed, determinism, and freedom from pycodestyle nagging about formatting.
     """
 
-    homepage = "https://github.com/ambv/black"
+    homepage = "https://github.com/psf/black"
     url      = "https://pypi.io/packages/source/b/black/black-18.9b0.tar.gz"
 
+    version('19.3b0', sha256='68950ffd4d9169716bcb8719a56c07a2f4485354fec061cdd5910aa07369731c')
     version('18.9b0', sha256='e030a9a28f542debc08acceb273f228ac422798e5215ba2a791a6ddeaaca22a5')
 
     depends_on('python@3.6.0:')

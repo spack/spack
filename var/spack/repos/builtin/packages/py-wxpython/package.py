@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,5 +34,5 @@ class PyWxpython(PythonPackage):
 
     # Needed at runtime
     depends_on('py-numpy', type='run')
-    depends_on('py-pillow', type='run')
+    depends_on('pil', type='run')
     depends_on('py-six', type='run')

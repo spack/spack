@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,15 +16,18 @@ Prerequisites
 Spack has the following minimum requirements, which must be installed
 before Spack is run:
 
-#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.8) to run Spack
+#. Python 2 (2.6 or 2.7) or 3 (3.5 - 3.9) to run Spack
 #. A C/C++ compiler for building
 #. The ``make`` executable for building
+#. The ``tar``, ``gzip``, ``bzip2``, ``xz`` and optionally ``zstd``
+   executables for extracting source code
+#. The ``patch`` command to apply patches
 #. The ``git`` and ``curl`` commands for fetching
 #. If using the ``gpg`` subcommand, ``gnupg2`` is required
 
 These requirements can be easily installed on most modern Linux systems;
-on Macintosh, XCode is required.  Spack is designed to run on HPC
-platforms like Cray and BlueGene/Q.  Not all packages should be expected
+on macOS, XCode is required.  Spack is designed to run on HPC
+platforms like Cray.  Not all packages should be expected
 to work on all platforms.  A build matrix showing which packages are
 working on which systems is planned but not yet available.
 
@@ -41,39 +44,50 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 This will create a directory called ``spack``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Add Spack to the Shell
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. _shell-support:
 
-We'll assume that the full path to your downloaded Spack directory is
-in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
-to your path and you're ready to go:
+^^^^^^^^^^^^^
+Shell support
+^^^^^^^^^^^^^
 
-.. code-block:: console
-
-   $ export PATH=$SPACK_ROOT/bin:$PATH
-   $ spack install libelf
-
-For a richer experience, use Spack's shell support:
+Once you have cloned Spack, we recommend sourcing the appropriate script
+for your shell:
 
 .. code-block:: console
 
-   # For bash/zsh users
-   $ export SPACK_ROOT=/path/to/spack
-   $ . $SPACK_ROOT/share/spack/setup-env.sh
+   # For bash/zsh/sh
+   $ . spack/share/spack/setup-env.sh
 
-   # For tcsh or csh users (note you must set SPACK_ROOT)
-   $ setenv SPACK_ROOT /path/to/spack
-   $ source $SPACK_ROOT/share/spack/setup-env.csh
+   # For tcsh/csh
+   $ source spack/share/spack/setup-env.csh
+
+   # For fish
+   $ . spack/share/spack/setup-env.fish
+
+That's it! You're ready to use Spack.
+
+Sourcing these files will put the ``spack`` command in your ``PATH``, set
+up your ``MODULEPATH`` to use Spack's packages, and add other useful
+shell integration for :ref:`certain commands <packaging-shell-support>`,
+:ref:`environments <environments>`, and :ref:`modules <modules>`. For
+``bash``, it also sets up tab completion.
+
+If you do not want to use Spack's shell support, you can always just run
+the ``spack`` command directly from ``spack/bin/spack``.
 
 
-This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to be used to execute spack :ref:`commands <shell-support>` and
-:ref:`useful packaging commands <packaging-shell-support>`.
+^^^^^^^^^^^^^^^^^^
+Check Installation
+^^^^^^^^^^^^^^^^^^
 
-If :ref:`environment-modules <InstallEnvironmentModules>` is
-installed and available, the ``spack`` command can also load and unload
-:ref:`modules <modules>`.
+With Spack installed, you should be able to run some basic Spack
+commands.  For example:
+
+.. command-output:: spack spec netcdf-c
+
+In theory, Spack doesn't need any additional installation; just
+download and run!  But in real life, additional steps are usually
+required before Spack can work in a practical sense.  Read on...
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -88,17 +102,6 @@ Therefore, it is recommended that Spack users run with a *clean
 environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
-
-
-^^^^^^^^^^^^^^^^^^
-Check Installation
-^^^^^^^^^^^^^^^^^^
-
-With Spack installed, you should be able to run some basic Spack
-commands.  For example:
-
-.. command-output:: spack spec netcdf-c
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
@@ -116,15 +119,6 @@ This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
 copy of spack installs packages into its own ``$PREFIX/opt``
 directory.
-
-
-^^^^^^^^^^
-Next Steps
-^^^^^^^^^^
-
-In theory, Spack doesn't need any additional installation; just
-download and run!  But in real life, additional steps are usually
-required before Spack can work in a practical sense.  Read on...
 
 
 .. _compiler-config:
@@ -482,7 +476,7 @@ Fortran.
           cxx: /usr/bin/clang++
           f77: /path/to/bin/gfortran
           fc: /path/to/bin/gfortran
-        spec: clang@11.0.0-apple
+        spec: apple-clang@11.0.0
 
 
    If you used Spack to install GCC, you can get the installation prefix by
@@ -716,8 +710,9 @@ an OpenMPI installed in /opt/local, one would use:
 
     packages:
         openmpi:
-            paths:
-                openmpi@1.10.1: /opt/local
+            externals:
+            - spec: openmpi@1.10.1
+              prefix: /opt/local
             buildable: False
 
 In general, Spack is easier to use and more reliable if it builds all of
@@ -779,8 +774,9 @@ Then add the following to ``~/.spack/packages.yaml``:
 
     packages:
         openssl:
-            paths:
-                openssl@1.0.2g: /usr
+            externals:
+            - spec: openssl@1.0.2g
+              prefix: /usr
             buildable: False
 
 
@@ -795,8 +791,9 @@ to add the following to ``packages.yaml``:
 
     packages:
         netlib-lapack:
-            paths:
-                netlib-lapack@3.6.1: /usr
+            externals:
+            - spec: netlib-lapack@3.6.1
+              prefix: /usr
             buildable: False
         all:
             providers:
@@ -822,7 +819,7 @@ Git
 
 Some Spack packages use ``git`` to download, which might not work on
 some computers.  For example, the following error was
-encountered on a Macintosh during ``spack install julia-master``:
+encountered on a Macintosh during ``spack install julia@master``:
 
 .. code-block:: console
 
@@ -851,7 +848,7 @@ from websites and from git.
 
 .. warning::
 
-   This workaround should be used ONLY as a last resort!  Wihout SSL
+   This workaround should be used ONLY as a last resort!  Without SSL
    certificate verification, spack and git will download from sites you
    wouldn't normally trust.  The code you download and run may then be
    compromised!  While this is not a major issue for archives that will
@@ -900,19 +897,14 @@ Core Spack Utilities
 ^^^^^^^^^^^^^^^^^^^^
 
 Core Spack uses the following packages, mainly to download and unpack
-source code, and to load generated environment modules: ``curl``,
-``env``, ``git``, ``go``, ``hg``, ``svn``, ``tar``, ``unzip``,
-``patch``, ``environment-modules``.
+source code: ``curl``, ``env``, ``git``, ``go``, ``hg``, ``svn``,
+``tar``, ``unzip``, ``patch``
 
 As long as the user's environment is set up to successfully run these
 programs from outside of Spack, they should work inside of Spack as
 well.  They can generally be activated as in the ``curl`` example above;
 or some systems might already have an appropriate hand-built
 environment module that may be loaded.  Either way works.
-
-If you find that you are missing some of these programs, ``spack`` can
-build some of them for you with ``spack bootstrap``. Currently supported
-programs are ``environment-modules``.
 
 A few notes on specific programs in this list:
 
@@ -939,45 +931,6 @@ Some packages use source code control systems as their download method:
 a new ``curl``, then chances are the system-supplied version of these
 other programs will also not work, because they also rely on OpenSSL.
 Once ``curl`` has been installed, you can similarly install the others.
-
-
-.. _InstallEnvironmentModules:
-
-"""""""""""""""""""
-Environment Modules
-"""""""""""""""""""
-
-In order to use Spack's generated module files, you must have
-installed ``environment-modules`` or ``lmod``. The simplest way
-to get the latest version of either of these tools is installing
-it as part of Spack's bootstrap procedure:
-
-.. code-block:: console
-
-   $ spack bootstrap
-
-.. warning::
-   At the moment ``spack bootstrap`` is only able to install ``environment-modules``.
-   Extending its capabilities to prefer ``lmod`` where possible is in the roadmap,
-   and likely to happen before the next release.
-
-Alternatively, on many Linux distributions, you can install a pre-built binary
-from the vendor's repository. On Fedora/RHEL/CentOS, for example, this can be
-done with the command:
-
-.. code-block:: console
-
-   $ yum install environment-modules
-
-Once you have the tool installed and available in your path, you can source
-Spack's setup file:
-
-.. code-block:: console
-
-   $ source share/spack/setup-env.sh
-
-This activates :ref:`shell support <shell-support>` and makes commands like
-``spack load`` available for use.
 
 
 ^^^^^^^^^^^^^^^^^
@@ -1229,9 +1182,13 @@ Here's an example of an external configuration for cray modules:
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-haswell-CNL10"
+         modules:
+         - cray-mpich
      all:
        providers:
          mpi: [mpich]
@@ -1243,7 +1200,7 @@ via module load.
 
 .. note::
 
-    For Cray-provided packages, it is best to use ``modules:`` instead of ``paths:``
+    For Cray-provided packages, it is best to use ``modules:`` instead of ``prefix:``
     in ``packages.yaml``, because the Cray Programming Environment heavily relies on
     modules (e.g., loading the ``cray-mpich`` module adds MPI libraries to the
     compiler wrapper link line).
@@ -1259,19 +1216,31 @@ Here is an example of a full packages.yaml used at NERSC
 
    packages:
      mpich:
-       modules:
-         mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-mpich
-         mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge: cray-mpich
+       externals:
+       - spec: "mpich@7.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-mpich
+       - spec: "mpich@7.3.1%intel@16.0.0.109 arch=cray_xc-SuSE11-ivybridge"
+         modules:
+         - cray-mpich
        buildable: False
      netcdf:
-       modules:
-         netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-netcdf
-         netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-netcdf
+       externals:
+       - spec: "netcdf@4.3.3.1%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
+       - spec: "netcdf@4.3.3.1%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-netcdf
        buildable: False
      hdf5:
-       modules:
-         hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge: cray-hdf5
-         hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge: cray-hdf5
+       externals:
+       - spec: "hdf5@1.8.14%gcc@5.2.0 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
+       - spec: "hdf5@1.8.14%intel@16.0.0.109 arch=cray_xc-CNL10-ivybridge"
+         modules:
+         - cray-hdf5
        buildable: False
      all:
        compiler: [gcc@5.2.0, intel@16.0.0.109]
@@ -1295,6 +1264,6 @@ environment variables may be propagated into containers that are not
 using the Cray programming environment.
 
 To ensure that Spack does not autodetect the Cray programming
-environment, unset the environment variable ``CRAYPE_VERSION``. This
+environment, unset the environment variable ``MODULEPATH``. This
 will cause Spack to treat a linux container on a Cray system as a base
 linux distro.

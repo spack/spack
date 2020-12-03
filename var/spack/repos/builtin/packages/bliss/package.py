@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Bliss(Package):
     patch("Makefile.spack.patch")
 
     def install(self, spec, prefix):
+        filter_file('__DATE__', ' __DATE__ ', 'bliss.cc')
         # The Makefile isn't portable; use our own instead
         makeargs = ["-f", "Makefile.spack",
                     "PREFIX=%s" % prefix, "GMP_PREFIX=%s" % spec["gmp"].prefix]

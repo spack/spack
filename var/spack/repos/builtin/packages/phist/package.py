@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+import spack.hooks.sbang as sbang
 
 
 class Phist(CMakePackage):
@@ -20,12 +21,16 @@ class Phist(CMakePackage):
 
     homepage = "https://bitbucket.org/essex/phist/"
     url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
-    git      = "https://bitbucket.org/essex/phist/phist.git"
+    git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
+    version('1.9.2', sha256='289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5')
+    version('1.9.1', sha256='6e6411115ec48afe605b4f2179e9bc45d60f15459428f474f3f32b80d2830f1f')
+    version('1.9.0', sha256='990d3308fc0083ed0f9f565d00c649ee70c3df74d44cbe5f19dfe05263d06559')
     version('1.8.0', sha256='ee42946bce187e126452053b5f5c200b57b6e40ee3f5bcf0751f3ced585adeb0')
     version('1.7.5', sha256='f11fe27f2aa13d69eb285cc0f32c33c1603fa1286b84e54c81856c6f2bdef500')
     version('1.7.4', sha256='ef0c97fda9984f53011020aff3e61523833320f5f5719af2f2ed84463cccb98b')
@@ -44,9 +49,12 @@ class Phist(CMakePackage):
                     'eigen',
                     'ghost'])
 
+    variant(name='int64', default=True,
+            description='Use 64-bit global indices.')
+
     variant(name='outlev', default='2', values=['0', '1', '2', '3', '4', '5'],
             description='verbosity. 0: errors 1: +warnings 2: +info '
-                        '3: +verbose 4: +extreme 5; +debug')
+                        '3: +verbose 4: +extreme 5: +debug')
 
     variant('host', default=True,
             description='allow PHIST to use compiler flags that lead to host-'
@@ -86,6 +94,15 @@ class Phist(CMakePackage):
     # in older versions, it is not possible to turn off the use of host-
     # specific compiler flags in Release mode.
     conflicts('~host', when='@:1.7.3')
+    # builtin always uses 64-bit indices
+    conflicts('~int64', when='kernel_lib=builtin')
+    conflicts('+int64', when='kernel_lib=eigen')
+
+    # ###################### Patches ##########################
+
+    patch('update_tpetra_gotypes.patch', when='@:1.8.99')
+
+    patch('sbang.patch', when='+fortran')
 
     # ###################### Dependencies ##########################
 
@@ -97,16 +114,18 @@ class Phist(CMakePackage):
     # the feature (e.g. use the '~fortran' variant)
     depends_on('python@3:', when='@1.7: +fortran', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
-    depends_on('trilinos@12:+tpetra', when='kernel_lib=tpetra')
+    depends_on('trilinos@12:+tpetra gotype=long_long', when='kernel_lib=tpetra +int64')
+    depends_on('trilinos@12:+tpetra gotype=int', when='kernel_lib=tpetra ~int64')
     # Epetra backend also works with older Trilinos versions
     depends_on('trilinos+epetra', when='kernel_lib=epetra')
-    depends_on('petsc', when='kernel_lib=petsc')
+    depends_on('petsc +int64', when='kernel_lib=petsc +int64')
+    depends_on('petsc ~int64', when='kernel_lib=petsc ~int64')
     depends_on('eigen', when='kernel_lib=eigen')
     depends_on('ghost', when='kernel_lib=ghost')
 
-    depends_on('trilinos', when='+trilinos')
-    depends_on('parmetis ^metis+int64', when='+parmetis')
+    depends_on('trilinos+anasazi+belos+teuchos', when='+trilinos')
+    depends_on('parmetis+int64', when='+parmetis+int64')
+    depends_on('parmetis~int64', when='+parmetis~int64')
 
     # Fortran 2003 bindings were included in version 1.7, previously they
     # required a separate package
@@ -115,6 +134,9 @@ class Phist(CMakePackage):
     # older gcc's may produce incorrect SIMD code and fail
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
+
+    def setup_build_environment(self, env):
+        env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     def cmake_args(self):
         spec = self.spec
@@ -126,7 +148,8 @@ class Phist(CMakePackage):
                         find_system_libraries(['libm'])).joined(';')
         lapacke_include_dir = spec['lapack:c'].headers.directories[0]
 
-        args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
+        args = ['-DPHIST_USE_CCACHE=OFF',
+                '-DPHIST_KERNEL_LIB=%s' % kernel_lib,
                 '-DPHIST_OUTLEV=%s' % outlev,
                 '-DTPL_LAPACKE_LIBRARIES=%s' % lapacke_libs,
                 '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,
@@ -139,13 +162,15 @@ class Phist(CMakePackage):
                 '-DPHIST_ENABLE_SCAMAC:BOOL=%s'
                 % ('ON' if '+scamac' in spec else 'OFF'),
                 '-DPHIST_USE_TRILINOS_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DPHIST_USE_SOLVER_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos+belos+anasazi' in spec else 'OFF'),
                 '-DPHIST_USE_PRECON_TPLS:BOOL=%s'
-                % ('ON' if '+trilinos' in spec else 'OFF'),
+                % ('ON' if '^trilinos' in spec else 'OFF'),
                 '-DXSDK_ENABLE_Fortran:BOOL=%s'
                 % ('ON' if '+fortran' in spec else 'OFF'),
+                '-DXSDK_INDEX_SIZE=%s'
+                % ('64' if '+int64' in spec else '32'),
                 '-DPHIST_HOST_OPTIMIZE:BOOL=%s'
                 % ('ON' if '+host' in spec else 'OFF'),
                 ]

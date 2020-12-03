@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,5 +21,6 @@ class Blat(Package):
         env.set('MACHTYPE', 'x86_64')
 
     def install(self, spec, prefix):
+        filter_file('CC=.*', 'CC={0}'.format(spack_cc), 'inc/common.mk')
         mkdirp(prefix.bin)
         make("BINDIR=%s" % prefix.bin)

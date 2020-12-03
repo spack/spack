@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,6 +48,8 @@ Spack uses a "manifest and lock" model similar to `Bundler gemfiles
 <https://bundler.io/man/gemfile.5.html>`_ and other package
 managers. The user input file is named ``spack.yaml`` and the lock
 file is named ``spack.lock``
+
+.. _environments-using:
 
 ------------------
 Using Environments
@@ -128,7 +130,7 @@ To activate an environment, use the following command:
 By default, the ``spack env activate`` will load the view associated
 with the Environment into the user environment. The ``-v,
 --with-view`` argument ensures this behavior, and the ``-V,
---without-vew`` argument activates the environment without changing
+--without-view`` argument activates the environment without changing
 the user environment variables.
 
 The ``-p`` option to the ``spack env activate`` command modifies the
@@ -165,15 +167,6 @@ Any directory can be treated as an environment if it contains a file
 
    $ spack env activate -d /path/to/directory
 
-Spack commands that are environment sensitive will also act on the
-environment any time the current working directory contains a
-``spack.yaml`` file. Changing working directory to a directory
-containing a ``spack.yaml`` file is equivalent to the command:
-
-.. code-block:: console
-
-   $ spack env activate -d /path/to/dir --without-view
-
 Anonymous specs can be created in place using the command:
 
 .. code-block:: console
@@ -198,44 +191,24 @@ Environment has been activated. Similarly, the ``install`` and
   ==> 0 installed packages
 
   $ spack install zlib@1.2.11
-  ==> Installing zlib
-  ==> Searching for binary cache of zlib
-  ==> Warning: No Spack mirrors are currently configured
-  ==> No binary for zlib found: installing from source
-  ==> Fetching http://zlib.net/fossils/zlib-1.2.11.tar.gz
-  ######################################################################## 100.0%
-  ==> Staging archive: /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur/zlib-1.2.11.tar.gz
-  ==> Created stage in /spack/var/spack/stage/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur
-  ==> No patches needed for zlib
-  ==> Building zlib [Package]
-  ==> Executing phase: 'install'
-  ==> Successfully installed zlib
-    Fetch: 0.36s.  Build: 11.58s.  Total: 11.93s.
-  [+] /spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/zlib-1.2.11-3r4cfkmx3wwfqeof4bc244yduu2mz4ur
+  ==> Installing zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
+  ==> No binary for zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv found: installing from source
+  ==> zlib: Executing phase: 'install'
+  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.11-q6cqrdto4iktfg6qyqcc5u4vmfmwb7iv
 
   $ spack env activate myenv
 
   $ spack find
   ==> In environment myenv
   ==> No root specs
-
   ==> 0 installed packages
 
   $ spack install zlib@1.2.8
-  ==> Installing zlib
-  ==> Searching for binary cache of zlib
-  ==> Warning: No Spack mirrors are currently configured
-  ==> No binary for zlib found: installing from source
-  ==> Fetching http://zlib.net/fossils/zlib-1.2.8.tar.gz
-  ######################################################################## 100.0%
-  ==> Staging archive: /spack/var/spack/stage/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7/zlib-1.2.8.tar.gz
-  ==> Created stage in /spack/var/spack/stage/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7
-  ==> No patches needed for zlib
-  ==> Building zlib [Package]
-  ==> Executing phase: 'install'
-  ==> Successfully installed zlib
-    Fetch: 0.26s.  Build: 2.08s.  Total: 2.35s.
-  [+] /spack/opt/spack/linux-rhel7-x86_64/gcc-4.9.3/zlib-1.2.8-y2t6kq3s23l52yzhcyhbpovswajzi7f7
+  ==> Installing zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
+  ==> No binary for zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x found: installing from source
+  ==> zlib: Executing phase: 'install'
+  [+] ~/spack/opt/spack/linux-rhel7-broadwell/gcc-8.1.0/zlib-1.2.8-yfc7epf57nsfn2gn4notccaiyxha6z7x
+  ==> Updating view at ~/spack/var/spack/environments/myenv/.spack-env/view
 
   $ spack find
   ==> In environment myenv
@@ -243,14 +216,16 @@ Environment has been activated. Similarly, the ``install`` and
   zlib@1.2.8
 
   ==> 1 installed package
-  -- linux-rhel7-x86_64 / gcc@4.9.3 -------------------------------
+  -- linux-rhel7-broadwell / gcc@8.1.0 ----------------------------
   zlib@1.2.8
 
   $ despacktivate
+
   $ spack find
   ==> 2 installed packages
-  -- linux-rhel7-x86_64 / gcc@4.9.3 -------------------------------
+  -- linux-rhel7-broadwell / gcc@8.1.0 ----------------------------
   zlib@1.2.8  zlib@1.2.11
+
 
 Note that when we installed the abstract spec ``zlib@1.2.8``, it was
 presented as a root of the Environment. All explicitly installed
@@ -279,18 +254,18 @@ in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
-be called using the ``spack -E`` flag to specify the environment.
+be called using the ``spack -e`` flag to specify the environment.
 
 .. code-block:: console
 
-   $ spack activate myenv
+   $ spack env activate myenv
    $ spack add mpileaks
 
 or
 
 .. code-block:: console
 
-   $ spack -E myenv add python
+   $ spack -e myenv add python
 
 .. _environments_concretization:
 
@@ -356,6 +331,9 @@ installed specs using the ``-c`` (``--concretized``) flag.
 
   ==> 0 installed packages
 
+
+.. _installing-environment:
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Installing an Environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -382,11 +360,12 @@ the Environment.
 Loading
 ^^^^^^^
 
-Once an environment has been installed, the following creates a load script for it:
+Once an environment has been installed, the following creates a load
+script for it:
 
 .. code-block:: console
 
-   $ spack env myenv loads -r
+   $ spack env loads -r
 
 This creates a file called ``loads`` in the environment directory.
 Sourcing that file in Bash will make the environment available to the
@@ -599,7 +578,7 @@ files are identical.
    spack:
      definitions:
        - first: [libelf, libdwarf]
-       - compilers: ['%gcc', '^intel']
+       - compilers: ['%gcc', '%intel']
        - second:
            - $first
            - matrix:
@@ -644,7 +623,7 @@ named list ``compilers`` is ``['%gcc', '%clang', '%intel']`` on
    spack:
      definitions:
        - compilers: ['%gcc', '%clang']
-       - when: target == 'x86_64'
+       - when: arch.satisfies('x86_64:')
          compilers: ['%intel']
 
 .. note::
@@ -663,8 +642,12 @@ The valid variables for a ``when`` clause are:
 #. ``target``. The target string of the default Spack
    architecture on the system.
 
-#. ``architecture`` or ``arch``. The full string of the
-   default Spack architecture on the system.
+#. ``architecture`` or ``arch``. A Spack spec satisfying the default Spack
+   architecture on the system. This supports querying via the ``satisfies``
+   method, as shown above.
+
+#. ``arch_str``. The architecture string of the default Spack architecture
+   on the system.
 
 #. ``re``. The standard regex module in Python.
 
@@ -672,6 +655,40 @@ The valid variables for a ``when`` clause are:
 
 #. ``hostname``. The hostname of the system (if ``hostname`` is an
    executable in the user's PATH).
+
+""""""""""""""""""""""""
+SpecLists as Constraints
+""""""""""""""""""""""""
+
+Dependencies and compilers in Spack can be both packages in an
+environment and constraints on other packages. References to SpecLists
+allow a shorthand to treat packages in a list as either a compiler or
+a dependency using the ``$%`` or ``$^`` syntax respectively.
+
+For example, the following environment has three root packages:
+``gcc@8.1.0``, ``mvapich2@2.3.1 %gcc@8.1.0``, and ``hdf5+mpi
+%gcc@8.1.0 ^mvapich2@2.3.1``.
+
+.. code-block:: yaml
+
+   spack:
+     definitions:
+     - compilers: [gcc@8.1.0]
+     - mpis: [mvapich2@2.3.1]
+     - packages: [hdf5+mpi]
+
+     specs:
+     - $compilers
+     - matrix:
+       - [$mpis]
+       - [$%compilers]
+     - matrix:
+       - [$packages]
+       - [$^mpis]
+       - [$%compilers]
+
+This allows for a much-needed reduction in redundancy between packages
+and constraints.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Environment-managed Views
@@ -798,8 +815,10 @@ environment for Spack commands. The arguments ``-v,--with-view`` and
 behavior is to activate with the environment view if there is one.
 
 The environment variables affected by the ``spack env activate``
-command and the paths that are used to update them are in the
-following table.
+command and the paths that are used to update them are determined by
+the :ref:`prefix inspections <customize-env-modifications>` defined in
+your modules configuration; the defaults are summarized in the following
+table.
 
 =================== =========
 Variable            Paths

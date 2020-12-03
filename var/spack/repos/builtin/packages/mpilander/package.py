@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class Mpilander(CMakePackage):
     # compiler support
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.8')
+    conflicts('%apple-clang@:7.4')
     conflicts('%intel@:16')
 
     def cmake_args(self):

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ from __future__ import print_function
 import platform
 import os.path
 import tempfile
+
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -27,7 +30,6 @@ from functools_backport import reverse_order
 from contextlib import contextmanager
 
 import llnl.util.lang
-import llnl.util.cpu as cpu
 
 import spack.repo
 import spack.abi
@@ -36,6 +38,7 @@ import spack.compilers
 import spack.architecture
 import spack.error
 import spack.tengine
+import spack.variant as vt
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
@@ -61,6 +64,29 @@ class Concretizer(object):
         self.abstract_spec = abstract_spec
         self._adjust_target_answer_generator = None
 
+    def concretize_develop(self, spec):
+        """
+        Add ``dev_path=*`` variant to packages built from local source.
+        """
+        env = spack.environment.get_env(None, None)
+        dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+        if not dev_info:
+            return False
+
+        path = dev_info['path']
+        path = path if os.path.isabs(path) else os.path.join(
+            env.path, path)
+
+        if 'dev_path' in spec.variants:
+            assert spec.variants['dev_path'].value == path
+            changed = False
+        else:
+            spec.variants.setdefault(
+                'dev_path', vt.SingleValuedVariant('dev_path', path))
+            changed = True
+        changed |= spec.constrain(dev_info['spec'])
+        return changed
+
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
            packages that coiuld be used to concretize a spec.
@@ -74,7 +100,7 @@ class Concretizer(object):
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
             if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
+                raise spack.error.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
@@ -301,7 +327,7 @@ class Concretizer(object):
         """
         target_prefs = PackagePrefs(spec.name, 'target')
         target_specs = [spack.spec.Spec('target=%s' % tname)
-                        for tname in cpu.targets]
+                        for tname in archspec.cpu.TARGETS]
 
         def tspec_filter(s):
             # Filter target specs by whether the architecture
@@ -309,7 +335,7 @@ class Concretizer(object):
             # we only consider x86_64 targets when on an
             # x86_64 machine, etc. This may need to change to
             # enable setting cross compiling as a default
-            target = cpu.targets[str(s.architecture.target)]
+            target = archspec.cpu.TARGETS[str(s.architecture.target)]
             arch_family_name = target.family.name
             return arch_family_name == platform.machine()
 
@@ -328,6 +354,13 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
+            var = spec.variants.get(name, None)
+            if var and '*' in var:
+                # remove variant wildcard before concretizing
+                # wildcard cannot be combined with other variables in a
+                # multivalue variant, a concrete variant cannot have the value
+                # wildcard, and a wildcard does not constrain a variant
+                spec.variants.pop(name)
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
@@ -362,7 +395,16 @@ class Concretizer(object):
         # compiler_for_spec Should think whether this can be more
         # efficient
         def _proper_compiler_style(cspec, aspec):
-            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+            compilers = spack.compilers.compilers_for_spec(
+                cspec, arch_spec=aspec
+            )
+            # If the spec passed as argument is concrete we want to check
+            # the versions match exactly
+            if (cspec.concrete and compilers and
+                cspec.version not in [c.version for c in compilers]):
+                return []
+
+            return compilers
 
         if spec.compiler and spec.compiler.concrete:
             if (self.check_for_compiler_existence and not
@@ -403,7 +445,9 @@ class Concretizer(object):
                     return True
                 else:
                     # No compiler with a satisfactory spec was found
-                    raise UnavailableCompilerVersionError(other_compiler)
+                    raise UnavailableCompilerVersionError(
+                        other_compiler, spec.architecture
+                    )
         else:
             # We have no hints to go by, grab any compiler
             compiler_list = spack.compilers.all_compiler_specs()
@@ -527,7 +571,7 @@ class Concretizer(object):
         Returns:
             True if any modification happened, False otherwise
         """
-        import llnl.util.cpu
+        import archspec.cpu
 
         # Try to adjust the target only if it is the default
         # target for this platform
@@ -547,14 +591,14 @@ class Concretizer(object):
 
         try:
             current_target.optimization_flags(spec.compiler)
-        except llnl.util.cpu.UnsupportedMicroarchitecture:
+        except archspec.cpu.UnsupportedMicroarchitecture:
             microarchitecture = current_target.microarchitecture
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
                     candidate = spack.architecture.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
-                except llnl.util.cpu.UnsupportedMicroarchitecture:
+                except archspec.cpu.UnsupportedMicroarchitecture:
                     continue
 
                 if candidate is not None:
@@ -716,7 +760,9 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
             )
 
         super(UnavailableCompilerVersionError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers.")
+            err_msg, "Run 'spack compiler find' to add compilers or "
+            "'spack compilers' to see which compilers are already recognized"
+            " by spack.")
 
 
 class NoValidVersionError(spack.error.SpackError):
@@ -740,10 +786,10 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
             % (spec.name, str(archs)))
 
 
-class NoBuildError(spack.error.SpackError):
+class NoBuildError(spack.error.SpecError):
     """Raised when a package is configured with the buildable option False, but
-       no satisfactory external versions can be found"""
-
+    no satisfactory external versions can be found
+    """
     def __init__(self, spec):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")

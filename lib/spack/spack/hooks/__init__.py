@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,6 @@
 
    Currently the following hooks are supported:
 
-      * pre_run()
       * pre_install(spec)
       * post_install(spec)
       * pre_uninstall(spec)
@@ -59,11 +58,6 @@ class HookRunner(object):
                 if hasattr(hook, '__call__'):
                     hook(*args, **kwargs)
 
-
-#
-# Define some functions that can be called to fire off hooks.
-#
-pre_run = HookRunner('pre_run')
 
 pre_install = HookRunner('pre_install')
 post_install = HookRunner('post_install')

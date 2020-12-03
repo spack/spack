@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,13 @@ class Blktrace(MakefilePackage):
     version('1.0.2', sha256='15f01e2a952919ba3c7b90f8bd891d1a98c454626501094030df632666786343')
 
     depends_on('libaio')
+
+    def edit(self, spec, prefix):
+        makefiles = ['Makefile', 'btreplay/Makefile',
+                     'btt/Makefile', 'iowatcher/Makefile']
+        for m in makefiles:
+            makefile = FileFilter(m)
+            makefile.filter('CC.*=.*', 'CC = {0}'.format(spack_cc))
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

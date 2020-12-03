@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,7 +35,7 @@ class Gtksourceview(AutotoolsPackage):
     depends_on('pango')
     depends_on('gdk-pixbuf')
     depends_on('atk')
-    depends_on('libiconv')
+    depends_on('iconv')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/gtksourceview/'

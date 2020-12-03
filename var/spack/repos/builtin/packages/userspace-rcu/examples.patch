@@ -1,0 +1,13 @@
+diff --git a/doc/examples/Makefile.am b/doc/examples/Makefile.am
+index edf00eb..cd491df 100644
+--- a/doc/examples/Makefile.am
++++ b/doc/examples/Makefile.am
+@@ -141,7 +141,7 @@ all-local:
+ 	else \
+ 		rel_build_subdir="../"; \
+ 	fi; \
+-	$(MAKE) -f dist-files/Makefile CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" AM_CPPFLAGS="$(AM_CPPFLAGS) -I"$${rel_src_subdir}/$(top_srcdir)/include/" -I"$${rel_src_subdir}/$(top_srcdir)/src/" -I"$${rel_build_subdir}$(top_builddir)/include/" -I"$${rel_build_subdir}$(top_builddir)/include/src/"" CFLAGS="$(CFLAGS)" AM_CFLAGS="$(AM_CFLAGS)" LDFLAGS="$(LDFLAGS)" AM_LDFLAGS="$(AM_LDFLAGS) -L../../../src/.libs/ -Wl,-rpath "$(PWD)/../../src/.libs/"" AM_V_P="$(AM_V_P)" AM_V_at="$(AM_V_at)" $(AM_MAKEFLAGS) all;
++	$(MAKE) -f dist-files/Makefile CC="$(CC)" CPPFLAGS="$(CPPFLAGS)" AM_CPPFLAGS="$(AM_CPPFLAGS) -I"$${rel_src_subdir}/$(top_srcdir)/include/" -I"$${rel_src_subdir}/$(top_srcdir)/src/" -I"$${rel_build_subdir}$(top_builddir)/include/" -I"$${rel_build_subdir}$(top_builddir)/include/src/"" CFLAGS="$(CFLAGS)" AM_CFLAGS="$(AM_CFLAGS)" LDFLAGS="$(LDFLAGS)" AM_LDFLAGS="$(AM_LDFLAGS) -L../../../src/.libs/ -Wl,-rpath="$(PWD)/../../src/.libs/"" AM_V_P="$(AM_V_P)" AM_V_at="$(AM_V_at)" $(AM_MAKEFLAGS) all;
+ 
+ clean-local:
+ 	$(AM_V_at)$(MAKE) -f dist-files/Makefile $(AM_MAKEFLAGS) clean; \

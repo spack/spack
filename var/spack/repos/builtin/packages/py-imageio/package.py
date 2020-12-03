@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class PyImageio(PythonPackage):
 
     # Fix for python 2 if needed.
     depends_on('py-numpy',            type=('build', 'run'))
-    depends_on('py-pillow',           type=('build', 'run'))
+    depends_on('pil',                 type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools',       type='build')
     depends_on('ffmpeg',              type='run')

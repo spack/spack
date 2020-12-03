@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,5 @@ class RFf(RPackage):
 
     depends_on('r@2.10.1:', type=('build', 'run'))
     depends_on('r-bit@1.1-13:', type=('build', 'run'))
+
+    patch('utk_platform_macros.hpp.patch', when='target=aarch64:')

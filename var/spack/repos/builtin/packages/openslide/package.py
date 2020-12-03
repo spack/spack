@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,3 +19,6 @@ class Openslide(AutotoolsPackage):
     depends_on('libtiff')
     depends_on('libxml2')
     depends_on('sqlite@3.6:')
+    depends_on('glib')
+    depends_on('cairo+pdf')
+    depends_on('gdk-pixbuf')

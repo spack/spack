@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,10 @@ class Libbsd(AutotoolsPackage):
     """
 
     homepage = "https://libbsd.freedesktop.org/wiki/"
-    url      = "https://libbsd.freedesktop.org/releases/libbsd-0.9.1.tar.xz"
+    urls     = [
+        "https://libbsd.freedesktop.org/releases/libbsd-0.9.1.tar.xz",
+        "https://mirrors.dotsrc.org/pub/mirrors/exherbo/libbsd-0.9.1.tar.xz"
+    ]
 
     version('0.10.0', sha256='34b8adc726883d0e85b3118fa13605e179a62b31ba51f676136ecb2d0bc1a887')
     version('0.9.1', sha256='56d835742327d69faccd16955a60b6dcf30684a8da518c4eca0ac713b9e0a7a4')
@@ -24,6 +27,17 @@ class Libbsd(AutotoolsPackage):
 
     patch('cdefs.h.patch', when='@0.8.6 %gcc@:4')
     patch('local-elf.h.patch', when='%intel')
+    patch('nvhpc.patch', when='%nvhpc')
 
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts('platform=darwin')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc'):
+            filter_file('-isystem', '-I', 'src/Makefile.in')
+            # This is not a 1 for 1 replacement, requiring nvhpc.patch
+            # to include config.h where needed
+            filter_file('-include ', '-I ', 'src/Makefile.in')
+            filter_file('-Wall -Wextra -Wno-unused-variable '
+                        '-Wno-unused-parameter', '-Wall', 'configure')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Openldap(AutotoolsPackage):
     homepage = "https://www.openldap.org/"
     url      = "ftp://ftp.openldap.org/pub/OpenLDAP/openldap-release/openldap-2.4.48.tgz"
 
+    version('2.4.49', sha256='e3b117944b4180f23befe87d0dcf47f29de775befbc469dcf4ac3dab3311e56e')
     version('2.4.48', sha256='d9523ffcab5cd14b709fcf3cb4d04e8bc76bb8970113255f372bc74954c6074d')
 
     variant('client_only', default=True, description='Client only installation')
@@ -46,7 +47,7 @@ class Openldap(AutotoolsPackage):
     @when('+client_only')
     def configure_args(self):
         return ['CPPFLAGS=-D_GNU_SOURCE',
-                '--disable-static',
+                '--enable-static',
                 '--enable-dynamic',
                 '--disable-debug',
                 '--disable-slapd',
@@ -56,7 +57,7 @@ class Openldap(AutotoolsPackage):
     def configure_args(self):
         # Ref: https://www.openldap.org/lists/openldap-technical/201009/msg00304.html
         args = ['CPPFLAGS=-D_GNU_SOURCE',  # fixes a build error, see Ref above
-                '--disable-static',
+                '--enable-static',
                 '--disable-debug',
                 '--with-cyrus-sasl',
                 '--enable-dynamic',

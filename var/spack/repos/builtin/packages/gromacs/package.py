@@ -1,9 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class Gromacs(CMakePackage):
@@ -24,7 +22,14 @@ class Gromacs(CMakePackage):
     git      = 'https://github.com/gromacs/gromacs.git'
     maintainers = ['junghans', 'marvinbernhardt']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
+    version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
+    version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
+    version('2020.1', sha256='e1666558831a3951c02b81000842223698016922806a8ce152e8f616e29899cf')
+    version('2020', sha256='477e56142b3dcd9cb61b8f67b24a55760b04d1655e8684f979a75a5eec40ba01')
+    version('2019.6', sha256='bebe396dc0db11a9d4cc205abc13b50d88225617642508168a2195324f06a358')
+    version('2019.5', sha256='438061a4a2d45bbb5cf5c3aadd6c6df32d2d77ce8c715f1c8ffe56156994083a')
     version('2019.4', sha256='ba4366eedfc8a1dbf6bddcef190be8cd75de53691133f305a7f9c296e5ca1867')
     version('2019.3', sha256='4211a598bf3b7aca2b14ad991448947da9032566f13239b1a05a2d4824357573')
     version('2019.2', sha256='bcbf5cc071926bc67baa5be6fb04f0986a2b107e1573e15fadcb7d7fc4fb9f7e')
@@ -54,30 +59,52 @@ class Gromacs(CMakePackage):
         description='Produces a double precision version of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('opencl', default=False, description='Enable OpenCL support')
+    variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
-    variant('simd', default='auto',
-            description='The SIMD instruction set to use',
-            values=('auto', 'none', 'SSE2', 'SSE4.1', 'AVX_128_FMA', 'AVX_256',
-                    'AVX2_128', 'AVX2_256', 'AVX_512', 'AVX_512_KNL',
-                    'IBM_QPX', 'Sparc64_HPC_ACE', 'IBM_VMX', 'IBM_VSX',
-                    'ARM_NEON', 'ARM_NEON_ASIMD'))
-    variant('rdtscp', default=True, description='Enable RDTSCP instruction usage')
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
-    variant('openmp', default=True, description='Enables OpenMP at configure time')
-    variant('double_precision', default=False, description='Enables a double-precision configuration')
+    variant('openmp', default=True,
+            description='Enables OpenMP at configure time')
+    variant('double_precision', default=False,
+            description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
+    variant('hwloc', default=True,
+            description='Use the hwloc portable hardware locality library')
+    variant('lapack', default=False,
+            description='Enables an external LAPACK library')
+    variant('blas', default=False,
+            description='Enables an external BLAS library')
+    variant('cycle_subcounters', default=False,
+            description='Enables cycle subcounters')
 
     depends_on('mpi', when='+mpi')
+    # define matching plumed versions
+    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2020.2+plumed+mpi')
+    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2020.2+plumed~mpi')
+    depends_on('plumed@2.6.0:2.6.9+mpi', when='@2019.6+plumed+mpi')
+    depends_on('plumed@2.6.0:2.6.9~mpi', when='@2019.6+plumed~mpi')
+    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2019.4+plumed+mpi')
+    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2019.4+plumed~mpi')
+    depends_on('plumed@2.5.0:2.5.9+mpi', when='@2018.6+plumed+mpi')
+    depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw')
+    depends_on('fftw-api@3')
+    depends_on('mkl', when='fft=mkl')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
+    depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
+    depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
+    depends_on('lapack', when='+lapack')
+    depends_on('blas', when='+blas')
+
+    # TODO: openmpi constraint; remove when concretizer is fixed
+    depends_on('hwloc@:1.999', when='@:3.0.0')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
@@ -86,9 +113,16 @@ class Gromacs(CMakePackage):
         if '+plumed' in self.spec:
             self.spec['plumed'].package.apply_patch(self)
 
+        if self.spec.satisfies('%nvhpc'):
+            # Disable obsolete workaround
+            filter_file('ifdef __PGI', 'if 0', 'src/gromacs/fileio/xdrf.h')
+
     def cmake_args(self):
 
         options = []
+
+        if self.spec.satisfies('@2020:'):
+            options.append('-DGMX_INSTALL_LEGACY_API=ON')
 
         if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
@@ -96,28 +130,97 @@ class Gromacs(CMakePackage):
         if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
 
+        if '+nosuffix' in self.spec:
+            options.append('-DGMX_DEFAULT_SUFFIX:BOOL=OFF')
+
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
 
-        if '+cuda' in self.spec:
+        if '+hwloc' in self.spec:
+            options.append('-DGMX_HWLOC:BOOL=ON')
+        else:
+            options.append('-DGMX_HWLOC:BOOL=OFF')
+
+        if '+cuda' in self.spec or '+opencl' in self.spec:
             options.append('-DGMX_GPU:BOOL=ON')
-            options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
-                           self.spec['cuda'].prefix)
         else:
             options.append('-DGMX_GPU:BOOL=OFF')
 
-        simd_value = self.spec.variants['simd'].value
-        if simd_value == 'auto':
-            pass
-        elif simd_value == 'none':
-            options.append('-DGMX_SIMD:STRING=None')
-        else:
-            options.append('-DGMX_SIMD:STRING=' + simd_value)
+        if '+cuda' in self.spec:
+            options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
+                           self.spec['cuda'].prefix)
 
-        if '-rdtscp' in self.spec:
-            options.append('-DGMX_USE_RDTSCP:BOOL=OFF')
+        if '+opencl' in self.spec:
+            options.append('-DGMX_USE_OPENCL=on')
+
+        if '+lapack' in self.spec:
+            options.append('-DGMX_EXTERNAL_LAPACK:BOOL=ON')
+            if self.spec['lapack'].libs:
+                options.append('-DGMX_LAPACK_USER={0}'.format(
+                    self.spec['lapack'].libs.joined(';')))
         else:
-            options.append('-DGMX_USE_RDTSCP:BOOL=ON')
+            options.append('-DGMX_EXTERNAL_LAPACK:BOOL=OFF')
+
+        if '+blas' in self.spec:
+            options.append('-DGMX_EXTERNAL_BLAS:BOOL=ON')
+            if self.spec['blas'].libs:
+                options.append('-DGMX_BLAS_USER={0}'.format(
+                    self.spec['blas'].libs.joined(';')))
+        else:
+            options.append('-DGMX_EXTERNAL_BLAS:BOOL=OFF')
+
+        # Activate SIMD based on properties of the target
+        target = self.spec.target
+        if target >= 'zen2':
+            # AMD Family 17h (EPYC Rome)
+            options.append('-DGMX_SIMD=AVX2_256')
+        elif target >= 'zen':
+            # AMD Family 17h (EPYC Naples)
+            options.append('-DGMX_SIMD=AVX2_128')
+        elif target >= 'bulldozer':
+            # AMD Family 15h
+            options.append('-DGMX_SIMD=AVX_128_FMA')
+        elif 'vsx' in target:
+            # IBM Power 7 and beyond
+            options.append('-DGMX_SIMD=IBM_VSX')
+        elif target.family == 'aarch64':
+            # ARMv8
+            if self.spec.satisfies('%nvhpc'):
+                options.append('-DGMX_SIMD=None')
+            else:
+                options.append('-DGMX_SIMD=ARM_NEON_ASIMD')
+        elif target == 'mic_knl':
+            # Intel KNL
+            options.append('-DGMX_SIMD=AVX_512_KNL')
+        elif target.vendor == 'GenuineIntel':
+            # Other Intel architectures
+            simd_features = [
+                ('sse2', 'SSE2'),
+                ('sse4_1', 'SSE4.1'),
+                ('avx', 'AVX_256'),
+                ('axv128', 'AVX2_128'),
+                ('avx2', 'AVX2_256'),
+                ('avx512', 'AVX_512'),
+            ]
+
+            # Workaround NVIDIA compiler bug when avx512 is enabled
+            if (self.spec.satisfies('%nvhpc') and
+                ('avx512', 'AVX_512') in simd_features):
+                simd_features.remove(('avx512', 'AVX_512'))
+
+            for feature, flag in reversed(simd_features):
+                if feature in target:
+                    options.append('-DGMX_SIMD:STRING={0}'.format(flag))
+                    break
+        else:
+            # Fall back to this for unknown microarchitectures
+            options.append('-DGMX_SIMD:STRING=None')
+
+        # Use the 'rtdscp' assembly instruction only on
+        # appropriate architectures
+        options.append(self.define(
+            'GMX_USE_RDTSCP', str(target.family) in ('x86_64', 'x86')
+        ))
 
         if '+mdrun_only' in self.spec:
             options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
@@ -133,5 +236,32 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
+
+        if '+cycle_subcounters' in self.spec:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
+        else:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF')
+
+        if '^mkl' in self.spec:
+            # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
+            # we use the mkl interface of gromacs
+            options.append('-DGMX_FFT_LIBRARY=mkl')
+            options.append('-DMKL_INCLUDE_DIR={0}'.
+                           format(self.spec['mkl'].headers.directories[0]))
+            # The 'blas' property provides a minimal set of libraries
+            # that is sufficient for fft. Using full mkl fails the cmake test
+            options.append('-DMKL_LIBRARIES={0}'.
+                           format(self.spec['blas'].libs.joined(';')))
+        else:
+            # we rely on the fftw-api@3
+            options.append('-DGMX_FFT_LIBRARY=fftw3')
+            if '^amdfftw' in self.spec:
+                options.append('-DGMX_FFT_LIBRARY=fftw3')
+                options.append(
+                    '-DFFTWF_INCLUDE_DIRS={0}'.
+                    format(self.spec['amdfftw'].headers.directories[0])
+                )
+                options.append('-DFFTWF_LIBRARIES={0}'.
+                               format(self.spec['amdfftw'].libs.joined(';')))
 
         return options
