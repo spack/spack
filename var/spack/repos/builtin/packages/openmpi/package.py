@@ -620,6 +620,8 @@ class Openmpi(AutotoolsPackage):
         # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
             config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec['slurm'].external:
+                config_args.append('--with-libevent=external')
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
