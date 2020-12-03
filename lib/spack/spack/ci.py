@@ -225,6 +225,7 @@ def get_spec_dependencies(specs, deps, spec_labels):
             spec_labels[entry['label']] = {
                 'spec': Spec(entry['spec']),
                 'rootSpec': entry['root_spec'],
+                'needs_rebuild': entry['needs_rebuild'],
             }
 
         for entry in dependencies:
@@ -311,7 +312,10 @@ def print_staging_summary(spec_labels, dependencies, stages):
 
         for job in sorted(stage):
             s = spec_labels[job]['spec']
-            tty.msg('      {0} -> {1}'.format(job, get_spec_string(s)))
+            tty.msg('      [{1}] {0} -> {2}'.format(
+                job,
+                'x' if spec_labels[job]['needs_rebuild'] else ' ',
+                get_spec_string(s)))
 
         stage_index += 1
 
@@ -393,11 +397,16 @@ def compute_spec_deps(spec_list):
                 tty.msg('Will not stage external pkg: {0}'.format(s))
                 continue
 
+            up_to_date_mirrors = bindist.get_mirrors_for_spec(
+                spec=s, full_hash_match=True)
+
             skey, slabel = spec_deps_key_label(s)
             spec_labels[slabel] = {
                 'spec': get_spec_string(s),
                 'root': root_spec,
+                'needs_rebuild': not up_to_date_mirrors,
             }
+
             append_dep(rlabel, slabel)
 
             for d in s.dependencies(deptype=all):
@@ -413,6 +422,7 @@ def compute_spec_deps(spec_list):
             'label': spec_label,
             'spec': spec_holder['spec'],
             'root_spec': spec_holder['root'],
+            'needs_rebuild': spec_holder['needs_rebuild'],
         })
 
     deps_json_obj = {
@@ -481,17 +491,22 @@ def pkg_name_from_spec_label(spec_label):
 
 
 def format_job_needs(phase_name, strip_compilers, dep_jobs,
-                     osname, build_group, enable_artifacts_buildcache):
+                     osname, build_group, stage_spec_dict,
+                     enable_artifacts_buildcache):
     needs_list = []
     for dep_job in dep_jobs:
-        needs_list.append({
-            'job': get_job_name(phase_name,
-                                strip_compilers,
-                                dep_job,
-                                osname,
-                                build_group),
-            'artifacts': enable_artifacts_buildcache,
-        })
+        dep_spec_key = '{0}/{1}'.format(dep_job.name, dep_job.dag_hash(7))
+        dep_spec_info = stage_spec_dict[dep_spec_key]
+
+        if dep_spec_info['needs_rebuild']:
+            needs_list.append({
+                'job': get_job_name(phase_name,
+                                    strip_compilers,
+                                    dep_job,
+                                    osname,
+                                    build_group),
+                'artifacts': enable_artifacts_buildcache,
+            })
     return needs_list
 
 
@@ -611,6 +626,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             stage_id += 1
 
             for spec_label in stage_jobs:
+                if not spec_labels[spec_label]['needs_rebuild']:
+                    continue
+
                 root_spec = spec_labels[spec_label]['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
@@ -678,20 +696,25 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                 job_dependencies = []
                 if spec_label in dependencies:
                     if enable_artifacts_buildcache:
+                        # Get dependencies transitively, so they're all
+                        # available in the artifacts buildcache.
                         dep_jobs = [
                             d for d in release_spec.traverse(deptype=all,
                                                              root=False)
                         ]
                     else:
+                        # In this case, "needs" is only used for scheduling
+                        # purposes, so we only get the direct dependencies.
                         dep_jobs = []
                         for dep_label in dependencies[spec_label]:
-                            dep_pkg = pkg_name_from_spec_label(dep_label)
-                            dep_root = spec_labels[dep_label]['rootSpec']
-                            dep_jobs.append(dep_root[dep_pkg])
+                            if spec_labels[dep_label]['needs_rebuild']:
+                                dep_pkg = pkg_name_from_spec_label(dep_label)
+                                dep_root = spec_labels[dep_label]['rootSpec']
+                                dep_jobs.append(dep_root[dep_pkg])
 
                     job_dependencies.extend(
                         format_job_needs(phase_name, strip_compilers, dep_jobs,
-                                         osname, build_group,
+                                         osname, build_group, spec_labels,
                                          enable_artifacts_buildcache))
 
                 # This next section helps gitlab make sure the right
@@ -727,12 +750,14 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                     d for d in bs['spec'].traverse(deptype=all)
                                 ]
 
+                            bs_specs, _, _ = staged_phases[bs['phase-name']]
                             job_dependencies.extend(
                                 format_job_needs(bs['phase-name'],
                                                  bs['strip-compilers'],
                                                  dep_jobs,
                                                  str(bs_arch),
                                                  build_group,
+                                                 bs_specs,
                                                  enable_artifacts_buildcache))
                         else:
                             debug_msg = ''.join([
