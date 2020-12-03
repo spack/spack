@@ -9,7 +9,6 @@ import pytest
 import spack.container
 
 
-# Should probably add 20.04
 @pytest.mark.parametrize('image,spack_version,expected', [
     ('ubuntu:18.04', 'develop', ('spack/ubuntu-bionic', 'latest')),
     ('ubuntu:18.04', '0.14.0', ('spack/ubuntu-bionic', '0.14.0')),
