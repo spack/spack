@@ -11,8 +11,7 @@ import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import (force_remove, get_filetype,
-                                  path_contains_subdirectory)
+import llnl.util.filesystem as fs
 
 import spack.store
 import spack.util.spack_json as sjson
@@ -305,7 +304,7 @@ class Python(AutotoolsPackage):
             except ProcessError:
                 variants += '~tix'
 
-        # Get config args for shared, debug, and optimizations variant checks
+        # Get config args for debug, and optimizations variant checks
         sysconf_imp = 'import sysconfig'
         if version < Version('2.7'):
             sysconf_imp = 'import distutils.sysconfig as sysconfig'
@@ -314,14 +313,13 @@ class Python(AutotoolsPackage):
             '%s; print(sysconfig.get_config_var("CONFIG_ARGS"))' % sysconf_imp,
             output=str, error=str)
 
-        # check for shared variant
-        # defualt is on, so we check for the string to turn it off
-        # +shared implies +pic
-        if '--disable-shared' in conf_args:
-            variants += '~shared'
-        else:
-            variants += '+shared'
-            variants += '+pic'
+        libdir = python(
+            '-c', '%s; print(sysconfig.get_config_var("LIBPL"))' % sysconf_imp,
+            output=str, error=str).strip()
+        # Search for shared libraries in the prefix and set shared variant
+        matches = fs.find_libraries(
+            'libpython*', prefix=libdir, shared=True, recursive=True)
+        variants += '+shared' if len(matches) > 0 else '~shared'
 
         # check for debug
         # default is off, so we check for the string to turn it on
@@ -604,7 +602,7 @@ class Python(AutotoolsPackage):
                 # is initialized by the method load_distutils_data().
                 self._distutil_vars = {}
                 if output_filename:
-                    force_remove(output_filename)
+                    fs.force_remove(output_filename)
 
     def _load_distutil_vars(self):
         # We update and keep the cache unchanged only if the package is
@@ -1146,11 +1144,11 @@ class Python(AutotoolsPackage):
     def add_files_to_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
-            if not path_contains_subdirectory(src, bin_dir):
+            if not fs.path_contains_subdirectory(src, bin_dir):
                 view.link(src, dst, spec=self.spec)
             elif not os.path.islink(src):
                 copy(src, dst)
-                if 'script' in get_filetype(src):
+                if 'script' in fs.get_filetype(src):
                     filter_file(
                         self.spec.prefix,
                         os.path.abspath(
@@ -1178,7 +1176,7 @@ class Python(AutotoolsPackage):
     def remove_files_from_view(self, view, merge_map):
         bin_dir = self.spec.prefix.bin
         for src, dst in merge_map.items():
-            if not path_contains_subdirectory(src, bin_dir):
+            if not fs.path_contains_subdirectory(src, bin_dir):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
