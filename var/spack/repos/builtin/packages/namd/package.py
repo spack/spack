@@ -10,7 +10,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Namd(MakefilePackage):
+class Namd(MakefilePackage, CudaPackage):
     """NAMDis a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
@@ -53,6 +53,12 @@ class Namd(MakefilePackage):
 
     depends_on('tcl', when='interface=python')
     depends_on('python', when='interface=python')
+
+    # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
+    # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
+    # https://www.ks.uiuc.edu/Research/namd/2.14/features.html
+    depends_on('cuda@6.5.14:7.5.18', when='@2.12 +cuda')
+    depends_on('cuda@8.0.61:', when='@2.13: +cuda')
 
     def _copy_arch_file(self, lib):
         config_filename = 'arch/{0}.{1}'.format(self.arch, lib)
@@ -215,6 +221,12 @@ class Namd(MakefilePackage):
                 '--without-tcl',
                 '--without-python'
             ])
+
+        if '+cuda' in spec:
+            self._append_option(opts, 'cuda')
+            filter_file('^CUDADIR=.*$',
+                        'CUDADIR={0}'.format(spec['cuda'].prefix),
+                        self.arch + '.cuda')
 
         config = Executable('./config')
 

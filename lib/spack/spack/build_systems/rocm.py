@@ -102,6 +102,8 @@ class ROCmPackage(PackageBase):
     depends_on('hsa-rocr-dev', when='+rocm')
     depends_on('hip', when='+rocm')
 
+    conflicts('^blt@:0.3.6', when='+rocm')
+
     # need amd gpu type for rocm builds
     conflicts('amdgpu_target=none', when='+rocm')
 
