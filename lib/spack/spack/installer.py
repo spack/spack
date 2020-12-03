@@ -1367,7 +1367,6 @@ class PackageInstaller(object):
 
             pkg, pkg_id, spec = task.pkg, task.pkg_id, task.pkg.spec
             tty.verbose('Processing {0}: task={1}'.format(pkg_id, task))
-
             # Ensure that the current spec has NO uninstalled dependencies,
             # which is assumed to be reflected directly in its priority.
             #
@@ -1967,7 +1966,8 @@ class BuildRequest(object):
             (tuple) required dependency type(s) for the package
         """
         deptypes = ['link', 'run']
-        if not self.install_args.get('cache_only'):
+        include_build_deps = self.install_args.get('include_build_deps')
+        if not self.install_args.get('cache_only') or include_build_deps:
             deptypes.append('build')
         if self.run_tests(pkg):
             deptypes.append('test')

@@ -43,6 +43,7 @@ def update_kwargs_from_args(args, kwargs):
         'dirty': args.dirty,
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
+        'include_build_deps': args.include_build_deps,
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
@@ -104,6 +105,11 @@ the dependencies"""
     cache_group.add_argument(
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
+
+    subparser.add_argument(
+        '--include-build-deps', action='store_true', dest='include_build_deps',
+        default=False, help="""include build deps when installing from cache,
+which is useful for CI pipeline troubleshooting""")
 
     subparser.add_argument(
         '--no-check-signature', action='store_true',
