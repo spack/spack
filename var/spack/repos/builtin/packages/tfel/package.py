@@ -29,12 +29,13 @@ class Tfel(CMakePackage):
     """
 
     homepage = "http://tfel.sourceforge.net"
-    url      = "https://github.com/thelfer/tfel/archive/TFEL-3.3.0.tar.gz"
+    url      = "https://github.com/thelfer/tfel/archive/TFEL-3.4.0.tar.gz"
     git      = "https://github.com/thelfer/tfel.git"
     maintainers = ['thelfer']
 
     # development branches
     version("master", branch="master")
+    version("rliv-3.4", branch="rliv-3.4")
     version("rliv-3.3", branch="rliv-3.3")
     version("rliv-3.2", branch="rliv-3.2")
     version("rliv-3.1", branch="rliv-3.1")
@@ -43,6 +44,7 @@ class Tfel(CMakePackage):
     version("rliv-1.2", branch="rliv-1.2")
 
     # released version
+    version('3.4.0', sha256='884ad68b0fbbededc3a602d559433c24114ae4534dc9f0a759d31ca3589dace0')
     version('3.3.0', sha256='884ad68b0fbbededc3a602d559433c24114ae4534dc9f0a759d31ca3589dace0')
     version('3.2.2', sha256='69b01ae0d1f9140b619aaa9135948284ff40d4654672c335e55ab4934c02eb43')
     version('3.2.1', sha256='12786480524a7fe86889120fb334fa00211dfd44ad5ec71e2279e7adf1ddc807')
@@ -85,6 +87,8 @@ class Tfel(CMakePackage):
             description='Enables python bindings')
     variant('java', default=False,
             description='Enables java interface')
+    variant('portable_build', default=False,
+            description='when true, disable -march=native flag')
 
     # only since TFEL-3.3, no effect on version below
     variant('comsol', default=True,
@@ -127,6 +131,11 @@ class Tfel(CMakePackage):
         else:
             args.append("-Denable-python-bindings=OFF")
 
+        if '+portable_build' in self.spec:
+            args.append("-Denable-portable-build=ON")
+        else:
+            args.append("-Denable-portable-build=OFF")
+            
         if(('+python' in self.spec) or
            ('+python_bindings' in self.spec)):
             python = self.spec['python']
