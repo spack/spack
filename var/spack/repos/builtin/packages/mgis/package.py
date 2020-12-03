@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class Mgis(CMakePackage):
     """
     The MFrontGenericInterfaceSupport project (MGIS) provides helper

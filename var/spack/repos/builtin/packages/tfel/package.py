@@ -135,7 +135,7 @@ class Tfel(CMakePackage):
             args.append("-Denable-portable-build=ON")
         else:
             args.append("-Denable-portable-build=OFF")
-            
+
         if(('+python' in self.spec) or
            ('+python_bindings' in self.spec)):
             python = self.spec['python']
