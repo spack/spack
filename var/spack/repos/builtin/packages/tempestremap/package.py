@@ -36,9 +36,6 @@ class Tempestremap(AutotoolsPackage):
     depends_on('blas')
     depends_on('lapack')
 
-#    def autoreconf(self, spec, prefix):
-#        autoreconf('--install', '--verbose', '--force')
-
     def configure_args(self):
         spec = self.spec
         options = []
