@@ -371,7 +371,7 @@ _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
 
 # Add programmable tab completion for Bash
 #
-if [ "$_sp_shell" = bash ]; then
+if test "$_sp_shell" = bash || test -n "${ZSH_VERSION:-}"; then
     source $_sp_share_dir/spack-completion.bash
 fi
 
