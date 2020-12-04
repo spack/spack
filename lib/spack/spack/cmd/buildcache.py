@@ -436,7 +436,7 @@ def _skip_no_redistribute_for_public(specs):
     if removed_specs:
         tty.debug("The following specs will not be added to the binary cache"
                   " because their package.py file has marked them as"
-                  " 'redistribute_binary = False':"
+                  " 'redistribute_binary = False': {0}"
                   .format(', '.join(s.name for s in removed_specs)))
     return remaining_specs
 
