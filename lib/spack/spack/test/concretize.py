@@ -975,3 +975,7 @@ class TestConcretize(object):
         spec.concretize()
         assert ((uuidpatch, localpatch) ==
                 spec['libelf'].variants['patches'].value)
+
+    def test_dont_select_version_that_brings_more_variants_in(self):
+        s = Spec('dep-with-variants-if-develop-root').concretized()
+        assert s['dep-with-variants-if-develop'].satisfies('@1.0')

@@ -508,7 +508,9 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % need to maximize their number below to ensure they're all set
 #maximize {
     1@13,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), root(Package)
+    : variant_not_default(Package, Variant, Value, Weight),
+    not variant_single_value(Package, Variant),
+    root(Package)
 }.
 #minimize{
     Weight@13,Provider
@@ -531,7 +533,9 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % need to maximize their number below to ensure they're all set
 #maximize {
     1@8,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+    : variant_not_default(Package, Variant, Value, Weight),
+    not variant_single_value(Package, Variant),
+    not root(Package)
 }.
 
 % Try to maximize the number of compiler matches in the DAG,
