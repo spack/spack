@@ -9,6 +9,7 @@ from spack import *
 class RaxmlNg(CMakePackage):
     """RAxML-NG is a phylogenetic tree inference tool which uses
     maximum-likelihood (ML) optimality criterion.
+    
     Its search heuristic is based on iteratively performing a series
     of Subtree Pruning and Regrafting (SPR) moves,
     which allows to quickly navigate to the best-known ML tree.
@@ -30,7 +31,6 @@ class RaxmlNg(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        args = []
-        return args
-        if "+mpi" in spec:
-            args.append("-DUSE_MPI=ON")
+    return [
+        self.define_from_variants('USE_MPI', 'mpi')
+    ]
