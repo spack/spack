@@ -117,7 +117,7 @@ _bash_completion_spack() {
     #_test_vars >> temp
 
     # Make sure function exists before calling it
-    if [[ "$(type -t $subfunction)" == "function" ]]
+    if [[ "$(type $subfunction)" =~ "$subfunction.*function.*" ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
