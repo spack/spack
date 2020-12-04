@@ -47,10 +47,10 @@ packages:
       - lapack
     specs:
       - hypre@2.14.0
-      - omega-h+gmsh+trilinos@9.31.3.dev2
+      - omega-h+gmsh+trilinos@9.33.0.dev1
       - superlu-dist@5.4.0
       - trilinos@xsdk-0.4.0-rc1
-      - omega-h+trilinos@9.29.0
+      - omega-h+trilinos@9.33.0.dev1
 
   gnu-stable-parallel-lapack-python:
     target_matrix:
