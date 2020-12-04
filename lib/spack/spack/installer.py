@@ -1030,7 +1030,7 @@ class PackageInstaller(object):
             if arch not in packages_per_compiler[compiler]:
                 packages_per_compiler[compiler][arch] = []
 
-            packages_per_compiler[compiler][arch].append(self.pkg)
+            packages_per_compiler[compiler][arch].append(request.pkg)
 
             for compiler, archs in packages_per_compiler.items():
                 for arch, packages in archs.items():
@@ -1038,7 +1038,7 @@ class PackageInstaller(object):
                         compiler, arch, packages, request, all_deps)
 
         if install_deps:
-            for dep in self.spec.traverse(order='post', root=False):
+            for dep in request.traverse_dependencies():
                 dep_pkg = dep.package
 
                 dep_id = package_id(dep_pkg)
