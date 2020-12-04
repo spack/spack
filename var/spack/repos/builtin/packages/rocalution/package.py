@@ -20,11 +20,11 @@ class Rocalution(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.10.0', sha256='c24cb9d1a8a1a3118040b8b16dec7c06268bcf157424d3378256cc9eb93f1b58')
+    version('3.9.0', sha256='1ce36801fe1d44f743b46b43345c0cd90d76b73911b2ec97be763f93a35396fb')
     version('3.8.0', sha256='39e64a29e75c4276163a93596436064c6338770ca72ce7f43711ed8285ed2de5')
     version('3.7.0', sha256='4d6b20aaaac3bafb7ec084d684417bf578349203b0f9f54168f669e3ec5699f8')
     version('3.5.0', sha256='be2f78c10c100d7fd9df5dd2403a44700219c2cbabaacf2ea50a6e2241df7bfe')
-    version('3.9.0', sha256='1ce36801fe1d44f743b46b43345c0cd90d76b73911b2ec97be763f93a35396fb')
-    version('3.10.0', sha256='c24cb9d1a8a1a3118040b8b16dec7c06268bcf157424d3378256cc9eb93f1b58')
 
     depends_on('cmake@3.5:', type='build')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
