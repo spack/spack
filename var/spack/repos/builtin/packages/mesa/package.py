@@ -24,7 +24,7 @@ class Mesa(MesonPackage):
     depends_on('cmake', type='build')
     # Starting with 0.54.0, meson will not try the cmake method when a
     # shared link is requested, so it will use version 0.53.2.
-    depends_on('meson@0.53.2', type='build')
+    depends_on('meson@0.52:0.53.2', type='build')
 
     depends_on('pkgconfig', type='build')
     depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
