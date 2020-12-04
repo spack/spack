@@ -19,7 +19,6 @@ class Geant4(CMakePackage):
 
     maintainers = ['drbenmorgan']
 
-
     version('10.7.0', sha256='c991a139210c7f194720c900b149405090058c00beb5a0d2fac5c40c42a262d4')
     version('10.6.3', sha256='bf96d6d38e6a0deabb6fb6232eb00e46153134da645715d636b9b7b4490193d3')
     version('10.6.2', sha256='e381e04c02aeade1ed8cdd9fdbe7dcf5d6f0f9b3837a417976b839318a005dbd')
@@ -117,8 +116,7 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            '-DGEANT4_BUILD_CXXSTD={0}'.format(
-                self.spec.variants['cxxstd'].value),
+            self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'),
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
