@@ -497,7 +497,6 @@ class Llvm(CMakePackage, CudaPackage):
                     gcc_prefix = line.split(":")[1].strip()
                     gcc_prefix = ancestor(gcc_prefix, 4)
                     break
-            #gcc_prefix = ancestor(self.compiler.cc, 2)
             cmake_args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
         if spec.satisfies("@4.0.0:"):
