@@ -32,7 +32,6 @@ class Edm4hep(CMakePackage):
 
     depends_on('hepmc@:2.99.99', type='test')
     depends_on('heppdt', type='test')
-    depends_on('tricktrack@1.0.9:', type='test')
 
     def cmake_args(self):
         args = []
