@@ -18,6 +18,9 @@ class Steps(CMakePackage):
     version("3.3.0", submodules=True)
     version("3.2.0", submodules=True)
 
+    variant("codechecks", default=False,
+            description="Perform additional code checks like "
+                        "code formatting or static analysis")
     variant("native", default=True, description="Generate non-portable arch-specific code")
     variant("lapack", default=False, description="Use new BDSystem/Lapack code for E-Field solver")
     variant("distmesh", default=False, description="Add solvers based on distributed mesh")
@@ -26,6 +29,7 @@ class Steps(CMakePackage):
     variant("coverage", default=False, description="Enable code coverage")
     variant("bundle", default=False, description="Use bundled libraries")
     variant("stochtests", default=True, description="Add stochastic tests to ctests")
+    variant("timemory", default=False, description="Add timemory API to instrument time/memory")
 
     depends_on("boost")
     depends_on("blas")
@@ -42,13 +46,15 @@ class Steps(CMakePackage):
     depends_on("py-scipy", type=("build", "test"))
     depends_on("py-matplotlib", type=("build", "test"))
     depends_on("python")
-
+    depends_on("py-cmake-format", type="build", when="+codechecks")
+    depends_on('py-pre-commit', type='build', when='+codechecks')
+    depends_on('py-pyyaml', type='build', when='+codechecks')
     depends_on("omega-h+gmsh+mpi", when="~bundle+distmesh")
     depends_on("gmsh", when="+distmesh")
     depends_on("easyloggingpp", when="~bundle")
     depends_on("random123", when="~bundle")
     depends_on("sundials@:2.99.99+int64", when="~bundle")
-
+    depends_on("timemory", when="+timemory")
     conflicts("+distmesh~mpi",
               msg="steps+distmesh requires +mpi")
 
@@ -91,14 +97,19 @@ class Steps(CMakePackage):
             args.append("-DENABLE_CODECOVERAGE:BOOL=True")
 
         if "+distmesh" in spec:
-            args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=True")
+            args.append("-DUSE_DISTRIBUTED_MESH:BOOL=True")
         else:
-            args.append("-DENABLE_DISTRIBUTED_MESH:BOOL=False")
+            args.append("-DUSE_DISTRIBUTED_MESH:BOOL=False")
 
         if "+stochtest" in spec:
-            args.append("-DBUILD_STOCHASTIC_TESTS=True")
+            args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=True")
         else:
-            args.append("-DBUILD_STOCHASTIC_TESTS=False")
+            args.append("-DBUILD_STOCHASTIC_TESTS:BOOL=False")
+
+        if "+timemory" in spec:
+            args.append("-USE_TIMEMORY:BOOL=TRUE")
+        else:
+            args.append("-USE_TIMEMORY:BOOL=FALSE")
 
         args.append('-DBLAS_LIBRARIES=' + spec['blas'].libs.joined(";"))
         args.append('-DPYTHON_EXECUTABLE='
