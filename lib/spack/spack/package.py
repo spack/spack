@@ -478,9 +478,6 @@ class RedistributionMixin(object):
     redistribute_binary = True
 
 
-# TODO: I should not need to include the RedistributionMixin as an argument to
-# with_metaclass, but when I include it alongside the with_metaclass
-# declaration, classes don't get the mixin attributes as I'd expect.
 class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin,
                                      RedistributionMixin, object)):
     """This is the superclass for all spack packages.
