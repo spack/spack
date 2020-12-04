@@ -434,7 +434,7 @@ then
         ld)
             flags=("${flags[@]}" -headerpad_max_install_names) ;;
         ccld)
-            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+            flags=("${flags[@]}" "-Wl,-headerpad_max_install_names") ;;
     esac
 fi
 
