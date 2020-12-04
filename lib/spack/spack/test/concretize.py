@@ -979,3 +979,14 @@ class TestConcretize(object):
     def test_dont_select_version_that_brings_more_variants_in(self):
         s = Spec('dep-with-variants-if-develop-root').concretized()
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
+
+    @pytest.mark.regression('20244')
+    @pytest.mark.parametrize('spec_str,expected_version', [
+        ('externaltool@1.0', '@1.0'),
+        ('externaltool@0.9', '@0.9'),
+        ('externaltool@0_8', '@0_8'),
+    ])
+    def test_external_package_versions(self, spec_str, expected_version):
+        s = Spec(spec_str).concretized()
+        assert s.external
+        assert s.satisfies(expected_version)
