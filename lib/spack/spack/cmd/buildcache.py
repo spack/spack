@@ -412,12 +412,10 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
 
     tty.debug('writing tarballs to %s/build_cache' % outdir)
 
+    if public:
+        specs = _skip_no_redistribute_for_public(specs)
+
     for spec in specs:
-        if public and (not spec.package.redistribute_binary):
-            tty.debug("Skip adding {0} to binary cache: the package.py file"
-                      " indicates that a public mirror should not contain it."
-                      .format(spec.name))
-            continue
         tty.debug('creating binary cache file for package %s ' % spec.format())
         try:
             bindist.build_tarball(spec, outdir, force, make_relative,
@@ -425,6 +423,22 @@ def _createtarball(env, spec_yaml=None, packages=None, add_spec=True,
                                   rebuild_index)
         except bindist.NoOverwriteException as e:
             tty.warn(e)
+
+
+def _skip_no_redistribute_for_public(specs):
+    remaining_specs = list()
+    removed_specs = list()
+    for spec in specs:
+        if spec.package.redistribute_binary:
+            remaining_specs.append(spec)
+        else:
+            removed_specs.append(spec)
+    if removed_specs:
+        tty.debug("The following specs will not be added to the binary cache"
+                  " because their package.py file has marked them as"
+                  " 'redistribute_binary = False':"
+                  .format(', '.join(s.name for s in removed_specs)))
+    return remaining_specs
 
 
 def createtarball(args):
