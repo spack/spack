@@ -1,14 +1,6 @@
 spack:
   view: false
   concretization: separately
-  packages:
-    all:
-      compiler: [gcc@9.3.0, intel@19.1.1.217]
-      providers:
-        mpi: [hpe-mpi@2.21]
-        lapack: [intel-mkl@2019.3.199]
-    python:
-      version: [3.8.3]
   specs:
     - matrix:
         - [

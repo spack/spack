@@ -7,7 +7,7 @@ spack:
       providers:
         jpeg: [libjpeg-turbo]
         mpi: [hpe-mpi]
-        lapack: [intel-mkl@2019.3.199]
+        lapack: [intel-mkl]
     cairo:
       variants: +pdf+png
     graphviz:
@@ -25,51 +25,51 @@ spack:
     - nvhpc@20.9 install_type=network
     - arm-forge@20.0.3-Redhat-7.0-x86_64
     - blender
-    - cmake@3.15.3
-    - darshan-runtime
-    - darshan-util
-    - doxygen@1.8.15
-    - emacs@26.1
-    - environment-modules@4.5.1
-    - ffmpeg
-    - gdb~python@8.2
-    - git@2.18.0
-    - graphviz@2.42.2
-    - help2man@1.47.4
-    - hpctoolkit@2019.08.14
-    - hpcviewer@2020.05
-    - hpe-mpi@2.22.hmpt
-    - intel-mpi@2019.7.217
-    - ispc@1.12.0
-    - mvapich2@2.3
-    - stat@4.0.2.999
-    - valgrind~mpi@3.15.0
     - boost~mpi@1.73.0
-    - bzip2@1.0.6
+    - bzip2
     - cgal
+    - cmake@3.15.7
     - cuda@10.1.243
     - cuda@11.1.0
     - cudnn@7.3.0.29-9.0-linux-x64
+    - darshan-runtime
+    - darshan-util
+    - doxygen
+    - emacs
+    - environment-modules@4.5.1
+    - ffmpeg
+    - gdb~python
+    - git
     - glew
     - gmsh+metis~mpi+oce+openmp+shared@4.4.1
-    - hdf5~mpi@1.10.5
-    - intel-mkl@2019.3.199
+    - graphviz
+    - hdf5~mpi@1.10.7
+    - help2man
+    - hpctoolkit@2020.03.01
+    - hpcviewer
+    - hpe-mpi@2.22.hmpt
+    - intel-mkl
+    - intel-mpi
+    - ispc@1.12.0
     - julia
     - libxml2
     - libxslt
+    - libzmq+libsodium%intel
+    - mvapich2@2.3
     - ncurses
-    - ninja@1.8.2
-    - openblas@0.3.10
+    - ninja
+    - openblas
     - optix
-    - python@3.8.3
+    - python
     - qhull@2015.2
     - qt@5.14.2
     - readline
     - snakemake
     - sqlite
+    - stat@4.0.2.999
     - symengine@0.3.0
+    - timemory
+    - valgrind~mpi
     - virtualgl
     - vrpn
-    - zlib@1.2.11
-    - libzmq+libsodium@4.3.2%intel@19.1.1.217
-    - timemory@3.0.1
+    - zlib
