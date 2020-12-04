@@ -29,3 +29,8 @@ packages:
     externals:
     - spec:  requires-virtual@2.0
       prefix: /usr
+  'external-buildable-with-variant':
+    buildable: True
+    externals:
+      - spec: external-buildable-with-variant@1.1.special +baz
+        prefix: /usr

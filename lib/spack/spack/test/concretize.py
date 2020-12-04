@@ -981,12 +981,19 @@ class TestConcretize(object):
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
 
     @pytest.mark.regression('20244')
-    @pytest.mark.parametrize('spec_str,expected_version', [
-        ('externaltool@1.0', '@1.0'),
-        ('externaltool@0.9', '@0.9'),
-        ('externaltool@0_8', '@0_8'),
+    @pytest.mark.parametrize('spec_str,is_external,expected', [
+        # These are all externals, and 0_8 is a version not in package.py
+        ('externaltool@1.0', True, '@1.0'),
+        ('externaltool@0.9', True, '@0.9'),
+        ('externaltool@0_8', True, '@0_8'),
+        # This external package is buildable, has a custom version
+        # in packages.yaml that is greater than the ones in package.py
+        # and specifies a variant
+        ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
+        ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
+        ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
     ])
-    def test_external_package_versions(self, spec_str, expected_version):
+    def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
-        assert s.external
-        assert s.satisfies(expected_version)
+        assert s.external == is_external
+        assert s.satisfies(expected)
