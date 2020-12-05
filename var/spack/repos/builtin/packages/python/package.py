@@ -192,9 +192,10 @@ class Python(AutotoolsPackage):
     patch('python-3.7.3-distutils-C++.patch', when='@3.7.3')
     patch('python-3.7.4+-distutils-C++.patch', when='@3.7.4:')
 
-    # TODO: There's currently no way to ignore the fact that a single module failed, even if the
-    # variant corresponding to that module is deselected. These patches comment out sections of
-    # setup.py, specifically for the purpose of python 2.6 compat.
+    # TODO: There's currently no way to ignore the fact that a single module
+    # failed, even if the variant corresponding to that module is deselected.
+    # These patches comment out sections of setup.py, specifically for the
+    # purpose of python 2.6 compat.
     patch('no-ssl.patch', when='@:2.6.99~ssl')
     patch('no-dbm.patch', when='@:2.6.99~dbm')
 

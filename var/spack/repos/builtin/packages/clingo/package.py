@@ -3,9 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import re
-
 from spack import *
 
 
@@ -78,8 +75,10 @@ class Clingo(CMakePackage):
                 '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
                 '-DPYTHON_EXECUTABLE={0}'.format(python.command.path),
                 '-DPYTHON_LIBRARY={0}'.format(python.libs.libraries[0]),
-                '-DPYTHON_INCLUDE_DIR={0}'.format(python.headers.directories[0]),
-                '-DCLINGO_PYTHON_VERSION:LIST={0};EXACT'.format(python.version.up_to(3)),
+                '-DPYTHON_INCLUDE_DIR={0}'.format(
+                    python.headers.directories[0]),
+                '-DCLINGO_PYTHON_VERSION:LIST={0};EXACT'.format(
+                    python.version.up_to(3)),
             ]
         else:
             python_args = []

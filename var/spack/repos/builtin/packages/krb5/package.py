@@ -34,7 +34,8 @@ class Krb5(AutotoolsPackage):
 
     conflicts('%gcc@:4.99',
               when='@1.18:',
-              msg='The CLI option -Wno-maybe-uninitialized is not recognized by a older gcc.')
+              msg='The CLI option -Wno-maybe-uninitialized '
+                  'is not recognized by older gcc versions.')
 
     configure_directory = 'src'
     build_directory = 'src'
