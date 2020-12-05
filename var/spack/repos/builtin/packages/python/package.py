@@ -842,7 +842,43 @@ class Python(AutotoolsPackage):
 
     @property
     def libs(self):
-        return find_libraries('libpython*', root=self.get_config_var('LIBPL'), shared=False)
+        # Spack installs libraries into lib, except on openSUSE where it
+        # installs them into lib64. If the user is using an externally
+        # installed package, it may be in either lib or lib64, so we need
+        # to ask Python where its LIBDIR is.
+        libdir = self.get_config_var('LIBDIR')
+
+        # In Ubuntu 16.04.6 and python 2.7.12 from the system, lib could be
+        # in LBPL
+        # https://mail.python.org/pipermail/python-dev/2013-April/125733.html
+        libpl = self.get_config_var('LIBPL')
+
+        # The system Python installation on macOS and Homebrew installations
+        # install libraries into a Frameworks directory
+        frameworkprefix = self.get_config_var('PYTHONFRAMEWORKPREFIX')
+
+        if '+shared' in self.spec:
+            ldlibrary = self.get_config_var('LDLIBRARY')
+
+            if os.path.exists(os.path.join(libdir, ldlibrary)):
+                return LibraryList(os.path.join(libdir, ldlibrary))
+            elif os.path.exists(os.path.join(libpl, ldlibrary)):
+                return LibraryList(os.path.join(libpl, ldlibrary))
+            elif os.path.exists(os.path.join(frameworkprefix, ldlibrary)):
+                return LibraryList(os.path.join(frameworkprefix, ldlibrary))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(ldlibrary, libdir))
+        else:
+            library = self.get_config_var('LIBRARY')
+
+            if os.path.exists(os.path.join(libdir, library)):
+                return LibraryList(os.path.join(libdir, library))
+            elif os.path.exists(os.path.join(frameworkprefix, library)):
+                return LibraryList(os.path.join(frameworkprefix, library))
+            else:
+                msg = 'Unable to locate {0} libraries in {1}'
+                raise RuntimeError(msg.format(library, libdir))
 
     @property
     def headers(self):
