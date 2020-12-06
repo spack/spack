@@ -14,14 +14,16 @@ class PyTns(PythonPackage):
 
     version('develop', branch='master')
     version('space2', branch='space2')
+    version('2.2.7', tag='tns-v2.2.7')
     version('2.0.4', tag='tns-v2.0.4')
     version('1.0.8', tag='tns-v1.0.8')
 
     depends_on('py-setuptools', type='build')
 
     depends_on('py-matplotlib@1.3:', type='run')
-    depends_on('py-morphio@2.3.4:', type='run')
+    depends_on('py-morphio@2.3.10:', type='run')
     depends_on('py-neurom@1.4.19:', type='run')
-    depends_on('py-numpy@1.8:', type='run')
+    depends_on('py-numpy@1.15.0:', type='run')
     depends_on('py-scipy@0.13:', type='run')
     depends_on('py-tmd@2.0.8:', type='run')
+    depends_on('py-jsonschema', type='run')

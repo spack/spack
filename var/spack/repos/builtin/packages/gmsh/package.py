@@ -100,7 +100,6 @@ class Gmsh(CMakePackage):
             options.append('-DENABLE_FLTK=OFF')
 
         if '+oce' in spec:
-            env['CASROOT'] = self.spec['oce'].prefix
             options.append('-DENABLE_OCC=ON')
         elif '+opencascade' in spec:
             env['CASROOT'] = self.spec['opencascade'].prefix
@@ -109,25 +108,21 @@ class Gmsh(CMakePackage):
             options.append('-DENABLE_OCC=OFF')
 
         if '+petsc' in spec:
-            env['PETSC_DIR'] = self.spec['petsc'].prefix
             options.append('-DENABLE_PETSC=ON')
         else:
             options.append('-DENABLE_PETSC=OFF')
 
         if '+tetgen' in spec:
-            env['TETGEN_DIR'] = self.spec['tetgen'].prefix
             options.append('-DENABLE_TETGEN=ON')
         else:
             options.append('-DENABLE_TETGEN=OFF')
 
         if '+netgen' in spec:
-            env['NETGEN_DIR'] = self.spec['netgen'].prefix
             options.append('-DENABLE_NETGEN=ON')
         else:
             options.append('-DENABLE_NETGEN=OFF')
 
         if '+slepc' in spec:
-            env['SLEPC_DIR'] = self.spec['slepc'].prefix
             options.append('-DENABLE_SLEPC=ON')
         else:
             options.append('-DENABLE_SLEPC=OFF')
@@ -157,3 +152,15 @@ class Gmsh(CMakePackage):
             options.append('-DENABLE_PRIVATE_API=OFF')
 
         return options
+
+    def setup_build_environment(self, env):
+        if "+oce" in self.spec:
+            env.prepend_path('CASROOT', self.spec['oce'].prefix)
+        if "+petsc" in self.spec:
+            env.prepend_path('PETSC_DIR', self.spec['petsc'].prefix)
+        if "+tetgen" in self.spec:
+            env.prepend_path('TETGEN_DIR', self.spec['tetgen'].prefix)
+        if "+netgen" in self.spec:
+            env.prepend_path('NETGEN_DIR', self.spec['netgen'].prefix)
+        if "+slepc" in self.spec:
+            env.prepend_path('SLEPC_DIR', self.spec['slepc'].prefix)

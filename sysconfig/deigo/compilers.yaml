@@ -1,0 +1,27 @@
+compilers:
+- compiler:
+    spec: clang@8.0.1
+    paths:
+      cc: /usr/bin/clang-8
+      cxx: /usr/bin/clang++-8
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    flags: {}
+    operating_system: centos8
+    target: x86_64
+    modules: []
+    environment: {}
+    extra_rpaths: []
+- compiler:
+    spec: gcc@8.3.1
+    paths:
+      cc: /usr/bin/gcc
+      cxx: /usr/bin/g++
+      f77: /usr/bin/gfortran
+      fc: /usr/bin/gfortran
+    flags: {}
+    operating_system: centos8
+    target: x86_64
+    modules: []
+    environment: {}
+    extra_rpaths: []
