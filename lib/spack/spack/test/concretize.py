@@ -979,3 +979,21 @@ class TestConcretize(object):
     def test_dont_select_version_that_brings_more_variants_in(self):
         s = Spec('dep-with-variants-if-develop-root').concretized()
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
+
+    @pytest.mark.regression('20244')
+    @pytest.mark.parametrize('spec_str,is_external,expected', [
+        # These are all externals, and 0_8 is a version not in package.py
+        ('externaltool@1.0', True, '@1.0'),
+        ('externaltool@0.9', True, '@0.9'),
+        ('externaltool@0_8', True, '@0_8'),
+        # This external package is buildable, has a custom version
+        # in packages.yaml that is greater than the ones in package.py
+        # and specifies a variant
+        ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
+        ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
+        ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+    ])
+    def test_external_package_versions(self, spec_str, is_external, expected):
+        s = Spec(spec_str).concretized()
+        assert s.external == is_external
+        assert s.satisfies(expected)
