@@ -377,11 +377,11 @@ class Version(object):
         if self == other:
             return self
         else:
-            # FIXME: I don't agree with this definition. If a comma-separated list is an OR, and
-            # intersection is an AND, the intersection of two lists should be defined the same as if
-            # the two lists were actually set()s.
+            # FIXME: I don't agree with this definition. If a comma-separated
+            # list is an OR, and intersection is an AND, the intersection of
+            # two lists should be defined the same as if the two lists were
+            # actually set()s.
             return VersionList()
-
 
 
 class _VersionEndpoint(object):
@@ -411,7 +411,8 @@ class _VersionEndpoint(object):
 
         s, o = self, other
         if s.value == o.value:
-            # Same version, so we check whether one and not the other contains the endpoint.
+            # Same version, so we check whether one and not the other contains
+            # the endpoint.
             if s.includes_endpoint != o.includes_endpoint:
                 return s.includes_endpoint
             # Cannot prove strict '<', so False.
@@ -439,8 +440,6 @@ class _VersionEndpoint(object):
         return not (self == other) and not (self < other)
 
 
-
-
 class VersionRange(object):
 
     @classmethod
@@ -456,9 +455,10 @@ class VersionRange(object):
         return False
 
     @classmethod
-    def check_for_star_components(cls, start, end, includes_left_endpoint, includes_right_endpoint,
-                                  description=None):
-        # type: (Version, Version, bool, bool, Optional[str]) -> Union[VersionRange, VersionList]
+    def check_for_star_components(
+        cls, start, end, includes_left_endpoint, includes_right_endpoint,
+        description=None,
+    ):
         if isinstance(start, string_types):
             start = Version(start)
         if isinstance(end, string_types):
@@ -480,11 +480,12 @@ class VersionRange(object):
                     "cannot create version range inequality '{0}' "
                     "with starred versions: [{1}].\n"
                     "please remove all '.*' version components "
-                    "or suffixes from your input specs".format(description,
-                                                               ', '.join(
-                                                                   v.string
-                                                                   for v in any_dotted_versions
-                                                               )))
+                    "or suffixes from your input specs"
+                    .format(description,
+                            ', '.join(
+                                v.string
+                                for v in any_dotted_versions
+                            )))
             return would_be_range
 
         assert start == end
@@ -497,13 +498,13 @@ class VersionRange(object):
         version_components = list(start.version)
         suffix = ''
         if not isinstance(version_components[-1], int):
-             suffix = version_components.pop()
+            suffix = version_components.pop()
         low_end = version_components[:]
         high_end = low_end[:]
         high_end[-1] += 1
 
-        # NB: Using the same start.separators will still give us a version with the same .\*, so
-        # remove it before zipping.
+        # NB: Using the same start.separators will still give us a version with
+        # the same .\*, so remove it before zipping.
         fixed_seps = [re.sub(r'^.\*', '', s) for s in start.separators]
 
         low_ver = Version(''.join(
@@ -516,16 +517,19 @@ class VersionRange(object):
         if not includes_left_endpoint:
             assert not includes_right_endpoint
             low_side = cls(None, low_ver,
-                           includes_left_endpoint=True, includes_right_endpoint=False)
+                           includes_left_endpoint=True,
+                           includes_right_endpoint=False)
             high_side = cls(high_ver, None,
-                            includes_left_endpoint=True, includes_right_endpoint=True)
+                            includes_left_endpoint=True,
+                            includes_right_endpoint=True)
             return VersionList([low_side, high_side])
 
         return cls(low_ver, high_ver,
                    includes_left_endpoint=True,
                    includes_right_endpoint=False)
 
-    def __init__(self, start, end, includes_left_endpoint=True, includes_right_endpoint=True):
+    def __init__(self, start, end, includes_left_endpoint=True,
+                 includes_right_endpoint=True):
         if isinstance(start, string_types):
             start = Version(start)
         if isinstance(end, string_types):
@@ -537,14 +541,15 @@ class VersionRange(object):
         if start and end and end < start:
             raise ValueError("Invalid Version range: %s" % self)
 
-        assert isinstance(includes_left_endpoint, bool), includes_left_endpoint
-        assert isinstance(includes_right_endpoint, bool), includes_right_endpoint
+        assert isinstance(includes_left_endpoint, bool)
+        assert isinstance(includes_right_endpoint, bool)
 
         self.includes_left_endpoint = includes_left_endpoint
         self.includes_right_endpoint = includes_right_endpoint
 
-        # We don't enforce this anywhere except implicitly when parsing a version string, but it is
-        # an assumption we have made so far, so we might as well check it.
+        # We don't enforce this anywhere except implicitly when parsing
+        # a version string, but it is an assumption we have made so far, so we
+        # might as well check it.
         if start is None:
             assert includes_left_endpoint
         if end is None:
@@ -628,19 +633,25 @@ class VersionRange(object):
         if other is None:
             return False
 
-        in_lower = (self.start == other.start or
-                    self.start is None or
-                    (other.start is not None and (
-                        self.start < other.start or
-                        other.start in self.start)))
+        in_lower = (
+            ((self.start == other.start) and
+             not self.includes_left_endpoint or
+             other.includes_left_endpoint) or
+            self.start is None or
+            (other.start is not None and (
+                self.start < other.start or
+                other.start in self.start)))
         if not in_lower:
             return False
 
-        in_upper = (self.end == other.end or
-                    self.end is None or
-                    (other.end is not None and (
-                        self.end > other.end or
-                        other.end in self.end)))
+        in_upper = (
+            ((self.end == other.end) and
+             not self.includes_right_endpoint
+             or other.includes_right_endpoint) or
+            self.end is None or
+            (other.end is not None and (
+                self.end > other.end or
+                other.end in self.end)))
         return in_upper
 
     @coerced
@@ -738,7 +749,8 @@ class VersionRange(object):
                 #     1.6 < 1.6.5  = True  (lexicographic)
                 # Should 1.6 NOT be less than 1.6.5?  Hmm.
                 # Here we test (not end in other.end) first to avoid paradox.
-                # FIXME: this seems to make perfect sense? Has this code ever stopped any error?
+                # FIXME: this seems to make perfect sense? Has this code ever
+                # stopped any error?
                 if other.end is not None and end not in other.end:
                     if other.end < end or other.end in end:
                         end = other.end
@@ -795,7 +807,8 @@ class VersionRange(object):
                 self.start != self.end)
 
         # {0}!:!{1} => {0} < x < {1}
-        if not self.includes_left_endpoint and not self.includes_right_endpoint:
+        if (not self.includes_left_endpoint and
+            not self.includes_right_endpoint):
             return '{0}!:!{1}'.format(self.start, self.end)
         # {0}:!{1} => {0} <= x < {1}
         if not self.includes_right_endpoint:
@@ -1076,10 +1089,12 @@ def ver(obj):
     if isinstance(obj, (list, tuple)):
         return VersionList(obj)
     elif isinstance(obj, string_types):
-        return _string_to_version(obj)
+        return ver(_string_to_version(obj))
     elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))
     elif type(obj) in (Version, VersionRange, VersionList):
+        if isinstance(obj, Version) and VersionRange.has_star_component(obj):
+            return VersionRange.check_for_star_components(obj, obj, True, True)
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
