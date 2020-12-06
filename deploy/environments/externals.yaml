@@ -52,8 +52,6 @@ spack:
     - intel-mpi
     - ispc@1.12.0
     - julia
-    - libxml2
-    - libxslt
     - libzmq+libsodium%intel
     - mvapich2@2.3
     - ncurses

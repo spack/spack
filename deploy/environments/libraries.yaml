@@ -35,6 +35,8 @@ spack:
     - highfive~mpi
     - hypre@2.18.2
     - libarchive
+    - libxml2
+    - libxslt
     - morphio
     - morpho-kit
     - mvdtool+mpi
