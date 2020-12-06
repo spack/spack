@@ -13,8 +13,10 @@ class Zee(CMakePackage):
 
     homepage = "https://github.com/BlueBrain/zee"
     url      = "git@github.com:BlueBrain/zee.git"
+    git      = "git@github.com:BlueBrain/zee.git"
 
-    version('develop', git=url, submodules=True)
+    version('develop', submodules=True)
+    version('0.0.1-dev0', commit='358e75347ac69da91fb2fab309ce85f705f6e4dd', submodules=True)
 
     variant('build_type', default=' ', description='CMake build type',
             values=' ')

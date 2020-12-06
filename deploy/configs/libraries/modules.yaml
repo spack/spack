@@ -50,6 +50,7 @@ modules:
       - '%pgi'
     projections:
       all: '{name}/{version}'
+      'omega-h+gmsh': '{name}/{version}-gmsh'
     all:
       autoload: 'all'
       environment:
