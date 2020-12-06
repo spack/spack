@@ -29,22 +29,10 @@ jobs:
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.5'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
-    - python: '3.7'
-      os: linux
-      language: python
-      env: TEST_SUITE=unit
     - python: '3.8'
       os: linux
       language: python
       env: [ TEST_SUITE=unit, COVERAGE=true ]
-    - python: '3.8'
-      os: linux
-      language: python
-      env: TEST_SUITE=doc
 
 stages:
   - 'style checks'
