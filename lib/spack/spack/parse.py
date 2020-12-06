@@ -7,6 +7,7 @@ import re
 import shlex
 import sys
 import itertools
+from textwrap import dedent
 from six import string_types
 
 import spack.error
@@ -153,7 +154,7 @@ class Parser(object):
 
 
 class ParseError(spack.error.SpackError):
-    """Raised when we don't hit an error while parsing."""
+    """Raised when we hit an error while parsing."""
 
     def __init__(self, message, string, pos):
         super(ParseError, self).__init__(message)
@@ -165,4 +166,12 @@ class LexError(ParseError):
     """Raised when we don't know how to lex something."""
 
     def __init__(self, message, string, pos):
-        super(LexError, self).__init__(message, string, pos)
+        whole_word = string
+        bad_char = string[pos]
+        printed = dedent("""\
+        {0}: '{1}'
+        -------
+        {2}
+        {3}^
+        """).format(message, bad_char, string, pos * ' ')
+        super(LexError, self).__init__(printed, string, pos)

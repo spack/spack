@@ -84,6 +84,7 @@ import itertools
 import operator
 import os
 import re
+from textwrap import dedent
 
 import six
 import ruamel.yaml as yaml
@@ -1163,7 +1164,7 @@ class Spec(object):
         # If it already has a non-trivial version list, this is an error
         if self.versions and self.versions != vn.VersionList(':'):
             raise MultipleVersionError(
-                'A spec cannot contain multiple version signifiers.'
+                'A spec cannot contain multiple version signifiers (was: {0}).'.format(self.versions) +
                 ' Use a version list instead.')
         self.versions = vn.VersionList()
         for version in version_list:
@@ -4345,7 +4346,7 @@ class LazySpecCache(collections.defaultdict):
 
 
 #: These are possible token types in the spec grammar.
-HASH, DEP, AT, COLON, COMMA, ON, OFF, PCT, EQ, ID, VAL, FILE = range(12)
+HASH, DEP, AT, ID, COLON, COMMA, ON, OFF, PCT, EQ, VAL, FILE, LT, GT, LE, GE, EQEQ, NE, LT_COLON, GT_COLON, LT_GT_COLON = range(21)
 
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r'\w[\w.-]*'
@@ -4359,13 +4360,22 @@ class SpecLexer(spack.parse.Lexer):
         super(SpecLexer, self).__init__([
             (r'\^', lambda scanner, val: self.token(DEP,   val)),
             (r'\@', lambda scanner, val: self.token(AT,    val)),
+            (r'\!\:\!', lambda scanner, val: self.token(LT_GT_COLON, val)),
+            (r'\:\!', lambda scanner, val: self.token(LT_COLON, val)),
+            (r'\!\:', lambda scanner, val: self.token(GT_COLON, val)),
             (r'\:', lambda scanner, val: self.token(COLON, val)),
             (r'\,', lambda scanner, val: self.token(COMMA, val)),
             (r'\+', lambda scanner, val: self.token(ON,    val)),
             (r'\-', lambda scanner, val: self.token(OFF,   val)),
             (r'\~', lambda scanner, val: self.token(OFF,   val)),
             (r'\%', lambda scanner, val: self.token(PCT,   val)),
+            (r'\=\=', lambda scanner, val: self.token(EQEQ,val)),
+            (r'\!\=', lambda scanner, val: self.token(NE,  val)),
             (r'\=', lambda scanner, val: self.token(EQ,    val)),
+            (r'\<\=',  lambda scanner, val: self.token(LE, val)),
+            (r'\<',  lambda scanner, val: self.token(LT,   val)),
+            (r'\>\=',  lambda scanner, val: self.token(GE, val)),
+            (r'\>',  lambda scanner, val: self.token(GT,   val)),
 
             # Filenames match before identifiers, so no initial filename
             # component is parsed as a spec (e.g., in subdir/spec.yaml)
@@ -4649,28 +4659,187 @@ class SpecParser(spack.parse.Parser):
     def version(self):
         start = None
         end = None
+        op = None
+
+        # @<1.2.3
+        if self.accept(LT):
+            op = self.token.value
+            assert self.accept(ID)
+            end = self.token.value
+            return vn.VersionRange.check_for_star_components(None, end,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=False,
+                                                             description=op + end)
+        # @<=1.2.3
+        if self.accept(LE):
+            op = self.token.value
+            assert self.accept(ID)
+            end = self.token.value
+            return vn.VersionRange.check_for_star_components(None, end,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=True,
+                                                             description=op + end)
+        # @>1.2.3
+        if self.accept(GT):
+            op = self.token.value
+            assert self.accept(ID)
+            start = self.token.value
+            return vn.VersionRange.check_for_star_components(start, None,
+                                                             includes_left_endpoint=False,
+                                                             includes_right_endpoint=True,
+                                                             description=op + start)
+        # @>=1.2.3
+        if self.accept(GE):
+            op = self.token.value
+            assert self.accept(ID)
+            start = self.token.value
+            return vn.VersionRange.check_for_star_components(start, None,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=True,
+                                                             description=op + start)
+        # @==1.2.3
+        if self.accept(EQEQ):
+            op = self.token.value
+            assert self.accept(ID)
+            end = self.token.value
+            start = end
+            return vn.VersionRange.check_for_star_components(start, end,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=True,
+                                                             description=op + start)
+        # @!=1.2.3
+        if self.accept(NE):
+            op = self.token.value
+            assert self.accept(ID)
+            end = self.token.value
+            start = end
+            return vn.VersionRange.check_for_star_components(start, end,
+                                                             includes_left_endpoint=False,
+                                                             includes_right_endpoint=False,
+                                                             description=op + start)
+
+        # @:!1.2.3( !: | : | \epsilon )
+        if self.accept(LT_COLON):
+            op = self.token.value
+            assert self.accept(ID)
+            end = self.token.value
+
+            # @:!1.2.3!: (@!=1.2.3) (not equal to)
+            if self.accept(GT_COLON):
+                r_op = self.token.value
+                return vn.VersionRange.check_for_star_components(end, end,
+                                                                 includes_left_endpoint=False,
+                                                                 includes_right_endpoint=False,
+                                                                 description=op + end + r_op)
+
+            # @:!1.2.3: => @: (all versions, which is often unexpected)
+            if self.accept(COLON):
+                self.push_tokens([self.token])
+                self.next_token_error("A @:!{0}: is the same as @: (all versions)!"
+                                      .format(end))
+
+            # @:!1.2.3 => @<1.2.3
+            return vn.VersionRange.check_for_star_components(None, end,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=False,
+                                                             description=op + end)
+
+        # @:( \epsilon | 1.2.3( !: | : | \epsilon ))
+        if self.accept(COLON):
+            op = self.token.value
+            # @:
+            if not self.accept(ID):
+                return vn.VersionRange(None, None)
+            end = self.token.value
+
+            # @:1.2.3( !: | : ) => (@:) (all versions, which is often unexpected)
+            if self.accept(GT_COLON):
+                self.push_tokens([self.token])
+                self.next_token_error("A @:{0}!: is the same as @: (all versions)!"
+                                      .format(end))
+            if self.accept(COLON):
+                self.push_tokens([self.token])
+                self.next_token_error("A @:{0}: is the same as @: (all versions)!"
+                                      .format(end))
+
+            # @:1.2.3 \epsilon => @<=1.2.3
+            return vn.VersionRange.check_for_star_components(None, end,
+                                                             includes_left_endpoint=True,
+                                                             includes_right_endpoint=True,
+                                                             description=op + end)
+
+        # @1.2.3( !:!1.2.3 | :!1.2.3 | !:1.2.3 | !: | :1.2.3 | : | \epsilon )
         if self.accept(ID):
             start = self.token.value
 
-        if self.accept(COLON):
-            if self.accept(ID):
-                if self.next and self.next.type is EQ:
-                    # This is a start: range followed by a key=value pair
-                    self.push_tokens([self.token])
-                else:
+            # @1.2.3!:!1.2.3
+            if self.accept(LT_GT_COLON):
+                r_op = self.token.value
+                assert self.accept(ID)
+                end = self.token.value
+                return vn.VersionRange.check_for_star_components(start, end,
+                                                                 includes_left_endpoint=False,
+                                                                 includes_right_endpoint=False)
+
+            # @1.2.3:!1.2.3
+            if self.accept(LT_COLON):
+                r_op = self.token.value
+                assert self.accept(ID)
+                end = self.token.value
+                return vn.VersionRange.check_for_star_components(start, end,
+                                                                 includes_left_endpoint=True,
+                                                                 includes_right_endpoint=False)
+
+            # @1.2.3!:(1.2.3 | \epsilon)
+            if self.accept(GT_COLON):
+                r_op = self.token.value
+                # @1.2.3!:1.2.3
+                if self.accept(ID):
                     end = self.token.value
-        elif start:
+                    return vn.VersionRange.check_for_star_components(start, end,
+                                                                     includes_left_endpoint=False,
+                                                                     includes_right_endpoint=True)
+                # @1.2.3!:
+                return vn.VersionRange.check_for_star_components(start, None,
+                                                                 includes_left_endpoint=False,
+                                                                 includes_right_endpoint=True)
+
+            # @1.2.3:( 1.2.3 | \epsilon )
+            if self.accept(COLON):
+                r_op = self.token.value
+                if self.accept(ID):
+                    if self.next and self.next.type is EQ:
+                        # This is a start: range followed by a key=value pair
+                        self.push_tokens([self.token])
+                    else:
+                        end = self.token.value
+                return vn.VersionRange.check_for_star_components(start, end,
+                                                                 includes_left_endpoint=True,
+                                                                 includes_right_endpoint=True,
+                                                                 description=str(start) + r_op + (end or ''))
+
+        if start:
             # No colon, but there was a version.
+            if vn.VersionRange.has_star_component(start):
+                return vn.VersionRange.check_for_star_components(start, start,
+                                                                 includes_left_endpoint=True,
+                                                                 includes_right_endpoint=True,
+                                                                 description=str(start))
             return vn.Version(start)
-        else:
+
+        if op is None:
             # No colon and no id: invalid version.
             self.next_token_error("Invalid version specifier")
 
+        description = (start or '') + op + (end or '')
         if start:
             start = vn.Version(start)
         if end:
             end = vn.Version(end)
-        return vn.VersionRange(start, end)
+        return vn.VersionRange.check_for_star_components(start, end,
+                                                         includes_left_endpoint=True,
+                                                         includes_right_endpoint=True,
+                                                         description=description)
 
     def version_list(self):
         vlist = []
@@ -4752,7 +4921,14 @@ def base32_prefix_bits(hash_string, bits):
 class SpecParseError(spack.error.SpecError):
     """Wrapper for ParseError for when we're parsing specs."""
     def __init__(self, parse_error):
-        super(SpecParseError, self).__init__(parse_error.message)
+        bad_char = parse_error.string[0][parse_error.pos]
+        printed = dedent("""\
+        {0}: <{1}>
+        ---------
+        {2}
+        {3}^
+        """).format(parse_error.message, bad_char, parse_error.string[0], parse_error.pos * ' ')
+        super(SpecParseError, self).__init__(printed)
         self.string = parse_error.string
         self.pos = parse_error.pos
 
