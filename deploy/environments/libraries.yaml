@@ -1,6 +1,9 @@
 spack:
   view: false
   concretization: separately
+  packages:
+    trilinos:
+      version: [xsdk-0.4.0-rc1]
   specs:
     - matrix:
         - [
@@ -37,7 +40,8 @@ spack:
     - mvdtool+mpi
     - neuron+mpi~debug%intel
     - nlohmann-json +single_header
-    - omega-h+gmsh+trilinos@9.31.3.dev2
+    - omega-h+trilinos@9.33.0.dev1
+    - omega-h+gmsh+trilinos@9.33.0.dev1
     - openscenegraph build_type=Release
     - parmetis@4.0.3
     - petsc+int64+mpi@3.13.1
