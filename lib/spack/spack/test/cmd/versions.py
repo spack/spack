@@ -31,6 +31,14 @@ def test_remote_versions_only():
 
 
 @pytest.mark.network
+@pytest.mark.usefixtures('mock_packages')
+def test_new_versions_only():
+    """Test a package for which new versions should be available."""
+
+    versions('--new', 'brillig')
+
+
+@pytest.mark.network
 def test_no_versions():
     """Test a package for which no remote versions are available."""
 
