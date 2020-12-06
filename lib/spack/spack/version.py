@@ -377,10 +377,6 @@ class Version(object):
         if self == other:
             return self
         else:
-            # FIXME: I don't agree with this definition. If a comma-separated
-            # list is an OR, and intersection is an AND, the intersection of
-            # two lists should be defined the same as if the two lists were
-            # actually set()s.
             return VersionList()
 
 

@@ -4352,6 +4352,9 @@ class LazySpecCache(collections.defaultdict):
     GE, EQEQ, NE, LT_COLON, GT_COLON, LT_GT_COLON, ID,
 ) = range(22)
 
+# NB: `spec_id_re` currently contains a literal `*` to match against, because
+# we use that same regex for matching version strings, and we want to support
+# the use of e.g. `spack install python@3.9.*`.
 #: Regex for fully qualified spec names. (e.g., builtin.hdf5)
 spec_id_re = r'\w[\w.\-\*]*'
 
@@ -4360,27 +4363,40 @@ class SpecLexer(spack.parse.Lexer):
 
     """Parses tokens that make up spack specs."""
 
+    # TODO: Determine whether using >2 lexer modes would allow us to create
+    # a separate entry (likely defined the same as `spec_id_re` at first) to
+    # specifically match version strings, variant names, compiler dependency
+    # names (with '%').
     def __init__(self):
         super(SpecLexer, self).__init__([
             ([
+                # '^': dependency, or "AND":
                 (r'\^', lambda scanner, val: self.token(DEP,   val)),
+                # '@': begin a Version, VersionRange, or VersionList:
                 (r'\@', lambda scanner, val: self.token(AT,    val)),
+                # VersionRange syntax:
                 (r'\!\:\!', lambda scanner, val: self.token(LT_GT_COLON, val)),
                 (r'\:\!', lambda scanner, val: self.token(LT_COLON, val)),
                 (r'\!\:', lambda scanner, val: self.token(GT_COLON, val)),
                 (r'\:', lambda scanner, val: self.token(COLON, val)),
+                # VersionList syntax:
                 (r'\,', lambda scanner, val: self.token(COMMA, val)),
+                # variant syntax:
                 (r'\+', lambda scanner, val: self.token(ON,    val)),
                 (r'\-', lambda scanner, val: self.token(OFF,   val)),
                 (r'\~', lambda scanner, val: self.token(OFF,   val)),
+                # Compiler dependency syntax:
                 (r'\%', lambda scanner, val: self.token(PCT,   val)),
+                # More version syntax: @==2 is the same as @2.
                 (r'\=\=', lambda scanner, val: self.token(EQEQ, val)),
                 (r'\!\=', lambda scanner, val: self.token(NE,  val)),
-                (r'\=', lambda scanner, val: self.token(EQ,    val)),
                 (r'\<\=',  lambda scanner, val: self.token(LE, val)),
                 (r'\<',  lambda scanner, val: self.token(LT,   val)),
                 (r'\>\=',  lambda scanner, val: self.token(GE, val)),
                 (r'\>',  lambda scanner, val: self.token(GT,   val)),
+
+                # This is *not* used in version string parsing.
+                (r'\=', lambda scanner, val: self.token(EQ,    val)),
 
                 # Filenames match before identifiers, so no initial filename
                 # component is parsed as a spec (e.g., in subdir/spec.yaml)
@@ -4394,10 +4410,11 @@ class SpecLexer(spack.parse.Lexer):
                 # Identifiers match after filenames and hashes.
                 (spec_id_re, lambda scanner, val: self.token(ID, val)),
 
+                # Gobble up all remaining whitespace between tokens.
                 (r'\s+', lambda scanner, val: None),
             ], {1: [EQ]}),
             ([(r'[\S].*', lambda scanner, val: self.token(VAL,    val)),
-             (r'\s+', lambda scanner, val: None)],
+              (r'\s+', lambda scanner, val: None)],
              {0: [VAL]})])
 
 
