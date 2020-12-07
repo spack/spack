@@ -1028,6 +1028,10 @@ class SpackSolverSetup(object):
             if pkg_name == 'all':
                 continue
 
+            # This package does not appear in any repository
+            if pkg_name not in spack.repo.path:
+                continue
+
             if 'externals' not in data:
                 self.gen.fact(fn.external(pkg_name).symbol(positive=False))
 
