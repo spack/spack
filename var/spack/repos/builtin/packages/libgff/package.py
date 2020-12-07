@@ -20,7 +20,3 @@ class Libgff(CMakePackage):
 
     # depends_on('foo')
     depends_on('cmake@3.12:', type='build')
-
-    def cmake_args(self):
-        args = []
-        return args
