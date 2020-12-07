@@ -19,9 +19,7 @@ class Nvtop(CMakePackage):
     depends_on('cmake')
     depends_on('ncurses')
     depends_on('git')
-    depends_on('cuda')
-    depends_on('py-pynvml', type=('build', 'run'))
-    depends_on('py-nvidia-ml-py3', type=('build', 'run'))
+    depends_on('cuda', type=('build'))
 
     def cmake_args(self):
         cmake_args = []
