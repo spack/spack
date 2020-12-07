@@ -49,7 +49,7 @@ def test_store(tmpdir):
 
 
 @pytest.fixture()
-def test_global_db_initializtion():
+def test_global_db_initialization():
     global_store = spack.store.store
     global_db_path = '$spack/opt/spack'
     global_db_path = spack.util.path.canonicalize_path(global_db_path)
