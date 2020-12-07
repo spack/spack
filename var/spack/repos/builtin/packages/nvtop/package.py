@@ -41,7 +41,6 @@ class Nvtop(CMakePackage):
     depends_on('py-nvidia-ml-py3', type=('build', 'run'))
 
     def cmake_args(self):
-        spec = self.spec
         cmake_args = []
         cmake_args.append('-DNVML_RETRIEVE_HEADER_ONLINE=True')
         return cmake_args
