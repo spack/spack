@@ -146,7 +146,7 @@ def clean_environment():
     env = EnvironmentModifications()
 
     # Remove these vars from the environment during build because they
-    # can affect how some packages find libraries.  We want to make
+    # can affect how some packages find libraries and headers.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
     env.unset('LIBRARY_PATH')
@@ -154,6 +154,9 @@ def clean_environment():
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+    env.unset('INCLUDE')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -690,7 +693,7 @@ def parent_class_modules(cls):
     Includes cls.__module__
     """
     if (not issubclass(cls, spack.package.PackageBase) or
-        issubclass(spack.package.PackageBase, cls)):
+            issubclass(spack.package.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
