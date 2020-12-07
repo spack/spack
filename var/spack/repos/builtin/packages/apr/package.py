@@ -18,5 +18,4 @@ class Apr(AutotoolsPackage):
 
     patch('missing_includes.patch', when='@1.7.0')
 
-    depends_on('libuuid', type='link')    
-
+    depends_on('libuuid', type='link')
