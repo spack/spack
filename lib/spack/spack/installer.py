@@ -210,7 +210,15 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
         return []
 
     dep = spack.compilers.pkg_spec_for_compiler(compiler)
-    dep.architecture = architecture  # TODO: this may need to back off slightly
+
+    # Set the architecture for the compiler package in a way that allows the
+    # concretizer to back off if needed for the older bootstrapping compiler
+    dep.constrain('platform=%s' % str(architecture.platform))
+    dep.constrain('os=%s' % str(architecture.os))
+    dep.constrain('target=%s:%s' % (
+        architecture.target.microarchitecture.family.name,
+        architecture.target.microarchitecture.name
+    ))
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     dep.concretize()
