@@ -645,7 +645,7 @@ multiple fields based on delimiters such as ``.``, ``-`` etc. Then
 matching fields are compared using the rules below:
 
 #. The following develop-like strings are greater (newer) than all
-   numbers and are ordered as ``develop > master > head > trunk``.
+   numbers and are ordered as ``develop > main > master > head > trunk``.
 
 #. Numbers are all less than the chosen develop-like strings above,
    and are sorted numerically.
@@ -1778,8 +1778,18 @@ RPATHs in Spack are handled in one of three ways:
 Parallel builds
 ---------------
 
+Spack supports parallel builds on an individual package and at the
+installation level.  Package-level parallelism is established by the
+``--jobs`` option and its configuration and package recipe equivalents.
+Installation-level parallelism is driven by the DAG(s) of the requested
+package or packages.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Package-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 By default, Spack will invoke ``make()``, or any other similar tool,
-with a ``-j <njobs>`` argument, so that builds run in parallel.
+with a ``-j <njobs>`` argument, so those builds run in parallel.
 The parallelism is determined by the value of the ``build_jobs`` entry
 in ``config.yaml`` (see :ref:`here <build-jobs>` for more details on
 how this value is computed).
@@ -1826,6 +1836,43 @@ The first make will run in parallel here, but the second will not.  If
 you set ``parallel`` to ``False`` at the package level, then each call
 to ``make()`` will be sequential by default, but packagers can call
 ``make(parallel=True)`` to override it.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Install-level build parallelism
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports the concurrent installation of packages within a Spack
+instance across multiple processes using file system locks.  This
+parallelism is separate from the package-level achieved through build
+systems' use of the ``-j <njobs>`` option.  With install-level parallelism,
+processes coordinate the installation of the dependencies of specs
+provided on the command line and as part of an environment build with
+only **one process** being allowed to install a given package at a time.
+Refer to :ref:`Dependencies` for more information on dependencies and
+:ref:`installing-environment` for how to install an environment.
+
+Concurrent processes may be any combination of interactive sessions and
+batch jobs.  Which means a ``spack install`` can be running in a terminal
+window while a batch job is running ``spack install`` on the same or
+overlapping dependencies without any process trying to re-do the work of
+another.
+
+For example, if you are using SLURM, you could launch an installation
+of ``mpich`` using the following command:
+
+.. code-block:: console
+
+   $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
+
+This will create eight concurrent four-job installation on two different
+nodes.
+
+.. note::
+
+   The effective parallelism will be based on the maximum number of
+   packages that can be installed at the same time, which will limited
+   by the number of packages with no (remaining) uninstalled dependencies.
+
 
 .. _dependencies:
 
@@ -1967,22 +2014,29 @@ exactly what kind of a dependency you need. For example:
    depends_on('cmake', type='build')
    depends_on('py-numpy', type=('build', 'run'))
    depends_on('libelf', type=('build', 'link'))
+   depends_on('py-pytest', type='test')
 
 The following dependency types are available:
 
-* **"build"**: made available during the project's build. The package will
-  be added to ``PATH``, the compiler include paths, and ``PYTHONPATH``.
-  Other projects which depend on this one will not have these modified
-  (building project X doesn't need project Y's build dependencies).
-* **"link"**: the project is linked to by the project. The package will be
-  added to the current package's ``rpath``.
-* **"run"**: the project is used by the project at runtime. The package will
-  be added to ``PATH`` and ``PYTHONPATH``.
+* **"build"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time.
+* **"link"**: the dependency will be added to Spack's compiler
+  wrappers, automatically injecting the appropriate linker flags,
+  including ``-I``, ``-L``, and RPATH/RUNPATH handling.
+* **"run"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at run-time. This is true for both ``spack load``
+  and the module files Spack writes.
+* **"test"**: the dependency will be added to the ``PATH`` and
+  ``PYTHONPATH`` at build-time. The only difference between
+  "build" and "test" is that test dependencies are only built
+  if the user requests unit tests with ``spack install --test``.
 
 One of the advantages of the ``build`` dependency type is that although the
 dependency needs to be installed in order for the package to be built, it
 can be uninstalled without concern afterwards. ``link`` and ``run`` disallow
-this because uninstalling the dependency would break the package.
+this because uninstalling the dependency would break the package. Another
+consequence of this is that ``build``-only dependencies do not affect the
+hash of the package. The same is true for ``test`` dependencies.
 
 If the dependency type is not specified, Spack uses a default of
 ``('build', 'link')``. This is the common case for compiler languages.
@@ -2003,7 +2057,8 @@ package. In that case, you could say something like:
 
 .. code-block:: python
 
-   variant('mpi', default=False)
+   variant('mpi', default=False, description='Enable MPI support')
+
    depends_on('mpi', when='+mpi')
 
 ``when`` can include constraints on the variant, version, compiler, etc. and
@@ -3108,7 +3163,7 @@ differ from package to package. In order to make the ``install()`` method
 independent of the choice of ``Blas`` implementation, each package which
 provides it implements ``@property def blas_libs(self):`` to return an object
 of
-`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
 type which simplifies usage of a set of libraries.
 The same applies to packages which provide ``Lapack`` and ``ScaLapack``.
 Package developers are requested to use this interface. Common usage cases are:
@@ -3143,7 +3198,7 @@ Package developers are requested to use this interface. Common usage cases are:
 
 
 For more information, see documentation of
-`LibraryList <http://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
+`LibraryList <https://spack.readthedocs.io/en/latest/llnl.util.html#llnl.util.filesystem.LibraryList>`_
 class.
 
 
@@ -3892,6 +3947,118 @@ using the ``run_before`` decorator.
     The API for adding tests is not yet considered stable and may change drastically in future releases.
 
 .. _file-manipulation:
+
+^^^^^^^^^^^^^
+Install Tests
+^^^^^^^^^^^^^
+
+.. warning::
+
+   The API for adding and running install tests is not yet considered
+   stable and may change drastically in future releases. Packages with
+   upstreamed tests will be refactored to match changes to the API.
+
+While build-tests are integrated with the build system, install tests
+may be added to Spack packages to be run independently of the install
+method.
+
+Install tests may be added by defining a ``test`` method with the following signature:
+
+.. code-block:: python
+
+   def test(self):
+
+These tests will be run in an environment set up to provide access to
+this package and all of its dependencies, including ``test``-type
+dependencies. Inside the ``test`` method, standard python ``assert``
+statements and other error reporting mechanisms can be used. Spack
+will report any errors as a test failure.
+
+Inside the test method, individual tests can be run separately (and
+continue transparently after a test failure) using the ``run_test``
+method. The signature for the ``run_test`` method is:
+
+.. code-block:: python
+
+   def run_test(self, exe, options=[], expected=[], status=0, installed=False,
+                purpose='', skip_missing=False, work_dir=None):
+
+This method will operate in ``work_dir`` if one is specified. It will
+search for an executable in the ``PATH`` variable named ``exe``, and
+if ``installed=True`` it will fail if that executable does not come
+from the prefix of the package being tested. If the executable is not
+found, it will fail the test unless ``skip_missing`` is set to
+``True``. The executable will be run with the options specified, and
+the return code will be checked against the ``status`` argument, which
+can be an integer or list of integers. Spack will also check that
+every string in ``expected`` is a regex matching part of the output of
+the executable. The ``purpose`` argument is recorded in the test log
+for debugging purposes.
+
+""""""""""""""""""""""""""""""""""""""
+Install tests that require compilation
+""""""""""""""""""""""""""""""""""""""
+
+Some tests may require access to the compiler with which the package
+was built, especially to test library-only packages. To ensure the
+compiler is configured as part of the test environment, set the
+attribute ``tests_require_compiler = True`` on the package. The
+compiler will be available through the canonical environment variables
+(``CC``, ``CXX``, ``FC``, ``F77``) in the test environment.
+
+""""""""""""""""""""""""""""""""""""""""""""""""
+Install tests that require build-time components
+""""""""""""""""""""""""""""""""""""""""""""""""
+
+Some packages cannot be easily tested without components from the
+build-time test suite. For those packages, the
+``cache_extra_test_sources`` method can be used.
+
+.. code-block:: python
+
+   @run_after('install')
+   def cache_test_sources(self):
+       srcs = ['./tests/foo.c', './tests/bar.c']
+       self.cache_extra_test_sources(srcs)
+
+This method will copy the listed methods into the metadata directory
+of the package at the end of the install phase of the build. They will
+be available to the test method in the directory
+``self._extra_tests_path``.
+
+While source files are generally recommended, for many packages
+binaries may also technically be cached in this way for later testing.
+
+"""""""""""""""""""""
+Running install tests
+"""""""""""""""""""""
+
+Install tests can be run using the ``spack test run`` command. The
+``spack test run`` command will create a ``test suite`` out of the
+specs provided to it, or if no specs are provided it will test all
+specs in the active environment, or all specs installed in Spack if no
+environment is active. Test suites can be named using the ``--alias``
+option; test suites not aliased will use the content hash of their
+specs as their name.
+
+Packages to install test can be queried using the ``spack test list``
+command, which outputs all installed packages with defined ``test``
+methods.
+
+Test suites can be found using the ``spack test find`` command. It
+will list all test suites that have been run and have not been removed
+using the ``spack test remove`` command. The ``spack test remove``
+command will remove tests to declutter the test stage. The ``spack
+test results`` command will show results for completed test suites.
+
+The test stage is the working directory for all install tests run with
+Spack. By default, Spack uses ``~/.spack/test`` as the test stage. The
+test stage can be set in the high-level config:
+
+.. code-block:: yaml
+
+   config:
+     test_stage: /path/to/stage
 
 ---------------------------
 File manipulation functions
@@ -4677,119 +4844,3 @@ might write:
    DWARF_PREFIX = $(spack location --install-dir libdwarf)
    CXXFLAGS += -I$DWARF_PREFIX/include
    CXXFLAGS += -L$DWARF_PREFIX/lib
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Build System Configuration Support
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Imagine a developer creating a CMake or Autotools-based project in a
-local directory, which depends on libraries A-Z.  Once Spack has
-installed those dependencies, one would like to run ``cmake`` with
-appropriate command line and environment so CMake can find them.  The
-``spack setup`` command does this conveniently, producing a CMake
-configuration that is essentially the same as how Spack *would have*
-configured the project.  This can be demonstrated with a usage
-example:
-
-.. code-block:: console
-
-   $ cd myproject
-   $ spack setup myproject@local
-   $ mkdir build; cd build
-   $ ../spconfig.py ..
-   $ make
-   $ make install
-
-Notes:
-
-* Spack must have ``myproject/package.py`` in its repository for
-  this to work.
-* ``spack setup`` produces the executable script ``spconfig.py`` in
-  the local directory, and also creates the module file for the
-  package.  ``spconfig.py`` is normally run from the user's
-  out-of-source build directory.
-* The version number given to ``spack setup`` is arbitrary, just
-  like ``spack diy``.  ``myproject/package.py`` does not need to
-  have any valid downloadable versions listed (typical when a
-  project is new).
-* spconfig.py produces a CMake configuration that *does not* use the
-  Spack wrappers.  Any resulting binaries *will not* use RPATH,
-  unless the user has enabled it.  This is recommended for
-  development purposes, not production.
-* ``spconfig.py`` is human readable, and can serve as a developer
-  reference of what dependencies are being used.
-* ``make install`` installs the package into the Spack repository,
-  where it may be used by other Spack packages.
-* CMake-generated makefiles re-run CMake in some circumstances.  Use
-  of ``spconfig.py`` breaks this behavior, requiring the developer
-  to manually re-run ``spconfig.py`` when a ``CMakeLists.txt`` file
-  has changed.
-
-^^^^^^^^^^^^
-CMakePackage
-^^^^^^^^^^^^
-
-In order to enable ``spack setup`` functionality, the author of
-``myproject/package.py`` must subclass from ``CMakePackage`` instead
-of the standard ``Package`` superclass.  Because CMake is
-standardized, the packager does not need to tell Spack how to run
-``cmake; make; make install``.  Instead the packager only needs to
-create (optional) methods ``configure_args()`` and ``configure_env()``, which
-provide the arguments (as a list) and extra environment variables (as
-a dict) to provide to the ``cmake`` command.  Usually, these will
-translate variant flags into CMake definitions.  For example:
-
-.. code-block:: python
-
-   def cmake_args(self):
-       spec = self.spec
-       return [
-           '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-           '-DBUILD_PYTHON=%s' % ('YES' if '+python' in spec else 'NO'),
-           '-DBUILD_GRIDGEN=%s' % ('YES' if '+gridgen' in spec else 'NO'),
-           '-DBUILD_COUPLER=%s' % ('YES' if '+coupler' in spec else 'NO'),
-           '-DUSE_PISM=%s' % ('YES' if '+pism' in spec else 'NO')
-       ]
-
-If needed, a packager may also override methods defined in
-``StagedPackage`` (see below).
-
-^^^^^^^^^^^^^
-StagedPackage
-^^^^^^^^^^^^^
-
-``CMakePackage`` is implemented by subclassing the ``StagedPackage``
-superclass, which breaks down the standard ``Package.install()``
-method into several sub-stages: ``setup``, ``configure``, ``build``
-and ``install``.  Details:
-
-* Instead of implementing the standard ``install()`` method, package
-  authors implement the methods for the sub-stages
-  ``install_setup()``, ``install_configure()``,
-  ``install_build()``, and ``install_install()``.
-
-* The ``spack install`` command runs the sub-stages ``configure``,
-  ``build`` and ``install`` in order.  (The ``setup`` stage is
-  not run by default; see below).
-* The ``spack setup`` command runs the sub-stages ``setup``
-  and a dummy install (to create the module file).
-* The sub-stage install methods take no arguments (other than
-  ``self``).  The arguments ``spec`` and ``prefix`` to the standard
-  ``install()`` method may be accessed via ``self.spec`` and
-  ``self.prefix``.
-
-^^^^^^^^^^^^^
-GNU Autotools
-^^^^^^^^^^^^^
-
-The ``setup`` functionality is currently only available for
-CMake-based packages.  Extending this functionality to GNU
-Autotools-based packages would be easy (and should be done by a
-developer who actively uses Autotools).  Packages that use
-non-standard build systems can gain ``setup`` functionality by
-subclassing ``StagedPackage`` directly.
-
-.. Emacs local variables
-   Local Variables:
-   fill-column: 79
-   End:

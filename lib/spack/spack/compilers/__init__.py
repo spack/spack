@@ -15,7 +15,7 @@ import six
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import llnl.util.cpu as cpu
+import archspec.cpu
 
 import spack.paths
 import spack.error
@@ -405,7 +405,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         target = items.get('target', None)
 
         try:
-            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            current_target = archspec.cpu.TARGETS[str(arch_spec.target)]
             family = str(current_target.family)
         except KeyError:
             # TODO: Check if this exception handling makes sense, or if we
@@ -417,7 +417,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         if arch_spec and target and (target != family and target != 'any'):
             # If the family of the target is the family we are seeking,
             # there's an error in the underlying configuration
-            if llnl.util.cpu.targets[target].family == family:
+            if archspec.cpu.TARGETS[target].family == family:
                 msg = ('the "target" field in compilers.yaml accepts only '
                        'target families [replace "{0}" with "{1}"'
                        ' in "{2}" specification]')
@@ -576,9 +576,7 @@ def arguments_to_detect_version_fn(operating_system, paths):
                         )
                         command_arguments.append(detect_version_args)
 
-        # Reverse it here so that the dict creation (last insert wins)
-        # does not spoil the intended precedence.
-        return reversed(command_arguments)
+        return command_arguments
 
     fn = getattr(
         operating_system, 'arguments_to_detect_version_fn', _default
@@ -666,7 +664,7 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
-        target = cpu.host()
+        target = archspec.cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
         )
@@ -741,7 +739,7 @@ def is_mixed_toolchain(compiler):
             toolchains.add(compiler_cls.__name__)
 
     if len(toolchains) > 1:
-        if toolchains == set(['Clang', 'AppleClang']):
+        if toolchains == set(['Clang', 'AppleClang', 'Aocc']):
             return False
         tty.debug("[TOOLCHAINS] {0}".format(toolchains))
         return True

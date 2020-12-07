@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Ruby(AutotoolsPackage):
@@ -54,6 +54,14 @@ class Ruby(AutotoolsPackage):
         expand=False
     )
 
+    executables = ['^ruby$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'ruby ([\d.]+)', output)
+        return match.group(1) if match else None
+
     def url_for_version(self, version):
         url = "http://cache.ruby-lang.org/pub/ruby/{0}/ruby-{1}.tar.gz"
         return url.format(version.up_to(2), version)
@@ -92,8 +100,9 @@ class Ruby(AutotoolsPackage):
             gem('install', '<gem-name>.gem')
         """
         # Ruby extension builds have global ruby and gem functions
-        module.ruby = Executable(join_path(self.spec.prefix.bin, 'ruby'))
-        module.gem = Executable(join_path(self.spec.prefix.bin, 'gem'))
+        module.ruby = Executable(self.prefix.bin.ruby)
+        module.gem  = Executable(self.prefix.bin.gem)
+        module.rake = Executable(self.prefix.bin.rake)
 
     @run_after('install')
     def post_install(self):

@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+import glob
+from shutil import copyfile, Error
 
 
 class NetcdfFortran(AutotoolsPackage):
@@ -13,28 +16,22 @@ class NetcdfFortran(AutotoolsPackage):
     distribution."""
 
     homepage = "https://www.unidata.ucar.edu/software/netcdf"
-    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.2.tar.gz"
+    url      = "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-fortran-4.5.3.tar.gz"
 
     maintainers = ['skosukhin', 'WardF']
 
+    version('4.5.3', sha256='123a5c6184336891e62cf2936b9f2d1c54e8dee299cfd9d2c1a1eb05dd668a74')
     version('4.5.2', sha256='b959937d7d9045184e9d2040a915d94a7f4d0185f4a9dceb8f08c94b0c3304aa')
     version('4.4.5', sha256='2467536ce29daea348c736476aa8e684c075d2f6cab12f3361885cb6905717b8')
     version('4.4.4', sha256='b2d395175f8d283e68c8be516e231a96b191ade67ad0caafaf7fa01b1e6b5d75')
     version('4.4.3', sha256='330373aa163d5931e475b5e83da5c1ad041e855185f24e6a8b85d73b48d6cda9')
 
-    variant('mpi', default=True,
-            description='Enable parallel I/O for netcdf-4')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
     variant('doc', default=False, description='Enable building docs')
 
-    # We need to build with MPI wrappers if parallel I/O features is enabled:
-    # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
-    depends_on('mpi', when='+mpi')
-
-    depends_on('netcdf-c~mpi~parallel-netcdf', when='~mpi')
-    depends_on('netcdf-c+mpi', when='+mpi')
+    depends_on('netcdf-c')
     depends_on('doxygen', when='+doc', type='build')
 
     # The default libtool.m4 is too old to handle NAG compiler properly:
@@ -66,17 +63,23 @@ class NetcdfFortran(AutotoolsPackage):
     def flag_handler(self, name, flags):
         config_flags = None
 
-        if '+pic' in self.spec:
-            # Unlike NetCDF-C, we add PIC flag only when +pic. Adding the
-            # flags also when ~shared would make it impossible to build a
-            # static-only version of the library with NAG.
-            if name == 'cflags':
-                config_flags = [self.compiler.cc_pic_flag]
-            elif name == 'fflags':
-                config_flags = [self.compiler.f77_pic_flag]
-
-        if name == 'cppflags':
-            config_flags = [self.spec['netcdf-c'].headers.cpp_flags]
+        if name == 'cflags':
+            if '+pic' in self.spec:
+                flags.append(self.compiler.cc_pic_flag)
+        elif name == 'fflags':
+            if '+pic' in self.spec:
+                flags.append(self.compiler.f77_pic_flag)
+            if self.spec.satisfies('%gcc@10:'):
+                # https://github.com/Unidata/netcdf-fortran/issues/212
+                flags.append('-fallow-argument-mismatch')
+            elif self.compiler.name == 'cce':
+                # Cray compiler generates module files with uppercase names by
+                # default, which is not handled by the makefiles of
+                # NetCDF-Fortran:
+                # https://github.com/Unidata/netcdf-fortran/pull/221.
+                # The following flag forces the compiler to produce module
+                # files with lowercase names.
+                flags.append('-ef')
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
@@ -84,11 +87,6 @@ class NetcdfFortran(AutotoolsPackage):
             # building takes place outside of Spack environment, i.e.
             # without Spack's compiler wrappers.
             config_flags = [self.spec['netcdf-c'].libs.search_flags]
-        elif name == 'fflags' and self.spec.satisfies('%gcc@10:'):
-            # https://github.com/Unidata/netcdf-fortran/issues/212
-            if config_flags is None:
-                config_flags = []
-            config_flags.append('-fallow-argument-mismatch')
 
         return flags, None, config_flags
 
@@ -122,7 +120,11 @@ class NetcdfFortran(AutotoolsPackage):
         config_args = self.enable_or_disable('shared')
         config_args.append('--enable-static')
 
-        if '+mpi' in self.spec:
+        # We need to build with MPI wrappers if either of the parallel I/O
+        # features is enabled in netcdf-c:
+        # https://www.unidata.ucar.edu/software/netcdf/docs/building_netcdf_fortran.html
+        netcdf_c_spec = self.spec['netcdf-c']
+        if '+mpi' in netcdf_c_spec or '+parallel-netcdf' in netcdf_c_spec:
             config_args.append('CC=%s' % self.spec['mpi'].mpicc)
             config_args.append('FC=%s' % self.spec['mpi'].mpifc)
             config_args.append('F77=%s' % self.spec['mpi'].mpif77)
@@ -138,3 +140,28 @@ class NetcdfFortran(AutotoolsPackage):
     def check(self):
         with working_dir(self.build_directory):
             make('check', parallel=False)
+
+    @run_after('install')
+    def cray_module_filenames(self):
+        # Cray compiler searches for module files with uppercase names by
+        # default and with lowercase names when the '-ef' flag is specified.
+        # To avoid warning messages when compiler user applications in both
+        # cases, we create copies of all '*.mod' files in the prefix/include
+        # with names in upper- and lowercase.
+        if self.spec.compiler.name != 'cce':
+            return
+
+        with working_dir(self.spec.prefix.include):
+            for f in glob.glob('*.mod'):
+                name, ext = os.path.splitext(f)
+                try:
+                    # Create a copy with uppercase name:
+                    copyfile(f, name.upper() + ext)
+                except Error:
+                    # Assume that the exception tells us that the file with
+                    # uppercase name already exists. Try to create a file with
+                    # lowercase name then:
+                    try:
+                        copyfile(f, name.lower() + ext)
+                    except Error:
+                        pass

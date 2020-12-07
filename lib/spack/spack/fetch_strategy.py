@@ -42,7 +42,7 @@ import spack.util.web as web_util
 from llnl.util.filesystem import (
     working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 from spack.util.compression import decompressor_for, extension
-from spack.util.executable import which
+from spack.util.executable import which, CommandNotFoundError
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 
@@ -214,13 +214,16 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
-@pattern.composite(interface=FetchStrategy)
-class FetchStrategyComposite(object):
+class FetchStrategyComposite(pattern.Composite):
     """Composite for a FetchStrategy object.
-
-    Implements the GoF composite pattern.
     """
     matches = FetchStrategy.matches
+
+    def __init__(self):
+        super(FetchStrategyComposite, self).__init__([
+            'fetch', 'check', 'expand', 'reset', 'archive', 'cachable',
+            'mirror_id'
+        ])
 
     def source_id(self):
         component_ids = tuple(i.source_id() for i in self)
@@ -267,7 +270,10 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def curl(self):
         if not self._curl:
-            self._curl = which('curl', required=True)
+            try:
+                self._curl = which('curl', required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
         return self._curl
 
     def source_id(self):
@@ -295,6 +301,9 @@ class URLFetchStrategy(FetchStrategy):
         url = None
         errors = []
         for url in self.candidate_urls:
+            if not self._existing_url(url):
+                continue
+
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file:
@@ -309,13 +318,22 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise FailedDownloadError(url)
 
+    def _existing_url(self, url):
+        tty.debug('Checking existence of {0}'.format(url))
+        curl = self.curl
+        # Telling curl to fetch the first byte (-r 0-0) is supposed to be
+        # portable.
+        curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
+        _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+        return curl.returncode == 0
+
     def _fetch_from_url(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
             save_file = self.stage.save_filename
             partial_file = self.stage.save_filename + '.part'
-        tty.debug('Fetching {0}'.format(url))
+        tty.msg('Fetching {0}'.format(url))
         if partial_file:
             save_args = ['-C',
                          '-',  # continue partial downloads
@@ -330,8 +348,6 @@ class URLFetchStrategy(FetchStrategy):
             '-',  # print out HTML headers
             '-L',  # resolve 3xx redirects
             url,
-            '--stderr',  # redirect stderr output
-            '-',         # redirect to stdout
         ]
 
         if not spack.config.get('config:verify_ssl'):
@@ -340,7 +356,7 @@ class URLFetchStrategy(FetchStrategy):
         if sys.stdout.isatty() and tty.msg_enabled():
             curl_args.append('-#')  # status bar when using a tty
         else:
-            curl_args.append('-sS')  # just errors when not.
+            curl_args.append('-sS')  # show errors if fail
 
         connect_timeout = spack.config.get('config:connect_timeout', 10)
 
@@ -569,7 +585,7 @@ class CacheURLFetchStrategy(URLFetchStrategy):
                 raise
 
         # Notify the user how we fetched.
-        tty.debug('Using cached archive: {0}'.format(path))
+        tty.msg('Using cached archive: {0}'.format(path))
 
 
 class VCSFetchStrategy(FetchStrategy):

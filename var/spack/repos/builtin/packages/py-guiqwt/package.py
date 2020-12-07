@@ -20,4 +20,4 @@ class PyGuiqwt(PythonPackage):
     depends_on('py-scipy@0.7:',       type=('build', 'run'))
     depends_on('py-guidata@1.7.0:',   type=('build', 'run'))
     depends_on('py-pythonqwt@0.5.0:', type=('build', 'run'))
-    depends_on('py-pillow',           type=('build', 'run'))
+    depends_on('pil',                 type=('build', 'run'))

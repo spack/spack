@@ -13,6 +13,8 @@ class Fjcontrib(AutotoolsPackage):
     homepage = "https://fastjet.hepforge.org/contrib/"
     url      = "http://fastjet.hepforge.org/contrib/downloads/fjcontrib-1.044.tar.gz"
 
+    tags = ['hep']
+
     version('1.044', sha256='de3f45c2c1bed6d7567483e4a774575a504de8ddc214678bac7f64e9d2e7e7a7')
     version('1.043', sha256='ef0f586b19ffd12f392b7facc890a73d31fc11b9f5bb727cf3743d6eb59e9993')
     version('1.042', sha256='5b052e93a371c557557fa4a293cca4b08f88ccfb6c43a4df15b2a9f38c6d8831')

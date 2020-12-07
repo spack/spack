@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Ccache(AutotoolsPackage):
@@ -14,6 +15,9 @@ class Ccache(AutotoolsPackage):
     homepage = "https://ccache.samba.org/"
     url      = "https://github.com/ccache/ccache/releases/download/v3.7.9/ccache-3.7.9.tar.gz"
 
+    executables = ['^ccache$']
+
+    version('3.7.11', sha256='34309a59d4b6b6b33756366aa9d3144a4655587be9f914476b4c0e2d36365f01')
     version('3.7.9', sha256='92838e2133c9e704fdab9ee2608dad86c99021278b9ac47d065aa8ff2ea8ce36')
     version('3.7.1', sha256='e562fcdbe766406b6fe4bf97ce5c001d2be8a17465f33bcddefc9499bbb057d8')
     version('3.3.4', sha256='1348b54e7c35dd2f8d17923389e03c546e599cfbde6459d2f31cf6f1521ec538')
@@ -26,3 +30,9 @@ class Ccache(AutotoolsPackage):
     depends_on('gperf')
     depends_on('libxslt')
     depends_on('zlib')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'ccache.*version\s+(\S+)', output)
+        return match.group(1) if match else None

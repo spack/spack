@@ -12,6 +12,8 @@ class Thepeg(AutotoolsPackage):
     homepage = "http://home.thep.lu.se/~leif/ThePEG/"
     url      = "https://thepeg.hepforge.org/downloads/?f=ThePEG-2.2.1.tar.bz2"
 
+    tags = ['hep']
+
     # The commented out versions exist, but may need patches
     # and/or recipe changes
     version('2.2.1', sha256='63abc7215e6ad45c11cf9dac013738e194cc38556a8368b850b70ab1b57ea58f')
@@ -52,6 +54,8 @@ class Thepeg(AutotoolsPackage):
     patch('thepeg-1.9.0.patch', when='@1.9.0', level=0)
     patch('thepeg-1.9.2.patch', when='@1.9.2', level=0)
     patch('thepeg-2.1.1.patch', when='@2.1.1:2.2.1', level=0)
+
+    force_autoreconf = True
 
     depends_on('gsl')
     depends_on('lhapdf')

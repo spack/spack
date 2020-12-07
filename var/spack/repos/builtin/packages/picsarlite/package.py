@@ -70,7 +70,7 @@ class Picsarlite(MakefilePackage):
 
     def build(self, spec, prefix):
         with working_dir('PICSARlite'):
-            make(parallel=False)
+            make(parallel=False, *self.build_targets)
 
     def install(self, spec, prefix):
         mkdirp(prefix.docs)

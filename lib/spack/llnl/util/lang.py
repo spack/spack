@@ -5,6 +5,7 @@
 
 from __future__ import division
 
+import multiprocessing
 import os
 import re
 import functools
@@ -17,6 +18,23 @@ import sys
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
+
+
+# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
+# method. Spack cannot currently handle this, so force the process to start
+# using the 'fork' start method.
+#
+# TODO: This solution is not ideal, as the 'fork' start method can lead to
+# crashes of the subprocess. Figure out how to make 'spawn' work.
+#
+# See:
+# * https://github.com/spack/spack/pull/18124
+# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
+# * https://bugs.python.org/issue33725
+if sys.version_info >= (3,):  # novm
+    fork_context = multiprocessing.get_context('fork')
+else:
+    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
@@ -550,6 +568,12 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
+        # When unpickling Singleton objects, the 'instance' attribute may be
+        # requested but not yet set. The final 'getattr' line here requires
+        # 'instance'/'_instance' to be defined or it will enter an infinite
+        # loop, so protect against that here.
+        if name in ['_instance', 'instance']:
+            raise AttributeError()
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -578,6 +602,8 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
         return getattr(self.ref_function(), name)
 
     def __getitem__(self, name):
@@ -645,3 +671,12 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

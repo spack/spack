@@ -13,6 +13,8 @@ class Kassiopeia(CMakePackage):
     url      = "https://github.com/KATRIN-Experiment/Kassiopeia/archive/v3.6.1.tar.gz"
     git      = "https://github.com/KATRIN-Experiment/Kassiopeia.git"
 
+    tags = ['hep']
+
     maintainers = ['wdconinc']
 
     version('3.7.5', sha256='8f28d08c7ef51e64221e0a4705f3cee3a5d738b8cdde5ce9fa58a3a0dd14ae05')

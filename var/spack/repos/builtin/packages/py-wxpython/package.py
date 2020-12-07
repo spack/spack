@@ -34,5 +34,5 @@ class PyWxpython(PythonPackage):
 
     # Needed at runtime
     depends_on('py-numpy', type='run')
-    depends_on('py-pillow', type='run')
+    depends_on('pil', type='run')
     depends_on('py-six', type='run')

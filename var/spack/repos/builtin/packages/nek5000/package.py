@@ -36,6 +36,8 @@ class Nek5000(Package):
     # Dependencies
     depends_on('mpi', when="+mpi")
 
+    patch('add_fjfortran.patch', when='%fj')
+
     @run_before('install')
     def fortran_check(self):
         if not self.compiler.f77:

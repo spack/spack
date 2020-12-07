@@ -81,6 +81,7 @@ properties = {
         ],
         'properties': {
             'hash': {'type': 'string'},
+            'full_hash': {'type': 'string'},
             'version': {
                 'oneOf': [
                     {'type': 'string'},
@@ -95,6 +96,12 @@ properties = {
                     'name': {'type': 'string'},
                     'version': {'type': 'string'},
                 },
+            },
+            'develop': {
+                'anyOf': [
+                    {'type': 'boolean'},
+                    {'type': 'string'},
+                ],
             },
             'namespace': {'type': 'string'},
             'parameters': {

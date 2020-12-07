@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import tempfile
 
 
 class PyTensorflow(Package, CudaPackage):
@@ -11,17 +12,23 @@ class PyTensorflow(Package, CudaPackage):
     """
 
     homepage = "https://www.tensorflow.org"
-    url      = "https://github.com/tensorflow/tensorflow/archive/v2.2.0.tar.gz"
+    url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'aweits']
     import_modules = ['tensorflow']
 
+    version('2.3.1',  sha256='ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac')
+    version('2.3.0',  sha256='2595a5c401521f20a2734c4e5d54120996f8391f00bb62a57267d930bce95350')
+    version('2.2.1',  sha256='e6a28e64236d729e598dbeaa02152219e67d0ac94d6ed22438606026a02e0f88')
     version('2.2.0',  sha256='69cd836f87b8c53506c4f706f655d423270f5a563b76dc1cfa60fbc3184185a3')
+    version('2.1.2',  sha256='3f941cda0ed12dfef5472e46f1d0238ea85da7583d73f1132d2ef050fda6e8ad')
     version('2.1.1',  sha256='a200bc16e4b630db3ac7225bcb6f239a76841967b0aec1d7d7bbe44dc5661318')
     version('2.1.0',  sha256='638e541a4981f52c69da4a311815f1e7989bf1d67a41d204511966e1daed14f7')
+    version('2.0.3',  sha256='6314299a723441bd9892e5c2af182c2be7d2256e20e71026e1cb1264cb497f33')
     version('2.0.2',  sha256='a548742bbafd302eec51e2794d7687674a64f6b10ce1414073858cb83c0cefc2')
     version('2.0.1',  sha256='29197d30923b9670992ee4b9c6161f50c7452e9a4158c720746e846080ac245a')
     version('2.0.0',  sha256='49b5f0495cd681cbcb5296a4476853d4aea19a43bdd9f179c928a977308a0617')
+    version('1.15.4', sha256='e18c55e771ad136f9bf3a70ea8f0e2d36662b2ba7c890f9eaf7950554557c7fa')
     version('1.15.3', sha256='9ab1d92e58eb813922b040acc7622b32d73c2d8d971fe6491a06f9df4c778151')
     version('1.15.2', sha256='d95d75d26a298211b5e802842e87fda5b8b14f6ad83719377b391e5fb71b8746')
     version('1.15.1', sha256='19b6e72bc8675937f618cede364d7228a71c2eeaffc42801bcefd98dda7ca056')
@@ -94,7 +101,8 @@ class PyTensorflow(Package, CudaPackage):
     # Need to investigate further.
 
     # See _TF_MIN_BAZEL_VERSION and _TF_MAX_BAZEL_VERSION in configure.py
-    depends_on('bazel@2.0.0',         type='build', when='@2.2:')
+    depends_on('bazel@3.1.0:3.99.0',  type='build', when='@2.3:')
+    depends_on('bazel@2.0.0',         type='build', when='@2.2.0:2.2.999')
     depends_on('bazel@0.27.1:0.29.1', type='build', when='@2.1.0:2.1.999')
     depends_on('bazel@0.24.1:0.26.1', type='build', when='@1.15:2.0')
     # See call to check_bazel_version in configure.py
@@ -138,6 +146,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
     depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11.999')
+    depends_on('py-keras-preprocessing@1.1.1:1.999', type=('build', 'run'), when='@2.3:')
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
@@ -152,6 +161,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-numpy@1.8.2:',        type=('build', 'run'), when='@0.6:')
     depends_on('py-numpy@1.9.2:',        type=('build', 'run'), when='@0.5.0')
     depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:')
+    depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.3:')
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-protobuf@3.6.1:', type=('build', 'run'), when='@1.12:')
     depends_on('py-protobuf@3.6.0:', type=('build', 'run'), when='@1.10:')
@@ -174,8 +184,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
     depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
-    depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1: ^python@:2')
-    depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1: ^python@3:')
+    depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2')
+    depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
@@ -514,14 +524,20 @@ class PyTensorflow(Package, CudaPackage):
         #       ])
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = '/tmp/spack/tf'
-        mkdirp(tmp_path)
+        tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
         # NOTE: INCLUDEDIR is not just relevant to protobuf
         # see third_party/systemlibs/jsoncpp.BUILD
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
+
+    def patch(self):
+        if self.spec.satisfies('@2.3.0:2.3.1'):
+            filter_file('deps = protodeps + well_known_proto_libs(),',
+                        'deps = protodeps,',
+                        'tensorflow/core/platform/default/build_config.bzl',
+                        string=True)
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
@@ -727,11 +743,13 @@ class PyTensorflow(Package, CudaPackage):
         build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+        remove_linked_tree(tmp_path)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

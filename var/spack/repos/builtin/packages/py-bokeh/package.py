@@ -18,7 +18,7 @@ class PyBokeh(PythonPackage):
     depends_on('python@2.6:',             type=('build', 'run'), when='@0.12.2')
     depends_on('python@2.7:',             type=('build', 'run'), when='@1.3.4:')
     depends_on('py-requests@1.2.3:',      type=('build', 'run'), when='@0.12.2')
-    depends_on('py-pillow@4.0:',          type=('build', 'run'), when='@1.3.4:')
+    depends_on('pil@4.0:',                type=('build', 'run'), when='@1.3.4:')
     depends_on('py-packaging@16.8:',      type=('build', 'run'), when='@1.3.4:')
     depends_on('py-six@1.5.2:',           type=('build', 'run'))
     depends_on('py-pyyaml@3.10:',         type=('build', 'run'))

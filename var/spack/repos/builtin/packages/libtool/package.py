@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 import re
 
 
@@ -35,7 +34,7 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     @classmethod
     def determine_version(cls, exe):
-        output = Executable(exe)('--version', output=str, error=os.devnull)
+        output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'\(GNU libtool\)\s+(\S+)', output)
         return match.group(1) if match else None
 
@@ -43,8 +42,20 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libltdl'], root=self.prefix, recursive=True, shared=True
+        )
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fno-builtin', '-Mnobuiltin', 'configure')
+            filter_file('-fno-builtin', '-Mnobuiltin', 'libltdl/configure')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)
