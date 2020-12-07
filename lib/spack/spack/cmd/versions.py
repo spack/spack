@@ -24,7 +24,7 @@ def setup_parser(subparser):
     output.add_argument('-s', '--safe', action='store_true',
                         help='only list safe versions of the package')
     output.add_argument('--safe-only', action='store_true',
-                        help='[deprecated] only list safe versions'
+                        help='[deprecated] only list safe versions '
                         'of the package')
     output.add_argument('-r', '--remote', action='store_true',
                         help='only list remote versions of the package')
