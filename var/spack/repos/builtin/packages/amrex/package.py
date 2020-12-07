@@ -80,6 +80,8 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
+    # cmake @3.17: is necessary to handle cuda @11: correctly
+    depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     conflicts('%apple-clang')
     conflicts('%clang')
 

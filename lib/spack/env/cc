@@ -320,9 +320,13 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rp="${arg#-rpath=}"
+            elif [[ "$arg" = --rpath=* ]]; then
+                rp="${arg#--rpath=}"
             elif [[ "$arg" = -rpath,* ]]; then
                 rp="${arg#-rpath,}"
-            elif [[ "$arg" = -rpath ]]; then
+            elif [[ "$arg" = --rpath,* ]]; then
+                rp="${arg#--rpath,}"
+            elif [[ "$arg" =~ ^-?-rpath$ ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Wl,* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
@@ -339,7 +343,9 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rp="${arg#-rpath=}"
-            elif [[ "$arg" = -rpath ]]; then
+            elif [[ "$arg" = --rpath=* ]]; then
+                rp="${arg#--rpath=}"
+            elif [[ "$arg" = -rpath  ]] || [[ "$arg" = --rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Xlinker,* ]]; then
                     die "-Xlinker,-rpath was not followed by -Xlinker,*"

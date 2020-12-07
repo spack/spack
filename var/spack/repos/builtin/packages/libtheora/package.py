@@ -23,6 +23,7 @@ class Libtheora(AutotoolsPackage):
     depends_on('libogg')
 
     patch('exit-prior-to-running-configure.patch', when='@1.1.1')
+    patch('dont_use_png_sizeof.patch', when='@1.1.1')
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')
