@@ -214,6 +214,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         self.metadata_dir        = '.spack'
         self.deprecated_dir      = 'deprecated'
         self.spec_file_name      = 'spec.yaml'
+        self.deploy_file_name    = 'deploy.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
         self.manifest_file_name  = 'install_manifest.json'
