@@ -365,26 +365,7 @@ class Database(object):
         tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
                   str(timeout_format_str)))
 
-        # Create .spack-db/index.json for global upstream it doesn't exist
-        global_install_tree = spack.config.get(
-            'upstreams')['global']['install_tree']
-        global_install_tree = global_install_tree.replace(
-            '$spack', spack.paths.prefix)
         if self.is_upstream:
-            if global_install_tree in self._db_dir:
-                if not os.path.isfile(self._index_path):
-                    f = open(self._index_path, "w+")
-                    database = {
-                        'database': {
-                            'installs': {},
-                            'version': str(_db_version)
-                        }
-                    }
-                    try:
-                        sjson.dump(database, f)
-                    except Exception as e:
-                        raise Exception(
-                            "error writing YAML database:", str(e))
             self.lock = ForbiddenLock()
         else:
             self.lock = lk.Lock(self._lock_path,
@@ -1015,7 +996,8 @@ class Database(object):
         try to regenerate a missing DB if local. This requires taking a
         write lock.
         """
-        if os.path.isfile(self._index_path):
+        index_path = spack.util.path.canonicalize_path(self._index_path)
+        if os.path.isfile(index_path):
             current_verifier = ''
             if _use_uuid:
                 try:
@@ -1027,7 +1009,7 @@ class Database(object):
                     (current_verifier == '')):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self._read_from_file(index_path)
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(

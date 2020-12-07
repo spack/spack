@@ -153,6 +153,13 @@ def parse_install_tree(config_dict):
     else:
         root = unpadded_root
 
+    # Initializes upstream pointer if requested
+    if init_upstream:
+        init_upstream_path = shared_install_trees[init_upstream]['root']
+        initialize_upstream_pointer_if_unset(root, init_upstream_path)
+    elif shared_install_trees and (not upstream_set(root)):
+        raise ValueError("Must specify an upstream shared install tree")
+
     return (root, unpadded_root, projections)
 
 
@@ -184,10 +191,10 @@ class Store(object):
     ):
         self.root = root
         self.unpadded_root = unpadded_root or root
-        # upstream_dbs = upstream_dbs_from_pointers(root)
+        upstream_dbs = upstream_dbs_from_pointers(root)
 
         self.db = spack.database.Database(
-            root, upstream_dbs=retrieve_upstream_dbs())
+            root, upstream_dbs=upstream_dbs)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, projections=projections, hash_length=hash_length)
         self.active_upstream = active_upstream
@@ -202,6 +209,7 @@ def _store():
     config_dict = spack.config.get('config')
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get('config:install_hash_length')
+
     return Store(root=root,
                  unpadded_root=unpadded_root,
                  projections=projections,
@@ -235,16 +243,43 @@ db = llnl.util.lang.LazyReference(_store_db)
 layout = llnl.util.lang.LazyReference(_store_layout)
 
 
-def retrieve_upstream_dbs():
+def upstream_set(root):
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    return os.path.exists(upstream_root_description)
 
-    global_fallback = {'global': {'install_tree': '$spack/opt/spack',
-                                  'modules':
-                                  {'tcl': '$spack/share/spack/modules',
-                                   'lmod': '$spack/share/spack/lmod',
-                                   'dotkit': '$spack/share/spack/dotkit'}}}
 
-    other_spack_instances = spack.config.get('upstreams',
-                                             global_fallback)
+def initialize_upstream_pointer_if_unset(root, init_upstream_root):
+    """Set the installation to point to the specified upstream."""
+    if not os.path.exists(root):
+        fs.mkdirp(root)
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    if not os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'w') as f:
+            f.write(init_upstream_root)
+
+
+def upstream_install_roots(root):
+    # Each installation root directory contains a file that points to the
+    # upstream installation used (if any). This constructs a sequence of
+    # upstream installations by recursively following these references.
+    upstream_root_description = os.path.join(root, 'upstream-spack')
+    install_roots = list()
+    while os.path.exists(upstream_root_description):
+        with open(upstream_root_description, 'r') as f:
+            upstream_root = f.read()
+            install_roots.append(upstream_root)
+            upstream_root_description = os.path.join(
+                upstream_root, 'upstream-spack')
+    return install_roots
+
+
+def upstream_dbs_from_pointers(root):
+    return _construct_upstream_dbs_from_install_roots(
+        upstream_install_roots(root))
+
+
+def upstream_dbs_from_config():
+    other_spack_instances = spack.config.get('upstreams', {})
     install_roots = []
     for install_properties in other_spack_instances.values():
         install_roots.append(spack.util.path.canonicalize_path(

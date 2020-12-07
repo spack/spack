@@ -50,6 +50,10 @@ tests_path            = os.path.join(var_path, "tests")
 share_path            = os.path.join(prefix, "share", "spack")
 user_share_path       = os.path.join(user_config_path, "share", "spack")
 
+# Default cache locations (can be changed in config)
+default_misc_cache_path = os.path.join(user_config_path, 'cache')
+default_source_cache_path = os.path.join(default_misc_cache_path, 'downloads')
+
 # Paths to built-in Spack repositories.
 packages_path      = os.path.join(repos_path, "builtin")
 mock_packages_path = os.path.join(repos_path, "builtin.mock")
