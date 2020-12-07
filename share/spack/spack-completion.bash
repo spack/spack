@@ -37,6 +37,17 @@
 #
 # See `man bash` for more details.
 
+if test -n "${ZSH_VERSION:-}" ; then
+  if [[ "$(emulate)" = zsh ]] ; then
+    # ensure base completion support is enabled
+    autoload -U +X compinit && compinit
+    # ensure bash compatible completion support is enabled
+    autoload -U +X bashcompinit && bashcompinit
+    emulate sh -c "source '$0:A'"
+    return # stop interpreting file
+  fi
+fi
+
 # Bash programmable completion for Spack
 _bash_completion_spack() {
     # In all following examples, let the cursor be denoted by brackets, i.e. []
@@ -117,7 +128,9 @@ _bash_completion_spack() {
     #_test_vars >> temp
 
     # Make sure function exists before calling it
-    if [[ "$(type $subfunction)" =~ "$subfunction.*function.*" ]]
+    local rgx #this dance is necessary to cover bash and zsh regex
+    rgx="$subfunction.*function.* "
+    if [[ "$(type $subfunction 2>&1)" =~ $rgx ]]
     then
         $subfunction
         COMPREPLY=($(compgen -W "$SPACK_COMPREPLY" -- "$cur"))
@@ -310,6 +323,7 @@ complete -o bashdefault -o default -F _bash_completion_spack spacktivate
 _spacktivate() {
   _spack_env_activate
 }
+
 
 # Spack commands
 #
@@ -1771,3 +1785,4 @@ _spack_view_check() {
         _all_packages
     fi
 }
+
