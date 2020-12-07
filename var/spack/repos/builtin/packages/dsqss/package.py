@@ -29,12 +29,8 @@ class Dsqss(CMakePackage):
 
     @run_before('cmake')
     def rm_macos(self):
-        test = 'test/dla/._*.json'
-        r = glob.glob(test)
-        for i in r:
-            os.remove(i)
-        test = 'test/pmwa/._*.json'
-        r = glob.glob(test)
+        macpath = 'test/*/._*.json'
+        r = glob.glob(macpath)
         for i in r:
             os.remove(i)
 
@@ -42,14 +38,6 @@ class Dsqss(CMakePackage):
         args = []
         args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.spec.prefix)
         return args
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check(self):
-        with working_dir(self.build_directory):
-            rm = which('rm')
-            rm('-rf', '._*.json')
-            ctest('-V', parallel=False)
 
     def setup_run_environment(self, env):
         python_version = self.spec['python'].version.up_to(2)
