@@ -39,8 +39,8 @@
 
 if test -n "${ZSH_VERSION:-}" ; then
   if [[ "$(emulate)" = zsh ]] ; then
-    # ensure base completion support is enabled
-    autoload -U +X compinit && compinit
+    # ensure base completion support is enabled, ignore insecure directories
+    autoload -U +X compinit && compinit -i
     # ensure bash compatible completion support is enabled
     autoload -U +X bashcompinit && bashcompinit
     emulate sh -c "source '$0:A'"
