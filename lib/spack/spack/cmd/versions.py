@@ -29,7 +29,7 @@ def setup_parser(subparser):
     output.add_argument('-r', '--remote', action='store_true',
                         help='only list remote versions of the package')
     output.add_argument('-n', '--new', action='store_true',
-                        help='only list remote versions newer than'
+                        help='only list remote versions newer than '
                         'the latest checksummed version')
     subparser.add_argument(
         '-c', '--concurrency', default=32, type=int,
