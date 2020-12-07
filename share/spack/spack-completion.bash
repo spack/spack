@@ -324,7 +324,6 @@ _spacktivate() {
   _spack_env_activate
 }
 
-
 # Spack commands
 #
 # Everything below here is auto-generated.
@@ -1785,4 +1784,3 @@ _spack_view_check() {
         _all_packages
     fi
 }
-
