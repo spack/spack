@@ -69,4 +69,4 @@ spack:
     - synapsetool
     - touchdetector
     - ultraliser
-    - zee
+    # - zee
