@@ -215,10 +215,8 @@ def _packages_needed_to_bootstrap_compiler(compiler, architecture, pkgs):
     # concretizer to back off if needed for the older bootstrapping compiler
     dep.constrain('platform=%s' % str(architecture.platform))
     dep.constrain('os=%s' % str(architecture.os))
-    dep.constrain('target=%s:%s' % (
-        architecture.target.microarchitecture.family.name,
-        architecture.target.microarchitecture.name
-    ))
+    dep.constrain('target=%s:' %
+                  architecture.target.microarchitecture.family.name)
     # concrete CompilerSpec has less info than concrete Spec
     # concretize as Spec to add that information
     dep.concretize()
