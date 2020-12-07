@@ -153,7 +153,6 @@ _stage_root = None
 
 def get_stage_root():
     global _stage_root
-
     if _stage_root is None:
         candidates = spack.config.get('config:build_stage')
 
