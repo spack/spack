@@ -18,12 +18,12 @@ class Podio(CMakePackage):
 
     version('master', branch='master')
     version('0.13', sha256='e9cbd4e25730003d3706ad82e28b15cb5bdc524a78b0a26e90b89ea852101498')
-    version('0.12.0', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
-    version('0.11.0', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
-    version('0.10.0', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
+    version('0.12', sha256='1729a2ce21e8b307fc37dfb9a9f5ae031e9f4be4992385cf99dba3e5fdf5323a')
+    version('0.11', sha256='4b2765566a14f0ddece2c894634e0a8e4f42f3e44392addb9110d856f6267fb6')
+    version('0.10', sha256='b5b42770ec8b96bcd2748abc05669dd3e4d4cc84f81ed57d57d2eda1ade90ef2')
     version('0.9.2', sha256='8234d1b9636029124235ef81199a1220968dcc7fdaeab81cdc96a47af332d240')
-    version('0.9.0', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
-    version('0.8.0', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
+    version('0.9', sha256='3cde67556b6b76fd2d004adfaa3b3b6173a110c0c209792bfdb5f9353e21076f')
+    version('0.8', sha256='9d035a7f5ebfae5279a17405003206853271af692f762e2bac8e73825f2af327')
 
     variant('build_type', default='Release',
             description='The build type to build',
@@ -55,7 +55,7 @@ class Podio(CMakePackage):
     def setup_run_environment(self, env):
         env.prepend_path('PYTHONPATH', self.prefix.python)
 
-		def url_for_version(self, version):
+    def url_for_version(self, version):
         """Translate version numbers to ilcsoft conventions.
         in spack, the convention is: 0.1 (or 0.1.0) 0.1.1, 0.2, 0.2.1 ...
         in ilcsoft, releases are dashed and padded with a leading zero
