@@ -56,12 +56,17 @@ class VtkM(CMakePackage, CudaPackage):
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
     variant("hip", default=False, description="build hip support")
 
-    # it doesn't look like spack has a amd gpu abstraction
+    # it doesn't look like spack has an amd gpu abstraction
+    # Going to have to restrict our set to ones that Kokkos supports
     amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
+        'gfx900', 'gfx906', 'gfx908'
     )
+    kokkos_amd_gpu_map = {
+        'gfx900': 'vega900',
+        'gfx906': 'vega906',
+        'gfx908': 'vega908'
+    }
+
     variant('amdgpu_target', default='none', multi=True, values=amdgpu_targets)
     conflicts("+hip", when="amdgpu_target=none")
 
@@ -72,7 +77,9 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
-    depends_on("kokkos@3.1:+hip", when="+hip")
+    for kokkos_value in kokkos_amd_gpu_map:
+        depends_on("kokkos@develop +hip amd_gpu_arch=%s" % kokkos_amd_gpu_map[kokkos_value], when="amdgpu_target=%s" % kokkos_value)
+
     depends_on("rocm-cmake@3.7:", when="+hip")
     depends_on("hip@3.7:", when="+hip")
 
@@ -161,6 +168,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # hip support
             if "+hip" in spec:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
                 options.append("-DVTKm_ENABLE_HIP:BOOL=ON")
 
                 archs = ",".join(self.spec.variants['amdgpu_target'].value)
