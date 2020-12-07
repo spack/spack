@@ -14,6 +14,7 @@ class Touchdetector(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
 
     version('develop', submodules=True)
+    version('5.5.1', tag='5.5.1', submodules=True)
     version('5.5.0', tag='5.5.0', submodules=True)
     version('5.4.0', tag='5.4.0', submodules=True)
     version('5.3.4', tag='5.3.4', submodules=True)
