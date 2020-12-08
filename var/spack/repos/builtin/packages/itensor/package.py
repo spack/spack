@@ -25,18 +25,10 @@ class Itensor(MakefilePackage):
     version('3.0.0', sha256='1d249a3a6442188a9f7829b32238c1025457c2930566d134a785994b1f7c54a9')
     version('2.1.1', sha256='b91a67af66ed0fa7678494f3895b5d5ae7f1dc1026540689f9625f515cb7791c')
 
-    variant('blaslapack', default='openblas', values=('openblas',
-            'mkl', 'lapack', 'macos', 'fjssl2'),
-            description='Enable the use of OpenBlas/MKL/Lapack or MacOS.')
     variant('openmp', default=False, description='Enable OpenMP support.')
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
 
-    depends_on('openblas', when='blaslapack=openblas',
-               type=('build', 'link', 'run'))
-    depends_on('intel-mkl', when='blaslapack=mkl',
-               type=('build', 'link', 'run'))
-    depends_on('netlib-lapack', when='blaslapack=lapack',
-               type=('build', 'link', 'run'))
+    depends_on('lapack', type=('build', 'link', 'run'))
 
     depends_on('hdf5+hl', when='+hdf5')
 
@@ -56,15 +48,24 @@ class Itensor(MakefilePackage):
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.BLAS/LAPACK
-        btype = self.spec.variants['blaslapack'].value
+        btype = spec['blas'].name
         if btype == 'openblas':
             vpla = 'PLATFORM=openblas'
-            vlib = 'BLAS_LAPACK_LIBFLAGS=-lpthread -lopenblas'
-            vinc = 'BLAS_LAPACK_INCLUDEFLAGS=-fpermissive '
+            vlib = 'BLAS_LAPACK_LIBFLAGS=-lpthread {0}'.format(
+                   spec['lapack'].libs.ld_flags)
+            vinc = 'BLAS_LAPACK_INCLUDEFLAGS=-I'
+            vinc += spec['lapack'].prefix.include
+            vinc += ' -fpermissive '
             vinc += '-DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE'
             filter_file(r'^PLATFORM.+', vpla, mf)
             filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
             filter_file('#PLATFORM=lapack', vinc, mf, String=True)
+        elif btype == 'fujitsu-ssl2':
+            vpla = 'PLATFORM=lapack'
+            vlib = 'BLAS_LAPACK_LIBFLAGS={0}'.format(
+                   spec['lapack'].libs.ld_flags)
+            filter_file(r'^PLATFORM.+', vpla, mf)
+            filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
 
         # 3.HDF5
         if '+hdf5' in spec:
@@ -73,6 +74,11 @@ class Itensor(MakefilePackage):
 
         # 4.openmp
         if '+openmp' in spec:
+            # dependency check
+            if btype == 'openblas' and 'threads=openmp' not in spec['blas']:
+                raise InstallError(
+                    '^openblas threads=openmp required for itensor+openmp'
+                    ' with openblas')
             filter_file('#ITENSOR_USE_OMP', 'ITENSOR_USE_OMP', mf)
 
         # 5.prefix
@@ -89,6 +95,8 @@ class Itensor(MakefilePackage):
 
         # 1.CCCOM
         ccopts = 'CCCOM={0}'.format(env["SPACK_CXX"])
+        if spec.satisfies('%fj'):
+            ccopts += ' -Nclang'
         if spec.satisfies('%gcc'):
             if not spec.satisfies('arch=aarch64:'):
                 ccopts += ' -m64'
