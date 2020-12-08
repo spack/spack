@@ -16,6 +16,7 @@ class Pism(CMakePackage):
     maintainers = ['citibeth']
 
     version('develop', branch='dev')
+    version('1.2.2', sha256='ecb880af26643e80b890f74efcf0e4d7e5d60adbc921ef281d3f00904020c624')
     version('1.1.4', sha256='8ccb867af3b37e8d103351dadc1d7e77512e64379519fe8a2592668deb27bc44')
     version('0.7.x', branch='stable0.7')
     version('icebin', branch='efischer/dev')
@@ -76,7 +77,8 @@ class Pism(CMakePackage):
     depends_on('netcdf-c')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
     depends_on('udunits')
-    depends_on('proj@:4')
+    depends_on('proj@4:', when='@:1.1')
+    depends_on('proj@6:', when='@1.2:')
     depends_on('everytrace', when='+everytrace')
 
     extends('python', when='+python')
@@ -84,6 +86,9 @@ class Pism(CMakePackage):
     depends_on('python@2.7:2.8', when='@:1.0 +python')
     depends_on('py-matplotlib', when='+python')
     depends_on('py-numpy', when='+python')
+
+    def setup_environment(self, spack_env, run_env):
+        spack_env.set('I_MPI_FABRICS', 'shm:tmi')
 
     def cmake_args(self):
         spec = self.spec
@@ -101,7 +106,7 @@ class Pism(CMakePackage):
             ('YES' if '+python' in spec else 'NO'),
             '-DPism_BUILD_ICEBIN=%s' %
             ('YES' if '+icebin' in spec else 'NO'),
-            '-DPism_USE_PROJ4=%s' %
+            '-DPism_USE_PROJ=%s' %
             ('YES' if '+proj' in spec else 'NO'),
             '-DPism_USE_PARALLEL_NETCDF4=%s' %
             ('YES' if '+parallel-netcdf4' in spec else 'NO'),
