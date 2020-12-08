@@ -1104,7 +1104,14 @@ class SpackSolverSetup(object):
             if not isinstance(values, tuple):
                 values = (values,)
 
+            # perform validation of the variant and values
+            spec = spack.spec.Spec(pkg_name)
+            spec.update_variant_validate(variant_name, values)
+
             for value in values:
+                self.variant_values_from_specs.add(
+                    (pkg_name, variant.name, value)
+                )
                 self.gen.fact(fn.variant_default_value_from_packages_yaml(
                     pkg_name, variant.name, value
                 ))
@@ -1691,15 +1698,7 @@ class SpecBuilder(object):
             )
             return
 
-        pkg_class = spack.repo.path.get_pkg_class(pkg)
-
-        variant = self._specs[pkg].variants.get(name)
-        if variant:
-            # it's multi-valued
-            variant.append(value)
-        else:
-            variant = pkg_class.variants[name].make_variant(value)
-            self._specs[pkg].variants[name] = variant
+        self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
         self._specs[pkg].versions = ver([version])

@@ -183,6 +183,9 @@ external_spec(Package, ID) :-
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
+% A variant cannot have a value that is not also a possible value
+:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
