@@ -264,6 +264,10 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    def test_concretize_dependent_with_singlevalued_variant_type(self):
+        s = Spec('singlevalue-variant-dependent-type')
+        s.concretize()
+
     @pytest.mark.parametrize("spec,version", [
         ('dealii', 'develop'),
         ('xsdk', '0.4.0'),
@@ -498,6 +502,11 @@ class TestConcretize(object):
 
     def test_conflicts_in_spec(self, conflict_spec):
         s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError):
+            s.concretize()
+
+    def test_conflict_in_all_directives_true(self):
+        s = Spec('when-directives-true')
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
@@ -954,3 +963,41 @@ class TestConcretize(object):
         # Check that non-default variant values are forced on the dependency
         d = s['dep-with-variants']
         assert '+foo+bar+baz' in d
+
+    @pytest.mark.regression('20055')
+    def test_custom_compiler_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec('a %gcc@foo os=redhat6').concretized()
+        assert '%gcc@foo' in s
+
+    def test_all_patches_applied(self):
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
+        spec.concretize()
+        assert ((uuidpatch, localpatch) ==
+                spec['libelf'].variants['patches'].value)
+
+    def test_dont_select_version_that_brings_more_variants_in(self):
+        s = Spec('dep-with-variants-if-develop-root').concretized()
+        assert s['dep-with-variants-if-develop'].satisfies('@1.0')
+
+    @pytest.mark.regression('20244')
+    @pytest.mark.parametrize('spec_str,is_external,expected', [
+        # These are all externals, and 0_8 is a version not in package.py
+        ('externaltool@1.0', True, '@1.0'),
+        ('externaltool@0.9', True, '@0.9'),
+        ('externaltool@0_8', True, '@0_8'),
+        # This external package is buildable, has a custom version
+        # in packages.yaml that is greater than the ones in package.py
+        # and specifies a variant
+        ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
+        ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
+        ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+    ])
+    def test_external_package_versions(self, spec_str, is_external, expected):
+        s = Spec(spec_str).concretized()
+        assert s.external == is_external
+        assert s.satisfies(expected)

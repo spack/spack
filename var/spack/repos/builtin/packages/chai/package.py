@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Chai(CMakePackage, CudaPackage, HipPackage):
+class Chai(CMakePackage, CudaPackage, ROCmPackage):
     """
     Copy-hiding array interface for data migration between memory spaces
     """
@@ -23,32 +23,40 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
     version('1.1.0', tag='v1.1.0', submodules='True')
     version('1.0', tag='v1.0', submodules='True')
 
+    variant('enable_pick', default=False, description='Enable pick method')
     variant('shared', default=True, description='Build Shared Libs')
     variant('raja', default=False, description='Build plugin for RAJA')
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
+    # TODO: figure out gtest dependency and then set this default True
+    # and remove the +tests conflict below.
+    variant('tests', default=False, description='Build tests')
 
     depends_on('cmake@3.8:', type='build')
+    depends_on('cmake@3.9:', type='build', when="+cuda")
+    depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
     depends_on('umpire')
     depends_on('raja', when="+raja")
 
-    depends_on('cmake@3.9:', type='build', when="+cuda")
     depends_on('umpire+cuda', when="+cuda")
     depends_on('raja+cuda', when="+raja+cuda")
 
-    # variants +hip and amdgpu_targets are not automatically passed to
+    # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
-    amdgpu_targets = HipPackage.amd_gputargets_list()
-    depends_on('umpire+hip', when='+hip')
-    depends_on('raja+hip', when="+raja+hip")
-    for val in amdgpu_targets:
+    depends_on('umpire+rocm', when='+rocm')
+    depends_on('raja+rocm', when="+raja+rocm")
+    for val in ROCmPackage.amdgpu_targets:
         depends_on('umpire amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
         depends_on('raja amdgpu_target=%s' % val, when='+raja amdgpu_target=%s' % val)
+
+    conflicts('+benchmarks', when='~tests')
 
     def cmake_args(self):
         spec = self.spec
 
         options = []
+        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
         if '+cuda' in spec:
             options.extend([
@@ -63,12 +71,17 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
@@ -76,18 +89,14 @@ class Chai(CMakePackage, CudaPackage, HipPackage):
             options.extend(['-DENABLE_RAJA_PLUGIN=ON',
                             '-DRAJA_DIR=' + spec['raja'].prefix])
 
+        options.append('-DENABLE_PICK={0}'.format(
+            'ON' if '+enable_pick' in spec else 'OFF'))
+
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix.share.umpire.cmake)
 
         options.append('-DENABLE_TESTS={0}'.format(
-            'ON' if self.run_tests else 'OFF'))
-
-        # give clear error for conflict between self.run_tests and
-        # benchmarks variant.
-        if not self.run_tests and '+benchmarks' in spec:
-            raise InstallError(
-                'ENABLE_BENCHMARKS requires ENABLE_TESTS to be ON'
-            )
+            'ON' if '+tests' in spec  else 'OFF'))
 
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))

@@ -13,10 +13,11 @@ class HsakmtRoct(CMakePackage):
        with the ROCk driver."""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface"
-    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-3.9.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCT-Thunk-Interface/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.10.0', sha256='a3d629247a763cc36f5d48e9122cee8498574af628e14e3c38686c05f66e3e06')
     version('3.9.0', sha256='e1bb8b010855736d8a97957222f648532d42646ec2964776a9a1455dc81104a3')
     version('3.8.0', sha256='cd5440f31f592737b5d05448704bd01f91f73cfcab8a7829922e81332575cfe8')
     version('3.7.0', sha256='b357fe7f425996c49f41748923ded1a140933de7564a70a828ed6ded6d896458')

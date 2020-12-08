@@ -28,6 +28,7 @@ test_args = [
     '-Wl,--end-group',
     '-Xlinker', '-rpath', '-Xlinker', '/third/rpath',
     '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
+    '-Wl,--rpath,/fifth/rpath', '-Wl,--rpath', '-Wl,/sixth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
@@ -45,11 +46,13 @@ test_library_paths = [
 
 test_wl_rpaths = [
     '-Wl,-rpath,/first/rpath', '-Wl,-rpath,/second/rpath',
-    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath']
+    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath',
+    '-Wl,-rpath,/fifth/rpath', '-Wl,-rpath,/sixth/rpath']
 
 test_rpaths = [
     '-rpath', '/first/rpath', '-rpath', '/second/rpath',
-    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath']
+    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath',
+    '-rpath', '/fifth/rpath', '-rpath', '/sixth/rpath']
 
 test_args_without_paths = [
     'arg1',
