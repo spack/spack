@@ -1812,7 +1812,10 @@ class BuildTask(object):
                                                   arch_spec=arch_spec):
             # The compiler is in the queue, identify it as dependency
             dep = spack.compilers.pkg_spec_for_compiler(compiler_spec)
-            dep.architecture = arch_spec
+            dep.constrain('platform=%s' % str(arch_spec.platform))
+            dep.constrain('os=%s' % str(arch_spec.os))
+            dep.constrain('target=%s:' %
+                          arch_spec.target.microarchitecture.family.name)
             dep.concretize()
             dep_id = package_id(dep.package)
             self.dependencies.add(dep_id)

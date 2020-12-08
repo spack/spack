@@ -253,8 +253,7 @@ class Concretizer(object):
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
 
-        if spec.architecture.platform and \
-                (spec.architecture.os and spec.architecture.target):
+        if spec.architecture.concrete:
             return False
 
         # Get platform of nearest spec with a platform, including spec
@@ -294,13 +293,17 @@ class Concretizer(object):
 
         # Get the nearest spec with relevant platform and a target
         # Generally, same algorithm as finding os
+        curr_target = None
         if spec.architecture.target:
+            curr_target = spec.architecture.target
+        if spec.architecture.target and spec.architecture.target_concrete:
             new_target = spec.architecture.target
         else:
             new_target_spec = find_spec(
                 spec, lambda x: (x.architecture and
                                  x.architecture.platform == str(new_plat) and
-                                 x.architecture.target)
+                                 x.architecture.target and
+                                 x.architecture.target_concrete)
             )
             if new_target_spec:
                 new_target = new_target_spec.architecture.target
@@ -310,6 +313,20 @@ class Concretizer(object):
                     new_target = self.target_from_package_preferences(spec)
                 else:
                     new_target = new_plat.target('default_target')
+                if curr_target:
+                    # convert to ArchSpec to compare satisfaction
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(new_target)))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(curr_target)))
+
+                    # We are guaranteed a : in curr_target if we get here
+                    if not new_target_arch.satisfies(curr_target_arch):
+                        if curr_target.name.split(':')[1]:
+                            new_target = curr_target.name.split(':')[1]
+                        else:
+                            # TODO: something better than picking first
+                            new_target = curr_target.name.split(':')[0]
 
         # Construct new architecture, compute whether spec changed
         arch_spec = (str(new_plat), str(new_os), str(new_target))
@@ -384,7 +401,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -482,7 +499,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
