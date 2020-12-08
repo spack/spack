@@ -269,6 +269,7 @@ class Version(object):
     def concrete(self):
         return self
 
+    # TODO: consider @memoized since we impl __hash__?
     @coerced
     def __lt__(self, other):
         """Version comparison is designed for consistency with the way RPM
@@ -380,32 +381,56 @@ class Version(object):
             return VersionList()
 
 
+def _endpoint_only(fun):
+    """We want to avoid logic that handles any type of version range, just endpoints."""
+    @wraps(fun)
+    def validate_endpoint_argument(self, other):
+        assert isinstance(other, _VersionEndpoint), "required two _VersionEndpoint arguments, received {0} and {1}".format(self, other)
+        assert self.location == other.location, "two _VersionEndpoint arguments with different locations is a programming bug: received {0} and {1}".format(self, other)
+        return fun(self, other)
+    return validate_endpoint_argument
+
+
 class _VersionEndpoint(object):
 
-    def __init__(self, value, includes_endpoint):
+    _valid_endpoint_locations = frozenset(['left', 'right'])
+
+    def __init__(self, value, location, includes_endpoint):
         assert (value is None) or isinstance(value, Version), value
+        assert location in self._valid_endpoint_locations, location
         assert isinstance(includes_endpoint, bool)
-        self.value = value
-        self.includes_endpoint = includes_endpoint
 
         # We arbitrarily decide this is a nonsensical state, consistent with
         # VersionRange.__init__().
         if value is None:
-            assert includes_endpoint
+            assert includes_endpoint, "infinite (None) value is incompatible with includes_endpoint=False"
 
-    @coerced
+        self.value = value
+        self.location = location
+        self.includes_endpoint = includes_endpoint
+
+    def __repr__(self):
+        return "_VersionEndpoint(value={0!r}, location={1!r}, includes_endpoint={2!r})".format(
+            self.value, self.location, self.includes_endpoint
+        )
+
+    def __hash__(self):
+        return hash((self.value, self.location, self.includes_endpoint))
+
+    @_endpoint_only
     def __eq__(self, other):
-        return (other is not None and
-                type(other) == _VersionEndpoint and
-                self.value == other.value and
+        return (self.value == other.value and
+                # Note that this is already checked by @_endpoint_only.
+                self.location == other.location and
                 self.includes_endpoint == other.includes_endpoint)
 
-    @coerced
+    # TODO: consider @memoized since we impl __hash__?
+    @_endpoint_only
     def __lt__(self, other):
-        if other is None:
-            return False
-
         s, o = self, other
+
+        # (1) Check whether both are the same finite value, or both are the same
+        #     infinite value (None).
         if s.value == o.value:
             # Same version, so we check whether one and not the other contains
             # the endpoint.
@@ -413,25 +438,38 @@ class _VersionEndpoint(object):
                 return s.includes_endpoint
             # Cannot prove strict '<', so False.
             return False
+
+        # (2) We now know they aren't *both* infinite, since they're not
+        #     equal, so we have to see if *one* is, and assume it is less/greater
+        #     than the other regardless of the other's value.
+        # TODO: This is already checked by @_endpoint_only.
+        assert self.location == other.location
+        if self.location == 'left':
+            infinite_left_wins = True
+        else:
+            # TODO: This is already checked by __init__.
+            assert self.location == 'right'
+            infinite_left_wins = False
         if s.value is None:
-            return True
+            return infinite_left_wins
         if o.value is None:
-            return False
+            return not infinite_left_wins
+
         return s.value < o.value
 
-    @coerced
+    @_endpoint_only
     def __ne__(self, other):
         return not (self == other)
 
-    @coerced
+    @_endpoint_only
     def __le__(self, other):
         return self == other or self < other
 
-    @coerced
+    @_endpoint_only
     def __ge__(self, other):
         return not (self < other)
 
-    @coerced
+    @_endpoint_only
     def __gt__(self, other):
         return not (self == other) and not (self < other)
 
@@ -554,16 +592,14 @@ class VersionRange(object):
     def lowest(self):
         return self.start
 
-    @memoized
     def _low_endpoint(self):
-        return _VersionEndpoint(self.lowest(), self.includes_left_endpoint)
+        return _VersionEndpoint(self.lowest(), 'left', self.includes_left_endpoint)
 
     def highest(self):
         return self.end
 
-    @memoized
     def _high_endpoint(self):
-        return _VersionEndpoint(self.highest(), self.includes_right_endpoint)
+        return _VersionEndpoint(self.highest(), 'right', self.includes_right_endpoint)
 
     @coerced
     def __lt__(self, other):
