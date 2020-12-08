@@ -224,6 +224,7 @@ def test_satisfy_strict_constraint_when_not_concrete(
     constraint = spack.spec.ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint, strict=True)
 
+
 @pytest.mark.parametrize('root_target_range,dep_target_range,result', [
     (('x86_64:nocona', 'x86_64:core2', 'nocona')),  # pref not in intersection
     (('x86_64:core2', 'x86_64:nocona', 'nocona')),
@@ -231,7 +232,8 @@ def test_satisfy_strict_constraint_when_not_concrete(
     (('ivybridge', 'nocona:skylake', 'ivybridge')),  # one side concrete
     (('haswell:icelake', 'broadwell', 'broadwell')),
     # multiple ranges in lists with multiple overlaps
-    (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:', 'haswell')),
+    (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:',
+      'haswell')),
     # lists with concrete targets, lists compared to ranges
     (('x86_64,haswell', 'core2:broadwell', 'haswell'))
 ])

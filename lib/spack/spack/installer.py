@@ -1788,7 +1788,8 @@ class BuildTask(object):
         # to support tracking of parallel, multi-spec, environment installs.
         self.dependents = set(get_dependent_ids(self.pkg.spec))
 
-        tty.debug('Pkg id {0} has the following dependents:'.format(self.pkg_id))
+        tty.debug(
+            'Pkg id {0} has the following dependents:'.format(self.pkg_id))
         for dep_id in self.dependents:
             tty.debug('- {0}'.format(dep_id))
 

@@ -436,7 +436,6 @@ class ArchSpec(object):
                         results.append('%s:%s' % (n_min, n_max))
         return results
 
-
     def constrain(self, other):
         """Projects all architecture fields that are specified in the given
         spec onto the instance spec if they're missing from the instance

@@ -638,7 +638,8 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     all_deps = defaultdict(set)
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
-    installer._add_bootstrap_compilers('fake', 'fake', [request.pkg], request, all_deps)
+    installer._add_bootstrap_compilers(
+        'fake', 'fake', [request.pkg], request, all_deps)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
