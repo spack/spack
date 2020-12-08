@@ -25,15 +25,13 @@ class HdfEos2(AutotoolsPackage):
     # In basename expansions, 0 is raw version,
     # 1 is for version with dots => underscores
     version_list = [
-            {'version': '2.20v1.00',
-                'sha256': 'cb0f900d2732ab01e51284d6c9e90d0e852d61bba9bce3b43af0430ab5414903',
-                'basename': 'HDF-EOS{0}.tar.Z'
-            },
-            {'version': '2.19b',
-                'sha256': 'a69993508dbf5fa6120bac3c906ab26f1ad277348dfc2c891305023cfdf5dc9d',
-                'basename': 'hdfeos{1}.zip'
-            }
-        ]
+        {'version': '2.20v1.00',
+            'sha256': 'cb0f900d2732ab01e51284d6c9e90d0e852d61bba9bce3b43af0430ab5414903',
+            'basename': 'HDF-EOS{0}.tar.Z'},
+        {'version': '2.19b',
+            'sha256': 'a69993508dbf5fa6120bac3c906ab26f1ad277348dfc2c891305023cfdf5dc9d',
+            'basename': 'hdfeos{1}.zip'}
+    ]
 
     for vrec in version_list:
         ver = vrec['version']
