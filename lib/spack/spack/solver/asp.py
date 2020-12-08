@@ -1104,9 +1104,10 @@ class SpackSolverSetup(object):
             if not isinstance(values, tuple):
                 values = (values,)
 
+            # perform validation of the variant and values
             spec = spack.spec.Spec(pkg_name)
-            spec.add_variant_values(variant_name,
-                                    values)
+            spec.update_variant_validate(variant_name, values)
+
             for value in values:
                 self.variant_values_from_specs.add(
                     (pkg_name, variant.name, value)
@@ -1697,8 +1698,7 @@ class SpecBuilder(object):
             )
             return
 
-        self._specs[pkg].add_variant_values(name,
-                                            value)
+        self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
         self._specs[pkg].versions = ver([version])
