@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Raja(CMakePackage, CudaPackage):
+class Raja(CMakePackage, CudaPackage, ROCmPackage):
     """RAJA Parallel Framework."""
 
     homepage = "http://software.llnl.gov/RAJA/"
@@ -32,14 +32,31 @@ class Raja(CMakePackage, CudaPackage):
     variant('shared', default=True, description='Build Shared Libs')
     variant('examples', default=True, description='Build examples.')
     variant('exercises', default=True, description='Build exercises.')
+    # TODO: figure out gtest dependency and then set this default True
+    # and remove the +tests conflict below.
+    variant('tests', default=False, description='Build tests')
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('cmake@3.9:', when='+cuda', type='build')
+    depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
+
+    depends_on('camp')
+    depends_on('camp+cuda', when='+cuda')
+
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    depends_on('camp+rocm', when='+rocm')
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('camp amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+
+    conflicts('+openmp', when='+rocm')
 
     def cmake_args(self):
         spec = self.spec
 
         options = []
+
+        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
+
         options.append('-DENABLE_OPENMP={0}'.format(
             'ON' if '+openmp' in spec else 'OFF'))
 
@@ -53,6 +70,19 @@ class Raja(CMakePackage, CudaPackage):
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
+
+        if '+rocm' in spec:
+            options.extend([
+                '-DENABLE_HIP=ON',
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
+        else:
+            options.append('-DENABLE_HIP=OFF')
 
         options.append('-DBUILD_SHARED_LIBS={0}'.format(
             'ON' if '+shared' in spec else 'OFF'))
@@ -69,7 +99,8 @@ class Raja(CMakePackage, CudaPackage):
         if self.spec.satisfies('%clang target=ppc64le:') or not self.run_tests:
             options.append('-DENABLE_TESTS=OFF')
         else:
-            options.append('-DENABLE_TESTS=ON')
+            options.append('-DENABLE_TESTS={0}'.format(
+                'ON' if '+tests' in spec else 'OFF'))
 
         return options
 

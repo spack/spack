@@ -15,6 +15,8 @@ class Fastjet(AutotoolsPackage):
     homepage = "http://fastjet.fr/"
     url      = "http://fastjet.fr/repo/fastjet-3.3.3.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'vvolkl']
 
     version('3.3.3', sha256='30b0a0282ce5aeac9e45862314f5966f0be941ce118a83ee4805d39b827d732b')

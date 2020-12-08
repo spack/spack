@@ -15,6 +15,8 @@ class Hepmcanalysis(MakefilePackage):
 
     version('3.4.13', sha256='be9937c6de493a5671258919493b0caa0cecca77853a2075f5cecce1071e0029')
 
+    tags = ['hep']
+
     depends_on('hepmc')
     depends_on('fastjet')
     depends_on('root')

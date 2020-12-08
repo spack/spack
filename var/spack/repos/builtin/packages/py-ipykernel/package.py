@@ -43,6 +43,7 @@ class PyIpykernel(PythonPackage):
 
     phases = ['build', 'install', 'install_data']
 
-    def install_data(self):
+    def install_data(self, spec, prefix):
         """ install the Jupyter kernel spec """
-        self.spec['python'].command('-m ipykernel', ['install'])
+        self.spec['python'].command(
+            '-m', 'ipykernel', 'install', '--prefix=' + prefix)

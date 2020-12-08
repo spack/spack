@@ -33,6 +33,8 @@ class Acts(CMakePackage, CudaPackage):
     git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
+    tags = ['hep']
+
     # Supported Acts versions
     version('master', branch='master')
     version('2.00.0', commit='8708eae2b2ccdf57ab7b451cfbba413daa1fc43c')

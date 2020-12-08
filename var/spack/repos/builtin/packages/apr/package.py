@@ -17,3 +17,5 @@ class Apr(AutotoolsPackage):
     version('1.5.2', sha256='1af06e1720a58851d90694a984af18355b65bb0d047be03ec7d659c746d6dbdb')
 
     patch('missing_includes.patch', when='@1.7.0')
+
+    depends_on('libuuid', type='link')

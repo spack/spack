@@ -13,6 +13,8 @@ class Evtgen(AutotoolsPackage):
     homepage = "https://evtgen.hepforge.org/"
     url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/evtgen-R01-07-00.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['vvolkl']
 
     version('02-00-00', sha256='02372308e1261b8369d10538a3aa65fe60728ab343fcb64b224dac7313deb719')
