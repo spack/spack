@@ -82,7 +82,9 @@ class TestConcretizePreferences(object):
          {'debug': True, 'opt': True, 'shared': False, 'static': False}),
         # Check a multivalued variant with multiple values set
         ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
-         {'foo': ('bar', 'baz'), 'fee': 'bar'})
+         {'foo': ('bar', 'baz'), 'fee': 'bar'}),
+        ('singlevalue-variant', ['fum=why'],
+         {'fum': 'why'})
     ])
     def test_preferred_variants(
             self, package_name, variant_value, expected_results
