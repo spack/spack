@@ -5,8 +5,7 @@
 
 
 from spack import *
-import os
-import glob
+import sys
 
 
 class Dsqss(CMakePackage):
@@ -29,10 +28,9 @@ class Dsqss(CMakePackage):
 
     @run_before('cmake')
     def rm_macos(self):
-        macpath = 'test/*/._*.json'
-        r = glob.glob(macpath)
-        for i in r:
-            os.remove(i)
+        if sys.platform != 'darwin':
+            for mfile in find('test', '._*.json', recursive=True):
+                force_remove(mfile)
 
     def cmake_args(self):
         args = []
