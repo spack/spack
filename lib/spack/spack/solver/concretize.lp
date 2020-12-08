@@ -334,19 +334,10 @@ node_target_weight(Package, Weight)
     target_weight(Target, Package, Weight).
 
 % compatibility rules for targets among nodes
-node_target_match_pref(Package, Target) :- node_target_set(Package, Target).
-node_target_match_pref(Dependency, Target)
-  :- depends_on(Package, Dependency), node_target_match_pref(Package, Target),
-     not node_target_set(Dependency, _).
-
-node_target_match_pref(Dependency, Target)
+node_target_match_parent(Dependency, Target)
   :- depends_on(Package, Dependency),
-     root(Package), node_target(Package, Target),
-     not node_target_match_pref(Package, _),
-     not node_target_set(Dependency, _).
-
-node_target_match(Package, 1)
-  :- node_target(Package, Target), node_target_match_pref(Package, Target).
+     node_target(Package, Target),
+     node_target(Dependency, Target).
 
 derive_target_from_parent(Parent, Package)
   :- depends_on(Parent, Package), not package_target_weight(_, Package, _).
@@ -568,5 +559,5 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % Maximize the number of matches for targets in the DAG, try
 % to select the preferred target.
-#maximize{ Weight@4,Package : node_target_match(Package, Weight) }.
+#maximize{ 1@4,Package,Target : node_target_match_parent(Package, Target) }.
 #minimize{ Weight@3,Package : node_target_weight(Package, Weight) }.
