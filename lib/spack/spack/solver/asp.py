@@ -883,6 +883,7 @@ class SpackSolverSetup(object):
         for name, variant in sorted(pkg.variants.items()):
             self.gen.fact(fn.variant(pkg.name, name))
 
+            spec = spack.spec.Spec(pkg.name)
             single_value = not variant.multi
             if single_value:
                 self.gen.fact(fn.variant_single_value(pkg.name, name))
@@ -890,6 +891,9 @@ class SpackSolverSetup(object):
                     fn.variant_default_value_from_package_py(
                         pkg.name, name, variant.default)
                 )
+                spec.update_variant_validate(name, variant.default)
+                self.gen.fact(fn.variant_possible_value(pkg.name, name,
+                                                        variant.default))
             else:
                 spec_variant = variant.make_default()
                 defaults = spec_variant.value
@@ -898,6 +902,9 @@ class SpackSolverSetup(object):
                         fn.variant_default_value_from_package_py(
                             pkg.name, name, val)
                     )
+                    spec.update_variant_validate(name, val)
+                    self.gen.fact(fn.variant_possible_value(pkg.name,
+                                                            name, val))
 
             values = variant.values
             if values is None:
