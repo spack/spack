@@ -83,7 +83,7 @@ def parse_install_tree(config_dict):
         # Determines if install_root exists
         if install_root in install_trees:
             install_tree = install_trees[install_root]
-        elif shared_install_trees and install_root in shared_install_trees:
+        elif shared_install_trees and (install_root in shared_install_trees):
             install_tree = shared_install_trees[install_root]
         else:
             # TODO: provide the user an option to create a new install tree
@@ -155,10 +155,12 @@ def parse_install_tree(config_dict):
 
     # Initializes upstream pointer if requested
     if init_upstream:
-        init_upstream_path = shared_install_trees[init_upstream]['root']
-        initialize_upstream_pointer_if_unset(root, init_upstream_path)
-    elif shared_install_trees and (not upstream_set(root)):
-        raise ValueError("Must specify an upstream shared install tree")
+        if shared_install_trees:
+            init_upstream_path = shared_install_trees[init_upstream]['root']
+            initialize_upstream_pointer_if_unset(root, init_upstream_path)
+        else:
+            tty.die("Specifided upstream must be defined"
+                    " as shared install tree.")
 
     return (root, unpadded_root, projections)
 
@@ -294,7 +296,7 @@ def _construct_upstream_dbs_from_install_roots(
     for install_root in reversed(install_roots):
         upstream_dbs = list(accumulated_upstream_dbs)
         next_db = spack.database.Database(
-            install_root, is_upstream=True, upstream_dbs=upstream_dbs)
+            install_root.strip(), is_upstream=True, upstream_dbs=upstream_dbs)
         next_db._fail_when_missing_deps = _test
         next_db._read()
         accumulated_upstream_dbs.insert(0, next_db)
