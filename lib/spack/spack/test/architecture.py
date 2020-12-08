@@ -223,3 +223,26 @@ def test_satisfy_strict_constraint_when_not_concrete(
     architecture = spack.spec.ArchSpec(architecture_tuple)
     constraint = spack.spec.ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint, strict=True)
+
+@pytest.mark.parametrize('root_target_range,dep_target_range,result', [
+    (('x86_64:nocona', 'x86_64:core2', 'nocona')),  # pref not in intersection
+    (('x86_64:core2', 'x86_64:nocona', 'nocona')),
+    (('x86_64:haswell', 'x86_64:mic_knl', 'core2')),  # pref in intersection
+    (('ivybridge', 'nocona:skylake', 'ivybridge')),  # one side concrete
+    (('haswell:icelake', 'broadwell', 'broadwell')),
+    # multiple ranges in lists with multiple overlaps
+    (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:', 'haswell')),
+    # lists with concrete targets, lists compared to ranges
+    (('x86_64,haswell', 'core2:broadwell', 'haswell'))
+])
+@pytest.mark.usefixtures('mock_packages')
+def test_concretize_target_ranges(
+        root_target_range, dep_target_range, result
+):
+    # use foobar=bar to make the problem simpler for the old concretizer
+    # the new concretizer should not need that help
+    spec = Spec('a foobar=bar target=%s ^b target=%s' %
+                (root_target_range, dep_target_range))
+    spec.concretize()
+
+    assert str(spec).count('arch=test-debian6-%s' % result) == 2

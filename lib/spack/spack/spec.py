@@ -359,13 +359,11 @@ class ArchSpec(object):
                     return False
 
         # Check target
-        return self._satisfies_target(other.target, strict=strict)
+        return self.target_satisfies(other, strict=strict)
 
-    def _satisfies_target(self, other_target, strict):
-        self_target = self.target
-
-        need_to_check = bool(other_target) if strict or self.concrete \
-            else bool(other_target and self_target)
+    def target_satisfies(self, other, strict):
+        need_to_check = bool(other.target) if strict or self.concrete \
+            else bool(other.target and self.target)
 
         # If there's no need to check we are fine
         if not need_to_check:
@@ -375,27 +373,10 @@ class ArchSpec(object):
         if self.target is None:
             return False
 
-        for target_range in str(other_target).split(','):
-            t_min, sep, t_max = target_range.partition(':')
-
-            # Checking against a single specific target
-            if not sep and self_target == t_min:
-                return True
-
-            if not sep and self_target != t_min:
-                return False
-
-            # Check against a range
-            min_ok = self_target.microarchitecture >= t_min if t_min else True
-            max_ok = self_target.microarchitecture <= t_max if t_max else True
-
-            if min_ok and max_ok:
-                return True
-
-        return False
+        return bool(self.target_intersection(other))
 
     def target_constrain(self, other):
-        if not other.target_satisfies(self):
+        if not other.target_satisfies(self, strict=False):
             raise UnsatisfiableArchitectureSpecError(self, other)
 
         if self.target_concrete:
@@ -405,11 +386,20 @@ class ArchSpec(object):
             return True
 
         # Compute the intersection of every combination of ranges in the lists
+        results = self.target_intersection(other)
+        # Do we need to dedupe here?
+        self.target = ','.join(results)
+
+    def target_intersection(self, other):
         results = []
+
+        if not self.target or not other.target:
+            return results
+
         for s_target_range in str(self.target).split(','):
             s_min, s_sep, s_max = s_target_range.partition(':')
             for o_target_range in str(other.target).split(','):
-                o_min, o_sep, o_max = o_target_range.paritions(':')
+                o_min, o_sep, o_max = o_target_range.partition(':')
 
                 if not s_sep:
                     # s_target_range is a concrete target
@@ -419,13 +409,15 @@ class ArchSpec(object):
                     if not o_sep:
                         if s_min == o_min:
                             results.append(s_min)
-                    elif s_comp >= o_min and s_comp <= o_max:
+                    elif (not o_min or s_comp >= o_min) and (
+                            not o_max or s_comp <= o_max):
                         results.append(s_min)
                 elif not o_sep:
                     # "cast" to microarchitecture
                     o_comp = spack.architecture.Target(o_min).microarchitecture
-                    if o_comp >= s_min and o_comp <= s_max:
-                        reults.append(o_min)
+                    if (not s_min or o_comp >= s_min) and (
+                            not s_max or o_comp <= s_max):
+                        results.append(o_min)
                 else:
                     # Take intersection of two ranges
                     # Lots of comparisons needed
@@ -436,14 +428,14 @@ class ArchSpec(object):
 
                     n_min = s_min if _s_min >= _o_min else o_min
                     n_max = s_max if _s_max <= _o_max else o_max
-                    n_comp = spack.architecture.Target(n_min).microarchitecture
-                    if n_min == n_max:
+                    _n_min = spack.architecture.Target(n_min).microarchitecture
+                    _n_max = spack.architecture.Target(n_max).microarchitecture
+                    if _n_min == _n_max:
                         results.append(n_min)
-                    elif n_comp < n_max:
+                    elif not n_min or not n_max or _n_min < _n_max:
                         results.append('%s:%s' % (n_min, n_max))
+        return results
 
-        # Do we need to dedupe here?
-        self.target = ','.join(results)
 
     def constrain(self, other):
         """Projects all architecture fields that are specified in the given
@@ -460,8 +452,8 @@ class ArchSpec(object):
         """
         other = self._autospec(other)
 
-        if not self.satisfies(other):
-            raise UnsatisfiableArchitectureSpecError(self, other)
+        if not other.satisfies(self):
+            raise UnsatisfiableArchitectureSpecError(other, self)
 
         constrained = False
         for attr in ('platform', 'os'):
@@ -470,7 +462,7 @@ class ArchSpec(object):
                 setattr(self, attr, ovalue)
                 constrained = True
 
-        self.target_constraint(self, other)
+        self.target_constrain(other)
 
         return constrained
 

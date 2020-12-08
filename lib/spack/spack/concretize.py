@@ -303,10 +303,19 @@ class Concretizer(object):
                 spec, lambda x: (x.architecture and
                                  x.architecture.platform == str(new_plat) and
                                  x.architecture.target and
-                                 x.architecture.target_concrete)
+                                 x.architecture.target != curr_target)
             )
             if new_target_spec:
-                new_target = new_target_spec.architecture.target
+                if curr_target:
+                    # constrain one target by the other
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, new_target_spec.architecture.target))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, curr_target))
+                    curr_target_arch.constrain(new_target_arch)
+                    new_target = curr_target_arch.target
+                else:
+                    new_target = new_target_spec.architecture.target
             else:
                 # To get default platform, consider package prefs
                 if PackagePrefs.has_preferred_targets(spec.name):
@@ -320,13 +329,23 @@ class Concretizer(object):
                     curr_target_arch = spack.spec.ArchSpec(
                         (None, None, str(curr_target)))
 
-                    # We are guaranteed a : in curr_target if we get here
                     if not new_target_arch.satisfies(curr_target_arch):
-                        if curr_target.name.split(':')[1]:
-                            new_target = curr_target.name.split(':')[1]
-                        else:
-                            # TODO: something better than picking first
-                            new_target = curr_target.name.split(':')[0]
+                        # new_target is an incorrect guess based on preferences
+                        # and/or default
+                        valid_target_ranges = reversed(
+                            str(curr_target).split(','))
+                        for target_range in valid_target_ranges:
+                            t_min, t_sep, t_max = target_range.partition(':')
+                            if not t_sep:
+                                new_target = t_min
+                                break
+                            elif t_max:
+                                new_target = t_max
+                                break
+                            elif t_min:
+                                # TODO: something better than picking first
+                                new_target = t_min
+                                break
 
         # Construct new architecture, compute whether spec changed
         arch_spec = (str(new_plat), str(new_os), str(new_target))
