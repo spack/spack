@@ -57,9 +57,9 @@ def _env_path():
     if spack.config.shared_spack():
         # If this is a shared spack instance, then environments should be
         # stored in the install tree root.
-        return os.path.join(spack.store.root, 'environments')
+        return os.path.join(str(spack.store.root), 'environments')
     else:
-        return os.path.join(spack.paths.var_path, 'environments')
+        return os.path.join(str(spack.paths.var_path), 'environments')
 
 
 #: path where environments are stored in the spack tree
