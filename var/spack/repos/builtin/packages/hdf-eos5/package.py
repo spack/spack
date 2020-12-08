@@ -31,7 +31,7 @@ class HdfEos5(AutotoolsPackage):
         {'version': '5.1.15',
             'sha256': 'fbf4d085f9bf6ffad259aee1e9f60cf060e7e99c447894ad8955df02de83c92c',
             'basename': 'hdfeos{1}.zip'}
-        ]
+    ]
 
     for vrec in version_list:
         ver = vrec['version']
