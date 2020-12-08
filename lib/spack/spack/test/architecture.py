@@ -12,6 +12,7 @@ import platform as py_platform
 import pytest
 
 import spack.architecture
+import spack.concretize
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
@@ -243,8 +244,9 @@ def test_concretize_target_ranges(
 ):
     # use foobar=bar to make the problem simpler for the old concretizer
     # the new concretizer should not need that help
-    spec = Spec('a foobar=bar target=%s ^b target=%s' %
+    spec = Spec('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
                 (root_target_range, dep_target_range))
-    spec.concretize()
+    with spack.concretize.disable_compiler_existence_check():
+        spec.concretize()
 
     assert str(spec).count('arch=test-debian6-%s' % result) == 2
