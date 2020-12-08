@@ -58,6 +58,11 @@ class PyProtobuf(PythonPackage):
             return '.'
 
     @when('+cpp')
+    def setup_build_environment(self, env):
+        protobuf_dir = self.spec['protobuf'].libs.directories[0]
+        env.prepend_path('LIBRARY_PATH', protobuf_dir)
+
+    @when('+cpp')
     def build_args(self, spec, prefix):
         return ['--cpp_implementation']
 
