@@ -26,6 +26,12 @@ class Krb5(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('openssl')
 
+    variant(
+        'shared', default=True,
+        description='install shared libraries if True, static if false'
+    )
+    patch('mit-krb5-1.17-static-libs.patch', level=0)
+
     configure_directory = 'src'
     build_directory = 'src'
 
@@ -51,4 +57,12 @@ class Krb5(AutotoolsPackage):
             string=True)
 
     def configure_args(self):
-        return ['--without-system-verto']
+        args = ['--without-system-verto']
+
+        if '~shared' in self.spec:
+            args.append('--enable-static')
+            args.append('--disable-shared')
+        else:
+            args.append('--disable-static')
+
+        return args

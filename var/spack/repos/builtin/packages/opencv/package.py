@@ -20,6 +20,8 @@ class Opencv(CMakePackage, CudaPackage):
     url      = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
     git      = 'https://github.com/opencv/opencv.git'
 
+    maintainers = ['bvanessen']
+
     version('master', branch='master')
     version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
     version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
@@ -50,51 +52,51 @@ class Opencv(CMakePackage, CudaPackage):
     # Standard variants
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('lapack', default=True, description='Include Lapack library support')
+    variant('lapack', default=False, description='Include Lapack library support')
     variant('powerpc', default=False, description='Enable PowerPC for GCC')
     variant('vsx', default=False, description='Enable POWER8 and above VSX (64-bit little-endian)')
     variant('fast-math', default=False,
             description='Enable -ffast-math (not recommended for GCC 4.6.x)')
 
     # OpenCV modules
-    variant('calib3d', default=True, description='calib3d module')
+    variant('calib3d', default=False, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
     variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
-    variant('dnn', default=True, description='Build DNN support')
-    variant('features2d', default=True, description='features2d module')
-    variant('flann', default=True, description='flann module')
-    variant('highgui', default=True, description='Include opencv_highgui module into the OpenCV build')
-    variant('imgproc', default=True, description='Include opencv_imgproc module into the OpenCV build')
-    variant('java', default=True,
+    variant('dnn', default=False, description='Build DNN support')
+    variant('features2d', default=False, description='features2d module')
+    variant('flann', default=False, description='flann module')
+    variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
+    variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
+    variant('java', default=False,
             description='Activates support for Java')
-    variant('ml', default=True, description='Build ML support')
-    variant('python', default=True,
+    variant('ml', default=False, description='Build ML support')
+    variant('python', default=False,
             description='Enables the build of Python extensions')
-    variant('stitching', default=True, description='stitching module')
-    variant('superres', default=True, description='superres module')
-    variant('ts', default=True, description='Include opencv_ts module into the OpenCV build')
-    variant('video', default=True, description='video module')
-    variant('videostab', default=True, description='videostab module')
-    variant('videoio', default=True, description='videoio module')
+    variant('stitching', default=False, description='stitching module')
+    variant('superres', default=False, description='superres module')
+    variant('ts', default=False, description='Include opencv_ts module into the OpenCV build')
+    variant('video', default=False, description='video module')
+    variant('videostab', default=False, description='videostab module')
+    variant('videoio', default=False, description='videoio module')
 
     # Optional 3rd party components
-    variant('eigen', default=True, description='Activates support for eigen')
-    variant('ipp', default=True, description='Activates support for IPP')
-    variant('ipp_iw', default=True, description='Build IPP IW from source')
-    variant('jasper', default=True, description='Activates support for JasPer')
-    variant('jpeg', default=True, description='Include JPEG support')
-    variant('opencl', default=True, description='Include OpenCL Runtime support')
-    variant('opencl_svm', default=True, description='Include OpenCL Shared Virtual Memory support')
-    variant('openclamdfft', default=True, description='Include OpenCL AMD OpenCL FFT library support')
-    variant('openclamdblas', default=True, description='Include OpenCL AMD OpenCL BLAS library support')
-    variant('openmp', default=True, description='Activates support for OpenMP threads')
-    variant('pthreads_pf', default=True, description='Use pthreads-based parallel_for')
-    variant('png', default=True, description='Include PNG support')
+    variant('eigen', default=False, description='Activates support for eigen')
+    variant('ipp', default=False, description='Activates support for IPP')
+    variant('ipp_iw', default=False, description='Build IPP IW from source')
+    variant('jasper', default=False, description='Activates support for JasPer')
+    variant('jpeg', default=False, description='Include JPEG support')
+    variant('opencl', default=False, description='Include OpenCL Runtime support')
+    variant('opencl_svm', default=False, description='Include OpenCL Shared Virtual Memory support')
+    variant('openclamdfft', default=False, description='Include OpenCL AMD OpenCL FFT library support')
+    variant('openclamdblas', default=False, description='Include OpenCL AMD OpenCL BLAS library support')
+    variant('openmp', default=False, description='Activates support for OpenMP threads')
+    variant('pthreads_pf', default=False, description='Use pthreads-based parallel_for')
+    variant('png', default=False, description='Include PNG support')
     variant('qt', default=False, description='Activates support for QT')
-    variant('gtk', default=True, description='Activates support for GTK')
-    variant('tiff', default=True, description='Include TIFF support')
-    variant('vtk', default=True, description='Activates support for VTK')
-    variant('zlib', default=True, description='Build zlib from source')
+    variant('gtk', default=False, description='Activates support for GTK')
+    variant('tiff', default=False, description='Include TIFF support')
+    variant('vtk', default=False, description='Activates support for VTK')
+    variant('zlib', default=False, description='Build zlib from source')
 
     variant('contrib', default=False, description='Adds in code from opencv_contrib.')
     contrib_vers = ['4.1.0', '4.1.1', '4.2.0']
