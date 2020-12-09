@@ -31,6 +31,7 @@ from spack import *
 
 
 class RGenefilter(RPackage):
+
     """genefilter: methods for filtering genes from high-throughput
        experiments."""
 
