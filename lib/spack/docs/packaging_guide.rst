@@ -4020,7 +4020,7 @@ Enabling test compilation
 Some tests may require access to the compiler with which the package
 was built, especially to test library-only packages. You must enable
 loading the package's compiler configuration by setting the attribute
-``tests_require_compiler`` to ``True``. Doing so makes the compiler
+``test_requires_compiler`` to ``True``. Doing so makes the compiler
 available in the test environment through the canonical environment
 variables (``CC``, ``CXX``, ``FC``, ``F77``).
 
