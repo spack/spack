@@ -680,6 +680,10 @@ def print_setup_info(*info):
         # then create a dictionary: each subdir of that directory should be
         # 'tcl' or etc. and the dictionary maps subdir name to full path
         modules_root = os.path.join(upstream_root, 'modules')
+
+        if not os.path.exists(modules_root):
+            os.mkdir(spack.util.path.canonicalize_path(modules_root))
+
         upstream_module_roots = dict(
             (module_type, os.path.join(modules_root, module_type))
             for module_type in os.listdir(modules_root)
