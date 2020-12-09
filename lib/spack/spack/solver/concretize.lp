@@ -183,6 +183,9 @@ external_spec(Package, ID) :-
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
+% A variant cannot have a value that is not also a possible value
+:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -221,6 +224,16 @@ variant_default_value(Package, Variant, Value)
 % values even if the variant is multi-valued
 :- 2 {variant_value(Package, Variant, Value): variant_possible_value(Package, Variant, Value)},
    variant_value(Package, Variant, "none").
+
+% patches and dev_path are special variants -- they don't have to be
+% declared in the package, so we just allow them to spring into existence
+% when assigned a value.
+auto_variant("dev_path").
+auto_variant("patches").
+variant(Package, "dev_path")
+  :- variant_set(Package, Variant, _), auto_variant(Variant).
+variant_single_value(Package, "dev_path")
+  :- variant_set(Package, "dev_path", _).
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
