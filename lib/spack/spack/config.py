@@ -805,7 +805,8 @@ def _config():
             shared_tree_scope = True
             scope_name = 'install_tree:' + install_tree
             shared_install_root = shared_install_trees[install_tree]['root']
-            shared_install_root = spack.util.path.canonicalize_path(shared_install_root)
+            shared_install_root = spack.util.path.canonicalize_path(
+                shared_install_root)
             shared_install_config_path = os.path.join(
                 str(shared_install_root), 'config')
             cfg.push_scope(
