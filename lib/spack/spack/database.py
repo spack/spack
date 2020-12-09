@@ -1186,9 +1186,6 @@ class Database(object):
             rec.installed = False
             return rec.spec
 
-        if self.is_upstream:
-            return rec.spec
-
         del self._data[key]
         for dep in rec.spec.dependencies(_tracked_deps):
             # FIXME: the two lines below needs to be updated once #11983 is
