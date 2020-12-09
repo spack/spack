@@ -96,7 +96,7 @@ def parse_install_tree(config_dict):
     else:
         # If this is not a shared spack instance, then by default we will place
         # the install prefix inside the Spack tree
-        install_tree = spack.config.get('config:install_trees')['default']
+        install_tree = spack.config.get('config:install_trees')['spack-root']
 
     padded_length = False
     if isinstance(install_tree, six.string_types):
