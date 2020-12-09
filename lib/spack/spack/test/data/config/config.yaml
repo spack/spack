@@ -1,6 +1,6 @@
 config:
   install_trees:
-    default:
+    spack-root:
       root: $spack/opt/spack
   template_dirs:
   - $spack/share/spack/templates
