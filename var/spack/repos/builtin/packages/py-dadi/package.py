@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyDadi(PythonPackage):
-    """Fit population genetic models of demography and selection using diffusion approximations to the allele frequency spectrum"""
+    """Fit population genetic models of demography and selection using
+    diffusion approximations to the allele frequency spectrum"""
 
     homepage = "https://bitbucket.org/gutenkunstlab/dadi/src/master/"
     git      = "https://bitbucket.org/gutenkunstlab/dadi.git"
