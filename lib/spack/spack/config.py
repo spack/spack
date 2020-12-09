@@ -804,9 +804,10 @@ def _config():
         if install_tree in shared_install_trees:
             shared_tree_scope = True
             scope_name = 'install_tree:' + install_tree
-            shared_install_root = shared_install_trees[install_tree]
+            shared_install_root = shared_install_trees[install_tree]['root']
+            shared_install_root = spack.util.path.canonicalize_path(shared_install_root)
             shared_install_config_path = os.path.join(
-                shared_install_root, 'config')
+                str(shared_install_root), 'config')
             cfg.push_scope(
                 ConfigScope(scope_name, shared_install_config_path))
         else:
@@ -838,7 +839,7 @@ def _config():
                 # users is to put new installations in the home directory
                 install_trees = {'user': '~/.spack/installs'}
             else:
-                install_trees = {'default': '$spack/opt/spack'}
+                install_trees = {'spack-root': '$spack/opt/spack'}
             cfg.set('config:install_trees', install_trees, 'user')
 
         default_install_tree = (not install_tree)
@@ -846,7 +847,7 @@ def _config():
             if shared_install_trees:
                 install_tree = 'user'
             else:
-                install_tree = 'default'
+                install_tree = 'spack-root'
 
         if install_tree not in install_trees:
             if default_install_tree:
@@ -859,7 +860,7 @@ def _config():
             raise ValueError("The specified install tree does not exist")
 
         # Only add new scope for non default/user install trees
-        if install_tree not in ['default', 'user']:
+        if install_tree not in ['spack-root', 'user']:
             scope_name = 'install_tree:' + install_tree
             install_tree = install_trees[install_tree]
             install_root = install_tree['root']
