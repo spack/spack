@@ -43,7 +43,7 @@ packages:
       #- intel@18.0.3
       - intel@19.0.4
       - pgi+network+nvidia+mpi@19.10
-      - nvhpc@20.9 install_type=network
+      - nvhpc@20.11 install_type=network
 
   bootstrapped_compilers:
     target_matrix:
