@@ -1,0 +1,10 @@
+--- a/libs/python/src/numpy/numpy.cpp
++++ b/libs/python/src/numpy/numpy.cpp
+@@ -19,6 +19,7 @@ static void wrap_import_array()
+ static void * wrap_import_array()
+ {
+   import_array();
++  return NULL;
+ }
+ #endif
+
