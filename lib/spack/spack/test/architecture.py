@@ -238,7 +238,7 @@ def test_satisfy_strict_constraint_when_not_concrete(
     # lists with concrete targets, lists compared to ranges
     (('x86_64,haswell', 'core2:broadwell', 'haswell'))
 ])
-@pytest.mark.usefixtures('mock_packages')
+@pytest.mark.usefixtures('mock_packages', 'config')
 def test_concretize_target_ranges(
         root_target_range, dep_target_range, result
 ):
