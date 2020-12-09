@@ -17,3 +17,4 @@ class SinglevalueVariant(Package):
         values=str,
         multi=False
     )
+    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)

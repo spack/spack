@@ -84,7 +84,9 @@ class TestConcretizePreferences(object):
         ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
          {'foo': ('bar', 'baz'), 'fee': 'bar'}),
         ('singlevalue-variant', ['fum=why'],
-         {'fum': 'why'})
+         {'fum': 'why'}),
+        ('singlevalue-variant', [],
+         {'api': 'none'})
     ])
     def test_preferred_variants(
             self, package_name, variant_value, expected_results
