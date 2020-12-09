@@ -29,6 +29,7 @@ class MiopenHip(CMakePackage):
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
+    depends_on('zlib', type='link', when='@3.9.0:')
 
     patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
 
@@ -40,12 +41,11 @@ class MiopenHip(CMakePackage):
         depends_on('rocm-clang-ocl@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='link', when='@' + ver)
-    depends_on('zlib', type='link', when='@3.9.0:')
 
-    def setup_build_environment(self, build_env):
+    def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:
             lib_dir = self.spec['zlib'].prefix.lib
-            build_env.prepend_path('LIBRARY_PATH', lib_dir)
+            env.prepend_path('LIBRARY_PATH', lib_dir)
 
     def cmake_args(self):
         hip_prefix_dir = self.spec['hip'].prefix
