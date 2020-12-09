@@ -4059,12 +4059,6 @@ the ``self.install_test_root``. All files in the package source's
 will be copied to the ``join_path(self.install_test_root, 'examples')``
 directory.
 
-.. _cmd-spack-test:
-
-"""""""""""""""""""""
-Running install tests
-"""""""""""""""""""""
-
 .. note::
 
     While source and input files are generally recommended, binaries
@@ -4087,6 +4081,8 @@ package in the repository. Spack will automaticaly copy any files in
 that directory to the test staging directory during install testing.
 The ``test`` method can access those files from the
 ``self.test_suite.current_test_data_dir`` directory.
+
+.. _cmd-spack-test:
 
 """""""""""""""""""
 ``spack test list``
