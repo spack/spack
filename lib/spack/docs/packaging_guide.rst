@@ -4059,6 +4059,12 @@ the ``self.install_test_root``. All files in the package source's
 will be copied to the ``join_path(self.install_test_root, 'examples')``
 directory.
 
+.. _cmd-spack-test:
+
+"""""""""""""""""""""
+Running install tests
+"""""""""""""""""""""
+
 .. note::
 
     While source and input files are generally recommended, binaries

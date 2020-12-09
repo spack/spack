@@ -264,6 +264,10 @@ class TestConcretize(object):
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
 
+    def test_concretize_dependent_with_singlevalued_variant_type(self):
+        s = Spec('singlevalue-variant-dependent-type')
+        s.concretize()
+
     @pytest.mark.parametrize("spec,version", [
         ('dealii', 'develop'),
         ('xsdk', '0.4.0'),

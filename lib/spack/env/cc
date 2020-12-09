@@ -125,7 +125,7 @@ case "$command" in
         comp="FC"
         lang_flags=F
         ;;
-    f77|xlf|xlf_r|pgf77|frt|flang)
+    f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -440,7 +440,7 @@ then
         ld)
             flags=("${flags[@]}" -headerpad_max_install_names) ;;
         ccld)
-            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+            flags=("${flags[@]}" "-Wl,-headerpad_max_install_names") ;;
     esac
 fi
 
@@ -518,12 +518,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
-        if [ ! -z "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
+        if [ -n "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
-        if [ ! -z "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
+        if [ -n "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;
