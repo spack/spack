@@ -159,7 +159,7 @@ def parse_install_tree(config_dict):
             init_upstream_path = shared_install_trees[init_upstream]['root']
             initialize_upstream_pointer_if_unset(root, init_upstream_path)
         else:
-            tty.die("Specifided upstream must be defined"
+            tty.die("Specified upstream must be defined"
                     " as shared install tree.")
 
     return (root, unpadded_root, projections)
