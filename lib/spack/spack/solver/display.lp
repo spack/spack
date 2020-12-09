@@ -22,6 +22,6 @@
 #show version_weight/2.
 #show compiler_version_match/2.
 #show compiler_weight/2.
-#show node_target_match_parent/2.
+#show node_target_match/2.
 #show node_target_weight/2.
 #show external_spec/2.
