@@ -40,8 +40,7 @@ class MiopenHip(CMakePackage):
         depends_on('rocm-clang-ocl@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='link', when='@' + ver)
-        if ver in ['3.9.0:']:
-            depends_on('zlib', type=('link'))
+    depends_on('zlib', type='link', when='@3.9.0:')
 
     def setup_build_environment(self, build_env):
         if '@3.9.0:' in self.spec:
