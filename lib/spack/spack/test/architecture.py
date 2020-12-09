@@ -234,7 +234,7 @@ def test_satisfy_strict_constraint_when_not_concrete(
     (('haswell:icelake', 'broadwell', 'broadwell')),
     # multiple ranges in lists with multiple overlaps
     (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:',
-      'haswell')),
+      'nocona')),
     # lists with concrete targets, lists compared to ranges
     (('x86_64,haswell', 'core2:broadwell', 'haswell'))
 ])

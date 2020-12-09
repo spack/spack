@@ -332,8 +332,7 @@ class Concretizer(object):
                     if not new_target_arch.satisfies(curr_target_arch):
                         # new_target is an incorrect guess based on preferences
                         # and/or default
-                        valid_target_ranges = reversed(
-                            str(curr_target).split(','))
+                        valid_target_ranges = str(curr_target).split(',')
                         for target_range in valid_target_ranges:
                             t_min, t_sep, t_max = target_range.partition(':')
                             if not t_sep:
