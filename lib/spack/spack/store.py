@@ -87,7 +87,7 @@ def parse_install_tree(config_dict):
             install_tree = shared_install_trees[install_root]
         else:
             # TODO: provide the user an option to create a new install tree
-            raise ValueError("Specified install tree does not exist: {0}"
+            tty.die("Specified install tree does not exist: {0}"
                              .format(install_root))
     elif shared_install_trees:
         # If no install tree is specified and there are shared install trees,

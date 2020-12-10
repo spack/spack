@@ -858,7 +858,7 @@ def _config():
                 # issues (e.g. missing dependencies for locally-installed
                 # packages)
                 pass
-            raise ValueError("The specified install tree does not exist")
+            tty.die("The specified install tree does not exist")
 
         # Only add new scope for non default/user install trees
         if install_tree not in ['spack-root', 'user']:
