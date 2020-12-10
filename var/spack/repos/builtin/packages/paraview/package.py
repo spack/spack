@@ -19,6 +19,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
+    # Latest release, it can be either a candidate or a stable release
+    version('master', sha256='a3e6f7db7804f11351df48781e8d67ff3e9c18a691bb9ef9a5485aa6520e70bc')
+
     version('develop', branch='master', submodules=True)
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
