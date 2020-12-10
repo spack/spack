@@ -6,7 +6,6 @@
 from __future__ import print_function
 
 import argparse
-import copy
 import sys
 import itertools
 
@@ -84,15 +83,6 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     Return:
         list of specs
     """
-    for spec in specs:
-        if isinstance(spec, spack.spec.Spec):
-            spec_name = str(spec)
-            spec_copy = (copy.deepcopy(spec))
-            spec_copy.concretize()
-            if spec_copy.package.installed_upstream:
-                tty.warn("{0} is 1".format(spec_name))
-                tty.die("Use 'spack [--install-root root-name] uninstall'")
-
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
 
@@ -120,8 +110,13 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
                 pkg_type = "packages in environment '%s'" % env.name
             else:
                 pkg_type = 'installed packages'
-            tty.die('{0} does not match any {1}.'.format(spec, pkg_type))
-
+            upstream = spack.store.db.query(spec, hashes=hashes,
+                                            installed=install_query)
+            if upstream:
+                tty.die("the package is installed upstream,"
+                        "use 'spack --install-root ...'")
+            else:
+                tty.die('{0} does not match any {1}.'.format(spec, pkg_type))
         specs_from_cli.extend(matching)
 
     if has_errors:
