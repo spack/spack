@@ -1356,7 +1356,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -i -m"
     else
         SPACK_COMPREPLY=""
     fi
