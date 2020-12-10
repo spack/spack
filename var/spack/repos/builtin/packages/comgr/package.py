@@ -24,13 +24,22 @@ class Comgr(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
+    depends_on('cmake@3.2.0:',  type='build', when='@:3.8.99')
+    depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
+
     depends_on('zlib', type='link')
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
-    depends_on('cmake@3:', type='build')
+    
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
-    root_cmakelists_dir = 'lib/comgr'
+    root_cmakelists_dir = join_path('lib', 'comgr')
+
+    # Disable the hip compile tests.  Spack should not be using
+    # /opt/rocm, and this breaks the build when /opt/rocm exists.
+    def patch(self):
+        filter_file(r'(find_package.*)PATHS\s*/opt/rocm[^ )]*', r'\1',
+                    join_path('lib', 'comgr', 'test', 'CMakeLists.txt'))
