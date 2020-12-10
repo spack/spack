@@ -396,6 +396,23 @@ other Spack modules:
    True
    >>>
 
+If you prefer using an ipython interpreter, given that ipython is installed
+you can specify the interpreter with ``-i``:
+
+.. code-block:: console
+
+   $ spack python -i ipython
+   Python 3.8.3 (default, May 19 2020, 18:47:26) 
+   Type 'copyright', 'credits' or 'license' for more information
+   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
+
+
+   Spack version 0.16.0
+   Python 3.8.3, Linux x86_64
+
+   In [1]:
+
+
 You can also run a single command:
 
 .. code-block:: console
@@ -409,7 +426,10 @@ or a file:
 
    $ spack python ~/test_fetching.py
 
-just like you would with the normal ``python`` command.
+just like you would with the normal ``python`` command. Note that for both
+commands and files, the default will always be the python interpreter,
+as ipython is intended for interactive use cases.
+
 
 .. _cmd-spack-url:
 

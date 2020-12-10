@@ -28,6 +28,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-c', dest='python_command', help='command to execute')
     subparser.add_argument(
+        '-i', dest='python_interpreter', help='python interpreter',
+        choices=['python', 'ipython'], default='python')
+    subparser.add_argument(
         '-m', dest='module', action='store',
         help='run library module as a script')
     subparser.add_argument(
@@ -48,10 +51,47 @@ def python(parser, args, unknown_args):
     if unknown_args:
         tty.die("Unknown arguments:", " ".join(unknown_args))
 
+    # If arguments or a command are provided, just use python
+    if args.python_args or args.python_command:
+        args.python_interpreter = "python"
+
+    # Run user choose of interpreter
+    if args.python_interpreter == "ipython":
+        return spack.cmd.python.ipython_interpreter(args)
+    return spack.cmd.python.python_interpreter(args)
+     
+
+def ipython_interpreter(args):
+    """An ipython interpreter is intended to be interactive, so it doesn't
+    support running a script or arguments
+    """
+    # If the user doesn't have ipython, fallback to python
+    try:
+        import IPython
+    except ImportError:
+        tty.warning("ipython is not installed, using python.")
+        return spack.cmd.python.python_interpreter(args)
+
+    if "PYTHONSTARTUP" in os.environ:
+        startup_file = os.environ["PYTHONSTARTUP"]
+        if os.path.isfile(startup_file):
+            with open(startup_file) as startup:
+                exec(startup.read())
+
+    header = ("Spack version %s\nPython %s, %s %s"
+                         % (spack.spack_version, platform.python_version(),
+                            platform.system(), platform.machine()))
+
+    __name__ = "__main__"
+    IPython.embed(module="__main__", header=header)
+
+
+def python_interpreter(args):
+    """A python interpreter is the default interpreter
+    """
     # Fake a main python shell by setting __name__ to __main__.
     console = code.InteractiveConsole({'__name__': '__main__',
                                        'spack': spack})
-
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
         if os.path.isfile(startup_file):
