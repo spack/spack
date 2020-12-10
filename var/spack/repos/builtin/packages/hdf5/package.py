@@ -20,6 +20,8 @@ class Hdf5(AutotoolsPackage):
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
     maintainers = ['lrknox']
 
+    test_requires_compiler = True
+
     version('develop', branch='develop')
 
     version('1.12.0', sha256='a62dcb276658cb78e6795dd29bf926ed7a9bc4edf6e77025cd2c689a8f97c17a')
@@ -426,5 +428,4 @@ HDF5 version {version} {version}
         self._test_example()
 
         # Run existing install check
-        # TODO: Restore once address built vs. installed state
-        # self._check_install()
+        self._check_install()
