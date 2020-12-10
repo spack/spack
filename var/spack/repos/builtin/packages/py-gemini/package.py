@@ -30,6 +30,7 @@ class PyGemini(PythonPackage):
     version('0.18.1', sha256='1d3d3b9d47555e1f62c1a870d8fd2ecbfc0bed25910cab31af5b585db3144a68')
 
     depends_on('python@2.5:2.8', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('zlib', type='build')
     depends_on('gcc@:6', type='build')
     depends_on('tabix', type=('build', 'run'))
