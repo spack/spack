@@ -327,21 +327,12 @@ spack package at this time.''',
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = spec.external_modules
-        if external_modules and 'cray' in external_modules[0]:
-            spec.mpicc = spack_cc
-            spec.mpicxx = spack_cxx
-            spec.mpifc = spack_fc
-            spec.mpif77 = spack_f77
-        else:
-            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+        spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-            if '+fortran' in spec:
-                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        if '+fortran' in spec:
+            spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+            spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
         spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
