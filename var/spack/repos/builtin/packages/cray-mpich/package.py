@@ -17,6 +17,9 @@ class CrayMpich(Package):
 
     version('7.7.16')
     version('7.7.15')
+    version('7.7.14')
+    version('7.7.13')
+
     provides('mpi@3:')
 
     def setup_run_environment(self, env):
