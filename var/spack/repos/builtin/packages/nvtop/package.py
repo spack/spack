@@ -19,9 +19,7 @@ class Nvtop(CMakePackage):
     depends_on('cmake')
     depends_on('ncurses')
     depends_on('git')
-    depends_on('cuda', type=('build'))
+    depends_on('cuda')
 
     def cmake_args(self):
-        cmake_args = []
-        cmake_args.append('-DNVML_RETRIEVE_HEADER_ONLINE=True')
-        return cmake_args
+        return [self.define('NVML_RETRIEVE_HEADER_ONLINE', True)]
