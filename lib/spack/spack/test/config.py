@@ -374,7 +374,8 @@ full_padded_string = os.path.join(
 
 @pytest.mark.parametrize('config_settings,expected', [
     ([], [None, None, None]),
-    ([['config:install_trees:spack-root:root', '/path']], ['/path', None, None]),
+    ([['config:install_trees:spack-root:root', '/path']],
+     ['/path', None, None]),
     ([['config:install_trees:spack-root', '/path']], ['/path', None, None]),
     ([['config:install_trees:spack-root:projections', {'all': '{name}'}]],
      [None, None, {'all': '{name}'}]),
