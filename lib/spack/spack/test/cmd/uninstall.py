@@ -80,6 +80,7 @@ def test_force_uninstall_spec_with_ref_count_not_zero(
     assert len(all_specs) == expected_number_of_specs
 
 
+@pytest.mark.db
 def test_force_uninstall_and_reinstall_by_hash(mutable_database):
     """Test forced uninstall and reinstall of old specs."""
     # this is the spec to be removed
