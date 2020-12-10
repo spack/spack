@@ -72,8 +72,7 @@ def setup_parser(subparser):
         help="specs of packages to uninstall")
 
 
-def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
-                        upstream=None):
+def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -92,7 +91,7 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False,
             spec_copy.concretize()
             if spec_copy.package.installed_upstream:
                 tty.warn("{0} is 1".format(spec_name))
-                tty.die("Use 'spack [--upstream upstream_name] uninstall'")
+                tty.die("Use 'spack [--install-root root-name] uninstall'")
 
     # constrain uninstall resolution to current environment if one is active
     hashes = env.all_hashes() if env else None
