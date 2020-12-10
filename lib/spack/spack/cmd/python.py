@@ -59,7 +59,7 @@ def python(parser, args, unknown_args):
     if args.python_interpreter == "ipython":
         return spack.cmd.python.ipython_interpreter(args)
     return spack.cmd.python.python_interpreter(args)
-     
+
 
 def ipython_interpreter(args):
     """An ipython interpreter is intended to be interactive, so it doesn't
@@ -79,10 +79,10 @@ def ipython_interpreter(args):
                 exec(startup.read())
 
     header = ("Spack version %s\nPython %s, %s %s"
-                         % (spack.spack_version, platform.python_version(),
-                            platform.system(), platform.machine()))
+              % (spack.spack_version, platform.python_version(),
+                 platform.system(), platform.machine()))
 
-    __name__ = "__main__"
+    __name__ = "__main__"  # noqa
     IPython.embed(module="__main__", header=header)
 
 
