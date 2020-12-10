@@ -81,22 +81,21 @@ all_schemas.update(dict((key, spack.schema.env.schema)
                         for key in spack.schema.env.keys))
 
 
-#: Builtin paths to configuration files in Spack
-configuration_paths = (
-    # Default configuration scope is the lowest-level scope. These are
-    # versioned with Spack and can be overridden by systems, sites or users
-    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
+class ConfigPath(object):
+    def __init__(self, universal, user):
+        self.universal = universal
+        self.user = user
 
-    # System configuration is per machine.
-    # No system-level configs should be checked into spack by default
-    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
 
-    # Site configuration is per spack instance, for sites or projects
-    # No site-level configs should be checked into spack by default.
-    ('site', os.path.join(spack.paths.etc_path, 'spack')))
+default_config_paths = ConfigPath(
+    universal={
+        'defaults': os.path.join(spack.paths.etc_path, 'spack', 'defaults'),
+        'system': os.path.join(spack.paths.system_etc_path, 'spack'),
+        'site': os.path.join(spack.paths.etc_path, 'spack')
+    },
+    user=('user', spack.paths.user_config_path)
+)
 
-# User configuration can override both spack defaults and site config
-user_configuration_path = ('user', spack.paths.user_config_path)
 
 #: Hard-coded default values for some key configuration options.
 #: This ensures that Spack will still work even if config.yaml in
@@ -773,7 +772,7 @@ def _add_command_line_scopes(cfg, command_line_scopes):
         _add_platform_scope(cfg, ImmutableConfigScope, name, path)
 
 
-def _config():
+def _config(cfg_paths=None, install_tree=None):
     """Singleton Configuration instance.
 
     This constructs one instance associated with this module and returns
@@ -786,19 +785,21 @@ def _config():
     """
     cfg = Configuration()
 
+    cfg_paths = cfg_paths or default_config_paths
+    install_tree = install_tree or spack.store.install_root
+
     # first do the builtin, hardcoded defaults
     defaults = InternalConfigScope('_builtin', config_defaults)
     cfg.push_scope(defaults)
 
     # add each scope and its platform-specific directory
-    for name, path in configuration_paths:
+    for name, path in cfg_paths.universal.items():
         cfg.push_scope(ConfigScope(name, path))
 
         # Each scope can have per-platfom overrides in subdirectories
         _add_platform_scope(cfg, ConfigScope, name, path)
 
     shared_install_trees = cfg.get('config:shared_install_trees')
-    install_tree = spack.store.install_root
     shared_tree_scope = False
     if shared_install_trees:
         if install_tree in shared_install_trees:
@@ -814,11 +815,11 @@ def _config():
         else:
             # User configuration is only used when we are not using a shared
             # install tree
-            cfg.push_scope(ConfigScope(*user_configuration_path))
+            cfg.push_scope(ConfigScope(*cfg_paths.user))
     else:
         # User configuration is only used when we are not using a shared
         # install tree
-        cfg.push_scope(ConfigScope(*user_configuration_path))
+        cfg.push_scope(ConfigScope(*cfg_paths.user))
 
     # add command-line scopes
     _add_command_line_scopes(cfg, command_line_scopes)

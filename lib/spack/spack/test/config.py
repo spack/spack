@@ -221,6 +221,80 @@ def compiler_specs():
     return CompilerSpecs(a=a, b=b)
 
 
+@pytest.fixture()
+def mock_config_scopes(tmpdir_factory):
+    universal = {
+        'defaults': str(tmpdir_factory.mktemp('defaults')),
+        'system': str(tmpdir_factory.mktemp('system')),
+        'site': str(tmpdir_factory.mktemp('site'))
+    }
+    user = ('user', str(tmpdir_factory.mktemp('user')))
+    test_cfg_paths = spack.config.ConfigPath(universal, user)
+    yield test_cfg_paths
+
+
+@pytest.fixture()
+def mock_shared_tree_cfg(mock_config_scopes, tmpdir_factory):
+    cfg_paths = mock_config_scopes
+
+    cfg_data = {
+        'config': {
+            'shared_install_trees': {
+                'shared_tree1': {
+                    'root': str(tmpdir_factory.mktemp('root1')),
+                },
+                'shared_tree2': {
+                    'root': str(tmpdir_factory.mktemp('root2'))
+                }
+            }
+        }
+    }
+    # TODO: create a config directory inside the shared_tree root and add some
+    # config so I can test the inclusion of install tree configuration
+
+    section_path = os.path.join(cfg_paths.universal['system'], 'config.yaml')
+    with open(section_path, 'w') as f:
+        syaml.dump_config(cfg_data, f)
+
+
+@pytest.fixture()
+def mock_usr_scope_cfg(mock_config_scopes, tmpdir_factory):
+    cfg_paths = mock_config_scopes
+    pkg_data = {
+        'packages': {
+            'foo': {
+                'version': ['1.0']
+            }
+        }
+    }
+    section_path = os.path.join(cfg_paths.user[1], 'packages.yaml')
+    with open(section_path, 'w') as f:
+        syaml.dump_config(pkg_data, f)
+
+    cfg_data = {
+        'config': {
+            'install_trees': {
+                'tree1': {
+                    'root': str(tmpdir_factory.mktemp('root1')),
+                },
+            }
+        }
+    }
+    section_path = os.path.join(cfg_paths.user[1], 'config.yaml')
+    with open(section_path, 'w') as f:
+        syaml.dump_config(cfg_data, f)
+
+
+def test_shared_install_tree_omit_user_config(
+        mock_config_scopes, mock_shared_tree_cfg, mock_usr_scope_cfg):
+    cfg1 = spack.config._config(
+        cfg_paths=mock_config_scopes, install_tree='tree1')
+    assert cfg1.get('packages:foo:version')
+    cfg2 = spack.config._config(
+        cfg_paths=mock_config_scopes, install_tree='shared_tree1')
+    assert 'foo' not in cfg2.get("packages")
+
+
 def test_write_key_in_memory(mock_low_high_config, compiler_specs):
     # Write b_comps "on top of" a_comps.
     spack.config.set('compilers', a_comps['compilers'], scope='low')
