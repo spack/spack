@@ -237,6 +237,8 @@ def mock_config_scopes(tmpdir_factory):
 def mock_shared_tree_cfg(mock_config_scopes, tmpdir_factory):
     cfg_paths = mock_config_scopes
 
+    root2 = str(tmpdir_factory.mktemp('root2'))
+
     cfg_data = {
         'config': {
             'shared_install_trees': {
@@ -244,17 +246,26 @@ def mock_shared_tree_cfg(mock_config_scopes, tmpdir_factory):
                     'root': str(tmpdir_factory.mktemp('root1')),
                 },
                 'shared_tree2': {
-                    'root': str(tmpdir_factory.mktemp('root2'))
+                    'root': root2
                 }
             }
         }
     }
-    # TODO: create a config directory inside the shared_tree root and add some
-    # config so I can test the inclusion of install tree configuration
-
     section_path = os.path.join(cfg_paths.universal['system'], 'config.yaml')
     with open(section_path, 'w') as f:
         syaml.dump_config(cfg_data, f)
+
+    install_tree_section_path = os.path.join(root2, 'config', 'packages.yaml')
+    mkdirp(os.path.dirname(install_tree_section_path))
+    pkg_data = {
+        'packages': {
+            'bar': {
+                'version': ['2.0']
+            }
+        }
+    }
+    with open(install_tree_section_path, 'w') as f:
+        syaml.dump_config(pkg_data, f)
 
 
 @pytest.fixture()
@@ -293,6 +304,14 @@ def test_shared_install_tree_omit_user_config(
     cfg2 = spack.config._config(
         cfg_paths=mock_config_scopes, install_tree='shared_tree1')
     assert 'foo' not in cfg2.get("packages")
+
+
+def test_install_tree_config(mock_config_scopes, mock_shared_tree_cfg):
+    """Check that the configuration associated with the install tree
+       is available"""
+    cfg = spack.config._config(
+        cfg_paths=mock_config_scopes, install_tree='shared_tree2')
+    assert cfg.get('packages:bar:version')
 
 
 def test_write_key_in_memory(mock_low_high_config, compiler_specs):
