@@ -260,9 +260,7 @@ def do_uninstall(env, specs, force):
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
     # args.all takes care of the case where '-a' is given in the cli
-    active_upstream = spack.store.active_upstream
-    uninstall_list = find_matching_specs(env, specs, args.all, args.force,
-                                         upstream=active_upstream)
+    uninstall_list = find_matching_specs(env, specs, args.all, args.force)
 
     # Takes care of '-R'
     active_dpts, inactive_dpts = installed_dependents(uninstall_list, env)
