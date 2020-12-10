@@ -34,14 +34,16 @@ class Alps(CMakePackage):
     depends_on('py-matplotlib', type=('build', 'run'))
 
     # build fails with gcc@7:
-    # conflicts('%gcc@7:')
     patch('alps_newgcc.patch', when='%gcc@7:')
 
     # remove a problematic build variable
     patch('mpi.patch')
-    # patch('alps_xmltest.patch')
-    # patch('alps_dbg7.patch')
+
+    # In Aarch 64, auto detectection does not work
     patch('alps_forceint.patch', when='target=aarch64:')
+
+    # ctest tries to test '/usr/bin/time'
+    patch('alps_cmake_time.patch')
 
     extends('python')
 
