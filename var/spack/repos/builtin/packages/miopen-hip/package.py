@@ -44,7 +44,7 @@ class MiopenHip(CMakePackage):
 
     def setup_build_environment(self, env):
         if '@3.9.0:' in self.spec:
-            lib_dir = self.spec['zlib'].prefix.lib
+            lib_dir = self.spec['zlib'].libs.directories[0]
             env.prepend_path('LIBRARY_PATH', lib_dir)
 
     def cmake_args(self):
