@@ -38,7 +38,7 @@ class Openwsman(CMakePackage):
             )
             filter_file(
                 'DESTINATION .*',
-                'DESTINATION {} )'.format(python_libdir),
+                'DESTINATION {0} )'.format(python_libdir),
                 join_path('bindings', 'python', 'CMakeLists.txt')
             )
 
