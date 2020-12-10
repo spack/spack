@@ -15,6 +15,7 @@ class CrayMpich(Package):
 
     maintainers = ['haampie']
 
+    version('7.7.16')
     version('7.7.15')
     provides('mpi')
 
