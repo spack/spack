@@ -64,7 +64,7 @@ class Likwid(Package):
             env.append_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
             cuptilib = join_path(self.spec['cuda'].prefix,
                                  "extras/CUPTI/lib64")
-            env.append_path('LD_LIBRARY_PATH', cuptilibpath)
+            env.append_path('LD_LIBRARY_PATH', cuptilib)
 
     @run_before('install')
     def filter_sbang(self):
