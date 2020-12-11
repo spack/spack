@@ -59,15 +59,12 @@ class Likwid(Package):
         filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
         filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
 
-
     def setup_run_environment(self, env):
         if "+cuda" in self.spec:
             libs = find_libraries('libcupti', root=self.spec['cuda'].prefix,
                                   shared=True, recursive=True)
             for lib in libs.directories:
                 env.append_path('LD_LIBRARY_PATH', lib)
-
-
 
     @run_before('install')
     def filter_sbang(self):
@@ -139,10 +136,10 @@ class Likwid(Package):
             filter_file('^CUDAINCLUDE.*',
                         'CUDAINCLUDE = {0}'.format(cudainc),
                         'config.mk')
-            cuptiheader = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
+            cuptihead = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
                                           recursive=True))
             filter_file('^CUPTIINCLUDE.*',
-                        'CUPTIINCLUDE = {0}'.format(cuptiheader.directories[0]),
+                        'CUPTIINCLUDE = {0}'.format(cuptihead.directories[0]),
                         'config.mk')
         else:
             filter_file('^NVIDIA_INTERFACE.*',
