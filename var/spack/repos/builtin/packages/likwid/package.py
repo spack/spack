@@ -62,7 +62,9 @@ class Likwid(Package):
         if "+cuda" in self.spec:
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
             env.append_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
-            env.append_path('LD_LIBRARY_PATH', "{0}/extras/CUPTI/lib64".format(self.spec['cuda'].prefix))
+            cuptilib = join_path(self.spec['cuda'].prefix,
+                                 "extras/CUPTI/lib64")
+            env.append_path('LD_LIBRARY_PATH', cuptilibpath)
 
     @run_before('install')
     def filter_sbang(self):
@@ -115,10 +117,9 @@ class Likwid(Package):
                         'FORTRAN_INTERFACE = true',
                         'config.mk')
             if self.compiler.name == 'gcc':
-                filter_file('ifort', 'gfortran',
-                            join_path('make', 'include_GCC.mk'))
-                filter_file('-module', '-I', join_path('make',
-                                                       'include_GCC.mk'))
+                makepath = join_path('make', 'include_GCC.mk')
+                filter_file('ifort', 'gfortran', makepath)
+                filter_file('-module', '-I',  makepath)
         else:
             filter_file('^FORTRAN_INTERFACE .*',
                         'FORTRAN_INTERFACE = false',
@@ -131,12 +132,13 @@ class Likwid(Package):
             filter_file('^BUILDAPPDAEMON.*',
                         'BUILDAPPDAEMON = true',
                         'config.mk')
+            cudainc = spec['cuda'].prefix.include
+            cuptiinc = join_path(spec['cuda'].prefix, "extras/CUPTI/include")
             filter_file('^CUDAINCLUDE.*',
-                        'CUDAINCLUDE = {0}'.format(spec['cuda'].prefix.include),
+                        'CUDAINCLUDE = {0}'.format(cudainc),
                         'config.mk')
-            cuptiinclude = "{0}/extras/CUPTI/include".format(spec['cuda'].prefix)
             filter_file('^CUPTIINCLUDE.*',
-                        'CUPTIINCLUDE = {0}'.format(cuptiinclude),
+                        'CUPTIINCLUDE = {0}'.format(cuptiinc),
                         'config.mk')
         else:
             filter_file('^NVIDIA_INTERFACE.*',
