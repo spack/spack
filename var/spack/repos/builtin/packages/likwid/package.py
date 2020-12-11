@@ -35,6 +35,7 @@ class Likwid(Package):
     patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
     patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt', sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416', when='@5.0.2^lua@5.1')
     variant('fortran', default=True, description='with fortran interface')
+    variant('cuda', default=False, description='with Nvidia GPU profiling support')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
@@ -43,6 +44,7 @@ class Likwid(Package):
     depends_on('lua', when='@:4')
     depends_on('lua@5.2:', when='@5:5.0.1')
     depends_on('lua', when='@5.0.2:')
+    depends_on('cuda', when='@5: +cuda')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -55,6 +57,12 @@ class Likwid(Package):
         # Allow the scripts to find Spack's perl
         filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
         filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
+
+    def setup_run_environment(self, env):
+        if "+cuda" in self.spec:
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            env.append_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
+            env.append_path('LD_LIBRARY_PATH', "{0}/extras/CUPTI/include".format(self.spec['cuda'].prefix))
 
     @run_before('install')
     def filter_sbang(self):
@@ -114,6 +122,25 @@ class Likwid(Package):
         else:
             filter_file('^FORTRAN_INTERFACE .*',
                         'FORTRAN_INTERFACE = false',
+                        'config.mk')
+
+        if "+cuda" in self.spec:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = true',
+                        'config.mk')
+            filter_file('^BUILDAPPDAEMON.*',
+                        'BUILDAPPDAEMON = true',
+                        'config.mk')
+            filter_file('^CUDAINCLUDE.*',
+                        'CUDAINCLUDE = {0}'.format(spec['cuda'].prefix.include),
+                        'config.mk')
+            cuptiinclude = "{0}/extras/CUPTI/include".format(spec['cuda'].prefix)
+            filter_file('^CUPTIINCLUDE.*',
+                        'CUPTIINCLUDE = {0}'.format(cuptiinclude),
+                        'config.mk')
+        else:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = false',
                         'config.mk')
 
         if spec.satisfies('^lua'):
