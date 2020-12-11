@@ -30,7 +30,7 @@ class Comgr(CMakePackage):
     depends_on('zlib', type='link')
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
-    
+
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
