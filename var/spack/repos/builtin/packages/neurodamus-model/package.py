@@ -91,12 +91,18 @@ class NeurodamusModel(SimModel):
         # only bring from core those specified
         if spec.satisfies("+coreneuron"):
             shutil.copytree('mod', 'mod_core', True)
+            core_nrn_mods = set()
             with open(core_prefix.lib.mod.join(_CORENRN_MODLIST_FNAME))\
                     as core_mods:
                 for aux_mod in core_mods:
                     mod_fil = core_prefix.lib.mod.join(aux_mod.strip())
                     if os.path.isfile(mod_fil):
                         shutil.copy(mod_fil, 'mod_core')
+                        core_nrn_mods.add(aux_mod)
+            with working_dir(core_prefix.lib.mod):
+                all_mods = set(f for f in os.listdir() if f.endswith(".mod"))
+            with open(join_path('mod', 'neuron_only_mods.txt'), 'w') as blackl:
+                blackl.write("\n".join(all_mods - core_nrn_mods) + "\n")
 
         # Neurodamus model may not have python scripts
         mkdirp('python')
@@ -122,16 +128,26 @@ class NeurodamusModel(SimModel):
         else:
             base_include_flag = ""
 
-        include_flag, link_flag = self._build_mods('mod', "",
-                                                   base_include_flag,
-                                                   'mod_core')
+        include_flag, link_flag = self._build_mods(
+            'mod', "", base_include_flag, 'mod_core'
+        )
 
         # Create rebuild script
+        if spec.satisfies('+coreneuron'):
+            nrnivmodlcore_call = str(which("nrnivmodl-core"))
+            for param in self._nrnivmodlcore_params(include_flag, link_flag):
+                nrnivmodlcore_call += " '%s'" % param
+            include_flag += " " + self._coreneuron_include_flag()
+        else:
+            nrnivmodlcore_call = ''
+
         with open(_BUILD_NEURODAMUS_FNAME, "w") as f:
-            f.write(
-                _BUILD_NEURODAMUS_TPL.format(nrnivmodl=str(which('nrnivmodl')),
-                                             incflags=include_flag,
-                                             loadflags=link_flag))
+            f.write(_BUILD_NEURODAMUS_TPL.format(
+                nrnivmodl=str(which('nrnivmodl')),
+                incflags=include_flag,
+                loadflags=link_flag,
+                nrnivmodlcore_call=nrnivmodlcore_call
+            ))
         os.chmod(_BUILD_NEURODAMUS_FNAME, 0o770)
 
     def install(self, spec, prefix):
@@ -201,6 +217,39 @@ if [ "$#" -eq 0 ]; then
 fi
 
 # run with nrnivmodl in path
-set -x
-'{nrnivmodl}' -incflags '{incflags} '"$2" -loadflags '{loadflags} '"$3" "$1"
+set -xe
+
+if [ ! -d "$1" ]; then
+    echo "Please provide a valid directory with mod files"
+    exit -1
+fi
+
+if [ -n "{nrnivmodlcore_call}" ]; then
+    rm -rf _core_mods
+    mkdir _core_mods
+    touch $1/neuron_only_mods.txt  # ensure exists
+    for f in $1/*.mod; do
+        if ! grep $(basename $f) $1/neuron_only_mods.txt; then
+            cp $f _core_mods/
+        fi
+    done
+    {nrnivmodlcore_call} _core_mods
+    libpath=$(dirname */libcorenrnmech*)
+    extra_loadflags="-L $libpath -lcorenrnmech -Wl,-rpath=\\$ORIGIN"
+
+    echo "Your build supports CoreNeuron. However in some systems
+        the coreneuron mods might not be loadable without a location hint.
+        In case you get an error such as
+            'libcorenrnmech.so: cannot open shared object file
+        please run the command:
+            export LD_LIBRARY_PATH=$libpath:\\$LD_LIBRARY_PATH"
+fi
+
+'{nrnivmodl}' -incflags '{incflags} '"$2" -loadflags \
+    '{loadflags} '"$extra_loadflags $3" "$1"
+
+# Final Cleanup
+if [ -d _core_mods ]; then
+    rm -rf _core_mods
+fi
 """

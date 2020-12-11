@@ -75,6 +75,8 @@ class SimModel(Package):
         if '+profile' in self.spec:
             include_flag += ' -DENABLE_TAU_PROFILER'
         output_dir = os.path.basename(self.nrnivmodl_outdir)
+        include_flag_raw = include_flag
+        link_flag_raw = link_flag
 
         if self.spec.satisfies('+coreneuron'):
             libnrncoremech = self.__build_mods_coreneuron(
@@ -84,9 +86,7 @@ class SimModel(Package):
             # 'ENABLE_CORENEURON' only now, otherwise mods assume neuron
             # Only link with coreneuron when dependencies are passed
             if dependencies:
-                include_flag += ' -DENABLE_CORENEURON'
-                include_flag += ' -I%s' % \
-                                self.spec['coreneuron'].prefix.include
+                include_flag += self._coreneuron_include_flag()
                 link_flag += ' ' + libnrncoremech.ld_flags
 
         # Neuron mechlib and special
@@ -97,21 +97,24 @@ class SimModel(Package):
                                mods_location)
 
         assert os.path.isfile(os.path.join(output_dir, 'special'))
-        return include_flag, link_flag
+        return include_flag_raw, link_flag_raw
+
+    def _nrnivmodlcore_params(self, inc_flags, link_flags):
+        return ['-n', self.mech_name, '-i', inc_flags, '-l', link_flags]
+
+    def _coreneuron_include_flag(self):
+        return ' -DENABLE_CORENEURON' \
+            + ' -I%s' % self.spec['coreneuron'].prefix.include
 
     def __build_mods_coreneuron(self, mods_location, link_flag, include_flag):
         mods_location = os.path.abspath(mods_location)
         assert os.path.isdir(mods_location) and find(mods_location, '*.mod',
                                                      recursive=False),\
             'Invalid mods dir: ' + mods_location
-        nrnivmodl_params = ['-n', self.mech_name,
-                            '-i', include_flag,
-                            '-l', link_flag,
-                            '-V',
-                            'mod']
+        nrnivmodl_params = self._nrnivmodlcore_params(include_flag, link_flag)
         with working_dir('build_' + self.mech_name, create=True):
             force_symlink(mods_location, 'mod')
-            which('nrnivmodl-core')(*nrnivmodl_params)
+            which('nrnivmodl-core')(*(nrnivmodl_params + ['mod']))
             output_dir = os.path.basename(self.nrnivmodl_outdir)
             mechlib = find_libraries('libcorenrnmech' + self.lib_suffix + '*',
                                      output_dir)
