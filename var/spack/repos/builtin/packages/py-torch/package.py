@@ -51,6 +51,7 @@ class PyTorch(PythonPackage, CudaPackage):
     ]
 
     version('master', branch='master', submodules=True)
+    version('1.7.1', tag='v1.7.1', submodules=True)
     version('1.7.0', tag='v1.7.0', submodules=True)
     version('1.6.0', tag='v1.6.0', submodules=True)
     version('1.5.1', tag='v1.5.1', submodules=True)
