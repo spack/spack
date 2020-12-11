@@ -40,6 +40,7 @@ class Likwid(Package):
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
+    # Note: extra functionality was included in upstream hwloc
 
     depends_on('lua', when='@:4')
     depends_on('lua@5.2:', when='@5:5.0.1')
@@ -58,13 +59,15 @@ class Likwid(Package):
         filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
         filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
 
+
     def setup_run_environment(self, env):
         if "+cuda" in self.spec:
-            env.set('CUDA_HOME', self.spec['cuda'].prefix)
-            env.append_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
-            cuptilib = join_path(self.spec['cuda'].prefix,
-                                 "extras/CUPTI/lib64")
-            env.append_path('LD_LIBRARY_PATH', cuptilib)
+            libs = find_libraries('libcupti', root=self.spec['cuda'].prefix,
+                                  shared=True, recursive=True)
+            for lib in libs.directories:
+                env.append_path('LD_LIBRARY_PATH', lib)
+
+
 
     @run_before('install')
     def filter_sbang(self):
@@ -133,12 +136,13 @@ class Likwid(Package):
                         'BUILDAPPDAEMON = true',
                         'config.mk')
             cudainc = spec['cuda'].prefix.include
-            cuptiinc = join_path(spec['cuda'].prefix, "extras/CUPTI/include")
             filter_file('^CUDAINCLUDE.*',
                         'CUDAINCLUDE = {0}'.format(cudainc),
                         'config.mk')
+            cuptiheader = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
+                                          recursive=True))
             filter_file('^CUPTIINCLUDE.*',
-                        'CUPTIINCLUDE = {0}'.format(cuptiinc),
+                        'CUPTIINCLUDE = {0}'.format(cuptiheader.directories[0]),
                         'config.mk')
         else:
             filter_file('^NVIDIA_INTERFACE.*',
