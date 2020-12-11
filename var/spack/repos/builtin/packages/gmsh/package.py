@@ -19,6 +19,12 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
 
+
+    version('4.7.1', sha256='c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a')
+    version('4.7.0', sha256='e27f32f92b374ba2a746a9d9c496401c13f66ac6e3e70753e16fa4012d14320e')
+    version('4.6.0', sha256='0f2c55e50fb6c478ebc8977f6341c223754cbf3493b7b0d683b4395ae9f2ad1c')
+    version('4.5.6', sha256='46eaeb0cdee5822fdaa4b15f92d8d160a8cc90c4565593cfa705de90df2a463f')
+    version('4.5.5', sha256='899d3cded664124fa387da57b6f170f47a7e712c7744aa3562779897e2b9e251')
     version('4.5.4', sha256='ccf8c74f43cbe3c371abe79862025d41642b3538a0148f018949494e3b3e2ecd')
     version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
     version('4.2.2', sha256='e9ee9f5c606bbec5f2adbb8c3d6023c4e2577f487fa4e4ecfcfc94a241cc8dcc')
@@ -29,6 +35,8 @@ class Gmsh(CMakePackage):
     version('2.15.0', sha256='992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
     version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
+
+    patch('gmsh-4.7.1-cgns-type.patch', sha256='bee4401602d114cbd011336261cd90a69d8cd80f4472f59ce9dfc65e8850dddb', when='@4.7.1')
 
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
