@@ -832,6 +832,9 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 
     context = kwargs.get('context', 'build')
+    # Restore the working directory from the passed-in arguments
+    if not spack.main.spack_working_dir:
+        spack.main.spack_working_dir = kwargs['spack_main_working_dir']
 
     try:
         # We are in the child process. Python sets sys.stdin to
@@ -944,6 +947,9 @@ def start_build_process(pkg, function, kwargs):
         if sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
+
+        # Pass the working directory through the kwargs for debug logging
+        kwargs['spack_main_working_dir'] = spack.main.spack_working_dir
 
         p = multiprocessing.Process(
             target=_setup_pkg_and_run,
