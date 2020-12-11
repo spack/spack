@@ -31,7 +31,7 @@ class Frontistr(CMakePackage):
     # depends_on('revocap-coupler')
     depends_on('metis')
     depends_on('mumps')
-    depends_on('trilinos')
+    depends_on('trilinos@:12.18.1')
 
     def cmake_args(self):
         define = CMakePackage.define
