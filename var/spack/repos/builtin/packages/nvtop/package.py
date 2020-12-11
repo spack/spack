@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Nvtop(CMakePackage):
+class Nvtop(CMakePackage, CudaPackage):
     """Nvtop stands for NVidia TOP, a (h)top like task monitor for NVIDIA GPUs.
     It can handle multiple GPUs and print information about them
     in a htop familiar way."""
@@ -16,10 +16,7 @@ class Nvtop(CMakePackage):
 
     version('1.1.0', sha256='00470cde8fc48d5a5ed7c96402607e474414d94b562b21189bdde1dbe6b1d1f3')
 
-    depends_on('cmake')
     depends_on('ncurses')
-    depends_on('git')
-    depends_on('cuda')
 
     def cmake_args(self):
         return [self.define('NVML_RETRIEVE_HEADER_ONLINE', True)]
