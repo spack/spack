@@ -31,8 +31,10 @@ import llnl.util.tty.color as color
 import spack
 import spack.architecture
 import spack.cmd
+import spack.compilers
 import spack.config
 import spack.dependency
+import spack.directives
 import spack.error
 import spack.spec
 import spack.package
@@ -695,6 +697,7 @@ class SpackSolverSetup(object):
         self.possible_versions = {}
         self.possible_virtuals = None
         self.possible_compilers = []
+        self.variant_values_from_specs = set()
         self.version_constraints = set()
         self.target_constraints = set()
         self.providers_by_vspec_name = collections.defaultdict(list)
@@ -828,6 +831,18 @@ class SpackSolverSetup(object):
         for i, cspec in enumerate(matches):
             f = fn.default_compiler_preference(cspec.name, cspec.version, i)
             self.gen.fact(f)
+
+        # Enumerate target families. This may be redundant, but compilers with
+        # custom versions will be able to concretize properly.
+        for entry in spack.compilers.all_compilers_config():
+            compiler_entry = entry['compiler']
+            cspec = spack.spec.CompilerSpec(compiler_entry['spec'])
+            if not compiler_entry.get('target', None):
+                continue
+
+            self.gen.fact(fn.compiler_supports_target(
+                cspec.name, cspec.version, compiler_entry['target']
+            ))
 
     def compiler_supports_os(self):
         compilers_yaml = spack.compilers.all_compilers_config()
@@ -1013,6 +1028,10 @@ class SpackSolverSetup(object):
             if pkg_name == 'all':
                 continue
 
+            # This package does not appear in any repository
+            if pkg_name not in spack.repo.path:
+                continue
+
             if 'externals' not in data:
                 self.gen.fact(fn.external(pkg_name).symbol(positive=False))
 
@@ -1047,6 +1066,7 @@ class SpackSolverSetup(object):
             for id, spec in enumerate(external_specs):
                 self.gen.newline()
                 spec_id = fn.external_spec(pkg_name, id)
+                self.possible_versions[spec.name].add(spec.version)
                 clauses = self.spec_clauses(spec, body=True)
                 # This is an iff below, wish it could be written in a
                 # more compact form
@@ -1084,7 +1104,14 @@ class SpackSolverSetup(object):
             if not isinstance(values, tuple):
                 values = (values,)
 
+            # perform validation of the variant and values
+            spec = spack.spec.Spec(pkg_name)
+            spec.update_variant_validate(variant_name, values)
+
             for value in values:
+                self.variant_values_from_specs.add(
+                    (pkg_name, variant.name, value)
+                )
                 self.gen.fact(fn.variant_default_value_from_packages_yaml(
                     pkg_name, variant.name, value
                 ))
@@ -1147,7 +1174,7 @@ class SpackSolverSetup(object):
             node_platform = fn.node_platform_set
             node_os = fn.node_os_set
             node_target = fn.node_target_set
-            variant = fn.variant_set
+            variant_value = fn.variant_set
             node_compiler = fn.node_compiler_hard
             node_compiler_version = fn.node_compiler_version_hard
             node_flag = fn.node_flag_set
@@ -1157,7 +1184,7 @@ class SpackSolverSetup(object):
             node_platform = fn.node_platform
             node_os = fn.node_os
             node_target = fn.node_target
-            variant = fn.variant_value
+            variant_value = fn.variant_value
             node_compiler = fn.node_compiler
             node_compiler_version = fn.node_compiler_version
             node_flag = fn.node_flag
@@ -1182,14 +1209,26 @@ class SpackSolverSetup(object):
 
         # variants
         for vname, variant in sorted(spec.variants.items()):
-            value = variant.value
-            if isinstance(value, tuple):
-                for v in value:
-                    if v == '*':
-                        continue
-                    clauses.append(f.variant(spec.name, vname, v))
-            elif value != '*':
-                clauses.append(f.variant(spec.name, vname, variant.value))
+            values = variant.value
+            if not isinstance(values, (list, tuple)):
+                values = [values]
+
+            for value in values:
+                # * is meaningless for concretization -- just for matching
+                if value == '*':
+                    continue
+
+                # validate variant value
+                if vname not in spack.directives.reserved_names:
+                    variant_def = spec.package.variants[vname]
+                    variant_def.validate_or_raise(variant, spec.package)
+
+                clauses.append(f.variant_value(spec.name, vname, value))
+
+                # Tell the concretizer that this is a possible value for the
+                # variant, to account for things like int/str values where we
+                # can't enumerate the valid values
+                self.variant_values_from_specs.add((spec.name, vname, value))
 
         # compiler and compiler version
         if spec.compiler:
@@ -1230,7 +1269,7 @@ class SpackSolverSetup(object):
                 if dep.versions.concrete:
                     self.possible_versions[dep.name].add(dep.version)
 
-    def _supported_targets(self, compiler, targets):
+    def _supported_targets(self, compiler_name, compiler_version, targets):
         """Get a list of which targets are supported by the compiler.
 
         Results are ordered most to least recent.
@@ -1239,7 +1278,7 @@ class SpackSolverSetup(object):
 
         for target in targets:
             try:
-                target.optimization_flags(compiler.name, compiler.version)
+                target.optimization_flags(compiler_name, compiler_version)
                 supported.append(target)
             except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
@@ -1289,7 +1328,22 @@ class SpackSolverSetup(object):
         # TODO: investigate this.
         best_targets = set([uarch.family.name])
         for compiler in sorted(compilers):
-            supported = self._supported_targets(compiler, compatible_targets)
+            supported = self._supported_targets(
+                compiler.name, compiler.version, compatible_targets
+            )
+
+            # If we can't find supported targets it may be due to custom
+            # versions in the spec, e.g. gcc@foo. Try to match the
+            # real_version from the compiler object to get more accurate
+            # results.
+            if not supported:
+                compiler_obj = spack.compilers.compilers_for_spec(compiler)
+                compiler_obj = compiler_obj[0]
+                supported = self._supported_targets(
+                    compiler.name,
+                    compiler_obj.real_version,
+                    compatible_targets
+                )
 
             if not supported:
                 continue
@@ -1394,10 +1448,6 @@ class SpackSolverSetup(object):
             if exact_match:
                 allowed_versions = exact_match
 
-            # don't bother restricting anything if all versions are allowed
-            if len(allowed_versions) == len(self.possible_versions[pkg_name]):
-                continue
-
             predicates = [fn.version(pkg_name, v) for v in allowed_versions]
 
             # version_satisfies(pkg, constraint) is true if and only if a
@@ -1487,6 +1537,18 @@ class SpackSolverSetup(object):
             )
             self.gen.newline()
 
+    def define_variant_values(self):
+        """Validate variant values from the command line.
+
+        Also add valid variant values from the command line to the
+        possible values for a variant.
+
+        """
+        # Tell the concretizer about possible values from specs we saw in
+        # spec_clauses()
+        for pkg, variant, value in sorted(self.variant_values_from_specs):
+            self.gen.fact(fn.variant_possible_value(pkg, variant, value))
+
     def setup(self, driver, specs, tests=False):
         """Generate an ASP program with relevant constraints for specs.
 
@@ -1555,51 +1617,20 @@ class SpackSolverSetup(object):
 
             for dep in spec.traverse():
                 self.gen.h2('Spec: %s' % str(dep))
+
                 # Inject dev_path from environment
                 _develop_specs_from_env(dep)
+
                 if dep.virtual:
                     for clause in self.virtual_spec_clauses(dep):
                         self.gen.fact(clause)
-                else:
-                    for clause in self.spec_clauses(dep):
-                        self.gen.fact(clause)
-                        # TODO: This might need to be moved somewhere else.
-                        # TODO: It's needed to account for open-ended variants
-                        # TODO: validated through a function. The rationale is
-                        # TODO: that if a value is set from cli and validated
-                        # TODO: then it's also a possible value.
-                        if clause.name == 'variant_set':
-                            variant_name = clause.args[1]
-                            # 'dev_path' and 'patches are treated in a
-                            # special way, as they are injected from cli
-                            # or files
-                            if variant_name == 'dev_path':
-                                pkg_name = clause.args[0]
-                                self.gen.fact(fn.variant(
-                                    pkg_name, variant_name
-                                ))
-                                self.gen.fact(fn.variant_single_value(
-                                    pkg_name, variant_name
-                                ))
-                            elif variant_name == 'patches':
-                                pkg_name = clause.args[0]
-                                self.gen.fact(fn.variant(
-                                    pkg_name, variant_name
-                                ))
-                            else:
-                                variant_def = dep.package.variants[
-                                    variant_name
-                                ]
-                                variant_def.validate_or_raise(
-                                    dep.variants[variant_name],
-                                    dep.package
-                                )
-                            # State that this variant is a possible value
-                            # to account for variant values that are not
-                            # enumerated explicitly
-                            self.gen.fact(
-                                fn.variant_possible_value(*clause.args)
-                            )
+                    continue
+
+                for clause in self.spec_clauses(dep):
+                    self.gen.fact(clause)
+
+        self.gen.h1("Variant Values defined in specs")
+        self.define_variant_values()
 
         self.gen.h1("Virtual Constraints")
         self.define_virtual_constraints()
@@ -1667,15 +1698,7 @@ class SpecBuilder(object):
             )
             return
 
-        pkg_class = spack.repo.path.get_pkg_class(pkg)
-
-        variant = self._specs[pkg].variants.get(name)
-        if variant:
-            # it's multi-valued
-            variant.append(value)
-        else:
-            variant = pkg_class.variants[name].make_variant(value)
-            self._specs[pkg].variants[name] = variant
+        self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
         self._specs[pkg].versions = ver([version])
@@ -1802,8 +1825,8 @@ class SpecBuilder(object):
         # fix flags after all specs are constructed
         self.reorder_flags()
 
-        for s in self._specs.values():
-            spack.spec.Spec.inject_patches_variant(s)
+        for root in set([spec.root for spec in self._specs.values()]):
+            spack.spec.Spec.inject_patches_variant(root)
 
         # Add external paths to specs with just external modules
         for s in self._specs.values():

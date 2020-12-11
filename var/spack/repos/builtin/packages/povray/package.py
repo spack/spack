@@ -63,7 +63,16 @@ class Povray(AutotoolsPackage):
     depends_on('libpng@1.2.5:', when='+libpng')
     depends_on('jpeg', when='+jpeg')
     depends_on('libtiff@3.6.1:', when='+libtiff')
+    depends_on('mkl', when='+mkl')
     depends_on('openexr@1.2:', when='+openexr')
+
+    # MKL conflicts
+    conflicts('+mkl', when='target=aarch64:',
+              msg='Intel MKL only runs on x86')
+    conflicts('+mkl', when='target=ppc64:',
+              msg='Intel MKL only runs on x86')
+    conflicts('+mkl', when='target=ppc64le:',
+              msg='Intel MKL only runs on x86')
 
     # This patch enables prebuild.sh to be invoked from any directory
     # (it immediately cds to the directory containing prebuild.sh)

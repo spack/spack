@@ -102,6 +102,9 @@ class MockPackageMultiRepo(object):
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
 
+    def __contains__(self, item):
+        return item in self.spec_to_pkg
+
     def add_package(self, name, dependencies=None, dependency_types=None,
                     conditions=None):
         """Factory method for creating mock packages.

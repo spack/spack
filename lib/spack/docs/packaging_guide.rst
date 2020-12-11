@@ -4029,6 +4029,8 @@ be available to the test method in the directory
 While source files are generally recommended, for many packages
 binaries may also technically be cached in this way for later testing.
 
+.. _cmd-spack-test:
+
 """""""""""""""""""""
 Running install tests
 """""""""""""""""""""
