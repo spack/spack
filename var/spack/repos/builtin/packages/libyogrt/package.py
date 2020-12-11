@@ -53,29 +53,24 @@ class Libyogrt(AutotoolsPackage):
         args = []
 
         sched = self.spec.variants['scheduler'].value
-        if sched != "system":
-            if sched == "lsf":
-                # The LSF library depends on a couple of other libraries,
-                # and running the build inside of spack does not find
-                # them, and the user has to add them when they want
-                # to use -lyogrt. If we explicitly tell it what libraries
-                # to use, the user does not need to specify them
-                args.append('--with-lsf')
-                args.append('LIBS=-llsf -lrt -lnsl')
-            else:
-                args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
+        if sched == "lsf":
+            # The LSF library depends on a couple of other libraries,
+            # and running the build inside of spack does not find
+            # them, and the user has to add them when they want
+            # to use -lyogrt. If we explicitly tell it what libraries
+            # to use, the user does not need to specify them
+            args.append('--with-lsf')
+            args.append('LIBS=-llsf -lrt -lnsl')
+        elif sched != "system":
+            args.append('--with-%s=%s' % (sched, self.spec[sched].prefix))
 
         if '+static' in self.spec:
             args.append('--enable-static=yes')
 
         return args
 
-    def install(self, spec, prefix):
-        # Run standard Autotools install first, then create a yogrt.conf file
-        # for the selected scheduler
-
-        AutotoolsPackage.install(self, spec, prefix)
-
+    @run_after('install')
+    def create_yogrt_conf(self):
         etcpath = os.path.join(prefix, "etc")
 
         # create subdirectory to hold yogrt.conf file
@@ -92,5 +87,3 @@ class Libyogrt(AutotoolsPackage):
         # create conf file to inform libyogrt about job scheduler
         with open(os.path.join(etcpath, "yogrt.conf"), "w+") as f:
             f.write("backend=%s\n" % sched)
-
-        return
