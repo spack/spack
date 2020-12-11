@@ -62,7 +62,7 @@ class Likwid(Package):
         if "+cuda" in self.spec:
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
             env.append_path('LD_LIBRARY_PATH', self.spec['cuda'].prefix.lib)
-            env.append_path('LD_LIBRARY_PATH', "{0}/extras/CUPTI/include".format(self.spec['cuda'].prefix))
+            env.append_path('LD_LIBRARY_PATH', "{0}/extras/CUPTI/lib64".format(self.spec['cuda'].prefix))
 
     @run_before('install')
     def filter_sbang(self):
