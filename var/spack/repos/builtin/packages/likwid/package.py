@@ -137,7 +137,7 @@ class Likwid(Package):
                         'CUDAINCLUDE = {0}'.format(cudainc),
                         'config.mk')
             cuptihead = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
-                                          recursive=True))
+                                        recursive=True))
             filter_file('^CUPTIINCLUDE.*',
                         'CUPTIINCLUDE = {0}'.format(cuptihead.directories[0]),
                         'config.mk')
