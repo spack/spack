@@ -1761,7 +1761,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             work_dir (str or None): path to the smoke test directory
         """
         wdir = '.' if work_dir is None else work_dir
-        with fsys.working_dir(wdir):
+        with fsys.working_dir(wdir, create=True):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:

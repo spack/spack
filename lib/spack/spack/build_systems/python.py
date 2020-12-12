@@ -370,9 +370,10 @@ class PythonPackage(PackageBase):
 
         # Make sure we are importing the installed modules,
         # not the ones in the source directory
-        with working_dir('spack-test', create=True):
-            for module in self.import_modules:
-                self.python('-c', 'import {0}'.format(module))
+        for module in self.import_modules:
+            self.run_test(inspect.getmodule(self).python.path,
+                          ['-c', 'import {0}'.format(module)],
+                          work_dir='spack-test')
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

@@ -208,5 +208,4 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     def test(self):
         super(PyHorovod, self).test()
-        horovodrun = Executable(self.prefix.bin.horovodrun)
-        horovodrun('--check-build')
+        run_test(self.prefix.bin.horovodrun, '--check-build')
