@@ -30,7 +30,7 @@ class Scalasca(AutotoolsPackage):
 
     # version 2.4+
     depends_on('cubew@4.4:', when='@2.4:')
-    depends_on('scorep@6.0:', when='@2.4:')
+    depends_on('scorep@6.0:', when='@2.4:', type=('run'))
 
     # version 2.3+
     depends_on('otf2@2:', when='@2.3:')

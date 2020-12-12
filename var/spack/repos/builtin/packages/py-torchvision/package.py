@@ -9,7 +9,7 @@ class PyTorchvision(PythonPackage):
     architectures, and common image transformations for computer vision."""
 
     homepage = "https://github.com/pytorch/vision"
-    url      = "https://github.com/pytorch/vision/archive/v0.8.1.tar.gz"
+    url      = "https://github.com/pytorch/vision/archive/v0.8.2.tar.gz"
     git      = "https://github.com/pytorch/vision.git"
 
     maintainers = ['adamjstewart']
@@ -21,6 +21,7 @@ class PyTorchvision(PythonPackage):
     ]
 
     version('master', branch='master')
+    version('0.8.2', sha256='9a866c3c8feb23b3221ce261e6153fc65a98ce9ceaa71ccad017016945c178bf')
     version('0.8.1', sha256='c46734c679c99f93e5c06654f4295a05a6afe6c00a35ebd26a2cce507ae1ccbd')
     version('0.8.0', sha256='b5f040faffbfc7bac8d4687d8665bd1196937334589b3fb5fcf15bb69ca25391')
     version('0.7.0', sha256='fa0a6f44a50451115d1499b3f2aa597e0092a07afce1068750260fa7dd2c85cb')
@@ -49,6 +50,7 @@ class PyTorchvision(PythonPackage):
 
     # https://github.com/pytorch/vision#installation
     depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.7.1', when='@0.8.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.7.0', when='@0.8.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.7.0', when='@0.8.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))

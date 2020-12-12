@@ -29,6 +29,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     patch('gdbm.patch', when='%gcc@10:')
     patch('gdbm.patch', when='%clang@11:')
     patch('gdbm.patch', when='%cce@11:')
+    patch('gdbm.patch', when='%aocc@2:')
 
     def configure_args(self):
 

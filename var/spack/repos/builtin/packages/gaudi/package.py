@@ -90,13 +90,14 @@ class Gaudi(CMakePackage):
         args = [
             self.define_from_variant("BUILD_TESTING",             "optional"),
             self.define_from_variant("GAUDI_USE_AIDA",            "optional"),
-            self.define_from_variant("GAUDI_USE_CLHEP",           "optional"),
             self.define_from_variant("GAUDI_USE_CPPUNIT",         "optional"),
             self.define_from_variant("GAUDI_USE_HEPPDT",          "optional"),
             self.define_from_variant("GAUDI_USE_JEMALLOC",        "optional"),
             self.define_from_variant("GAUDI_USE_UNWIND",          "optional"),
             self.define_from_variant("GAUDI_USE_XERCESC",         "optional"),
             self.define_from_variant("GAUDI_USE_DOXYGEN",         "docs"),
+            # needed to build core services like rndmsvc
+            self.define("GAUDI_USE_CLHEP", True),
             self.define("GAUDI_USE_PYTHON_MAJOR",
                         str(self.spec['python'].version.up_to(1))),
             # todo:

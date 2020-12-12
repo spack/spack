@@ -72,6 +72,17 @@ class Mesa(MesonPackage):
     depends_on('xrandr', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx', type='build')
 
+    # Require at least 1 front-end
+    # TODO: Add egl to this conflict once made available
+    conflicts('~osmesa ~glx')
+
+    # Require at least 1 back-end
+    # TODO: Add vulkan to this conflict once made available
+    conflicts('~opengl ~opengles')
+
+    # OpenGL ES requires OpenGL
+    conflicts('~opengl +opengles')
+
     def meson_args(self):
         spec = self.spec
         args = [
