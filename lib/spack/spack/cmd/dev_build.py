@@ -112,6 +112,7 @@ def dev_build(self, args):
         verbose=not args.quiet,
         dirty=args.dirty,
         stop_before=args.before,
+        skip_patch=args.skip_patch,
         stop_at=args.until)
 
     # drop into the build environment of the package?
