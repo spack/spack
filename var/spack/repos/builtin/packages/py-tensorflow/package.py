@@ -16,6 +16,7 @@ class PyTensorflow(Package, CudaPackage):
 
     maintainers = ['adamjstewart', 'aweits']
 
+    version('2.4.0',  sha256='26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae')
     version('2.3.1',  sha256='ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac')
     version('2.3.0',  sha256='2595a5c401521f20a2734c4e5d54120996f8391f00bb62a57267d930bce95350')
     version('2.2.1',  sha256='e6a28e64236d729e598dbeaa02152219e67d0ac94d6ed22438606026a02e0f88')
@@ -127,6 +128,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-future', type='build', when='^python@:2')
 
     # Listed under REQUIRED_PACKAGES in tensorflow/tools/pip_package/setup.py
+    depends_on('py-absl-py@0.10.0:', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-absl-py@0.7.0:', type=('build', 'run'), when='@1.12.1,1.14:')
     depends_on('py-absl-py@0.1.6:', type=('build', 'run'), when='@1.5:')
     depends_on('py-astunparse@1.6.3', type=('build', 'run'), when='@2.2:')
@@ -138,6 +140,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-gast@0.3.3', type=('build', 'run'), when='@2.2:')
     depends_on('py-gast@0.2.2', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-gast@0.2.0:', type=('build', 'run'), when='@1.6:1.14')
+    depends_on('py-google-pasta@0.2.0:', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-google-pasta@0.1.8:', type=('build', 'run'), when='@2.1:')
     depends_on('py-google-pasta@0.1.6:', type=('build', 'run'), when='@1.14:')
     depends_on('py-google-pasta@0.1.2:', type=('build', 'run'), when='@1.12.1')
@@ -145,11 +148,13 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-keras-applications@1.0.8:', type=('build', 'run'), when='@1.15:2.1')
     depends_on('py-keras-applications@1.0.6:', type=('build', 'run'), when='@1.12:1.14')
     depends_on('py-keras-applications@1.0.5:', type=('build', 'run'), when='@1.11.0:1.11.999')
+    depends_on('py-keras-preprocessing@1.1.2:1.999', type=('build', 'run'), when='@2.4:')
     depends_on('py-keras-preprocessing@1.1.1:1.999', type=('build', 'run'), when='@2.3:')
     depends_on('py-keras-preprocessing@1.1.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-keras-preprocessing@1.0.5:', type=('build', 'run'), when='@1.12:')
     depends_on('py-keras-preprocessing@1.0.3:', type=('build', 'run'), when='@1.11:')
     # https://github.com/tensorflow/tensorflow/issues/40688
+    depends_on('py-numpy@1.19.2:',  type=('build', 'run'), when='@2.4.0:')
     depends_on('py-numpy@1.16.0:1.18',  type=('build', 'run'), when='@1.13.2,1.15:')
     depends_on('py-numpy@1.14.5:1.18',  type=('build', 'run'), when='@1.12.1,1.14.0')
     depends_on('py-numpy@1.13.3:1.14.5', type=('build', 'run'), when='@1.10.0:1.10.1')
@@ -159,6 +164,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-numpy@1.10.1:',       type=('build', 'run'), when='@0.7.1: platform=darwin')
     depends_on('py-numpy@1.8.2:',        type=('build', 'run'), when='@0.6:')
     depends_on('py-numpy@1.9.2:',        type=('build', 'run'), when='@0.5.0')
+    depends_on('py-opt-einsum@3.3.0:', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-opt-einsum@2.3.2:', type=('build', 'run'), when='@1.15:')
     depends_on('py-protobuf@3.9.2:', type=('build', 'run'), when='@2.3:')
     depends_on('py-protobuf@3.8.0:', type=('build', 'run'), when='@2.1:')
@@ -173,19 +179,24 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
     depends_on('protobuf')
+    depends_on('flatbuffers+python', type=('build', 'run'), when='@2.4.0')
     # tensorboard
     # tensorflow-estimator
     depends_on('py-termcolor@1.1.0:', type=('build', 'run'), when='@1.6:')
+    depends_on('py-wrapt@1.12.1:', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-wrapt@1.11.1:', type=('build', 'run'), when='@1.12.1,1.14:')
     depends_on('py-wheel', type=('build', 'run'), when='@0.6:')
     depends_on('py-wheel@0.26:', type=('build', 'run'), when='@0.6: ^python@3:')
+    depends_on('py-wheel@0.35:', type=('build', 'run'), when='@2.4.0: ^python@3:')
     depends_on('py-mock@2.0.0:', type=('build', 'run'), when='@0.10: ^python@:2')
     depends_on('py-functools32@3.2.3:', type=('build', 'run'), when='@1.15: ^python@:2')
+    depends_on('py-six@1.15.0:', type=('build', 'run'), when='@2.4.0:')
     depends_on('py-six@1.12.0:', type=('build', 'run'), when='@2.1:')
     depends_on('py-six@1.10.0:', type=('build', 'run'), when='@:2.0')
     depends_on('py-scipy@1.2.2', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@:2')
     depends_on('py-scipy@1.4.1', type=('build', 'run'), when='@2.1.0:2.1.1,2.2.0,2.3.0 ^python@3:')
     depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.6:1.7')
+    depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'), when='@2.4.0')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:')
@@ -532,11 +543,24 @@ class PyTensorflow(Package, CudaPackage):
         env.set('INCLUDEDIR', spec['protobuf'].prefix.include)
 
     def patch(self):
-        if self.spec.satisfies('@2.3.0:2.3.1'):
+        if self.spec.satisfies('@2.3.0:'):
             filter_file('deps = protodeps + well_known_proto_libs(),',
                         'deps = protodeps,',
                         'tensorflow/core/platform/default/build_config.bzl',
                         string=True)
+        if self.spec.satisfies('@2.4.0:'):
+            text = '''
+def protobuf_deps():
+    pass
+'''
+            with open('third_party/systemlibs/protobuf_deps.bzl', 'w') as f:
+                f.write(text)
+            filter_file(
+                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",',
+                '"//third_party/systemlibs:protobuf.bzl": "protobuf.bzl",\n'
+                '"//third_party/systemlibs:protobuf_deps.bzl": "protobuf_deps.bzl",',  # noqa: E501
+                'tensorflow/workspace.bzl',
+                string=True)
 
     def configure(self, spec, prefix):
         # NOTE: configure script is interactive. If you set the appropriate
