@@ -139,6 +139,8 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 #defined external_only/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
+#defined version_satisfies/2.
+#defined node_compiler_version_satisfies/3.
 #defined root/1.
 
 %-----------------------------------------------------------------------------
