@@ -1,5 +1,6 @@
 import re
 import sys
+import pycodestyle
 from collections import defaultdict
 from flake8.formatting.default import Pylint
 from flake8.style_guide import Violation
@@ -75,6 +76,8 @@ class SpackFormatter(Pylint):
         pass
 
     def beginning(self, filename):
+        self.filename = filename
+        self.file_lines = None
         self.spack_errors = defaultdict(list)
         for file_pattern, errors in pattern_exemptions.items():
             if file_pattern.search(filename):
@@ -94,15 +97,35 @@ class SpackFormatter(Pylint):
         :type error:
             flake8.style_guide.Violation
         """
+
         # print(error.code)
         # print(error.physical_line)
         # get list of patterns for this error code
         pats = self.spack_errors.get(error.code, None)
         # if any pattern matches, skip line
-        if pats is not None and any(
-            (pat.search(error.physical_line) for pat in pats)
-        ):
+        if pats is not None and any((pat.search(error.physical_line) for pat in pats)):
             return
+
+        # Special F811 handling
+        # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
+        # Starting with Python 3.8, it must be placed on the `def` line
+        # https://gitlab.com/pycqa/flake8/issues/583
+        # we can only determine if F811 should be ignored given the previous line,
+        # so get the previous line and check it
+        if (
+            self.spack_errors.get("F811", False)
+            and error.code == "F811"
+            and error.line_number > 1
+        ):
+            if self.file_lines is None:
+                if self.filename in {"stdin", "-", "(none)", None}:
+                    self.file_lines = pycodestyle.stdin_get_value().splitlines(True)
+                else:
+                    self.file_lines = pycodestyle.readlines(self.filename)
+            for pat in self.spack_errors["F811"]:
+                if pat.search(self.file_lines[error.line_number - 2]):
+                    return
+
         self.error_seen = True
         line = self.format(error)
         source = self.show_source(error)

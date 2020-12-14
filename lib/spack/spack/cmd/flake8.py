@@ -39,60 +39,6 @@ exclude_directories = [spack.paths.external_path]
 #: max line length we're enforcing (note: this duplicates what's in .flake8)
 max_line_length = 79
 
-#: This is a dict that maps:
-#:  filename pattern ->
-#:     flake8 exemption code ->
-#:        list of patterns, for which matching lines should have codes applied.
-#:
-#: For each file, if the filename pattern matches, we'll add per-line
-#: exemptions if any patterns in the sub-dict match.
-pattern_exemptions = {
-    # exemptions applied only to package.py files.
-    r'package.py$': {
-        # Allow 'from spack import *' in packages, but no other wildcards
-        'F403': [
-            r'^from spack import \*$',
-            r'^from spack.pkgkit import \*$',
-        ],
-        # Exempt lines with urls and descriptions from overlong line errors.
-        'E501': [
-            r'^\s*homepage\s*=',
-            r'^\s*url\s*=',
-            r'^\s*git\s*=',
-            r'^\s*svn\s*=',
-            r'^\s*hg\s*=',
-            r'^\s*list_url\s*=',
-            r'^\s*version\(',
-            r'^\s*variant\(',
-            r'^\s*provides\(',
-            r'^\s*extends\(',
-            r'^\s*depends_on\(',
-            r'^\s*conflicts\(',
-            r'^\s*resource\(',
-            r'^\s*patch\(',
-        ],
-        # Exempt '@when' decorated functions from redefinition errors.
-        'F811': [
-            r'^\s*@when\(.*\)',
-        ],
-    },
-
-    # exemptions applied to all files.
-    r'.py$': {
-        'E501': [
-            r'(https?|ftp|file)\:',        # URLs
-            r'([\'"])[0-9a-fA-F]{32,}\1',  # long hex checksums
-        ]
-    },
-}
-
-# compile all regular expressions.
-pattern_exemptions = dict(
-    (re.compile(file_pattern),
-     dict((code, [re.compile(p) for p in patterns])
-          for code, patterns in error_dict.items()))
-    for file_pattern, error_dict in pattern_exemptions.items())
-
 
 def changed_files(base=None, untracked=True, all_files=False):
     """Get list of changed files in the Spack repository."""
@@ -141,49 +87,8 @@ def changed_files(base=None, untracked=True, all_files=False):
     return sorted(changed)
 
 
-def add_pattern_exemptions(line, codes):
-    """Add a flake8 exemption to a line."""
-    if line.startswith('#'):
-        return line
-
-    line = line.rstrip('\n')
-
-    # Line is already ignored
-    if line.endswith('# noqa'):
-        return line + '\n'
-
-    orig_len = len(line)
-    codes = set(codes)
-
-    # don't add E501 unless the line is actually too long, as it can mask
-    # other errors like trailing whitespace
-    if orig_len <= max_line_length and "E501" in codes:
-        codes.remove("E501")
-        if not codes:
-            return line + "\n"
-
-    exemptions = ','.join(sorted(codes))
-
-    # append exemption to line
-    if '# noqa: ' in line:
-        line += ',{0}'.format(exemptions)
-    elif line:  # ignore noqa on empty lines
-        line += '  # noqa: {0}'.format(exemptions)
-
-    # if THIS made the line too long, add an exemption for that
-    if len(line) > max_line_length and orig_len <= max_line_length:
-        line += ',E501'
-
-    return line + '\n'
-
-
 def filter_file(source, dest, output=False):
     """Filter a single file through all the patterns in pattern_exemptions."""
-
-    # Prior to Python 3.8, `noqa: F811` needed to be placed on the `@when` line
-    # Starting with Python 3.8, it must be placed on the `def` line
-    # https://gitlab.com/pycqa/flake8/issues/583
-    ignore_f811_on_previous_line = False
 
     with open(source) as infile:
         parent = os.path.dirname(dest)
@@ -191,28 +96,6 @@ def filter_file(source, dest, output=False):
 
         with open(dest, 'w') as outfile:
             for line in infile:
-                line_errors = []
-
-                # pattern exemptions
-                for file_pattern, errors in pattern_exemptions.items():
-                    if not file_pattern.search(source):
-                        continue
-
-                    for code, patterns in errors.items():
-                        for pattern in patterns:
-                            if pattern.search(line):
-                                line_errors.append(code)
-                                break
-
-                if 'F811' in line_errors:
-                    ignore_f811_on_previous_line = True
-                elif ignore_f811_on_previous_line:
-                    line_errors.append('F811')
-                    ignore_f811_on_previous_line = False
-
-                if line_errors:
-                    line = add_pattern_exemptions(line, line_errors)
-
                 outfile.write(line)
                 if output:
                     sys.stdout.write(line)
@@ -283,16 +166,16 @@ def flake8(parser, args):
             output = ''
             if file_list:
                 output += flake8(
-                    '--format', 'pylint',
+                    '--format', 'spack',
                     '--config=%s' % os.path.join(spack.paths.prefix,
                                                  '.flake8'),
                     *file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
             if package_file_list:
                 output += flake8(
-                    '--format', 'pylint',
+                    '--format', 'spack',
                     '--config=%s' % os.path.join(spack.paths.prefix,
-                                                 '.flake8_packages'),
+                                                 '.flake8'),
                     *package_file_list, fail_on_error=False, output=str)
                 returncode |= flake8.returncode
 
