@@ -14,7 +14,6 @@ class Pmerge(AutotoolsPackage):
        an additional filter in population-genomic studies using RAD-seq
        data."""
 
-    # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://github.com/beiko-lab/PMERGE"
     git      = "https://github.com/beiko-lab/PMERGE.git"
 
