@@ -258,6 +258,10 @@ class PackageMeta(
     """
     phase_fmt = '_InstallPhase_{0}'
 
+    # These are accessed only through getattr, by name
+    _InstallPhase_run_before = {} # type: Dict[str, List[Callable]]
+    _InstallPhase_run_after = {} # type: Dict[str, List[Callable]]
+
     def __new__(cls, name, bases, attr_dict):
         """
         Instance creation is preceded by phase attribute transformations.
