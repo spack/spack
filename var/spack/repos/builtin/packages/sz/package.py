@@ -14,12 +14,6 @@ class Sz(CMakePackage):
     git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
-    def url_for_version(self, version):
-        """provide url to ensure that download counting via github releases
-        works accurately"""
-        url = "https://github.com/szcompressor/SZ/releases/download/v{0}/SZ-{0}.tar.gz"
-        return url.format(version)
-
     version('master', branch='master')
     version('2.1.11', sha256='85b8ef99344a3317ba9ee63ca4b9d99a51d1832d4d8880e01c7c56b3a69cacc9')
     version('2.1.10', sha256='3aba7619bdb5412218f162696f946c9d3a3df5acf128ddc685b21e45c11f6ae3',
@@ -138,3 +132,9 @@ class Sz(CMakePackage):
         else:
             args.append("-DBUILD_STATS=OFF")
         return args
+    
+    def url_for_version(self, version):
+        """provide url to ensure that download counting via github releases
+        works accurately"""
+        url = "https://github.com/szcompressor/SZ/releases/download/v{0}/SZ-{0}.tar.gz"
+        return url.format(version)
