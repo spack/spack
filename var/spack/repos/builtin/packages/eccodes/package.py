@@ -58,7 +58,7 @@ class Eccodes(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')
-    
+ 
     depends_on('cmake@3.12.0:', when='@:2.19', type=('build'))
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
