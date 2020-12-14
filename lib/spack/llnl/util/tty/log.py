@@ -20,9 +20,15 @@ from contextlib import contextmanager
 from six import string_types
 from six import StringIO
 
+try:
+    from typing import Optional  # novm
+    from types import ModuleType  # novm
+except ImportError:
+    pass
+
 import llnl.util.tty as tty
 
-termios = None # type: Optional[Module]
+termios = None  # type: Optional[ModuleType]
 try:
     import termios as term_mod
     termios = term_mod

@@ -101,7 +101,8 @@ class FetchStrategy(object):
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
-    optional_attrs = []  # type: List[str] # optional attributes in version() args.
+    # optional attributes in version() args.
+    optional_attrs = []  # type: List[str]
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be

@@ -10,7 +10,8 @@ import collections
 import os
 
 try:
-    from typing import Any, Callable, DefaultDict, Dict, List  # novm
+    from typing import Callable, DefaultDict, Dict, List  # novm
+    CallbackDict = DefaultDict[str, List[Callable]]  # novm
 except ImportError:
     pass
 
@@ -32,8 +33,8 @@ class PackageMixinsMeta(type):
     """
 
     _methods_to_be_added = {}  # type: Dict[str, Callable]
-    _add_method_before = collections.defaultdict(list)  # type: DefaultDict[str, List[Callable]]
-    _add_method_after = collections.defaultdict(list)  # type: DefaultDict[str, List[Callable]]
+    _add_method_before = collections.defaultdict(list)  # type: CallbackDict
+    _add_method_after = collections.defaultdict(list)  # type: CallbackDict
 
     @staticmethod
     def register_method_before(fn, phase):  # type: (Callable, str) -> None

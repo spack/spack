@@ -107,7 +107,7 @@ def make_log_context(log_events, width=None):
         for i in range(start, event.end):
             # wrap to width
             lines = _wrap(event[i], wrap_width)
-            lines[1:] = [indent + l for l in lines[1:]]
+            lines[1:] = [indent + ln for ln in lines[1:]]
             wrapped_line = line_fmt % (i, '\n'.join(lines))
 
             if i in error_lines:

@@ -12,7 +12,7 @@ import shutil
 import tempfile
 
 try:
-    from typing import Sequence, Optional, List  # novm
+    from typing import Sequence, List  # novm
 except ImportError:
     pass
 

@@ -45,7 +45,6 @@ def parse(config_obj):
     else:
         from collections import Sequence  # novm
 
-
     env = ev.EnvironmentModifications()
     for command, variable in config_obj.items():
         # Distinguish between commands that take only a name as argument

@@ -235,7 +235,8 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None   # type: int # Subclass sets number. Controls detection order
+    # Subclass sets number. Controls detection order
+    priority        = None   # type: int
 
     #: binary formats used on this platform; used by relocation logic
     binary_formats  = ['elf']
