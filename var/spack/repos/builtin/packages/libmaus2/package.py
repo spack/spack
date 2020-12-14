@@ -12,7 +12,8 @@ class Libmaus2(AutotoolsPackage):
     homepage = "https://gitlab.com/german.tischler/libmaus2"
     url      = "https://gitlab.com/german.tischler/libmaus2/-/archive/2.0.767-release-20201123131410/libmaus2-2.0.767-release-20201123131410.tar.gz"
 
-    version('2.0.767.20201123131410', sha256='40cec9bef2fb61d8df0a35cdf76c59a1d8389686d393805138c364d0c029f03c')
+    version('2.0.767', sha256='40cec9bef2fb61d8df0a35cdf76c59a1d8389686d393805138c364d0c029f03c', 
+            url='https://gitlab.com/german.tischler/libmaus2/-/archive/2.0.767-release-20201123131410/libmaus2-2.0.767-release-20201123131410.tar.gz')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
@@ -20,12 +21,6 @@ class Libmaus2(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     conflicts('%gcc@:7.9', msg="libmaus2 uses std::filesystem. std::filesystem requires greater than or equal to GCC 8.")
-
-    def url_for_version(self, version):
-        url = "https://gitlab.com/german.tischler/libmaus2/-/archive/{0}-release-{1}/libmaus2-{0}-release-{1}.tar.gz"
-        ver = version[:3]
-        date = version[3]
-        return url.format(ver, date)
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%gcc@8.0:8.9') or self.spec.satisfies('%fj'):
