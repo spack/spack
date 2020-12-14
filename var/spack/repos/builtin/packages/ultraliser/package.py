@@ -16,3 +16,6 @@ class Ultraliser(CMakePackage):
 
     depends_on('libtiff')
     depends_on('ilmbase')
+    depends_on('vtk')
+    depends_on('hdf5')
+    
