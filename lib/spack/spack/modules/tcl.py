@@ -9,6 +9,11 @@ non-hierarchical modules.
 import os.path
 import string
 
+try:
+    from typing import Dict, Any
+except ImportError:
+    pass
+
 import llnl.util.tty as tty
 
 import spack.config
@@ -24,7 +29,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {} # type: Dict[str, Any]
 
 
 def make_configuration(spec):

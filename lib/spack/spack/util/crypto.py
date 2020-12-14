@@ -8,6 +8,10 @@ import hashlib
 
 import llnl.util.tty as tty
 
+try:
+    from typing import Dict, Callable, Any
+except ImportError:
+    pass
 
 #: Set of hash algorithms that Spack can use, mapped to digest size in bytes
 hashes = {
@@ -30,7 +34,7 @@ _deprecated_hash_algorithms = ['md5']
 
 
 #: cache of hash functions generated
-_hash_functions = {}
+_hash_functions = {} # type: Dict[str, Callable[[], Any]]
 
 
 class DeprecatedHash(object):

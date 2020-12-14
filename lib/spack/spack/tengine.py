@@ -5,6 +5,11 @@
 import itertools
 import textwrap
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import llnl.util.lang
 import six
 
@@ -18,7 +23,7 @@ class ContextMeta(type):
     """
     #: Keeps track of the context properties that have been added
     #: by the class that is being defined
-    _new_context_properties = []
+    _new_context_properties = [] # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Merge all the context properties that are coming from base classes

@@ -34,6 +34,11 @@ import os.path
 import re
 from six import string_types
 
+try:
+    from typing import Set, List
+except ImportError:
+    pass
+
 import llnl.util.lang
 import llnl.util.tty.color
 
@@ -103,8 +108,8 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()
-    _directives_to_be_executed = []
+    _directive_names = set() # type: Set[str]
+    _directives_to_be_executed = [] # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives

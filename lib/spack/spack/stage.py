@@ -17,6 +17,11 @@ import tempfile
 from six import string_types
 from six import iteritems
 
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
 from llnl.util.filesystem import partition_path, remove_linked_tree
@@ -221,7 +226,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}
+    stage_locks = {} # type: Dict[str, spack.util.lock.Lock]
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True

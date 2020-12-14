@@ -17,10 +17,16 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import archspec.cpu
 
+try:
+    from typing import Dict
+except ImportError:
+    pass
+
 import spack.paths
 import spack.error
 import spack.spec
 import spack.config
+import spack.compiler
 import spack.architecture
 import spack.util.imp as simp
 from spack.util.environment import get_path
@@ -36,7 +42,7 @@ _cache_config_file = []
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache = {}
+_compiler_cache = {} # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
     'clang': 'llvm+clang'

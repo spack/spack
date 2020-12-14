@@ -9,6 +9,11 @@ import llnl.util.lang as lang
 import itertools
 import collections
 
+try:
+    from typing import Dict, Any
+except ImportError:
+    pass
+
 import spack.config
 import spack.compilers
 import spack.spec
@@ -26,7 +31,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {} # type: Dict[str, Any]
 
 
 def make_configuration(spec):

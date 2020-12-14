@@ -15,6 +15,11 @@
 import ctypes
 import collections
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO
 
@@ -219,7 +224,7 @@ def file_line(mark):
 #: This is nasty but YAML doesn't give us many ways to pass arguments --
 #: yaml.dump() takes a class (not an instance) and instantiates the dumper
 #: itself, so we can't just pass an instance
-_annotations = []
+_annotations = [] # type: List[str]
 
 
 class LineAnnotationDumper(OrderedLineDumper):

@@ -6,6 +6,11 @@
 
 import inspect
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
 from spack.package import PackageBase, run_after
@@ -48,7 +53,7 @@ class MakefilePackage(PackageBase):
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
-    build_targets = []
+    build_targets = [] # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
     #: phase
     install_targets = ['install']

@@ -30,7 +30,6 @@ fc_mapping = [
     ('ifort', 'intel/ifort')
 ]
 
-
 class Clang(Compiler):
     # Subclasses use possible names of C compiler
     cc_names = ['clang']

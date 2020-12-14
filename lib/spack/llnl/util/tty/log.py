@@ -22,10 +22,12 @@ from six import StringIO
 
 import llnl.util.tty as tty
 
+termios = None # type Optional[Module]
 try:
-    import termios
+    import termios as term_mod
+    termios = term_mod
 except ImportError:
-    termios = None
+    pass
 
 
 # Use this to strip escape sequences

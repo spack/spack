@@ -7,6 +7,11 @@
 import inspect
 import os
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 from llnl.util.filesystem import working_dir
 from spack.directives import depends_on, variant
 from spack.package import PackageBase, run_after
@@ -46,7 +51,7 @@ class MesonPackage(PackageBase):
     #: system base class
     build_system_class = 'MesonPackage'
 
-    build_targets = []
+    build_targets = [] # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']

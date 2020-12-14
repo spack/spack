@@ -5,6 +5,11 @@
 
 import argparse
 
+try:
+    from typing import Dict, Callable
+except ImportError:
+    pass
+
 import llnl.util.tty as tty
 
 import spack.cmd.modules.lmod
@@ -15,7 +20,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}
+_subcommands = {} # type: Dict[str, Callable]
 
 _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 

@@ -35,6 +35,11 @@ import inspect
 import os.path
 import re
 
+try:
+    from typing import Optional
+except ImportError:
+    pass
+
 import llnl.util.filesystem
 from llnl.util.lang import dedupe
 import llnl.util.tty as tty
@@ -540,7 +545,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None
+    extension = None # type: Optional[str]
 
     def __init__(self, configuration):
         self.conf = configuration

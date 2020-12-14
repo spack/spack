@@ -9,6 +9,11 @@ import os
 import platform
 import re
 
+try:
+    from typing import List
+except ImportError:
+    pass
+
 import spack.build_environment
 from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
@@ -74,7 +79,7 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
-    build_targets = []
+    build_targets = [] # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']

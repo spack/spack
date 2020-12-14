@@ -9,6 +9,11 @@ package.
 import collections
 import os
 
+try:
+    from typing import Any, Callable, DefaultDict, Dict, List
+except ImportError:
+    pass
+
 import llnl.util.filesystem
 
 __all__ = [
@@ -26,12 +31,12 @@ class PackageMixinsMeta(type):
     gets implicitly attached to the package class by calling the mixin.
     """
 
-    _methods_to_be_added = {}
-    _add_method_before = collections.defaultdict(list)
-    _add_method_after = collections.defaultdict(list)
+    _methods_to_be_added = {} # type: Dict[str, Callable]
+    _add_method_before = collections.defaultdict(list) # type: DefaultDict[str, List[Callable]]
+    _add_method_after = collections.defaultdict(list) # type: DefaultDict[str, List[Callable]]
 
     @staticmethod
-    def register_method_before(fn, phase):
+    def register_method_before(fn, phase): # type: (Callable, str) -> None
         """Registers a method to be run before a certain phase.
 
         Args:
@@ -42,7 +47,7 @@ class PackageMixinsMeta(type):
         PackageMixinsMeta._add_method_before[phase].append(fn)
 
     @staticmethod
-    def register_method_after(fn, phase):
+    def register_method_after(fn, phase): # type: (Callable, str) -> None
         """Registers a method to be run after a certain phase.
 
         Args:
