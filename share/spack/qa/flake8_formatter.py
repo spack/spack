@@ -15,7 +15,10 @@ pattern_exemptions = {
     # exemptions applied only to package.py files.
     r"package.py$": {
         # Allow 'from spack import *' in packages, but no other wildcards
-        "F403": [r"^from spack import \*$"],
+        "F403": [
+            r"^from spack import \*$",
+            r"^from spack.pkgkit import \*$",
+        ],
         # Exempt lines with urls and descriptions from overlong line errors.
         "E501": [
             r"^\s*homepage\s*=",
@@ -96,7 +99,9 @@ class SpackFormatter(Pylint):
         # get list of patterns for this error code
         pats = self.spack_errors.get(error.code, None)
         # if any pattern matches, skip line
-        if pats is not None and any((pat.search(error.physical_line) for pat in pats)):
+        if pats is not None and any(
+            (pat.search(error.physical_line) for pat in pats)
+        ):
             return
         self.error_seen = True
         line = self.format(error)

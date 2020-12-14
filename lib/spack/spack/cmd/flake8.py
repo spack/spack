@@ -51,7 +51,8 @@ pattern_exemptions = {
     r'package.py$': {
         # Allow 'from spack import *' in packages, but no other wildcards
         'F403': [
-            r'^from spack import \*$'
+            r'^from spack import \*$',
+            r'^from spack.pkgkit import \*$',
         ],
         # Exempt lines with urls and descriptions from overlong line errors.
         'E501': [
