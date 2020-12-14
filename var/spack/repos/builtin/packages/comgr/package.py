@@ -24,6 +24,10 @@ class Comgr(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
+    # Disable the hip compile tests.  Spack should not be using
+    # /opt/rocm, and this breaks the build when /opt/rocm exists.
+    patch('hip-tests.patch')
+
     depends_on('cmake@3.2.0:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
 
@@ -37,9 +41,3 @@ class Comgr(CMakePackage):
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 
     root_cmakelists_dir = join_path('lib', 'comgr')
-
-    # Disable the hip compile tests.  Spack should not be using
-    # /opt/rocm, and this breaks the build when /opt/rocm exists.
-    def patch(self):
-        filter_file(r'(find_package.*)PATHS\s*/opt/rocm[^ )]*', r'\1',
-                    join_path('lib', 'comgr', 'test', 'CMakeLists.txt'))
