@@ -30,7 +30,7 @@ packages:
       - circuit-build@3.1.1
       - connectome-tools@0.3.3
       - spatial-index@0.2.1
-      - spykfunc@0.15.7
+      - spykfunc@0.15.9
       - psp-validation@0.3.1
       - py-pytouchreader@1.4.6
       - py-basalt@0.2.9
