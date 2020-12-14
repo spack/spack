@@ -101,6 +101,12 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
     conflicts('~dihydrogen', when='+distconv')
 
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('hydrogen cuda_arch=%s' % arch, when='cuda_arch=%s' % arch)
+        depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+        depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen cuda_arch=%s' % arch)
+        depends_on('nccl cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
+
     depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
