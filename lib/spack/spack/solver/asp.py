@@ -1413,6 +1413,13 @@ class SpackSolverSetup(object):
             self.preferred_targets(pkg)
             self.preferred_versions(pkg)
 
+        # Inject dev_path from environment
+        env = spack.environment.get_env(None, None)
+        if env:
+            for spec in sorted(specs):
+                for dep in spec.traverse():
+                    _develop_specs_from_env(dep, env)
+
         self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
             if not spec.virtual:
@@ -1422,10 +1429,6 @@ class SpackSolverSetup(object):
 
             for dep in spec.traverse():
                 self.gen.h2('Spec: %s' % str(dep))
-
-                # Inject dev_path from environment
-                _develop_specs_from_env(dep)
-
                 if dep.virtual:
                     for clause in self.virtual_spec_clauses(dep):
                         self.gen.fact(clause)
@@ -1637,8 +1640,9 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
 
+        env = spack.environment.get_env(None, None)
         for s in self._specs.values():
-            _develop_specs_from_env(s)
+            _develop_specs_from_env(s, env)
 
         for s in self._specs.values():
             s._mark_concrete()
@@ -1649,8 +1653,7 @@ class SpecBuilder(object):
         return self._specs
 
 
-def _develop_specs_from_env(spec):
-    env = spack.environment.get_env(None, None)
+def _develop_specs_from_env(spec, env):
     dev_info = env.dev_specs.get(spec.name, {}) if env else {}
     if not dev_info:
         return
