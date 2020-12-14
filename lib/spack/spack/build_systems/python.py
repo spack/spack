@@ -373,6 +373,7 @@ class PythonPackage(PackageBase):
         for module in self.import_modules:
             self.run_test(inspect.getmodule(self).python.path,
                           ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
                           work_dir='spack-test')
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
