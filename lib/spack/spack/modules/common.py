@@ -545,7 +545,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None # type: Optional[str]
+    extension = None  # type: Optional[str]
 
     def __init__(self, configuration):
         self.conf = configuration

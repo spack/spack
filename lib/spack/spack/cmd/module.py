@@ -20,7 +20,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {} # type: Dict[str, Callable]
+_subcommands = {}  # type: Dict[str, Callable]
 
 _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 

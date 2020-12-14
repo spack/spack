@@ -43,7 +43,7 @@ def parse_log_events(stream, context=6, jobs=None, profile=False):
 
 
 #: lazily constructed CTest log parser
-parse_log_events.ctest_parser = None # type: ignore[attr-defined]
+parse_log_events.ctest_parser = None  # type: ignore[attr-defined]
 
 
 def _wrap(text, width):

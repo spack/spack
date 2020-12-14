@@ -53,7 +53,7 @@ class MakefilePackage(PackageBase):
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
-    build_targets = [] # type: List[str]
+    build_targets = []  # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
     #: phase
     install_targets = ['install']

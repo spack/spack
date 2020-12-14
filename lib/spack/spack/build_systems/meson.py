@@ -51,7 +51,7 @@ class MesonPackage(PackageBase):
     #: system base class
     build_system_class = 'MesonPackage'
 
-    build_targets = [] # type: List[str]
+    build_targets = []  # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']

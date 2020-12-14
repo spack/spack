@@ -382,7 +382,7 @@ def gpg(*args, **kwargs):
     return get_global_gpg_instance()(*args, **kwargs)
 
 
-gpg.name = 'gpg' # type: ignore[attr-defined]
+gpg.name = 'gpg'  # type: ignore[attr-defined]
 
 
 @functools.wraps(Gpg.create)

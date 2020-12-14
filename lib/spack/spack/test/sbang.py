@@ -44,7 +44,7 @@ sbang_line = '#!/bin/sh %s/bin/sbang\n' % spack.store.store.unpadded_root
 last_line  = "last!\n"
 
 
-@pytest.fixture # type: ignore[no-redef]
+@pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
     yield '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
 

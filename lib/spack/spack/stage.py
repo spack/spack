@@ -226,7 +226,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {} # type: Dict[str, spack.util.lock.Lock]
+    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True

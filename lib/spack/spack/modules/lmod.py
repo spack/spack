@@ -31,7 +31,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {} # type: Dict[str, Any]
+configuration_registry = {}  # type: Dict[str, Any]
 
 
 def make_configuration(spec):

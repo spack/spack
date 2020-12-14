@@ -34,7 +34,7 @@ _deprecated_hash_algorithms = ['md5']
 
 
 #: cache of hash functions generated
-_hash_functions = {} # type: Dict[str, Callable[[], Any]]
+_hash_functions = {}  # type: Dict[str, Callable[[], Any]]
 
 
 class DeprecatedHash(object):
