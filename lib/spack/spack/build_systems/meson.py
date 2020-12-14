@@ -8,7 +8,7 @@ import inspect
 import os
 
 try:
-    from typing import List
+    from typing import List # novm
 except ImportError:
     pass
 

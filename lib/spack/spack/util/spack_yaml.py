@@ -16,7 +16,7 @@ import ctypes
 import collections
 
 try:
-    from typing import List
+    from typing import List # novm
 except ImportError:
     pass
 

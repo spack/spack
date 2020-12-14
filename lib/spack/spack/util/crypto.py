@@ -9,7 +9,7 @@ import hashlib
 import llnl.util.tty as tty
 
 try:
-    from typing import Dict, Callable, Any
+    from typing import Dict, Callable, Any # novm
 except ImportError:
     pass
 

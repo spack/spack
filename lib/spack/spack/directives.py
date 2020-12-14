@@ -35,7 +35,7 @@ import re
 from six import string_types
 
 try:
-    from typing import Set, List
+    from typing import Set, List # novm
 except ImportError:
     pass
 

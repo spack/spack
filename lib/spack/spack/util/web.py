@@ -20,7 +20,7 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-if sys.version_info <= (2, 7):
+if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
     from HTMLParser import HTMLParser, HTMLParseError  # novm
 else:

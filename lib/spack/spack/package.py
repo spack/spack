@@ -28,7 +28,7 @@ import six
 import types
 
 try:
-    from typing import Optional, List, Dict, Any
+    from typing import Optional, List, Dict, Any # novm
 except ImportError:
     pass
 

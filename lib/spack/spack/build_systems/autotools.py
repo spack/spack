@@ -10,7 +10,7 @@ from subprocess import PIPE
 from subprocess import check_call
 
 try:
-    from typing import List
+    from typing import List # novm
 except ImportError:
     pass
 
