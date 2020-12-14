@@ -75,6 +75,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
     depends_on('cub', when='^cuda@:10.99')
