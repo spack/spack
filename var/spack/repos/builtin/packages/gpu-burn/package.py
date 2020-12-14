@@ -31,7 +31,7 @@ class GpuBurn(MakefilePackage, CudaPackage):
         'cuda_arch',
         description='CUDA architecture',
         default='none',
-        values=cuda_arch_values,
+        values=('none',) + cuda_arch_values,
         multi=False
     )
 

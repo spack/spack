@@ -77,9 +77,8 @@ class KokkosLegacy(Package):
                   'Volta70', 'Volta72')
 
     # C++ standard variant
-    variant('cxxstd', default='none',
-            values=('c++11', 'c++14', 'c++17', 'c++1y', 'c++1z', 'c++2a'),
-            multi=False,
+    cxx_stds = ('none', 'c++11', 'c++14', 'c++17', 'c++1y', 'c++1z', 'c++2a')
+    variant('cxxstd', default='none', values=cxx_stds, multi=False,
             description='set cxxstandard Kokkos option')
 
     # Host architecture variant
