@@ -81,7 +81,7 @@ class Mysql(CMakePackage):
     # 8.0.19+
     depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19: cxxstd=98')
     depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=11')
-    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=14')
+    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19: cxxstd=14')
     depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19: cxxstd=17')
     # 8.0.16--8.0.18
     depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16:8.0.18 cxxstd=98')
