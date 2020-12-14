@@ -45,6 +45,8 @@ class Wps(Package):
     depends_on('jasper')
     phases = ['configure', 'build', 'install']
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     def setup_build_environment(self, env):
         env.set('WRF_DIR', self.spec['wrf'].prefix)
         env.set('NETCDF', self.spec['netcdf-c'].prefix)
