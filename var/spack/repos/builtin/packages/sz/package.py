@@ -132,7 +132,7 @@ class Sz(CMakePackage):
         else:
             args.append("-DBUILD_STATS=OFF")
         return args
-    
+ 
     def url_for_version(self, version):
         """provide url to ensure that download counting via github releases
         works accurately"""

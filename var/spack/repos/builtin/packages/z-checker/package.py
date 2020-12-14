@@ -31,7 +31,7 @@ class ZChecker(AutotoolsPackage):
         else:
             args += ['--disable-mpi']
         return args
-    
+ 
     def url_for_version(self, version):
         """provide url to ensure that download counting via github releases
         works accurately"""
