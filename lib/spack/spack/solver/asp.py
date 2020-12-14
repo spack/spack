@@ -750,7 +750,7 @@ class SpackSolverSetup(object):
                             )
                         )
                     else:
-                        clauses = self.spec_traverse_clauses(named_cond)
+                        clauses = self.spec_clauses(named_cond, body=True)
 
                         self.gen.rule(
                             fn.declared_dependency(
@@ -776,16 +776,10 @@ class SpackSolverSetup(object):
                             clause,
                             self.gen._and(
                                 fn.depends_on(dep.pkg.name, dep.spec.name),
-                                *self.spec_traverse_clauses(named_cond)
+                                *self.spec_clauses(named_cond, body=True)
                             )
                         )
             self.gen.newline()
-
-    def spec_traverse_clauses(self, named_cond):
-        clauses = []
-        for d in named_cond.traverse():
-            clauses.extend(self.spec_clauses(d, body=True))
-        return clauses
 
     def virtual_preferences(self, pkg_name, func):
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
@@ -957,13 +951,15 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
-    def spec_clauses(self, spec, body=False):
+    def spec_clauses(self, spec, body=False, transitive=True):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
             spec (Spec): the spec to analyze
             body (bool): if True, generate clauses to be used in rule bodies
                 (final values) instead of rule heads (setters).
+            transitive (bool): if False, don't generate clauses from
+                 dependencies (default True)
         """
         clauses = []
 
@@ -1049,8 +1045,17 @@ class SpackSolverSetup(object):
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
 
-        # TODO
-        # namespace
+        # TODO: namespace
+
+        # dependencies
+        if spec.concrete:
+            clauses.append(fn.concrete(spec.name))
+            # TODO: add concrete depends_on() facts for concrete dependencies
+
+        # add all clauses from dependencies
+        if transitive:
+            for dep in spec.traverse(root=False):
+                clauses.extend(self.spec_clauses(dep, body, transitive=False))
 
         return clauses
 
@@ -1266,6 +1271,7 @@ class SpackSolverSetup(object):
     def define_virtual_constraints(self):
         for vspec_str in sorted(self.virtual_constraints):
             vspec = spack.spec.Spec(vspec_str)
+
             self.gen.h2("Virtual spec: {0}".format(vspec_str))
             providers = spack.repo.path.providers_for(vspec_str)
             candidates = self.providers_by_vspec_name[vspec.name]
@@ -1427,15 +1433,13 @@ class SpackSolverSetup(object):
             else:
                 self.gen.fact(fn.virtual_root(spec.name))
 
-            for dep in spec.traverse():
-                self.gen.h2('Spec: %s' % str(dep))
-                if dep.virtual:
-                    for clause in self.virtual_spec_clauses(dep):
-                        self.gen.fact(clause)
-                    continue
-
-                for clause in self.spec_clauses(dep):
-                    self.gen.fact(clause)
+            self.gen.h2('Spec: %s' % str(spec))
+            if spec.virtual:
+                clauses = self.virtual_spec_clauses(spec)
+            else:
+                clauses = self.spec_clauses(spec)
+            for clause in clauses:
+                self.gen.fact(clause)
 
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
