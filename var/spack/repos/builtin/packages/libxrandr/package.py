@@ -23,3 +23,8 @@ class Libxrandr(AutotoolsPackage, XorgPackage):
     depends_on('renderproto', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libXrandr', self.prefix, shared=True, recursive=True)

@@ -183,6 +183,9 @@ external_spec(Package, ID) :-
 % if a variant is set to anything, it is considered 'set'.
 variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 
+% A variant cannot have a value that is not also a possible value
+:- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -194,12 +197,19 @@ variant_value(Package, Variant, Value)
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
+    not variant_set(Package, Variant, Value),
     node(Package).
 
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
+
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    variant_set(Package, Variant, Value),
+    node(Package).
+
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
@@ -214,6 +224,16 @@ variant_default_value(Package, Variant, Value)
 % values even if the variant is multi-valued
 :- 2 {variant_value(Package, Variant, Value): variant_possible_value(Package, Variant, Value)},
    variant_value(Package, Variant, "none").
+
+% patches and dev_path are special variants -- they don't have to be
+% declared in the package, so we just allow them to spring into existence
+% when assigned a value.
+auto_variant("dev_path").
+auto_variant("patches").
+variant(Package, "dev_path")
+  :- variant_set(Package, Variant, _), auto_variant(Variant).
+variant_single_value(Package, "dev_path")
+  :- variant_set(Package, "dev_path", _).
 
 % suppress warnings about this atom being unset.  It's only set if some
 % spec or some package sets it, and without this, clingo will give
@@ -501,44 +521,34 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % need to maximize their number below to ensure they're all set
 #maximize {
     1@13,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), root(Package)
+    : variant_not_default(Package, Variant, Value, Weight),
+    not variant_single_value(Package, Variant),
+    root(Package)
 }.
 #minimize{
     Weight@13,Provider
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
-% Next, we want to minimize the weights of the providers
-% i.e. use as much as possible the most preferred providers
-#minimize{
-    Weight@11,Provider
-    : provider_weight(Provider, Weight), not root(Provider)
-}.
-
-% For external packages it's more important than for others
-% to match the compiler with their parent node
-#maximize{
-    Weight@10,Package
-    : compiler_version_match(Package, Weight), external(Package)
-}.
-
-% Then try to use as much as possible:
-% 1. Default variants
-% 2. Latest versions
-% of all the other nodes in the DAG
+% Try to use default variants or variants that have been set
 #minimize {
-    Weight@9,Package,Variant,Value
+    Weight@11,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
+}.
+% Minimize the weights of the providers, i.e. use as much as
+% possible the most preferred providers
+#minimize{
+    Weight@9,Provider
+    : provider_weight(Provider, Weight), not root(Provider)
 }.
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
 #maximize {
     1@8,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight), not root(Package)
-}.
-#minimize{
-    Weight@8,Package : version_weight(Package, Weight)
+    : variant_not_default(Package, Variant, Value, Weight),
+    not variant_single_value(Package, Variant),
+    not root(Package)
 }.
 
 % Try to maximize the number of compiler matches in the DAG,
@@ -548,10 +558,15 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 #minimize{ 1@7,Package : node(Package) }.
 #maximize{ Weight@7,Package : compiler_version_match(Package, Weight) }.
 
+% Choose more recent versions for nodes
+#minimize{
+    Weight@6,Package : version_weight(Package, Weight)
+}.
+
 % Try to use preferred compilers
-#minimize{ Weight@6,Package : compiler_weight(Package, Weight) }.
+#minimize{ Weight@5,Package : compiler_weight(Package, Weight) }.
 
 % Maximize the number of matches for targets in the DAG, try
 % to select the preferred target.
-#maximize{ Weight@5,Package : node_target_match(Package, Weight) }.
-#minimize{ Weight@4,Package : node_target_weight(Package, Weight) }.
+#maximize{ Weight@4,Package : node_target_match(Package, Weight) }.
+#minimize{ Weight@3,Package : node_target_weight(Package, Weight) }.

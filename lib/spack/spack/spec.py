@@ -2442,6 +2442,9 @@ class Spec(object):
             raise spack.error.SpecError(
                 "Spec has no name; cannot concretize an anonymous spec")
 
+        if self._concrete:
+            return
+
         result = spack.solver.asp.solve([self], tests=tests)
         if not result.satisfiable:
             result.print_cores()
@@ -2463,8 +2466,14 @@ class Spec(object):
         self._dup(concretized)
         self._mark_concrete()
 
-    #: choose your concretizer here.
     def concretize(self, tests=False):
+        """Concretize the current spec.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         if spack.config.get('config:concretizer') == "clingo":
             self._new_concretize(tests)
         else:
@@ -2482,12 +2491,19 @@ class Spec(object):
             s._normal = value
             s._concrete = value
 
-    def concretized(self):
-        """This is a non-destructive version of concretize().  First clones,
-           then returns a concrete version of this package without modifying
-           this package. """
+    def concretized(self, tests=False):
+        """This is a non-destructive version of concretize().
+
+        First clones, then returns a concrete version of this package
+        without modifying this package.
+
+        Args:
+            tests (bool or list): if False disregard 'test' dependencies,
+                if a list of names activate them for the packages in the list,
+                if True activate 'test' dependencies for all packages.
+        """
         clone = self.copy(caches=False)
-        clone.concretize()
+        clone.concretize(tests=tests)
         return clone
 
     def flat_dependencies(self, **kwargs):
@@ -2876,6 +2892,40 @@ class Spec(object):
         )
         if not_existing:
             raise vt.UnknownVariantError(spec, not_existing)
+
+    def update_variant_validate(self, variant_name, values):
+        """If it is not already there, adds the variant named
+        `variant_name` to the spec `spec` based on the definition
+        contained in the package metadata. Validates the variant and
+        values before returning.
+
+        Used to add values to a variant without being sensitive to the
+        variant being single or multi-valued. If the variant already
+        exists on the spec it is assumed to be multi-valued and the
+        values are appended.
+
+        Args:
+           variant_name: the name of the variant to add or append to
+           values: the value or values (as a tuple) to add/append
+                   to the variant
+        """
+        if not isinstance(values, tuple):
+            values = (values,)
+
+        pkg_variant = self.package_class.variants[variant_name]
+
+        for value in values:
+            if self.variants.get(variant_name):
+                msg = ("Cannot append a value to a single-valued "
+                       "variant with an already set value")
+                assert pkg_variant.multi, msg
+                self.variants[variant_name].append(value)
+            else:
+                variant = pkg_variant.make_variant(value)
+                self.variants[variant_name] = variant
+
+        pkg_variant.validate_or_raise(
+            self.variants[variant_name], self.package)
 
     def constrain(self, other, deps=True):
         """Merge the constraints of other with self.

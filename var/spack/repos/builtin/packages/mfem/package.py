@@ -697,6 +697,9 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    # The files referenced in this patch method do not exist in stable
+    # versions earlier than 4.1.
+    @when('@4.1:')
     def patch(self):
         # Remove the byte order mark since it messes with some compilers
         filter_file(u'\uFEFF', '', 'fem/gslib.hpp')

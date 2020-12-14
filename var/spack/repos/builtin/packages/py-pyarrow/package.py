@@ -49,6 +49,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
 
     phases = ['build_ext', 'install']
 
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     def build_ext_args(self, spec, prefix):
         args = []
         if spec.satisfies('+parquet'):
