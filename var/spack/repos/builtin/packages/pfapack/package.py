@@ -16,7 +16,7 @@ class Pfapack(MakefilePackage):
     url      = "https://michaelwimmer.org/pfapack.tgz"
 
     version('2014-09-17', sha256='b68fc35dda23ee24c358641b1a92ef701c4ffa0b3f0b0808b24e68afeb58ef07')
-    
+
     depends_on('lapack')
     depends_on('blas')
     depends_on('python')
@@ -25,10 +25,10 @@ class Pfapack(MakefilePackage):
 
     def edit(self, spec, prefix):
         filter_file('FORT =.*', 'FORT = {0}'.format(spack_fc),
-                    join_path('fortran','makefile'))
+                    join_path('fortran', 'makefile'))
         filter_file('CC =.*', 'CC = {0}'.format(spack_cc),
                     join_path('c_interface', 'makefile'))
-    
+
     def build(self, spec, prefix):
         source_directory = self.stage.source_path
         with working_dir(join_path(source_directory, 'fortran')):
@@ -52,7 +52,8 @@ class Pfapack(MakefilePackage):
                 prefix.c_interface)
         install(join_path(source_directory, 'c_interface', 'fortran.h'),
                 prefix.c_interface)
-        install(join_path(source_directory, 'c_interface', 'fortran_pfapack.h'),
+        install(join_path(source_directory, 'c_interface',
+                          'fortran_pfapack.h'),
                 prefix.c_interface)
         install(join_path(source_directory, 'c_interface', 'pfapack.h'),
                 prefix.c_interface)
