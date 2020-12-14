@@ -18,7 +18,7 @@ from six import string_types
 from six import iteritems
 
 try:
-    from typing import Dict # novm
+    from typing import Dict  # novm
 except ImportError:
     pass
 

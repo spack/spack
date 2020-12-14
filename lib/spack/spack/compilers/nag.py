@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 try:
-    from typing import List # novm
+    from typing import List  # novm
 except ImportError:
     pass
 

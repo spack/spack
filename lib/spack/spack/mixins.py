@@ -10,7 +10,7 @@ import collections
 import os
 
 try:
-    from typing import Any, Callable, DefaultDict, Dict, List # novm
+    from typing import Any, Callable, DefaultDict, Dict, List  # novm
 except ImportError:
     pass
 

@@ -6,7 +6,7 @@
 import argparse
 
 try:
-    from typing import Dict, Callable # novm
+    from typing import Dict, Callable  # novm
 except ImportError:
     pass
 

@@ -10,7 +10,7 @@ import itertools
 import collections
 
 try:
-    from typing import Dict, Any # novm
+    from typing import Dict, Any  # novm
 except ImportError:
     pass
 

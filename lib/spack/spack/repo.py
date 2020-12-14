@@ -24,7 +24,7 @@ else:
     from collections import Mapping
 
 try:
-    from typing import Dict # novm
+    from typing import Dict  # novm
 except ImportError:
     pass
 

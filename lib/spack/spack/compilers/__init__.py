@@ -18,7 +18,7 @@ import llnl.util.tty as tty
 import archspec.cpu
 
 try:
-    from typing import Dict # novm
+    from typing import Dict  # novm
 except ImportError:
     pass
 

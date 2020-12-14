@@ -7,7 +7,7 @@
 import inspect
 
 try:
-    from typing import List # novm
+    from typing import List  # novm
 except ImportError:
     pass
 

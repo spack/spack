@@ -31,7 +31,7 @@ import shutil
 import sys
 
 try:
-    from typing import Optional, List # novm
+    from typing import Optional, List  # novm
 except ImportError:
     pass
 

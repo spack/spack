@@ -22,7 +22,7 @@ from six import StringIO
 
 import llnl.util.tty as tty
 
-termios = None # type Optional[Module]
+termios = None # type: Optional[Module]
 try:
     import termios as term_mod
     termios = term_mod

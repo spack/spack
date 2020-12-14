@@ -43,7 +43,7 @@ def parse(config_obj):
     if sys.version_info >= (3, 5):
         from collections.abc import Sequence  # novm
     else:
-        from collections import Sequence # novm
+        from collections import Sequence  # novm
 
 
     env = ev.EnvironmentModifications()
