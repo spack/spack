@@ -260,7 +260,6 @@ def test_variant_defaults_are_parsable_from_cli():
 
 
 def test_variant_defaults_listed_explicitly_in_values():
-    """Ensures that variant defaults are parsable from cli."""
     failing = []
     for pkg in spack.repo.path.all_packages():
         for variant_name, variant in pkg.variants.items():
