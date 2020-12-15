@@ -20,7 +20,7 @@ class CbtfLanl(CMakePackage):
     version('1.9.1.1', branch='1.9.1.1')
     version('1.9.1.0', branch='1.9.1.0')
 
-    variant('build_type', default='None', values=('None'),
+    variant('build_type', default='None', values=('None',),
             description='CMake build type')
 
     variant('runtime', default=False,

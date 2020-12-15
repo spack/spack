@@ -66,7 +66,7 @@ class VtkM(CMakePackage, CudaPackage):
         'gfx908': 'vega908'
     }
 
-    variant('amdgpu_target', default='none', multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='none', multi=True, values=('none',) + amdgpu_targets)
     conflicts("+hip", when="amdgpu_target=none")
 
     depends_on("cmake@3.12:", type="build")         # CMake >= 3.12
