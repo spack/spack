@@ -63,7 +63,6 @@ modules:
       - '%pgi'
     projections:
       all: '{name}/{version}'
-      ~mpi: '{name}/{version}-serial'
     all:
       autoload: 'all'
       environment:

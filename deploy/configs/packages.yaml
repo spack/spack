@@ -17,7 +17,7 @@ packages:
   boost:
     variants: +pic
   cuda:
-    version: [9.2.88]
+    version: [11.1.0]
   curl:
     version: [7.29.0]
     externals:
