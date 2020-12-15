@@ -3946,7 +3946,7 @@ using the ``run_before`` decorator.
 
     The API for adding tests is not yet considered stable and may change drastically in future releases.
 
-.. _file-manipulation:
+.. _cmd-spack-test:
 
 ^^^^^^^^^^^^^
 Install Tests
@@ -4082,7 +4082,7 @@ that directory to the test staging directory during install testing.
 The ``test`` method can access those files from the
 ``self.test_suite.current_test_data_dir`` directory.
 
-.. _cmd-spack-test:
+.. _cmd-spack-test-list:
 
 """""""""""""""""""
 ``spack test list``
@@ -4091,6 +4091,8 @@ The ``test`` method can access those files from the
 Packages available for install testing can be found using the
 ``spack test list`` command. The command outputs all installed
 packages that have defined ``test`` methods.
+
+.. _cmd-spack-test-run:
 
 """"""""""""""""""
 ``spack test run``
@@ -4114,6 +4116,8 @@ Test output is written to a text log file by default but ``junit``
 and ``cdash`` are outputs are available through the ``--log-format``
 option.
 
+.. _cmd-spack-test-results:
+
 """"""""""""""""""""""
 ``spack test results``
 """"""""""""""""""""""
@@ -4128,12 +4132,16 @@ test(s) to facilitate debugging.
 The ``--failed`` option limits results shown to that of the failed
 tests, if any, of matching packages.
 
+.. _cmd-spack-test-find:
+
 """""""""""""""""""
 ``spack test find``
 """""""""""""""""""
 
 The ``spack test find`` command lists the aliases or content hashes
 of all test suites whose results are available.
+
+.. _cmd-spack-test-remove:
 
 """""""""""""""""""""
 ``spack test remove``
@@ -4142,6 +4150,8 @@ of all test suites whose results are available.
 The ``spack test remove`` command removes test suites to declutter
 the test results directory. You are prompted to confirm the removal
 of each test suite **unless** you use the ``--yes-to-all`` option.
+
+.. _file-manipulation:
 
 ---------------------------
 File manipulation functions
