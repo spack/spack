@@ -32,8 +32,21 @@ class PyPygpu(PythonPackage):
     depends_on('py-nose', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-mako', type=('build', 'run'))
+    # depends_on('libcheck')
     depends_on('check')
 
+    '''
+    <<<<<<< mummi1
+    # linking fails because cannot find -lgpuarray
+    # somehow, the link path does not point to the dependency
+    # adding the following empty functions magically fix the issue
+    def build(self, spec, prefix):
+        pass
+
+    def install(self, spec, prefix):
+        pass
+    '''
+    
     phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):

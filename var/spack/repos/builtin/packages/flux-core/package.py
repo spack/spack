@@ -54,6 +54,13 @@ class FluxCore(AutotoolsPackage):
     depends_on("pkgconfig")
     depends_on("yaml-cpp")
     depends_on("lz4")
+    #depends_on("yaml-cpp", when="@:0.11.99")
+    #depends_on("lz4", when="@0.11.0:,master")
+
+    # versions up to 0.8.0 uses pylint to check Flux's python binding
+    # later versions provide a configure flag and disable the check by default
+    depends_on("py-pylint", when='@:0.8.0', type='build')
+>>>>>>> 8a1ed6ed12 (squash and merge "bhatia-mummi" branch (copied into mummi1))
 
     depends_on("asciidoc", type='build', when="+docs")
 

@@ -19,6 +19,9 @@ class PyMaestrowf(PythonPackage):
     # git branches
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('flux-dev', branch='bugfix/flux_broker')
+    version('flux-c3', branch='merge/flux2')
+    version('flux-c3.beta_1123', tag='flux_beta_1123')
 
     # Pre-release candidates
     version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')

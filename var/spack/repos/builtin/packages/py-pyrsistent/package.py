@@ -7,6 +7,7 @@ from spack import *
 
 
 class PyPyrsistent(PythonPackage):
+
     """Pyrsistent is a number of persistent collections
        (by some referred to as functional data structures).
        Persistent in the sense that they are immutable."""

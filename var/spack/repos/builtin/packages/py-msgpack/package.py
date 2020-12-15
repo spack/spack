@@ -5,7 +5,7 @@
 
 
 class PyMsgpack(PythonPackage):
-    """MessagePack (de)serializer."""
+    """MessagePack is an efficient binary serialization format."""
 
     homepage = "https://msgpack.org/"
     pypi = "msgpack/msgpack-1.0.0.tar.gz"

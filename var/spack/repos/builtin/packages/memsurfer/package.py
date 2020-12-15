@@ -18,7 +18,8 @@ class Memsurfer(PythonPackage):
     version('1.0',     tag='v1.0',       submodules=True)
     version('master',  branch='master',  submodules=True)
     version('develop', branch='develop', submodules=True)
-
+    #version('8-lipid', git='ssh://git@cz-bitbucket.llnl.gov:7999/~bhatia4/memsurfer.git', branch='8-lipid', submodules=True)
+    
     variant('osmesa', default=False,
             description='Enable OSMesa support (for VTK)')
 
