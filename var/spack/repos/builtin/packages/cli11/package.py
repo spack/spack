@@ -7,8 +7,8 @@ from spack import *
 
 
 class Cli11(CMakePackage):
-    """CLI11 is a command line parser for C++11 and beyond that provides a rich feature set
-    with a simple and intuitive interface."""
+    """CLI11 is a command line parser for C++11 and beyond that provides a rich
+    feature set with a simple and intuitive interface."""
 
     homepage = "https://cliutils.github.io/CLI11/book/"
     url      = "https://github.com/CLIUtils/CLI11/archive/v1.9.1.tar.gz"
