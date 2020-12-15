@@ -4,16 +4,23 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import errno
-import fcntl
 import os
 import socket
 import time
 from datetime import datetime
 from typing import Dict, Tuple  # novm
 
+from sys import platform as _platform
 import llnl.util.tty as tty
 
 import spack.util.string
+
+if _platform != "win32":
+    import fcntl
+else:
+    import win32con
+    import win32file
+    import pywintypes
 
 __all__ = [
     'Lock',
@@ -29,8 +36,6 @@ __all__ = [
     'CantCreateLockError'
 ]
 
-#: Mapping of supported locks to description
-lock_type = {fcntl.LOCK_SH: 'read', fcntl.LOCK_EX: 'write'}
 
 #: A useful replacement for functions that should return True when not provided
 #: for example.
@@ -228,6 +233,24 @@ class Lock(object):
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
+        if not spack.config.get('config:locks', True):
+            self.LOCK_EX = None
+            self.LOCK_SH = None
+            self.LOCK_NB = None
+        elif _platform == "win32":
+            self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
+            self.LOCK_SH = 0
+            self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY
+            self.win_overlapped = pywintypes.OVERLAPPED()
+        else:
+            self.LOCK_EX = fcntl.LOCK_EX
+            self.LOCK_SH = fcntl.LOCK_SH
+            self.LOCK_NB = fcntl.LOCK_NB
+            self.LOCK_UN = fcntl.LOCK_UN
+
+        # Mapping of supported locks to description
+        self.lock_type = {self.LOCK_SH: 'read', self.LOCK_EX: 'write'}
+
     @staticmethod
     def _poll_interval_generator(_wait_times=None):
         """This implements a backoff scheme for polling a contended resource
@@ -276,9 +299,9 @@ class Lock(object):
         successfully acquired, the total wait time and the number of attempts
         is returned.
         """
-        assert op in lock_type
+        assert op in self.lock_type
 
-        self._log_acquiring('{0} LOCK'.format(lock_type[op].upper()))
+        self._log_acquiring('{0} LOCK'.format(self.lock_type[op].upper()))
         timeout = timeout or self.default_timeout
 
         # Create file and parent directories if they don't exist.
@@ -286,13 +309,14 @@ class Lock(object):
             self._ensure_parent_directory()
             self._file = file_tracker.get_fh(self.path)
 
-        if op == fcntl.LOCK_EX and self._file.mode == 'r':
+
+        if op == self.LOCK_EX and self._file.mode == 'r':
             # Attempt to upgrade to write lock w/a read-only file.
             # If the file were writable, we'd have opened it 'r+'
             raise LockROFileError(self.path)
 
         self._log_debug("{0} locking [{1}:{2}]: timeout {3} sec"
-                        .format(lock_type[op], self._start, self._length,
+                        .format(self.lock_type[op], self._start, self._length,
                                 timeout))
 
         poll_intervals = iter(Lock._poll_interval_generator())
@@ -313,29 +337,34 @@ class Lock(object):
             return total_wait_time, num_attempts
 
         raise LockTimeoutError("Timed out waiting for a {0} lock."
-                               .format(lock_type[op]))
+                               .format(self.lock_type[op]))
 
     def _poll_lock(self, op):
         """Attempt to acquire the lock in a non-blocking manner. Return whether
         the locking attempt succeeds
         """
-        assert op in lock_type
+        assert op in self.lock_type
 
         try:
             # Try to get the lock (will raise if not available.)
-            fcntl.lockf(self._file, op | fcntl.LOCK_NB,
-                        self._length, self._start, os.SEEK_SET)
+            if _platform == "win32":
+                hfile = win32file._get_osfhandle((self._file).fileno())
+                win32file.LockFileEx(hfile, self.LOCK_NB, self._start,
+                                     (self._start + self._length), self.win_overlapped)
+            else:
+                fcntl.lockf(self._file, op | self.LOCK_NB,
+                            self._length, self._start, os.SEEK_SET)
 
             # help for debugging distributed locking
             if self.debug:
                 # All locks read the owner PID and host
                 self._read_log_debug_data()
                 self._log_debug('{0} locked {1} [{2}:{3}] (owner={4})'
-                                .format(lock_type[op], self.path,
+                                .format(self.lock_type[op], self.path,
                                         self._start, self._length, self.pid))
 
                 # Exclusive locks write their PID/host
-                if op == fcntl.LOCK_EX:
+                if op == self.LOCK_EX:
                     self._write_log_debug_data()
 
             return True
@@ -397,10 +426,19 @@ class Lock(object):
         be masquerading as write locks, but this removes either.
 
         """
-        fcntl.lockf(self._file, fcntl.LOCK_UN,
-                    self._length, self._start, os.SEEK_SET)
+
+        if _platform == "win32":
+            hfile = win32file._get_osfhandle((self._file).fileno())
+            win32file.UnlockFileEx(hfile, self._start,
+                                   (self._start + self._length),
+                                   self.win_overlapped)
+        else:
+            fcntl.lockf(self._file, self.LOCK_UN,
+                        self._length, self._start, os.SEEK_SET)
 
         file_tracker.release_fh(self.path)
+
+        self._file.close()
         self._file = None
         self._reads = 0
         self._writes = 0
@@ -420,7 +458,7 @@ class Lock(object):
 
         if self._reads == 0 and self._writes == 0:
             # can raise LockError.
-            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            wait_time, nattempts = self._lock(self.LOCK_SH, timeout=timeout)
             self._reads += 1
             # Log if acquired, which includes counts when verbose
             self._log_acquired('READ LOCK', wait_time, nattempts)
@@ -445,7 +483,7 @@ class Lock(object):
 
         if self._writes == 0:
             # can raise LockError.
-            wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
+            wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)
             self._writes += 1
             # Log if acquired, which includes counts when verbose
             self._log_acquired('WRITE LOCK', wait_time, nattempts)
@@ -489,7 +527,7 @@ class Lock(object):
         if self._writes == 1 and self._reads == 0:
             self._log_downgrading()
             # can raise LockError.
-            wait_time, nattempts = self._lock(fcntl.LOCK_SH, timeout=timeout)
+            wait_time, nattempts = self._lock(self.LOCK_SH, timeout=timeout)
             self._reads = 1
             self._writes = 0
             self._log_downgraded(wait_time, nattempts)
@@ -508,7 +546,7 @@ class Lock(object):
         if self._reads == 1 and self._writes == 0:
             self._log_upgrading()
             # can raise LockError.
-            wait_time, nattempts = self._lock(fcntl.LOCK_EX, timeout=timeout)
+            wait_time, nattempts = self._lock(self.LOCK_EX, timeout=timeout)
             self._reads = 0
             self._writes = 1
             self._log_upgraded(wait_time, nattempts)

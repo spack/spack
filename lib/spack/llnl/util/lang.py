@@ -13,6 +13,7 @@ import sys
 from datetime import datetime, timedelta
 
 from six import string_types
+from sys import platform as _platform
 
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm
@@ -28,6 +29,25 @@ else:
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
+
+
+# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
+# method. Spack cannot currently handle this, so force the process to start
+# using the 'fork' start method.
+#
+# TODO: This solution is not ideal, as the 'fork' start method can lead to
+# crashes of the subprocess. Figure out how to make 'spawn' work.
+#
+# See:
+# * https://github.com/spack/spack/pull/18124
+# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
+# * https://bugs.python.org/issue33725
+
+if _platform != "win32":
+    if sys.version_info >= (3,):  # novm
+        fork_context = multiprocessing.get_context('fork')
+    else:
+        fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
