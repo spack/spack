@@ -6,11 +6,16 @@ import collections
 import errno
 import hashlib
 import glob
-import grp
+
+from sys import platform as _platform
+if _platform != "win32":
+    import grp
+    import pwd
+
+
 import itertools
 import numbers
 import os
-import pwd
 import re
 import shutil
 import stat
@@ -295,6 +300,10 @@ def group_ids(uid=None):
     Returns:
         (list of int): gids of groups the user is a member of
     """
+    if _platform == 'win32':
+        tty.warn("Function is not supported on Windows")
+        return []
+
     if uid is None:
         uid = os.getuid()
     user = pwd.getpwuid(uid).pw_name
@@ -303,6 +312,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
+    if _platform == 'win32':
+        tty.warn("Function is not supported on Windows")
+        return
+
     if isinstance(group, six.string_types):
         gid = grp.getgrnam(group).gr_gid
     else:
@@ -763,7 +776,10 @@ def open_if_filename(str_or_file, mode='r'):
 
 def touch(path):
     """Creates an empty file at the specified path."""
-    perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
+    if _platform == 'win32':
+        perms = (os.O_WRONLY | os.O_CREAT)
+    else:
+        perms = (os.O_WRONLY | os.O_CREAT | os.O_NONBLOCK | os.O_NOCTTY)
     fd = None
     try:
         fd = os.open(path, perms)
