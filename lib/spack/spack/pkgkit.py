@@ -20,6 +20,8 @@ from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.oneapi import IntelOneApiPackage
+from spack.build_systems.oneapi import IntelOneApiLibraryPackage
 from spack.build_systems.rocm import ROCmPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.maven import MavenPackage
