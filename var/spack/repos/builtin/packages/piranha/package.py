@@ -23,8 +23,8 @@ class Piranha(CMakePackage):
 
     # Build dependencies
     depends_on('cmake@3.2.0:', type='build')
-    extends('python',         when='+pyranha')
-    depends_on('python@2.6:', type='build', when='+pyranha')
+    extends('python',         when='+python')
+    depends_on('python@2.6:', type='build', when='+python')
 
     # Other dependencies
     depends_on('boost+iostreams+regex+serialization',
