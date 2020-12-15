@@ -15,4 +15,4 @@ class PyParmed(PythonPackage):
     url      = "https://github.com/ParmEd/ParmEd/archive/3.2.0.tar.gz"
 
     version('3.2.0', sha256='5522cb6218b467a7b9f5c8dd5f81a59d199f8712b8d02a1ad6c9161647256821')
-    depends_on('py-numpy@1.16.4')
+    depends_on('py-numpy@1.16.4:')

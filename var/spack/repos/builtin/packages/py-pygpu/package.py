@@ -26,6 +26,7 @@ class PyPygpu(PythonPackage):
     depends_on('libgpuarray@0.7.6', when='@0.7.6')
     depends_on('libgpuarray@0.7.5', when='@0.7.5')
     depends_on('libgpuarray')                        # default
+
     # not just build-time, requires pkg_resources
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython@0.25:', type=('build', 'run'))
@@ -56,3 +57,16 @@ class PyPygpu(PythonPackage):
         library_flags = '-L{0}'.format(os.path.join(_, 'lib'))
 
         return [include_flags, library_flags]
+
+    '''
+    depends_on('libcheck')
+
+    # linking fails because cannot find -lgpuarray
+    # somehow, the link path does not point to the dependency
+    # adding the following empty functions magically fix the issue
+    def build(self, spec, prefix):
+        pass
+
+    def install(self, spec, prefix):
+        pass
+    '''

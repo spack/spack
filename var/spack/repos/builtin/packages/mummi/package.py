@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 from spack import *
 
 
@@ -12,7 +11,6 @@ class Mummi(PythonPackage):
 
     NEW_REPO = True
 
-    # -------------------------------------------------------------------
     if NEW_REPO:
         homepage = "https://code.ornl.gov/bhatiah/mummi"
         git      = "git@code.ornl.gov:bhatiah/mummi.git"
@@ -33,6 +31,7 @@ class Mummi(PythonPackage):
         #version('1.0.1', tag='v1.0.1')
         #version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
         #version('1.0', 'f43fb8126c138db96b489655914ed2bd5a469412')
+
 
     # -------------------------------------------------------------------
 
