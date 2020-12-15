@@ -3517,8 +3517,11 @@ class Spec(object):
 
     def _cmp_node(self):
         """Comparison key for just *this node* and not its deps."""
-        return (self.name,
-                self.namespace,
+        # Name or namespace None will lead to invalid comparisons for abstract
+        # specs. Replace them with the empty string, which is not a valid spec
+        # name nor namespace so it will not create spurious equalities.
+        return (self.name or '',
+                self.namespace or '',
                 tuple(self.versions),
                 self.variants,
                 self.architecture,
