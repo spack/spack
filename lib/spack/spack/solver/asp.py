@@ -19,7 +19,7 @@ import archspec.cpu
 try:
     import clingo
 except ImportError:
-    clingo = None
+    clingo = None  # type: ignore
 
 import llnl.util.lang
 import llnl.util.tty as tty
