@@ -69,14 +69,14 @@ NOT_PROVIDED = object()
 #: core the top-level namespace polluted by package symbols this way.  To
 #: solve this, the top-level ``spack`` package contains very few symbols
 #: of its own, and importing ``*`` is essentially a no-op.  The common
-#: routines and directives that packages need are now in ``spack.pkgkit``,
+#: routines and directives that packages need are now in ``spack.std``,
 #: and the import system forces packages to automatically include
 #: this. This way, old packages that call ``from spack import *`` will
 #: continue to work without modification, but it's no longer required.
 #:
 #: TODO: At some point in the future, consider removing ``from spack import *``
-#: TODO: from packages and shifting to from ``spack.pkgkit import *``
-_package_prepend = 'from spack.pkgkit import *'
+#: TODO: from packages and shifting to from ``spack.std import *``
+_package_prepend = 'from spack.std import *'
 
 
 def autospec(function):
