@@ -22,15 +22,23 @@ class Cpmd(MakefilePackage):
     # Patch to ver4624
     patch('cpmd_4624.patch', when='@4.3')
 
-    #variant('mpi', description='Build MPI executables',
-            #default=True)
+    variant('omp', description='Enables the use of OMP instructions',
+            default=False)
 
     depends_on('lapack')
-    #depends_on('mpi', when='+mpi')
 
     def edit(self, spec, prefix):
+        # dependency check
+        ltype = spec['lapack'].name
+        if spec.satisfies('+omp'):
+            if ltype == 'openblas' and 'threads=openmp' not in spec['lapack']:
+                raise InstallError(
+                    '^openblas threads=openmp required for cpmd+omp'
+                    ' with openblas')
+
         # patch configure file
-        cp = join_path('configure', 'LINUX-GFORTRAN')
+        cbase = 'LINUX-GFORTRAN'
+        cp = join_path('configure', cbase)
         # Compilers
         filter_file(
             'FC=.+',
@@ -53,14 +61,45 @@ class Cpmd(MakefilePackage):
             'LIBS=\'{0}\''.format(spec['lapack'].libs.ld_flags),
             cp
         )
-        filter_file(
-            '\'-static \'',
-            '',
-            cp
-        )
+        # LIBS:remove static (TODO: needed?)
+        if spec.satisfies('%fj') and spec.satisfies('+omp'):
+            filter_file(
+                '\'-static \'',
+                '\'-Nlibomp \'',
+                cp
+            )
+        else:
+            filter_file(
+                '\'-static \'',
+                '',
+                cp
+            )
+        # Non-gcc
+        # fj
+        if spec.satisfies('%fj'):
+            filter_file(
+                '-ffixed-form',
+                '-Fixed',
+                cp
+            )
+            filter_file(
+                '-ffree-line-length-none -falign-commons',
+                '-Kalign_commons',
+                cp
+            )
+            filter_file(
+                '-fopenmp',
+                '-Kopenmp',
+                cp
+            )
+
+
         # create Makefile
         bash = which('bash')
-        bash('./configure.sh', 'LINUX-GFORTRAN')
+        if spec.satisfies('+omp'):
+            bash('./configure.sh', '-omp', cbase)
+        else:
+            bash('./configure.sh', cbase)
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)
