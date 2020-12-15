@@ -53,5 +53,4 @@ class Alps(CMakePackage):
         args = []
         args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
         args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
-        args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
         return args

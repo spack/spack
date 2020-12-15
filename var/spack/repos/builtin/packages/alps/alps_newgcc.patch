@@ -31,8 +31,8 @@ diff -u -r -N a/alps/applications/dmrg/mps/framework/dmrg/mp_tensors/twositetens
  template<class Matrix, class SymmGroup>
 diff -u -r -N a/alps/applications/qmc/sse4/model.h b/alps/applications/qmc/sse4/model.h
 --- a/alps/applications/qmc/sse4/model.h	2020-10-20 15:12:20.000000000 +0900
-+++ b/alps/applications/qmc/sse4/model.h	2020-10-20 15:14:22.000000000 +0900
-@@ -140,10 +140,10 @@
++++ b/alps/applications/qmc/sse4/model.h	2020-12-15 14:56:27.000000000 +0900
+@@ -140,11 +140,6 @@
          return diag_vertex_indices[e_index(state, utype, sites)];
      }
      
@@ -40,25 +40,20 @@ diff -u -r -N a/alps/applications/qmc/sse4/model.h b/alps/applications/qmc/sse4/
 -    {
 -        return _max_diag_me;
 -    }
-+    //double max_diag_me() const
-+    //{
-+        //return _max_diag_me;
-+    //}
-     
+-    
      double c(unsigned unit_type) const
      {
+         return epsilon + _max_diag_me[unit_type];
 diff -u -r -N a/alps/src/alps/alea/histogram.h b/alps/src/alps/alea/histogram.h
 --- a/alps/src/alps/alea/histogram.h	2020-10-20 14:49:19.000000000 +0900
-+++ b/alps/src/alps/alea/histogram.h	2020-10-20 14:50:05.000000000 +0900
-@@ -85,9 +85,9 @@
++++ b/alps/src/alps/alea/histogram.h	2020-12-15 14:56:59.000000000 +0900
+@@ -85,9 +85,7 @@
    // forward a few things from container
  
    const_iterator begin() const { return histogram_.begin();}
 -  const_iterator rbegin() const { return histogram_.rbegin();}
-+  // const_iterator rbegin() const { return histogram_.rbegin();}
    const_iterator end() const { return histogram_.end();}
 -  const_iterator rend() const { return histogram_.rend();}
-+  // const_iterator rend() const { return histogram_.rend();}
    size_type size() const { return histogram_.size();}
    value_type operator[](size_type i) const { return histogram_[i];}
    value_type at(size_type i) const { return histogram_.at(i);}
