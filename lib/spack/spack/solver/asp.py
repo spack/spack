@@ -389,36 +389,6 @@ class PyclingoDriver(object):
             + rule_atoms
         )
 
-    def iff(self, expr1, expr2):
-        self.rule(head=expr1, body=expr2)
-        self.rule(head=expr2, body=expr1)
-
-    def one_of_iff(self, head, versions):
-        # if there are no versions, skip this one_of_iff
-        if not versions:
-            return
-
-        self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
-        self.out.write("%s :- %s.\n" % (AspOneOf(*versions), head))
-
-        at_least_1_sym = fn.at_least_1(*head.args).symbol()
-        at_least_1 = self.backend.add_atom(at_least_1_sym)
-
-        more_than_1_sym = fn.more_than_1(*head.args).symbol()
-        more_than_1 = self.backend.add_atom(more_than_1_sym)
-
-        version_atoms = [self.backend.add_atom(f.symbol()) for f in versions]
-        self.backend.add_weight_rule(
-            [at_least_1], 1, [(v, 1) for v in version_atoms])
-        self.backend.add_weight_rule(
-            [more_than_1], 2, [(v, 1) for v in version_atoms])
-
-        head_atom = self.backend.add_atom(head.symbol())
-        self.backend.add_rule([head_atom], [at_least_1, -more_than_1])
-
-        self.backend.add_rule([], [head_atom, more_than_1])
-        self.backend.add_rule([], [head_atom, -at_least_1])
-
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False
@@ -894,6 +864,9 @@ class SpackSolverSetup(object):
                     self.gen.rule(clause, spec_id.symbol())
                 spec_id_list.append(spec_id)
 
+            # TODO: find another way to do everything below, without
+            # TODO: generating ground rules.
+
             # If one of the external specs is selected then the package
             # is external and viceversa
             # TODO: make it possible to declare the rule like below
@@ -1267,14 +1240,11 @@ class SpackSolverSetup(object):
             if exact_match:
                 allowed_versions = exact_match
 
-            predicates = [fn.version(pkg_name, v) for v in allowed_versions]
+            # generate facts for each package constraint and the version
+            # that satisfies it
+            for v in allowed_versions:
+                self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
-            # version_satisfies(pkg, constraint) is true if and only if a
-            # satisfying version is set for the package
-            self.gen.one_of_iff(
-                fn.version_satisfies(pkg_name, versions),
-                predicates,
-            )
             self.gen.newline()
 
     def define_virtual_constraints(self):
@@ -1303,19 +1273,17 @@ class SpackSolverSetup(object):
         compiler_list = list(sorted(set(compiler_list)))
 
         for pkg_name, cspec in self.compiler_version_constraints:
-            possible_compiler_versions = [
-                fn.node_compiler_version(
-                    pkg_name, compiler.name, compiler.version)
-                for compiler in compiler_list
-                if compiler.satisfies(cspec)
-            ]
-
-            self.gen.one_of_iff(
-                fn.node_compiler_version_satisfies(
-                    pkg_name, cspec.name, cspec.versions),
-                possible_compiler_versions,
-            )
-            self.gen.newline()
+            for compiler in compiler_list:
+                if compiler.satisfies(cspec):
+                    self.gen.fact(
+                        fn.node_compiler_version_satisfies(
+                            pkg_name,
+                            cspec.name,
+                            cspec.versions,
+                            compiler.version
+                        )
+                    )
+        self.gen.newline()
 
     def define_target_constraints(self):
 
@@ -1346,14 +1314,12 @@ class SpackSolverSetup(object):
                     )
                 allowed_targets.extend(cache[single_constraint])
 
-            allowed_targets = [
-                fn.node_target(spec_name, t) for t in allowed_targets
-            ]
-
-            self.gen.one_of_iff(
-                fn.node_target_satisfies(spec_name, target_constraint),
-                allowed_targets,
-            )
+            for target in allowed_targets:
+                self.gen.fact(
+                    fn.node_target_satisfies(
+                        spec_name, target_constraint, target
+                    )
+                )
             self.gen.newline()
 
     def define_variant_values(self):
