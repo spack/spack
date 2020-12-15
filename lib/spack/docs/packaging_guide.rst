@@ -1864,14 +1864,21 @@ of ``mpich`` using the following command:
 
    $ srun -N 2 -n 8 spack install -j 4 mpich@3.3.2
 
-This will create eight concurrent four-job installation on two different
+This will create eight concurrent, four-job installs on two different
 nodes.
+
+Alternatively, you could run the same installs on one node by entering
+the following at the command line of a bash shell:
+
+.. code-block:: console
+
+   $ for i in {1..12}; do nohup spack install -j 4 mpich@3.3.2 >> mpich_install.txt 2>&1 &; done
 
 .. note::
 
-   The effective parallelism will be based on the maximum number of
-   packages that can be installed at the same time, which will limited
-   by the number of packages with no (remaining) uninstalled dependencies.
+   The effective parallelism is based on the maximum number of packages
+   that can be installed at the same time, which is limited by the
+   number of packages with no (remaining) uninstalled dependencies.
 
 
 .. _dependencies:
