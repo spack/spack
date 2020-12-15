@@ -8,7 +8,6 @@ import os
 import re
 import shutil
 import sys
-import tty
 
 import llnl.util.filesystem as fs
 
@@ -244,6 +243,7 @@ class TestSuite(object):
                 data = sjson.load(f)
                 return TestSuite.from_dict(data)
         except Exception as e:
+            import tty
             tty.debug(e)
             raise sjson.SpackJSONError("error parsing JSON TestSuite:", str(e))
 
