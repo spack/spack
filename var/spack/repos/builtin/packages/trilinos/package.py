@@ -271,7 +271,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
     conflicts('+muelu', when='~teuchos')
-    conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
     conflicts('+phalanx', when='~sacado')
@@ -292,7 +291,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+tpetra', when='~teuchos')
     conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
-    conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
     conflicts('+dtk', when='~boost')
@@ -398,7 +396,6 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
-    conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
