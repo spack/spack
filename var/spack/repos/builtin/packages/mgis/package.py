@@ -61,6 +61,8 @@ class Mgis(CMakePackage):
 
         args = []
 
+        args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
+
         for i in ['c', 'fortran', 'python']:
             if '+' + i  in self.spec:
                 args.append("-Denable-{0}-bindings=ON".format(i))

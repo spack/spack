@@ -87,8 +87,6 @@ class Tfel(CMakePackage):
             description='Enables python bindings')
     variant('java', default=False,
             description='Enables java interface')
-    variant('portable_build', default=False,
-            description='when true, disable -march=native flag')
 
     # only since TFEL-3.3, no effect on version below
     variant('comsol', default=True,
@@ -105,13 +103,15 @@ class Tfel(CMakePackage):
                type=('build', 'link', 'run'))
     depends_on('python', when='+python_bindings',
                type=('build', 'link', 'run'))
-    depends_on('boost+python', when='+python_bindings')
+    depends_on('boost+python+numpy', when='+python_bindings')
 
     extends('python', when='+python_bindings')
 
     def cmake_args(self):
 
         args = []
+
+        args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
 
         for i in ['fortran', 'java', 'aster', 'abaqus', 'calculix',
                   'ansys', 'europlexus', 'cyrano', 'lsdyna', 'python',
@@ -130,11 +130,6 @@ class Tfel(CMakePackage):
             args.append("-Denable-python-bindings=ON")
         else:
             args.append("-Denable-python-bindings=OFF")
-
-        if '+portable_build' in self.spec:
-            args.append("-Denable-portable-build=ON")
-        else:
-            args.append("-Denable-portable-build=OFF")
 
         if(('+python' in self.spec) or
            ('+python_bindings' in self.spec)):
