@@ -311,7 +311,6 @@ class Compiler(object):
         # caching value for compiler reported version
         # used for version checks for API, e.g. C++11 flag
         self._real_version = None
-        print(self.real_version < spack.version.ver("3.3"))
 
     def verify_executables(self):
         """Raise an error if any of the compiler executables is not valid.
