@@ -1682,11 +1682,10 @@ def build_process(pkg, kwargs):
     pkg._total_time = time.time() - start_time
     build_time = pkg._total_time - pkg._fetch_time
 
-    tty.debug('{0} Successfully installed {1}'
-              .format(pre, pkg_id),
-              'Fetch: {0}.  Build: {1}.  Total: {2}.'
-              .format(_hms(pkg._fetch_time), _hms(build_time),
-                      _hms(pkg._total_time)))
+    tty.msg('{0} Successfully installed {1}'.format(pre, pkg_id),
+            'Fetch: {0}.  Build: {1}.  Total: {2}.'
+            .format(_hms(pkg._fetch_time), _hms(build_time),
+                    _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
 
     # preserve verbosity across runs
