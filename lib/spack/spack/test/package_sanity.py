@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
 import re
@@ -14,6 +13,7 @@ import spack.package
 import spack.paths
 import spack.repo
 import spack.util.executable as executable
+import spack.variant
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
 import spack.cmd.flake8 as flake8
@@ -256,4 +256,16 @@ def test_variant_defaults_are_parsable_from_cli():
             )
             if not default_is_parsable:
                 failing.append((pkg.name, variant_name))
+    assert not failing
+
+
+def test_variant_defaults_listed_explicitly_in_values():
+    failing = []
+    for pkg in spack.repo.path.all_packages():
+        for variant_name, variant in pkg.variants.items():
+            vspec = variant.make_default()
+            try:
+                variant.validate_or_raise(vspec, pkg=pkg)
+            except spack.variant.InvalidVariantValueError:
+                failing.append((pkg.name, variant.name))
     assert not failing

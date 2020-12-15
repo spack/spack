@@ -29,7 +29,7 @@ class Rr(CMakePackage):
     # Only 'Release' is supported at the moment
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Release'))
+            values=('Release',))
 
     def patch(self):
         # because otherwise CMake would try and fail to set RPATH of

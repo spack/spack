@@ -67,7 +67,7 @@ class Hdf5(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compaitibility.
-    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+    variant('api', default='none', description='choose api compatibility', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
     conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
     conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')

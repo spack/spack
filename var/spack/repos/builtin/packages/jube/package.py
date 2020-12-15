@@ -30,7 +30,8 @@ class Jube(PythonPackage):
     variant(
         'resource_manager', default='none',
         description='Select resource manager templates',
-        values=('loadleveler', 'lsf', 'moab', 'pbs', 'slurm'), multi=False
+        values=('none', 'loadleveler', 'lsf', 'moab', 'pbs', 'slurm'),
+        multi=False
     )
 
     depends_on('py-setuptools', type='build')
