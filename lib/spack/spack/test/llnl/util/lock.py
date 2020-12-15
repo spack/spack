@@ -44,7 +44,6 @@ actually on a shared filesystem.
 """
 import collections
 import errno
-import fcntl
 import getpass
 import glob
 import os
@@ -54,12 +53,23 @@ import tempfile
 import traceback
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
-
+from sys import platform as _platform
 import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
 from llnl.util.filesystem import touch
+
+if _platform == "win32":
+    import win32con
+    import win32file
+    import pywintypes
+    LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
+    LOCK_SH = 0
+    LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY
+    __overlapped = pywintypes.OVERLAPPED()
+else:
+    import fcntl
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -1336,14 +1346,18 @@ def test_poll_lock_exception(tmpdir, monkeypatch, err_num, err_msg):
         lock = lk.Lock(lockfile)
 
         touch(lockfile)
+        if _platform == 'win32':
+            # TODO
+            monkeypatch.setattr(win32file, 'LockFileEx', _lockf)
 
-        monkeypatch.setattr(fcntl, 'lockf', _lockf)
-
-        if err_num in [errno.EAGAIN, errno.EACCES]:
-            assert not lock._poll_lock(fcntl.LOCK_EX)
         else:
-            with pytest.raises(IOError, match=err_msg):
-                lock._poll_lock(fcntl.LOCK_EX)
+            monkeypatch.setattr(fcntl, 'lockf', _lockf)
+
+            if err_num in [errno.EAGAIN, errno.EACCES]:
+                assert not lock._poll_lock(fcntl.LOCK_EX)
+            else:
+                with pytest.raises(IOError, match=err_msg):
+                    lock._poll_lock(fcntl.LOCK_EX)
 
 
 def test_upgrade_read_okay(tmpdir):
