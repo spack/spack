@@ -63,5 +63,6 @@ class Cpmd(MakefilePackage):
         bash('./configure.sh', 'LINUX-GFORTRAN')
 
     def install(self, spec, prefix):
-        # just install bin/cpmd.x
         install_tree('bin', prefix.bin)
+        install_tree('doc', join_path(prefix, 'doc'))
+        install_tree('lib', prefix.lib)
