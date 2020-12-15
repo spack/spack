@@ -7,13 +7,18 @@ from spack import *
 
 from sys import stdout
 import glob
-from os import O_NONBLOCK, rename
 from os.path import basename
-from fcntl import fcntl, F_GETFL, F_SETFL
 from subprocess import Popen, PIPE
 import time
 from llnl.util import tty
 import re
+
+from sys import platform as _platform
+if _platform != 'win32':
+    from os import O_NONBLOCK, rename
+    from fcntl import fcntl, F_GETFL, F_SETFL
+else:
+    from os import rename
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')
 re_paroptname = re.compile(r'\((serial|smpar|dmpar|dm\+sm)\)')
@@ -26,9 +31,11 @@ re_nestoptname = re.compile(r'=([^,)]+)')
 def setNonBlocking(fd):
     """
     Set the given file descriptor to non-blocking
+    Non-blocking pipes are not supported on windows
     """
-    flags = fcntl(fd, F_GETFL) | O_NONBLOCK
-    fcntl(fd, F_SETFL, flags)
+    if _platform != 'win32':
+        flags = fcntl(fd, F_GETFL) | O_NONBLOCK
+        fcntl(fd, F_SETFL, flags)
 
 
 def collect_platform_options(stdoutpipe):
