@@ -101,7 +101,16 @@ class Cpmd(MakefilePackage):
         else:
             bash('./configure.sh', cbase)
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def test_h2o(self):
+        tpath = join_path(os.path.dirname(__file__), "test")
+        tfile = join_path(tpath, '1-h2o-pbc-geoopt.inp')
+        cpmdexe = Executable(join_path('bin', 'cpmd.x'))
+        cpmdexe(tfile, tpath)
+
     def install(self, spec, prefix):
-        install_tree('bin', prefix.bin)
-        install_tree('doc', join_path(prefix, 'doc'))
-        install_tree('lib', prefix.lib)
+        install_tree('.', prefix)
+        #install_tree('bin', prefix.bin)
+        #install_tree('doc', join_path(prefix, 'doc'))
+        #install_tree('lib', prefix.lib)
