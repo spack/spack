@@ -4,117 +4,143 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+import re
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'
 compute_url = 'https://github.com/RadeonOpenCompute'
 
-# 3.9 SHA Keys
-openmp_extras39 = dict()
-openmp_extras39 = {
-    "aomp":
-        "377ab59b685a73b3f95fba95f5e028678ec5aafabc4177b7f0ffb78da095d679",
-    "devlib":
-        "c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7",
-    "llvm":
-        "1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1",
-    "flang":
-        "5d113f44fb173bd0d5704b282c5cebbb2aa642c7c29f188764bfa1daa58374c9",
-    "extras":
-        "830a37cf1c6700f81fc00749206a37e7cda4d2867bbdf489e9e2d81f52d06b3d"
+# Arrays of hashes are in order of the versions array below
+# For example array[0] = 3.9.0, array[1] = 3.10.0, etc.
 
-}
+aomp = [
+    "377ab59b685a73b3f95fba95f5e028678ec5aafabc4177b7f0ffb78da095d679",
+    "808fca9bdefb109d5bcbbc9f5b59c564a6d422488869e986516f2a7233eda235"
+]
+
+devlib = [
+    "c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7",
+    "bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc"
+]
+
+llvm = [
+    "1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1",
+    "8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370"
+]
+
+flang = [
+    "5d113f44fb173bd0d5704b282c5cebbb2aa642c7c29f188764bfa1daa58374c9",
+    "3990d39ff1c908b150f464f0653a123d94be30802f9cad6af18fbb560c4b412e"
+]
+
+extras = [
+    "830a37cf1c6700f81fc00749206a37e7cda4d2867bbdf489e9e2d81f52d06b3d",
+    "5d98d34aff97416d8b5b9e16e7cf474580f8de8a73bd0e549c4440a3c5df4ef5"
+]
+
+versions = ['3.9.0', '3.10.0']
+versions_dict = dict()
+components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
+component_hashes = [aomp, devlib, llvm, flang, extras]
+
+# Loop through versions and create necessary dictionaries of components
+for outer_index, item in enumerate(versions):
+    for inner_index, component in enumerate(component_hashes):
+        versions_dict.setdefault(item, {})[components[inner_index]] = \
+            component_hashes[inner_index][outer_index]
 
 
-class OpenmpExtras(Package):
+class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-uc-3.9.0.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-uc-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
-    version('3.9.0', sha256=openmp_extras39['aomp'])
+    version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
+    version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
 
     depends_on('cmake@3.5.2:3.13.4', type='build')
     depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
     depends_on('py-setuptools@44.1.0', type='build')
-    depends_on('python@3.8.6', type='build', when='@3.9.0')
+    depends_on('python@3.6.9:', type='build')
     depends_on('perl-data-dumper', type='build')
     depends_on('awk', type='build')
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
-    for ver in ['3.9.0']:
+    for ver in ['3.9.0', '3.10.0']:
         depends_on('hsakmt-roct@' + ver, type=('build', 'run'), when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type=('build', 'run'),
                    when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type=('build', 'run'),
                    when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type=('build', 'run'),
+                   when='@' + ver)
 
-        if ver == '3.9.0':
-            resource(
-                name='rocm-device-libs',
-                url=compute_url +
-                '/ROCm-Device-Libs/archive/rocm-uc-3.9.0.tar.gz',
-                sha256=openmp_extras39['devlib'],
-                expand=True,
-                destination='openmp-extras',
-                placement='rocm-device-libs',
-                when='@3.9.0')
+        resource(
+            name='rocm-device-libs',
+            url=compute_url +
+            '/ROCm-Device-Libs/archive/rocm-uc-' + ver + '.tar.gz',
+            sha256=versions_dict[ver]['devlib'],
+            expand=True,
+            destination='rocm-openmp-extras',
+            placement='rocm-device-libs',
+            when='@' + ver)
 
-            resource(
-                name='flang',
-                url=tools_url + '/flang/archive/rocm-uc-3.9.0.tar.gz',
-                sha256=openmp_extras39['flang'],
-                expand=True,
-                destination='openmp-extras',
-                placement='flang',
-                when='@3.9.0')
+        resource(
+            name='flang',
+            url=tools_url + '/flang/archive/rocm-uc-' + ver + '.tar.gz',
+            sha256=versions_dict[ver]['flang'],
+            expand=True,
+            destination='rocm-openmp-extras',
+            placement='flang',
+            when='@' + ver)
 
-            resource(
-                name='aomp-extras',
-                url=tools_url + '/aomp-extras/archive/rocm-uc-3.9.0.tar.gz',
-                sha256=openmp_extras39['extras'],
-                expand=True,
-                destination='openmp-extras',
-                placement='aomp-extras',
-                when='@3.9.0')
+        resource(
+            name='aomp-extras',
+            url=tools_url + '/aomp-extras/archive/rocm-uc-' + ver + '.tar.gz',
+            sha256=versions_dict[ver]['extras'],
+            expand=True,
+            destination='rocm-openmp-extras',
+            placement='aomp-extras',
+            when='@' + ver)
 
-            resource(
-                name='llvm-project',
-                url=compute_url + '/llvm-project/archive/rocm-3.9.0.tar.gz',
-                sha256=openmp_extras39['llvm'],
-                expand=True,
-                destination='openmp-extras',
-                placement='llvm-project',
-                when='@3.9.0')
+        resource(
+            name='llvm-project',
+            url=compute_url + '/llvm-project/archive/rocm-' + ver + '.tar.gz',
+            sha256=versions_dict[ver]['llvm'],
+            expand=True,
+            destination='rocm-openmp-extras',
+            placement='llvm-project',
+            when='@' + ver)
 
     def setup_run_environment(self, env):
         devlibs_prefix = self.spec['rocm-device-libs'].prefix
-        openmp_extras_prefix = self.spec['openmp-extras'].prefix
+        openmp_extras_prefix = self.spec['rocm-openmp-extras'].prefix
+        llvm_prefix = self.spec['llvm-amdgpu'].prefix
+        env.set('AOMP', '{0}'.format(format(llvm_prefix)))
         env.set('HIP_DEVICE_LIB_PATH',
                 '{0}/amdgcn/bitcode'.format(format(devlibs_prefix)))
-        env.set('AOMP', '{0}'.format(format(openmp_extras_prefix)))
         env.set('AOMP_GPU',
                 '`{0}/rocm-bin/mygpu`'.format(format(openmp_extras_prefix)))
 
     def setup_build_environment(self, env):
-        openmp_extras_prefix = self.spec['openmp-extras'].prefix
-        env.set('AOMP', '{0}'.format(format(openmp_extras_prefix)))
+        openmp_extras_prefix = self.spec['rocm-openmp-extras'].prefix
+        llvm_prefix = self.spec['llvm-amdgpu'].prefix
+        env.set('AOMP', '{0}'.format(format(llvm_prefix)))
         env.set('FC', '{0}/bin/flang'.format(format(openmp_extras_prefix)))
         env.set(
             'GFXLIST',
             'gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908')
 
-    # This fix has not been applied to the llvm compiler as of 3.9.0.
-    patch('fix-missing-arguments-assertion.patch',
-          working_dir='openmp-extras/llvm-project', when='@3.9.0:')
-
     def patch(self):
         src = self.stage.source_path
-        aomp_extras = '{0}/openmp-extras/aomp-extras/aomp-device-libs'
-        libomptarget = '{0}/openmp-extras/llvm-project/openmp/libomptarget'
-        flang = '{0}/openmp-extras/flang/'
+        aomp_extras = '{0}/rocm-openmp-extras/aomp-extras/aomp-device-libs'
+        libomptarget = \
+            '{0}/rocm-openmp-extras/llvm-project/openmp/libomptarget'
+        flang = '{0}/rocm-openmp-extras/flang/'
 
         filter_file(
             '{ROCM_DIR}/amdgcn/bitcode', '{DEVICE_LIBS_DIR}',
@@ -165,10 +191,6 @@ class OpenmpExtras(Package):
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            '{ROCM_DIR}/include', '{COMGR_INCLUDE}',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
-
-        filter_file(
             r'-L\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
             '-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX} -L${COMGR_LIB}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
@@ -186,42 +208,51 @@ class OpenmpExtras(Package):
     def install(self, spec, prefix):
         src = self.stage.source_path
         gfx_list = "gfx700;gfx701;gfx801;gfx803;gfx900;gfx902;gfx906;gfx908"
-        openmp_extras_prefix = self.spec['openmp-extras'].prefix
+        openmp_extras_prefix = self.spec['rocm-openmp-extras'].prefix
         devlibs_prefix = self.spec['rocm-device-libs'].prefix
+        devlibs_src = '{0}/rocm-openmp-extras/rocm-device-libs'.format(src)
         hsa_prefix = self.spec['hsa-rocr-dev'].prefix
         hsakmt_prefix = self.spec['hsakmt-roct'].prefix
         comgr_prefix = self.spec['comgr'].prefix
-        llvm_inc = '/openmp-extras/llvm-project/llvm/include'
-        bin_dir = '{0}/bin'.format(openmp_extras_prefix)
+        llvm_inc = '/rocm-openmp-extras/llvm-project/llvm/include'
+        llvm_prefix = self.spec['llvm-amdgpu'].prefix
+        omp_bin_dir = '{0}/bin'.format(openmp_extras_prefix)
+        omp_lib_dir = '{0}/lib'.format(openmp_extras_prefix)
+        bin_dir = '{0}/bin'.format(llvm_prefix)
+        lib_dir = '{0}/lib'.format(llvm_prefix)
+
+        # flang1 and flang2 symlink needed for build of flang-runtime
+        # libdevice symlink to rocm-openmp-extras for runtime
+        if not (os.path.islink((os.path.join(bin_dir, 'flang1')))):
+            os.symlink(os.path.join(omp_bin_dir, 'flang1'),
+                       os.path.join(bin_dir, 'flang1'))
+        if not (os.path.islink((os.path.join(bin_dir, 'flang2')))):
+            os.symlink(os.path.join(omp_bin_dir, 'flang2'),
+                       os.path.join(bin_dir, 'flang2'))
+        if not (os.path.islink((os.path.join(lib_dir, 'libdevice')))):
+            os.symlink(os.path.join(omp_lib_dir, 'libdevice'),
+                       os.path.join(lib_dir, 'libdevice'))
+
+        # Set cmake args
         components = dict()
 
-        components['llvm'] = [
-            '../openmp-extras/llvm-project/llvm',
-            '-DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra;compiler-rt',
-            '-DCMAKE_C_COMPILER={0}'.format(self.compiler.cc),
-            '-DCMAKE_CXX_COMPILER={0}'.format(self.compiler.cxx),
-            '-DCMAKE_ASM_COMPILER={0}'.format(self.compiler.cc),
-            '-DLLVM_TARGETS_TO_BUILD=AMDGPU;X86',
-            '-DLLVM_ENABLE_ASSERTIONS=1'
-        ]
-
         components['aomp-extras'] = [
-            '../openmp-extras/aomp-extras',
-            '-DLLVM_DIR={0}'.format(openmp_extras_prefix),
+            '../rocm-openmp-extras/aomp-extras',
+            '-DLLVM_DIR={0}'.format(llvm_prefix),
             '-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode'.format(devlibs_prefix),
             '-DAOMP_STANDALONE_BUILD=0',
-            '-DDEVICELIBS_ROOT={0}/openmp-extras/rocm-device-libs'.format(src),
+            '-DDEVICELIBS_ROOT={0}'.format(devlibs_src),
             '-DNEW_BC_PATH=1',
-            '-DAOMP={0}'.format(openmp_extras_prefix),
+            '-DAOMP={0}'.format(llvm_prefix),
             '-DCMAKE_VERBOSE_MAKEFILE=1'
         ]
 
-        components['openmp'] = [
-            '../openmp-extras/llvm-project/openmp',
+        # Shared cmake configuration for openmp, openmp-debug
+        openmp_common_args = [
             '-DROCM_DIR={0}'.format(hsa_prefix),
             '-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode'.format(devlibs_prefix),
             '-DAOMP_STANDALONE_BUILD=0',
-            '-DDEVICELIBS_ROOT={0}/openmp-extras/rocm-device-libs'.format(src),
+            '-DDEVICELIBS_ROOT={0}'.format(devlibs_src),
             '-DOPENMP_TEST_C_COMPILER=$AOMP/bin/clang',
             '-DOPENMP_TEST_CXX_COMPILER=$AOMP/bin/clang++',
             '-DLIBOMPTARGET_AMDGCN_GFXLIST={0}'.format(gfx_list),
@@ -235,36 +266,23 @@ class OpenmpExtras(Package):
             '-DOPENMP_ENABLE_LIBOMPTARGET=1',
             '-DOPENMP_ENABLE_LIBOMPTARGET_HSA=1',
             '-DLLVM_MAIN_INCLUDE_DIR={0}{1}'.format(src, llvm_inc),
-            '-DLLVM_INSTALL_PREFIX={0}'.format(openmp_extras_prefix)
+            '-DLLVM_INSTALL_PREFIX={0}'.format(llvm_prefix)
         ]
 
+        components['openmp'] = ['../rocm-openmp-extras/llvm-project/openmp']
+        components['openmp'] += openmp_common_args
+
         components['openmp-debug'] = [
-            '../openmp-extras/llvm-project/openmp',
-            '-DROCM_DIR={0}'.format(hsa_prefix),
-            '-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode'.format(devlibs_prefix),
-            '-DAOMP_STANDALONE_BUILD=0',
-            '-DDEVICELIBS_ROOT={0}/openmp-extras/rocm-device-libs'.format(src),
-            '-DOPENMP_TEST_C_COMPILER=$AOMP/bin/clang',
-            '-DOPENMP_TEST_CXX_COMPILER=$AOMP/bin/clang++',
-            '-DLIBOMPTARGET_AMDGCN_GFXLIST={0}'.format(gfx_list),
-            '-DLIBOMP_COPY_EXPORTS=OFF',
-            '-DHSA_INCLUDE={0}'.format(hsa_prefix),
-            '-DHSA_LIB={0}/lib'.format(hsa_prefix),
-            '-DHSAKMT_LIB={0}/lib'.format(hsakmt_prefix),
-            '-DHSAKMT_LIB64={0}/lib64'.format(hsakmt_prefix),
-            '-DCOMGR_INCLUDE={0}/include'.format(comgr_prefix),
-            '-DCOMGR_LIB={0}/lib'.format(comgr_prefix),
+            '../rocm-openmp-extras/llvm-project/openmp',
             '-DLIBOMPTARGET_NVPTX_DEBUG=ON',
-            '-DOPENMP_ENABLE_LIBOMPTARGET=1',
-            '-DOPENMP_ENABLE_LIBOMPTARGET_HSA=1',
-            '-DLLVM_MAIN_INCLUDE_DIR={0}{1}'.format(src, llvm_inc),
-            '-DLLVM_INSTALL_PREFIX={0}'.format(openmp_extras_prefix),
             '-DCMAKE_CXX_FLAGS=-g',
             '-DCMAKE_C_FLAGS=-g'
         ]
 
-        components['pgmath'] = [
-            '../openmp-extras/flang/runtime/libpgmath',
+        components['openmp-debug'] += openmp_common_args
+
+        # Shared cmake configuration for pgmath, flang, flang-runtime
+        flang_common_args = [
             '-DLLVM_ENABLE_ASSERTIONS=ON',
             '-DLLVM_CONFIG={0}/llvm-config'.format(bin_dir),
             '-DCMAKE_CXX_COMPILER={0}/clang++'.format(bin_dir),
@@ -273,38 +291,38 @@ class OpenmpExtras(Package):
             '-DLLVM_TARGETS_TO_BUILD=AMDGPU;x86'
         ]
 
+        components['pgmath'] = [
+            '../rocm-openmp-extras/flang/runtime/libpgmath'
+        ]
+
+        components['pgmath'] += flang_common_args
+
         components['flang'] = [
-            '../openmp-extras/flang',
-            '-DLLVM_ENABLE_ASSERTIONS=ON',
-            '-DLLVM_CONFIG={0}/llvm-config'.format(bin_dir),
-            '-DCMAKE_CXX_COMPILER={0}/clang++'.format(bin_dir),
-            '-DCMAKE_C_COMPILER={0}/clang'.format(bin_dir),
-            '-DCMAKE_Fortran_COMPILER={0}/flang'.format(bin_dir),
-            '-DLLVM_TARGETS_TO_BUILD=AMDGPU;x86',
+            '../rocm-openmp-extras/flang',
             '-DFLANG_OPENMP_GPU_AMD=ON',
             '-DFLANG_OPENMP_GPU_NVIDIA=ON'
         ]
 
+        components['flang'] += flang_common_args
+
         components['flang-runtime'] = [
-            '../openmp-extras/flang',
-            '-DLLVM_ENABLE_ASSERTIONS=ON',
-            '-DLLVM_CONFIG={0}/llvm-config'.format(bin_dir),
-            '-DCMAKE_CXX_COMPILER={0}/clang++'.format(bin_dir),
-            '-DCMAKE_C_COMPILER={0}/clang'.format(bin_dir),
-            '-DCMAKE_Fortran_COMPILER={0}/flang'.format(bin_dir),
-            '-DLLVM_TARGETS_TO_BUILD=AMDGPU;x86',
+            '../rocm-openmp-extras/flang',
             '-DLLVM_INSTALL_RUNTIME=ON',
             '-DFLANG_BUILD_RUNTIME=ON',
             '-DOPENMP_BUILD_DIR={0}/spack-build-openmp/runtime/src'.format(src)
         ]
+        components['flang-runtime'] += flang_common_args
 
         build_order = [
-            "llvm", "aomp-extras", "openmp", "openmp-debug", "pgmath",
+            "aomp-extras", "openmp", "openmp-debug", "pgmath",
             "flang", "flang-runtime"
         ]
 
         # Override standard CMAKE_BUILD_TYPE
-        std_cmake_args.remove("-DCMAKE_BUILD_TYPE:STRING=RelWithDebInfo")
+        for arg in std_cmake_args:
+            found = re.search("CMAKE_BUILD_TYPE", arg)
+            if found:
+                std_cmake_args.remove(arg)
         for component in build_order:
             with working_dir('spack-build-{0}'.format(component), create=True):
                 cmake_args = components[component]
