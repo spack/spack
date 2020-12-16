@@ -728,7 +728,7 @@ class SpackSolverSetup(object):
 
     def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
-        for name, conditions in sorted(pkg.dependencies.items()):
+        for _, conditions in sorted(pkg.dependencies.items()):
             for cond_id, (cond, dep) in enumerate(sorted(conditions.items())):
                 named_cond = cond.copy()
                 named_cond.name = named_cond.name or pkg.name
@@ -751,22 +751,19 @@ class SpackSolverSetup(object):
                         continue
 
                     # there is a declared dependency of type t
-
-                    # TODO: this ends up being redundant in the output --
-                    # TODO: not sure if we really need it anymore.
-                    # TODO: Look at simplifying the logic in concretize.lp
                     self.gen.fact(
-                        fn.declared_dependency(dep.pkg.name, dep.spec.name, t))
+                        fn.declared_dependency(dep.pkg.name, dep.spec.name, cond_id, t)
+                    )
 
-                    # if it has conditions, declare them.
-                    conditions = self.spec_clauses(named_cond, body=True)
-                    for cond in conditions:
-                        self.gen.fact(
-                            fn.dep_cond(
-                                dep.pkg.name, dep.spec.name, t, cond_id,
-                                cond.name, *cond.args
-                            )
+                # if it has conditions, declare them.
+                conditions = self.spec_clauses(named_cond, body=True)
+                for cond in conditions:
+                    self.gen.fact(
+                        fn.dep_cond(
+                            dep.pkg.name, dep.spec.name, cond_id,
+                            cond.name, *cond.args
                         )
+                    )
 
                 # add constraints on the dependency from dep spec.
 
