@@ -158,7 +158,7 @@ class Paraview(CMakePackage, CudaPackage):
     @property
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
-        if self.spec.version == Version('develop'):
+        if self.spec.version == Version('master'):
             return 'paraview-5.9'
         else:
             return 'paraview-{0}'.format(self.spec.version.up_to(2))
