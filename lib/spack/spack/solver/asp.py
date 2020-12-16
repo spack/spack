@@ -729,9 +729,16 @@ class SpackSolverSetup(object):
     def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
         for name, conditions in sorted(pkg.dependencies.items()):
-            for cond, dep in sorted(conditions.items()):
+            for cond_id, (cond, dep) in enumerate(sorted(conditions.items())):
                 named_cond = cond.copy()
                 named_cond.name = named_cond.name or pkg.name
+
+                # each independent condition has an id
+                self.gen.fact(
+                    fn.dependency_condition(
+                        dep.pkg.name, dep.spec.name, cond_id
+                    )
+                )
 
                 for t in sorted(dep.type):
                     # Skip test dependencies if they're not requested at all
@@ -743,22 +750,29 @@ class SpackSolverSetup(object):
                                         and pkg.name not in tests):
                         continue
 
-                    if cond == spack.spec.Spec():
-                        self.gen.fact(
-                            fn.declared_dependency(
-                                dep.pkg.name, dep.spec.name, t
-                            )
-                        )
-                    else:
-                        clauses = self.spec_clauses(named_cond, body=True)
+                    # there is a declared dependency of type t
 
-                        self.gen.rule(
-                            fn.declared_dependency(
-                                dep.pkg.name, dep.spec.name, t
-                            ), self.gen._and(*clauses)
+                    # TODO: this ends up being redundant in the output --
+                    # TODO: not sure if we really need it anymore.
+                    # TODO: Look at simplifying the logic in concretize.lp
+                    self.gen.fact(
+                        fn.declared_dependency(dep.pkg.name, dep.spec.name, t))
+
+                    # if it has conditions, declare them.
+                    conditions = self.spec_clauses(named_cond, body=True)
+                    for cond in conditions:
+                        self.gen.fact(
+                            fn.dep_cond(
+                                dep.pkg.name, dep.spec.name, t, cond_id,
+                                cond.name, *cond.args
+                            )
                         )
 
                 # add constraints on the dependency from dep spec.
+
+                # TODO: nest this in the type loop so that dependency
+                # TODO: constraints apply only for their deptypes and
+                # TODO: specific conditions.
                 if spack.repo.path.is_virtual(dep.spec.name):
                     self.virtual_constraints.add(str(dep.spec))
                     conditions = ([fn.real_node(pkg.name)] +
@@ -779,7 +793,8 @@ class SpackSolverSetup(object):
                                 *self.spec_clauses(named_cond, body=True)
                             )
                         )
-            self.gen.newline()
+
+                self.gen.newline()
 
     def virtual_preferences(self, pkg_name, func):
         """Call func(vspec, provider, i) for each of pkg's provider prefs."""
