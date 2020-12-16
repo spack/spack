@@ -55,32 +55,32 @@ depends_on(Package, Dependency, Type)
     not external(Package).
 
 % if any individual condition below is true, trigger the dependency.
-dependency_conditions(P, D, T) :- dependency_conditions(P, D, T, _).
+dependency_conditions(P, D, T) :-
+  dependency_conditions_hold(P, D, I), declared_dependency(P, D, I, T).
 
 % collect all the dependency condtions into a single conditional rule
-dependency_conditions(P, D, T, I) :-
+dependency_conditions_hold(P, D, I) :-
   node(Package)
-    : dep_cond(P, D, T, I, "node", Package);
+    : dep_cond(P, D, I, "node", Package);
   version(Package, Version)
-    : dep_cond(P, D, T, I, "version", Package, Version);
+    : dep_cond(P, D, I, "version", Package, Version);
   version_satisfies(Package, Constraint)
-    : dep_cond(P, D, T, I, "version_satisfies", Package, Constraint);
+    : dep_cond(P, D, I, "version_satisfies", Package, Constraint);
   node_platform(Package, Platform)
-    : dep_cond(P, D, T, I, "node_platform", Package, Platform);
+    : dep_cond(P, D, I, "node_platform", Package, Platform);
   node_os(Package, OS)
-    : dep_cond(P, D, T, I, "node_os", Package, OS);
+    : dep_cond(P, D, I, "node_os", Package, OS);
   node_target(Package, Target)
-    : dep_cond(P, D, T, I, "node_target", Package, Target);
+    : dep_cond(P, D, I, "node_target", Package, Target);
   variant_value(Package, Variant, Value)
-    : dep_cond(P, D, T, I, "variant_value", Package, Variant, Value);
+    : dep_cond(P, D, I, "variant_value", Package, Variant, Value);
   node_compiler(Package, Compiler)
-    : dep_cond(P, D, T, I, "node_compiler", Package, Compiler);
+    : dep_cond(P, D, I, "node_compiler", Package, Compiler);
   node_compiler_version(Package, Compiler, Version)
-    : dep_cond(P, D, T, I, "node_compiler_version", Package, Compiler, Version);
+    : dep_cond(P, D, I, "node_compiler_version", Package, Compiler, Version);
   node_flag(Package, FlagType, Flag)
-    : dep_cond(P, D, T, I, "node_flag", Package, FlagType, Flag);
+    : dep_cond(P, D, I, "node_flag", Package, FlagType, Flag);
   dependency_condition(P, D, I);
-  declared_dependency(P, D, T);
   node(P).
 
 % if a virtual was required by some root spec, one provider is in the DAG
