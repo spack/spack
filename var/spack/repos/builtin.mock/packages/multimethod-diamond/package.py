@@ -3,8 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import spack.pkg.builtin.mock.multimethod_inheritor as mi
 import spack.pkg.builtin.mock.multimethod_diamond_parent as mp
+import spack.pkg.builtin.mock.multimethod_inheritor as mi
+from spack.std import *
 
 
 class MultimethodDiamond(mi.MultimethodInheritor, mp.MultimethodDiamondParent):

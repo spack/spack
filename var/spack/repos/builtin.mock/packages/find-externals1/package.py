@@ -6,6 +6,7 @@ import os
 import re
 
 import spack.package
+from spack.std import *
 
 
 class FindExternals1(AutotoolsPackage):

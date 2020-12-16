@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.std import *
 
 
 class HashTest3(Package):
