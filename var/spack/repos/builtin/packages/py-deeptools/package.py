@@ -30,8 +30,6 @@ class PyDeeptools(PythonPackage):
     depends_on('py-plotly@2.0.0:', type=('build', 'run'))
     depends_on('py-deeptoolsintervals@0.1.8:', type=('build', 'run'))
 
-    depends_on('py-nose', type='test')
-
     def patch(self):
         # Add nosetest hook for "python setup.py test" argument.
         filter_file(r'^setup\(',

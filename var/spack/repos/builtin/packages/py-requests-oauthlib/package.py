@@ -20,5 +20,3 @@ class PyRequestsOauthlib(PythonPackage):
     depends_on('py-oauthlib@3.0.0:', type=('build', 'run'))
     depends_on('py-requests@2.0.0:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-mock', type='test')
-    depends_on('py-requests-mock', type='test')

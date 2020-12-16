@@ -36,4 +36,3 @@ class PyAzureCliCore(PythonPackage):
     depends_on('py-ndg-httpsclient', when='^python@:2.7.8', type=('build', 'run'))
     depends_on('py-pyasn1', when='^python@:2.7.8', type=('build', 'run'))
     depends_on('py-futures', when='^python@:2', type=('build', 'run'))
-    depends_on('py-mock', type='test')

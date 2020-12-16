@@ -28,4 +28,3 @@ class PyScikitOptimize(PythonPackage):
     depends_on('py-scikit-learn@0.19.1:', type=('build', 'run'))
 
     depends_on('py-matplotlib',   when='+plots')
-    depends_on('py-pytest@3.3.0:', type='test')

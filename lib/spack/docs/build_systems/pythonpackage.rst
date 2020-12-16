@@ -90,7 +90,7 @@ Instead of using the ``PythonPackage`` base class, you should extend
 the ``Package`` base class and implement the following custom installation
 procedure:
 
-.. code-block::
+.. code-block:: python
 
    def install(self, spec, prefix):
        pip = which('pip')
@@ -255,7 +255,7 @@ Many packages are hosted on PyPI, but are developed on GitHub or another
 version control systems. The tarball can be downloaded from either
 location, but PyPI is preferred for the following reasons:
 
-#. PyPI contains the bare minimum of files to install the package.
+#. PyPI contains the bare minimum number of files needed to install the package.
 
    You may notice that the tarball you download from PyPI does not
    have the same checksum as the tarball you download from GitHub.
@@ -291,19 +291,6 @@ location, but PyPI is preferred for the following reasons:
    you must contact the developers to determine which is the case.
    PyPI is nice because it makes it physically impossible to
    re-release the same version of a package with a different checksum.
-
-There are some reasons to prefer downloading from GitHub:
-
-#. The GitHub tarball may contain unit tests.
-
-   As previously mentioned, the PyPI tarball contains the bare minimum
-   of files to install the package. Unless explicitly specified by the
-   developers, it will not contain development files like unit tests.
-   If you desire to run the unit tests during installation, you should
-   use the GitHub tarball instead.
-
-If you really want to run these unit tests, no one will stop you from
-submitting a PR for a new package that downloads from GitHub.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
@@ -569,7 +556,8 @@ If the package uses ``setuptools``, check for the following clues:
 
   These are packages that are required to run the unit tests for the
   package. These dependencies can be specified using the
-  ``type='test'`` dependency type.
+  ``type='test'`` dependency type. However, the PyPI tarballs rarely
+  contain unit tests, so there is usually no reason to add these.
 
 In the root directory of the package, you may notice a
 ``requirements.txt`` file. It may look like this file contains a list
@@ -625,7 +613,8 @@ add run-time dependencies if they aren't needed, so you need to
 determine whether or not setuptools is needed. Grep the installation
 directory for any files containing a reference to ``setuptools`` or
 ``pkg_resources``. Both modules come from ``py-setuptools``.
-``pkg_resources`` is particularly common in scripts in ``prefix/bin``.
+``pkg_resources`` is particularly common in scripts found in
+``prefix/bin``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to setup.py
@@ -699,48 +688,64 @@ a "package" is a directory containing files like:
    foo/baz.py
 
 
-whereas a "module" is a single Python file. Since ``find_packages``
-only returns packages, you'll have to determine the correct module
-names yourself. You can now add these packages and modules to the
-package like so:
+whereas a "module" is a single Python file.
+
+The ``PythonPackage`` base class automatically detects these module
+names for you. If, for whatever reason, the module names detected
+are wrong, you can provide the names yourself by overriding
+``import_modules`` like so:
 
 .. code-block:: python
 
    import_modules = ['six']
 
 
-When you run ``spack install --test=root py-six``, Spack will attempt
-to import the ``six`` module after installation.
+Sometimes the list of module names to import depends on how the
+package was built. For example, the ``py-pyyaml`` package has a
+``+libyaml`` variant that enables the build of a faster optimized
+version of the library. If the user chooses ``~libyaml``, only the
+``yaml`` library will be importable. If the user chooses ``+libyaml``,
+both the ``yaml`` and ``yaml.cyaml`` libraries will be available.
+This can be expressed like so:
 
-These tests most often catch missing dependencies and non-RPATHed
+.. code-block:: python
+
+   @property
+   def import_modules(self):
+       modules = ['yaml']
+
+       if '+libyaml' in self.spec:
+           modules.append('yaml.cyaml')
+
+       return modules
+
+
+These tests often catch missing dependencies and non-RPATHed
 libraries. Make sure not to add modules/packages containing the word
-"test", as these likely won't end up in installation directory.
+"test", as these likely won't end up in the installation directory,
+or may require test dependencies like pytest to be installed.
+
+These tests can be triggered by running ``spack install --test=root``
+or by running ``spack test run`` after the installation has finished.
 
 """"""""""
 Unit tests
 """"""""""
 
 The package you want to install may come with additional unit tests.
-By default, Spack runs:
-
-.. code-block:: console
-
-   $ python setup.py test
-
-
-if it detects that the ``setup.py`` file supports a ``test`` phase.
-You can add additional build-time or install-time tests by overriding
-``test`` or adding a custom install-time test function. For example,
-``py-numpy`` adds:
+You can add additional build-time or install-time tests by adding
+additional testing functions. For example, ``py-numpy`` adds:
 
 .. code-block:: python
 
-   install_time_test_callbacks = ['install_test', 'import_module_test']
-
+   @run_after('install')
+   @on_package_attributes(run_tests=True)
    def install_test(self):
-        with working_dir('..'):
-            python('-c', 'import numpy; numpy.test("full", verbose=2)')
+       with working_dir('spack-test', create=True):
+           python('-c', 'import numpy; numpy.test("full", verbose=2)')
 
+
+These tests can be triggered by running ``spack install --test=root``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setup file in a sub-directory
@@ -781,7 +786,7 @@ PythonPackage vs. packages that use Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are many packages that make use of Python, but packages that depend
-on Python are not necessarily ``PythonPackages``.
+on Python are not necessarily ``PythonPackage``'s.
 
 """""""""""""""""""""""
 Choosing a build system
@@ -878,8 +883,8 @@ and ``pip`` may be a perfectly valid alternative to using Spack. The
 main advantage of Spack over ``pip`` is its ability to compile
 non-Python dependencies. It can also build cythonized versions of a
 package or link to an optimized BLAS/LAPACK library like MKL,
-resulting in calculations that run orders of magnitude faster.
-Spack does not offer a significant advantage to other python-management
+resulting in calculations that run orders of magnitudes faster.
+Spack does not offer a significant advantage over other python-management
 systems for installing and using tools like flake8 and sphinx.
 But if you need packages with non-Python dependencies like
 numpy and scipy, Spack will be very valuable to you.

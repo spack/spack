@@ -25,4 +25,3 @@ class PyAdbEnhanced(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-psutil', type=('build', 'run'))
     depends_on('py-asyncio', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

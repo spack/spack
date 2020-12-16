@@ -25,6 +25,3 @@ class PyThinc(PythonPackage):
     depends_on('py-plac@0.9.6:1.1', type=('build', 'run'))
     depends_on('py-tqdm@4.10:4.999', type=('build', 'run'))
     depends_on('py-pathlib@1.0.1', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-hypothesis', type='test')

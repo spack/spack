@@ -16,10 +16,6 @@ class PyShapely(PythonPackage):
     git      = "https://github.com/Toblerity/Shapely.git"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'shapely', 'shapely.geometry', 'shapely.algorithms',
-        'shapely.examples', 'shapely.speedups', 'shapely.vectorized',
-    ]
 
     version('master', branch='master')
     version('1.7.1', sha256='1641724c1055459a7e2b8bbe47ba25bdc89554582e62aec23cb3f3ca25f9b129')
@@ -64,5 +60,7 @@ class PyShapely(PythonPackage):
         else:
             env.prepend_path('LD_LIBRARY_PATH', libs)
 
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def test_install(self):
         python('-m', 'pytest')

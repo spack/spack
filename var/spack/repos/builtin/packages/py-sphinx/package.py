@@ -12,16 +12,6 @@ class PySphinx(PythonPackage):
     homepage = "https://sphinx-doc.org/"
     url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-3.2.0.tar.gz"
 
-    import_modules = [
-        'sphinx', 'sphinx.testing', 'sphinx.ext', 'sphinx.pycode',
-        'sphinx.search', 'sphinx.transforms', 'sphinx.builders',
-        'sphinx.directives', 'sphinx.util', 'sphinx.environment',
-        'sphinx.writers', 'sphinx.domains', 'sphinx.locale',
-        'sphinx.ext.napoleon', 'sphinx.ext.autosummary', 'sphinx.pycode.pgen2',
-        'sphinx.transforms.post_transforms', 'sphinx.util.stemmer',
-        'sphinx.environment.collectors', 'sphinx.environment.adapters'
-    ]
-
     version('3.2.0', sha256='cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177')
     version('3.0.0', sha256='6a099e6faffdc3ceba99ca8c2d09982d43022245e409249375edf111caf79ed3')
     version('2.2.0', sha256='0d586b0f8c2fc3cc6559c5e8fd6124628110514fda0e5d7c82e682d749d2e845')
@@ -64,11 +54,3 @@ class PySphinx(PythonPackage):
     depends_on('py-packaging', when='@1.7.4:', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.1', type=('build', 'run'))
     depends_on('py-typing', when='@1.6.2:^python@2.7:3.4', type=('build', 'run'))
-
-    depends_on('py-pytest',     type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-html5lib',   type='test')
-    depends_on('py-flake8@3.5.0:', type='test')
-    depends_on('py-flake8-import-order', type='test')
-    depends_on('py-mypy@0.720:', type='test')
-    depends_on('py-docutils-stubs', type='test')
