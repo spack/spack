@@ -39,8 +39,8 @@ class Alps(CMakePackage):
     # remove a problematic build variable
     patch('mpi.patch')
 
-    # In Aarch 64, auto detectection does not work
-    patch('alps_forceint.patch', when='target=aarch64:')
+    # include climits to use INT_MAX
+    patch('alps_climit.patch')
 
     # ctest tries to test '/usr/bin/time'
     patch('alps_cmake_time.patch')
