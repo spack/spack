@@ -239,7 +239,7 @@ def assume_unique(along, condition_expr_fn, gen_expr_fn,
 
     # See https://stackoverflow.com/questions/43081929/k-out-of-n-constraint-in-z3py/43081930#43081930.
     assumptions = []  # type: List[T]
-    bvars = [Bool(six.ensure_str(fmt(x))) for x in along]
+    bvars = [Bool(six.binary_type(fmt(x))) for x in along]
     assumptions.extend(
         gen_expr_fn(x) == bv
         for x, bv in zip(along, bvars)
@@ -686,10 +686,9 @@ def generate_fake_input(
                 condition_expr_fn=(lambda: use_package(pkg.into_z3())),
                 gen_expr_fn=(lambda dep_pkg: use_this_dependency(pkg.into_z3(), dep_pkg.into_z3())),
                 fmt=(lambda dep_pkg: (
-                    "use_package(p = {}) => ∃!d∈{{P_dependencies(p)}} s.t. "
+                    "use_package(p = {}) => \existsuniq! d \in {{P_dependencies(p)}} s.t. "
                     "use_this_dependency(p, d). case of: d = {}."
-                    .format(pkg, dep_pkg)
-                    .encode('utf-8'))),
+                    .format(pkg, dep_pkg))),
             )
             assumptions.extend(unique_dependency_assumptions)
 
@@ -734,10 +733,9 @@ def generate_fake_input(
             condition_expr_fn=(lambda: use_package(pkg.into_z3())),
             gen_expr_fn=(lambda repo: use_repo_package(pkg.into_z3(), repo.into_z3())),
             fmt=(lambda repo: (
-                "use_package(p = {}) => ∃!r∈{{Repo}} s.t. use_repo_package(p, r). "
+                "use_package(p = {}) => \existsuniq! r \in {{Repo}} s.t. use_repo_package(p, r). "
                 "case of: r = {}."
-                .format(pkg, repo)
-                .decode('utf-8').encode('utf-8'))),
+                .format(pkg, repo))),
         )
         assumptions.extend(unique_repo_assumptions)
 
