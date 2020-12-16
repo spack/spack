@@ -75,10 +75,10 @@ class HdfEos5(AutotoolsPackage):
 
         # Package really wants h5cc to be used
         if self.spec['mpi']:
-            extra_args.append('CC={0}/bin/h5pcc'.format(
+            extra_args.append('CC={0}/bin/h5pcc -Df2cFortran'.format(
                 self.spec['hdf5'].prefix))
         else:
-            extra_args.append('CC={0}/bin/h5cc'.format(
+            extra_args.append('CC={0}/bin/h5cc -Df2cFortran'.format(
                 self.spec['hdf5'].prefix))
 
         # We always build PIC code
