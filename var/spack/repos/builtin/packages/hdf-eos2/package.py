@@ -74,7 +74,8 @@ class HdfEos2(AutotoolsPackage):
         extra_args = []
 
         # Package really wants h4cc to be used
-        extra_args.append('CC={0}/bin/h4cc'.format(self.spec['hdf'].prefix))
+        extra_args.append('CC={0}/bin/h4cc -Df2cFortran'.format(
+            self.spec['hdf'].prefix))
 
         # We always build PIC code
         extra_args.append('--with-pic')
