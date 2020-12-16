@@ -62,8 +62,8 @@ class RocmOpenmpExtras(Package):
 
     depends_on('cmake@3.5.2:3.13.4', type='build')
     depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
-    depends_on('py-setuptools@44.1.0', type='build')
-    depends_on('python@3.6.9:', type='build')
+    depends_on('py-setuptools@44.1.0:', type='build')
+    depends_on('python@3.6.9:3.8.6', type='build')
     depends_on('perl-data-dumper', type='build')
     depends_on('awk', type='build')
     depends_on('elfutils', type=('build', 'link'))
