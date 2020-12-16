@@ -24,6 +24,6 @@ class WindowsOs(OperatingSystem):
 
     def __init__(self):
         super(WindowsOs, self).__init__('Windows10', '10')
-        
+
     def __str__(self):
         return self.name
