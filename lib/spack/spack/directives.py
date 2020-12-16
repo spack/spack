@@ -48,7 +48,7 @@ from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
 
-__all__ = []
+__all__ = ['version', 'variant', 'conflicts', 'depends_on', 'extends', 'provides', 'patch', 'resource']
 
 #: These are variant names used by Spack internally; packages can't use them
 reserved_names = ['patches', 'dev_path']

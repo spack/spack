@@ -455,28 +455,18 @@ def _set_variables_for_single_module(pkg, module):
     if getattr(module, marker, False):
         return
 
-    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
-    jobs = min(jobs, multiprocessing.cpu_count())
-
     m = module
-    m.make_jobs = jobs
 
-    # TODO: make these build deps that can be installed if not found.
-    m.make = MakeExecutable('make', jobs)
-    m.gmake = MakeExecutable('gmake', jobs)
-    m.scons = MakeExecutable('scons', jobs)
-    m.ninja = MakeExecutable('ninja', jobs)
-
-    # easy shortcut to os.environ
-    m.env = os.environ
-
-    # Find the configure script in the archive path
-    # Don't use which for this; we want to find it in the current dir.
-    m.configure = Executable('./configure')
-
-    m.meson = Executable('meson')
-    m.cmake = Executable('cmake')
-    m.ctest = MakeExecutable('ctest', jobs)
+    # overriding commands and variables that require package info
+    # to hide the ones in std
+    if not pkg.parallel:
+        m.make_jobs = 1
+        # TODO: make these build deps that can be installed if not found.
+        m.make = MakeExecutable('make', 1)
+        m.gmake = MakeExecutable('gmake', 1)
+        m.scons = MakeExecutable('scons', 1)
+        m.ninja = MakeExecutable('ninja', 1)
+        m.ctest = MakeExecutable('ctest', 1)
 
     # Standard CMake arguments
     m.std_cmake_args = spack.build_systems.cmake.CMakePackage._std_args(pkg)
@@ -489,27 +479,9 @@ def _set_variables_for_single_module(pkg, module):
     m.spack_f77 = os.path.join(link_dir, pkg.compiler.link_paths['f77'])
     m.spack_fc = os.path.join(link_dir, pkg.compiler.link_paths['fc'])
 
-    # Emulate some shell commands for convenience
-    m.pwd = os.getcwd
-    m.cd = os.chdir
-    m.mkdir = os.mkdir
-    m.makedirs = os.makedirs
-    m.remove = os.remove
-    m.removedirs = os.removedirs
-    m.symlink = os.symlink
-
-    m.mkdirp = mkdirp
-    m.install = install
-    m.install_tree = install_tree
-    m.rmtree = shutil.rmtree
-    m.move = shutil.move
-
     # Useful directories within the prefix are encapsulated in
     # a Prefix object.
     m.prefix = pkg.prefix
-
-    # Platform-specific library suffix.
-    m.dso_suffix = dso_suffix
 
     def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
         compiler_path = kwargs.get('compiler', m.spack_cc)

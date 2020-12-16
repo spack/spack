@@ -8,12 +8,62 @@
 
 Everything in this module is automatically imported into Spack package files.
 """
-import llnl.util.filesystem
-from llnl.util.filesystem import *
+import os
+import shutil
 
-from spack.package import \
-    Package, BundlePackage, \
-    run_before, run_after, on_package_attributes
+import llnl.util.filesystem
+from llnl.util.filesystem import (
+    FileFilter,
+    FileList,
+    HeaderList,
+    LibraryList,
+    ancestor,
+    can_access,
+    change_sed_delimiter,
+    copy_mode,
+    filter_file,
+    find,
+    find_headers,
+    find_all_headers,
+    find_libraries,
+    find_system_libraries,
+    fix_darwin_install_name,
+    force_remove,
+    force_symlink,
+    chgrp,
+    chmod_x,
+    copy,
+    install,
+    copy_tree,
+    install_tree,
+    is_exe,
+    join_path,
+    last_modification_time_recursive,
+    mkdirp,
+    partition_path,
+    prefixes,
+    remove_dead_links,
+    remove_directory_contents,
+    remove_if_dead_link,
+    remove_linked_tree,
+    set_executable,
+    set_install_permissions,
+    touch,
+    touchp,
+    traverse_tree,
+    unset_executable_mode,
+    working_dir,
+)
+
+import spack.config as _config
+import spack.build_environment as _buildenv
+from spack.package import (
+    Package,
+    BundlePackage,
+    run_before,
+    run_after,
+    on_package_attributes,
+)
 from spack.package import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
@@ -51,18 +101,85 @@ from spack.dependency import all_deptypes
 from spack.multimethod import when
 
 import spack.directives
-from spack.directives import *
+from spack.directives import (
+    version,
+    variant,
+    conflicts,
+    depends_on,
+    extends,
+    provides,
+    patch,
+    resource,
+)
 
 import spack.util.executable
-from spack.util.executable import *
+from spack.util.executable import Executable, which, ProcessError
 
-from spack.package import \
-    install_dependency_symlinks, flatten_dependencies, \
-    DependencyConflictError
+from spack.package import (
+    install_dependency_symlinks,
+    flatten_dependencies,
+    DependencyConflictError,
+)
 
-from spack.installer import \
-    ExternalPackageError, InstallError, InstallLockError, UpstreamPackageError
+from spack.installer import (
+    ExternalPackageError,
+    InstallError,
+    InstallLockError,
+    UpstreamPackageError,
+)
 from spack.install_test import get_escaped_text_output
 
 from spack.variant import any_combination_of, auto_or_any_combination_of
 from spack.variant import disjoint_sets
+
+import multiprocessing as _mp
+# TODO: make these build deps that can be installed if not found.
+_jobs = _config.get("config:build_jobs", 16)
+_jobs = min(_jobs, _mp.cpu_count())
+make = _buildenv.MakeExecutable("make", _jobs)
+gmake = _buildenv.MakeExecutable("gmake", _jobs)
+scons = _buildenv.MakeExecutable("scons", _jobs)
+ninja = _buildenv.MakeExecutable("ninja", _jobs)
+make_jobs = _jobs
+
+# easy shortcut to os.environ
+env = os.environ
+
+# Find the configure script in the archive path
+# Don't use which for this; we want to find it in the current dir.
+configure = _buildenv.Executable("./configure")
+
+meson = _buildenv.Executable("meson")
+cmake = _buildenv.Executable("cmake")
+ctest = _buildenv.MakeExecutable("ctest", _jobs)
+
+# fake lists
+std_cmake_args = []
+std_meson_args = []
+
+# fake paths
+spack_cc = ''
+spack_cxx = ''
+spack_f77 = ''
+spack_fc = ''
+prefix = ''
+# Platform-specific library suffix.
+dso_suffix = _buildenv.dso_suffix
+
+# Emulate some shell commands for convenience
+pwd = os.getcwd
+cd = os.chdir
+mkdir = os.mkdir
+makedirs = os.makedirs
+remove = os.remove
+removedirs = os.removedirs
+symlink = os.symlink
+
+mkdirp = mkdirp
+install = install
+install_tree = install_tree
+rmtree = shutil.rmtree
+move = shutil.move
+
+def static_to_shared_library(static_lib, shared_lib=None, **kwargs):
+    raise NotImplementedError()
