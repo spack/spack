@@ -56,32 +56,86 @@ depends_on(Package, Dependency, Type)
 
 % if any individual condition below is true, trigger the dependency.
 dependency_conditions(P, D, T) :-
-  dependency_conditions_hold(P, D, I), declared_dependency(P, D, I, T).
+  dependency_conditions_hold(P, D, I),
+  dependency_type(I, T).
 
-% collect all the dependency condtions into a single conditional rule
-dependency_conditions_hold(P, D, I) :-
-  node(Package)
-    : dep_cond(P, D, I, "node", Package);
+% collect all the dependency conditions into a single conditional rule
+dependency_conditions_hold(Package, Dependency, ID) :-
   version(Package, Version)
-    : dep_cond(P, D, I, "version", Package, Version);
+    : required_dependency_condition(ID, "version", Package, Version);
   version_satisfies(Package, Constraint)
-    : dep_cond(P, D, I, "version_satisfies", Package, Constraint);
+    : required_dependency_condition(ID, "version_satisfies", Package, Constraint);
   node_platform(Package, Platform)
-    : dep_cond(P, D, I, "node_platform", Package, Platform);
+    : required_dependency_condition(ID, "node_platform", Package, Platform);
   node_os(Package, OS)
-    : dep_cond(P, D, I, "node_os", Package, OS);
+    : required_dependency_condition(ID, "node_os", Package, OS);
   node_target(Package, Target)
-    : dep_cond(P, D, I, "node_target", Package, Target);
+    : required_dependency_condition(ID, "node_target", Package, Target);
   variant_value(Package, Variant, Value)
-    : dep_cond(P, D, I, "variant_value", Package, Variant, Value);
+    : required_dependency_condition(ID, "variant_value", Package, Variant, Value);
   node_compiler(Package, Compiler)
-    : dep_cond(P, D, I, "node_compiler", Package, Compiler);
+    : required_dependency_condition(ID, "node_compiler", Package, Compiler);
   node_compiler_version(Package, Compiler, Version)
-    : dep_cond(P, D, I, "node_compiler_version", Package, Compiler, Version);
+    : required_dependency_condition(ID, "node_compiler_version", Package, Compiler, Version);
   node_flag(Package, FlagType, Flag)
-    : dep_cond(P, D, I, "node_flag", Package, FlagType, Flag);
-  dependency_condition(P, D, I);
-  node(P).
+    : required_dependency_condition(ID, "node_flag", Package, FlagType, Flag);
+  dependency_condition(Package, Dependency, ID);
+  node(Package).
+
+% Implications from matching a dependency condition
+node(Dependency) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency).
+
+version(Dependency, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "version", Dependency, Version).
+
+version_satisfies(Dependency, Constraint) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "version_satisfies", Dependency, Constraint).
+
+node_platform(Dependency, Platform) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_platform", Dependency, Platform).
+
+node_os(Dependency, OS) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_os", Dependency, OS).
+
+node_target(Dependency, Target) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_target", Dependency, Target).
+
+variant_set(Dependency, Variant, Value) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "variant_set", Dependency, Variant, Value).
+
+node_compiler(Dependency, Compiler) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler", Dependency, Compiler).
+
+node_compiler_version(Dependency, Compiler, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler_version", Dependency, Compiler, Version).
+
+node_compiler_version_satisfies(Dependency, Compiler, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler_version_satisfies", Dependency, Compiler, Version).
+
+node_flag(Dependency, FlagType, Flag) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_flag", Dependency, FlagType, Flag).
 
 % if a virtual was required by some root spec, one provider is in the DAG
 1 { node(Package) : provides_virtual(Package, Virtual) } 1

@@ -496,6 +496,7 @@ class SpackSolverSetup(object):
 
         # id for dummy variables
         self.card = 0
+        self._condition_id_counter = 0
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -729,16 +730,16 @@ class SpackSolverSetup(object):
     def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
-            for cond_id, (cond, dep) in enumerate(sorted(conditions.items())):
+            for cond, dep in sorted(conditions.items()):
+                global_condition_id = self._condition_id_counter
+                self._condition_id_counter += 1
                 named_cond = cond.copy()
                 named_cond.name = named_cond.name or pkg.name
 
                 # each independent condition has an id
-                self.gen.fact(
-                    fn.dependency_condition(
-                        dep.pkg.name, dep.spec.name, cond_id
-                    )
-                )
+                self.gen.fact(fn.dependency_condition(
+                    dep.pkg.name, dep.spec.name, global_condition_id
+                ))
 
                 for t in sorted(dep.type):
                     # Skip test dependencies if they're not requested at all
@@ -751,19 +752,14 @@ class SpackSolverSetup(object):
                         continue
 
                     # there is a declared dependency of type t
-                    self.gen.fact(
-                        fn.declared_dependency(dep.pkg.name, dep.spec.name, cond_id, t)
-                    )
+                    self.gen.fact(fn.dependency_type(global_condition_id, t))
 
                 # if it has conditions, declare them.
                 conditions = self.spec_clauses(named_cond, body=True)
                 for cond in conditions:
-                    self.gen.fact(
-                        fn.dep_cond(
-                            dep.pkg.name, dep.spec.name, cond_id,
-                            cond.name, *cond.args
-                        )
-                    )
+                    self.gen.fact(fn.required_dependency_condition(
+                        global_condition_id, cond.name, *cond.args
+                    ))
 
                 # add constraints on the dependency from dep spec.
 
@@ -783,13 +779,9 @@ class SpackSolverSetup(object):
                 else:
                     clauses = self.spec_clauses(dep.spec)
                     for clause in clauses:
-                        self.gen.rule(
-                            clause,
-                            self.gen._and(
-                                fn.depends_on(dep.pkg.name, dep.spec.name),
-                                *self.spec_clauses(named_cond, body=True)
-                            )
-                        )
+                        self.gen.fact(fn.imposed_dependency_condition(
+                            global_condition_id, clause.name, *clause.args
+                        ))
 
                 self.gen.newline()
 
@@ -1382,6 +1374,7 @@ class SpackSolverSetup(object):
             specs (list): list of Specs to solve
 
         """
+        self._condition_id_counter = 0
         # preliminary checks
         check_packages_exist(specs)
 
