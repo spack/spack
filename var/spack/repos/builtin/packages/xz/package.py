@@ -5,7 +5,7 @@
 
 import re
 
-from spack import *
+from spack.std import *
 
 
 class Xz(AutotoolsPackage, SourceforgePackage):

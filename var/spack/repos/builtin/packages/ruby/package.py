@@ -5,6 +5,8 @@
 
 import re
 
+from spack.std import *
+
 
 class Ruby(AutotoolsPackage):
     """A dynamic, open source programming language with a focus on

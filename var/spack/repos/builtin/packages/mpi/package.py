@@ -5,6 +5,8 @@
 
 import os
 
+from spack.std import *
+
 
 class Mpi(Package):
     """Virtual package for the Message Passing Interface."""

@@ -5,8 +5,7 @@
 
 import os
 
-
-from spack import *
+from spack.std import *
 
 
 class Swig(AutotoolsPackage, SourceforgePackage):

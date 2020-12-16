@@ -5,7 +5,7 @@
 
 import numbers
 
-from spack import *
+from spack.std import *
 
 
 def is_integral(x):

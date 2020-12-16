@@ -3,8 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
+
+from spack.std import *
+
 
 _versions = {
     '1.6.7': {

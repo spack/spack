@@ -5,7 +5,8 @@
 
 
 import os
-from spack import *
+
+from spack.std import *
 
 
 class Nauty(AutotoolsPackage):

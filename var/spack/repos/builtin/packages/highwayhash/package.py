@@ -5,6 +5,8 @@
 
 import os
 
+from spack.std import *
+
 
 class Highwayhash(MakefilePackage):
     """Strong (well-distributed and unpredictable) hashes:

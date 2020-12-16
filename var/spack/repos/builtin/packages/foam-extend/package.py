@@ -30,16 +30,13 @@
 #
 ##############################################################################
 import glob
-import re
 import os
+import re
 
-from spack import *
-from spack.util.environment import EnvironmentModifications
-from spack.pkg.builtin.openfoam import OpenfoamArch
-from spack.pkg.builtin.openfoam import add_extra_files
-from spack.pkg.builtin.openfoam import write_environ
-from spack.pkg.builtin.openfoam import rewrite_environ_files
 import llnl.util.tty as tty
+from spack.pkg.builtin.openfoam import OpenfoamArch, add_extra_files, write_environ, rewrite_environ_files
+from spack.std import *
+from spack.util.environment import EnvironmentModifications
 
 
 class FoamExtend(Package):

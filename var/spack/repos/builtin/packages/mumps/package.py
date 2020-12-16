@@ -6,6 +6,8 @@
 import os
 import sys
 
+from spack.std import *
+
 
 class Mumps(Package):
     """MUMPS: a MUltifrontal Massively Parallel sparse direct Solver"""

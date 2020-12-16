@@ -5,6 +5,8 @@
 
 import os
 
+from spack.std import *
+
 
 class Fortran(Package):
     """Virtual package for the Fortran language."""

@@ -5,6 +5,7 @@
 import re
 
 import llnl.util.tty as tty
+from spack.std import *
 
 
 class Intel(IntelPackage):

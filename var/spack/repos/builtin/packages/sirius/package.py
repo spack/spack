@@ -5,7 +5,7 @@
 
 import os
 
-from spack import *
+from spack.std import *
 
 
 class Sirius(CMakePackage, CudaPackage):

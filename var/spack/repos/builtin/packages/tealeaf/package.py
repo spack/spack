@@ -6,7 +6,7 @@
 
 import glob
 
-from spack import *
+from spack.std import *
 
 
 class Tealeaf(MakefilePackage):

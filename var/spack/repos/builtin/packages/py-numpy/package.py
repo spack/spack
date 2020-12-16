@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 import platform
 import subprocess
+
+from spack.std import *
 
 
 class PyNumpy(PythonPackage):

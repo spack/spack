@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.pkg.builtin.blis import BlisBase
+from spack.std import *
 
 
 class Amdblis(BlisBase):

@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
 import spack.hooks.sbang as sbang
+from spack.std import *
 
 
 class Phist(CMakePackage):

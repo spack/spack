@@ -5,7 +5,7 @@
 
 import sys
 
-from spack import *
+from spack.std import *
 
 
 class IntelMkl(IntelPackage):
