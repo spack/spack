@@ -21,7 +21,7 @@ spack:
     timemory:
       variants: +mpi~cuda~cupti+caliper~gperftools~python
   specs:
-    - llvm@11.0.0 +cuda cuda_arch=70 +omp_tsan +python ^cuda@11.1.0
+    - llvm@11.0.0 +python
     - nvhpc@20.9 install_type=network
     - arm-forge@20.0.3-Redhat-7.0-x86_64
     - blender
