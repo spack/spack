@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# @author:>-----Robert QIAO (DRS, Flinders University, Australia)
 
 from spack import *
 
@@ -22,7 +21,7 @@ class Grabix(MakefilePackage):
 
     version('0.1.7', sha256='d90735c55c0985a4d751858d7ce9e36ad534fff4103257e8e981e34d5c915b28')
 
-    depends_on('gcc@:6', type='build')
+    conflickts('%gcc@7:', msg='grabix cannot be compiled with newer versions of GCC')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
