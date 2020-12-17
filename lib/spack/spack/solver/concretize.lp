@@ -62,7 +62,15 @@ dependency_conditions(P, D, T) :-
 #defined dependency_type/2.
 
 % collect all the dependency conditions into a single conditional rule
-dependency_conditions_hold(Package, Dependency, ID) :-
+% distinguishing between Parent and Package is needed to account for
+% conditions like:
+%
+% depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
+%
+% that include dependencies
+dependency_conditions_hold(Parent, Dependency, ID) :-
+  node(Package)
+    : required_dependency_condition(ID, "node", Package);
   version(Package, Version)
     : required_dependency_condition(ID, "version", Package, Version);
   version_satisfies(Package, Constraint)
@@ -79,10 +87,12 @@ dependency_conditions_hold(Package, Dependency, ID) :-
     : required_dependency_condition(ID, "node_compiler", Package, Compiler);
   node_compiler_version(Package, Compiler, Version)
     : required_dependency_condition(ID, "node_compiler_version", Package, Compiler, Version);
+  node_compiler_version_satisfies(Package, Compiler, Version)
+    : required_dependency_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
   node_flag(Package, FlagType, Flag)
     : required_dependency_condition(ID, "node_flag", Package, FlagType, Flag);
-  dependency_condition(Package, Dependency, ID);
-  node(Package).
+  dependency_condition(Parent, Dependency, ID);
+  node(Parent).
 
 #defined dependency_condition/3.
 #defined required_dependency_condition/3.
