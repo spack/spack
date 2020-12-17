@@ -28,10 +28,11 @@ The available directives are:
 
 """
 
-import collections
 import functools
 import os.path
 import re
+import sys
+
 from six import string_types
 from typing import Set, List  # novm
 
@@ -47,6 +48,13 @@ from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
 from spack.version import Version, VersionChecksumError
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
+
 
 __all__ = []
 
@@ -203,7 +211,7 @@ class DirectiveMeta(type):
 
         if isinstance(dicts, string_types):
             dicts = (dicts, )
-        if not isinstance(dicts, collections.Sequence):
+        if not isinstance(dicts, Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
         # Add the dictionary names if not already there
@@ -244,7 +252,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, collections.Sequence):
+                if not isinstance(values, Sequence):
                     values = (values, )
 
                 DirectiveMeta._directives_to_be_executed.extend(values)

@@ -116,6 +116,13 @@ import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
+
 __all__ = [
     'Spec',
     'parse',
@@ -2120,7 +2127,7 @@ class Spec(object):
         # which likely means the spec was created with Spec.from_detection
         msg = ('cannot validate "{0}" since it was not created '
                'using Spec.from_detection'.format(self))
-        assert isinstance(self.extra_attributes, collections.Mapping), msg
+        assert isinstance(self.extra_attributes, Mapping), msg
 
         # Validate the spec calling a package specific method
         validate_fn = getattr(
