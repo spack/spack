@@ -67,7 +67,8 @@ class Lbann(CMakePackage, CudaPackage):
 
     conflicts('@:0.90,0.99:', when='~conduit')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.17.0:')
+#    depends_on('cmake@3.17.0:', type='build')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -127,12 +128,8 @@ class Lbann(CMakePackage, CudaPackage):
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui +imgproc +jpeg '
-               '+png +tiff +zlib +fast-math ~calib3d ~cuda ~dnn ~eigen'
-               '~features2d ~flann ~gtk ~ipp ~ipp_iw ~jasper ~java ~lapack ~ml'
-               '~openmp ~opencl ~opencl_svm ~openclamdblas ~openclamdfft'
-               '~pthreads_pf ~python ~qt +shared ~stitching ~superres ~ts'
-               '~video ~videostab ~videoio ~vtk', when='+opencv')
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui +imgcodecs '
+               ' +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda', when='+opencv')
 
     # Note that for Power systems we want the environment to add  +powerpc +vsx
     depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
@@ -209,11 +206,9 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
-            '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
-            '-DLBANN_VERBOSE=0',
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
             # protobuf is included by py-protobuf+cpp
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
@@ -244,9 +239,7 @@ class Lbann(CMakePackage, CudaPackage):
             args.append('-DAluminum_DIR={0}'.format(spec['aluminum'].prefix))
 
         if '+conduit' in spec:
-            args.extend([
-                '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
-                '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
+            args.append('-DConduit_DIR={0}'.format(spec['conduit'].prefix))
 
         if '+fft' in spec:
             args.extend([
