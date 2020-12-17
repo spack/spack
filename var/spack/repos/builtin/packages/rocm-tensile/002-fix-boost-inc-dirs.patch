@@ -1,0 +1,13 @@
+diff --git a/Tensile/Source/client/CMakeLists.txt b/Tensile/Source/client/CMakeLists.txt
+index 9ccba86..59ed2e2 100644
+--- a/Tensile/Source/client/CMakeLists.txt
++++ b/Tensile/Source/client/CMakeLists.txt
+@@ -32,7 +32,7 @@ if(NOT ROCmSMI_FOUND)
+     find_package(ROCmSMI REQUIRED)
+ endif()
+ 
+-target_include_directories(TensileClient PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")# "${rocm_smi_root}/include")
++target_include_directories(TensileClient PUBLIC "${Boost_INCLUDE_DIRS}" "${CMAKE_CURRENT_SOURCE_DIR}/include")# "${rocm_smi_root}/include")
+ 
+ if(CXX_VERSION_STRING MATCHES "clang")
+     target_compile_options(TensileClient PUBLIC -mno-xnack)
