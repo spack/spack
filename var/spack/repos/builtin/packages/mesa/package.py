@@ -198,7 +198,7 @@ class Mesa(MesonPackage):
         if libs_to_seek:
             return find_libraries(list(libs_to_seek),
                                   root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
+                                  shared=True,
                                   recursive=True)
         return LibraryList()
 
@@ -206,19 +206,19 @@ class Mesa(MesonPackage):
     def osmesa_libs(self):
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def glx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def gl_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
