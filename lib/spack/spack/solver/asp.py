@@ -1031,7 +1031,11 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             for dep in spec.traverse(root=False):
-                clauses.extend(self.spec_clauses(dep, body, transitive=False))
+                if dep.virtual:
+                    clauses.extend(self.virtual_spec_clauses(dep))
+                else:
+                    clauses.extend(
+                        self.spec_clauses(dep, body, transitive=False))
 
         return clauses
 
