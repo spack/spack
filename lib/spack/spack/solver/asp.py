@@ -356,39 +356,6 @@ class PyclingoDriver(object):
             [atoms[s] for s in body_symbols] + rule_atoms
         )
 
-    def integrity_constraint(self, clauses, default_negated=None):
-        """Add an integrity constraint to the solver.
-
-        Args:
-            clauses: clauses to be added to the integrity constraint
-            default_negated: clauses to be added to the integrity
-                constraint after with a default negation
-        """
-        symbols, negated_symbols, atoms = _normalize(clauses), [], {}
-        if default_negated:
-            negated_symbols = _normalize(default_negated)
-
-        for s in symbols + negated_symbols:
-            atoms[s] = self.backend.add_atom(s)
-
-        symbols_str = ",".join(str(a) for a in symbols)
-        if negated_symbols:
-            negated_symbols_str = ",".join(
-                "not " + str(a) for a in negated_symbols
-            )
-            symbols_str += ",{0}".format(negated_symbols_str)
-        rule_str = ":- {0}.".format(symbols_str)
-        rule_atoms = self._register_rule_for_cores(rule_str)
-
-        # print rule before adding
-        self.out.write("{0}\n".format(rule_str))
-        self.backend.add_rule(
-            [],
-            [atoms[s] for s in symbols] +
-            [-atoms[s] for s in negated_symbols]
-            + rule_atoms
-        )
-
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
             timers=False, stats=False, tests=False
@@ -588,11 +555,16 @@ class SpackSolverSetup(object):
                 # TODO: of a rule and filter unwanted functions.
                 to_be_filtered = ['node_compiler_hard']
                 clauses = [x for x in clauses if x.name not in to_be_filtered]
-                external = fn.external(pkg.name)
 
-                self.gen.integrity_constraint(
-                    AspAnd(*clauses), AspAnd(external)
-                )
+                # Emit facts based on clauses
+                cond_id = self._condition_id_counter
+                self._condition_id_counter += 1
+                self.gen.fact(fn.conflict(cond_id, pkg.name))
+                for clause in clauses:
+                    self.gen.fact(fn.conflict_condition(
+                        cond_id, clause.name, *clause.args
+                    ))
+                self.gen.newline()
 
     def available_compilers(self):
         """Facts about available compilers."""
