@@ -25,5 +25,3 @@ class PyWheel(PythonPackage):
     depends_on('py-setuptools@40.9.0:', when='@0.34.1:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm@3.4:', when='@0.34.0', type='build')
-    depends_on('py-pytest@3.0.0:', type='test')
-    depends_on('py-pytest-cov', type='test')

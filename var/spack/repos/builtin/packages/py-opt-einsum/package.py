@@ -21,6 +21,3 @@ class PyOptEinsum(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@3:')
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.7:', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-cov', type='test')
-    depends_on('py-pytest-pep8', type='test')

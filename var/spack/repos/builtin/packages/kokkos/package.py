@@ -72,13 +72,13 @@ class Kokkos(CMakePackage, CudaPackage):
         'tests': [False, 'Build for tests'],
     }
 
-    amd_gpu_arches = [
+    amd_gpu_arches = (
         'fiji',
         'gfx901',
         'vega900',
         'vega906',
-    ]
-    variant("amd_gpu_arch", default='none', values=amd_gpu_arches,
+    )
+    variant("amd_gpu_arch", default='none', values=('none',) + amd_gpu_arches,
             description="AMD GPU architecture")
     conflicts("+hip", when="amd_gpu_arch=none")
 

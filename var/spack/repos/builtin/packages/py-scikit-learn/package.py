@@ -12,23 +12,6 @@ class PyScikitLearn(PythonPackage):
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
-    install_time_test_callbacks = ['install_test', 'import_module_test']
-
-    import_modules = [
-        'sklearn', 'sklearn.tree', 'sklearn.metrics', 'sklearn.ensemble',
-        'sklearn.experimental', 'sklearn.cluster',
-        'sklearn.feature_extraction', 'sklearn.__check_build',
-        'sklearn.semi_supervised', 'sklearn.gaussian_process',
-        'sklearn.compose', 'sklearn.datasets', 'sklearn.externals',
-        'sklearn.linear_model', 'sklearn.impute', 'sklearn.utils',
-        'sklearn.covariance', 'sklearn.neural_network',
-        'sklearn.feature_selection', 'sklearn.inspection', 'sklearn.svm',
-        'sklearn.manifold', 'sklearn.mixture', 'sklearn.preprocessing',
-        'sklearn.model_selection', 'sklearn._build_utils',
-        'sklearn.decomposition', 'sklearn.cross_decomposition',
-        'sklearn.neighbors', 'sklearn.metrics.cluster',
-        'sklearn.ensemble._hist_gradient_boosting'
-    ]
 
     version('master', branch='master')
     version('0.23.2', sha256='20766f515e6cd6f954554387dfae705d93c7b544ec0e6c6a5d8e006f6f7ef480')
@@ -93,6 +76,8 @@ class PyScikitLearn(PythonPackage):
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def install_test(self):
         # https://scikit-learn.org/stable/developers/advanced_installation.html#testing
         with working_dir('spack-test', create=True):

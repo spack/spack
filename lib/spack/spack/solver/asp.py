@@ -8,11 +8,8 @@ import collections
 import copy
 import itertools
 import os
-import pkgutil
 import pprint
-import re
 import sys
-import tempfile
 import time
 import types
 from six import string_types
@@ -26,7 +23,6 @@ except ImportError:
 
 import llnl.util.lang
 import llnl.util.tty as tty
-import llnl.util.tty.color as color
 
 import spack
 import spack.architecture
@@ -41,7 +37,6 @@ import spack.package
 import spack.package_prefs
 import spack.repo
 import spack.variant
-from spack.util.executable import which
 from spack.version import ver
 
 
@@ -233,182 +228,6 @@ class Result(object):
                 *sorted(str(symbol) for symbol in core))
 
 
-class ClingoDriver(object):
-    def __init__(self):
-        self.clingo = which("clingo", required=True)
-        self.out = None
-
-    def title(self, name, char):
-        self.out.write('\n')
-        self.out.write("%" + (char * 76))
-        self.out.write('\n')
-        self.out.write("%% %s\n" % name)
-        self.out.write("%" + (char * 76))
-        self.out.write('\n')
-
-    def h1(self, name):
-        self.title(name, "=")
-
-    def h2(self, name):
-        self.title(name, "-")
-
-    def newline(self):
-        self.out.write('\n')
-
-    def one_of(self, *args):
-        return AspOneOf(*args)
-
-    def _and(self, *args):
-        return AspAnd(*args)
-
-    def fact(self, head):
-        """ASP fact (a rule without a body)."""
-        self.out.write("%s.\n" % head)
-
-    def rule(self, head, body):
-        """ASP rule (an implication)."""
-        rule_line = "%s :- %s.\n" % (head, body)
-        if len(rule_line) > _max_line:
-            rule_line = re.sub(r' \| ', "\n| ", rule_line)
-        self.out.write(rule_line)
-
-    def before_setup(self):
-        """Must be called before program is generated."""
-        # read the main ASP program from concrtize.lp
-
-    def after_setup(self):
-        """Must be called after program is generated."""
-
-    def parse_model_functions(self, function_strings):
-        function_re = re.compile(r'(\w+)\(([^)]*)\)')
-
-        # parse functions out of ASP output
-        functions = []
-        for string in function_strings:
-            m = function_re.match(string)
-            name, arg_string = m.groups()
-            args = re.split(r'\s*,\s*', arg_string)
-            args = [s.strip('"') if s.startswith('"') else int(s)
-                    for s in args]
-            functions.append((name, args))
-        return functions
-
-    def parse_competition_format(self, output, builder, result):
-        """Parse Clingo's competition output format, which gives one answer."""
-        best_model_number = 0
-        for line in output:
-            match = re.match(r"% Answer: (\d+)", line)
-            if match:
-                best_model_number = int(match.group(1))
-
-            if re.match("INCONSISTENT", line):
-                result.satisfiable = False
-                return
-
-            if re.match("ANSWER", line):
-                result.satisfiable = True
-
-                answer = next(output)
-                functions = [
-                    f.rstrip(".") for f in re.split(r"\s+", answer.strip())
-                ]
-                function_tuples = self.parse_model_functions(functions)
-                specs = builder.build_specs(function_tuples)
-
-                costs = re.split(r"\s+", next(output).strip())
-                opt = [int(x) for x in costs[1:]]
-
-                result.answers.append((opt, best_model_number, specs))
-
-    def solve(self, solver_setup, specs, dump=None, models=0,
-              timers=False, stats=False):
-        def colorize(string):
-            color.cprint(highlight(color.cescape(string)))
-
-        timer = Timer()
-        with tempfile.TemporaryFile("w+") as program:
-            self.out = program
-
-            concretize_lp = pkgutil.get_data('spack.solver', 'concretize.lp')
-            program.write(concretize_lp.decode("utf-8"))
-
-            solver_setup.setup(self, specs)
-
-            program.write('\n')
-            display_lp = pkgutil.get_data('spack.solver', 'display.lp')
-            program.write(display_lp.decode("utf-8"))
-
-            timer.phase("generate")
-
-            result = Result(program.read())
-            program.seek(0)
-
-            if dump and 'asp' in dump:
-                if sys.stdout.isatty():
-                    tty.msg('ASP program:')
-
-                if dump == ['asp']:
-                    print(result.asp)
-                    return
-                else:
-                    colorize(result.asp)
-                timer.phase("dump")
-
-            with tempfile.TemporaryFile("w+") as output:
-                with tempfile.TemporaryFile() as warnings:
-                    self.clingo(
-                        '--models=%d' % models,
-                        # 1 is "competition" format with just optimal answer
-                        # 2 is JSON format with all explored answers
-                        '--outf=1',
-                        # Use a highest priority criteria-first optimization
-                        # strategy, which means we'll explore recent
-                        # versions, preferred packages first.  This works
-                        # well because Spack solutions are pretty easy to
-                        # find -- there are just a lot of them.  Without
-                        # this, it can take a VERY long time to find good
-                        # solutions, and a lot of models are explored.
-                        '--opt-strategy=bb,hier',
-                        input=program,
-                        output=output,
-                        error=warnings,
-                        fail_on_error=False)
-                    timer.phase("solve")
-
-                    warnings.seek(0)
-                    result.warnings = warnings.read().decode("utf-8")
-
-                    # dump any warnings generated by the solver
-                    if result.warnings:
-                        if sys.stdout.isatty():
-                            tty.msg('Clingo gave the following warnings:')
-                        colorize(result.warnings)
-
-                    output.seek(0)
-                    result.output = output.read()
-                    timer.phase("read")
-
-                    # dump the raw output of the solver
-                    if dump and 'output' in dump:
-                        if sys.stdout.isatty():
-                            tty.msg('Clingo output:')
-                        print(result.output)
-
-                        if 'solutions' not in dump:
-                            return
-
-                    output.seek(0)
-                    builder = SpecBuilder(specs)
-                    self.parse_competition_format(output, builder, result)
-                    timer.phase("parse")
-
-            if timers:
-                timer.write()
-                print()
-
-        return result
-
-
 def _normalize(body):
     """Accept an AspAnd object or a single Symbol and return a list of
     symbols.
@@ -569,36 +388,6 @@ class PyclingoDriver(object):
             [-atoms[s] for s in negated_symbols]
             + rule_atoms
         )
-
-    def iff(self, expr1, expr2):
-        self.rule(head=expr1, body=expr2)
-        self.rule(head=expr2, body=expr1)
-
-    def one_of_iff(self, head, versions):
-        # if there are no versions, skip this one_of_iff
-        if not versions:
-            return
-
-        self.out.write("%s :- %s.\n" % (head, AspOneOf(*versions)))
-        self.out.write("%s :- %s.\n" % (AspOneOf(*versions), head))
-
-        at_least_1_sym = fn.at_least_1(*head.args).symbol()
-        at_least_1 = self.backend.add_atom(at_least_1_sym)
-
-        more_than_1_sym = fn.more_than_1(*head.args).symbol()
-        more_than_1 = self.backend.add_atom(more_than_1_sym)
-
-        version_atoms = [self.backend.add_atom(f.symbol()) for f in versions]
-        self.backend.add_weight_rule(
-            [at_least_1], 1, [(v, 1) for v in version_atoms])
-        self.backend.add_weight_rule(
-            [more_than_1], 2, [(v, 1) for v in version_atoms])
-
-        head_atom = self.backend.add_atom(head.symbol())
-        self.backend.add_rule([head_atom], [at_least_1, -more_than_1])
-
-        self.backend.add_rule([], [head_atom, more_than_1])
-        self.backend.add_rule([], [head_atom, -at_least_1])
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
@@ -1075,6 +864,9 @@ class SpackSolverSetup(object):
                     self.gen.rule(clause, spec_id.symbol())
                 spec_id_list.append(spec_id)
 
+            # TODO: find another way to do everything below, without
+            # TODO: generating ground rules.
+
             # If one of the external specs is selected then the package
             # is external and viceversa
             # TODO: make it possible to declare the rule like below
@@ -1448,14 +1240,11 @@ class SpackSolverSetup(object):
             if exact_match:
                 allowed_versions = exact_match
 
-            predicates = [fn.version(pkg_name, v) for v in allowed_versions]
+            # generate facts for each package constraint and the version
+            # that satisfies it
+            for v in allowed_versions:
+                self.gen.fact(fn.version_satisfies(pkg_name, versions, v))
 
-            # version_satisfies(pkg, constraint) is true if and only if a
-            # satisfying version is set for the package
-            self.gen.one_of_iff(
-                fn.version_satisfies(pkg_name, versions),
-                predicates,
-            )
             self.gen.newline()
 
     def define_virtual_constraints(self):
@@ -1484,19 +1273,17 @@ class SpackSolverSetup(object):
         compiler_list = list(sorted(set(compiler_list)))
 
         for pkg_name, cspec in self.compiler_version_constraints:
-            possible_compiler_versions = [
-                fn.node_compiler_version(
-                    pkg_name, compiler.name, compiler.version)
-                for compiler in compiler_list
-                if compiler.satisfies(cspec)
-            ]
-
-            self.gen.one_of_iff(
-                fn.node_compiler_version_satisfies(
-                    pkg_name, cspec.name, cspec.versions),
-                possible_compiler_versions,
-            )
-            self.gen.newline()
+            for compiler in compiler_list:
+                if compiler.satisfies(cspec):
+                    self.gen.fact(
+                        fn.node_compiler_version_satisfies(
+                            pkg_name,
+                            cspec.name,
+                            cspec.versions,
+                            compiler.version
+                        )
+                    )
+        self.gen.newline()
 
     def define_target_constraints(self):
 
@@ -1527,14 +1314,12 @@ class SpackSolverSetup(object):
                     )
                 allowed_targets.extend(cache[single_constraint])
 
-            allowed_targets = [
-                fn.node_target(spec_name, t) for t in allowed_targets
-            ]
-
-            self.gen.one_of_iff(
-                fn.node_target_satisfies(spec_name, target_constraint),
-                allowed_targets,
-            )
+            for target in allowed_targets:
+                self.gen.fact(
+                    fn.node_target_satisfies(
+                        spec_name, target_constraint, target
+                    )
+                )
             self.gen.newline()
 
     def define_variant_values(self):
@@ -1842,41 +1627,6 @@ class SpecBuilder(object):
             spack.spec.Spec.ensure_no_deprecated(s)
 
         return self._specs
-
-
-def highlight(string):
-    """Syntax highlighting for ASP programs"""
-    # variables
-    string = re.sub(r'\b([A-Z])\b', r'@y{\1}', string)
-
-    # implications
-    string = re.sub(r':-', r'@*G{:-}', string)
-
-    # final periods
-    pattern = re.compile(r'^([^%].*)\.$', flags=re.MULTILINE)
-    string = re.sub(pattern, r'\1@*G{.}', string)
-
-    # directives
-    string = re.sub(
-        r'(#\w*)( (?:\w*)?)((?:/\d+)?)', r'@*B{\1}@c{\2}\3', string)
-
-    # functions
-    string = re.sub(r'(\w[\w-]+)\(([^)]*)\)', r'@C{\1}@w{(}\2@w{)}', string)
-
-    # comments
-    pattern = re.compile(r'(%.*)$', flags=re.MULTILINE)
-    string = re.sub(pattern, r'@w\1@.', string)
-
-    # strings
-    string = re.sub(r'("[^"]*")', r'@m{\1}', string)
-
-    # result
-    string = re.sub(r'\bUNSATISFIABLE', "@R{UNSATISFIABLE}", string)
-    string = re.sub(r'\bINCONSISTENT', "@R{INCONSISTENT}", string)
-    string = re.sub(r'\bSATISFIABLE', "@G{SATISFIABLE}", string)
-    string = re.sub(r'\bOPTIMUM FOUND', "@G{OPTIMUM FOUND}", string)
-
-    return string
 
 
 def _develop_specs_from_env(spec):

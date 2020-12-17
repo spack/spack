@@ -21,7 +21,15 @@ version_weight(Package, Weight)
 version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
 
+% version_satisfies implies that exactly one of the satisfying versions
+% is the package's version, and vice versa.
+1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
+  :- version_satisfies(Package, Constraint).
+version_satisfies(Package, Constraint)
+  :- version(Package, Version), version_satisfies(Package, Constraint, Version).
+
 #defined preferred_version_declared/3.
+#defined version_satisfies/3.
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
@@ -299,6 +307,13 @@ node_os(Package, OS)
 % one target per node -- optimization will pick the "best" one
 1 { node_target(Package, Target) : target(Target) } 1 :- node(Package).
 
+% node_target_satisfies semantics
+1 { node_target(Package, Target) : node_target_satisfies(Package, Constraint, Target) } 1
+  :- node_target_satisfies(Package, Constraint).
+node_target_satisfies(Package, Constraint)
+  :- node_target(Package, Target), node_target_satisfies(Package, Constraint, Target).
+#defined node_target_satisfies/3.
+
 % The target weight is either the default target weight
 % or a more specific per-package weight if set
 target_weight(Target, Package, Weight)
@@ -365,6 +380,17 @@ derive_target_from_parent(Parent, Package)
     : compiler_version(Compiler, Version) } 1 :- node(Package).
 1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
  :- node(Package).
+
+% define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
+% version_satisfies implies that exactly one of the satisfying versions
+% is the package's version, and vice versa.
+1 { node_compiler_version(Package, Compiler, Version)
+    : node_compiler_version_satisfies(Package, Compiler, Constraint, Version) } 1
+  :- node_compiler_version_satisfies(Package, Compiler, Constraint).
+node_compiler_version_satisfies(Package, Compiler, Constraint)
+  :- node_compiler_version(Package, Compiler, Version),
+     node_compiler_version_satisfies(Package, Compiler, Constraint, Version).
+#defined node_compiler_version_satisfies/4.
 
 % If the compiler version was set from the command line,
 % respect it verbatim

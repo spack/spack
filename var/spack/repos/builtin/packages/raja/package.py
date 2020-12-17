@@ -12,6 +12,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules='True')
     version('main',  branch='main',  submodules='True')
+    version('0.13.0', tag='v0.13.0', submodules='True')
     version('0.12.1', tag='v0.12.1', submodules="True")
     version('0.12.0', tag='v0.12.0', submodules="True")
     version('0.11.0', tag='v0.11.0', submodules="True")

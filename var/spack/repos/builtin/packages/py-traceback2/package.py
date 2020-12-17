@@ -16,9 +16,3 @@ class PyTraceback2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pbr', type='build')
-
-    # test-requirements.txt
-    depends_on('py-contextlib2', type='test')
-    depends_on('py-fixtures', type='test')
-    depends_on('py-testtools', type='test')
-    depends_on('py-unittest2', type='test')

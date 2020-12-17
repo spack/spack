@@ -21,9 +21,6 @@ class PySqlalchemy(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest@2.5.2:3.9.0,3.9.3:', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-pytest-xdist', type='test')
 
     variant('backend', description='Python modules for database access',
             values=any_combination_of('mysql', 'pymysql', 'postgresql'))

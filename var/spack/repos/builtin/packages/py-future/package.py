@@ -21,3 +21,29 @@ class PyFuture(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-importlib', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
+
+    @property
+    def import_modules(self):
+        modules = [
+            'copyreg', '_thread', 'past', 'past.types', 'past.translation',
+            'past.utils', 'past.builtins', 'reprlib', 'html', 'builtins',
+            'http', '_dummy_thread', 'queue', 'xmlrpc', 'libfuturize',
+            'libfuturize.fixes', 'future', 'future.moves', 'future.moves.test',
+            'future.moves.urllib', 'future.moves.html', 'future.moves.http',
+            'future.moves.dbm', 'future.moves.xmlrpc', 'future.types',
+            'future.tests', 'future.utils', 'future.builtins',
+            'future.backports', 'future.backports.test',
+            'future.backports.urllib', 'future.backports.html',
+            'future.backports.http', 'future.backports.xmlrpc',
+            'future.backports.email', 'future.backports.email.mime',
+            'future.standard_library', 'libpasteurize', 'libpasteurize.fixes',
+            'socketserver', '_markupbase'
+        ]
+
+        if 'platform=windows' in self.spec:
+            modules.append('winreg')
+
+        if '+tkinter' in self.spec['python']:
+            modules.extend(['tkinter', 'future.moves.tkinter'])
+
+        return modules
