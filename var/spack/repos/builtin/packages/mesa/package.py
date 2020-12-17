@@ -83,6 +83,12 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
+    def patch(self):
+        filter_file(
+            r"_llvm_method = 'auto'",
+            "_llvm_method = 'config-tool'",
+            "meson.build")
+
     def meson_args(self):
         spec = self.spec
         args = [
