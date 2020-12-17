@@ -7,10 +7,10 @@ diff -u -r -N a/alps/applications/dmrg/dmrg/dmtk/system.h b/alps/applications/dm
        for(int i = 1; i <= _numsweeps; i++){
 -        s.write((const char *)&_sweeps(0,i), sizeof(double));
 -        s.write((const char *)&_sweeps(1,i), sizeof(double));
-+	double x;
-+	x = _sweeps(0,i);
++        double x;
++        x = _sweeps(0,i);
 +        s.write((const char *)&x, sizeof(double));
-+	x = _sweeps(1,i);
++        x = _sweeps(1,i);
 +        s.write((const char *)&x, sizeof(double));
        }
        s.write((const char *)&_in_warmup, sizeof(bool));
