@@ -91,9 +91,5 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        return self.gl_libs
-
-    @property
-    def gl_libs(self):
         return find_libraries(
             'libGL', self.prefix, shared=True, recursive=True)
