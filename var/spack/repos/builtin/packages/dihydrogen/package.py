@@ -31,8 +31,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Enable extra warnings and force tests to be enabled.')
     variant('half', default=False,
             description='Enable FP16 support on the CPU.')
-    variant('legacy', default=False,
-            description='Enable the legacy DistConv code branch.')
+    variant('distconv', default=False,
+            description='Support for distributed convolutions: spatial, channel, filter.')
     variant('nvshmem', default=False,
             description='Builds with support for NVSHMEM')
     variant('openmp', default=False,
@@ -105,14 +105,17 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Legacy builds require cuda
     conflicts('~cuda', when='+legacy')
 
+    conflicts('+distconv', when='+half')
+    conflicts('+rocm', when='+half')
+
     depends_on('half', when='+half')
 
     generator = 'Ninja'
-    depends_on('ninja', type='build')
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('ninja')
+    depends_on('cmake@3.17.0:')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
+    depends_on('py-breathe', when='+docs')
+    depends_on('doxygen', when='+docs')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
@@ -137,7 +140,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
-            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+legacy' in spec),
+            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+distconv' in spec),
             '-DH2_ENABLE_OPENMP=%s' % ('+openmp' in spec),
             '-DH2_ENABLE_FP16=%s' % ('+half' in spec),
             '-DH2_ENABLE_HIP_ROCM=%s' % ('+rocm' in spec),

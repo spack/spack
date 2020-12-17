@@ -68,7 +68,6 @@ class Lbann(CMakePackage, CudaPackage):
     conflicts('@:0.90,0.99:', when='~conduit')
 
     depends_on('cmake@3.17.0:')
-#    depends_on('cmake@3.17.0:', type='build')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -103,7 +102,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
     depends_on('dihydrogen ~al', when='+dihydrogen ~al')
     depends_on('dihydrogen +al', when='+dihydrogen +al')
-    depends_on('dihydrogen +legacy +cuda', when='+distconv')
+    depends_on('dihydrogen +distconv +cuda', when='+distconv')
     depends_on('dihydrogen ~half', when='+dihydrogen ~half')
     depends_on('dihydrogen +half', when='+dihydrogen +half')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
@@ -155,9 +154,9 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99:')
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
-    depends_on('py-breathe', type='build', when='+docs')
-    depends_on('doxygen', type='build', when='+docs')
-    depends_on('py-m2r', type='build', when='+docs')
+    depends_on('py-breathe', when='+docs')
+    depends_on('doxygen', when='+docs')
+    depends_on('py-m2r', when='+docs')
 
     depends_on('cereal')
     depends_on('catch2', when='+unit_testing')
@@ -166,7 +165,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('llvm-openmp', when='%apple-clang')
 
     generator = 'Ninja'
-    depends_on('ninja', type='build')
+    depends_on('ninja')
 
     @property
     def common_config_args(self):
