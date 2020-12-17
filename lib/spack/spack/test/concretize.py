@@ -5,6 +5,7 @@
 import sys
 
 import pytest
+import jinja2
 
 import archspec.cpu
 
@@ -112,6 +113,64 @@ def current_host(request, monkeypatch):
 
     # clear any test values fetched
     spack.architecture.get_platform.cache.clear()
+
+
+@pytest.fixture()
+def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
+    repo_namespace = 'changing'
+    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+
+    repo_dir.join('repo.yaml').write("""
+repo:
+  namespace: changing
+""", ensure=True)
+
+    packages_dir = repo_dir.ensure('packages', dir=True)
+    root_pkg_str = """
+class Root(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/root-1.0.tar.gz"
+
+    version(1.0, sha256='abcde')
+    depends_on('changing')
+"""
+    packages_dir.join('root', 'package.py').write(
+        root_pkg_str, ensure=True
+    )
+
+    changing_template = """
+class Changing(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/changing-1.0.tar.gz"
+
+    version(1.0, sha256='abcde')
+{% if not delete_variant %}
+    variant('fee', default=True, description='nope')
+{% endif %}
+    variant('foo', default=True, description='nope')
+{% if add_variant %}
+    variant('fum', default=True, description='nope')
+{% endif %}
+"""
+    repo = spack.repo.Repo(str(repo_dir))
+    mutable_mock_repo.put_first(repo)
+
+    class _ChangingPackage(object):
+        def change(self, context):
+            # To ensure we get the changed package we need to
+            # invalidate the cache
+            repo._modules = {}
+
+            t = jinja2.Template(changing_template)
+            changing_pkg_str = t.render(**context)
+            packages_dir.join('changing', 'package.py').write(
+                changing_pkg_str, ensure=True
+            )
+
+    _changing_pkg = _ChangingPackage()
+    _changing_pkg.change({'delete_variant': False, 'add_variant': False})
+
+    return _changing_pkg
 
 
 # This must use the mutable_config fixture because the test
@@ -1001,3 +1060,28 @@ class TestConcretize(object):
         s = Spec(spec_str).concretized()
         assert s.external == is_external
         assert s.satisfies(expected)
+
+    @pytest.mark.regression('20292')
+    @pytest.mark.parametrize('context', [
+        {'add_variant': True, 'delete_variant': False},
+        {'add_variant': False, 'delete_variant': True},
+        {'add_variant': True, 'delete_variant': True}
+    ])
+    @pytest.mark.xfail()
+    def test_reuse_installed_packages(
+            self, context, mutable_database, repo_with_changing_recipe
+    ):
+        # Install a spec
+        root = Spec('root').concretized()
+        dependency = root['changing'].copy()
+        root.package.do_install(fake=True, explicit=True)
+
+        # Modify package.py
+        repo_with_changing_recipe.change(context)
+
+        # Try to concretize with the spec installed previously
+        new_root = Spec('root ^/{0}'.format(
+            dependency.dag_hash())
+        ).concretized()
+
+        assert root.dag_hash() == new_root.dag_hash()
