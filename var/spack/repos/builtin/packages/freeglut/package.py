@@ -31,7 +31,7 @@ class Freeglut(CMakePackage, SourceforgePackage):
     def cmake_args(self):
         return [
             '-DFREEGLUT_BUILD_DEMOS=OFF',
-            '-DOPENGL_gl_LIBRARY=' + self.spec['gl'].gl_libs[0],
+            '-DOPENGL_gl_LIBRARY=' + self.spec['gl'].libs[0],
             '-DOPENGL_glu_LIBRARY=' + self.spec['glu'].libs[0],
             '-DX11_X11_LIB=' + self.spec['libx11'].libs[0],
             '-DX11_Xrandr_LIB=' + self.spec['libxrandr'].libs[0],
