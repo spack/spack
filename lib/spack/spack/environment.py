@@ -1413,7 +1413,13 @@ class Environment(object):
                     # If it's a dev build it could need to be reinstalled
                     specs_to_install.append(spec)
 
-        if not specs_to_install:
+        if args:
+            if args.overwrite:
+                # reinstall root specs if an overwrite was requested
+                install_args['overwrite'] = install_args.get(
+                    'overwrite', []) + list(self.roots())
+
+        if not specs_to_install and not install_args['overwrite']:
             tty.msg('All of the packages are already installed')
             return
 
