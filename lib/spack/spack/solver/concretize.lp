@@ -59,6 +59,8 @@ dependency_conditions(P, D, T) :-
   dependency_conditions_hold(P, D, I),
   dependency_type(I, T).
 
+#defined dependency_type/2.
+
 % collect all the dependency conditions into a single conditional rule
 dependency_conditions_hold(Package, Dependency, ID) :-
   version(Package, Version)
@@ -81,6 +83,32 @@ dependency_conditions_hold(Package, Dependency, ID) :-
     : required_dependency_condition(ID, "node_flag", Package, FlagType, Flag);
   dependency_condition(Package, Dependency, ID);
   node(Package).
+
+#defined dependency_condition/3.
+#defined required_dependency_condition/3.
+#defined required_dependency_condition/4.
+#defined required_dependency_condition/5.
+#defined required_dependency_condition/5.
+
+% general rules for conflicts
+:- node(Package) : conflict_condition(ID, "node", Package);
+   not external(Package) : conflict_condition(ID, "node", Package);
+   version(Package, Version) : conflict_condition(ID, "version", Package, Version);
+   version_satisfies(Package, Constraint) : conflict_condition(ID, "version_satisfies", Package, Constraint);
+   node_platform(Package, Platform) : conflict_condition(ID, "node_platform", Package, Platform);
+   node_os(Package, OS) : conflict_condition(ID, "node_os", Package, OS);
+   node_target(Package, Target) : conflict_condition(ID, "node_target", Package, Target);
+   variant_value(Package, Variant, Value) : conflict_condition(ID, "variant_value", Package, Variant, Value);
+   node_compiler(Package, Compiler) : conflict_condition(ID, "node_compiler", Package, Compiler);
+   node_compiler_version(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version", Package, Compiler, Version);
+   node_compiler_version_satisfies(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
+   node_flag(Package, FlagType, Flag) : conflict_condition(ID, "node_flag", Package, FlagType, Flag);
+   conflict(ID, Package).
+
+#defined conflict/2.
+#defined conflict_condition/3.
+#defined conflict_condition/4.
+#defined conflict_condition/5.
 
 % Implications from matching a dependency condition
 node(Dependency) :-
@@ -136,6 +164,9 @@ node_flag(Dependency, FlagType, Flag) :-
   dependency_conditions_hold(Package, Dependency, ID),
   depends_on(Package, Dependency),
   imposed_dependency_condition(ID, "node_flag", Dependency, FlagType, Flag).
+
+#defined imposed_dependency_condition/4.
+#defined imposed_dependency_condition/5.
 
 % if a virtual was required by some root spec, one provider is in the DAG
 1 { node(Package) : provides_virtual(Package, Virtual) } 1
