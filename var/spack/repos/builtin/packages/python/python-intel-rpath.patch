@@ -1,0 +1,27 @@
+diff -Naur Python-3.7.7/Lib/distutils/unixccompiler.py Python-3.7.7.new/Lib/distutils/unixccompiler.py
+--- Python-3.7.7/Lib/distutils/unixccompiler.py	2020-03-10 02:11:12.000000000 -0400
++++ Python-3.7.7.new/Lib/distutils/unixccompiler.py	2020-10-30 09:37:53.428355595 -0400
+@@ -216,6 +212,9 @@
+ 
+     def _is_gcc(self, compiler_name):
+         return "gcc" in compiler_name or "g++" in compiler_name
++    
++    def _is_icc(self, compiler_name):
++        return "icc" in compiler_name or "icpc" in compiler_name
+ 
+     def runtime_library_dir_option(self, dir):
+         # XXX Hackish, at the very least.  See Python bug #445902:
+@@ -242,11 +241,12 @@
+                 return ["-Wl,+s", "-L" + dir]
+             return ["+s", "-L" + dir]
+         else:
+-            if self._is_gcc(compiler):
++            if self._is_gcc(compiler) or self._is_icc(compiler):
+                 # gcc on non-GNU systems does not need -Wl, but can
+                 # use it anyway.  Since distutils has always passed in
+                 # -Wl whenever gcc was used in the past it is probably
+                 # safest to keep doing so.
++                # Intel uses the same arguments as GCC
+                 if sysconfig.get_config_var("GNULD") == "yes":
+                     # GNU ld needs an extra option to get a RUNPATH
+                     # instead of just an RPATH.
