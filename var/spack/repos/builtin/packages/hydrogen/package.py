@@ -64,7 +64,7 @@ class Hydrogen(CMakePackage, CudaPackage):
 
     conflicts('~openmp', when='+omp_taskloops')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.17.0:')
     depends_on('mpi')
     depends_on('hwloc@1.11:')
 
@@ -115,7 +115,7 @@ class Hydrogen(CMakePackage, CudaPackage):
               "Did you mean to use Elemental instead?")
 
     generator = 'Ninja'
-    depends_on('ninja', type='build')
+    depends_on('ninja')
 
     @property
     def libs(self):

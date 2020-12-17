@@ -38,14 +38,14 @@ class Aluminum(CMakePackage, CudaPackage):
     variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
             ' Put/Get and IPC RMA functionality')
 
-    depends_on('cmake@3.17.0:', type='build')
+    depends_on('cmake@3.17.0:')
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc@1.11:')
     depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
 
     generator = 'Ninja'
-    depends_on('ninja', type='build')
+    depends_on('ninja')
 
     def cmake_args(self):
         spec = self.spec
