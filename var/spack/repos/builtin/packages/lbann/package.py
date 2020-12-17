@@ -34,7 +34,6 @@ class Lbann(CMakePackage, CudaPackage):
     version('0.91', sha256='b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5')
 
     variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
-    variant('seq_init', default=False, description='Force serial initialization of weight matrices.')
     variant('dtype', default='float',
             description='Type for floating point representation of weights',
             values=('float', 'double'))
@@ -54,6 +53,15 @@ class Lbann(CMakePackage, CudaPackage):
             'distributed convolutions')
 
     variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('nvprof', default=False, description='Build with region annotations for NVPROF')
+    conflicts('~cuda', when='+nvprof')
+
+    variant('fft', default=False, description='Support for FFT operations')
+    depends_on('fftw +openmp +mpi', when='+fft')
+
+    variant('unit_testing', default=False, description='Builds with support for unit testing')
+    variant('deterministic', default=False, 
+            description='Builds with support for deterministic execution')
     variant('docs', default=False, description='Builds with support for building documentation')
     variant('extras', default=False, description='Add python modules for LBANN related tools')
 
@@ -155,7 +163,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2', type='test')
+    depends_on('catch2', when='+unit_testing')
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
@@ -194,21 +202,27 @@ class Lbann(CMakePackage, CudaPackage):
         spec = self.spec
         args = self.common_config_args
         args.extend([
-            '-DLBANN_WITH_TOPO_AWARE:BOOL=%s' % ('+cuda +nccl' in spec),
+            '-DCMAKE_CXX_STANDARD=14',
+            '-DCMAKE_CUDA_STANDARD=14',
+            '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_SOFTMAX_CUDA:BOOL=%s' % ('+cuda' in spec),
-            '-DLBANN_SEQUENTIAL_INITIALIZATION:BOOL=%s' %
-            ('+seq_init' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DLBANN_VERBOSE=0',
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
             # protobuf is included by py-protobuf+cpp
-            '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix)])
+            '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
+            '-Dprotobuf_MODULE_COMPATIBLE=ON'])
+
+        args.append(
+            '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % ('+unit_testing' in spec))
+        args.append(
+            '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec))
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(
@@ -233,6 +247,13 @@ class Lbann(CMakePackage, CudaPackage):
             args.extend([
                 '-DLBANN_CONDUIT_DIR={0}'.format(spec['conduit'].prefix),
                 '-DConduit_DIR={0}'.format(spec['conduit'].prefix)])
+
+        if '+fft' in spec:
+            args.extend([
+                '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
+                '-DFFTW_DIR={0}'.format(spec['fftw'].prefix)])
+        # args.append(
+        #     '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec))
 
         # Add support for OpenMP with external (Brew) clang
         if spec.satisfies('%clang platform=darwin'):
@@ -264,6 +285,8 @@ class Lbann(CMakePackage, CudaPackage):
                     args.append(
                         '-DNCCL_DIR={0}'.format(
                             spec['nccl'].prefix))
+            args.append(
+                '-DLBANN_WITH_NVPROF:BOOL=%s' % ('+nvprof' in spec))
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.100:'):
             args.append(
@@ -289,7 +312,6 @@ class Lbann(CMakePackage, CudaPackage):
             '-DElemental_DIR={0}'.format(spec['elemental'].prefix),
             '-DELEMENTAL_MATH_LIBS={0}'.format(
                 spec['elemental'].libs),
-            '-DSEQ_INIT:BOOL=%s' % ('+seq_init' in spec),
             '-DVERBOSE=0',
             '-DLBANN_HOME=.'])
 
