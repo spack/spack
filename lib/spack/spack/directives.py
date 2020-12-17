@@ -211,8 +211,6 @@ class DirectiveMeta(type):
 
         # This decorator just returns the directive functions
         def _decorator(decorated_function):
-            __all__.append(decorated_function.__name__)
-
             @functools.wraps(decorated_function)
             def _wrapper(*args, **kwargs):
                 # If any of the arguments are executors returned by a
