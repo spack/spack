@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-# @author:	Robert QIAO (DRS, Flinders University, Australia)
 
 from spack import *
 
@@ -31,13 +30,9 @@ class PyGemini(PythonPackage):
 
     depends_on('python@2.5:2.8', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('zlib', type='build')
-    depends_on('gcc@:6', type='build')
     depends_on('tabix', type=('build', 'run'))
     depends_on('grabix', type=('build', 'run'))
     depends_on('bedtools2', type=('build', 'run'))
-    depends_on('py-matplotlib@:2', type=('build', 'run'))
-    depends_on('py-pillow@:6', type=('build', 'run'))
 
     depends_on('py-numpy@1.7.1:', type=('build', 'run'))
     depends_on('py-inheritance@0.1.3:', type=('build', 'run'))
@@ -50,12 +45,12 @@ class PyGemini(PythonPackage):
     depends_on('py-pybedtools@0.6.2:', type=('build', 'run'))
     depends_on('py-jinja2@2.7.1:', type=('build', 'run'))
     depends_on('py-networkx@1.10:', type=('build', 'run'))
-    depends_on('py-bottle@1.10:', type=('build', 'run'))
+    depends_on('py-bottle@0.11.6:', type=('build', 'run'))
     depends_on('py-ipyparallel@4.0:', type=('build', 'run'))
     depends_on('py-ipython-cluster-helper@0.5.1:', type=('build', 'run'))
     depends_on('py-bx-python@0.7.1:', type=('build', 'run'))
     depends_on('py-pandas@0.11.0:', type=('build', 'run'))
-    depends_on('py-openpyxl@1.6.1:2.0.0', type=('build', 'run'))
+    depends_on('py-openpyxl@1.6.1:1.999', type=('build', 'run'))
     depends_on('py-scipy@0.12.0:', type=('build', 'run'))
     depends_on('py-unidecode@0.04.14:', type=('build', 'run'))
     depends_on('py-cyordereddict@0.2.2', type=('build', 'run'))
