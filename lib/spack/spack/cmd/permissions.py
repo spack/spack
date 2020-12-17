@@ -37,14 +37,15 @@ def setup_parser(subparser):
 def perm_check(args):
     """Check that permissions match those specified by packages.yaml."""
     # First check permissions for the database directory and its contents
-    spp.check_permissions(spack.store.db._db_dir, None, contents=True)
+    spp.check_permissions(spack.store.db._db_dir, None, contents=True,
+                          header=True)
 
     # Now check permissions for installed packages
     env = ev.get_env(args, 'permissions')
     hashes = env.all_hashes() if env else None
     specs = spack.store.db.query(hashes=hashes)
     for spec in specs:
-        spp.check_permissions(spec.prefix, spec, contents=True)
+        spp.check_permissions(spec.prefix, spec, contents=True, header=False)
 
 
 def perm_repair(args):

@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import collections
 import grp
 import os
 import stat
@@ -17,11 +18,10 @@ import spack.config as cfg
 #: packages.yaml files.
 permissions_key = 'packages:{0}:permissions:{1}'
 
-#: Column width for reporting group differences
-group_width = 20
-
-#: Column width for reporting permission differences
-perm_width = 9
+#: SetGID-Read-Write permissions mask since those are relevant to package
+#: options
+srw_perms = (stat.S_ISGID | stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO) & \
+    ~(stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
 def _add_gid_bit(perms):
@@ -35,7 +35,7 @@ def _add_gid_bit(perms):
     return perms
 
 
-def _check_perms(path, perms, group, trim='', check_exists=False):
+def _check_perms(path, perms, group):
     """Checks permissions for the specified path against those given.
 
     Args:
@@ -43,48 +43,37 @@ def _check_perms(path, perms, group, trim='', check_exists=False):
         perms (int): the appropriate stat permissions or mode
         group (str): the appropriate group name or empty string if the group
             option does not apply
-        trim (str): root path to trim off of the output path
-        check_exists (bool): ``True`` if the path existence should be checked;
-            otherwise, skip the existence check
 
-    Returns: (bool) ``True`` if match configuration, ``False`` otherwise
+    Returns: (None or tuple) of (<groups>, <perms>, <path>) where groups and
+        perms are formatted as <current>-><expected> and are only returned
+        when there is a mismatch
     """
-    if check_exists and not os.path.exists(path):
-        tty.warn('Cannot check permissions on missing path {0}'
-                 .format(path))
-        return False
-
     status = os.stat(path)
-
-    trim = trim if not trim else \
-        '{0}{1}'.format(trim, os.sep)
-
-    errs = ['', '', '']
 
     # Check the path's group.
     name = group
     if group:
         name, _, _, _ = grp.getgrgid(status.st_gid)
-        if group != name:
-            errs[0] = name.center(group_width)
-        else:
-            errs[0] = group.center(group_width)
+    gdiff = '' if name == group else '{0}->{1}'.format(name, group)
 
-    # Check the path's permissions.
-    mode = status.st_mode
-    if mode != perms:
-        # Only want the ugo values of the mode and permissions
-        errs[1] = oct(mode)[-3:].center(perm_width)
-        errs[2] = oct(perms)[-3:].center(perm_width)
-    else:
-        errs[1] = errs[2] = ' ' * perm_width
+    # Check the path's permissions, but only look at the ones that can
+    # be set by os.chmod().
+    mode = stat.S_IMODE(status.st_mode)
 
-    if name != group or mode != perms:
-        name = '.' if trim and path == trim else path.replace(trim, '')
-        print('{0}: {1}'.format(': '.join(errs), name))
-        return False
+    # Ignore execute bits UNLESS add logic to infer need for executable
+    # from the file type
+    expected = perms & srw_perms
+    if os.path.isdir(path):
+        expected = _add_gid_bit(expected)
+    actual = mode & srw_perms
+    if name == group and actual == expected:
+        return None
 
-    return True
+    # Only report ugo
+    pdiff = '' if actual == expected else \
+        '{0}->{1}'.format(oct(actual), oct(expected))
+
+    return (gdiff, pdiff, path)
 
 
 def _process_permissions(path, spec, update, contents):
@@ -100,47 +89,51 @@ def _process_permissions(path, spec, update, contents):
         path (str): path whose permissions are being
         spec (Spec or None): spec instance or None if want all permissions
         update (bool): ``True`` to set permissions, ``False`` to check them
-        contents (bool): ``True`` to process the contents of the
-            and files and ``False`` to apply the permissions only to the
-            specified directory
+        contents (bool): ``True`` to process the contents of the directory
+            and ``False`` to apply the permissions only to the specified
+            directory
 
-    Returns:  (bool) ``True`` for success, ``False`` otherwise
+    Returns: (list) of (<groups>, <perms>, <path>) where groups and perms
+        are formatted as <current>-><expected> and only includes mismatches
     """
+    entries = []
+
     if not os.path.exists(path):
         tty.warn('Cannot process permissions for missing path {0}'
                  .format(path))
-        return
+        return entries
 
     func = _set_perms if update else _check_perms
 
     group = get_package_group(spec)
     perms = get_package_permissions(spec)
-    dir_perms = _add_gid_bit(perms)
 
-    is_dir = os.path.isdir(path)
-    path_perms = dir_perms if is_dir else perms
-
-    func(path, path_perms, group, path)
+    entry = func(path, perms, group)
+    if entry:
+        entries.append(entry)
 
     # We're done if the path is a file OR we don't need to process
     # permissions for the directory's contents.
-    if not (is_dir and contents):
-        return
+    if not (os.path.isdir(path) and contents):
+        return entries
 
-    for root, dirs, files in os.walk(path, topdown=True):
+    for root, dirs, files in os.walk(path, topdown=True, followlinks=False):
         for d in dirs:
             dir_name = os.path.join(root, d)
-            success = func(dir_name, dir_perms, group, path)
-            if not success:
+            entry = func(dir_name, perms, group)
+            if entry:
+                entries.append(entry)
                 dirs.remove(d)
         for f in files:
             file_name = os.path.join(root, f)
-            func(file_name, perms, group, path)
-        if path in dirs:
-            dirs.remove(path)
+            if not os.path.islink(file_name):
+                entry = func(file_name, perms, group)
+                if entry:
+                    entries.append(entry)
 
+    return entries
 
-def _set_perms(path, perms, group, trim='', check_exists=False):
+def _set_perms(path, perms, group):
     """Set permissions for the specified path to the given permissions.
 
     Args:
@@ -148,17 +141,9 @@ def _set_perms(path, perms, group, trim='', check_exists=False):
         perms (int): the appropriate stat permissions or mode
         group (str): the appropriate group name or empty string if the group
             option does not apply
-        trim (str): root path to trim off of the output path
-        check_exists (bool): ``True`` if the path existence should be checked;
-            otherwise, skip the existence check
 
     Returns: (bool) ``True`` if successful, ``False`` otherwise
     """
-    if check_exists and not os.path.exists(path):
-        tty.warn('Cannot set permissions on missing path {0}'
-                 .format(path))
-        return False
-
     # Set the path's group.
     if group:
         fs.chgrp(path, group)
@@ -174,19 +159,50 @@ def _set_perms(path, perms, group, trim='', check_exists=False):
     return True
 
 
-def check_permissions(path, spec, contents=True):
-    """Checks permissions against those expected by the configuration."""
-    print('\nChecking Permissions for {0}\n'.format(path))
-    print('{0}: {1}: {2}: {3}'.format(
-        'Actual Group'.center(group_width),
-        'Act Perms'.center(perm_width),
-        'Exp Perms'.center(perm_width),
-        'Path'))
-    _process_permissions(path, spec, False, contents)
+def check_permissions(path, spec, contents=True, header=False):
+    """Checks permissions against those expected by the configuration.
 
+    Args:
+        path (str): path whose permissions are to be checked
+        spec (Spec or None): spec instance or None if want all permissions
+        contents (bool): ``True`` to process the contents of the
+            and files and ``False`` to apply the permissions only to the
+            specified directory
+        header (bool): ``True`` to output a header before processing
+            permissions; ``False`` if the header should not be output
+    """
+    if header:
+        print('\nChecking Permissions...\n\nGroup Diff:Perms Diff')
+        tty.colify.colify(['paths(s)'], indent=4)
+        print('')
 
-def update_permissions(path, spec, contents=True):
-    """Updates permissions using those expected by the configuration."""
+    entries = _process_permissions(path, spec, False, contents)
+    if entries:
+        org = collections.defaultdict(list)
+        for group, perms, path in sorted(entries):
+            org['{0}:{1}'.format(group, perms)].append(path)
+
+        for key in sorted(org):
+            print(key)
+            tty.colify.colify(org[key], indent=4)
+            print('')
+        print('')
+
+def update_permissions(path, spec, contents=True, header=False):
+    """Repairs permissions using those expected by the configuration.
+
+    Args:
+        path (str): path whose permissions are to be updated if needed
+        spec (Spec or None): spec instance or None if want all permissions
+        contents (bool): ``True`` to process the contents of the
+            and files and ``False`` to apply the permissions only to the
+            specified directory
+        header (bool): ``True`` to output a header before processing
+            permissions; ``False`` if the header should not be output
+    """
+    if header:
+        print('\nRepairing Permissions...')
+
     _process_permissions(path, spec, True, contents)
 
 
