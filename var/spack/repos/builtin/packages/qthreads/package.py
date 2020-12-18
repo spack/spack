@@ -29,6 +29,10 @@ class Qthreads(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/qthreads/"
 
     url = "https://github.com/Qthreads/qthreads/releases/download/1.10/qthread-1.10.tar.bz2"
+    test_requires_compiler = True
+    test_base_path = 'test/basics/'
+    test_list = ['hello_world_multi', 'hello_world']
+
     version("1.14", sha256="16f15e5b2e35b6329a857d24c283a1e43cd49921ee49a1446d4f31bf9c6f5cf9")
     version("1.12", sha256="2c13a5f6f45bc2f22038d272be2e748e027649d3343a9f824da9e86a88b594c9")
     version("1.11", sha256="dbde6c7cb7de7e89921e47363d09cecaebf775c9d090496c2be8350355055571")
@@ -83,13 +87,7 @@ class Qthreads(AutotoolsPackage):
 
         args.append('--with-scheduler=%s'
                     % self.spec.variants['scheduler'].value)
-
         return args
-
-
-    test_requires_compiler = True
-    test_base_path = 'test/basics/'
-    test_list = ['hello_world_multi', 'hello_world']
 
     @run_after('install')
     def setup_build_tests(self):
@@ -97,15 +95,13 @@ class Qthreads(AutotoolsPackage):
         install test subdirectory for use during `spack test run`."""
         tests = self.test_list
         relative_test_dir = self.test_base_path
-
-        tests_to_cpy = []
+        files_to_cpy = []
         header = 'test/argparsing.h'
         for test in tests:
             test_path = join_path(relative_test_dir, test + '.c')
-            tests_to_cpy.append(test_path)
-        
-        self.cache_extra_test_sources(tests_to_cpy)
-        self.cache_extra_test_sources(header) 
+            files_to_cpy.append(test_path)
+        files_to_cpy.append(header)
+        self.cache_extra_test_sources(files_to_cpy)
 
     def build_tests(self):
         """Build and run the added smoke (install) test."""
@@ -132,10 +128,8 @@ class Qthreads(AutotoolsPackage):
            reason = 'test:{0}: Checking ability to execute.'.format(test)
            self.run_test(test, [], purpose=reason)
 
-
     def test(self):
         # Build
         self.build_tests()
-
         # Run test programs pulled from the build
         self.run_tests()
