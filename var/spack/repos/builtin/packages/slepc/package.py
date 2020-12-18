@@ -96,7 +96,7 @@ class Slepc(Package):
 
         if '+arpack' in spec:
             options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
+                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
             if spec.satisfies('@:3.12.99'):
                 arpackopt = '--with-arpack-flags'
