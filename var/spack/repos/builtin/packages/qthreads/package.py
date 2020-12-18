@@ -87,7 +87,7 @@ class Qthreads(AutotoolsPackage):
         return args
 
 
-
+    test_requires_compiler = True
     test_base_path = 'test/basics/'
     test_list = ['hello_world_multi', 'hello_world']
 
@@ -139,4 +139,3 @@ class Qthreads(AutotoolsPackage):
 
         # Run test programs pulled from the build
         self.run_tests()
-
