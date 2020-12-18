@@ -102,7 +102,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
-    # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime package
+    # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
