@@ -19,11 +19,6 @@ class PySrsly(PythonPackage):
     depends_on('py-wheel', when='@2:', type='build')
     depends_on('py-cython@0.25:', when='@2:', type='build')
     depends_on('py-pathlib@1.0.1', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-numpy', type='test')
-    depends_on('py-six', when='@:1', type='test')
-    depends_on('py-pytz', when='@:1', type='test')
 
     # https://github.com/explosion/srsly/pull/24
     patch('subprocess.patch', when='@2.0.0:2.0.1')

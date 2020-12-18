@@ -15,4 +15,3 @@ class PyBlis(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.15:', type=('build', 'run'))
-    depends_on('py-hypothesis', type='test')

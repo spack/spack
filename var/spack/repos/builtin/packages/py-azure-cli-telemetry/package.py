@@ -15,4 +15,3 @@ class PyAzureCliTelemetry(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-applicationinsights@0.11.1:0.11.999', type=('build', 'run'))
     depends_on('py-portalocker@1.2:1.999', type=('build', 'run'))
-    depends_on('py-mock', type='test')

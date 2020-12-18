@@ -16,5 +16,3 @@ class PyLinecache2(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pbr', type='build')
-    depends_on('py-fixtures', type='test')
-    depends_on('py-unittest2', type='test')

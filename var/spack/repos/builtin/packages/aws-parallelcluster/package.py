@@ -18,10 +18,6 @@ class AwsParallelcluster(PythonPackage):
         'sean-smith', 'demartinofra', 'enrico-usai', 'lukeseawalker', 'rexcsn',
         'ddeidda', 'tilne'
     ]
-    import_modules = [
-        'pcluster', 'awsbatch', 'pcluster.dcv', 'pcluster.configure',
-        'pcluster.config', 'pcluster.networking'
-    ]
 
     version('2.10.0', sha256='a7a27871b4f54cb913b0c1233e675131e9b2099549af0840d32c36b7e91b104b')
     version('2.9.1', sha256='12dc22286cd447a16931f1f8619bdd47d4543fd0de7905d52b6c6f83ff9db8a3')

@@ -19,5 +19,3 @@ class PyPythonUtils(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-runner', type='test')

@@ -20,7 +20,6 @@ class PyTpot(PythonPackage):
     depends_on('py-setuptools',             type='build')
     depends_on('python@3.5:',               type=('build', 'run'))
     depends_on('py-deap@1.2:',              type=('build', 'run'))
-    depends_on('py-nose',                   type='test')
     depends_on('py-numpy@1.16.3:',          type=('build', 'run'))
     depends_on('py-scikit-learn@0.22.0:',   type=('build', 'run'))
     depends_on('py-scipy@1.3.1',            type=('build', 'run'))

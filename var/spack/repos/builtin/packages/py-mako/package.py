@@ -17,6 +17,4 @@ class PyMako(PythonPackage):
     version('1.0.1', sha256='45f0869febea59dab7efd256fb451c377cbb7947bef386ff0bb44627c31a8d1c')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-mock',   type='test')
-    depends_on('py-pytest', type='test')
     depends_on('py-markupsafe@0.9.2:', type=('build', 'run'))

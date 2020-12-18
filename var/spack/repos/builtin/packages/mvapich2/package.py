@@ -14,7 +14,7 @@ class Mvapich2(AutotoolsPackage):
     platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
 
     homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.4.tar.gz"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.5.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
     maintainers = ['nithintsk', 'harisubramoni']
@@ -22,6 +22,7 @@ class Mvapich2(AutotoolsPackage):
     executables = ['^mpiname$']
 
     # Prefer the latest stable release
+    version('2.3.5', sha256='f9f467fec5fc981a89a7beee0374347b10c683023c76880f92a1a0ad4b961a8c')
     version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
     version('2.3.3', sha256='41d3261be57e5bc8aabf4e32981543c015c5443ff032a26f18205985e18c2b73')
     version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf')

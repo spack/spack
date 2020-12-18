@@ -19,4 +19,3 @@ class PyPyinstrument(PythonPackage):
     depends_on('py-pytest-runner', type='build')
     depends_on('npm', type='build')
     depends_on('py-pyinstrument-cext@0.2.2:', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

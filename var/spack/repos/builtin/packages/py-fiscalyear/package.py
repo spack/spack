@@ -17,7 +17,6 @@ class PyFiscalyear(PythonPackage):
     git      = "https://github.com/adamjstewart/fiscalyear.git"
 
     maintainers = ['adamjstewart']
-    import_modules = ['fiscalyear']
 
     version('master', branch='master')
     version('0.2.0', sha256='f513616aeb03046406c56d7c69cd9e26f6a12963c71c1410cc3d4532a5bfee71')
@@ -25,7 +24,3 @@ class PyFiscalyear(PythonPackage):
 
     depends_on('python@2.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-runner', type='test')
-    depends_on('py-pytest-mock', type='test')

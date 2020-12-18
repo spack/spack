@@ -53,8 +53,6 @@ class Hydrogen(CMakePackage, CudaPackage):
     variant('mpfr', default=False,
             description='Support GNU MPFR\'s'
             'arbitrary-precision floating-point arithmetic')
-    variant('cuda', default=False,
-            description='Builds with support for GPUs via CUDA and cuDNN')
     variant('test', default=False,
             description='Builds test suite')
     variant('al', default=False,
@@ -96,6 +94,9 @@ class Hydrogen(CMakePackage, CudaPackage):
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
 
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
 
@@ -126,6 +127,8 @@ class Hydrogen(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
+        enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
+
         args = [
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
@@ -140,6 +143,7 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
             '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
+            '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
         ]
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
