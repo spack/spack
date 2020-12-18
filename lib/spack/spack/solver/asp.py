@@ -1112,6 +1112,12 @@ class SpackSolverSetup(object):
         self.gen.h2('Target compatibility')
 
         compatible_targets = [uarch] + uarch.ancestors
+        additional_targets_in_family = sorted([
+            t for t in archspec.cpu.TARGETS.values()
+            if (t.family.name == uarch.family.name and
+                t not in compatible_targets)
+        ], key=lambda x: len(x.ancestors), reverse=True)
+        compatible_targets += additional_targets_in_family
         compilers = self.possible_compilers
 
         # this loop can be used to limit the number of targets
@@ -1154,7 +1160,9 @@ class SpackSolverSetup(object):
 
             target = archspec.cpu.TARGETS.get(spec.target.name)
             if not target:
-                raise ValueError("Invalid target: ", spec.target.name)
+                self.target_ranges(spec, None)
+                continue
+
             if target not in compatible_targets:
                 compatible_targets.append(target)
 
@@ -1289,6 +1297,10 @@ class SpackSolverSetup(object):
 
         def _all_targets_satisfiying(single_constraint):
             allowed_targets = []
+
+            if ':' not in single_constraint:
+                return [single_constraint]
+
             t_min, _, t_max = single_constraint.partition(':')
             for test_target in archspec.cpu.TARGETS.values():
                 # Check lower bound
