@@ -11,8 +11,8 @@ class PyPacificaUploader(PythonPackage):
 
     homepage = "https://github.com/pacifica/pacifica-python-uploader/"
 
-    version('0.3.1', sha256='adda18b28f01f0b1e6fbaf927fec9b8cf07c86f1b74185bed2a624e8a4597578',url="https://pypi.io/packages/source/p/pacifica-uploader/pacifica-uploader-0.3.1.tar.gz")
+    version('0.3.1', sha256='adda18b28f01f0b1e6fbaf927fec9b8cf07c86f1b74185bed2a624e8a4597578', url="https://pypi.io/packages/source/p/pacifica-uploader/pacifica-uploader-0.3.1.tar.gz")
 
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
-    depends_on('python@3:', type=('build','run'))
+    depends_on('python@3:', type=('build', 'run'))

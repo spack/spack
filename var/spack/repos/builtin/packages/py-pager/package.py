@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class PyPager(PythonPackage):
     """FIXME: Put a proper description of your package here."""
     url      = "py-pager"
@@ -12,4 +13,4 @@ class PyPager(PythonPackage):
 
     version('3.3', sha256='18aa45ec877dca732e599531c7b3b0b22ed6a4445febdf1bdf7da2761cca340d', url="https://pypi.io/packages/source/p/pager/pager-3.3.tar.gz")
 
-    depends_on('python@3:', type=('build','run'))
+    depends_on('python@3:', type=('build', 'run'))
