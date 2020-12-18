@@ -14,6 +14,9 @@ class Blitz(AutotoolsPackage):
     version('1.0.1', sha256='b62fc3f07b64b264307b01fec5e4f2793e09a68dcb5378984aedbc2e4b3adcef')
     version('1.0.0', sha256='79c06ea9a0585ba0e290c8140300e3ad19491c45c1d90feb52819abc3b58a0c1')
 
+    patch('https://github.com/blitzpp/blitz/commit/27915941905d4429d4ed803535573b02cd9285a3.patch', sha256='229709e5d1d83f199a3c3f986b5ae6a7d3c04b94201af4952dc5a423448ac4ba', when='@1.0.1')
+    patch('fj.patch', when='%fj')
+
     build_targets = ['lib']
 
     def check(self):

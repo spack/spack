@@ -1,0 +1,12 @@
+diff -ruN orig/blitz-1.0.1/configure blitz-1.0.1/configure
+--- orig/blitz-1.0.1/configure	2017-10-03 01:04:43.000000000 +0900
++++ blitz-1.0.1/configure	2020-12-18 22:04:17.000000000 +0900
+@@ -5974,7 +5974,7 @@
+ ac_config_commands="$ac_config_commands blitz/hp/bzconfig.h"
+ 
+                 COMPILER_SPECIFIC_HEADER="hp/bzconfig.h" ;;
+-  *g++*|*c++*)
++  *g++*|*c++*|*FCC)
+ ac_config_commands="$ac_config_commands blitz/gnu/bzconfig.h"
+ 
+                 COMPILER_SPECIFIC_HEADER="gnu/bzconfig.h" ;;
