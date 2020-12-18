@@ -162,9 +162,10 @@ class RocmOpenmpExtras(Package):
             libomptarget.format(src) + '/hostrpc/CMakeLists.txt')
 
         filter_file(
-            r'\${ROCM_DIR}/hsa/include \${ROCM_DIR}/hsa/include/hsa',
+            r'${ROCM_DIR}/hsa/include ${ROCM_DIR}/hsa/include/hsa',
             '${HSA_INCLUDE}/hsa/include ${HSA_INCLUDE}/hsa/include/hsa',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
+            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt',
+            string=True)
 
         filter_file(
             '{ROCM_DIR}/hsa/lib', '{HSA_LIB}',
@@ -176,30 +177,34 @@ class RocmOpenmpExtras(Package):
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            r'-L\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
+            r'-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
             '-L${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS} -L${HSAKMT_LIB64}',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
+            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt',
+            string=True)
 
         filter_file(
-            r'-rpath,\${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
+            r'-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}',
             '-rpath,${LIBOMPTARGET_DEP_LIBHSAKMT_LIBRARIES_DIRS}' +
             ',-rpath,${HSAKMT_LIB64}',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
+            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt',
+            string=True)
 
         filter_file(
             '{ROCM_DIR}/include', '{COMGR_INCLUDE}',
             libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
 
         filter_file(
-            r'-L\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
+            r'-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}',
             '-L${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX} -L${COMGR_LIB}',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
+            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt',
+            string=True)
 
         filter_file(
-            r'rpath,\${LLVM_LIBDIR}\${OPENMP_LIBDIR_SUFFIX}',
+            r'rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}',
             'rpath,${LLVM_LIBDIR}${OPENMP_LIBDIR_SUFFIX}' +
             '-Wl,-rpath,${COMGR_LIB}',
-            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt')
+            libomptarget.format(src) + '/plugins/hsa/CMakeLists.txt',
+            string=True)
 
         filter_file(
             'ADDITIONAL_VERSIONS 2.7', 'ADDITIONAL_VERSIONS 3',
