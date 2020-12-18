@@ -497,6 +497,9 @@ class SpackSolverSetup(object):
         # id for dummy variables
         self.card = 0
 
+        # Caches to optimize the setup phase of the solver
+        self.target_specs_cache = None
+
     def pkg_version_rules(self, pkg):
         """Output declared versions of a package.
 
@@ -910,7 +913,14 @@ class SpackSolverSetup(object):
 
     def preferred_targets(self, pkg_name):
         key_fn = spack.package_prefs.PackagePrefs(pkg_name, 'target')
-        target_specs = self._target_specs()
+
+        if not self.target_specs_cache:
+            self.target_specs_cache = [
+                spack.spec.Spec('target={0}'.format(target_name))
+                for target_name in archspec.cpu.TARGETS
+            ]
+
+        target_specs = self.target_specs_cache
         preferred_targets = [x for x in target_specs if key_fn(x) < 0]
         if not preferred_targets:
             return
@@ -919,15 +929,6 @@ class SpackSolverSetup(object):
         self.gen.fact(fn.package_target_weight(
             str(preferred.architecture.target), pkg_name, -30
         ))
-
-    @llnl.util.lang.memoized
-    def _target_specs(self):
-        # The function is memoized to optimize the setup time of the solve
-        target_specs = [
-            spack.spec.Spec('target={0}'.format(target_name))
-            for target_name in archspec.cpu.TARGETS
-        ]
-        return target_specs
 
     def preferred_versions(self, pkg_name):
         packages_yaml = spack.config.get('packages')
