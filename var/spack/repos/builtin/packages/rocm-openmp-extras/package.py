@@ -60,10 +60,10 @@ class RocmOpenmpExtras(Package):
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
 
-    depends_on('cmake@3.5.2:3.13.4', type='build')
+    depends_on('cmake@3:', type='build')
     depends_on('mesa18~llvm@18.3:', type=('build', 'link'))
-    depends_on('py-setuptools@44.1.0:', type='build')
-    depends_on('python@3.6.9:3.8.6', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('python@3:', type='build')
     depends_on('perl-data-dumper', type='build')
     depends_on('awk', type='build')
     depends_on('elfutils', type=('build', 'link'))
@@ -253,8 +253,8 @@ class RocmOpenmpExtras(Package):
             '-DDEVICE_LIBS_DIR={0}/amdgcn/bitcode'.format(devlibs_prefix),
             '-DAOMP_STANDALONE_BUILD=0',
             '-DDEVICELIBS_ROOT={0}'.format(devlibs_src),
-            '-DOPENMP_TEST_C_COMPILER=$AOMP/bin/clang',
-            '-DOPENMP_TEST_CXX_COMPILER=$AOMP/bin/clang++',
+            '-DOPENMP_TEST_C_COMPILER={0}/clang'.format(bin_dir),
+            '-DOPENMP_TEST_CXX_COMPILER={0}/clang++'.format(bin_dir),
             '-DLIBOMPTARGET_AMDGCN_GFXLIST={0}'.format(gfx_list),
             '-DLIBOMP_COPY_EXPORTS=OFF',
             '-DHSA_INCLUDE={0}'.format(hsa_prefix),
