@@ -15,4 +15,4 @@ class PyPacificaDownloader(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
-    depends_on('python@3:', type=('build','run'))
+    depends_on('python@3:', type=('build', 'run'))
