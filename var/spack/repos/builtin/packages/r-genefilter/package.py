@@ -7,13 +7,11 @@ from spack import *
 
 
 class RGenefilter(RPackage):
-
     """genefilter: methods for filtering genes from high-throughput
        experiments."""
 
     homepage = "https://bioconductor.org/packages/genefilter"
     git      = "https://git.bioconductor.org/packages/genefilter.git"
-    # url      = "https://bioconductor.org/packages/release/bioc/src/contrib/genefilter_1.72.0.tar.gz"
 
     version('1.73.0', commit='154bc907d2d84884ab3c5c19c1da73d3ba61aad7')
     version('1.66.0', commit='1c4c471ccca873bf92dcf0b50f611eaa64c4f0cf')
