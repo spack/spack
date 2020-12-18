@@ -232,7 +232,8 @@ name_try_repo_map = {
 # T = TypeVar('T')
 
 def assume_unique(along, condition_expr_fn, gen_expr_fn,
-                  fmt=(lambda x: "∃!x∈{} s.t. {}. Case of: x = {}."
+                  implies_for_expr_fn=None,
+                  fmt=(lambda x: "\existsuniq! x \in {} s.t. {}. Case of: x = {}."
                        .format(list(along), gen_expr_fn(x), x))):
     # type: (Iterable[T], Callable[[], Z3Expr], Callable[[T], Z3Expr], str) -> List[Z3Expr]
     along = list(along)
@@ -244,6 +245,11 @@ def assume_unique(along, condition_expr_fn, gen_expr_fn,
         gen_expr_fn(x) == bv
         for x, bv in zip(along, bvars)
     )
+    if implies_for_expr_fn is not None:
+        assumptions.extend(
+            Implies(gen_expr_fn(x), implies_for_expr_fn(x))
+            for x in along
+        )
     assumptions.append(
         condition_expr_fn() == PbEq([(bv,1) for bv in bvars],
                                     k=1)
@@ -304,6 +310,15 @@ class DepSpec(object):
     SORT = DepSpecSort
     constructor = mk_dep_spec
 
+    def __str__(self):
+        # type: () -> str
+        if self.strategy.into_z3() == low:
+            return '{}@: {} <= x < {}'.format(self.dep_name, self.low.into_spack_version(), self.high.into_spack_version())
+        if self.strategy.into_z3() == high:
+            return '{}@: {} < x <= {}'.format(self.dep_name, self.low.into_spack_version(), self.high.into_spack_version())
+        assert self.strategy.into_z3() == neither, self
+        return '{}@: {} == x == {}'.format(self.dep_name, self.low.into_spack_version(), self.high.into_spack_version())
+
 
 @delegate_iter('dep_specs')
 class DepSet(IntoZ3):
@@ -319,40 +334,6 @@ class DepSet(IntoZ3):
             dep_expr = self.extract_z3_expr(dep_spec)
             seq_expr += Unit(dep_expr)
         return seq_expr
-
-
-ConflictSpecSort, mk_conflict_spec, (get_conflict_name, get_conflict_version,) = TupleSort(
-    'ConflictSpecSort',
-    [PackageNameSort, SpackVersionSort],
-)
-
-@tuple_type(ordered_dict([('name', PackageName),
-                          ('version', SpackVersion)]))
-class ConflictSpec(object):
-    SORT = ConflictSpecSort
-    constructor = mk_conflict_spec
-
-
-@delegate_iter('conflicts')
-class ConflictSet(IntoZ3):
-    SORT = SeqSort(ConflictSpecSort)
-
-    @classmethod
-    def empty(cls):
-        # type: () -> ConflictSet
-        return cls([])
-
-    def __init__(self, conflicts):
-        # type: (Iterable[ConflictSpec]) -> None
-        self.conflicts = list(conflicts)
-
-    def convert_to_z3(self):
-        seq_expr = Empty(SeqSort(ConflictSpecSort))
-        for conflict in self.conflicts:
-            conflict_expr = self.extract_z3_expr(conflict)
-            seq_expr += Unit(conflict_expr)
-        return seq_expr
-
 
 
 version_dependency_try_map = {
@@ -383,17 +364,14 @@ version_dependency_try_map = {
                     'prefer': neither,
                 },
             },
-            'conflicts': {
-                'c': '3.1.3',
-            },
         },
     },
     'b': {
         '1.0.0': {
             'dependencies': {
                 'c': {
-                    'low': '2.0.0',
-                    'high': '3.0.0',
+                    'low': '1.0.0',
+                    'high': '2.0.0',
                     'prefer': low,
                 },
             },
@@ -401,9 +379,9 @@ version_dependency_try_map = {
         '1.0.1': {
             'dependencies': {
                 'c': {
-                    'low': '3.0.0',
-                    'high': '4.0.0',
-                    'prefer': low,
+                    'low': '2.0.0',
+                    'high': '2.0.0',
+                    'prefer': neither,
                 },
             },
         },
@@ -414,9 +392,6 @@ version_dependency_try_map = {
                     'high': '3.1.2',
                     'prefer': neither,
                 },
-            },
-            'conflicts': {
-                'c': '3.0.0',
             },
         },
         '2.1.3': {
@@ -434,9 +409,6 @@ version_dependency_try_map = {
             'dependencies': {},
         },
         '3.0.0': {
-            'dependencies': {},
-        },
-        '3.1.2': {
             'dependencies': {},
         },
         '3.1.3': {
@@ -505,13 +477,12 @@ class VersionSolverSetup(object):
         self._version_mapping = {}  # type: Dict[PackageIdentity, SpackVersion]
         self._owning_bool_mapping = {}  # type: Dict[PackageIdentity, Bool]
         self._dep_set_mapping = {}  # type: Dict[PackageIdentity, DepSet]
-        self._conflict_set_mapping = {}  # type: Dict[PackageIdentity, ConflictSet]
 
         # type: Dict[PackageName, Dict[SpackVersion, List[PackageIdentity]]]
         self._reverse_lookup = collections.defaultdict(lambda: collections.defaultdict(list))
 
-    def register_package(self, pkg, name, version, owning_bool, dep_set, conflict_set):
-        # type: (PackageIdentity, PackageName, SpackVersion, Bool, DepSet, ConflictSet) -> None
+    def register_package(self, pkg, name, version, owning_bool, dep_set):
+        # type: (PackageIdentity, PackageName, SpackVersion, Bool, DepSet) -> None
         assert isinstance(name, PackageName), name
         self._name_mapping[pkg] = name
         assert isinstance(version, SpackVersion), version
@@ -520,8 +491,6 @@ class VersionSolverSetup(object):
         self._owning_bool_mapping[pkg] = owning_bool
         assert isinstance(dep_set, DepSet), dep_set
         self._dep_set_mapping[pkg] = dep_set
-        assert isinstance(conflict_set, ConflictSet), conflict_set
-        self._conflict_set_mapping[pkg] = conflict_set
 
         # Add to the reverse lookup table.
         self._reverse_lookup[name][version].append(pkg)
@@ -537,13 +506,12 @@ class VersionSolverSetup(object):
         raise NotImplemented
 
     def extract_package_details(self, pkg):
-        # type: (PackageIdentity) -> Tuple[PackageName, SpackVersion, Bool, DepSet, ConflictSet]
+        # type: (PackageIdentity) -> Tuple[PackageName, SpackVersion, Bool, DepSet]
         name = self._name_mapping[pkg]
         version = self._version_mapping[pkg]
         owning_bool = self._owning_bool_mapping[pkg]
         dep_set = self._dep_set_mapping[pkg]
-        conflict_set = self._conflict_set_mapping[pkg]
-        return (name, version, owning_bool, dep_set, conflict_set)
+        return (name, version, owning_bool, dep_set)
 
     def reverse_lookup_packages(self, name):
         # type: (str) -> Iterable[Tuple[SpackVersion, List[PackageIdentity]]]
@@ -567,7 +535,7 @@ class StaticVersionSolverSetup(VersionSolverSetup):
             s = 'FAKE::[{}]'.format(name.version_pin_spec(version))
             return cls(s)
 
-    def all_repo_packages(self, repo, with_conflict=False):
+    def all_repo_packages(self, repo):
         repo_names = frozenset(PackageName(n) for n in name_try_repo_map[repo])
         for name, version_map in version_dependency_try_map.items():
             name = PackageName(name)
@@ -591,18 +559,6 @@ class StaticVersionSolverSetup(VersionSolverSetup):
                     dep_specs.append(single_dep_spec)
                 dep_set = DepSet(dep_specs)
 
-                if with_conflict:
-                    conflicts = dep_var_spec.get('conflicts', {})
-                    all_conflicts = []
-                    for p_name, p_version_string in conflicts.items():
-                        p_version = SpackVersion(parse_single_version(p_version_string))
-                        current_conflict = ConflictSpec(p_name, p_version)
-                        all_conflicts.append(current_conflict)
-                        # conflicts_table[pkg][p_name].append(p_version)
-                    conflict_set = ConflictSet(all_conflicts)
-                else:
-                    conflict_set = ConflictSet.empty()
-
                 var_string = name.version_pin_spec(version)
                 pkg = (
                     StaticVersionSolverSetup
@@ -612,14 +568,13 @@ class StaticVersionSolverSetup(VersionSolverSetup):
                 pkg_bool_var = Bool(var_string)
 
                 # Registers the package so the ground variables can be set up!
-                self.register_package(pkg, name, version, pkg_bool_var, dep_set, conflict_set)
+                self.register_package(pkg, name, version, pkg_bool_var, dep_set)
 
                 yield pkg
 
 
-def generate_fake_input(
+def perform_manual_grounding(
     assumptions,  # type: List[Z3Expr]
-    with_conflict=False,  # type: bool
 ):
     # type: (...) -> VersionSolverSetup
     solver_setup = StaticVersionSolverSetup()
@@ -631,7 +586,7 @@ def generate_fake_input(
     all_packages = list(repo_by_pkg.keys())  # type: List[PackageIdentity]
 
     for pkg in all_packages:
-        (name, version, owning, dep_set, conflict_set) = solver_setup.extract_package_details(pkg)
+        (name, version, owning, dep_set) = solver_setup.extract_package_details(pkg)
         # Ensure that using a package flips on or off the Bool variable previously created for
         # this package.
         assumptions.append(owning == use_package(pkg.into_z3()))
@@ -657,15 +612,18 @@ def generate_fake_input(
                 else:
                     assert strategy == neither, strategy
                     dep_matched_version = (other_version == low_version) and (low_version == high_version)
+
+                if dep_matched_version:
+                    print('MATCHED: version {} matches {}'.format(other_version, dep_spec))
+                else:
+                    print('UNMATCHED: version {} does NOT match {}'.format(other_version, dep_spec))
+
                 # Fill in the now-known value of dependency_matches_version_spec()!
-                # print(dep_spec)
-                # print(other)
                 assumptions.append(
                     dependency_matches_version_spec(dep_spec.into_z3(), other.into_z3()) == dep_matched_version
                 )
 
                 # TODO: Convert this into a Spec satisfying any result with that version!
-                # dep_pkg = mk_package_metadata(dep_name, other_version)
                 for dep_pkg in dep_pkgs:
                     # Require the version to have matched to satisfy the dependency!
                     if dep_matched_version:
@@ -685,34 +643,13 @@ def generate_fake_input(
                 all_matching_deps,
                 condition_expr_fn=(lambda: use_package(pkg.into_z3())),
                 gen_expr_fn=(lambda dep_pkg: use_this_dependency(pkg.into_z3(), dep_pkg.into_z3())),
+                implies_for_expr_fn=(lambda dep_pkg: use_package(dep_pkg.into_z3())),
                 fmt=(lambda dep_pkg: (
                     "use_package(p = {}) => \existsuniq! d \in {{P_dependencies(p)}} s.t. "
                     "use_this_dependency(p, d). case of: d = {}."
                     .format(pkg, dep_pkg))),
             )
             assumptions.extend(unique_dependency_assumptions)
-
-            # TODO: Here's where we try to make a set!
-            # assumptions.append(
-            #     Iff(
-            #         And([use_package(pkg), use_package(dep_pkg)]),
-            #         IsMember(dep_spec, get_dep_specs(pkg)),
-            #     )
-            # )
-
-        for conflict_spec in conflict_set:
-            c_name = conflict_spec.name
-            c_version = conflict_spec.version
-            conflict_pkgs = list(solver_setup.reverse_lookup_package_version(c_name, c_version))
-            assumptions.append(
-                Implies(
-                    use_package(pkg.into_z3()),
-                    Not(Or([
-                        use_package(conflict_pkg.into_z3())
-                        for conflict_pkg in conflict_pkgs
-                    ])),
-                )
-            )
 
     for pkg, pkg_repos in repo_by_pkg.items():
         # The repo must contain the package in order for us to use it!
@@ -742,14 +679,11 @@ def generate_fake_input(
     return solver_setup
 
 
-def build_assumptions(with_conflict=False):
+def build_assumptions():
     assumptions = []  # type: List[Z3Expr]
 
     # Iterate over every package!
-    solver_setup = generate_fake_input(
-        assumptions=assumptions,
-        with_conflict=with_conflict,
-    )
+    solver_setup = perform_manual_grounding(assumptions=assumptions)
 
     return (assumptions, solver_setup)
 
@@ -791,15 +725,15 @@ def install_check(problems, timer=Timer(), solver=None):
         return (solver, result, truths, unsat_core)
 
 
-def ground_check(grounder, solver=None, timer=Timer(), with_conflict=False):
+def generate_then_solve_then_print(initial_requirements, solver=None, timer=Timer()):
     # type: (List[Z3Expr], Optional[Solver], bool) -> Tuple[BoolVarsDict, List[Bool], Solver]
     with timer.nested_phase('build assumptions'):
-        (assumptions, solver_setup) = build_assumptions(with_conflict=with_conflict)
+        (assumptions, solver_setup) = build_assumptions()
     with timer.nested_phase('install check'):
-        grounds_maybe = list(grounder(solver_setup))
-        print('grounds: {}'.format(grounds_maybe))
-        all_exprs = assumptions + grounds_maybe
-        print('\n----\n'.join(str(e).decode('utf-8').encode('utf-8') for e in all_exprs))
+        init_requirements_maybe = list(initial_requirements(solver_setup))
+        print('init_requirements: {}'.format(init_requirements_maybe))
+        all_exprs = assumptions + init_requirements_maybe
+        # print('\n----\n'.join(str(e).decode('utf-8').encode('utf-8') for e in all_exprs))
         (s, result, truths, unsat_core) = install_check(all_exprs, timer=timer, solver=solver)
         if result == sat:
             print('TRUTHS:\n{}'.format('\n'.join(truths)))
@@ -809,7 +743,7 @@ def ground_check(grounder, solver=None, timer=Timer(), with_conflict=False):
             print('UNSAT_CORE():\n{}'.format(s.unsat_core()))
         else:
             raise OSError('unrecognized result {}'.format(result))
-        return (s, all_exprs, result, truths, unsat_core, grounds_maybe, solver_setup)
+        return (s, all_exprs, result, truths, unsat_core, init_requirements_maybe, solver_setup)
 
 
 def solve(timer=Timer(), interact=False):
@@ -821,37 +755,49 @@ def solve(timer=Timer(), interact=False):
     #                      Tactic('smt'),
     # )
 
-    def get_ground_exprs(version_solver_setup):
+    def make_initial_requirements_1(version_solver_setup):
         # type: (VersionSolverSetup) -> Iterable[Z3Expr]
-        a_1_5 = list(version_solver_setup.reverse_lookup_package_version(
+        a_1_5_2 = list(version_solver_setup.reverse_lookup_package_version(
             PackageName('a'),
             SpackVersion(parse_single_version('1.5.2')),
         ))[0]
-        return [use_package(a_1_5.into_z3())]
+        return [use_package(a_1_5_2.into_z3())]
 
     with timer.nested_phase('solve 1'):
-        s1, e1, r1, tr1, u1, g1, ss1 = ground_check(
-            get_ground_exprs,
+        s1, e1, r1, tr1, u1, g1, ss1 = generate_then_solve_then_print(
+            make_initial_requirements_1,
             timer=timer,
-            # solver=robust_tactic.solver(),
-            with_conflict=False)
+            # solver=robust_tactic.solver()
+        )
         with timer.nested_phase('check 1'):
-            if not r1 == sat:
+            if r1 == sat:
+                print('SUCCESS: SAT!!!!')
+            else:
                 if interact:
                     print('ERROR: NOT SAT! SHOULD BE!')
                     # code.interact(local=locals())
                 else:
                     assert r1 == sat, r1
 
+    def make_initial_requirements_2(version_solver_setup):
+        # type: (VersionSolverSetup) -> Iterable[Z3Expr]
+        a_1_0_0 = list(version_solver_setup.reverse_lookup_package_version(
+            PackageName('a'),
+            SpackVersion(parse_single_version('1.0.0')),
+        ))[0]
+        return [use_package(a_1_0_0.into_z3())]
+
     with timer.nested_phase('solve 2'):
-        s2, e2, r2, tr2, u2, g2, ss2 = ground_check(
-            get_ground_exprs,
+        s2, e2, r2, tr2, u2, g2, ss2 = generate_then_solve_then_print(
+            make_initial_requirements_2,
             timer=timer,
-            # solver=robust_tactic.solver(),
-            with_conflict=True)
+            # solver=robust_tactic.solver()
+        )
         with timer.nested_phase('check 2'):
             # TODO: make this correct!
-            if not r2 == unsat:
+            if r2 == unsat:
+                print('SUCCESS: UNSAT!!!!!')
+            else:
                 if interact:
                     print('ERROR: NOT \'unsat\'! SHOULD  BE!')
                     # code.interact(local=locals())
