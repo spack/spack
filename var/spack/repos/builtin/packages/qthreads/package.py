@@ -110,23 +110,26 @@ class Qthreads(AutotoolsPackage):
 
         for test in tests:
             options = [
-               '-I{0}'.format(self.prefix.include),
-               '-I{0}'.format(self.install_test_root + '/test'),
-               join_path(self.install_test_root, relative_test_dir, test + '.c'),
-               '-o',
-               test,
-               '-L{0}'.format(self.prefix.lib),
-               '-lqthread',
-               '{0}{1}'.format(self.compiler.cc_rpath_arg, self.prefix.lib)]
-            reason = 'test:{0}: Checking ability to link to the library.'.format(test)
+                '-I{0}'.format(self.prefix.include),
+                '-I{0}'.format(self.install_test_root + '/test'),
+                join_path(self.install_test_root, relative_test_dir,
+                          test + '.c'),
+                '-o',
+                test,
+                '-L{0}'.format(self.prefix.lib),
+                '-lqthread',
+                '{0}{1}'.format(self.compiler.cc_rpath_arg,
+                                self.prefix.lib)]
+            reason = 'test:{0}: Checking ability to link to the library.'\
+                     .format(test)
             self.run_test('cc', options, [], installed=False, purpose=reason)
 
     def run_tests(self):
         tests = self.test_list
-           # Now run the program 
+        # Now run the program
         for test in tests:
-           reason = 'test:{0}: Checking ability to execute.'.format(test)
-           self.run_test(test, [], purpose=reason)
+            reason = 'test:{0}: Checking ability to execute.'.format(test)
+            self.run_test(test, [], purpose=reason)
 
     def test(self):
         # Build
