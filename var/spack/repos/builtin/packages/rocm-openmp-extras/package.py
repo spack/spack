@@ -120,17 +120,17 @@ class RocmOpenmpExtras(Package):
         devlibs_prefix = self.spec['rocm-device-libs'].prefix
         openmp_extras_prefix = self.spec['rocm-openmp-extras'].prefix
         llvm_prefix = self.spec['llvm-amdgpu'].prefix
-        env.set('AOMP', '{0}'.format(format(llvm_prefix)))
+        env.set('AOMP', '{0}'.format(llvm_prefix))
         env.set('HIP_DEVICE_LIB_PATH',
-                '{0}/amdgcn/bitcode'.format(format(devlibs_prefix)))
+                '{0}/amdgcn/bitcode'.format(devlibs_prefix))
         env.set('AOMP_GPU',
-                '`{0}/rocm-bin/mygpu`'.format(format(openmp_extras_prefix)))
+                '`{0}/rocm-bin/mygpu`'.format(openmp_extras_prefix))
 
     def setup_build_environment(self, env):
         openmp_extras_prefix = self.spec['rocm-openmp-extras'].prefix
         llvm_prefix = self.spec['llvm-amdgpu'].prefix
-        env.set('AOMP', '{0}'.format(format(llvm_prefix)))
-        env.set('FC', '{0}/bin/flang'.format(format(openmp_extras_prefix)))
+        env.set('AOMP', '{0}'.format(llvm_prefix))
+        env.set('FC', '{0}/bin/flang'.format(openmp_extras_prefix))
         env.set(
             'GFXLIST',
             'gfx700 gfx701 gfx801 gfx803 gfx900 gfx902 gfx906 gfx908')
