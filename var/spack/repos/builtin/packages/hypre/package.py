@@ -191,11 +191,11 @@ class Hypre(Package):
             with working_dir(examples_dir, create=False):
                 make("HYPRE_DIR=" + self.prefix, "bigint")
 
-                reason="test: ensuring HYPRE examples run"
+                reason = "test: ensuring HYPRE examples run"
                 self.run_test('./ex5big', [], [], installed=True,
-                            purpose=reason, skip_missing=True, work_dir='.')
+                              purpose=reason, skip_missing=True, work_dir='.')
                 self.run_test('./ex15big', [], [], installed=True,
-                            purpose=reason, skip_missing=True, work_dir='.')
+                              purpose=reason, skip_missing=True, work_dir='.')
 
                 make("distclean")
         else:
