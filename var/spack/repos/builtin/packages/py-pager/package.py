@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyPager(PythonPackage):
-    """Python module that pages output to the screen, 
+    """Python module that pages output to the screen,
        reads keys and console dimensions without executing external utils."""
     url      = "py-pager"
     homepage = "http://bitbucket.org/techtonik/python-pager"
