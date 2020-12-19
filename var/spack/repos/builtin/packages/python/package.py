@@ -620,6 +620,13 @@ class Python(AutotoolsPackage):
                        os.path.join(prefix.bin, 'python-config'))
 
     @run_after('install')
+    def install_python_gdb(self):
+        # https://devguide.python.org/gdb/
+        src = os.path.join('Tools', 'gdb', 'libpython.py')
+        if os.path.exists(src):
+            install(src, self.command.path + '-gdb.py')
+
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def import_tests(self):
         """Test that basic Python functionality works."""
