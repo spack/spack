@@ -9,7 +9,7 @@ import shutil
 import sys
 
 
-class Mfem(Package):
+class Mfem(Package, ROCmPackage):
     """Free, lightweight, scalable C++ library for finite element methods."""
 
     tags = ['FEM', 'finite elements', 'high-order', 'AMR', 'HPC']
@@ -102,6 +102,7 @@ class Mfem(Package):
     variant('cuda', default=False, description='Enable CUDA support')
     variant('cuda_arch', default='sm_60',
             description='CUDA architecture to compile for')
+    # Note: '+rocm' and 'amdgpu_target' variants are added by the ROCmPackage
     variant('occa', default=False, description='Enable OCCA backend')
     variant('raja', default=False, description='Enable RAJA backend')
     variant('libceed', default=False, description='Enable libCEED backend')
@@ -142,8 +143,7 @@ class Mfem(Package):
             description='Enable secure sockets using GnuTLS')
     variant('libunwind', default=False,
             description='Enable backtrace on error support using Libunwind')
-    # TODO: HIP, SIMD, Ginkgo, AmgX, SLEPc, ADIOS2, HiOp, MKL CPardiso,
-    #       Axom/Sidre
+    # TODO: SIMD, Ginkgo, SLEPc, ADIOS2, HiOp, MKL CPardiso, Axom/Sidre
     variant('timer', default='auto',
             values=('auto', 'std', 'posix', 'mac', 'mpi'),
             description='Timing functions to use in mfem::StopWatch')
@@ -157,6 +157,8 @@ class Mfem(Package):
     conflicts('~threadsafe', when='@:3.99.99+openmp')
 
     conflicts('+cuda', when='@:3.99.99')
+    conflicts('+rocm', when='@:4.1.99')
+    conflicts('+cuda+rocm')
     conflicts('+netcdf', when='@:3.1')
     conflicts('+superlu-dist', when='@:3.1')
     # STRUMPACK support was added in mfem v3.3.2, however, here we allow only
@@ -392,6 +394,7 @@ class Mfem(Package):
             'MFEM_USE_OPENMP=%s' % yes_no('+openmp'),
             'MFEM_USE_CONDUIT=%s' % yes_no('+conduit'),
             'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
+            'MFEM_USE_HIP=%s' % yes_no('+rocm'),
             'MFEM_USE_OCCA=%s' % yes_no('+occa'),
             'MFEM_USE_RAJA=%s' % yes_no('+raja'),
             'MFEM_USE_AMGX=%s' % yes_no('+amgx'),
@@ -618,6 +621,12 @@ class Mfem(Package):
             options += [
                 'CUDA_CXX=%s' % join_path(spec['cuda'].prefix, 'bin', 'nvcc'),
                 'CUDA_ARCH=%s' % cuda_arch]
+
+        if '+rocm' in spec:
+            amdgpu_target = ','.join(spec.variants['amdgpu_target'].value)
+            options += [
+                'HIP_CXX=%s' % spec['hip'].hipcc,
+                'HIP_ARCH=%s' % amdgpu_target]
 
         if '+occa' in spec:
             options += ['OCCA_OPT=-I%s' % spec['occa'].prefix.include,
