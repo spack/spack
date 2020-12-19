@@ -20,6 +20,8 @@ class Graphmap(MakefilePackage):
         mkdirp(prefix.bin)
         makefile = FileFilter('Makefile')
         makefile.filter('/usr/bin/graphmap', prefix.bin.graphmap)
+        if self.spec.target.family == 'aarch64':
+            makefile.filter('-m64', '')
 
     def build(self, spec, prefix):
         make('modules')

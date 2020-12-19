@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
 import re
@@ -14,10 +13,14 @@ import spack.package
 import spack.paths
 import spack.repo
 import spack.util.executable as executable
+import spack.variant
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
 import spack.cmd.flake8 as flake8
 import spack.util.crypto as crypto
+import pickle
+
+import llnl.util.tty as tty
 
 
 def check_repo():
@@ -30,6 +33,41 @@ def check_repo():
 def test_get_all_packages():
     """Get all packages once and make sure that works."""
     check_repo()
+
+
+def test_packages_are_pickleable():
+    failed_to_pickle = list()
+    for name in spack.repo.all_package_names():
+        pkg = spack.repo.get(name)
+        try:
+            pickle.dumps(pkg)
+        except Exception:
+            # If there are any failures, keep track of all packages that aren't
+            # pickle-able and re-run the pickling later on to recreate the
+            # error
+            failed_to_pickle.append(name)
+
+    if failed_to_pickle:
+        tty.msg('The following packages failed to pickle: ' +
+                ', '.join(failed_to_pickle))
+
+        for name in failed_to_pickle:
+            pkg = spack.repo.get(name)
+            pickle.dumps(pkg)
+
+
+def test_repo_getpkg_names_and_classes():
+    """Ensure that all_packages/names/classes are consistent."""
+    names = spack.repo.path.all_package_names()
+    print(names)
+    classes = spack.repo.path.all_package_classes()
+    print(list(classes))
+    pkgs = spack.repo.path.all_packages()
+    print(list(pkgs))
+
+    for name, cls, pkg in zip(names, classes, pkgs):
+        assert cls.name == name
+        assert pkg.name == name
 
 
 def test_get_all_mock_packages():
@@ -136,7 +174,7 @@ def test_all_packages_use_sha256_checksums():
                 if bad_digest:
                     errors.append(
                         "All packages must use sha256 checksums."
-                        "Resource in %s uses %s." % (name, bad_digest)
+                        "Resource in %s uses %s." % (name,  bad_digest)
                     )
 
     assert [] == errors
@@ -218,4 +256,16 @@ def test_variant_defaults_are_parsable_from_cli():
             )
             if not default_is_parsable:
                 failing.append((pkg.name, variant_name))
+    assert not failing
+
+
+def test_variant_defaults_listed_explicitly_in_values():
+    failing = []
+    for pkg in spack.repo.path.all_packages():
+        for variant_name, variant in pkg.variants.items():
+            vspec = variant.make_default()
+            try:
+                variant.validate_or_raise(vspec, pkg=pkg)
+            except spack.variant.InvalidVariantValueError:
+                failing.append((pkg.name, variant.name))
     assert not failing

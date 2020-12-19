@@ -29,4 +29,3 @@ class PyTraitlets(PythonPackage):
     depends_on('py-six', when='@:4', type=('build', 'run'))
     depends_on('py-decorator', when='@:4', type=('build', 'run'))
     depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

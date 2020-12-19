@@ -15,6 +15,8 @@ class Syscalc(MakefilePackage):
     version('1.1.7', sha256='ac73df0f9f195eb62601fafc2eede3db17a562750f7971616870d6df4abd1b6c',
             url='https://bazaar.launchpad.net/~mgtools/mg5amcnlo/SysCalc/tarball/17')
 
+    tags = ['hep']
+
     depends_on('lhapdf@6:')
 
     def url_for_version(self, version):

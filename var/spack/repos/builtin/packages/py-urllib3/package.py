@@ -21,9 +21,6 @@ class PyUrllib3(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-tornado', type='test')
 
     variant('secure', default=False, description='Add SSL/TLS support')
     depends_on('py-pyopenssl@0.14:', when='+secure')

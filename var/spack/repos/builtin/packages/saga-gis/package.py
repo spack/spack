@@ -56,6 +56,7 @@ class SagaGis(AutotoolsPackage, SourceforgePackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('libsm',    type='link')
 
     depends_on('libharu')
     depends_on('wxwidgets')

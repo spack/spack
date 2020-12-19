@@ -22,19 +22,3 @@ class PyPbr(PythonPackage):
 
     depends_on('python@2.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-
-    # test-requirements.txt
-    depends_on('py-wheel@0.32.0:', type='test')
-    depends_on('py-fixtures@3.0.0:', type='test')
-    depends_on('py-hacking@0.12.0:0.12.999,0.13.1:0.13.999', type='test')
-    depends_on('py-mock@2.0.0:', type='test')
-    depends_on('py-six@1.10.0:', type='test')
-    depends_on('py-stestr@2.1.0:', type='test')
-    depends_on('py-testresources@2.0.0:', type='test')
-    depends_on('py-testscenarios@0.4:', type='test')
-    depends_on('py-testtools@2.2.0:', type='test')
-    depends_on('py-virtualenv@14.0.6:', type='test')
-    depends_on('py-coverage@4.0:4.3,4.5:', type='test')
-    depends_on('py-sphinx@1.6.2:1.6.5,1.6.8:1.999', when='^python@:2', type='test')
-    depends_on('py-sphinx@1.6.2:1.6.5,1.6.8:', type='test')
-    depends_on('py-testrepository@0.0.18:', type='test')

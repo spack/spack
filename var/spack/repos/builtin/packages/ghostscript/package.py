@@ -34,7 +34,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on('libxext')
     depends_on('gtkplus')
 
-    patch('nogoto.patch', when='%fj')
+    patch('nogoto.patch', when='%fj@:4.1.0')
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"

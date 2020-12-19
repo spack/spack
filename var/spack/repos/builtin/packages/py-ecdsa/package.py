@@ -18,4 +18,3 @@ class PyEcdsa(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-six@1.9.0:', type=('build', 'run'))
-    depends_on('openssl',       type='test')

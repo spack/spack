@@ -13,7 +13,7 @@ class KokkosNvccWrapper(Package):
     # We no longer maintain this as a separate repo
     # Download the Kokkos repo and install from there
     homepage = "https://github.com/kokkos/kokkos"
-    git = "git@github.com:kokkos/kokkos.git"
+    git = "https://github.com/kokkos/kokkos.git"
     url = "https://github.com/kokkos/kokkos/archive/3.1.01.tar.gz"
 
     version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')

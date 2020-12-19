@@ -20,9 +20,3 @@ class PyGeoalchemy2(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-sqlalchemy@0.8:', type=('build', 'run'))
     depends_on('py-shapely@1.3.0:', type=('build', 'run'), when='+dev')
-
-    depends_on('py-pycodestyle@2.2.0', type='test')
-    depends_on('py-flake8@3.2.0', type='test')
-    depends_on('py-pytest@3.7.4', type='test', when='@0.6.3')
-    depends_on('py-pytest@3.1.3', type='test', when='@0.4.2')
-    depends_on('py-pytest-cov@2.5.1', type='test')

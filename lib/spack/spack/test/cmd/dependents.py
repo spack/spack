@@ -18,17 +18,30 @@ dependents = SpackCommand('dependents')
 def test_immediate_dependents(mock_packages):
     out = dependents('libelf')
     actual = set(re.split(r'\s+', out.strip()))
-    assert actual == set(['dyninst', 'libdwarf',
-                          'patch-a-dependency', 'patch-several-dependencies'])
+    assert actual == set([
+        'dyninst',
+        'libdwarf',
+        'patch-a-dependency',
+        'patch-several-dependencies',
+        'quantum-espresso',
+        'conditionally-patch-dependency'
+    ])
 
 
 def test_transitive_dependents(mock_packages):
     out = dependents('--transitive', 'libelf')
     actual = set(re.split(r'\s+', out.strip()))
-    assert actual == set(
-        ['callpath', 'dyninst', 'libdwarf', 'mpileaks', 'multivalue-variant',
-         'singlevalue-variant-dependent',
-         'patch-a-dependency', 'patch-several-dependencies'])
+    assert actual == set([
+        'callpath',
+        'dyninst',
+        'libdwarf',
+        'mpileaks',
+        'multivalue-variant',
+        'singlevalue-variant-dependent',
+        'patch-a-dependency', 'patch-several-dependencies',
+        'quantum-espresso',
+        'conditionally-patch-dependency'
+    ])
 
 
 @pytest.mark.db

@@ -914,7 +914,8 @@ class Python(AutotoolsPackage):
         return join_path(self.site_packages_dir, "easy-install.pth")
 
     def setup_run_environment(self, env):
-        env.prepend_path('CPATH', os.pathsep.join(self.headers.directories))
+        env.prepend_path('CPATH', os.pathsep.join(
+            self.spec['python'].headers.directories))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set PYTHONPATH to include the site-packages directory for the
@@ -944,13 +945,20 @@ class Python(AutotoolsPackage):
         env.set('PYTHONPATH', pythonpath)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            for lib in ['lib', 'lib64']:
-                env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, lib,
-                    'python' + str(self.version.up_to(2)), 'site-packages'))
+        python_paths = []
+        for d in dependent_spec.traverse(deptype='run'):
+            if d.package.extends(self.spec):
+                # Python libraries may be installed in lib or lib64
+                # See issues #18520 and #17126
+                for lib in ['lib', 'lib64']:
+                    root = join_path(
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
+                        'site-packages')
+                    if os.path.exists(root):
+                        python_paths.append(root)
+
+        pythonpath = ':'.join(python_paths)
+        env.prepend_path('PYTHONPATH', pythonpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
@@ -1126,3 +1134,21 @@ class Python(AutotoolsPackage):
                 view.remove_file(src, dst)
             else:
                 os.remove(dst)
+
+    def test(self):
+        # do not use self.command because we are also testing the run env
+        exe = self.spec['python'].command.name
+
+        # test hello world
+        msg = 'hello world!'
+        reason = 'test: running {0}'.format(msg)
+        options = ['-c', 'print("{0}")'.format(msg)]
+        self.run_test(exe, options=options, expected=[msg], installed=True,
+                      purpose=reason)
+
+        # checks import works and executable comes from the spec prefix
+        reason = 'test: checking import and executable'
+        print_str = self.print_string('sys.executable')
+        options = ['-c', 'import sys; {0}'.format(print_str)]
+        self.run_test(exe, options=options, expected=[self.spec.prefix],
+                      installed=True, purpose=reason)

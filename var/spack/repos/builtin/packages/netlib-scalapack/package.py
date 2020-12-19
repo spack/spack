@@ -73,11 +73,22 @@ class ScalapackBase(CMakePackage):
             '-DBLAS_LIBRARIES=%s' % (blas.joined(';'))
         ])
 
+        c_flags = []
         if '+pic' in spec:
-            options.extend([
-                "-DCMAKE_C_FLAGS=%s" % self.compiler.cc_pic_flag,
+            c_flags.append(self.compiler.cc_pic_flag)
+            options.append(
                 "-DCMAKE_Fortran_FLAGS=%s" % self.compiler.fc_pic_flag
-            ])
+            )
+
+        # Work around errors of the form:
+        #   error: implicit declaration of function 'BI_smvcopy' is
+        #   invalid in C99 [-Werror,-Wimplicit-function-declaration]
+        if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
+            c_flags.append('-Wno-error=implicit-function-declaration')
+
+        options.append(
+            self.define('CMAKE_C_FLAGS', ' '.join(c_flags))
+        )
 
         return options
 

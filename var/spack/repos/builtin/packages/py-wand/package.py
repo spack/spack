@@ -24,7 +24,3 @@ class PyWand(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
 
     depends_on('py-sphinx@1:', type='build', when='+docs')
-
-    depends_on('py-pytest@2.3.0:', type='test')
-    depends_on('py-pytest-xdist@1.8:', type='test')
-    depends_on('py-psutil@1.0.1:', type='test')

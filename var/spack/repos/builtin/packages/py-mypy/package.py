@@ -19,8 +19,3 @@ class PyMypy(PythonPackage):
     depends_on('py-typed-ast@1.4.0:1.4.999', type=('build', 'run'))
     depends_on('py-typing-extensions@3.7.4:', type=('build', 'run'))
     depends_on('py-mypy-extensions@0.4.0:0.4.999', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-virtualenv', type='test')
-    depends_on('py-pip', type='test')
-    depends_on('py-lxml', type='test')
-    depends_on('googletest', type='test')

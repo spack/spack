@@ -99,4 +99,3 @@ class PyAzureCli(PythonPackage):
     depends_on('py-xmltodict@0.12:0.999', type=('build', 'run'))
     depends_on('py-javaproperties@0.5.1', type=('build', 'run'))
     depends_on('py-jsondiff@1.2.0', type=('build', 'run'))
-    depends_on('py-mock@4.0:4.999', type='test')

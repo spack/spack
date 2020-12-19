@@ -301,14 +301,11 @@ class BinaryCacheIndex(object):
             cached_index_path = cache_entry['index_path']
             if cached_mirror_url in configured_mirror_urls:
                 # May need to fetch the index and update the local caches
-                needs_regen = self.fetch_and_cache_index(
+                needs_regen = self._fetch_and_cache_index(
                     cached_mirror_url, expect_hash=cached_index_hash)
-                # In this block, the need to regenerate implies a need to
-                # clear as well.  This is the first place we set these to
-                # non-default values, so setting them False is fine.  After
-                # this, we should never set False again, only True.
-                spec_cache_clear_needed = needs_regen
-                spec_cache_regenerate_needed = needs_regen
+                # The need to regenerate implies a need to clear as well.
+                spec_cache_clear_needed |= needs_regen
+                spec_cache_regenerate_needed |= needs_regen
             else:
                 # No longer have this mirror, cached index should be removed
                 items_to_remove.append({
@@ -332,11 +329,9 @@ class BinaryCacheIndex(object):
         for mirror_url in configured_mirror_urls:
             if mirror_url not in self._local_index_cache:
                 # Need to fetch the index and update the local caches
-                needs_regen = self.fetch_and_cache_index(mirror_url)
+                needs_regen = self._fetch_and_cache_index(mirror_url)
                 # Generally speaking, a new mirror wouldn't imply the need to
-                # clear the spec cache, but don't touch it, which lets the
-                # previous decisions stand.  Also, only change the need to
-                # regenerate possibly from False to True.
+                # clear the spec cache, so leave it as is.
                 if needs_regen:
                     spec_cache_regenerate_needed = True
 
@@ -345,7 +340,7 @@ class BinaryCacheIndex(object):
         if spec_cache_regenerate_needed:
             self.regenerate_spec_cache(clear_existing=spec_cache_clear_needed)
 
-    def fetch_and_cache_index(self, mirror_url, expect_hash=None):
+    def _fetch_and_cache_index(self, mirror_url, expect_hash=None):
         """ Fetch a buildcache index file from a remote mirror and cache it.
 
         If we already have a cached index from this mirror, then we first
@@ -704,10 +699,23 @@ def generate_package_index(cache_prefix):
                            enable_transaction_locking=False,
                            record_fields=['spec', 'ref_count'])
 
-    file_list = (
-        entry
-        for entry in web_util.list_url(cache_prefix)
-        if entry.endswith('.yaml'))
+    try:
+        file_list = (
+            entry
+            for entry in web_util.list_url(cache_prefix)
+            if entry.endswith('.yaml'))
+    except KeyError as inst:
+        msg = 'No packages at {0}: {1}'.format(cache_prefix, inst)
+        tty.warn(msg)
+        return
+    except Exception as err:
+        # If we got some kind of S3 (access denied or other connection
+        # error), the first non boto-specific class in the exception
+        # hierarchy is Exception.  Just print a warning and return
+        msg = 'Encountered problem listing packages at {0}: {1}'.format(
+            cache_prefix, err)
+        tty.warn(msg)
+        return
 
     tty.debug('Retrieving spec.yaml files from {0} to build index'.format(
         cache_prefix))
@@ -769,10 +777,23 @@ def generate_key_index(key_prefix, tmpdir=None):
                         url_util.format(key_prefix),
                         'to build key index')))
 
-    fingerprints = (
-        entry[:-4]
-        for entry in web_util.list_url(key_prefix, recursive=False)
-        if entry.endswith('.pub'))
+    try:
+        fingerprints = (
+            entry[:-4]
+            for entry in web_util.list_url(key_prefix, recursive=False)
+            if entry.endswith('.pub'))
+    except KeyError as inst:
+        msg = 'No keys at {0}: {1}'.format(key_prefix, inst)
+        tty.warn(msg)
+        return
+    except Exception as err:
+        # If we got some kind of S3 (access denied or other connection
+        # error), the first non boto-specific class in the exception
+        # hierarchy is Exception.  Just print a warning and return
+        msg = 'Encountered problem listing keys at {0}: {1}'.format(
+            key_prefix, err)
+        tty.warn(msg)
+        return
 
     remove_tmpdir = False
 
@@ -1290,15 +1311,16 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
-def try_direct_fetch(spec, force=False, full_hash_match=False):
+def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
     specfile_name = tarball_name(spec, '.spec.yaml')
     lenient = not full_hash_match
     found_specs = []
+    spec_full_hash = spec.full_hash()
 
-    for mirror in spack.mirror.MirrorCollection().values():
+    for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
         buildcache_fetch_url = url_util.join(
             mirror.fetch_url, _build_cache_relative_path, specfile_name)
 
@@ -1318,7 +1340,7 @@ def try_direct_fetch(spec, force=False, full_hash_match=False):
 
         # Do not recompute the full hash for the fetched spec, instead just
         # read the property.
-        if lenient or fetched_spec._full_hash == spec.full_hash():
+        if lenient or fetched_spec._full_hash == spec_full_hash:
             found_specs.append({
                 'mirror_url': mirror.fetch_url,
                 'spec': fetched_spec,
@@ -1327,7 +1349,8 @@ def try_direct_fetch(spec, force=False, full_hash_match=False):
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
+def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False,
+                         mirrors_to_check=None):
     """
     Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
@@ -1335,7 +1358,7 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
     if spec is None:
         return []
 
-    if not spack.mirror.MirrorCollection():
+    if not spack.mirror.MirrorCollection(mirrors=mirrors_to_check):
         tty.debug("No Spack mirrors are currently configured")
         return {}
 
@@ -1360,7 +1383,9 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False):
     if not results:
         results = try_direct_fetch(spec,
                                    force=force,
-                                   full_hash_match=full_hash_match)
+                                   full_hash_match=full_hash_match,
+                                   mirrors=mirrors_to_check)
+
         if results:
             binary_index.update_spec(spec, results)
 

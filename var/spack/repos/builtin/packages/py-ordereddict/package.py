@@ -13,6 +13,4 @@ class PyOrdereddict(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ordereddict"
     url      = "https://pypi.io/packages/source/o/ordereddict/ordereddict-1.1.tar.gz"
 
-    import_modules = ['ordereddict']
-
     version('1.1', sha256='1c35b4ac206cef2d24816c89f89cf289dd3d38cf7c449bb3fab7bf6d43f01b1f')

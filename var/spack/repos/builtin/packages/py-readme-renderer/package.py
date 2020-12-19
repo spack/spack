@@ -21,5 +21,3 @@ class PyReadmeRenderer(PythonPackage):
     depends_on('py-docutils@0.13.1:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')

@@ -82,8 +82,7 @@ class Variant(object):
         else:
             # Otherwise assume values is the set of allowed explicit values
             self.values = values
-            allowed = tuple(self.values) + (self.default,)
-            self.single_value_validator = lambda x: x in allowed
+            self.single_value_validator = lambda x: x in tuple(self.values)
 
         self.multi = multi
         self.group_validator = validator
@@ -388,6 +387,11 @@ class MultiValuedVariant(AbstractVariant):
         # Otherwise we want all the values in `other` to be also in `self`
         return super_sat and (all(v in self.value for v in other.value) or
                               '*' in other or '*' in self)
+
+    def append(self, value):
+        """Add another value to this multi-valued variant."""
+        self._value = tuple(sorted((value,) + self._value))
+        self._original_value = ",".join(self._value)
 
 
 class SingleValuedVariant(AbstractVariant):

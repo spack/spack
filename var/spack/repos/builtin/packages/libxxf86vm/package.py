@@ -22,3 +22,8 @@ class Libxxf86vm(AutotoolsPackage, XorgPackage):
     depends_on('xf86vidmodeproto@2.2.99.1:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+
+    @property
+    def libs(self):
+        return find_libraries(
+            'libXxf86vm', self.prefix, shared=True, recursive=True)

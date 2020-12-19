@@ -19,4 +19,3 @@ class PyYahmm(PythonPackage):
     depends_on('py-scipy@0.13.3:', type=('build', 'run'))
     depends_on('py-matplotlib@1.3.1:', type=('build', 'run'))
     depends_on('py-networkx@1.8.1:', type=('build', 'run'))
-    depends_on('py-nose@1.3.3:', type='test')

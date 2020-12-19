@@ -15,4 +15,3 @@ class PyPreshed(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-cymem@2.0.2:2.0.999', type=('build', 'run'))
     depends_on('py-murmurhash@0.28:1.0', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

@@ -23,4 +23,3 @@ class PyPytestHttpbin(PythonPackage):
     depends_on('py-decorator', when='@:0.2', type=('build', 'run'))
     depends_on('py-httpbin', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

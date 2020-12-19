@@ -358,28 +358,56 @@ def test_substitute_tempdir(mock_low_high_config):
     )
 
 
-def test_substitute_padding(mock_low_high_config):
-    max_system_path = spack_path.get_system_path_max()
-    expected_length = (max_system_path -
-                       spack_path.SPACK_MAX_INSTALL_PATH_LENGTH)
+PAD_STRING = spack.util.path.SPACK_PATH_PADDING_CHARS
+MAX_PATH_LEN = spack.util.path.get_system_path_max()
+MAX_PADDED_LEN = MAX_PATH_LEN - spack.util.path.SPACK_MAX_INSTALL_PATH_LENGTH
+reps = [PAD_STRING for _ in range((MAX_PADDED_LEN // len(PAD_STRING) + 1) + 2)]
+full_padded_string = os.path.join(
+    '/path', os.path.sep.join(reps))[:MAX_PADDED_LEN]
 
-    install_path = spack_path.canonicalize_path('/foo/bar/${padding}/baz')
 
-    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
-    assert len(install_path) == expected_length
+@pytest.mark.parametrize('config_settings,expected', [
+    ([], [None, None, None]),
+    ([['config:install_tree:root', '/path']], ['/path', None, None]),
+    ([['config:install_tree', '/path']], ['/path', None, None]),
+    ([['config:install_tree:projections', {'all': '{name}'}]],
+     [None, None, {'all': '{name}'}]),
+    ([['config:install_path_scheme', '{name}']],
+     [None, None, {'all': '{name}'}]),
+    ([['config:install_tree:root', '/path'],
+      ['config:install_tree:padded_length', 11]],
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
+    ([['config:install_tree:root', '/path/$padding:11']],
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
+    ([['config:install_tree', '/path/${padding:11}']],
+     [os.path.join('/path', PAD_STRING[:5]), '/path', None]),
+    ([['config:install_tree:padded_length', False]], [None, None, None]),
+    ([['config:install_tree:padded_length', True],
+      ['config:install_tree:root', '/path']],
+     [full_padded_string, '/path', None]),
+    ([['config:install_tree:', '/path$padding']],
+     [full_padded_string, '/path', None]),
+    ([['config:install_tree:', '/path/${padding}']],
+     [full_padded_string, '/path', None]),
+])
+def test_parse_install_tree(config_settings, expected, mutable_config):
+    expected_root = expected[0] or spack.store.default_install_tree_root
+    expected_unpadded_root = expected[1] or expected_root
+    expected_proj = expected[2] or spack.directory_layout.default_projections
 
-    install_path = spack_path.canonicalize_path('/foo/bar/baz/gah/$padding')
+    # config settings is a list of 2-element lists, [path, value]
+    # where path is a config path and value is the value to set at that path
+    # these can be "splatted" in as the arguments to config.set
+    for config_setting in config_settings:
+        mutable_config.set(*config_setting)
 
-    assert spack_path.SPACK_PATH_PADDING_CHARS in install_path
-    assert len(install_path) == expected_length
+    config_dict = mutable_config.get('config')
+    root, unpadded_root, projections = spack.store.parse_install_tree(
+        config_dict)
 
-    i_path = spack_path.canonicalize_path('/foo/$padding:10')
-    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:10])
-    assert i_path == i_expect
-
-    i_path = spack_path.canonicalize_path('/foo/${padding:20}')
-    i_expect = os.path.join('/foo', spack_path.SPACK_PATH_PADDING_CHARS[:20])
-    assert i_path == i_expect
+    assert root == expected_root
+    assert unpadded_root == expected_unpadded_root
+    assert projections == expected_proj
 
 
 def test_read_config(mock_low_high_config, write_config_file):

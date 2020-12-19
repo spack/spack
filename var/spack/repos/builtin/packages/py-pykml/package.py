@@ -19,4 +19,3 @@ class PyPykml(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-lxml@2.2.6:', type=('build', 'run'))
-    depends_on('py-nose', type='test')

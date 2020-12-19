@@ -25,6 +25,3 @@ class PyArrow(PythonPackage):
     depends_on('py-setuptools', type='build')
     depends_on('py-backports-functools-lru-cache@1.2.1:', type=('build', 'run'), when='^python@2.7:2.8')
     depends_on('py-python-dateutil', type=('build', 'run'))
-    depends_on('py-chai', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-pytz@2019.0:', type='test')

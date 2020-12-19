@@ -33,7 +33,7 @@ class SConsPackage(PackageBase):
     build_system_class = 'SConsPackage'
 
     #: Callback names for build-time test
-    build_time_test_callbacks = ['test']
+    build_time_test_callbacks = ['build_test']
 
     depends_on('scons', type='build')
 
@@ -59,7 +59,7 @@ class SConsPackage(PackageBase):
 
     # Testing
 
-    def test(self):
+    def build_test(self):
         """Run unit tests after build.
 
         By default, does nothing. Override this if you want to

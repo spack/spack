@@ -25,5 +25,3 @@ class PyImportlibMetadata(PythonPackage):
     depends_on('py-pathlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-contextlib2', when='^python@:2', type=('build', 'run'))
     depends_on('py-configparser@3.5:', when='^python@:2', type=('build', 'run'))
-    depends_on('py-importlib-resources', when='^python@:3.6', type='test')
-    depends_on('py-packaging', type='test')

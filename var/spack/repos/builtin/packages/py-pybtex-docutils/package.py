@@ -12,8 +12,6 @@ class PyPybtexDocutils(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pybtex-docutils/"
     url      = "https://pypi.io/packages/source/p/pybtex-docutils/pybtex-docutils-0.2.1.tar.gz"
 
-    import_modules = ['pybtex_docutils']
-
     version('0.2.1', sha256='e4b075641c1d68a3e98a6d73ad3d029293fcf9e0773512315ef9c8482f251337')
 
     depends_on('py-setuptools', type='build')

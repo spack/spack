@@ -27,7 +27,7 @@ class Kcov(CMakePackage):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def test_install(self):
         # The help message exits with an exit code of 1
         kcov = Executable(self.prefix.bin.kcov)
         kcov('-h', ignore_errors=1)

@@ -14,6 +14,8 @@ class Hepmc3(CMakePackage):
     url      = "https://gitlab.cern.ch/hepmc/HepMC3/-/archive/3.2.1/HepMC3-3.2.1.tar.gz"
     git      = "https://gitlab.cern.ch/hepmc/HepMC3.git"
 
+    tags = ['hep']
+
     maintainers = ['vvolkl']
 
     version('3.2.2', sha256='0e8cb4f78f804e38f7d29875db66f65e4c77896749d723548cc70fb7965e2d41')

@@ -26,8 +26,3 @@ class PyDateparser(PythonPackage):
     depends_on('py-ruamel-yaml', type=('build', 'run'), when='+calendars')
     depends_on('py-convertdate', type=('build', 'run'), when='+calendars')
     depends_on('py-jdatetime', type=('build', 'run'), when='+calendars')
-    depends_on('py-mock', type='test')
-    depends_on('py-nose', type='test')
-    depends_on('py-parameterized', type='test')
-    depends_on('py-six', type='test')
-    depends_on('py-coverage', type='test')
