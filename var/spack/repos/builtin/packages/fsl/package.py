@@ -159,8 +159,14 @@ class Fsl(Package, CudaPackage):
 
     @run_after('install')
     def postinstall(self):
-        del os.environ['PYTHONPATH']
-        del os.environ['PYTHONHOME']
+        # The PYTHON  related environment variables need to be unset here so
+        # the post install script does not get confused.
+        vars_to_unset = ['PYTHONPATH', 'PYTHONHOME']
+
+        with spack.util.environment.preserve_environment(*vars_to_unset):
+            for v in vars_to_unset:
+                del os.environ[v]
+
         script = Executable(join_path(prefix, 'etc', 'fslconf',
                                       'post_install.sh'))
         script('-f', prefix)
