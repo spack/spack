@@ -22,7 +22,7 @@ class Clingo(CMakePackage):
 
     maintainers = ["tgamblin"]
 
-    version('master', branch='master', submodules=True)
+    version('master', branch='master', submodules=True, preferred=True)
     version('spack', commit='2ab2e81bcb24f6070b7efce30a754d74ef52ee2d', submodules=True)
 
     version('5.4.0', sha256='e2de331ee0a6d254193aab5995338a621372517adcf91568092be8ac511c18f3')
