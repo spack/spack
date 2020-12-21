@@ -35,6 +35,7 @@ class Meson(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('ninja', type='run')
+    depends_on('cmake', type='run')
 
     # By default, Meson strips the rpath on installation. This patch disables
     # rpath modification completely to make sure that Spack's rpath changes

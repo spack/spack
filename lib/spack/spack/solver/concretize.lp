@@ -40,8 +40,7 @@ depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 % declared dependencies are real if they're not virtual AND
 % the package is not an external
 depends_on(Package, Dependency, Type)
- :- declared_dependency(Package, Dependency, Type),
-    node(Package),
+ :- dependency_conditions(Package, Dependency, Type),
     not virtual(Dependency),
     not external(Package).
 
@@ -51,10 +50,133 @@ depends_on(Package, Dependency, Type)
   depends_on(Package, Provider, Type)
   : provides_virtual(Provider, Virtual)
 } 1
- :- declared_dependency(Package, Virtual, Type),
+ :- dependency_conditions(Package, Virtual, Type),
     virtual(Virtual),
-    not external(Package),
-    node(Package).
+    not external(Package).
+
+% if any individual condition below is true, trigger the dependency.
+dependency_conditions(P, D, T) :-
+  dependency_conditions_hold(P, D, I),
+  dependency_type(I, T).
+
+#defined dependency_type/2.
+
+% collect all the dependency conditions into a single conditional rule
+% distinguishing between Parent and Package is needed to account for
+% conditions like:
+%
+% depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
+%
+% that include dependencies
+dependency_conditions_hold(Parent, Dependency, ID) :-
+  node(Package)
+    : required_dependency_condition(ID, "node", Package);
+  version(Package, Version)
+    : required_dependency_condition(ID, "version", Package, Version);
+  version_satisfies(Package, Constraint)
+    : required_dependency_condition(ID, "version_satisfies", Package, Constraint);
+  node_platform(Package, Platform)
+    : required_dependency_condition(ID, "node_platform", Package, Platform);
+  node_os(Package, OS)
+    : required_dependency_condition(ID, "node_os", Package, OS);
+  node_target(Package, Target)
+    : required_dependency_condition(ID, "node_target", Package, Target);
+  variant_value(Package, Variant, Value)
+    : required_dependency_condition(ID, "variant_value", Package, Variant, Value);
+  node_compiler(Package, Compiler)
+    : required_dependency_condition(ID, "node_compiler", Package, Compiler);
+  node_compiler_version(Package, Compiler, Version)
+    : required_dependency_condition(ID, "node_compiler_version", Package, Compiler, Version);
+  node_compiler_version_satisfies(Package, Compiler, Version)
+    : required_dependency_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
+  node_flag(Package, FlagType, Flag)
+    : required_dependency_condition(ID, "node_flag", Package, FlagType, Flag);
+  dependency_condition(Parent, Dependency, ID);
+  node(Parent).
+
+#defined dependency_condition/3.
+#defined required_dependency_condition/3.
+#defined required_dependency_condition/4.
+#defined required_dependency_condition/5.
+#defined required_dependency_condition/5.
+
+% general rules for conflicts
+:- node(Package) : conflict_condition(ID, "node", Package);
+   not external(Package) : conflict_condition(ID, "node", Package);
+   version(Package, Version) : conflict_condition(ID, "version", Package, Version);
+   version_satisfies(Package, Constraint) : conflict_condition(ID, "version_satisfies", Package, Constraint);
+   node_platform(Package, Platform) : conflict_condition(ID, "node_platform", Package, Platform);
+   node_os(Package, OS) : conflict_condition(ID, "node_os", Package, OS);
+   node_target(Package, Target) : conflict_condition(ID, "node_target", Package, Target);
+   variant_value(Package, Variant, Value) : conflict_condition(ID, "variant_value", Package, Variant, Value);
+   node_compiler(Package, Compiler) : conflict_condition(ID, "node_compiler", Package, Compiler);
+   node_compiler_version(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version", Package, Compiler, Version);
+   node_compiler_version_satisfies(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
+   node_flag(Package, FlagType, Flag) : conflict_condition(ID, "node_flag", Package, FlagType, Flag);
+   conflict(ID, Package).
+
+#defined conflict/2.
+#defined conflict_condition/3.
+#defined conflict_condition/4.
+#defined conflict_condition/5.
+
+% Implications from matching a dependency condition
+node(Dependency) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency).
+
+version(Dependency, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "version", Dependency, Version).
+
+version_satisfies(Dependency, Constraint) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "version_satisfies", Dependency, Constraint).
+
+node_platform(Dependency, Platform) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_platform", Dependency, Platform).
+
+node_os(Dependency, OS) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_os", Dependency, OS).
+
+node_target(Dependency, Target) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_target", Dependency, Target).
+
+variant_set(Dependency, Variant, Value) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "variant_set", Dependency, Variant, Value).
+
+node_compiler(Dependency, Compiler) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler", Dependency, Compiler).
+
+node_compiler_version(Dependency, Compiler, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler_version", Dependency, Compiler, Version).
+
+node_compiler_version_satisfies(Dependency, Compiler, Version) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_compiler_version_satisfies", Dependency, Compiler, Version).
+
+node_flag(Dependency, FlagType, Flag) :-
+  dependency_conditions_hold(Package, Dependency, ID),
+  depends_on(Package, Dependency),
+  imposed_dependency_condition(ID, "node_flag", Dependency, FlagType, Flag).
+
+#defined imposed_dependency_condition/4.
+#defined imposed_dependency_condition/5.
 
 % if a virtual was required by some root spec, one provider is in the DAG
 1 { node(Package) : provides_virtual(Package, Virtual) } 1
@@ -139,6 +261,8 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 #defined external_only/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
+#defined version_satisfies/2.
+#defined node_compiler_version_satisfies/3.
 #defined root/1.
 
 %-----------------------------------------------------------------------------
@@ -349,16 +473,21 @@ node_target_weight(Package, Weight)
     target_weight(Target, Package, Weight).
 
 % compatibility rules for targets among nodes
-node_target_match_pref(Package, Target) :- node_target_set(Package, Target).
 node_target_match_pref(Dependency, Target)
-  :- depends_on(Package, Dependency), node_target_match_pref(Package, Target),
+  :- depends_on(Package, Dependency),
+     node_target_match_pref(Package, Target),
+     not node_target_set(Dependency, _).
+
+node_target_match_pref(Dependency, Target)
+  :- depends_on(Package, Dependency),
+     node_target_set(Package, Target),
+     not node_target_match_pref(Package, Target),
      not node_target_set(Dependency, _).
 
 node_target_match_pref(Dependency, Target)
   :- depends_on(Package, Dependency),
      root(Package), node_target(Package, Target),
-     not node_target_match_pref(Package, _),
-     not node_target_set(Dependency, _).
+     not node_target_match_pref(Package, _).
 
 node_target_match(Package, 1)
   :- node_target(Package, Target), node_target_match_pref(Package, Target).
