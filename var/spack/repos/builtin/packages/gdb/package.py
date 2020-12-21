@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Gdb(AutotoolsPackage, GNUMirrorPackage):
@@ -76,3 +77,12 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
             args.append('--enable-tui')
 
         return args
+
+    @run_after('install')
+    def gdbinit(self):
+        if '+python' in self.spec:
+            tool = self.spec['python'].command.path + '-gdb.py'
+            if os.path.exists(tool):
+                directory = self.prefix.share.gdb.join('auto-load')
+                mkdir(directory)
+                symlink(tool, directory.join(os.path.basename(tool)))
