@@ -6,8 +6,9 @@
 
 from spack import *
 
+
 class RFasterize(RPackage):
-    """Provides drop-in replacement for rasterize() from the package 'raster'."""
+    """Provides drop-in replacement for rasterize() from the package raster."""
 
     homepage = "https://cran.r-project.org/package=fasterize"
     url      = "https://cran.r-project.org/src/contrib/fasterize_1.0.3.tar.gz"
