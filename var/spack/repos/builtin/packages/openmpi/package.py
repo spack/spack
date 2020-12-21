@@ -24,9 +24,9 @@ class Openmpi(AutotoolsPackage):
     application developers and computer science researchers.
     """
 
-    homepage = "http://www.open-mpi.org"
+    homepage = "https://www.open-mpi.org"
     url = "https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.0.tar.bz2"
-    list_url = "http://www.open-mpi.org/software/ompi/"
+    list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
     maintainers = ['hppritcha']
@@ -452,7 +452,7 @@ class Openmpi(AutotoolsPackage):
         return results
 
     def url_for_version(self, version):
-        url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
+        url = "https://download.open-mpi.org/release/open-mpi/v{0}/openmpi-{1}.tar.bz2"
         return url.format(version.up_to(2), version)
 
     @property
