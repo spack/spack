@@ -33,7 +33,7 @@ class PyH5py(PythonPackage):
     depends_on('python@3.6:', when='@3.0.0:')
 
     # Build dependencies
-    depends_on('py-cython@0.23:', type='build')
+    depends_on('py-cython@0.23:', type='build', when='@:2.99')
     depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:')
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
@@ -41,7 +41,7 @@ class PyH5py(PythonPackage):
     # Build and runtime dependencies
     depends_on('py-cached-property@1.5:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'), when='@:2.999.999')
+    depends_on('py-six', type=('build', 'run'), when='@:2.99')
 
     # Link dependencies
     depends_on('hdf5@1.8.4:+hl')
@@ -52,11 +52,11 @@ class PyH5py(PythonPackage):
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
     # Conflicts
-    conflicts('^hdf5@1.12.0:', when='@:2.999.999')
+    conflicts('^hdf5@1.12.0:', when='@:2.99')
 
     phases = ['configure', 'install']
 
-    @when('@:2.999.999')
+    @when('@:2.99')
     def configure(self, spec, prefix):
         self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix),
                       '--hdf5-version={0}'.format(spec['hdf5'].version))
