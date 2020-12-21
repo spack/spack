@@ -269,6 +269,20 @@ def mock_shared_tree_cfg(mock_config_scopes, tmpdir_factory):
 
 
 @pytest.fixture()
+def mock_deprecated_tree_cfg(mock_config_scopes, tmpdir_factory):
+    cfg_paths = mock_config_scopes
+
+    cfg_data = {
+        'config': {
+            'install_tree': str(tmpdir_factory.mktemp('root1'))
+        }
+    }
+    section_path = os.path.join(cfg_paths.universal['system'], 'config.yaml')
+    with open(section_path, 'w') as f:
+        syaml.dump_config(cfg_data, f)
+
+
+@pytest.fixture()
 def mock_usr_scope_cfg(mock_config_scopes, tmpdir_factory):
     cfg_paths = mock_config_scopes
     pkg_data = {
@@ -312,6 +326,13 @@ def test_install_tree_config(mock_config_scopes, mock_shared_tree_cfg):
     cfg = spack.config._config(
         cfg_paths=mock_config_scopes, install_tree='shared_tree2')
     assert cfg.get('packages:bar:version')
+
+
+def test_deprecated_install_tree_config(mutable_empty_config, tmpdir_factory):
+    """Check that the deprecated install_root format can be used"""
+    mock_root = str(tmpdir_factory.mktemp('root1'))
+    spack.config.set('config:install_tree', mock_root)
+    assert str(spack.store._store().root) == mock_root
 
 
 def test_write_key_in_memory(mock_low_high_config, compiler_specs):
