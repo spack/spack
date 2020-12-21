@@ -502,13 +502,20 @@ derive_target_from_parent(Parent, Package)
 %-----------------------------------------------------------------------------
 % Compiler semantics
 %-----------------------------------------------------------------------------
+compiler(Compiler) :- compiler_version(Compiler, _).
 
-% one compiler per node
-1 { node_compiler(Package, Compiler) : compiler(Compiler) } 1 :- node(Package).
+% There must be only one compiler set per node. The compiler
+% is chosen among available versions.
 1 { node_compiler_version(Package, Compiler, Version)
     : compiler_version(Compiler, Version) } 1 :- node(Package).
-1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
- :- node(Package).
+
+% Sometimes we just need to know the compiler and not the version
+node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
+
+% We can't have a compiler be enforced and select the version from another compiler
+:- node_compiler(Package, Compiler1),
+   node_compiler_version(Package, Compiler2, _),
+   Compiler1 != Compiler2.
 
 % define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
 % version_satisfies implies that exactly one of the satisfying versions
@@ -519,6 +526,7 @@ derive_target_from_parent(Parent, Package)
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
      node_compiler_version_satisfies(Package, Compiler, Constraint, Version).
+
 #defined node_compiler_version_satisfies/4.
 
 % If the compiler version was set from the command line,
@@ -566,17 +574,14 @@ compiler_version_match(Package, 1)
 
 % compilers weighted by preference according to packages.yaml
 compiler_weight(Package, Weight)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
+ :- node_compiler_version(Package, Compiler, V),
     node_compiler_preference(Package, Compiler, V, Weight).
 compiler_weight(Package, Weight)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
+ :- node_compiler_version(Package, Compiler, V),
     not node_compiler_preference(Package, Compiler, V, _),
     default_compiler_preference(Compiler, V, Weight).
 compiler_weight(Package, 100)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, Version),
+ :- node_compiler_version(Package, Compiler, Version),
     not node_compiler_preference(Package, Compiler, Version, _),
     not default_compiler_preference(Compiler, Version, _).
 
@@ -610,7 +615,6 @@ node_flag_source(Dependency, Q)
 node_flag(Package, FlagType, Flag)
  :- not node_flag_set(Package),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
-    node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
@@ -619,7 +623,6 @@ node_flag(Package, FlagType, Flag)
 node_flag_compiler_default(Package)
  :- not node_flag_set(Package),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
-    node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
