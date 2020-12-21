@@ -577,7 +577,6 @@ class SpackSolverSetup(object):
             compiler_versions[compiler.name].add(compiler.version)
 
         for compiler in sorted(compiler_versions):
-            self.gen.fact(fn.compiler(compiler))
             for v in sorted(compiler_versions[compiler]):
                 self.gen.fact(fn.compiler_version(compiler, v))
 
