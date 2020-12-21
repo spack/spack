@@ -5,7 +5,12 @@
 
 from __future__ import print_function
 
-import itertools
+try:
+  from itertools import zip_longest
+except:
+  from itertools import izip_longest
+  zip_longest = izip_longest
+
 import re
 import os
 import sys
@@ -26,7 +31,7 @@ def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx"
     args = [iter(iterable)] * n
-    return itertools.zip_longest(*args, fillvalue=fillvalue)
+    return zip_longest(*args, fillvalue=fillvalue)
 
 
 def is_package(f):
@@ -171,7 +176,7 @@ def flake8(parser, args):
                 # "--config=.flake8",
                 *chunk,
                 fail_on_error=False,
-                output=str,
+                output=str
             )
             returncode |= flake8_cmd.returncode
 
