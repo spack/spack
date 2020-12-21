@@ -6,10 +6,11 @@
 from __future__ import print_function
 
 try:
-  from itertools import zip_longest
-except:
-  from itertools import izip_longest
-  zip_longest = izip_longest
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest
+
+    zip_longest = izip_longest
 
 import re
 import os
