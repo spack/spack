@@ -40,17 +40,24 @@ max-line-length = 79
 per-file-ignores =
   var/spack/repos/*/package.py:F405,F821
 
+# exclude things we usually do not want linting for.
+# These still get linted when passed explicitly, as when spack flake8 passes
+# them on the command line.
 exclude =
   .git
-  ./etc
-  ./opt
-  ./share/
-  ./var/spack/cache/
-  ./var/spack/gpg*/
-  ./var/spack/junit-report/
-  ./var/spack/mock-configs/
+  etc/
+  opt/
+  share/
+  var/spack/cache/
+  var/spack/gpg*/
+  var/spack/junit-report/
+  var/spack/mock-configs/
   lib/spack/external
+  __pycache__
+  var
+
 format = spack
+
 [flake8:local-plugins]
 report =
   spack = flake8_formatter:SpackFormatter
