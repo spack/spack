@@ -269,20 +269,6 @@ def mock_shared_tree_cfg(mock_config_scopes, tmpdir_factory):
 
 
 @pytest.fixture()
-def mock_deprecated_tree_cfg(mock_config_scopes, tmpdir_factory):
-    cfg_paths = mock_config_scopes
-
-    cfg_data = {
-        'config': {
-            'install_tree': str(tmpdir_factory.mktemp('root1'))
-        }
-    }
-    section_path = os.path.join(cfg_paths.universal['system'], 'config.yaml')
-    with open(section_path, 'w') as f:
-        syaml.dump_config(cfg_data, f)
-
-
-@pytest.fixture()
 def mock_usr_scope_cfg(mock_config_scopes, tmpdir_factory):
     cfg_paths = mock_config_scopes
     pkg_data = {

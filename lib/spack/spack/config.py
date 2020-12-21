@@ -645,14 +645,14 @@ class Configuration(object):
         return value
 
     @_config_mutator
-    def set(self, path, value, scope=None, force=False):
+    def set(self, path, value, scope=None):
         """Convenience function for setting single values in config files.
 
         Accepts the path syntax described in ``get()``.
         """
         if ':' not in path:
             # handle bare section name as path
-            self.update_config(path, value, scope=scope, force=force)
+            self.update_config(path, value, scope=scope)
             return
 
         parts = process_config_path(path)
@@ -683,7 +683,7 @@ class Configuration(object):
         # update new value
         data[parts[0]] = value
 
-        self.update_config(section, section_data, scope=scope, force=force)
+        self.update_config(section, section_data, scope=scope)
 
     def __iter__(self):
         """Iterate over scopes in this configuration."""
