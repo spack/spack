@@ -362,7 +362,7 @@ variant_default_value(Package, Variant, Value)
 % when assigned a value.
 auto_variant("dev_path").
 auto_variant("patches").
-variant(Package, "dev_path")
+variant(Package, Variant)
   :- variant_set(Package, Variant, _), auto_variant(Variant).
 variant_single_value(Package, "dev_path")
   :- variant_set(Package, "dev_path", _).
@@ -381,9 +381,9 @@ variant_single_value(Package, "dev_path")
 %-----------------------------------------------------------------------------
 % Platform semantics
 %-----------------------------------------------------------------------------
+
 % one platform per node
-1 { node_platform(Package, Platform) : node_platform(Packagee, Platform) } 1
-  :- node(Package).
+:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package).
 
 % if no platform is set, fall back to the default
 node_platform(Package, Platform)
