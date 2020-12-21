@@ -18,7 +18,7 @@ packages:
       - compiler
       - architecture
     specs:
-      - arm-forge@20.0.3-linux-rhel7-x86_64
+      - arm-forge@20.2.0-linux-rhel7-x86_64
       - binutils@2.31.1
       - bison@3.4.2
       - blender
