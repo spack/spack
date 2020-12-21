@@ -18,6 +18,3 @@ class PyTqdm(PythonPackage):
 
     depends_on('python@2.6:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-nose', type='test')
-    depends_on('py-flake8', type='test')
-    depends_on('py-coverage', type='test')

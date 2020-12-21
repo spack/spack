@@ -12,8 +12,6 @@ class PyPytest(PythonPackage):
     homepage = "http://pytest.org/"
     url      = "https://pypi.io/packages/source/p/pytest/pytest-5.2.1.tar.gz"
 
-    import_modules = ['pytest']
-
     version('5.3.4', sha256='1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600')
     version('5.2.1', sha256='ca563435f4941d0cb34767301c27bc65c510cb82e90b9ecf9cb52dc2c63caaa0')
     version('5.1.1', sha256='c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88')

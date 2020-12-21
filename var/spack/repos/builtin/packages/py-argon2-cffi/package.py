@@ -16,6 +16,3 @@ class PyArgon2Cffi(PythonPackage):
     depends_on('py-cffi@1.0.0:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-enum34', when='^python@:3.3', type=('build', 'run'))
-    depends_on('py-coverage@5.0.2:+toml', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-pytest', type='test')

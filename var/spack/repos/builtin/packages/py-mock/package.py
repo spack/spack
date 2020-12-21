@@ -23,5 +23,3 @@ class PyMock(PythonPackage):
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-funcsigs@1:', type=('build', 'run'), when='^python@:3.2')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-cov', type='test')

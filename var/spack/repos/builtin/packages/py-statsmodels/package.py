@@ -42,6 +42,8 @@ class PyStatsmodels(PythonPackage):
 
     depends_on('py-pytest', type='test')
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
     def build_test(self):
         dirs = glob.glob("build/lib*")  # There can be only one...
         with working_dir(dirs[0]):

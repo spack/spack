@@ -12,8 +12,6 @@ class PyEdffile(PythonPackage):
     homepage = "https://github.com/vasole/pymca/blob/master/PyMca5/PyMcaIO/EdfFile.py"
     git      = "https://github.com/conda-forge/edffile-feedstock.git"
 
-    import_modules = ['EdfFile']
-
     version('5.0.0', commit='be5ab4199db9f8209c59e31874934b8536b52301')
 
     depends_on('py-setuptools', type='build')

@@ -11,7 +11,6 @@ class PyVermin(PythonPackage):
     url      = "https://github.com/netromdk/vermin/archive/v1.0.3.tar.gz"
 
     maintainers = ['netromdk']
-    import_modules = ['vermin']
 
     version('1.0.3', sha256='1503be05b55cacde1278a1fe55304d8ee889ddef8ba16e120ac6686259bec95c')
     version('1.0.2', sha256='e999d5f5455e1116b366cd1dcc6fecd254c7ae3606549a61bc044216f9bb5b55')
@@ -24,5 +23,7 @@ class PyVermin(PythonPackage):
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
 
-    def test(self):
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
         make('test')

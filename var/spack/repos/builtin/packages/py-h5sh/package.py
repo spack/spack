@@ -22,4 +22,3 @@ class PyH5sh(PythonPackage):
     depends_on('py-prompt-toolkit@2:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

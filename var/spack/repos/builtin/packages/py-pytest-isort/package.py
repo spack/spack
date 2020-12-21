@@ -11,7 +11,6 @@ class PyPytestIsort(PythonPackage):
 
     homepage = "http://github.com/moccu/pytest-isort/"
     url      = "https://pypi.io/packages/source/p/pytest-isort/pytest-isort-0.3.1.tar.gz"
-    import_modules = ['pytest_isort']
 
     version('0.3.1', sha256='4bfee60dad1870b51700d55a85f5ceda766bd9d3d2878c1bbabee80e61b1be1a')
 

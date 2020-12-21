@@ -33,7 +33,3 @@ class PyTheano(PythonPackage, CudaPackage):
     depends_on('cudnn', when='+cuda')
     depends_on('py-pygpu', when='+cuda', type=('build', 'run'))
     depends_on('libgpuarray', when='+cuda')
-
-    depends_on('py-nose@1.3.0:', type='test')
-    depends_on('py-parameterized', type='test')
-    depends_on('py-flake8', type='test')

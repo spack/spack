@@ -19,5 +19,3 @@ class PyBlosc(PythonPackage):
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-scikit-build', type='build')
     # depends_on('c-blosc')  # shipped internally
-    depends_on('py-numpy', type='test')
-    depends_on('py-psutil', type='test')

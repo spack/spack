@@ -14,7 +14,6 @@ class PyPyproj(PythonPackage):
     git      = "https://github.com/pyproj4/pyproj.git"
 
     maintainers = ['citibeth', 'adamjstewart']
-    import_modules = ['pyproj']
 
     version('2.6.0',   sha256='977542d2f8cf2981cf3ad72cedfebcd6ac56977c7aa830d9b49fa7888b56e83d')
     version('2.2.0',   sha256='0a4f793cc93539c2292638c498e24422a2ec4b25cb47545addea07724b2a56e5')

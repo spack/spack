@@ -945,13 +945,20 @@ class Python(AutotoolsPackage):
         env.set('PYTHONPATH', pythonpath)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            for lib in ['lib', 'lib64']:
-                env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, lib,
-                    'python' + str(self.version.up_to(2)), 'site-packages'))
+        python_paths = []
+        for d in dependent_spec.traverse(deptype='run'):
+            if d.package.extends(self.spec):
+                # Python libraries may be installed in lib or lib64
+                # See issues #18520 and #17126
+                for lib in ['lib', 'lib64']:
+                    root = join_path(
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
+                        'site-packages')
+                    if os.path.exists(root):
+                        python_paths.append(root)
+
+        pythonpath = ':'.join(python_paths)
+        env.prepend_path('PYTHONPATH', pythonpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.

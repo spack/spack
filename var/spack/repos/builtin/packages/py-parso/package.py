@@ -19,5 +19,3 @@ class PyParso(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools',    type='build')
-    depends_on('py-pytest@3.0.7:', type='test')
-    depends_on('py-docopt',        type='test')

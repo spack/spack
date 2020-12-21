@@ -21,9 +21,6 @@ class PyMerlin(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-
-    depends_on('py-pytest', type='test')
-
     depends_on('py-cached-property', type=('build', 'run'))
     depends_on('py-celery@5.0.0+redis+sqlalchemy', when="@1.7.5:", type=('build', 'run'))
     depends_on('py-celery@4.3.0:4.999+redis+sqlalchemy', when="@:1.7.4", type=('build', 'run'))

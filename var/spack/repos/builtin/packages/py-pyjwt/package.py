@@ -19,6 +19,3 @@ class PyPyjwt(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cryptography@1.4:', when='+crypto', type=('build', 'run'))
-    depends_on('py-pytest@4.0.1:4.99.99', type='test')
-    depends_on('py-pytest-cov@2.6.0:2.99.99', type='test')
-    depends_on('py-pytest-runner@4.2:4.99', type='test')

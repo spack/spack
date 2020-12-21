@@ -12,14 +12,6 @@ class PyCython(PythonPackage):
     homepage = "https://pypi.python.org/pypi/cython"
     url      = "https://pypi.io/packages/source/c/cython/Cython-0.29.21.tar.gz"
 
-    import_modules = [
-        'cython', 'Cython', 'Cython.Build', 'Cython.Compiler',
-        'Cython.Runtime', 'Cython.Distutils', 'Cython.Debugger',
-        'Cython.Debugger.Tests', 'Cython.Plex', 'Cython.Tests',
-        'Cython.Build.Tests', 'Cython.Compiler.Tests', 'Cython.Utility',
-        'Cython.Tempita', 'pyximport',
-    ]
-
     version('0.29.21', sha256='e57acb89bd55943c8d8bf813763d20b9099cc7165c0f16b707631a7654be9cad')
     version('0.29.16', sha256='232755284f942cbb3b43a06cd85974ef3c970a021aef19b5243c03ee2b08fa05')
     version('0.29.15', sha256='60d859e1efa5cc80436d58aecd3718ff2e74b987db0518376046adedba97ac30')
@@ -47,6 +39,8 @@ class PyCython(PythonPackage):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
 
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
     def build_test(self):
         # Warning: full suite of unit tests takes a very long time
         python('runtests.py', '-j', str(make_jobs))

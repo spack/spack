@@ -25,9 +25,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant('benchmarks', default=True, description='Build benchmarks.')
     variant('examples', default=True, description='Build examples.')
     variant('docs', default=False, description='Build documentation')
-    # TODO: figure out gtest dependency and then set this default True
-    # and remove the +tests conflict below.
     variant('tests', default=False, description='Build tests')
+    variant('loop_fuser', default=False, description='Enable loop fusion capability')
 
     depends_on('blt', type='build')
     depends_on('blt@0.3.7:', type='build', when='+rocm')
@@ -96,6 +95,9 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
         options.append('-DCARE_ENABLE_IMPLICIT_CONVERSIONS={0}'.format(
             'ON' if '+implicit_conversions' in spec else 'OFF'))
+
+        options.append('-DCARE_ENABLE_LOOP_FUSER={0}'.format(
+            'ON' if '+loop_fuser' in spec else 'OFF'))
 
         options.append('-DCAMP_DIR:PATH='
                        + spec['camp'].prefix.share.camp.cmake)

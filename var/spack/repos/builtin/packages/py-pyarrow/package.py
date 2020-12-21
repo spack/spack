@@ -31,11 +31,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on('py-setuptools-scm', type='build', when='@0.15.0:')
     depends_on('py-cython', type='build')
     depends_on('py-cython@0.29:', type='build', when='@0.15.0:')
-    depends_on('py-pytest-runner', type='test', when='@0.17:')
-    depends_on('py-pytest', type='test', when='@0.15.0:')
-    depends_on('py-pandas', type='test', when='@0.15.0:')
-    depends_on('py-hypothesis', type='test', when='@0.15.0:')
-    depends_on('py-pathlib2', type='test', when='@0.15.0: ^python@:3.3.99')
     depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-six@1.0.0:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1.99')
@@ -48,6 +43,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+orc' + v, when='+orc' + v)
 
     phases = ['build_ext', 'install']
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def build_ext_args(self, spec, prefix):
         args = []

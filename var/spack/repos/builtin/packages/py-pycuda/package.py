@@ -27,5 +27,3 @@ class PyPycuda(PythonPackage):
     depends_on('py-mako', type='run')
 
     depends_on('cuda@:8.0.61', when='@2016.1.2')
-
-    depends_on('py-pytest@2:', type='test')

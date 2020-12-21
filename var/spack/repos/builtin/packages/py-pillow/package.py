@@ -7,7 +7,6 @@ class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
     maintainers = ['adamjstewart']
-    import_modules = ['PIL']
 
     provides('pil')
 
@@ -36,9 +35,6 @@ class PyPillowBase(PythonPackage):
     depends_on('python@2.6:2.8,3.2:3.5', when='@2:3',         type=('build', 'run'))
     depends_on('python@2.4:2.7',         when='@:1',          type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-runner', type='test')
-    depends_on('imagemagick', type='test')
 
     # Optional dependencies
     depends_on('zlib', when='+zlib')
@@ -98,8 +94,6 @@ class PyPillowBase(PythonPackage):
         env.set('MAX_CONCURRENCY', str(make_jobs))
 
     # Tests need to be re-added since `phases` was overridden
-    run_after('build_ext')(
-        PythonPackage._run_default_build_time_test_callbacks)
     run_after('install')(
         PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)
