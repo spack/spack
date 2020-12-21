@@ -22,6 +22,21 @@ properties = {
                 'type': 'string',
                 'enum': ['rpath', 'runpath']
             },
+            'install_tree': {
+                'anyOf': [
+                    {
+                        'type': 'object',
+                        'properties': union_dicts(
+                            {'root': {'type': 'string'}},
+                            {'padded_length': {'oneOf': [
+                                {'type': 'integer', 'minimum': 0},
+                                {'type': 'boolean'}]}},
+                            spack.schema.projections.properties,
+                        ),
+                    },
+                    {'type': 'string'}  # deprecated
+                ],
+            },
             'install_trees': {
                 'type': 'object',
                 'default': {},
@@ -29,19 +44,14 @@ properties = {
                 'patternProperties': {
                     r'\w[\w-]*': {
                         'install_tree': {
-                            'anyOf': [
-                                {
-                                    'type': 'object',
-                                    'properties': union_dicts(
-                                        {'root': {'type': 'string'}},
-                                        {'padded_length': {'oneOf': [
-                                            {'type': 'integer', 'minimum': 0},
-                                            {'type': 'boolean'}]}},
-                                        spack.schema.projections.properties,
-                                    ),
-                                },
-                                {'type': 'string'}  # deprecated
-                            ],
+                            'type': 'object',
+                            'properties': union_dicts(
+                                {'root': {'type': 'string'}},
+                                {'padded_length': {'oneOf': [
+                                    {'type': 'integer', 'minimum': 0},
+                                    {'type': 'boolean'}]}},
+                                spack.schema.projections.properties,
+                            ),
                         },
                     },
                 },
@@ -53,19 +63,14 @@ properties = {
                 'patternProperties': {
                     r'\w[\w-]*': {
                         'install_tree': {
-                            'anyOf': [
-                                {
-                                    'type': 'object',
-                                    'properties': union_dicts(
-                                        {'root': {'type': 'string'}},
-                                        {'padded_length': {'oneOf': [
-                                            {'type': 'integer', 'minimum': 0},
-                                            {'type': 'boolean'}]}},
-                                        spack.schema.projections.properties,
-                                    ),
-                                },
-                                {'type': 'string'}  # deprecated
-                            ],
+                            'type': 'object',
+                            'properties': union_dicts(
+                                {'root': {'type': 'string'}},
+                                {'padded_length': {'oneOf': [
+                                    {'type': 'integer', 'minimum': 0},
+                                    {'type': 'boolean'}]}},
+                                spack.schema.projections.properties,
+                            ),
                         },
                     },
                 },
