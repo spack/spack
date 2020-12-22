@@ -709,7 +709,7 @@ class SpackSolverSetup(object):
 
                 # each independent condition has an id
                 self.gen.fact(fn.dependency_condition(
-                    dep.pkg.name, dep.spec.name, global_condition_id
+                    global_condition_id, dep.pkg.name, dep.spec.name
                 ))
 
                 for t in sorted(dep.type):
