@@ -1085,3 +1085,17 @@ class TestConcretize(object):
         ).concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.parametrize('spec_str,preferred_versions,expected_version', [
+        ('mpileaks', ['2.2'], '@2.2'),
+        ('mpileaks', ['6.2'], '@2.3'),
+        ('mpileaks', ['6.2', '2.1', '2.2'], '@2.1'),
+    ])
+    def test_preferred_version_is_used_only_if_it_exists_in_package_py(
+            self, spec_str, preferred_versions, expected_version
+    ):
+        with spack.config.override(
+                'packages:mpileaks', {'version': preferred_versions}
+        ):
+            s = Spec(spec_str).concretized()
+            assert s.satisfies(expected_version)
