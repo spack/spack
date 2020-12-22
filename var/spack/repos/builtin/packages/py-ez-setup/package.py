@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyEzSetup(PythonPackage):
-    """Setuptools bootstrap module, which is not always packaged with 
+    """Setuptools bootstrap module, which is not always packaged with
     setuptools."""
 
     homepage = "https://github.com/ActiveState/ez_setup"
