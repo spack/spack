@@ -67,7 +67,9 @@ version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Con
 node_platform(Package, Platform)       :- attr("node_platform", Package, Platform).
 node_os(Package, OS)                   :- attr("node_os", Package, OS).
 node_target(Package, Target)           :- attr("node_target", Package, Target).
+node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
 variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
+variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
 node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
 node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
 node_compiler_version(Package, Compiler, Version)
@@ -81,7 +83,9 @@ attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Con
 attr("node_platform", Package, Platform)       :- node_platform(Package, Platform).
 attr("node_os", Package, OS)                   :- node_os(Package, OS).
 attr("node_target", Package, Target)           :- node_target(Package, Target).
+attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
 attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
+attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
 attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
 attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
 attr("node_compiler_version", Package, Compiler, Version)
