@@ -27,8 +27,12 @@
 # - N813: camelcase imported as lowercase
 # - N814: camelcase imported as constant
 #
+# F4: pyflakes import checks, these are now checked by mypy more precisely
+# - F403: from module import *
+# - F405: undefined name or from *
+#
 [flake8]
-ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814
+ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405
 max-line-length = 79
 
 # F4: Import
