@@ -50,6 +50,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('libvori', default=False,
             description=('Enable support for Voronoi integration'
                          ' and BQB compression'))
+    variant('spglib', default=False, description='Enable support for spglib')
 
     # override cuda_arch from CudaPackage since we only support one arch
     # at a time and only specific ones for which we have parameter files
@@ -133,6 +134,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
     depends_on('libvori@201217:', when='@8:+libvori', type='build')
+    depends_on('spglib', when='+spglib')
 
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
@@ -492,6 +494,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             ldflags += [libvori.search_flags]
             libs += libvori
             libs += ['-lstdc++']
+
+        if '+spglib' in spec:
+            cppflags += ['-D__SPGLIB']
+            spglib = spec['spglib'].libs
+            ldflags += [spglib.search_flags]
+            libs += spglib
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
