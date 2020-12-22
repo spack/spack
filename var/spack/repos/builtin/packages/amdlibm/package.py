@@ -21,6 +21,8 @@ class Amdlibm(SConsPackage):
     # Download and build from latest source
     version("master", branch="master")
 
+    variant("debug", default=False,
+            description="Building with debug")
     variant("verbose", default=False,
             description="Building with verbosity")
 
@@ -29,8 +31,8 @@ class Amdlibm(SConsPackage):
     depends_on("scons@3.1.2:", type=("build"))
     depends_on("mpfr", type=("build"))
 
-    patch('0001-libm-OpenSourceFixes-UpdateScripts.patch')
-    patch('0001-libm-opensource-issues-Update-source-issues-with-cla.patch')
+    patch('0001-libm-ose-Scripts-cleanup-pyc-files.patch')
+    patch('0002-libm-ose-prevent-log-v3.c-from-building.patch')
 
     conflicts("%gcc@:9.1.999", msg="Minimum required GCC version is 9.2.0")
 
