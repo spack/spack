@@ -507,10 +507,7 @@ class SpackSolverSetup(object):
             #    c) Numeric or string comparison
             v)
 
-        most_to_least_preferred = sorted(
-            self.possible_versions[pkg.name], key=keyfn, reverse=True
-        )
-
+        most_to_least_preferred = sorted(pkg.versions, key=keyfn, reverse=True)
         for i, v in enumerate(most_to_least_preferred):
             self.gen.fact(fn.version_declared(pkg.name, v, i))
 
@@ -519,7 +516,7 @@ class SpackSolverSetup(object):
         spec = specify(spec)
         assert spec.name
 
-        if spec.concrete:
+        if spec.versions.concrete:
             return [fn.version(spec.name, spec.version)]
 
         if spec.versions == ver(":"):
@@ -1418,6 +1415,10 @@ class SpackSolverSetup(object):
             else:
                 clauses = self.spec_clauses(spec)
             for clause in clauses:
+                if clause.name == 'version' and not spec.virtual:
+                    self.gen.fact(
+                        fn.abstract_spec_version_declared(*clause.args)
+                    )
                 self.gen.fact(clause)
 
         self.gen.h1("Variant Values defined in specs")

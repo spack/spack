@@ -19,7 +19,6 @@
 
 #show variant_not_default/4.
 #show provider_weight/2.
-#show version_weight/2.
 #show compiler_version_match/2.
 #show compiler_weight/2.
 #show node_target_match/2.

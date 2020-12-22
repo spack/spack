@@ -6,20 +6,33 @@
 % Version semantics
 %-----------------------------------------------------------------------------
 
-% versions are declared w/priority -- declared with priority implies declared
+% The same version may be declared with multiple weights. Sometimes
+% we just need to know whether it's declared or not.
 version_declared(Package, Version) :- version_declared(Package, Version, _).
 
-% If something is a package, it has only one version and that must be a
-% declared version.
-1 { version(Package, Version) : version_declared(Package, Version) } 1
+% Infer version/2 if version/3 is true
+version(Package, Version) :- version(Package, Version, Weight).
+
+% Each node in the graph must have exactly one version and
+% that must be a declared version.
+1 { version(Package, Version, Weight) : version_declared(Package, Version, Weight) } 1
  :- node(Package).
 
-version_weight(Package, Weight)
- :- version(Package, Version), version_declared(Package, Version, Weight),
-    not preferred_version_declared(Package, Version, _).
+% Having a preferred version declared in packages.yaml declares implicitly
+% a new weight for the version only if the version already exists in package.py
+version_declared(Package, Version, Weight)
+  :- preferred_version_declared(Package, Version, Weight),
+     version_declared(Package, Version, AnotherWeight).
 
-version_weight(Package, Weight)
-  :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+% If a version is specified on the abstract spec, it is declared implicitly
+% (we want to allow the concretization of any version from the command line)
+version_declared(Package, Version, -100)
+  :- abstract_spec_version_declared(Package, Version),
+     version(Package, Version).
+
+:- version(Package, Version), not version_declared(Package, Version).
+:- version(Package, Version), not version(Package, Version, _).
+:- version(Package, Version1), version(Package, Version2, Weight), Version1 != Version2.
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -28,6 +41,7 @@ version_weight(Package, Weight)
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
+#defined abstract_spec_version_declared/2.
 #defined preferred_version_declared/3.
 #defined version_satisfies/3.
 
@@ -273,7 +287,13 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 version_declared(Package, Version, Weight) :- external_version_declared(Package, Version, Weight, _).
 
 % if a package is external its version must be one of the external versions
-1 { version(Package, Version): external_version_declared(Package, Version, _, _) } 1 :- external(Package).
+1 { version(Package, Version, Weight) :
+    external_version_declared(Package, Version, Weight, _) } 1
+  :- external(Package).
+
+:- version(Package, Version, Weight),
+   external_version_declared(Package, Version, Weight, ID),
+   not external_spec(Package, ID).
 
 % if a package is not buildable (external_only), only externals are allowed
 external(Package) :- external_only(Package), node(Package).
@@ -283,12 +303,9 @@ real_node(Package) :- node(Package), not external(Package).
 
 % if an external version is selected, the package is external and
 % we are using the corresponding spec
-external(Package) :-
-    version(Package, Version), version_weight(Package, Weight),
-    external_version_declared(Package, Version, Weight, ID).
-
+external(Package) :- external_spec(Package, ID).
 external_spec(Package, ID) :-
-    version(Package, Version), version_weight(Package, Weight),
+    version(Package, Version, Weight),
     external_version_declared(Package, Version, Weight, ID).
 
 %-----------------------------------------------------------------------------
@@ -669,7 +686,7 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-#minimize { Weight@15 : root(Package),version_weight(Package, Weight)}.
+#minimize { Weight@15 : root(Package),version(Package, Version, Weight)}.
 #minimize {
     Weight@14,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
@@ -718,7 +735,7 @@ root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % Choose more recent versions for nodes
 #minimize{
-    Weight@6,Package : version_weight(Package, Weight)
+    Weight@6,Version,Package : version(Package, Version, Weight)
 }.
 
 % Try to use preferred compilers
