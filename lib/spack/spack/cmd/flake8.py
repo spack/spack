@@ -10,11 +10,7 @@ import llnl.util.tty as tty
 import spack.cmd.style
 
 
-description = (
-    "The flake8 command is deprecated, but re-directs to "
-    + "the style command for now\n"
-    + spack.cmd.style.description
-)
+description = "alias for spack style (deprecated)"
 section = spack.cmd.style.section
 level = spack.cmd.style.level
 
