@@ -16,6 +16,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     homepage = "https://www.gnu.org/software/gdb"
     gnu_mirror_path = "gdb/gdb-7.10.tar.gz"
 
+    maintainers = ['robertu94']
+
     version('10.1',   sha256='f12f388b99e1408c01308c3f753313fafa45517740c81ab7ed0d511b13e2cf55')
     version('9.2',    sha256='38ef247d41ba7cc3f6f93a612a78bab9484de9accecbe3b0150a3c0391a3faf0')
     version('9.1',    sha256='fcda54d4f35bc53fb24b50009a71ca98410d71ff2620942e3c829a7f5d614252')
@@ -55,7 +57,10 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     build_directory = 'spack-build'
 
     def configure_args(self):
-        args = []
+        args = [
+            '--with-system-gdbinit={0}'.format(self.prefix.etc.gdbinit)
+        ]
+
         if '+python' in self.spec:
             args.append('--with-python')
             args.append('LDFLAGS={0}'.format(
@@ -83,6 +88,6 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
         if '+python' in self.spec:
             tool = self.spec['python'].command.path + '-gdb.py'
             if os.path.exists(tool):
-                directory = self.prefix.share.gdb.join('auto-load')
-                mkdir(directory)
-                symlink(tool, directory.join(os.path.basename(tool)))
+                mkdir(self.prefix.etc)
+                with open(self.prefix.etc.gdbinit, 'w') as gdbinit:
+                    gdbinit.write('add-auto-load-safe-path {0}\n'.format(tool))
