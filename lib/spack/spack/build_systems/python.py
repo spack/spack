@@ -72,6 +72,9 @@ class PythonPackage(PackageBase):
        def configure(self, spec, prefix):
            self.setup_py('configure')
     """
+    #: Package name, version, and extension on PyPI
+    pypi = None
+
     # Default phases
     phases = ['build', 'install']
 
@@ -92,7 +95,7 @@ class PythonPackage(PackageBase):
     def homepage(self):
         if self.pypi:
             name = self.pypi.split('/')[0]
-            return 'https://pypi.org/' + name + '/'
+            return 'https://pypi.org/project/' + name + '/'
 
     @property
     def url(self):
