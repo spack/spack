@@ -8,31 +8,31 @@ from spack import *
 
 class PyPem(PythonPackage):
     """
-    pem is an MIT-licensed Python module for parsing and splitting of PEM files,
-    i.e. Base64 encoded DER keys and certificates.
+    pem is an MIT-licensed Python module for parsing and splitting of PEM
+    files, i.e. Base64 encoded DER keys and certificates.
 
     It runs on Python 2.7, 3.5+, and PyPy, has no dependencies, and does not
     attempt to interpret the certificate data in any way.
 
     It’s born from the need to load keys, certificates, trust chains, and DH
     parameters from various certificate deployments: some servers (like Apache)
-    expect them to be a separate file, others (like nginx) expect them concatenated
-    to the server certificate and finally some (like HAProxy) expect key,
-    certificate, and chain to be in one file. With pem, your Python application can
-    cope with all of those scenarios:
+    expect them to be a separate file, others (like nginx) expect them
+    concatenated to the server certificate and finally some (like HAProxy)
+    expect key, certificate, and chain to be in one file. With pem, your Python
+    application can cope with all of those scenarios:
 
     import pem
     certs = pem.parse_file("chain.pem")
     certs
-    rtificate(PEM string with SHA-1 digest '...')>, <Certificate(PEM string with SHA-1 digest '...')>]
+    [<Certificate(PEM string with SHA-1 digest '...')>, <Certificate(PEM string
+    with SHA-1 digest '...')>]
     str(certs[0])
     '-----BEGIN CERTIFICATE-----\n...'
 
-    Additionally to the vanilla parsing code, pem also contains helpers for Twisted
-    that save a lot of boilerplate code.
+    Additionally to the vanilla parsing code, pem also contains helpers for
+    Twisted that save a lot of boilerplate code.
 
     pem’s documentation lives at Read the Docs, the code on GitHub.
-    
     """
 
     homepage = "https://www.example.com"
