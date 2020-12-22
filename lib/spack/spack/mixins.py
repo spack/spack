@@ -8,9 +8,10 @@ package.
 """
 import collections
 import os
+import sys
 from typing import Callable, DefaultDict, Dict, List  # novm
-if Callable is not None:
-    CallbackDict = DefaultDict[str, List[Callable]]  # novm
+if sys.version_info >= (3, 5):
+    CallbackDict = DefaultDict[str, List[Callable]]
 else:
     CallbackDict = None
 

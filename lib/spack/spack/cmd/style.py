@@ -5,17 +5,17 @@
 
 from __future__ import print_function
 
-try:
-    from itertools import zip_longest  # novm
-except ImportError:
-    from itertools import izip_longest  # novm
-
-    zip_longest = izip_longest
-
 import re
 import os
 import sys
 import argparse
+
+if sys.version_info < (3, 0):
+    from itertools import izip_longest  # novm
+
+    zip_longest = izip_longest
+else:
+    from itertools import zip_longest  # novm
 
 from llnl.util.filesystem import working_dir
 
@@ -23,7 +23,10 @@ import spack.paths
 from spack.util.executable import which
 
 
-description = "runs source code style checks on Spack. requires flake8, mypy, black for their respective checks"
+description = (
+    "runs source code style checks on Spack. requires flake8, mypy, black for"
+    + "their respective checks"
+)
 section = "developer"
 level = "long"
 
@@ -125,24 +128,71 @@ def setup_parser(subparser):
         help="exclude untracked files from checks",
     )
     subparser.add_argument(
+        "--no-flake8",
+        dest="flake8",
+        action="store_false",
+        help="Do not run flake8, default is run flake8",
+    )
+    subparser.add_argument(
+        "--no-mypy",
+        dest="mypy",
+        action="store_false",
+        help="Do not run mypy, default is run mypy if available",
+    )
+    subparser.add_argument(
         "files", nargs=argparse.REMAINDER, help="specific files to check"
     )
 
-def run_flake8(file_list, args):
-    returncode = 0
+
+def rewrite_and_print_output(output, args):
+    """rewrite ouput with <file>:<line>: format to respect path args"""
+    if args.root_relative:
+        # print results relative to repo root.
+        print(output)
+    else:
+        # print results relative to current working directory
+        def cwd_relative(path):
+            return "{0}: [".format(
+                os.path.relpath(
+                    os.path.join(spack.paths.prefix, path.group(1)),
+                    os.getcwd(),
+                )
+            )
+
+        for line in output.split("\n"):
+            print(re.sub(r"^(.*): \[", cwd_relative, line))
+
+
+def print_style_header(file_list, args):
     print("=======================================================")
-    print("flake8: running flake8 code checks on spack.")
+    print("style: running code checks on spack.")
+    print("tools:")
+    if args.flake8:
+        print("  flake8")
+    if args.mypy:
+        print("  mypy")
     print()
     print("Modified files:")
     for filename in file_list:
         print("  {0}".format(filename.strip()))
     print("=======================================================")
 
+
+def print_tool_header(tool):
+    print("=======================================================")
+    print("style: running %s checks on spack." % tool)
+    print("=======================================================")
+
+
+def run_flake8(file_list, args):
+    returncode = 0
+    print_tool_header("flake8")
+    flake8_cmd = which("flake8", required=True)
+
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
     for chunk in grouper(file_list, 100):
-        flake8_cmd = which("flake8", required=True)
         chunk = filter(lambda e: e is not None, chunk)
 
         output = flake8_cmd(
@@ -156,23 +206,37 @@ def run_flake8(file_list, args):
         )
         returncode |= flake8_cmd.returncode
 
-        if args.root_relative:
-            # print results relative to repo root.
-            print(output)
-        else:
-            # print results relative to current working directory
-            def cwd_relative(path):
-                return "{0}: [".format(
-                    os.path.relpath(
-                        os.path.join(spack.paths.prefix, path.group(1)),
-                        os.getcwd(),
-                    )
-                )
+        rewrite_and_print_output(output, args)
 
-            for line in output.split("\n"):
-                print(re.sub(r"^(.*): \[", cwd_relative, line))
-
+    if returncode == 0:
+        print("Flake8 style checks were clean")
     return returncode
+
+
+def run_mypy(file_list, args):
+    mypy_cmd = which("mypy")
+    if mypy_cmd is None:
+        print("style: mypy is not available in path, skipping")
+        return 1
+
+    print_tool_header("mypy")
+
+    returncode = 0
+    output = ""
+    # run in chunks of 100 at a time to avoid line length limit
+    # filename parameter in config *does not work* for this reliably
+    for chunk in grouper(file_list, 100):
+        chunk = filter(lambda e: e is not None, chunk)
+
+        output = mypy_cmd(*chunk, fail_on_error=False, output=str)
+        returncode |= mypy_cmd.returncode
+
+        rewrite_and_print_output(output, args)
+
+    if returncode == 0:
+        print("mypy style checks were clean")
+    return returncode
+
 
 def style(parser, args):
     file_list = args.files
@@ -185,15 +249,18 @@ def style(parser, args):
 
         file_list = [prefix_relative(p) for p in file_list]
 
+    returncode = 0
     with working_dir(spack.paths.prefix):
         if not file_list:
             file_list = changed_files(args.base, args.untracked, args.all)
-    returncode = run_flake8(file_list, args)
+        print_style_header(file_list, args)
+        if args.flake8:
+            returncode = run_flake8(file_list, args)
+        if args.mypy:
+            returncode |= run_mypy(file_list, args)
 
     if returncode != 0:
-        print("Flake8 found errors.")
+        print("spack style found errors.")
         sys.exit(1)
     else:
-        print("Flake8 checks were clean.")
-
-
+        print("spack style checks were clean.")

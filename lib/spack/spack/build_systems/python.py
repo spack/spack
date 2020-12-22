@@ -5,7 +5,6 @@
 import inspect
 import os
 import shutil
-from typing import List  # novm
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
