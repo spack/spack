@@ -22,16 +22,7 @@ class PyOauthlib(PythonPackage):
     variant('extras', default=True, description='Build with pyjwt, blinker, cryptography')
 
     depends_on('py-setuptools', type='build')
-
     depends_on('py-pyjwt@1.0.0:', type=('build', 'run'), when='+extras')
     depends_on('py-blinker',      type=('build', 'run'), when='+extras')
     depends_on('py-cryptography', type=('build', 'run'), when='+extras')
-
-    depends_on('py-mock@2.0:', type='test')
-    depends_on('py-pytest@4.0:', type='test')
-    depends_on('py-pytest-cov@2.6:', type='test')
-
-    depends_on('py-nose', type='test', when='@2.0.2')
-    depends_on('py-unittest2', type='test', when='^python@2.0.2')
-
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))

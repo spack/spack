@@ -22,5 +22,3 @@ class PyJupyterlabServer(PythonPackage):
     depends_on('py-jsonschema@3.0.1:', type=('build', 'run'))
     depends_on('py-notebook@4.2.0:', type=('build', 'run'))
     depends_on('py-jinja2@2.10:', type=('build', 'run'))
-
-    depends_on('py-pytest', type='test')

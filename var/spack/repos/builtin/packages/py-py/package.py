@@ -12,11 +12,6 @@ class PyPy(PythonPackage):
     homepage = "http://pylib.readthedocs.io/en/latest/"
     url      = "https://pypi.io/packages/source/p/py/py-1.8.0.tar.gz"
 
-    import_modules = [
-        'py', 'py._process', 'py._vendored_packages', 'py._path',
-        'py._log', 'py._code', 'py._io'
-    ]
-
     version('1.8.0', sha256='dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53')
     version('1.5.4',  sha256='3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7')
     version('1.5.3',  sha256='29c9fab495d7528e80ba1e343b958684f4ace687327e6f789a94bf3d1915f881')
@@ -27,7 +22,3 @@ class PyPy(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
-
-    def build_test(self):
-        # Tests require pytest, creating a circular dependency
-        pass

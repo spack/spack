@@ -12,8 +12,6 @@ class PyArchspec(PythonPackage):
 
     maintainers = ['alalazo']
 
-    import_modules = ['archspec']
-
     version('0.1.1', sha256='34bafad493b41208857232e21776216d716de37ab051a6a4a1cc1653f7e26423')
 
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))

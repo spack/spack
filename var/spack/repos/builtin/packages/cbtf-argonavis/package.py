@@ -27,7 +27,7 @@ class CbtfArgonavis(CMakePackage):
                          to point to target build.")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('build_type', default='None', values=('None'),
+    variant('build_type', default='None', values=('None',),
             description='CMake build type')
 
     depends_on("cmake@3.0.2:", type='build')

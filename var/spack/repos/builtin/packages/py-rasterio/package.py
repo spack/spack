@@ -17,7 +17,6 @@ class PyRasterio(PythonPackage):
     url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.1.5.tar.gz"
 
     maintainers = ['adamjstewart']
-    import_modules = ['rasterio', 'rasterio.rio']
 
     version('1.1.5',  sha256='ebe75c71f9257c780615caaec8ef81fa4602702cf9290a65c213e1639284acc9')
     version('1.0.24', sha256='4839479621045211f66868ec49625979693450bc2e476f23e7e8ac4804eaf452')
@@ -37,10 +36,3 @@ class PyRasterio(PythonPackage):
     depends_on('py-enum34', type='run', when='^python@:3.3')
     depends_on('gdal@1.11:3.0', when='@1.0.25:')
     depends_on('gdal@1.11:2', when='@:1.0.24')
-    depends_on('py-pytest@2.8.2:', type='test')
-    depends_on('py-pytest-cov@2.2.0:', type='test')
-    depends_on('py-boto3@1.2.4:', type='test')
-    depends_on('py-packaging', type='test')
-    depends_on('py-hypothesis', type='test')
-    depends_on('py-futures', type='test', when='^python@:3.1')
-    depends_on('py-mock', type='test', when='^python@:3.1')

@@ -12,12 +12,14 @@ class Libx11(AutotoolsPackage, XorgPackage):
     homepage = "https://www.x.org/"
     xorg_mirror_path = "lib/libX11-1.6.7.tar.gz"
 
+    version('1.7.0', sha256='c48ec61785ec68fc6a9a6aca0a9578393414fe2562e3cc9cca30234345c7b6ac')
     version('1.6.7', sha256='f62ab88c2a87b55e1dc338726a55bb6ed8048084fe6a3294a7ae324ca45159d1')
     version('1.6.5', sha256='3abce972ba62620611fab5b404dafb852da3da54e7c287831c30863011d28fb3')
     version('1.6.3', sha256='0b03b9d22f4c9e59b4ba498f294e297f013cae27050dfa0f3496640200db5376')
 
     depends_on('libxcb@1.1.92:')
 
+    depends_on('xproto@7.0.25:', type='build', when='@1.7.0:')
     depends_on('xproto@7.0.17:', type='build')
     depends_on('xextproto', type=('build', 'link'))
     depends_on('xtrans', type='build')

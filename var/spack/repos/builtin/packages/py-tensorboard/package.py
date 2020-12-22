@@ -75,6 +75,12 @@ class PyTensorboard(Package):
         filter_file('trap cleanup EXIT',
                     '',
                     'tensorboard/pip_package/build_pip_package.sh')
+        filter_file('unset PYTHON_HOME',
+                    'export PYTHONPATH="{0}"'.format(env['PYTHONPATH']),
+                    'tensorboard/pip_package/build_pip_package.sh')
+        filter_file('python setup.py',
+                    '{0} setup.py'.format(spec['python'].command.path),
+                    'tensorboard/pip_package/build_pip_package.sh')
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']
@@ -82,6 +88,8 @@ class PyTensorboard(Package):
               '--nosystem_rc',
               '--output_user_root=' + tmp_path,
               'build',
+              # watch https://github.com/bazelbuild/bazel/issues/7254
+              '--define=EXECUTOR=remote',
               '--verbose_failures',
               '--spawn_strategy=local',
               '--subcommands=pretty_print',

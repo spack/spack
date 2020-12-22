@@ -18,5 +18,3 @@ class PyChardet(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pytest-runner', type='build')
-    depends_on('py-pytest', type='test')
-    depends_on('py-hypothesis', type='test')

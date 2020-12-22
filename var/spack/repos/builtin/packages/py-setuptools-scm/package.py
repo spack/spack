@@ -12,8 +12,6 @@ class PySetuptoolsScm(PythonPackage):
     homepage = "https://github.com/pypa/setuptools_scm"
     url      = "https://pypi.io/packages/source/s/setuptools_scm/setuptools_scm-4.1.2.tar.gz"
 
-    import_modules = ['setuptools_scm']
-
     version('4.1.2',  sha256='a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8')
     version('3.3.3',  sha256='bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5')
     version('3.1.0',  sha256='1191f2a136b5e86f7ca8ab00a97ef7aef997131f1f6d4971be69a1ef387d8b40')

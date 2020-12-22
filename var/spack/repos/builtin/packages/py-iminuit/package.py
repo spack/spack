@@ -18,9 +18,3 @@ class PyIminuit(PythonPackage):
     # Required dependencies
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'), when='@1.3:')
-
-    # Optional dependencies
-    depends_on('py-matplotlib', type='test', when='@1.3:')
-    depends_on('py-cython', type='test', when='@1.3:')
-    depends_on('py-pytest', type='test', when='@1.3:')
-    depends_on('py-scipy', type='test', when='@1.3:')

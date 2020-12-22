@@ -18,6 +18,7 @@ class Superlu(Package):
     variant('pic',    default=True,
             description='Build with position independent code')
 
+    depends_on('tcsh', type='build')
     depends_on('cmake', when='@5.2.1:', type='build')
     depends_on('blas')
 

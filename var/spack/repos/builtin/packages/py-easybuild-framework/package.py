@@ -22,6 +22,3 @@ class PyEasybuildFramework(PythonPackage):
     depends_on('python@2.6:2.8,3.5:', when='@4:', type=('build', 'run'))
     depends_on('py-setuptools', when='@:3', type=('build', 'run'))
     depends_on('py-vsc-base@2.5.4:', when='@2.9:3', type='run')
-
-    # Only required for tests (python -O -m test.framework.suite)
-    depends_on('py-vsc-install', when='@:3', type='test')

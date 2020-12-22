@@ -15,6 +15,8 @@ class Pythia8(AutotoolsPackage):
     homepage = "http://home.thep.lu.se/Pythia/"
     url      = "http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz"
 
+    tags = ['hep']
+
     maintainers = ['ChristianTackeGSI']
 
     version('8303', sha256='cd7c2b102670dae74aa37053657b4f068396988ef7da58fd3c318c84dc37913e')

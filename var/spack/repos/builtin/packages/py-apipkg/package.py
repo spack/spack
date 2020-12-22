@@ -18,5 +18,3 @@ class PyApipkg(PythonPackage):
     depends_on('py-setuptools@30.3.0:', type='build')
     depends_on('py-setuptools-scm', type='build')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('py-py', type='test')
-    depends_on('py-pytest', type='test')

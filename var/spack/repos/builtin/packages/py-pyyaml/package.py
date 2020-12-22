@@ -61,8 +61,6 @@ class PyPyyaml(PythonPackage):
         return args
 
     # Tests need to be re-added since `phases` was overridden
-    run_after('build_ext')(
-        PythonPackage._run_default_build_time_test_callbacks)
     run_after('install')(
         PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)

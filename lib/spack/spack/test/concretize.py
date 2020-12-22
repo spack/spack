@@ -5,6 +5,7 @@
 import sys
 
 import pytest
+import jinja2
 
 import archspec.cpu
 
@@ -112,6 +113,64 @@ def current_host(request, monkeypatch):
 
     # clear any test values fetched
     spack.architecture.get_platform.cache.clear()
+
+
+@pytest.fixture()
+def repo_with_changing_recipe(tmpdir_factory, mutable_mock_repo):
+    repo_namespace = 'changing'
+    repo_dir = tmpdir_factory.mktemp(repo_namespace)
+
+    repo_dir.join('repo.yaml').write("""
+repo:
+  namespace: changing
+""", ensure=True)
+
+    packages_dir = repo_dir.ensure('packages', dir=True)
+    root_pkg_str = """
+class Root(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/root-1.0.tar.gz"
+
+    version(1.0, sha256='abcde')
+    depends_on('changing')
+"""
+    packages_dir.join('root', 'package.py').write(
+        root_pkg_str, ensure=True
+    )
+
+    changing_template = """
+class Changing(Package):
+    homepage = "http://www.example.com"
+    url      = "http://www.example.com/changing-1.0.tar.gz"
+
+    version(1.0, sha256='abcde')
+{% if not delete_variant %}
+    variant('fee', default=True, description='nope')
+{% endif %}
+    variant('foo', default=True, description='nope')
+{% if add_variant %}
+    variant('fum', default=True, description='nope')
+{% endif %}
+"""
+    repo = spack.repo.Repo(str(repo_dir))
+    mutable_mock_repo.put_first(repo)
+
+    class _ChangingPackage(object):
+        def change(self, context):
+            # To ensure we get the changed package we need to
+            # invalidate the cache
+            repo._modules = {}
+
+            t = jinja2.Template(changing_template)
+            changing_pkg_str = t.render(**context)
+            packages_dir.join('changing', 'package.py').write(
+                changing_pkg_str, ensure=True
+            )
+
+    _changing_pkg = _ChangingPackage()
+    _changing_pkg.change({'delete_variant': False, 'add_variant': False})
+
+    return _changing_pkg
 
 
 # This must use the mutable_config fixture because the test
@@ -263,6 +322,10 @@ class TestConcretize(object):
         s = Spec('mpileaks ^multi-provider-mpi@3.0')
         s.concretize()
         assert s['mpi'].version == ver('1.10.3')
+
+    def test_concretize_dependent_with_singlevalued_variant_type(self):
+        s = Spec('singlevalue-variant-dependent-type')
+        s.concretize()
 
     @pytest.mark.parametrize("spec,version", [
         ('dealii', 'develop'),
@@ -498,6 +561,11 @@ class TestConcretize(object):
 
     def test_conflicts_in_spec(self, conflict_spec):
         s = Spec(conflict_spec)
+        with pytest.raises(spack.error.SpackError):
+            s.concretize()
+
+    def test_conflict_in_all_directives_true(self):
+        s = Spec('when-directives-true')
         with pytest.raises(spack.error.SpackError):
             s.concretize()
 
@@ -883,3 +951,137 @@ class TestConcretize(object):
 
         # 'stuff' is provided by an external package, so check it's present
         assert 'externalvirtual' in s
+
+    @pytest.mark.regression('20040')
+    def test_conditional_provides_or_depends_on(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # Check that we can concretize correctly a spec that can either
+        # provide a virtual or depend on it based on the value of a variant
+        s = Spec('conditional-provider +disable-v1').concretized()
+        assert 'v1-provider' in s
+        assert s['v1'].name == 'v1-provider'
+        assert s['v2'].name == 'conditional-provider'
+
+    @pytest.mark.regression('20079')
+    @pytest.mark.parametrize('spec_str,tests_arg,with_dep,without_dep', [
+        # Check that True is treated correctly and attaches test deps
+        # to all nodes in the DAG
+        ('a', True, ['a'], []),
+        ('a foobar=bar', True, ['a', 'b'], []),
+        # Check that a list of names activates the dependency only for
+        # packages in that list
+        ('a foobar=bar', ['a'], ['a'], ['b']),
+        ('a foobar=bar', ['b'], ['b'], ['a']),
+        # Check that False disregard test dependencies
+        ('a foobar=bar', False, [], ['a', 'b']),
+    ])
+    def test_activating_test_dependencies(
+            self, spec_str, tests_arg, with_dep, without_dep
+    ):
+        s = Spec(spec_str).concretized(tests=tests_arg)
+
+        for pkg_name in with_dep:
+            msg = "Cannot find test dependency in package '{0}'"
+            node = s[pkg_name]
+            assert node.dependencies(deptype='test'), msg.format(pkg_name)
+
+        for pkg_name in without_dep:
+            msg = "Test dependency in package '{0}' is unexpected"
+            node = s[pkg_name]
+            assert not node.dependencies(deptype='test'), msg.format(pkg_name)
+
+    @pytest.mark.regression('20019')
+    def test_compiler_match_is_preferred_to_newer_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        # This spec depends on openblas. Openblas has a conflict
+        # that doesn't allow newer versions with gcc@4.4.0. Check
+        # that an old version of openblas is selected, rather than
+        # a different compiler for just that node.
+        spec_str = 'simple-inheritance+openblas %gcc@4.4.0 os=redhat6'
+        s = Spec(spec_str).concretized()
+
+        assert 'openblas@0.2.13' in s
+        assert s['openblas'].satisfies('%gcc@4.4.0')
+
+    @pytest.mark.regression('19981')
+    def test_target_ranges_in_conflicts(self):
+        with pytest.raises(spack.error.SpackError):
+            Spec('impossible-concretization').concretized()
+
+    @pytest.mark.regression('20040')
+    def test_variant_not_default(self):
+        s = Spec('ecp-viz-sdk').concretized()
+
+        # Check default variant value for the package
+        assert '+dep' in s['conditional-constrained-dependencies']
+
+        # Check that non-default variant values are forced on the dependency
+        d = s['dep-with-variants']
+        assert '+foo+bar+baz' in d
+
+    @pytest.mark.regression('20055')
+    def test_custom_compiler_version(self):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec('a %gcc@foo os=redhat6').concretized()
+        assert '%gcc@foo' in s
+
+    def test_all_patches_applied(self):
+        uuidpatch = 'a60a42b73e03f207433c5579de207c6ed61d58e4d12dd3b5142eb525728d89ea'
+        localpatch = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+        spec = spack.spec.Spec('conditionally-patch-dependency+jasper')
+        spec.concretize()
+        assert ((uuidpatch, localpatch) ==
+                spec['libelf'].variants['patches'].value)
+
+    def test_dont_select_version_that_brings_more_variants_in(self):
+        s = Spec('dep-with-variants-if-develop-root').concretized()
+        assert s['dep-with-variants-if-develop'].satisfies('@1.0')
+
+    @pytest.mark.regression('20244')
+    @pytest.mark.parametrize('spec_str,is_external,expected', [
+        # These are all externals, and 0_8 is a version not in package.py
+        ('externaltool@1.0', True, '@1.0'),
+        ('externaltool@0.9', True, '@0.9'),
+        ('externaltool@0_8', True, '@0_8'),
+        # This external package is buildable, has a custom version
+        # in packages.yaml that is greater than the ones in package.py
+        # and specifies a variant
+        ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
+        ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
+        ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+    ])
+    def test_external_package_versions(self, spec_str, is_external, expected):
+        s = Spec(spec_str).concretized()
+        assert s.external == is_external
+        assert s.satisfies(expected)
+
+    @pytest.mark.regression('20292')
+    @pytest.mark.parametrize('context', [
+        {'add_variant': True, 'delete_variant': False},
+        {'add_variant': False, 'delete_variant': True},
+        {'add_variant': True, 'delete_variant': True}
+    ])
+    @pytest.mark.xfail()
+    def test_reuse_installed_packages(
+            self, context, mutable_database, repo_with_changing_recipe
+    ):
+        # Install a spec
+        root = Spec('root').concretized()
+        dependency = root['changing'].copy()
+        root.package.do_install(fake=True, explicit=True)
+
+        # Modify package.py
+        repo_with_changing_recipe.change(context)
+
+        # Try to concretize with the spec installed previously
+        new_root = Spec('root ^/{0}'.format(
+            dependency.dag_hash())
+        ).concretized()
+
+        assert root.dag_hash() == new_root.dag_hash()

@@ -12,8 +12,6 @@ class PySix(PythonPackage):
     homepage = "https://pypi.python.org/pypi/six"
     url      = "https://pypi.io/packages/source/s/six/six-1.11.0.tar.gz"
 
-    import_modules = ['six']
-
     version('1.14.0', sha256='236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a')
     version('1.12.0', sha256='d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73')
     version('1.11.0', sha256='70e8a77beed4562e7f14fe23a786b54f6296e34344c23bc42f07b15018ff98e9')
@@ -22,10 +20,4 @@ class PySix(PythonPackage):
     version('1.8.0',  sha256='047bbbba41bac37c444c75ddfdf0573dd6e2f1fbd824e6247bb26fa7d8fa3830')
 
     extends('python', ignore=r'bin/pytest')
-
-    # Newer versions of setuptools require six. Although setuptools is an
-    # optional dependency of six, if it is not found, setup.py will fallback
-    # on distutils.core instead. Don't add a setuptools dependency or we
-    # won't be able to bootstrap setuptools.
-
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')

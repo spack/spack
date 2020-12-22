@@ -16,8 +16,6 @@ class PyIsort(PythonPackage):
     version('4.2.15', sha256='79f46172d3a4e2e53e7016e663cc7a8b538bec525c36675fcfd2767df30b3983')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@4.3.0:')
     depends_on('py-futures', type=('build', 'run'), when='@4.3.0: ^python@:3.1')

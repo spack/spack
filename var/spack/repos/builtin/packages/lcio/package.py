@@ -14,6 +14,8 @@ class Lcio(CMakePackage):
     git      = "https://github.com/iLCSoft/LCIO.git"
     url      = "https://github.com/iLCSoft/LCIO/archive/v02-13-03.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['gaede', 'vvolkl']
 
     version('master', branch='master')

@@ -750,6 +750,9 @@ def setup_package(pkg, dirty, context='build'):
     elif context == 'test':
         import spack.user_environment as uenv  # avoid circular import
         env.extend(uenv.environment_modifications_for_spec(pkg.spec))
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
         set_module_variables_for_package(pkg)
         env.prepend_path('PATH', '.')
 
@@ -814,7 +817,8 @@ def modifications_from_dependencies(spec, context):
     }
     deptype, method = deptype_and_method[context]
 
-    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+    root = context == 'test'
+    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module
