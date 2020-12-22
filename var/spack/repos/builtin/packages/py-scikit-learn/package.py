@@ -8,12 +8,13 @@ class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
     homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.23.2.tar.gz"
+    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.24.0.tar.gz"
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.24.0', sha256='076369634ee72b5a5941440661e2f306ff4ac30903802dc52031c7e9199ac640')
     version('0.23.2', sha256='20766f515e6cd6f954554387dfae705d93c7b544ec0e6c6a5d8e006f6f7ef480')
     version('0.23.1', sha256='e3fec1c8831f8f93ad85581ca29ca1bb88e2da377fb097cf8322aa89c21bc9b8')
     version('0.23.0', sha256='639a53df6273acc6a7510fb0c658b94e0c70bb13dafff9d14932c981ff9baff4')
@@ -50,7 +51,7 @@ class PyScikitLearn(PythonPackage):
     depends_on('py-threadpoolctl@2.0.0:', when='@0.23:', type=('build', 'run'))
     depends_on('py-cython@0.23:', type='build')
     depends_on('py-cython@0.28.5:', when='@0.21:', type='build')
-    depends_on('py-pytest@3.3.0:', type='test')
+    depends_on('py-pytest@5.0.1:', type='test')
     depends_on('py-pandas', type='test')
     depends_on('py-setuptools', type='build')
     depends_on('llvm-openmp', when='@0.21: %apple-clang +openmp')
