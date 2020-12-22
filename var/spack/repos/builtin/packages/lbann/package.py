@@ -33,39 +33,38 @@ class Lbann(CMakePackage, CudaPackage):
     version('0.92', sha256='9187c5bcbc562c2828fe619d53884ab80afb1bcd627a817edb935b80affe7b84')
     version('0.91', sha256='b69f470829f434f266119a33695592f74802cff4b76b37022db00ab32de322f5')
 
-    variant('opencv', default=True, description='Builds with support for image processing routines with OpenCV')
-    variant('dtype', default='float',
-            description='Type for floating point representation of weights',
-            values=('float', 'double'))
+    variant('al', default=True, description='Builds with support for Aluminum Library')
     variant('build_type', default='Release',
             description='The build type to build',
             values=('Debug', 'Release'))
-    variant('al', default=True, description='Builds with support for Aluminum Library')
     variant('conduit', default=True,
             description='Builds with support for Conduit Library '
             '(note that for v0.99 conduit is required)')
-    variant('half', default=False,
-            description='Builds with support for FP16 precision data types')
+    variant('deterministic', default=False,
+            description='Builds with support for deterministic execution')
     variant('dihydrogen', default=False,
             description='Builds with support for DiHydrogen Tensor Library')
     variant('distconv', default=False,
             description='Builds with support for spatial, filter, or channel '
             'distributed convolutions')
-
-    variant('vtune', default=False, description='Builds with support for Intel VTune')
-    variant('nvprof', default=False, description='Build with region annotations for NVPROF')
-    conflicts('~cuda', when='+nvprof')
-
-    variant('fft', default=False, description='Support for FFT operations')
-    depends_on('fftw +openmp +mpi', when='+fft')
-
-    variant('unit_testing', default=False, description='Builds with support for unit testing')
-    variant('deterministic', default=False, 
-            description='Builds with support for deterministic execution')
     variant('docs', default=False, description='Builds with support for building documentation')
+    variant('dtype', default='float',
+            description='Type for floating point representation of weights',
+            values=('float', 'double'))
     variant('extras', default=False, description='Add python modules for LBANN related tools')
+    variant('fft', default=False, description='Support for FFT operations')
+    variant('half', default=False,
+            description='Builds with support for FP16 precision data types')
+    variant('nvprof', default=False, description='Build with region annotations for NVPROF')
+    variant('opencv', default=True,
+            description='Builds with support for image processing routines with OpenCV')
+    variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('unit_testing', default=False, description='Builds with support for unit testing')
 
+    # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
+    conflicts('@:0.90,0.102:', when='+fft')
+    conflicts('~cuda', when='+nvprof')
 
     depends_on('cmake@3.17.0:')
 
@@ -124,11 +123,14 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('half', when='+half')
 
+    depends_on('fftw +openmp +mpi', when='+fft')
+
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
-    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui +imgcodecs '
-               ' +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda', when='+opencv')
+    depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
+               '+imgcodecs +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda',
+               when='+opencv')
 
     # Note that for Power systems we want the environment to add  +powerpc +vsx
     depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
@@ -200,23 +202,21 @@ class Lbann(CMakePackage, CudaPackage):
         args.extend([
             '-DCMAKE_CXX_STANDARD=14',
             '-DCMAKE_CUDA_STANDARD=14',
+            '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
+            '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_TBINF=OFF',
+            '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % ('+unit_testing' in spec),
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
             # protobuf is included by py-protobuf+cpp
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
-
-        args.append(
-            '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % ('+unit_testing' in spec))
-        args.append(
-            '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec))
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(
@@ -239,13 +239,6 @@ class Lbann(CMakePackage, CudaPackage):
 
         if '+conduit' in spec:
             args.append('-DConduit_DIR={0}'.format(spec['conduit'].prefix))
-
-        if '+fft' in spec:
-            args.extend([
-                '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
-                '-DFFTW_DIR={0}'.format(spec['fftw'].prefix)])
-        # args.append(
-        #     '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec))
 
         # Add support for OpenMP with external (Brew) clang
         if spec.satisfies('%clang platform=darwin'):

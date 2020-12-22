@@ -32,7 +32,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     variant('half', default=False,
             description='Enable FP16 support on the CPU.')
     variant('distconv', default=False,
-            description='Support for distributed convolutions: spatial, channel, filter.')
+            description='Support distributed convolutions: spatial, channel, '
+            'filter.')
     variant('nvshmem', default=False,
             description='Builds with support for NVSHMEM')
     variant('openmp', default=False,
