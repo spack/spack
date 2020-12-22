@@ -22,6 +22,9 @@ class Exciting(MakefilePackage):
 
     # as-of-yet unpublished fix to version 14
     patch('dfgather.patch', when='@14', working_dir='src/src_xs', level=0)
+    # Patch to add aarch64 in config.guess
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     variant('mpi', default=False, description='Use MPI')
     variant('mkl', default=False, description='Use MKL')
     variant('omp', default=True, description='Use OpenMP')
