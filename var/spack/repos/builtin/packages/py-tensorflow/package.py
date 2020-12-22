@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 import sys
 import tempfile
 
@@ -551,6 +552,7 @@ class PyTensorflow(Package, CudaPackage):
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
         tmp_path = tempfile.mkdtemp(prefix='spack')
+        tmp_path = os.path.join(tmp_path, os.getenv('USER'))
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
