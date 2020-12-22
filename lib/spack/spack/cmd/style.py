@@ -140,13 +140,19 @@ def setup_parser(subparser):
         help="Do not run mypy, default is run mypy if available",
     )
     subparser.add_argument(
+        "--black",
+        dest="black",
+        action="store_true",
+        help="Run black checks, default is skip",
+    )
+    subparser.add_argument(
         "files", nargs=argparse.REMAINDER, help="specific files to check"
     )
 
 
-def rewrite_and_print_output(output, args):
+def rewrite_and_print_output(output, args, re_obj=None):
     """rewrite ouput with <file>:<line>: format to respect path args"""
-    if args.root_relative:
+    if args.root_relative or re_obj is None:
         # print results relative to repo root.
         print(output)
     else:
@@ -160,7 +166,7 @@ def rewrite_and_print_output(output, args):
             )
 
         for line in output.split("\n"):
-            print(re.sub(r"^(.*): \[", cwd_relative, line))
+            print(re_obj.sub(cwd_relative, line))
 
 
 def print_style_header(file_list, args):
@@ -171,6 +177,8 @@ def print_style_header(file_list, args):
         print("  flake8")
     if args.mypy:
         print("  mypy")
+    if args.black:
+        print("  black")
     print()
     print("Modified files:")
     for filename in file_list:
@@ -189,6 +197,7 @@ def run_flake8(file_list, args):
     print_tool_header("flake8")
     flake8_cmd = which("flake8", required=True)
 
+    pat = re.compile(r"^(.*): \[")
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
@@ -206,7 +215,7 @@ def run_flake8(file_list, args):
         )
         returncode |= flake8_cmd.returncode
 
-        rewrite_and_print_output(output, args)
+        rewrite_and_print_output(output, args, pat)
 
     if returncode == 0:
         print("Flake8 style checks were clean")
@@ -221,6 +230,7 @@ def run_mypy(file_list, args):
 
     print_tool_header("mypy")
 
+    pat = re.compile(r"^(.*):[0-9]*:")
     returncode = 0
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
@@ -231,10 +241,43 @@ def run_mypy(file_list, args):
         output = mypy_cmd(*chunk, fail_on_error=False, output=str)
         returncode |= mypy_cmd.returncode
 
-        rewrite_and_print_output(output, args)
+        rewrite_and_print_output(output, args, pat)
 
     if returncode == 0:
         print("mypy style checks were clean")
+    return returncode
+
+
+def run_black(file_list, args):
+    black_cmd = which("black")
+    if black_cmd is None:
+        print("style: black is not available in path, skipping")
+        return 1
+
+    print_tool_header("black")
+
+    returncode = 0
+    output = ""
+    # run in chunks of 100 at a time to avoid line length limit
+    # filename parameter in config *does not work* for this reliably
+    for chunk in grouper(file_list, 100):
+        chunk = filter(lambda e: e is not None, chunk)
+
+        output = black_cmd(
+            "--check",
+            "--diff",
+            "--line-length",
+            "79",
+            *chunk,
+            fail_on_error=False,
+            output=str
+        )
+        returncode |= black_cmd.returncode
+
+        rewrite_and_print_output(output, args)
+
+    if returncode == 0:
+        print("black style checks were clean")
     return returncode
 
 
@@ -258,6 +301,8 @@ def style(parser, args):
             returncode = run_flake8(file_list, args)
         if args.mypy:
             returncode |= run_mypy(file_list, args)
+        if args.black:
+            returncode |= run_black(file_list, args)
 
     if returncode != 0:
         print("spack style found errors.")
