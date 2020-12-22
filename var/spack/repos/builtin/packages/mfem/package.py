@@ -121,6 +121,8 @@ class Mfem(Package, ROCmPackage):
             description='Enable serial, sparse direct solvers')
     variant('petsc', default=False,
             description='Enable PETSc solvers, preconditioners, etc.')
+    variant('slepc', default=False,
+            description='Enable SLEPc integration')
     variant('sundials', default=False,
             description='Enable Sundials time integrators')
     variant('pumi', default=False,
@@ -143,7 +145,7 @@ class Mfem(Package, ROCmPackage):
             description='Enable secure sockets using GnuTLS')
     variant('libunwind', default=False,
             description='Enable backtrace on error support using Libunwind')
-    # TODO: SIMD, Ginkgo, SLEPc, ADIOS2, HiOp, MKL CPardiso, Axom/Sidre
+    # TODO: SIMD, Ginkgo, ADIOS2, HiOp, MKL CPardiso, Axom/Sidre
     variant('timer', default='auto',
             values=('auto', 'std', 'posix', 'mac', 'mpi'),
             description='Timing functions to use in mfem::StopWatch')
@@ -168,6 +170,7 @@ class Mfem(Package, ROCmPackage):
     conflicts('+zlib', when='@:3.2')
     conflicts('+mpfr', when='@:3.2')
     conflicts('+petsc', when='@:3.2')
+    conflicts('+slepc', when='@:4.1.99')
     conflicts('+sundials', when='@:3.2')
     conflicts('+pumi', when='@:3.3.2')
     conflicts('+gslib', when='@:4.0.99')
@@ -186,6 +189,7 @@ class Mfem(Package, ROCmPackage):
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
     conflicts('+petsc', when='~mpi')
+    conflicts('+slepc', when='~petsc')
     conflicts('+pumi', when='~mpi')
     conflicts('timer=mpi', when='~mpi')
 
@@ -219,6 +223,7 @@ class Mfem(Package, ROCmPackage):
     # SuiteSparse and MUMPS. On the other hand, if we require the variants
     # '+suite-sparse+mumps' of PETSc, the xsdk package concretization fails.
     depends_on('petsc@3.8:+mpi+double+hypre', when='+petsc')
+    depends_on('slepc@3.8.0:', when='+slepc')
     # Recommended when building outside of xsdk:
     # depends_on('petsc@3.8:+mpi+double+hypre+suite-sparse+mumps',
     #            when='+petsc')
@@ -268,6 +273,9 @@ class Mfem(Package, ROCmPackage):
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
+    # FIXME: restrict to only version 4.2.0 when this issue is resolved, see
+    #        https://github.com/mfem/mfem/issues/1962.
+    patch('mfem-4.2-slepc.patch', when='@4.2.0:+slepc')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
@@ -386,6 +394,7 @@ class Mfem(Package, ROCmPackage):
             'MFEM_USE_SUITESPARSE=%s' % yes_no('+suite-sparse'),
             'MFEM_USE_SUNDIALS=%s' % yes_no('+sundials'),
             'MFEM_USE_PETSC=%s' % yes_no('+petsc'),
+            'MFEM_USE_SLEPC=%s' % yes_no('+slepc'),
             'MFEM_USE_PUMI=%s' % yes_no('+pumi'),
             'MFEM_USE_GSLIB=%s' % yes_no('+gslib'),
             'MFEM_USE_NETCDF=%s' % yes_no('+netcdf'),
@@ -554,6 +563,12 @@ class Mfem(Package, ROCmPackage):
                     'PETSC_LIB=%s' % ld_flags_from_library_list(petsc.libs)]
             else:
                 options += ['PETSC_DIR=%s' % petsc.prefix]
+
+        if '+slepc' in spec:
+            slepc = spec['slepc']
+            options += [
+                'SLEPC_OPT=%s' % slepc.headers.cpp_flags,
+                'SLEPC_LIB=%s' % ld_flags_from_library_list(slepc.libs)]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',

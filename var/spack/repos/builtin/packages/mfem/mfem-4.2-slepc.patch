@@ -1,0 +1,31 @@
+diff --git a/linalg/slepc.hpp b/linalg/slepc.hpp
+index 7f8911ba2..82a7faa7a 100644
+--- a/linalg/slepc.hpp
++++ b/linalg/slepc.hpp
+@@ -20,7 +20,7 @@
+ #include "petsc.hpp"
+ 
+ // Forward declarations
+-typedef struct _p_EPS *EPS;
++typedef struct _p_EPS *slepc_EPS;
+ 
+ namespace mfem
+ {
+@@ -37,7 +37,7 @@ private:
+    mutable bool clcustom;
+ 
+    /// SLEPc linear eigensolver object
+-   EPS eps;
++   slepc_EPS eps;
+ 
+    /// Real and imaginary part of eigenvector
+    mutable PetscParVector *VR, *VC;
+@@ -102,7 +102,7 @@ public:
+    void SetSpectralTransformation(SpectralTransformation transformation);
+ 
+    /// Conversion function to SLEPc's EPS type.
+-   operator EPS() const { return eps; }
++   operator slepc_EPS() const { return eps; }
+ 
+    /// Conversion function to PetscObject
+    operator PetscObject() const {return (PetscObject)eps; }
