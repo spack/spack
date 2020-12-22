@@ -108,6 +108,11 @@ class Bazel(Package):
     depends_on('python', type=('build', 'run'))
     depends_on('zip', when='platform=linux', type=('build', 'run'))
 
+    # make work on power9 (2x commits)
+    # https://github.com/bazelbuild/bazel/commit/5cff4f1edf8b95bf0612791632255852332f72b5
+    # https://github.com/bazelbuild/bazel/commit/ab62a6e097590dac5ec946ad7a796ea0e8593ae0
+    patch('linux_ppc-0.29.1.patch', when='@0.29.1')
+
     # Pass Spack environment variables to the build
     patch('bazelruleclassprovider-0.25.patch', when='@0.25:')
     patch('bazelruleclassprovider-0.14.patch', when='@0.14:0.24')
@@ -163,6 +168,11 @@ class Bazel(Package):
         return url.format(version)
 
     def setup_build_environment(self, env):
+        # fix the broken linking (on power9)
+        # https://github.com/bazelbuild/bazel/issues/10327
+        env.set('BAZEL_LINKOPTS', '')
+        env.set('BAZEL_LINKLIBS', '-lstdc++')
+
         env.set('EXTRA_BAZEL_ARGS',
                 # Spack's logs don't handle colored output well
                 '--color=no --host_javabase=@local_jdk//:jdk'
