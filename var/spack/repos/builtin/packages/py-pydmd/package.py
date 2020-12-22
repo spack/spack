@@ -26,36 +26,24 @@ class PyPydmd(PythonPackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
-
-    depends_on('py-nose', type=('build', 'test'))
-    depends_on('py-sphinx@1.4.5', type=('build', 'run'), when='+docs')
-    depends_on('py-sphinx-rtd-theme', type=('build', 'run'), when='+docs')
+    depends_on('py-nose', type='test')
+    depends_on('texlive', type='build', when='+docs')
+    depends_on('py-sphinx@1.4.0:1.4.99', type='build', when='+docs')
+    depends_on('py-sphinx-rtd-theme', type='build', when='+docs')
 
     # https://github.com/mathLab/PyDMD/pull/133
     patch('isuue-133.patch', when='@0.3')
 
-    conflicts(
-        '^py-sphinx-rtd-theme@0.5.0',
-        msg='py-sphinx-rtd-theme@0.5.0 fails to build (see https://github.com/spack/spack/issues/19310); '
-        'specify an older version, e.g., py-sphinx-rtd-theme@0.4.3',
-    )
-
-    phases = ['build', 'install']
-
-    def build(self, spec, prefix):
-        self.setup_py('build')
-
-        if '+docs' in spec:
+    @run_after('build')
+    def build_docs(self):
+        if '+docs' in self.spec:
             with working_dir('docs'):
                 make('html')
 
-    def install(self, spec, prefix):
-        self.setup_py('install')
+    @run_after('install')
+    def install_docs(self):
+        if '+docs' in self.spec:
+            install_tree('docs', self.prefix.docs)
 
-        if '+docs' in spec:
-            install_tree('docs', prefix.docs)
-
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def check_build(self):
+    def build_test(self):
         python('test.py')
