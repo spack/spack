@@ -42,7 +42,7 @@ jobs:
         # Need this for the git tests to succeed.
         git --version
         . .github/workflows/setup_git.sh
-    - name: Run flake8 tests
+    - name: Run style tests
       run: |
           share/spack/qa/run-style-tests
   documentation:
