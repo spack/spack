@@ -26,7 +26,7 @@ import time
 import traceback
 import six
 import types
-from typing import Optional, List, Dict, Any, Callable
+from typing import Optional, List, Dict, Any, Callable  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
