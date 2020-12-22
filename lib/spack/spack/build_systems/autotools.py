@@ -8,11 +8,7 @@ import os
 import os.path
 from subprocess import PIPE
 from subprocess import check_call
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs

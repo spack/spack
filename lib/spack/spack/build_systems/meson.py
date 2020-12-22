@@ -6,11 +6,7 @@
 
 import inspect
 import os
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
 from spack.directives import depends_on, variant

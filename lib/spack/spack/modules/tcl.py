@@ -8,11 +8,7 @@ non-hierarchical modules.
 """
 import os.path
 import string
-
-try:
-    from typing import Dict, Any  # novm
-except ImportError:
-    pass
+from typing import Dict, Any  # novm
 
 import llnl.util.tty as tty
 

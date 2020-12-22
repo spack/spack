@@ -26,11 +26,7 @@ import time
 import traceback
 import six
 import types
-
-try:
-    from typing import Optional, List, Dict, Any, Callable  # novm
-except ImportError:
-    pass
+from typing import Optional, List, Dict, Any, Callable
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty

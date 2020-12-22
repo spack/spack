@@ -8,12 +8,11 @@ package.
 """
 import collections
 import os
-
-try:
-    from typing import Callable, DefaultDict, Dict, List  # novm
+from typing import Callable, DefaultDict, Dict, List  # novm
+if Callable is not None:
     CallbackDict = DefaultDict[str, List[Callable]]  # novm
-except ImportError:
-    pass
+else:
+    CallbackDict = None
 
 import llnl.util.filesystem
 

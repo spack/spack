@@ -8,11 +8,7 @@ import os.path
 import llnl.util.lang as lang
 import itertools
 import collections
-
-try:
-    from typing import Dict, Any  # novm
-except ImportError:
-    pass
+from typing import Dict, Any  # novm
 
 import spack.config
 import spack.compilers

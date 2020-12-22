@@ -38,11 +38,7 @@ import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError

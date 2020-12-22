@@ -13,23 +13,17 @@ import itertools
 import os
 import re
 import shutil
+import six
 import stat
 import sys
 import traceback
 import types
+from typing import Dict  # novm
 
 if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
 else:
     from collections import Mapping
-
-try:
-    from typing import Dict  # novm
-except ImportError:
-    pass
-
-
-import six
 
 import ruamel.yaml as yaml
 

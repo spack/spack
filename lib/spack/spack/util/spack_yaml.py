@@ -14,11 +14,7 @@
 """
 import ctypes
 import collections
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 from ordereddict_backport import OrderedDict
 from six import string_types, StringIO

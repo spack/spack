@@ -5,11 +5,7 @@
 
 
 import inspect
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir

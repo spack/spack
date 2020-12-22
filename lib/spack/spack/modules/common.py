@@ -34,11 +34,7 @@ import datetime
 import inspect
 import os.path
 import re
-
-try:
-    from typing import Optional  # novm
-except ImportError:
-    pass
+from typing import Optional  # novm
 
 import llnl.util.filesystem
 from llnl.util.lang import dedupe

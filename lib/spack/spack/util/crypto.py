@@ -5,13 +5,9 @@
 
 import sys
 import hashlib
+from typing import Dict, Callable, Any  # novm
 
 import llnl.util.tty as tty
-
-try:
-    from typing import Dict, Callable, Any  # novm
-except ImportError:
-    pass
 
 #: Set of hash algorithms that Spack can use, mapped to digest size in bytes
 hashes = {

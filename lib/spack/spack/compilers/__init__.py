@@ -11,16 +11,12 @@ import itertools
 import multiprocessing.pool
 import os
 import six
+from typing import Dict  # novm
 
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import archspec.cpu
-
-try:
-    from typing import Dict  # novm
-except ImportError:
-    pass
 
 import spack.paths
 import spack.error

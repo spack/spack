@@ -10,11 +10,7 @@ import re
 import itertools
 import shutil
 import tempfile
-
-try:
-    from typing import Sequence, List  # novm
-except ImportError:
-    pass
+from typing import Sequence, List  # novm
 
 import llnl.util.lang
 from llnl.util.filesystem import (

@@ -29,11 +29,7 @@ import os.path
 import re
 import shutil
 import sys
-
-try:
-    from typing import Optional, List  # novm
-except ImportError:
-    pass
+from typing import Optional, List  # novm
 
 import llnl.util.tty as tty
 import six

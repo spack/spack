@@ -8,11 +8,7 @@ import inspect
 import os
 import platform
 import re
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir

@@ -33,11 +33,7 @@ import functools
 import os.path
 import re
 from six import string_types
-
-try:
-    from typing import Set, List  # novm
-except ImportError:
-    pass
+from typing import Set, List  # novm
 
 import llnl.util.lang
 import llnl.util.tty.color

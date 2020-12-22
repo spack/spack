@@ -5,11 +5,7 @@
 import inspect
 import os
 import shutil
-
-try:
-    from typing import List  # novm
-except ImportError:
-    pass
+from typing import List  # novm
 
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after

@@ -20,11 +20,8 @@ from contextlib import contextmanager
 from six import string_types
 from six import StringIO
 
-try:
-    from typing import Optional  # novm
-    from types import ModuleType  # novm
-except ImportError:
-    pass
+from typing import Optional  # novm
+from types import ModuleType  # novm
 
 import llnl.util.tty as tty
 

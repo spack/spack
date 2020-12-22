@@ -16,11 +16,7 @@ import sys
 import tempfile
 from six import string_types
 from six import iteritems
-
-try:
-    from typing import Dict  # novm
-except ImportError:
-    pass
+from typing import Dict  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree

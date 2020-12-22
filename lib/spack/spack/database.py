@@ -27,16 +27,13 @@ import six
 import socket
 import sys
 import time
+from typing import Dict  # novm
+
 try:
     import uuid
     _use_uuid = True
 except ImportError:
     _use_uuid = False
-    pass
-
-try:
-    from typing import Dict  # novm
-except ImportError:
     pass
 
 import llnl.util.filesystem as fs
