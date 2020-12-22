@@ -913,7 +913,7 @@ _spack_find() {
 _spack_flake8() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -b --base -k --keep-temp -a --all -o --output -r --root-relative -U --no-untracked"
+        SPACK_COMPREPLY="-h --help -b --base -a --all -o --output -r --root-relative -U --no-untracked"
     else
         SPACK_COMPREPLY=""
     fi
