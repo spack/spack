@@ -615,26 +615,6 @@ no_flags(Package, FlagType)
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
-% weight root preferences higher
-%
-% TODO: how best to deal with this issue?  It's not clear how best to
-% weight all the constraints. Without this root preference, `spack solve
-% hdf5` will pick mpich instead of openmpi, even if openmpi is the
-% preferred provider, because openmpi has a version constraint on hwloc.
-% It ends up choosing between settling for an old version of hwloc, or
-% picking the second-best provider.  This workaround weights root
-% preferences higher so that hdf5's prefs are more important, but it's
-% not clear this is a general solution.  It would be nice to weight by
-% distance to root, but that seems to slow down the solve a lot.
-%
-% One option is to make preferences hard constraints.  Or maybe we need
-% to look more closely at where a constraint came from and factor that
-% into our weights.  e.g., a non-default variant resulting from a version
-% constraint counts like a version constraint.  Needs more thought later.
-%
-
-root(Package, 2) :- root(Package), node(Package).
-root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % The highest priority is to minimize the:
 % 1. Version weight
