@@ -54,10 +54,49 @@ depends_on(Package, Dependency, Type)
     virtual(Virtual),
     not external(Package).
 
+% Equivalencies of the form:
+%
+%   name(Arg1, Arg2, ...) :- attr("name", Arg1, Arg2, ...).
+%   attr("name", Arg1, Arg2, ...) :- name(Arg1, Arg2, ...).
+%
+% These allow us to easily define conditional dependency and conflict rules
+% without enumerating all spec attributes every time.
+node(Package)                          :- attr("node", Package).
+version(Package, Version)              :- attr("version", Package, Version).
+version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
+node_platform(Package, Platform)       :- attr("node_platform", Package, Platform).
+node_os(Package, OS)                   :- attr("node_os", Package, OS).
+node_target(Package, Target)           :- attr("node_target", Package, Target).
+node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
+variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
+variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
+node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
+node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
+node_compiler_version(Package, Compiler, Version)
+  :- attr("node_compiler_version", Package, Compiler, Version).
+node_compiler_version_satisfies(Package, Compiler, Version)
+  :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
+
+attr("node", Package)                          :- node(Package).
+attr("version", Package, Version)              :- version(Package, Version).
+attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
+attr("node_platform", Package, Platform)       :- node_platform(Package, Platform).
+attr("node_os", Package, OS)                   :- node_os(Package, OS).
+attr("node_target", Package, Target)           :- node_target(Package, Target).
+attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
+attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
+attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
+attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
+attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
+attr("node_compiler_version", Package, Compiler, Version)
+  :- node_compiler_version(Package, Compiler, Version).
+attr("node_compiler_version_satisfies", Package, Compiler, Version)
+  :- node_compiler_version_satisfies(Package, Compiler, Version).
+
 % if any individual condition below is true, trigger the dependency.
-dependency_conditions(P, D, T) :-
-  dependency_conditions_hold(P, D, I),
-  dependency_type(I, T).
+dependency_conditions(Package, Dependency, Type) :-
+  dependency_conditions_hold(ID, Package, Dependency),
+  dependency_type(ID, Type).
 
 #defined dependency_type/2.
 
@@ -68,51 +107,23 @@ dependency_conditions(P, D, T) :-
 % depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
 %
 % that include dependencies
-dependency_conditions_hold(Parent, Dependency, ID) :-
-  node(Package)
-    : required_dependency_condition(ID, "node", Package);
-  version(Package, Version)
-    : required_dependency_condition(ID, "version", Package, Version);
-  version_satisfies(Package, Constraint)
-    : required_dependency_condition(ID, "version_satisfies", Package, Constraint);
-  node_platform(Package, Platform)
-    : required_dependency_condition(ID, "node_platform", Package, Platform);
-  node_os(Package, OS)
-    : required_dependency_condition(ID, "node_os", Package, OS);
-  node_target(Package, Target)
-    : required_dependency_condition(ID, "node_target", Package, Target);
-  variant_value(Package, Variant, Value)
-    : required_dependency_condition(ID, "variant_value", Package, Variant, Value);
-  node_compiler(Package, Compiler)
-    : required_dependency_condition(ID, "node_compiler", Package, Compiler);
-  node_compiler_version(Package, Compiler, Version)
-    : required_dependency_condition(ID, "node_compiler_version", Package, Compiler, Version);
-  node_compiler_version_satisfies(Package, Compiler, Version)
-    : required_dependency_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
-  node_flag(Package, FlagType, Flag)
-    : required_dependency_condition(ID, "node_flag", Package, FlagType, Flag);
-  dependency_condition(Parent, Dependency, ID);
+dependency_conditions_hold(ID, Parent, Dependency) :-
+  attr(Name, Arg1)             : required_dependency_condition(ID, Name, Arg1);
+  attr(Name, Arg1, Arg2)       : required_dependency_condition(ID, Name, Arg1, Arg2);
+  attr(Name, Arg1, Arg2, Arg3) : required_dependency_condition(ID, Name, Arg1, Arg2, Arg3);
+  dependency_condition(ID, Parent, Dependency);
   node(Parent).
 
 #defined dependency_condition/3.
 #defined required_dependency_condition/3.
 #defined required_dependency_condition/4.
 #defined required_dependency_condition/5.
-#defined required_dependency_condition/5.
 
 % general rules for conflicts
-:- node(Package) : conflict_condition(ID, "node", Package);
-   not external(Package) : conflict_condition(ID, "node", Package);
-   version(Package, Version) : conflict_condition(ID, "version", Package, Version);
-   version_satisfies(Package, Constraint) : conflict_condition(ID, "version_satisfies", Package, Constraint);
-   node_platform(Package, Platform) : conflict_condition(ID, "node_platform", Package, Platform);
-   node_os(Package, OS) : conflict_condition(ID, "node_os", Package, OS);
-   node_target(Package, Target) : conflict_condition(ID, "node_target", Package, Target);
-   variant_value(Package, Variant, Value) : conflict_condition(ID, "variant_value", Package, Variant, Value);
-   node_compiler(Package, Compiler) : conflict_condition(ID, "node_compiler", Package, Compiler);
-   node_compiler_version(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version", Package, Compiler, Version);
-   node_compiler_version_satisfies(Package, Compiler, Version) : conflict_condition(ID, "node_compiler_version_satisfies", Package, Compiler, Version);
-   node_flag(Package, FlagType, Flag) : conflict_condition(ID, "node_flag", Package, FlagType, Flag);
+:- not external(Package)        : conflict_condition(ID, "node", Package);
+   attr(Name, Arg1)             : conflict_condition(ID, Name, Arg1);
+   attr(Name, Arg1, Arg2)       : conflict_condition(ID, Name, Arg1, Arg2);
+   attr(Name, Arg1, Arg2, Arg3) : conflict_condition(ID, Name, Arg1, Arg2, Arg3);
    conflict(ID, Package).
 
 #defined conflict/2.
@@ -122,63 +133,23 @@ dependency_conditions_hold(Parent, Dependency, ID) :-
 
 % Implications from matching a dependency condition
 node(Dependency) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency).
 
-version(Dependency, Version) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+attr(Name, Arg1, Arg2) :-
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "version", Dependency, Version).
+  imposed_dependency_condition(ID, Name, Arg1, Arg2).
 
-version_satisfies(Dependency, Constraint) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+attr(Name, Arg1, Arg2, Arg3) :-
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "version_satisfies", Dependency, Constraint).
-
-node_platform(Dependency, Platform) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_platform", Dependency, Platform).
-
-node_os(Dependency, OS) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_os", Dependency, OS).
-
-node_target(Dependency, Target) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_target", Dependency, Target).
-
-variant_set(Dependency, Variant, Value) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "variant_set", Dependency, Variant, Value).
-
-node_compiler(Dependency, Compiler) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_compiler", Dependency, Compiler).
-
-node_compiler_version(Dependency, Compiler, Version) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_compiler_version", Dependency, Compiler, Version).
-
-node_compiler_version_satisfies(Dependency, Compiler, Version) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_compiler_version_satisfies", Dependency, Compiler, Version).
-
-node_flag(Dependency, FlagType, Flag) :-
-  dependency_conditions_hold(Package, Dependency, ID),
-  depends_on(Package, Dependency),
-  imposed_dependency_condition(ID, "node_flag", Dependency, FlagType, Flag).
+  imposed_dependency_condition(ID, Name, Arg1, Arg2, Arg3).
 
 #defined imposed_dependency_condition/4.
 #defined imposed_dependency_condition/5.
 
-% if a virtual was required by some root spec, one provider is in the DAG
+% if a virtual was required by some package, one provider is in the DAG
 1 { node(Package) : provides_virtual(Package, Virtual) } 1
  :- virtual_node(Virtual).
 
