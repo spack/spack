@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import glob
+import subprocess
+from os import path
 
 from spack import *
 
@@ -24,6 +27,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     version('2021.1.0', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
 
+    depends_on('patchelf', type='build')
+
     def __init__(self, spec):
         self.component_info(
             dir_name='compiler',
@@ -32,3 +37,27 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             releases=releases,
             url_name='HPCKit')
         super(IntelOneapiCompilers, self).__init__(spec)
+
+    def install(self, spec, prefix):
+        super(IntelOneapiCompilers, self).install(spec, prefix)
+        # For quick turnaround debugging, copy instead of install
+        # copytree('/opt/intel/oneapi/compiler', path.join(prefix, 'compiler'),
+        #          symlinks=True)
+        eprefix = path.join(prefix, 'compiler', 'latest', 'linux')
+        rpath_dirs = ['lib',
+                      'lib/x64',
+                      'lib/emu',
+                      'lib/oclfpga/host/linux64/lib',
+                      'lib/oclfpga/linux64/lib',
+                      'compiler/lib/intel64_lin',
+                      'compiler/lib']
+        rpath = ':'.join([path.join(eprefix, c) for c in rpath_dirs])
+        patch_dirs = ['compiler/lib/intel64_lin',
+                      'compiler/lib/intel64',
+                      'bin']
+        for pd in patch_dirs:
+            dir = path.join(eprefix, pd)
+            for file in glob.glob(path.join(dir, '*')):
+                # Try to patch all files, patchelf will do nothing if
+                # file should not be patched
+                subprocess.call(['patchelf', '--set-rpath', rpath, file])
