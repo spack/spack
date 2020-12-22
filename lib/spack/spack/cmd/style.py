@@ -46,6 +46,16 @@ exclude_directories = [spack.paths.external_path]
 max_line_length = 79
 
 
+def is_package(f):
+    """Whether flake8 should consider a file as a core file or a package.
+
+    We run flake8 with different exceptions for the core and for
+    packages, since we allow `from spack import *` and poking globals
+    into packages.
+    """
+    return f.startswith("var/spack/repos/") or "docs/tutorial/examples" in f
+
+
 def changed_files(base=None, untracked=True, all_files=False):
     """Get list of changed files in the Spack repository."""
 
