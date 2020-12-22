@@ -35,7 +35,7 @@ class PyPem(PythonPackage):
     pem’s documentation lives at Read the Docs, the code on GitHub.
     """
 
-    homepage = "https://www.example.com"
+    homepage = "https://pem.readthedocs.io/en/stable/"
     url      = "https://github.com/hynek/pem/archive/20.1.0.tar.gz"
 
     version('20.1.0', sha256='140df7388f72bdf95d5a40e152cfda4fd62856b8320a9a808ffdc2bee37d5c36')
