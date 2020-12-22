@@ -8,6 +8,11 @@ from __future__ import print_function
 import spack.cmd.style
 
 
+description = spack.cmd.style.description
+section = spack.cmd.style.section
+level = spack.cmd.style.level
+
+
 def setup_parser(subparser):
     spack.cmd.style.setup_parser(subparser)
 
