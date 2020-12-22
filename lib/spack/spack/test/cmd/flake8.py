@@ -11,7 +11,7 @@ import sys
 from llnl.util.filesystem import FileFilter
 
 import spack.paths
-from spack.cmd.style import flake8, setup_parser, changed_files
+from spack.cmd.style import style, setup_parser, changed_files
 from spack.repo import Repo
 from spack.util.executable import which
 
@@ -69,7 +69,7 @@ def test_flake8(parser, flake8_package):
     # Otherwise, the unit tests would fail every time
     # the flake8 tests fail
     args = parser.parse_args([flake8_package])
-    flake8(parser, args)
+    style(parser, args)
     # Get even more coverage
     args = parser.parse_args(['--output', '--root-relative', flake8_package])
-    flake8(parser, args)
+    style(parser, args)
