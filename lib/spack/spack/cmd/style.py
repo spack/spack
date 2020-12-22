@@ -25,7 +25,7 @@ from spack.util.executable import which
 
 
 description = (
-    "runs source code style checks on Spack. requires flake8, mypy, black for"
+    "runs source code style checks on Spack. Requires flake8, mypy, black for "
     + "their respective checks"
 )
 section = "developer"
