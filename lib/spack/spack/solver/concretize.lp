@@ -90,9 +90,9 @@ attr("node_compiler_version_satisfies", Package, Compiler, Version)
   :- node_compiler_version_satisfies(Package, Compiler, Version).
 
 % if any individual condition below is true, trigger the dependency.
-dependency_conditions(P, D, T) :-
-  dependency_conditions_hold(P, D, I),
-  dependency_type(I, T).
+dependency_conditions(Package, Dependency, Type) :-
+  dependency_conditions_hold(ID, Package, Dependency),
+  dependency_type(ID, Type).
 
 #defined dependency_type/2.
 
@@ -103,7 +103,7 @@ dependency_conditions(P, D, T) :-
 % depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
 %
 % that include dependencies
-dependency_conditions_hold(Parent, Dependency, ID) :-
+dependency_conditions_hold(ID, Parent, Dependency) :-
   attr(Name, Arg1)             : required_dependency_condition(ID, Name, Arg1);
   attr(Name, Arg1, Arg2)       : required_dependency_condition(ID, Name, Arg1, Arg2);
   attr(Name, Arg1, Arg2, Arg3) : required_dependency_condition(ID, Name, Arg1, Arg2, Arg3);
@@ -129,16 +129,16 @@ dependency_conditions_hold(Parent, Dependency, ID) :-
 
 % Implications from matching a dependency condition
 node(Dependency) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency).
 
 attr(Name, Arg1, Arg2) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency),
   imposed_dependency_condition(ID, Name, Arg1, Arg2).
 
 attr(Name, Arg1, Arg2, Arg3) :-
-  dependency_conditions_hold(Package, Dependency, ID),
+  dependency_conditions_hold(ID, Package, Dependency),
   depends_on(Package, Dependency),
   imposed_dependency_condition(ID, Name, Arg1, Arg2, Arg3).
 
