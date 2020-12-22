@@ -18,6 +18,7 @@ else:
     from itertools import zip_longest  # novm
 
 from llnl.util.filesystem import working_dir
+import llnl.util.tty as tty
 
 import spack.paths
 from spack.util.executable import which
@@ -150,7 +151,12 @@ def setup_parser(subparser):
     )
 
 
-def rewrite_and_print_output(output, args, re_obj=None):
+def rewrite_and_print_output(
+    output,
+    args,
+    re_obj=re.compile(r"^(.+):([0-9]+):"),
+    replacement=r"{0}:{1}:",
+):
     """rewrite ouput with <file>:<line>: format to respect path args"""
     if args.root_relative or re_obj is None:
         # print results relative to repo root.
@@ -158,38 +164,41 @@ def rewrite_and_print_output(output, args, re_obj=None):
     else:
         # print results relative to current working directory
         def cwd_relative(path):
-            return "{0}: [".format(
+            return replacement.format(
                 os.path.relpath(
                     os.path.join(spack.paths.prefix, path.group(1)),
                     os.getcwd(),
-                )
+                ),
+                *list(path.groups()[1:])
             )
 
         for line in output.split("\n"):
-            print(re_obj.sub(cwd_relative, line))
+            print(
+                re_obj.sub(
+                    cwd_relative,
+                    line,
+                )
+            )
 
 
 def print_style_header(file_list, args):
-    print("=======================================================")
-    print("style: running code checks on spack.")
-    print("tools:")
+    tty.msg("style: running code checks on spack.")
+    tools = []
     if args.flake8:
-        print("  flake8")
+        tools.append("flake8")
     if args.mypy:
-        print("  mypy")
+        tools.append("mypy")
     if args.black:
-        print("  black")
-    print()
-    print("Modified files:")
-    for filename in file_list:
-        print("  {0}".format(filename.strip()))
-    print("=======================================================")
+        tools.append("black")
+    tty.msg("style: tools selected: " + ", ".join(tools))
+    tty.msg("Modified files:", *[filename.strip() for filename in file_list])
+    sys.stdout.flush()
 
 
 def print_tool_header(tool):
-    print("=======================================================")
-    print("style: running %s checks on spack." % tool)
-    print("=======================================================")
+    sys.stdout.flush()
+    tty.msg("style: running %s checks on spack." % tool)
+    sys.stdout.flush()
 
 
 def run_flake8(file_list, args):
@@ -197,7 +206,6 @@ def run_flake8(file_list, args):
     print_tool_header("flake8")
     flake8_cmd = which("flake8", required=True)
 
-    pat = re.compile(r"^(.*): \[")
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
     # filename parameter in config *does not work* for this reliably
@@ -215,22 +223,23 @@ def run_flake8(file_list, args):
         )
         returncode |= flake8_cmd.returncode
 
-        rewrite_and_print_output(output, args, pat)
+        rewrite_and_print_output(output, args)
 
     if returncode == 0:
-        print("Flake8 style checks were clean")
+        tty.msg("Flake8 style checks were clean")
+    else:
+        tty.error("Flake8 style checks found errors")
     return returncode
 
 
 def run_mypy(file_list, args):
     mypy_cmd = which("mypy")
     if mypy_cmd is None:
-        print("style: mypy is not available in path, skipping")
+        tty.error("style: mypy is not available in path, skipping")
         return 1
 
     print_tool_header("mypy")
 
-    pat = re.compile(r"^(.*):[0-9]*:")
     returncode = 0
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
@@ -241,21 +250,25 @@ def run_mypy(file_list, args):
         output = mypy_cmd(*chunk, fail_on_error=False, output=str)
         returncode |= mypy_cmd.returncode
 
-        rewrite_and_print_output(output, args, pat)
+        rewrite_and_print_output(output, args)
 
     if returncode == 0:
-        print("mypy style checks were clean")
+        tty.msg("mypy checks were clean")
+    else:
+        tty.error("mypy checks found errors")
     return returncode
 
 
 def run_black(file_list, args):
     black_cmd = which("black")
     if black_cmd is None:
-        print("style: black is not available in path, skipping")
+        tty.error("style: black is not available in path, skipping")
         return 1
 
     print_tool_header("black")
 
+    pat = re.compile("would reformat +(.*)")
+    replacement = "would reformat {0}"
     returncode = 0
     output = ""
     # run in chunks of 100 at a time to avoid line length limit
@@ -264,20 +277,16 @@ def run_black(file_list, args):
         chunk = filter(lambda e: e is not None, chunk)
 
         output = black_cmd(
-            "--check",
-            "--diff",
-            "--line-length",
-            "79",
-            *chunk,
-            fail_on_error=False,
-            output=str
+            "--check", "--diff", *chunk, fail_on_error=False, output=str, error=str
         )
         returncode |= black_cmd.returncode
 
-        rewrite_and_print_output(output, args)
+        rewrite_and_print_output(output, args, pat, replacement)
 
     if returncode == 0:
-        print("black style checks were clean")
+        tty.msg("black style checks were clean")
+    else:
+        tty.error("black checks found errors")
     return returncode
 
 
