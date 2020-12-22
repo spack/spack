@@ -35,18 +35,21 @@ class Mummi(PythonPackage):
 
     # -------------------------------------------------------------------
 
-    extends('python@3.7.3')
+    extends('python@3.7:')
 
     # build dependencies
-    depends_on('cmake@3.14.5',  type='build')
-    depends_on('swig@3.0.12',  type='build')
+    depends_on('cmake',  type='build')
+    depends_on('swig',  type='build')
 
     # generic
-    depends_on('py-numpy@1.16.4')
-    depends_on('py-scipy@1.3.0')
+    depends_on('py-numpy')
+    depends_on('py-scipy')
+
+    # ml
+    #depends_on('py-tensorflow@2.1.0 ~cuda~nccl')
+    depends_on('faiss@1.6.3 +python')
 
     '''
-    # ml
     depends_on('cudnn@7.5.1-10.1-ppc64le')			      	        #TODO: these settings are for powerpc
     depends_on('faiss@1.5.3 +python')
     #depends_on('py-theano@1.0.4 +cuda ^cudnn@7.5.1-10.1-ppc64le')	#TODO: these settings are for powerpc
@@ -54,10 +57,11 @@ class Mummi(PythonPackage):
     depends_on('py-keras@2.2.4')
     #depends_on('py-h5py@2.9.0~mpi ^hdf5~mpi+hl')
     '''
+
     # analysis
     depends_on('talass@process-statistics')
     depends_on('py-scikit-learn')
-    depends_on('py-matplotlib@3.0.2')
+    depends_on('py-matplotlib@3:')
 
     # macro
     #depends_on('gridsim2d@v2020-10-09.2')
@@ -65,12 +69,13 @@ class Mummi(PythonPackage):
     # cg and aa
     depends_on('ddcmdconverter@1.0.4')
     depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
+
     depends_on('dssp@3.1.4')
     depends_on('py-parmed@3.2.0')
     depends_on('py-tqdm@4.36.1')
 
-    #depends_on('fftw@3.3.8 +mpi~openmp~pfft_patches precision=double,float')
-    depends_on('gromacs@2019.06 +cuda')
+    depends_on('fftw@3.3.8 +mpi~openmp~pfft_patches precision=double,float')
+    depends_on('gromacs@2019.6 +cuda')
 
     # databroker
     #depends_on('databroker@0.7.1 +python')

@@ -141,9 +141,11 @@ class Gromacs(CMakePackage):
               url='http://ftp.gromacs.org/gromacs/gromacs-2019.6.tar.gz',
               sha256='bebe396dc0db11a9d4cc205abc13b50d88225617642508168a2195324f06a358')
 
-    patch('http://www.sci.utah.edu/~hbhatia/pilot2/gromacs-2019.6-limitEMstep-20200526.patch', 
-            sha256='e82b910d71fdeea82cedcbb03b2d67dcf92405beb95a40c5ef628d211be4137d', 
-            when='@2019.6.mummifix')
+    #patch('http://www.sci.utah.edu/~hbhatia/pilot2/gromacs-2019.6-limitEMstep-20200526.patch', 
+    #        sha256='e82b910d71fdeea82cedcbb03b2d67dcf92405beb95a40c5ef628d211be4137d', 
+    #        when='@2019.6.mummifix')
+
+    patch('gromacs-2019.6-limitEMstep-20200526.patch', when='@2019.6.mummifix')
     # ----------------------------------------------------------------------------------
 
     def patch(self):

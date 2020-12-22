@@ -1,0 +1,87 @@
+diff -Naur gromacs-2019.6/src/gromacs/gmxpreprocess/convparm.cpp gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/gmxpreprocess/convparm.cpp
+--- gromacs-2019.6/src/gromacs/gmxpreprocess/convparm.cpp	2020-02-28 02:27:21.000000000 -0500
++++ gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/gmxpreprocess/convparm.cpp	2020-05-26 13:53:04.701020746 -0400
+@@ -555,7 +555,7 @@
+             {
+                 enter_function(&(plist[i]), static_cast<t_functype>(i), comb, reppow,
+                                ffp, &molt->ilist[i],
+-                               FALSE, (i == F_POSRES  || i == F_FBPOSRES));
++                               FALSE, (i == F_POSRES  || i == F_FBPOSRES || i == F_DISRES || i== F_RESTRBONDS));
+             }
+         }
+     }
+diff -Naur gromacs-2019.6/src/gromacs/mdrun/minimize.cpp gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/mdrun/minimize.cpp
+--- gromacs-2019.6/src/gromacs/mdrun/minimize.cpp	2020-02-28 02:27:21.000000000 -0500
++++ gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/mdrun/minimize.cpp	2020-05-26 13:53:48.341342497 -0400
+@@ -2593,6 +2593,9 @@
+             if (count > 0)
+             {
+                 ustep *= 1.2;
++                if (ustep>0.05){
++                  ustep = 0.05;
++                }
+             }
+ 
+             /* Write to trn, if necessary */
+diff -Naur gromacs-2019.6/src/gromacs/tools/check.cpp gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/tools/check.cpp
+--- gromacs-2019.6/src/gromacs/tools/check.cpp	2020-02-28 02:27:21.000000000 -0500
++++ gromacs-2019.6_limitEMstep0.05nm_accelerateGrompp_checkRESTRBONDS/src/gromacs/tools/check.cpp	2020-05-26 13:54:07.765069000 -0400
+@@ -261,48 +261,17 @@
+     rvec  dx;
+ 
+     set_pbc(&pbc, ePBC, box);
+-    for (ftype = 0; (ftype < F_NRE); ftype++)
++    ftype = F_RESTRBONDS;
++    for (k = 0; (k < idef->il[ftype].nr); )
+     {
+-        if ((interaction_function[ftype].flags & IF_CHEMBOND) == IF_CHEMBOND)
+-        {
+-            for (k = 0; (k < idef->il[ftype].nr); )
+-            {
+-                type = idef->il[ftype].iatoms[k++];
+-                ai   = idef->il[ftype].iatoms[k++];
+-                aj   = idef->il[ftype].iatoms[k++];
+-                b0   = 0;
+-                switch (ftype)
+-                {
+-                    case F_BONDS:
+-                        b0 = idef->iparams[type].harmonic.rA;
+-                        break;
+-                    case F_G96BONDS:
+-                        b0 = std::sqrt(idef->iparams[type].harmonic.rA);
+-                        break;
+-                    case F_MORSE:
+-                        b0 = idef->iparams[type].morse.b0A;
+-                        break;
+-                    case F_CUBICBONDS:
+-                        b0 = idef->iparams[type].cubic.b0;
+-                        break;
+-                    case F_CONSTR:
+-                        b0 = idef->iparams[type].constr.dA;
+-                        break;
+-                    default:
+-                        break;
+-                }
+-                if (b0 != 0)
+-                {
+-                    pbc_dx(&pbc, x[ai], x[aj], dx);
+-                    blen      = norm(dx);
+-                    deviation = gmx::square(blen-b0);
+-                    if (std::sqrt(deviation/gmx::square(b0)) > tol)
+-                    {
+-                        fprintf(stderr, "Distance between atoms %d and %d is %.3f, should be %.3f\n", ai+1, aj+1, blen, b0);
+-                    }
+-                }
+-            }
+-        }
++        type = idef->il[ftype].iatoms[k++];
++        ai   = idef->il[ftype].iatoms[k++];
++        aj   = idef->il[ftype].iatoms[k++];
++        b0   = idef->iparams[type].restraint.lowA;
++
++        pbc_dx(&pbc, x[ai], x[aj], dx);
++        blen      = norm(dx);
++        fprintf(stderr, "Distance between atoms %d and %d is %.3f, should be %.3f\n", ai+1, aj+1, blen, b0);
+     }
+ }
+ 
