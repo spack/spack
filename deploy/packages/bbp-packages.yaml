@@ -28,6 +28,7 @@ packages:
       - brion@3.2.0 +python
       - brion@3.3.0 +python
       - circuit-build@3.1.1
+      - circuit-analysis@0.0.4
       - connectome-tools@0.3.3
       - spatial-index@0.2.1
       - spykfunc@0.15.9
