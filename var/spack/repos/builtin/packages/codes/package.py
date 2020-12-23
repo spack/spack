@@ -47,6 +47,6 @@ class Codes(AutotoolsPackage):
 
         if "+dumpi" in spec:
             config_args.extend([
-                '--with-dumpi=%s'.format(spec['sst-dumpi'].prefix)])
+                '--with-dumpi=%s' % spec['sst-dumpi'].prefix])
 
         return config_args

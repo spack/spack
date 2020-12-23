@@ -111,7 +111,7 @@ class VariantFormatter(object):
             yield '    None'
         else:
             yield '    ' + self.fmt % self.headers
-            underline = tuple([l * "=" for l in self.column_widths])
+            underline = tuple([w * "=" for w in self.column_widths])
             yield '    ' + self.fmt % underline
             yield ''
             for k, v in sorted(self.variants.items()):
