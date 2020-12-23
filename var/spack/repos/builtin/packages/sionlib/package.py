@@ -15,6 +15,7 @@ class Sionlib(AutotoolsPackage):
     version('1.7.6', sha256='e85253ed3cd17a3b1c124ccd704caea3ad3c200abfcca9cc0851cb14f5a60691', extension='tar.gz')
 
     depends_on('mpi')
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def configure_args(self):
         args = []
