@@ -59,8 +59,8 @@ def find_list_urls(url):
     PyPI       https://pypi.org/simple/<name>/
     =========  =======================================================
 
-    Note: this function is called by `spack versions` and `spack checksum`
-    but not by `spack fetch` or `spack install`.
+    Note: this function is called by `spack versions`, `spack checksum`,
+    and `spack create`, but not by `spack fetch` or `spack install`.
 
     Parameters:
         url (str): The download URL for the package
@@ -102,7 +102,8 @@ def find_list_urls(url):
         # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
         # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
         # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
-        (r'.*(?:pypi|pythonhosted)[^/]+/packages/[^/]+/./([^/]+)',
+        # e.g. https://pypi.io/packages/py2.py3/o/opencensus-context/opencensus_context-0.1.1-py2.py3-none-any.whl
+        (r'(?:pypi|pythonhosted)[^/]+/packages/[^/]+/./([^/]+)',
          lambda m: 'https://pypi.org/simple/' + m.group(1) + '/'),
     ]
 
