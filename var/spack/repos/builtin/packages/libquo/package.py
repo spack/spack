@@ -28,13 +28,19 @@ class Libquo(AutotoolsPackage):
     depends_on('automake', when='@develop', type='build')
     depends_on('libtool',  when='@develop', type='build')
 
+    variant('pic', default=False, description='Produce position-independent code for shared libs.')
+
     @when('@develop')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen')
 
     def configure_args(self):
-        return [
+        config_args = [
             'CC={0}'.format(self.spec['mpi'].mpicc),
-            'FC={0}'.format(self.spec['mpi'].mpifc)
+            'FC={0}'.format(self.spec['mpi'].mpifc),
         ]
+        if '+pic' in self.spec:
+          config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
+          config_args.append('FCFLAGS={0}'.format(self.compiler.fc_pic_flag))
+        return config_args
