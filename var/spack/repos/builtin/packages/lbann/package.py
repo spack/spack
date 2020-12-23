@@ -66,7 +66,7 @@ class Lbann(CMakePackage, CudaPackage):
     conflicts('@:0.90,0.102:', when='+fft')
     conflicts('~cuda', when='+nvprof')
 
-    depends_on('cmake@3.17.0:')
+    depends_on('cmake@3.17.0:', type='build')
 
     # Specify the correct versions of Hydrogen
     depends_on('hydrogen@:1.3.4', when='@0.95:0.100')
@@ -167,7 +167,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('llvm-openmp', when='%apple-clang')
 
     generator = 'Ninja'
-    depends_on('ninja')
+    depends_on('ninja', type='build')
 
     @property
     def common_config_args(self):
