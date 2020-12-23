@@ -4,9 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 """This module contains jsonschema files for all of Spack's YAML formats."""
 
-import copy
-import re
-
 import six
 
 import llnl.util.lang
@@ -18,10 +15,6 @@ import spack.spec
 # and increases the start-up time
 def _make_validator():
     import jsonschema
-    _validate_properties = jsonschema.Draft4Validator.VALIDATORS["properties"]
-    _validate_pattern_properties = jsonschema.Draft4Validator.VALIDATORS[
-        "patternProperties"
-    ]
 
     def _validate_spec(validator, is_spec, instance, schema):
         """Check if the attributes on instance are valid specs."""
