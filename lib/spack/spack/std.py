@@ -10,7 +10,7 @@ Everything in this module is automatically imported into Spack package files.
 """
 import os
 import shutil
-from typing import List
+from typing import List  # novm
 
 import llnl.util.filesystem
 from llnl.util.filesystem import (
