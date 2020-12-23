@@ -32,9 +32,10 @@ class Asciitoh5(Package):
             include_flag = ' -I%s' % (spec['hdf5'].prefix.include)
             which('nrnivmodl')('-incflags', include_flag, '-loadflags',
                                link_flag, 'lib/mod')
-            bindir = os.path.basename(self.nrnivmodl_outdir)
-            special = join_path(bindir, 'special')
-            shutil.copy(special, prefix.bin)
+            archdir = os.path.basename(self.nrnivmodl_outdir)
+            src = join_path(prefix, archdir, 'special')
+            dest = join_path(prefix.bin, 'special')
+            symlink(src, dest)
 
     def setup_run_environment(self, env):
         env.set('HOC_LIBRARY_PATH', self.prefix.lib.hoc)
