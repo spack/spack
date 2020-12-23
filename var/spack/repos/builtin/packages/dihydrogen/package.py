@@ -115,8 +115,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('ninja', type='build')
     depends_on('cmake@3.17.0:', type='build')
 
-    depends_on('py-breathe', when='+docs')
-    depends_on('doxygen', when='+docs')
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+docs')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 

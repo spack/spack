@@ -156,12 +156,12 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99:')
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
-    depends_on('py-breathe', when='+docs')
-    depends_on('doxygen', when='+docs')
-    depends_on('py-m2r', when='+docs')
+    depends_on('py-breathe', type='build', when='+docs')
+    depends_on('doxygen', type='build', when='+docs')
+    depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2', when='+unit_testing')
+    depends_on('catch2', type='build', when='+unit_testing')
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
