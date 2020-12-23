@@ -11,7 +11,7 @@ releases = {
 
 
 class IntelOneapiDal(IntelOneApiLibraryPackage):
-    '''Intel oneAPI DAL.'''
+    """Intel oneAPI DAL."""
 
     maintainers = ['rscohn2']
 

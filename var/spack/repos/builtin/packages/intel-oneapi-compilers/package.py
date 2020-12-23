@@ -10,22 +10,22 @@ from os import path
 from spack import *
 
 
-releases = {'2021.1.0':
+releases = {'2021.1':
             {'irc_id': '17427', 'build': '2684'}}
 
 
 class IntelOneapiCompilers(IntelOneApiPackage):
-    '''Intel oneAPI compilers.
+    """Intel oneAPI compilers.
 
     Contains icc, icpc, icx, icpx, dpcpp, ifort, ifx.
 
-    '''
+    """
 
     maintainers = ['rscohn2']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html'
 
-    version('2021.1.0', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
+    version('2021.1', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
 
     depends_on('patchelf', type='build')
 
@@ -43,7 +43,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # For quick turnaround debugging, copy instead of install
         # copytree('/opt/intel/oneapi/compiler', path.join(prefix, 'compiler'),
         #          symlinks=True)
-        eprefix = path.join(prefix, 'compiler', 'latest', 'linux')
         rpath_dirs = ['lib',
                       'lib/x64',
                       'lib/emu',
@@ -51,13 +50,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                       'lib/oclfpga/linux64/lib',
                       'compiler/lib/intel64_lin',
                       'compiler/lib']
-        rpath = ':'.join([path.join(eprefix, c) for c in rpath_dirs])
         patch_dirs = ['compiler/lib/intel64_lin',
                       'compiler/lib/intel64',
                       'bin']
+        eprefix = path.join(prefix, 'compiler', 'latest', 'linux')
+        rpath = ':'.join([path.join(eprefix, c) for c in rpath_dirs])
         for pd in patch_dirs:
-            dir = path.join(eprefix, pd)
-            for file in glob.glob(path.join(dir, '*')):
+            for file in glob.glob(path.join(eprefix, pd, '*')):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])

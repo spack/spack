@@ -11,7 +11,7 @@ releases = {
 
 
 class IntelOneapiIppcp(IntelOneApiLibraryPackage):
-    '''Intel oneAPI IPP Crypto.'''
+    """Intel oneAPI IPP Crypto."""
 
     maintainers = ['rscohn2']
 

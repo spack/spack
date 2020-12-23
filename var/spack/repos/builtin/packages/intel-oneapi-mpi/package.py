@@ -11,7 +11,7 @@ releases = {
 
 
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
-    '''Intel oneAPI MPI.'''
+    """Intel oneAPI MPI."""
 
     maintainers = ['rscohn2']
 

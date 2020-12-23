@@ -11,7 +11,7 @@ releases = {
 
 
 class IntelOneapiVpl(IntelOneApiLibraryPackage):
-    '''Intel oneAPI VPL.'''
+    """Intel oneAPI VPL."""
 
     maintainers = ['rscohn2']
 
