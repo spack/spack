@@ -195,7 +195,7 @@ class Python(AutotoolsPackage):
     # TODO: There's currently no way to ignore the fact that a single module
     # failed, even if the variant corresponding to that module is deselected.
     # These patches comment out sections of setup.py, specifically for the
-    # purpose of python 2.6 compat.
+    # purpose of python 2.6 compat. They will break if any different python version is used.
     patch('no-ssl.patch', when='@:2.6.99~ssl')
     patch('no-dbm.patch', when='@:2.6.99~dbm')
 
