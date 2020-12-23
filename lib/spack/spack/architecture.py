@@ -235,18 +235,19 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None   # Subclass sets number. Controls detection order
+    # Subclass sets number. Controls detection order
+    priority        = None   # type: int
 
     #: binary formats used on this platform; used by relocation logic
     binary_formats  = ['elf']
 
-    front_end       = None
-    back_end        = None
-    default         = None   # The default back end target.
+    front_end       = None   # type: str
+    back_end        = None   # type: str
+    default         = None   # type: str # The default back end target.
 
-    front_os        = None
-    back_os         = None
-    default_os      = None
+    front_os        = None   # type: str
+    back_os         = None   # type: str
+    default_os      = None   # type: str
 
     reserved_targets = ['default_target', 'frontend', 'fe', 'backend', 'be']
     reserved_oss = ['default_os', 'frontend', 'fe', 'backend', 'be']

@@ -26,6 +26,7 @@ import time
 import traceback
 import six
 import types
+from typing import Optional, List, Dict, Any, Callable  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -253,8 +254,9 @@ class PackageMeta(
     """
     phase_fmt = '_InstallPhase_{0}'
 
-    _InstallPhase_run_before = {}
-    _InstallPhase_run_after = {}
+    # These are accessed only through getattr, by name
+    _InstallPhase_run_before = {}  # type: Dict[str, List[Callable]]
+    _InstallPhase_run_after = {}  # type: Dict[str, List[Callable]]
 
     def __new__(cls, name, bases, attr_dict):
         """
@@ -555,7 +557,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: A list or set of build time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
-    build_time_test_callbacks = None
+    build_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -567,7 +569,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: A list or set of install time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
-    install_time_test_callbacks = None
+    install_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -589,19 +591,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
     #: sanity checks fail.
-    sanity_check_is_file = []
+    sanity_check_is_file = []  # type: List[str]
 
     #: List of prefix-relative directory paths (or a single path). If
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
-    sanity_check_is_dir = []
+    sanity_check_is_dir = []  # type: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
     #: copied in the same directory tree as _spack_build_logfile and
     #: _spack_build_envfile.
-    archive_files = []
+    archive_files = []  # type: List[str]
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
@@ -609,7 +611,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
-    fetch_options = {}
+    fetch_options = {}  # type: Dict[str, Any]
 
     #
     # Set default licensing information
@@ -627,12 +629,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: looking for a license. All file paths must be relative to the
     #: installation directory. More complex packages like Intel may require
     #: multiple licenses for individual components. Defaults to the empty list.
-    license_files = []
+    license_files = []  # type: List[str]
 
     #: List of strings. Environment variables that can be set to tell the
     #: software where to look for a license if it is not in the usual location.
     #: Defaults to the empty list.
-    license_vars = []
+    license_vars = []  # type: List[str]
 
     #: String. A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
@@ -646,7 +648,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
-    maintainers = []
+    maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
@@ -2591,7 +2593,7 @@ class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
     #: There are no phases by default but the property is required to support
     #: post-install hooks (e.g., for module generation).
-    phases = []
+    phases = []  # type: List[str]
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'BundlePackage'

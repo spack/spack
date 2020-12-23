@@ -8,6 +8,7 @@ non-hierarchical modules.
 """
 import os.path
 import string
+from typing import Dict, Any  # novm
 
 import llnl.util.tty as tty
 
@@ -24,7 +25,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {}  # type: Dict[str, Any]
 
 
 def make_configuration(spec):

@@ -5,6 +5,7 @@
 
 
 import inspect
+from typing import List  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import working_dir
@@ -48,7 +49,7 @@ class MakefilePackage(PackageBase):
 
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.build`
     #: phase
-    build_targets = []
+    build_targets = []  # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.MakefilePackage.install`
     #: phase
     install_targets = ['install']

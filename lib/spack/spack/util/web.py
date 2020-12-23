@@ -20,10 +20,10 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-try:
+if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
     from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
+else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
 

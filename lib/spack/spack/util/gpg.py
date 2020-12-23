@@ -115,7 +115,7 @@ if not cached_property:
         return result
 
 
-class GpgConstants(object):
+class _GpgConstants(object):
     @cached_property
     def target_version(self):
         return spack.version.Version('2')
@@ -189,7 +189,7 @@ class GpgConstants(object):
         #                "file-name-too-long" errors in gpg.
 
         try:
-            has_suitable_gpgconf = bool(GpgConstants.gpgconf_string)
+            has_suitable_gpgconf = bool(_GpgConstants.gpgconf_string)
         except SpackGPGError:
             has_suitable_gpgconf = False
 
@@ -244,7 +244,7 @@ class GpgConstants(object):
                 pass
 
 
-GpgConstants = GpgConstants()
+GpgConstants = _GpgConstants()
 
 
 def ensure_gpg(reevaluate=False):
@@ -382,7 +382,7 @@ def gpg(*args, **kwargs):
     return get_global_gpg_instance()(*args, **kwargs)
 
 
-gpg.name = 'gpg'
+gpg.name = 'gpg'  # type: ignore[attr-defined]
 
 
 @functools.wraps(Gpg.create)
