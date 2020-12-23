@@ -619,9 +619,8 @@ class Concretizer(object):
         if PackagePrefs.has_preferred_targets(spec.name):
             default_target = self.target_from_package_preferences(spec)
 
-        if current_target != default_target or \
-            (self.abstract_spec.architecture is not None and
-             self.abstract_spec.architecture.target is not None):
+        if (current_target != default_target or
+                self.abstract_spec.architecture.concrete):
             return False
 
         try:
