@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+from typing import Dict, Callable  # novm
 
 import llnl.util.tty as tty
 
@@ -15,7 +16,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}
+_subcommands = {}  # type: Dict[str, Callable]
 
 _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 

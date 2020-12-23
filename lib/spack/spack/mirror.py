@@ -23,9 +23,9 @@ import ruamel.yaml.error as yaml_error
 
 from ordereddict_backport import OrderedDict
 
-try:
+if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
-except ImportError:
+else:
     from collections import Mapping
 
 import llnl.util.tty as tty

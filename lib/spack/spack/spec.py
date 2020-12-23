@@ -3269,7 +3269,7 @@ class Spec(object):
         """Return list of any virtual deps in this spec."""
         return [spec for spec in self.traverse() if spec.virtual]
 
-    @property
+    @property  # type: ignore[misc] # decorated prop not supported in mypy
     @lang.memoized
     def patches(self):
         """Return patch objects for any patch sha256 sums on this Spec.

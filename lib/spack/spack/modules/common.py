@@ -34,6 +34,7 @@ import datetime
 import inspect
 import os.path
 import re
+from typing import Optional  # novm
 
 import llnl.util.filesystem
 from llnl.util.lang import dedupe
@@ -540,7 +541,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None
+    extension = None  # type: Optional[str]
 
     def __init__(self, configuration):
         self.conf = configuration

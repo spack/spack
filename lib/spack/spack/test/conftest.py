@@ -318,7 +318,7 @@ def _skip_if_missing_executables(request):
 # FIXME: The lines below should better be added to a fixture with
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
-spack.architecture.real_platform = spack.architecture.platform
+spack.architecture.real_platform = spack.architecture.platform  # type: ignore
 
 
 def test_platform():
@@ -1238,7 +1238,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}
+    versions = {}  # type: ignore
 
 
 @pytest.fixture

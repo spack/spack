@@ -13,17 +13,17 @@ import itertools
 import os
 import re
 import shutil
+import six
 import stat
 import sys
 import traceback
 import types
+from typing import Dict  # novm
 
-try:
+if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
-except ImportError:
+else:
     from collections import Mapping
-
-import six
 
 import ruamel.yaml as yaml
 
@@ -131,7 +131,7 @@ class FastPackageChecker(Mapping):
     during instance initialization.
     """
     #: Global cache, reused by every instance
-    _paths_cache = {}
+    _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -149,7 +149,7 @@ class FastPackageChecker(Mapping):
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self):
+    def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
         """Create a new cache for packages in a repo.
 
         The implementation here should try to minimize filesystem
@@ -159,7 +159,7 @@ class FastPackageChecker(Mapping):
         """
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
-        cache = {}
+        cache = {}  # type: Dict[str, os.stat_result]
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
@@ -341,7 +341,7 @@ class PatchIndexer(Indexer):
     def _create(self):
         return spack.patch.PatchCache()
 
-    def needs_update():
+    def needs_update(self):
         # TODO: patches can change under a package and we should handle
         # TODO: it, but we currently punt. This should be refactored to
         # TODO: check whether patches changed each time a package loads,

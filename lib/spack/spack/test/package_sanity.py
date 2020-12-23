@@ -16,7 +16,7 @@ import spack.util.executable as executable
 import spack.variant
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
-import spack.cmd.flake8 as flake8
+import spack.cmd.style as style
 import spack.util.crypto as crypto
 import pickle
 
@@ -207,7 +207,7 @@ def test_prs_update_old_api():
     deprecated calls to any method.
     """
     changed_package_files = [
-        x for x in flake8.changed_files() if flake8.is_package(x)
+        x for x in style.changed_files() if style.is_package(x)
     ]
     failing = []
     for file in changed_package_files:

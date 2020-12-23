@@ -8,6 +8,7 @@ import os.path
 import llnl.util.lang as lang
 import itertools
 import collections
+from typing import Dict, Any  # novm
 
 import spack.config
 import spack.compilers
@@ -26,7 +27,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {}  # type: Dict[str, Any]
 
 
 def make_configuration(spec):

@@ -38,6 +38,7 @@ import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
+from typing import List  # novm
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -735,7 +736,7 @@ def override(path_or_scope, value=None):
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []
+command_line_scopes = []  # type: List[str]
 
 
 def _add_platform_scope(cfg, scope_type, name, path):

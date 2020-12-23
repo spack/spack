@@ -15,7 +15,7 @@ import spack.error
 import spack.paths
 
 
-class Lock(llnl.util.lock.Lock):
+class Lock(llnl.util.lock.Lock):  # type: ignore[no-redef]
     """Lock that can be disabled.
 
     This overrides the ``_lock()`` and ``_unlock()`` methods from
