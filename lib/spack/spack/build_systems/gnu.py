@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+from typing import Optional  # novm
 
 import spack.util.url
 import spack.package_base
@@ -10,7 +11,7 @@ import spack.package_base
 class GNUMirrorPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
     #: Path of the package in a GNU mirror
-    gnu_mirror_path = None
+    gnu_mirror_path = None  # type: Optional[str]
 
     #: List of GNU mirrors used by Spack
     base_mirrors = [
