@@ -57,7 +57,7 @@ class Lbann(CMakePackage, CudaPackage):
             description='Builds with support for FP16 precision data types')
     variant('nvprof', default=False, description='Build with region annotations for NVPROF')
     variant('opencv', default=True,
-            description='Builds with support for image processing routines with OpenCV')
+            description='Builds with support for image processing with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('unit_testing', default=False, description='Builds with support for unit testing')
 
