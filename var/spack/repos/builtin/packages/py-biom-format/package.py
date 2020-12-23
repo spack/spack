@@ -14,6 +14,9 @@ class PyBiomFormat(PythonPackage):
     homepage = "https://pypi.python.org/pypi/biom-format/2.1.6"
     url      = "https://pypi.io/packages/source/b/biom-format/biom-format-2.1.6.tar.gz"
 
+    version('2.1.10', sha256='f5a277a8144f0b114606852c42f657b9cfde44b3cefa0b2638ab1c1d5e1d0488')
+    version('2.1.9', sha256='18a6e4d4b4b2a6bf2d5544fa357ad168bedeac93f0837015ef9c72f41fa89491')
+    version('2.1.7', sha256='b47e54282ef13cddffdb00aea9183a87175a2372c91a915259086a3f444c42f4')
     version('2.1.6', sha256='8eefc275a85cc937f6d6f408d91b7b45eae854cd5d1cbda411a3af51f5b49b0d')
 
     variant('h5py', default=True, description='For use with BIOM 2.0+ files')
@@ -21,10 +24,10 @@ class PyBiomFormat(PythonPackage):
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type='build')
     depends_on('py-h5py', type=('build', 'run'), when='+h5py')
-    depends_on('py-click', type=('build', 'run'))
+    depends_on('py-click', type=('build', 'run'), when='@2.1.5:')
     depends_on('py-numpy@1.3.0:', type=('build', 'run'))
     depends_on('py-future@0.16.0:', type=('build', 'run'))
     depends_on('py-scipy@0.13.0:', type=('build', 'run'))
     depends_on('py-pandas@0.19.2:', type=('build', 'run'))
     depends_on('py-six@1.10.0:', type=('build', 'run'))
-    depends_on('py-pyqi', type=('build', 'run'))
+    depends_on('py-pyqi', type=('build', 'run'), when='@:2.1.4')
