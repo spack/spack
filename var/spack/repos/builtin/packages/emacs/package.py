@@ -5,7 +5,7 @@
 
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Emacs(AutotoolsPackage, GNUMirrorPackage):

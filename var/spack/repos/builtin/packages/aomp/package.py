@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.std import *
+from spack.package import *
 
 
 tools_url = 'https://github.com/ROCm-Developer-Tools'

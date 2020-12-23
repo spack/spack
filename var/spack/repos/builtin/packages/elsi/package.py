@@ -6,7 +6,7 @@
 # See the Spack documentation for more information on packaging.
 # ----------------------------------------------------------------------------
 
-from spack.std import *
+from spack.package import *
 
 
 class Elsi(CMakePackage):

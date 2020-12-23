@@ -6,7 +6,7 @@
 import os
 
 import spack.store
-from spack.std import *
+from spack.package import *
 
 
 class Openspeedshop(CMakePackage):

@@ -7,7 +7,7 @@ import os
 import sys
 
 from spack.operating_systems.mac_os import macos_version
-from spack.std import *
+from spack.package import *
 
 
 MACOS_VERSION = macos_version() if sys.platform == 'darwin' else None

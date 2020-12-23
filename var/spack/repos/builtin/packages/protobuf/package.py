@@ -6,7 +6,7 @@
 import sys
 
 import spack.util.web
-from spack.std import *
+from spack.package import *
 
 
 class Protobuf(Package):

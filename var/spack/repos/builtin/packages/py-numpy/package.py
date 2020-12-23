@@ -6,7 +6,7 @@
 import platform
 import subprocess
 
-from spack.std import *
+from spack.package import *
 
 
 class PyNumpy(PythonPackage):

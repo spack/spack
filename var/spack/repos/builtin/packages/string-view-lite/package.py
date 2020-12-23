@@ -5,7 +5,7 @@
 
 from shutil import copytree
 
-from spack.std import *
+from spack.package import *
 
 
 class StringViewLite(CMakePackage):

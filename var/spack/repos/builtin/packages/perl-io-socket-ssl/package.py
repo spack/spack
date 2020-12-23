@@ -5,7 +5,7 @@
 
 import inspect
 
-from spack.std import *
+from spack.package import *
 
 
 class PerlIoSocketSsl(PerlPackage):

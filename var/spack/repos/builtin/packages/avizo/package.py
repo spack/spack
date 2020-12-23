@@ -6,7 +6,7 @@
 import os
 import tarfile
 
-from spack.std import *
+from spack.package import *
 
 
 class Avizo(Package):

@@ -5,7 +5,7 @@
 
 from os.path import split
 
-from spack.std import *
+from spack.package import *
 
 
 class Anaconda2(Package):

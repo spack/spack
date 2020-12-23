@@ -6,7 +6,7 @@
 import os
 from glob import glob
 
-from spack.std import *
+from spack.package import *
 
 
 class Libxsmm(MakefilePackage):

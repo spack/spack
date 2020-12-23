@@ -2,10 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
+from spack.package import *
 class PyPyamg(PythonPackage):
     """PyAMG is a library of Algebraic Multigrid (AMG) solvers with
     a convenient Python interface."""

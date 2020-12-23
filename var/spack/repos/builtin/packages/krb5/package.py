@@ -5,7 +5,7 @@
 
 import re
 
-from spack.std import *
+from spack.package import *
 
 
 class Krb5(AutotoolsPackage):

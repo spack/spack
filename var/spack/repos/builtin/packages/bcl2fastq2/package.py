@@ -7,7 +7,7 @@ import glob
 import os
 
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 
 
 # This application uses cmake to build, but they wrap it with a

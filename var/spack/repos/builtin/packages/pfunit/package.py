@@ -6,7 +6,7 @@
 #
 import glob
 
-from spack.std import *
+from spack.package import *
 
 
 class Pfunit(CMakePackage):

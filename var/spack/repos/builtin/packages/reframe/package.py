@@ -5,7 +5,7 @@
 
 import shutil
 
-from spack.std import *
+from spack.package import *
 
 
 class Reframe(Package):

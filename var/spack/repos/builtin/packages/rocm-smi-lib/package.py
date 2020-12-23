@@ -6,7 +6,7 @@
 
 import shutil
 
-from spack.std import *
+from spack.package import *
 
 
 class RocmSmiLib(CMakePackage):

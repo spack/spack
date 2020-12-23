@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.spec import ConflictsInSpecError
-from spack.std import *
+from spack.package import *
 
 
 yaml_cpp_tests_libcxx_error_msg = 'yaml-cpp tests incompatible with libc++'

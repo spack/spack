@@ -35,7 +35,7 @@ import re
 
 import llnl.util.tty as tty
 from spack.pkg.builtin.openfoam import OpenfoamArch, add_extra_files, write_environ, rewrite_environ_files
-from spack.std import *
+from spack.package import *
 from spack.util.environment import EnvironmentModifications
 
 

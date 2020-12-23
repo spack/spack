@@ -8,7 +8,7 @@ import os
 import shutil
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class VtkM(CMakePackage, CudaPackage):

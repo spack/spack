@@ -2,10 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
+from spack.package import *
 class Armadillo(CMakePackage):
     """Armadillo is a high quality linear algebra library (matrix maths)
     for the C++ language, aiming towards a good balance between speed and

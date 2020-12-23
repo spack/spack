@@ -45,7 +45,7 @@ import os
 import re
 
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 from spack.util.environment import EnvironmentModifications
 
 

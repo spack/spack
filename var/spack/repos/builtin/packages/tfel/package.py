@@ -6,7 +6,7 @@
 # Maintainer comments:
 # 18/12/2018: fix python detection
 
-from spack.std import *
+from spack.package import *
 
 
 class Tfel(CMakePackage):

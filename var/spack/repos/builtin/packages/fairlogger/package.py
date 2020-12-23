@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.std import *
+from spack.package import *
 
 
 class Fairlogger(CMakePackage):

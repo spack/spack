@@ -6,7 +6,7 @@
 import os.path
 
 import llnl.util.lang
-from spack.std import *
+from spack.package import *
 
 
 class FftwBase(AutotoolsPackage):

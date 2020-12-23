@@ -6,7 +6,7 @@
 import glob
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Valgrind(AutotoolsPackage, SourcewarePackage):

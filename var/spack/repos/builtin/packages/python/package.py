@@ -15,7 +15,7 @@ import spack.util.spack_json as sjson
 from llnl.util.filesystem import (force_remove, get_filetype,
                                   path_contains_subdirectory)
 from llnl.util.lang import match_predicate
-from spack.std import *
+from spack.package import *
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 

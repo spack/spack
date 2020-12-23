@@ -8,7 +8,7 @@ import os
 import socket
 
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):

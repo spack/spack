@@ -5,7 +5,7 @@
 
 import platform
 
-from spack.std import *
+from spack.package import *
 
 
 # The viewer and trace viewer tar files and sha256sum depend on the

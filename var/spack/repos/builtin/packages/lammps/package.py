@@ -5,7 +5,7 @@
 
 import datetime as dt
 
-from spack.std import *
+from spack.package import *
 
 
 class Lammps(CMakePackage, CudaPackage):

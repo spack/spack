@@ -10,7 +10,7 @@ from glob import glob
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import LibraryList
-from spack.std import *
+from spack.package import *
 
 
 # FIXME Remove hack for polymorphic versions

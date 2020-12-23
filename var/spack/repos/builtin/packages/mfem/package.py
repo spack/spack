@@ -6,7 +6,7 @@
 import os
 import shutil
 
-from spack.std import *
+from spack.package import *
 
 
 class Mfem(Package):

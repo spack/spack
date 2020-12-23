@@ -13,7 +13,7 @@ from subprocess import Popen, PIPE
 from sys import stdout
 
 from llnl.util import tty
-from spack.std import *
+from spack.package import *
 
 
 re_optline = re.compile(r'\s+[0-9]+\..*\((serial|smpar|dmpar|dm\+sm)\)\s+')

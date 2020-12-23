@@ -9,7 +9,7 @@
 #
 from glob import glob
 
-from spack.std import *
+from spack.package import *
 
 
 class Cask(Package):

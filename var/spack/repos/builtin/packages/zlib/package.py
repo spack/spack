@@ -6,7 +6,7 @@
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
-from spack.std import *
+from spack.package import *
 
 
 class Zlib(Package):

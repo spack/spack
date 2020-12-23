@@ -6,7 +6,7 @@
 import getpass
 import socket
 
-from spack.std import *
+from spack.package import *
 
 
 # For getting fqdn for defaulting COMPILED_BY

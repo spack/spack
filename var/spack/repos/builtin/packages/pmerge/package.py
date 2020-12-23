@@ -2,10 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
+from spack.package import *
 class Pmerge(AutotoolsPackage):
     """PMERGE implements a new method that identifies candidate PSVs by
        building networks of loci that share high levels of nucleotide

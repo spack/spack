@@ -8,7 +8,7 @@ import os
 import sys
 
 import llnl.util.filesystem as fs
-from spack.std import *
+from spack.package import *
 
 
 class Papi(AutotoolsPackage):

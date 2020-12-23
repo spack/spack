@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.pkg.builtin.mock.multimethod import Multimethod
-from spack.std import *
+from spack.package import *
 
 
 class MultimethodInheritor(Multimethod):

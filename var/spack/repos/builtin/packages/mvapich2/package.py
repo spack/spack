@@ -7,7 +7,7 @@ import os.path
 import re
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Mvapich2(AutotoolsPackage):

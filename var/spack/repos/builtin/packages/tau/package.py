@@ -10,7 +10,7 @@ import platform
 import sys
 
 from llnl.util.filesystem import join_path
-from spack.std import *
+from spack.package import *
 
 
 class Tau(Package):

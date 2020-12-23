@@ -36,7 +36,6 @@ import inspect
 import re
 import multiprocessing
 import os
-import shutil
 import sys
 import traceback
 import types
@@ -44,7 +43,6 @@ from six import StringIO
 
 import llnl.util.tty as tty
 from llnl.util.tty.color import cescape, colorize
-from llnl.util.filesystem import mkdirp, install, install_tree
 from llnl.util.lang import dedupe
 from llnl.util.tty.log import MultiProcessFd
 

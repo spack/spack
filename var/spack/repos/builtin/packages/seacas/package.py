@@ -6,7 +6,7 @@
 import sys
 
 from spack.operating_systems.mac_os import macos_version
-from spack.std import *
+from spack.package import *
 
 
 #

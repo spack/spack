@@ -7,7 +7,7 @@ import os
 import platform
 import re
 
-from spack.std import *
+from spack.package import *
 
 
 # If you need to add a new version, please be aware that:

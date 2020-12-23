@@ -6,7 +6,7 @@
 import sys
 import tempfile
 
-from spack.std import *
+from spack.package import *
 
 
 class PyTensorflow(Package, CudaPackage):

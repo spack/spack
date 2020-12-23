@@ -8,7 +8,7 @@
 import os
 import platform
 
-from spack.std import *
+from spack.package import *
 from spack.util.prefix import Prefix
 
 

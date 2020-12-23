@@ -5,7 +5,7 @@
 
 import glob
 
-from spack.std import *
+from spack.package import *
 
 
 class Augustus(MakefilePackage):

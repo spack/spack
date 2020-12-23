@@ -2,7 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.std import *
+from spack.package import *
 
 
 class CumulativeVrangeRoot(Package):
@@ -17,3 +17,4 @@ class CumulativeVrangeRoot(Package):
 
     depends_on('cumulative-vrange-middle')
     depends_on('cumulative-vrange-bottom@:2')
+

@@ -6,7 +6,7 @@
 import re
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Opengl(Package):

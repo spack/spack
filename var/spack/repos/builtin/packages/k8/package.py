@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class K8(Package):

@@ -5,7 +5,7 @@
 
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Mesa18(AutotoolsPackage):

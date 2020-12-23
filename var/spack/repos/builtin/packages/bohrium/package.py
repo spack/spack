@@ -7,8 +7,8 @@ import os
 
 import llnl.util.tty as tty
 from spack.package_test import compare_output
-from spack.std import *
 from spack.util.executable import Executable
+from spack.package import *
 
 
 class Bohrium(CMakePackage, CudaPackage):

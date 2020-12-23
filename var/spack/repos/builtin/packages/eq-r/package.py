@@ -5,7 +5,7 @@
 
 import os
 
-from spack.std import *
+from spack.package import *
 
 
 class EqR(AutotoolsPackage):

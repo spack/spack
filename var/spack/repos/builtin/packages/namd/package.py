@@ -8,7 +8,7 @@ import platform
 import sys
 
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 
 
 class Namd(MakefilePackage, CudaPackage):

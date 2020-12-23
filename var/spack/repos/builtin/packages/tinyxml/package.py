@@ -5,7 +5,7 @@
 
 import os.path
 
-from spack.std import *
+from spack.package import *
 
 
 class Tinyxml(CMakePackage):

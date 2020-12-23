@@ -5,7 +5,7 @@
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 
 
 class Umpire(CMakePackage, CudaPackage, ROCmPackage):

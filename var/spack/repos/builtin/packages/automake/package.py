@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import re
 
-from spack.std import *
+from spack.package import *
 
 
 class Automake(AutotoolsPackage, GNUMirrorPackage):

@@ -6,7 +6,7 @@
 
 import platform
 
-from spack.std import *
+from spack.package import *
 
 
 class Lcals(MakefilePackage):

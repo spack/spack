@@ -6,7 +6,7 @@
 import os
 
 from spack.spec import UnsupportedCompilerError
-from spack.std import *
+from spack.package import *
 
 
 class Elemental(CMakePackage):

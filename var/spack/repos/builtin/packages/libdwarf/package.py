@@ -6,7 +6,7 @@
 import os
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 # Only build certain parts of dwarf because the other ones break.

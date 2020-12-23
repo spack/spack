@@ -16,7 +16,7 @@ import re
 from contextlib import contextmanager
 
 from llnl.util.lang import match_predicate
-from spack.std import *
+from spack.package import *
 
 
 class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package

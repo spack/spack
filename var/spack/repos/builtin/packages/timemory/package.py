@@ -5,7 +5,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from spack.std import *
+from spack.package import *
 
 
 class Timemory(CMakePackage):

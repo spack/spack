@@ -5,7 +5,7 @@
 
 
 import spack.hooks.sbang as sbang
-from spack.std import *
+from spack.package import *
 
 
 class Phist(CMakePackage):

@@ -10,7 +10,7 @@ import socket
 from os import environ as env
 
 import llnl.util.tty as tty
-from spack.std import *
+from spack.package import *
 
 
 def cmake_cache_entry(name, value, vtype=None):

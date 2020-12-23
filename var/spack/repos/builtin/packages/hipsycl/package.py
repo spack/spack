@@ -7,7 +7,7 @@ import json
 from os import path
 
 from llnl.util import filesystem
-from spack.std import *
+from spack.package import *
 
 
 class Hipsycl(CMakePackage):

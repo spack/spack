@@ -7,7 +7,7 @@ import os
 import platform
 import tempfile
 
-from spack.std import *
+from spack.package import *
 
 
 class Texlive(AutotoolsPackage):

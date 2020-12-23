@@ -7,7 +7,7 @@
 import os
 
 import spack.architecture
-from spack.std import *
+from spack.package import *
 
 
 class Pmix(AutotoolsPackage):

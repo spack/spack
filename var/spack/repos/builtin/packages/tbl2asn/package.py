@@ -5,7 +5,7 @@
 
 from os import chmod
 
-from spack.std import *
+from spack.package import *
 
 
 class Tbl2asn(Package):

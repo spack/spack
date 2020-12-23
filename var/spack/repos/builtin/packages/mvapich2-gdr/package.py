@@ -6,7 +6,7 @@
 import os.path
 import sys
 
-from spack.std import *
+from spack.package import *
 
 
 class Mvapich2Gdr(AutotoolsPackage):

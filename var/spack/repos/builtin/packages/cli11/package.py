@@ -2,10 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
+from spack.package import *
 class Cli11(CMakePackage):
     """CLI11 is a command line parser for C++11 and beyond that provides a rich
     feature set with a simple and intuitive interface."""

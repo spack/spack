@@ -3,11 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack.std import *
+from spack.package import *
 from typing import List
 
-meh = []  # type: List[str]
-meh = {}
 
 class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
@@ -34,9 +32,6 @@ class Kripke(CMakePackage):
     def cmake_args(self):
         def enabled(variant):
             return (1 if variant in self.spec else 0)
-        meh = []  # type: List[str]
-        meh = {}
-        shazbot()
 
         return [
             '-DENABLE_OPENMP=%d' % enabled('+openmp'),
