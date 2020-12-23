@@ -657,7 +657,7 @@ def get_std_meson_args(pkg):
 
 def parent_class_modules(cls):
     """
-    Get list of superclass modules that descend from spack.package.PackageBase
+    Get list of superclass modules that descend from spack.package_base.PackageBase
 
     Includes cls.__module__
     """

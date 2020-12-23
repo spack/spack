@@ -10,6 +10,7 @@ Everything in this module is automatically imported into Spack package files.
 """
 import os
 import shutil
+from typing import List
 
 import llnl.util.filesystem
 from llnl.util.filesystem import (
@@ -154,8 +155,8 @@ cmake = _buildenv.Executable("cmake")
 ctest = _buildenv.MakeExecutable("ctest", _jobs)
 
 # fake lists
-std_cmake_args = []
-std_meson_args = []
+std_cmake_args = []  # type: List[str]
+std_meson_args = []  # type: List[str]
 
 # fake paths
 spack_cc = ''

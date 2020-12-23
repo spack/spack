@@ -48,7 +48,7 @@ class Edm4hep(CMakePackage):
         the patch version is omitted when 0
         so for example v01-12-01, v01-12 ...
         :param self: spack package class that has a url
-        :type self: class: `spack.PackageBase`
+        :type self: class: `spack.package_base.PackageBase`
         :param version: version
         :type param: str
         """
