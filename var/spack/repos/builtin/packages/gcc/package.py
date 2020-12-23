@@ -98,6 +98,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('bootstrap',
             default=False,
             description='add --enable-bootstrap flag for stage3 build')
+    variant('graphite',
+            default=False,
+            description='Enable Graphite loop optimizations (requires ISL)')
 
     depends_on('flex', type='build', when='@master')
 
@@ -112,11 +115,11 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.14', when='@5.0:5.2')
-    depends_on('isl@0.15', when='@5.3:5.9')
-    depends_on('isl@0.15:0.18', when='@6:8.9')
-    depends_on('isl@0.15:0.20', when='@9:9.9')
-    depends_on('isl@0.15:', when='@10:')
+    depends_on('isl@0.14', when='@5.0:5.2 +graphite')
+    depends_on('isl@0.15', when='@5.3:5.9 +graphite')
+    depends_on('isl@0.15:0.18', when='@6:8.9 +graphite')
+    depends_on('isl@0.15:0.20', when='@9:9.9 +graphite')
+    depends_on('isl@0.15:', when='@10: +graphite')
     depends_on('zlib', when='@6:')
     depends_on('zstd', when='@10:')
     depends_on('diffutils', type='build')
