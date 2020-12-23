@@ -59,7 +59,6 @@ class Lbann(CMakePackage, CudaPackage):
     variant('opencv', default=True,
             description='Builds with support for image processing with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
-    variant('unit_testing', default=False, description='Builds with support for unit testing')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
@@ -161,7 +160,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2', type='build', when='+unit_testing')
+    depends_on('catch2', type='test')
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
@@ -210,7 +209,7 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_TBINF=OFF',
-            '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % ('+unit_testing' in spec),
+            '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
