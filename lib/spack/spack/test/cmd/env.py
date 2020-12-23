@@ -2162,7 +2162,7 @@ def test_env_write_only_non_default():
     assert yaml == ev.default_manifest_yaml
 
 
-@pytest.mark.regression('default_setting')
+@pytest.mark.regression('20526')
 def test_env_write_only_non_default_nested(tmpdir):
     # setup an environment file
     # the environment includes configuration because nested configs proved the
