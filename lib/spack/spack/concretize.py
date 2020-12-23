@@ -578,10 +578,14 @@ class Concretizer(object):
             True if spec was modified, False otherwise
         """
         # To minimize the impact on performance this function will attempt
-        # to adjust the target only at the very first call. It will just
-        # return False on subsequent calls. The way this is achieved is by
-        # initializing a generator and making this function return the next
-        # answer.
+        # to adjust the target only at the very first call once necessary
+        # information is set. It will just return False on subsequent calls.
+        # The way this is achieved is by initializing a generator and making
+        # this function return the next answer.
+        if not (spec.architecture and spec.architecture.concrete):
+            # Not ready, but keep going because we have work to do later
+            return True
+
         def _make_only_one_call(spec):
             yield self._adjust_target(spec)
             while True:
