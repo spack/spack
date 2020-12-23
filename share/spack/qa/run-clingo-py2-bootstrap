@@ -25,6 +25,8 @@ ORIGINAL_PATH="$PATH"
 . "$(dirname $0)/setup.sh"
 check_dependencies $coverage git
 
+set -euxo pipefail
+
 # Move to root directory of Spack
 # Allows script to be run from anywhere
 cd "$SPACK_ROOT"
@@ -54,27 +56,30 @@ fi
 # accident, we actually need to install *yet another* python whose libpython doesn't clash with the
 # OS python, then work our way back to the python we want.
 
+# TODO: it would be really nice if these could be specified in a config file!
+CLI_INSTALL_ARGS=( --verbose --fail-fast -y -n )
+
 # '~dbm~pyexpat' is necessary to build python 2.7 in specifically this environment. To be clear,
 # in most other environments, using '+dbm+pyexpat' is necessary to build.
-spack install 'python@2.7.18~dbm~pyexpat+shared'
+spack install "${CLI_INSTALL_ARGS[@]}" 'python@2.7.18~dbm~pyexpat+shared'
 
 # Many other libraries will fail to build correctly when we load this new gcc
 # unless we also enable +binutils.
-spack install --verbose --fail-fast -y -n -j 6 'gcc@10.2.0+binutils'
+spack install "${CLI_INSTALL_ARGS[@]}" -j 6 'gcc@10.2.0+binutils'
 
 # Load the newer python to avoid having this build fail while looking for the
 # broken centos6 python library in /usr/lib64.
 spack load 'python@2.7.18~dbm~pyexpat+shared'
 # Install the same python again, this time ready to build modules against (with normal headers and
 # libpython).
-spack install "python@$(cat python-full-version.txt)~dbm~pyexpat+shared"
+spack install "${CLI_INSTALL_ARGS[@]}" "python@$(cat python-full-version.txt)~dbm~pyexpat+shared"
 # Our python is now the same (version) again, but with a reasonable header and shared
 # library arrangement!
 spack load "python@$(cat python-full-version.txt)~dbm~pyexpat+shared"
 # Ensure spack has registered the built gcc as a compiler (this should error if not).
 spack compiler find
 # Build clingo.
-spack install --verbose --fail-fast -y -n 'clingo@spack+python%gcc@10.2.0'
+spack install "${CLI_INSTALL_ARGS[@]}" 'clingo@spack+python%gcc@10.2.0'
 
 # For fun, make it run a solve on the same spec.
 spack solve 'clingo@spack+python'
