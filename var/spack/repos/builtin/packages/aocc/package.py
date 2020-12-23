@@ -56,7 +56,7 @@ class Aocc(Package):
 
     @run_before('install')
     def abort_without_license_agreed(self):
-        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf' 
+        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
         install_example = "spack install aocc +license-agreed"
         if not self.spec.variants['license-agreed'].value:
             raise InstallError("\n\n\nNOTE:\nUse +license-agreed " +

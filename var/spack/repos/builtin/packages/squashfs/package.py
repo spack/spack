@@ -24,7 +24,7 @@ class Squashfs(MakefilePackage):
     variant('lzo', default=False, description='Enable LZO compression support')
     variant('xz', default=False, description='Enable xz compression support')
     variant('zstd', default=False, description='Enable Zstandard/zstd support')
-    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'), 
+    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'),
             multi=False, description='Default compression algorithm')
 
     conflicts('squashfs~gzip default_compression=gzip', msg='Cannot set default compression to missing algorithm')

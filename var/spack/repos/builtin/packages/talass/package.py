@@ -35,9 +35,10 @@ class Talass(CMakePackage):
         args = []
 
         if int(variants['local'].value) > int(variants['global'].value):
-            raise InstallError('The global index space (%d bits) must be at least as large\
- as the local index space (% bits)' % (variants['global'].value,
-                                       variants['local'].value))
+            msg = ('The global index space (%d bits) must be at least as '
+                   'large as the local index space (% bits)')
+            raise InstallError(
+                msg % (variants['global'].value, variants['local'].value))
 
         if variants['precision'].value == '32':
             args.append('-DFUNCTION_TYPE=float')

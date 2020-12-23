@@ -19,8 +19,8 @@ class Libspatialite(AutotoolsPackage):
     # For instructions on the file:// below..
     #     https://github.com/spack/spack/issues/2489
     version('5.0.0.2.c7f67038bf',
-        sha256='f8100f71b769c7db066c6f938af6b00e920e4b90ac14c00a4f3ed7171565caab',
-        url="file://%s/SpatiaLite-c7f67038bf.tar.gz" % os.getcwd())
+            sha256='f8100f71b769c7db066c6f938af6b00e920e4b90ac14c00a4f3ed7171565caab',
+            url="file://%s/SpatiaLite-c7f67038bf.tar.gz" % os.getcwd())
 
     version('5.0.0-beta0', sha256='caacf5378a5cfab9b8e98bb361e2b592e714e21f5c152b795df80d0ab1da1c42')
     version('4.3.0a', preferred=True,

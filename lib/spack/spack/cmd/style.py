@@ -183,6 +183,8 @@ def rewrite_and_print_output(
             )
 
         for line in output.split("\n"):
+            if not line:
+                continue
             print(
                 re_obj.sub(
                     cwd_relative,

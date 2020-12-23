@@ -445,9 +445,8 @@ class Rust(Package):
                     ),
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
-                    when='@{version} platform={platform} target={target}'\
-                    .format(
-                        version=rust_version,
+                    when='@{ver} platform={platform} target={target}'.format(
+                        ver=rust_version,
                         platform=rust_arch['platform'],
                         target=rust_arch['target']
                     )

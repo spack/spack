@@ -14,7 +14,7 @@ class PyCogent(PythonPackage):
 
     version('1.9', sha256='57d8c58e0273ffe4f2b907874f9b49dadfd0600f5507b7666369f4e44d56ce14')
     version('1.5.3', url="https://pypi.io/packages/source/c/cogent/cogent-1.5.3.tgz",
-        sha256='1215ac219070b7b2207b0b47b4388510f3e30ccd88160aa9f02f25d24bcbcd95')
+            sha256='1215ac219070b7b2207b0b47b4388510f3e30ccd88160aa9f02f25d24bcbcd95')
 
     variant('matplotlib', default=False, description="graphs related to codon usage")
     variant('mpi', default=False, description='MPI required for parallel computation.')
