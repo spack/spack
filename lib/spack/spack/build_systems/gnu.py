@@ -4,10 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import spack.util.url
-import spack.package
+import spack.package_base
 
 
-class GNUMirrorPackage(spack.package.PackageBase):
+class GNUMirrorPackage(spack.package_base.PackageBase):
     """Mixin that takes care of setting url and mirrors for GNU packages."""
     #: Path of the package in a GNU mirror
     gnu_mirror_path = None

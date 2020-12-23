@@ -5,7 +5,7 @@
 
 """
 This module contains all routines related to setting up the package
-build environment.  All of this is set up by package.py just before
+build environment.  All of this is set up by package_base.py just before
 install() is called.
 
 There are two parts to the build environment:
@@ -53,7 +53,7 @@ import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
-import spack.package
+import spack.package_base
 import spack.repo
 import spack.schema.environment
 import spack.store
@@ -661,8 +661,8 @@ def parent_class_modules(cls):
 
     Includes cls.__module__
     """
-    if (not issubclass(cls, spack.package.PackageBase) or
-        issubclass(spack.package.PackageBase, cls)):
+    if (not issubclass(cls, spack.package_base.PackageBase) or
+        issubclass(spack.package_base.PackageBase, cls)):
         return []
     result = []
     module = sys.modules.get(cls.__module__)
@@ -987,7 +987,7 @@ def get_package_context(traceback, context=3):
         if 'self' in frame.f_locals:
             # Find the first proper subclass of PackageBase.
             obj = frame.f_locals['self']
-            if isinstance(obj, spack.package.PackageBase):
+            if isinstance(obj, spack.package_base.PackageBase):
                 break
 
     # We found obj, the Package implementation we care about.

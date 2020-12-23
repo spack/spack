@@ -57,14 +57,14 @@ from llnl.util.filesystem import (
 
 import spack.config as _config
 import spack.build_environment as _buildenv
-from spack.package import (
+from spack.package_base import (
     Package,
     BundlePackage,
     run_before,
     run_after,
     on_package_attributes,
 )
-from spack.package import inject_flags, env_flags, build_system_flags
+from spack.package_base import inject_flags, env_flags, build_system_flags
 from spack.build_systems.makefile import MakefilePackage
 from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
@@ -115,7 +115,7 @@ from spack.directives import (
 import spack.util.executable
 from spack.util.executable import Executable, which, ProcessError
 
-from spack.package import (
+from spack.package_base import (
     install_dependency_symlinks,
     flatten_dependencies,
     DependencyConflictError,
