@@ -54,10 +54,8 @@ class PyH5py(PythonPackage):
 
     @property
     def phases(self):
-        if self.spec.satisfies('@3:'):
-            return ['install']
-        else:
-            return['configure', 'install']
+        return ['install'] if self.spec.satisfies('@3:') \
+            else ['configure', 'install']
 
     def setup_build_environment(self, env):
         if '+mpi' in spec:
