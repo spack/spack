@@ -686,7 +686,7 @@ class Environment(object):
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name)
+        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
         user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
                               self.spec_lists.copy())
         self.spec_lists[user_speclist_name] = user_specs
@@ -708,10 +708,11 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        self.concretization = configuration.get('concretization')
+        # default concretization to separately
+        self.concretization = configuration.get('concretization', 'separately')
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration['develop']
+        self.dev_specs = configuration.get('develop', {})
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
