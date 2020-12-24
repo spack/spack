@@ -470,7 +470,7 @@ def mock_uarch_configuration(mock_uarch_json):
             return json.load(f)
 
     targets_json = load_json()
-    targets = archspec.cpu.microarchitecture._known_microarchitectures
+    targets = archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
