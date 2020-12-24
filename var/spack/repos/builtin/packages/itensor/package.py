@@ -33,7 +33,7 @@ class Itensor(MakefilePackage):
     depends_on('hdf5+hl', when='+hdf5')
 
     def edit(self, spec, prefix):
-        # 0.copy config.mk
+        # 0.copy options.mk
         mf = 'options.mk'
         copy('options.mk.sample', mf)
 
@@ -89,9 +89,9 @@ class Itensor(MakefilePackage):
         )
 
     def install(self, spec, prefix):
-        # 0.copy config.mk
+        # 0.copy options.mk
         mf = 'options.mk'
-        copy(mf, 'options.mk.bak')
+        copy(mf, 'options.mk.build')
 
         # 1.CCCOM
         ccopts = 'CCCOM={0}'.format(env["SPACK_CXX"])
@@ -113,7 +113,7 @@ class Itensor(MakefilePackage):
         )
 
         # tutorial/project_template/Makefile
-        mf2 = join_path(prefix, self.build_directory, 'Makefile')
+        mf2 = join_path('tutorial', 'project_template', 'Makefile')
         filter_file(
             r'^LIBRARY_DIR.+',
             'LIBRARY_DIR={0}'.format(prefix),
