@@ -14,6 +14,7 @@ class PyDask(PythonPackage):
 
     maintainers = ['skosukhin']
 
+    version('2020.12.0', sha256='43e745afd4b464e6c0113131e430a16dce6ac42460b06e24d799093d098f7ab0')
     version('2.16.0', sha256='2af5b0dcd48ce679ce0321cf91de623f4fe376262789b951fefa3c334002f350')
     version('1.2.2', sha256='5e7876bae2a01b355d1969b73aeafa23310febd8c353163910b73e93dc7e492c')
     version('1.1.2', sha256='93b355b9a9c9a3ddbb39fab99d5759aad5cfd346f4520b87788970e80cf97256')
@@ -43,6 +44,7 @@ class PyDask(PythonPackage):
     depends_on('py-numpy@1.10.4:',      type=('build', 'run'), when='+array')
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='@0.17.3: +array')
     depends_on('py-numpy@1.13.0:',      type=('build', 'run'), when='@1.2.1: +array')
+    depends_on('py-numpy@1.15.1:',      type=('build', 'run'), when='@2020.12.0: +array')
 
     depends_on('py-toolz',              type=('build', 'run'), when='+array')
     depends_on('py-toolz@0.7.2:',       type=('build', 'run'), when='@0.7.0: +array')
@@ -77,12 +79,14 @@ class PyDask(PythonPackage):
     depends_on('py-numpy@1.10.4:',      type=('build', 'run'), when='+dataframe')
     depends_on('py-numpy@1.11.0:',      type=('build', 'run'), when='@0.17.3: +dataframe')
     depends_on('py-numpy@1.13.0:',      type=('build', 'run'), when='@1.2.1: +dataframe')
+    depends_on('py-numpy@1.15.1:',      type=('build', 'run'), when='@2020.12.0: +dataframe')
 
     depends_on('py-pandas@0.16.0:',     type=('build', 'run'), when='+dataframe')
     depends_on('py-pandas@0.18.0:',     type=('build', 'run'), when='@0.9.0: +dataframe')
     depends_on('py-pandas@0.19.0:',     type=('build', 'run'), when='@0.14.0: +dataframe')
     depends_on('py-pandas@0.21.0:',     type=('build', 'run'), when='@1.2.1: +dataframe')
     depends_on('py-pandas@0.23.0:',     type=('build', 'run'), when='@2.11.0: +dataframe')
+    depends_on('py-pandas@0.25.0:',     type=('build', 'run'), when='@2020.12.0: +dataframe')
 
     depends_on('py-toolz',              type=('build', 'run'), when='+dataframe')
     depends_on('py-toolz@0.7.2:',       type=('build', 'run'), when='@0.7.0: +dataframe')
@@ -120,6 +124,7 @@ class PyDask(PythonPackage):
     # Requirements for dask.diagnostics
     depends_on('py-bokeh',              type=('build', 'run'), when='+diagnostics')
     depends_on('py-bokeh@1.0.0:',       type=('build', 'run'), when='@2.0.0: +diagnostics')
+    depends_on('py-bokeh@1.0.0:1.999,2.0.1:', type=('build', 'run'), when='@2020.12.0: +diagnostics')
 
     # Requirements for dask.delayed
     depends_on('py-cloudpickle@0.2.1:', type=('build', 'run'), when='@2,7.0: +delayed')
