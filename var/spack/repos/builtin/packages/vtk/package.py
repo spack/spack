@@ -305,8 +305,8 @@ class Vtk(CMakePackage):
         if compile_flags:
             compile_flags = ' '.join(compile_flags)
             cmake_args.extend([
-                '-DCMAKE_C_FLAGS="{}"'.format(compile_flags),
-                '-DCMAKE_CXX_FLAGS="{}"'.format(compile_flags)
+                '-DCMAKE_C_FLAGS={0}'.format(compile_flags),
+                '-DCMAKE_CXX_FLAGS={0}'.format(compile_flags)
             ])
 
         return cmake_args
