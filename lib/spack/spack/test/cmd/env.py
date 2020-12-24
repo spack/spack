@@ -2162,6 +2162,40 @@ def test_env_write_only_non_default():
     assert yaml == ev.default_manifest_yaml
 
 
+@pytest.mark.regression('20526')
+def test_env_write_only_non_default_nested(tmpdir):
+    # setup an environment file
+    # the environment includes configuration because nested configs proved the
+    # most difficult to avoid writing.
+    filename = 'spack.yaml'
+    filepath = str(tmpdir.join(filename))
+    contents = """\
+env:
+  specs:
+  - matrix:
+    - [mpileaks]
+  packages:
+    mpileaks:
+      compiler: [gcc]
+  view: true
+"""
+
+    # create environment with some structure
+    with open(filepath, 'w') as f:
+        f.write(contents)
+    env('create', 'test', filepath)
+
+    # concretize
+    with ev.read('test') as e:
+        concretize()
+        e.write()
+
+        with open(e.manifest_path, 'r') as f:
+            manifest = f.read()
+
+    assert manifest == contents
+
+
 @pytest.fixture
 def packages_yaml_v015(tmpdir):
     """Return the path to an existing manifest in the v0.15.x format
