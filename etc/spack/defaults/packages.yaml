@@ -52,9 +52,3 @@ packages:
     permissions:
       read: world
       write: user
-  openmpi:
-    buildable: False
-    externals:
-    - spec: 'openmpi@3.1.6-gcc_9.3.0'
-      modules:
-      - 'openmpi/3.1.6-gcc_9.3.0'
