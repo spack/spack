@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.pkg.builtin.mock.patch import Patch
-from spack.package import *
 
 
 class PatchInheritance(Patch):
     def install(self, spec, prefix):
         Patch.install(self, spec, prefix)
-

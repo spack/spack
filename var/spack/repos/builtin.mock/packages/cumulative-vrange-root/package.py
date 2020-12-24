@@ -17,4 +17,3 @@ class CumulativeVrangeRoot(Package):
 
     depends_on('cumulative-vrange-middle')
     depends_on('cumulative-vrange-bottom@:2')
-

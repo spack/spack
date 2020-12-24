@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class PyGemini(PythonPackage):
     """GEMINI (GEnome MINIng) is a flexible framework for exploring genetic
     variation in the context of the wealth of genome annotations available

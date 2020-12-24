@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class PyPylikwid(PythonPackage):
     """Python interface to the LIKWID tools library with calls for system
        topology, process/thread affinity, hardware performance monitoring

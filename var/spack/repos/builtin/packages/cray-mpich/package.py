@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class CrayMpich(Package):
     """Cray's MPICH is a high performance and widely portable implementation of
     the Message Passing Interface (MPI) standard."""

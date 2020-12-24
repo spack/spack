@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class Biobambam2(AutotoolsPackage):
     """Tools for early stage alignment file processing"""
 

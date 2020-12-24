@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class Grabix(MakefilePackage):
     """Grabix leverages the fantastic BGZF library in samtools to provide
        random access into text files that have been compressed with bgzip.

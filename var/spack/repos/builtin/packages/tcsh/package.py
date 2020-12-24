@@ -12,6 +12,7 @@ def fedora_patch(commit,  # type: str
     prefix = 'https://src.fedoraproject.org/rpms/tcsh/raw/{0}/f/'.format(commit)
     patch('{0}{1}'.format(prefix, file), **kwargs)
 
+
 class Tcsh(AutotoolsPackage):
     """Tcsh is an enhanced but completely compatible version of csh, the C
     shell. Tcsh is a command language interpreter which can be used both as

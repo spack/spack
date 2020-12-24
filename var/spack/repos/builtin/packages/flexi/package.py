@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class Flexi(CMakePackage):
     """Open Source High-Order Unstructured Discontinuous Galerkin Fluid
     Dynamics Solver"""

@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class Dbow2(CMakePackage):
     """DBoW2 is an improved version of the DBow library, an open source C++
     library for indexing and converting images into a bag-of-word

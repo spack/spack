@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack.package import *
+
+
 class NetlibLapack(CMakePackage):
     """LAPACK version 3.X is a comprehensive FORTRAN library that does
     linear algebra operations including matrix inversions, least squared
