@@ -116,7 +116,8 @@ class FftwBase(AutotoolsPackage):
             simd_features.remove('avx2')
 
         # Workaround NVIDIA/PGI compiler bug when avx512 is enabled
-        if (spec.satisfies('%nvhpc') or (spec.satisfies('%pgi'))) and ('avx512' in simd_features):
+        if (spec.satisfies('%nvhpc') or (spec.satisfies('%pgi'))) and
+            ('avx512' in simd_features):
             simd_features.remove('avx512')
 
         # NVIDIA compiler does not support Altivec intrinsics
