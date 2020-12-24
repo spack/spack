@@ -41,7 +41,6 @@ class SalmonTddft(CMakePackage):
     depends_on('libxc@:4.9', type='link', when='@:1.9.9 +libxc')
 
     conflicts('+scalapack', when='~mpi')
-    conflicts('~mpi', when='+scalapack')
     conflicts('+manycore', when='@2.0.0:')
     conflicts('+current_processing', when='@2.0.0:')
 
