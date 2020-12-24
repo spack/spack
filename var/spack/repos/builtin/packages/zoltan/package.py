@@ -90,13 +90,6 @@ class Zoltan(AutotoolsPackage):
             '-g' if '+debug' in spec else '',
         ]
 
-        config_ldflags = []
-        # PGI runtime libraries
-        if '%pgi' in spec:
-            config_ldflags.append('-pgf90libs')
-        if '+parmetis' in spec:
-            config_ldflags.append('-L{0}'.format(spec['metis'].prefix.lib))
-
         if '+shared' in spec:
             config_args.extend([
                 'RANLIB=echo',
@@ -118,6 +111,7 @@ class Zoltan(AutotoolsPackage):
                 '--with-parmetis-libdir={0}'.format(parmetis_prefix.lib),
                 '--with-parmetis-incdir={0}'.format(parmetis_prefix.include),
                 '--with-incdirs=-I{0}'.format(spec['metis'].prefix.include),
+                '--with-ldflags=-L{0}'.format(spec['metis'].prefix.lib)
             ])
             if '+int64' in spec['metis']:
                 config_args.append('--with-id-type=ulong')
@@ -148,8 +142,7 @@ class Zoltan(AutotoolsPackage):
         config_args.extend([
             '--with-cflags={0}'.format(' '.join(config_cflags)),
             '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-            '--with-fcflags={0}'.format(' '.join(config_fcflags)),
-            '--with-ldflags={0}'.format(' '.join(config_ldflags))
+            '--with-fcflags={0}'.format(' '.join(config_fcflags))
         ])
         return config_args
 
