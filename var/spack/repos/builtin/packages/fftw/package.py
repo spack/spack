@@ -105,19 +105,18 @@ class FftwBase(AutotoolsPackage):
             options.append('--enable-mpi')
 
         # Specific SIMD support.
-        # PGI compiler has trouble with avx2: https://github.com/FFTW/fftw3/issues/78
-        if self.spec.satisfies('%pgi'):
-            simd_features = ['sse2', 'avx', 'avx-128-fma',
-                             'kcvi', 'vsx', 'neon']
         # all precisions
-        else:
-            simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
-                             'kcvi', 'vsx', 'neon']
+        simd_features = ['sse2', 'avx', 'avx2', 'avx512', 'avx-128-fma',
+                         'kcvi', 'vsx', 'neon']
         # float only
         float_simd_features = ['altivec', 'sse']
 
-        # Workaround NVIDIA compiler bug when avx512 is enabled
-        if spec.satisfies('%nvhpc') and 'avx512' in simd_features:
+        # Workaround PGI compiler bug when avx2 is enabled
+        if spec.satisfies('%pgi') and 'avx2' in simd_features:
+            simd_features.remove('avx2')
+
+        # Workaround NVIDIA/PGI compiler bug when avx512 is enabled
+        if (spec.satisfies('%nvhpc') or (spec.satisfies('%pgi'))) and ('avx512' in simd_features):
             simd_features.remove('avx512')
 
         # NVIDIA compiler does not support Altivec intrinsics
