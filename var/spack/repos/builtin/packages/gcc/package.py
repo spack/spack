@@ -490,6 +490,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # More info at: https://gcc.gnu.org/install/configure.html
         for dep_str in ('mpfr', 'gmp', 'mpc', 'isl'):
             if dep_str not in spec:
+                options.append('--without-{0}'.format(dep_str))
                 continue
 
             dep_spec = spec[dep_str]
