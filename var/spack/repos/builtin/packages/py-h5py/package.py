@@ -44,15 +44,13 @@ class PyH5py(PythonPackage):
     depends_on('py-six', type=('build', 'run'), when='@:2.99')
 
     # Link dependencies
-    depends_on('hdf5@1.8.4:+hl')
+    depends_on('hdf5@1.8.4:1.11+hl', when='@:2.99')
+    depends_on('hdf5@1.8.4:+hl', when='@3.0.0:')
 
     # MPI dependencies
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
-
-    # Conflicts
-    conflicts('^hdf5@1.12.0:', when='@:2.99')
 
     phases = ['configure', 'install']
 
