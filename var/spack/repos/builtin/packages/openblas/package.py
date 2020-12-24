@@ -109,9 +109,11 @@ class Openblas(MakefilePackage):
           when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
+    # See https://github.com/xianyi/OpenBLAS/pull/3010
+    # UPD: the patch has been merged starting version 0.3.13
     patch('openblas_fujitsu.patch', when='@:0.3.10 %fj')
-    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11: %fj')
-    patch('openblas_fujitsu2.patch', when='@0.3.10: %fj')
+    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11:0.3.12 %fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10:0.3.12 %fj')
 
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
