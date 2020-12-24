@@ -18,7 +18,7 @@ class PySphinxcontribBibtex(PythonPackage):
 
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('python@3.5:', type=('build', 'run'), when='@1:')
-    depends_on('python@3.6:', type=('build', 'run'), when='@2:')    
+    depends_on('python@3.6:', type=('build', 'run'), when='@2:')
     depends_on('py-setuptools', type='build')
     depends_on('py-latexcodec@0.3.0:', type=('build', 'run'))
     depends_on('py-pybtex@0.17:', type=('build', 'run'), when='@:1.9.9')
