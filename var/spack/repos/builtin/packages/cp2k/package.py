@@ -47,6 +47,10 @@ class Cp2k(MakefilePackage, CudaPackage):
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
     variant('cosma', default=False, description='Use COSMA for p?gemm')
+    variant('libvori', default=False,
+            description=('Enable support for Voronoi integration'
+                         ' and BQB compression'))
+    variant('spglib', default=False, description='Enable support for spglib')
 
     # override cuda_arch from CudaPackage since we only support one arch
     # at a time and only specific ones for which we have parameter files
@@ -129,6 +133,9 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
+    depends_on('libvori@201217:', when='@8:+libvori', type='build')
+    depends_on('spglib', when='+spglib')
+
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
@@ -136,6 +143,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('~mpi', '+cosma')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
     conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
+
+    conflicts('+libvori', '@:7.999')  # libvori support was introduced in 8+
 
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
@@ -478,6 +487,19 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += pkgconf('--cflags-only-I', 'libxsmmf',
                                output=str).split()
             libs += pkgconf('--libs', 'libxsmmf', output=str).split()
+
+        if '+libvori' in spec:
+            cppflags += ['-D__LIBVORI']
+            libvori = spec['libvori'].libs
+            ldflags += [libvori.search_flags]
+            libs += libvori
+            libs += ['-lstdc++']
+
+        if '+spglib' in spec:
+            cppflags += ['-D__SPGLIB']
+            spglib = spec['spglib'].libs
+            ldflags += [spglib.search_flags]
+            libs += spglib
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
