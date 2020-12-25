@@ -82,7 +82,10 @@ class Hip(CMakePackage):
                           for name in ('llvm-amdgpu', 'hsa-rocr-dev',
                                        'rocminfo', 'rocm-device-libs'))
             mydict['rocm-path'] = self.spec.prefix
-            device_lib_path = mydict['rocm-device-libs'].amdgcn.bitcode
+            if '@:3.8.0' in self.spec:
+                device_lib_path = mydict['rocm-device-libs'].lib
+            else:
+                device_lib_path = mydict['rocm-device-libs'].amdgcn.bitcode
             mydict['device_lib_path'] = device_lib_path
             return mydict
 
