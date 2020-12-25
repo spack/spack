@@ -77,7 +77,7 @@ class Pism(CMakePackage):
     depends_on('netcdf-c')    # Only the C interface is used, no netcdf-cxx4
     depends_on('petsc')
     depends_on('udunits')
-    depends_on('proj@4:', when='@:1.1')
+    depends_on('proj@:4', when='@:1.1')
     depends_on('proj@6:', when='@1.2:')
     depends_on('everytrace', when='+everytrace')
 
