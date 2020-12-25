@@ -37,6 +37,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Supported Acts versions
     version('master', branch='master')
+    version('4.00.0', commit='ed64b4b88d366b63adc4a8d1afe5bc97aa5751eb')
     version('3.00.0', commit='e20260fccb469f4253519d3f0ddb3191b7046db3')
     version('2.00.0', commit='8708eae2b2ccdf57ab7b451cfbba413daa1fc43c')
     version('1.02.1', commit='f6ebeb9a28297ba8c54fd08b700057dd4ff2a311')
@@ -101,6 +102,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
+    # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
