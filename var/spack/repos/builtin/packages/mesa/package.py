@@ -30,6 +30,7 @@ class Mesa(MesonPackage):
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
+    depends_on('expat')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
