@@ -90,6 +90,10 @@ class Zoltan(AutotoolsPackage):
             '-g' if '+debug' in spec else '',
         ]
 
+        config_ldflags = []
+        # PGI runtime libraries
+        if '%pgi' in spec:
+            config_ldflags.append('-pgf90libs')
         if '+shared' in spec:
             config_args.extend([
                 'RANLIB=echo',
@@ -142,7 +146,8 @@ class Zoltan(AutotoolsPackage):
         config_args.extend([
             '--with-cflags={0}'.format(' '.join(config_cflags)),
             '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-            '--with-fcflags={0}'.format(' '.join(config_fcflags))
+            '--with-fcflags={0}'.format(' '.join(config_fcflags)),
+            '--with-ldflags={0}'.format(' '.join(config_ldflags))
         ])
         return config_args
 
