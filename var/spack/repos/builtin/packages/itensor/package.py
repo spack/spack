@@ -35,16 +35,17 @@ class Itensor(MakefilePackage):
     conflicts('^openblas threads=pthreads', when='+openmp')
 
     def getcopts(self, spec):
-        copts = ' ' + self.compiler.cxx17_flag
-        copts += ' ' + self.compiler.cc_pic_flag
+        copts = []
+        copts.append(self.compiler.cxx17_flag)
+        copts.append(self.compiler.cc_pic_flag)
 
         if spec.satisfies('%gcc'):
             if not spec.satisfies('arch=aarch64:'):
-                copts += ' -m64'
-            copts += ' -fconcepts'
+                copts.append('-m64')
+            copts.append('-fconcepts')
         if spec.satisfies('%clang') or spec.satisfies('%fj'):
-            copts += ' -Wno-gcc-compat'
-        return copts
+            copts.append('-Wno-gcc-compat')
+        return ' ' + ' '.join(copts)
 
     def edit(self, spec, prefix):
         # 0.copy options.mk
@@ -56,25 +57,24 @@ class Itensor(MakefilePackage):
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.BLAS/LAPACK
+        # Set default values
         vpla = 'PLATFORM=lapack'
         vlib = 'BLAS_LAPACK_LIBFLAGS='
         vlib += spec['lapack'].libs.ld_flags
         vinc = 'BLAS_LAPACK_INCLUDEFLAGS=-I'
         vinc += spec['lapack'].prefix.include
         ltype = spec['lapack'].name
+        # lapack specific
         if ltype == 'openblas':
             vpla = 'PLATFORM=openblas'
-            vinc += ' -fpermissive'
+            if spec.satisfies('%gcc'):
+                vinc += ' -fpermissive'
             vinc += ' -DHAVE_LAPACK_CONFIG_H'
             vinc += ' -DLAPACK_COMPLEX_STRUCTURE'
             filter_file('#PLATFORM=lapack', vinc, mf, String=True)
-        elif ltype == 'fujitsu-ssl2':
-            vpla = 'PLATFORM=lapack'
         elif ltype == 'intel-mkl':
             vpla = 'PLATFORM=mkl'
             filter_file('#PLATFORM=lapack', vinc, mf, String=True)
-        else:
-            raise InstallError('Unknown lapack')
 
         filter_file(r'^PLATFORM.+', vpla, mf)
         filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
