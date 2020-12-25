@@ -63,7 +63,7 @@ class Openwsman(CMakePackage):
                     define('BUILD_PYTHON3', False)
                 ])
             arg.append(define('PYTHON_EXECUTABLE',
-                       spec['python'].prefix.bin.python))
+                       spec['python'].command.path))
         else:
             arg.extend([
                 define('BUILD_PYTHON', False),
