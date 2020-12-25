@@ -29,8 +29,22 @@ class Itensor(MakefilePackage):
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
 
     depends_on('lapack', type=('build', 'link', 'run'))
-
     depends_on('hdf5+hl', when='+hdf5')
+
+    conflicts('^openblas threads=none', when='+openmp')
+    conflicts('^openblas threads=pthreads', when='+openmp')
+
+    def getcopts(self, spec):
+        copts = ' ' + self.compiler.cxx17_flag
+        copts += ' ' + self.compiler.cc_pic_flag
+
+        if spec.satisfies('%gcc'):
+            if not spec.satisfies('arch=aarch64:'):
+                copts += ' -m64'
+            copts += ' -fconcepts'
+        if spec.satisfies('%clang') or spec.satisfies('%fj'):
+            copts += ' -Wno-gcc-compat'
+        return copts
 
     def edit(self, spec, prefix):
         # 0.copy options.mk
@@ -38,34 +52,32 @@ class Itensor(MakefilePackage):
         copy('options.mk.sample', mf)
 
         # 1.CCCOM
-        ccopts = 'CCCOM={0}'.format(spack_cxx)
-        if spec.satisfies('%gcc'):
-            if not spec.satisfies('arch=aarch64:'):
-                ccopts += ' -m64'
-            ccopts += ' -std=c++17 -fconcepts -fPIC'
-        if spec.satisfies('%clang') or spec.satisfies('%fj'):
-            ccopts += ' -std=c++17 -fPIC -Wno-gcc-compat'
+        ccopts = 'CCCOM={0}{1}'.format(spack_cxx, self.getcopts(spec))
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.BLAS/LAPACK
-        btype = spec['blas'].name
-        if btype == 'openblas':
+        vpla = 'PLATFORM=lapack'
+        vlib = 'BLAS_LAPACK_LIBFLAGS='
+        vlib += spec['lapack'].libs.ld_flags
+        vinc = 'BLAS_LAPACK_INCLUDEFLAGS=-I'
+        vinc += spec['lapack'].prefix.include
+        ltype = spec['lapack'].name
+        if ltype == 'openblas':
             vpla = 'PLATFORM=openblas'
-            vlib = 'BLAS_LAPACK_LIBFLAGS=-lpthread {0}'.format(
-                   spec['lapack'].libs.ld_flags)
-            vinc = 'BLAS_LAPACK_INCLUDEFLAGS=-I'
-            vinc += spec['lapack'].prefix.include
-            vinc += ' -fpermissive '
-            vinc += '-DHAVE_LAPACK_CONFIG_H -DLAPACK_COMPLEX_STRUCTURE'
-            filter_file(r'^PLATFORM.+', vpla, mf)
-            filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
+            vinc += ' -fpermissive'
+            vinc += ' -DHAVE_LAPACK_CONFIG_H'
+            vinc += ' -DLAPACK_COMPLEX_STRUCTURE'
             filter_file('#PLATFORM=lapack', vinc, mf, String=True)
-        elif btype == 'fujitsu-ssl2':
+        elif ltype == 'fujitsu-ssl2':
             vpla = 'PLATFORM=lapack'
-            vlib = 'BLAS_LAPACK_LIBFLAGS={0}'.format(
-                   spec['lapack'].libs.ld_flags)
-            filter_file(r'^PLATFORM.+', vpla, mf)
-            filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
+        elif ltype == 'intel-mkl':
+            vpla = 'PLATFORM=mkl'
+            filter_file('#PLATFORM=lapack', vinc, mf, String=True)
+        else:
+            raise InstallError('Unknown lapack')
+
+        filter_file(r'^PLATFORM.+', vpla, mf)
+        filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
 
         # 3.HDF5
         if '+hdf5' in spec:
@@ -74,11 +86,6 @@ class Itensor(MakefilePackage):
 
         # 4.openmp
         if '+openmp' in spec:
-            # dependency check
-            if btype == 'openblas' and 'threads=openmp' not in spec['blas']:
-                raise InstallError(
-                    '^openblas threads=openmp required for itensor+openmp'
-                    ' with openblas')
             filter_file('#ITENSOR_USE_OMP', 'ITENSOR_USE_OMP', mf)
 
         # 5.prefix
@@ -89,20 +96,15 @@ class Itensor(MakefilePackage):
         )
 
     def install(self, spec, prefix):
-        # 0.copy options.mk
+        # 0.backup options.mk
         mf = 'options.mk'
         copy(mf, 'options.mk.build')
 
         # 1.CCCOM
-        ccopts = 'CCCOM={0}'.format(env["SPACK_CXX"])
+        ccopts = 'CCCOM={0}'.format(self.compiler.cxx)
         if spec.satisfies('%fj'):
             ccopts += ' -Nclang'
-        if spec.satisfies('%gcc'):
-            if not spec.satisfies('arch=aarch64:'):
-                ccopts += ' -m64'
-            ccopts += ' -std=c++17 -fconcepts -fPIC'
-        if spec.satisfies('%clang') or spec.satisfies('%fj'):
-            ccopts += ' -std=c++17 -fPIC -Wno-gcc-compat'
+        ccopts += self.getcopts(spec)
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.prefix
