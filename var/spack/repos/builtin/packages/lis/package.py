@@ -32,6 +32,6 @@ class Lis(AutotoolsPackage):
 
         if self.spec.satisfies('%fj'):
             config_args.append('CLIBS=-lm')
-            config_args.append('FCLDFLAGS="-mlcmain=main"')
+            config_args.append('FCLDFLAGS=-mlcmain=main')
 
         return config_args
