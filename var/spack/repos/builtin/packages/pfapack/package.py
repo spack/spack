@@ -19,9 +19,9 @@ class Pfapack(MakefilePackage):
 
     depends_on('lapack')
     depends_on('blas')
-    depends_on('python')
-    depends_on('py-numpy')
-    depends_on('py-scipy')
+    depends_on('python', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
 
     def edit(self, spec, prefix):
         filter_file('FORT =.*', 'FORT = {0}'.format(spack_fc),
