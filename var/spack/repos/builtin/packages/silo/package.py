@@ -38,6 +38,7 @@ class Silo(AutotoolsPackage):
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
+    patch('H5FD_class_t-terminate.patch', when='^hdf5@1.10.0:')
 
     def flag_handler(self, name, flags):
         spec = self.spec
