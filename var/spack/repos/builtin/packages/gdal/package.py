@@ -20,6 +20,7 @@ class Gdal(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['adamjstewart']
+    import_modules = ['osgeo', 'osgeo.utils']
 
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
@@ -557,5 +558,13 @@ class Gdal(AutotoolsPackage):
             fix_darwin_install_name(self.prefix.lib)
 
     def test(self):
+        """Attempts to import modules of the installed package."""
+
         if '+python' in self.spec:
-            PythonPackage.test(self)
+            # Make sure we are importing the installed modules,
+            # not the ones in the source directory
+            for module in self.import_modules:
+                self.run_test(self.spec['python'].command.path,
+                              ['-c', 'import {0}'.format(module)],
+                              purpose='checking import of {0}'.format(module),
+                              work_dir='spack-test')
