@@ -225,6 +225,10 @@ class Llvm(CMakePackage, CudaPackage):
     # merged in llvm-11.0.0_rc2
     patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
 
+    # https://github.com/spack/spack/issues/19908
+    # merged in llvm main prior to 12.0.0
+    patch("llvm_python_path.patch", when="@11.0.0")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -365,15 +369,23 @@ class Llvm(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
+        python = spec['python']
         cmake_args = [
             "-DLLVM_REQUIRES_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
+            "-DPYTHON_EXECUTABLE:PATH={0}".format(python.command.path),
             "-DLIBOMP_USE_HWLOC:BOOL=ON",
             "-DLIBOMP_HWLOC_INSTALL_DIR={0}".format(spec["hwloc"].prefix),
         ]
+
+        if python.version >= Version("3.0.0"):
+            cmake_args.append("-DPython3_EXECUTABLE={0}".format(
+                              python.command.path))
+        else:
+            cmake_args.append("-DPython2_EXECUTABLE={0}".format(
+                              python.command.path))
 
         projects = []
 
