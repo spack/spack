@@ -15,5 +15,5 @@ class PyPytestRunner(PythonPackage):
     version('5.1',    sha256='25a013c8d84f0ca60bb01bd11913a3bcab420f601f0f236de4423074af656e7a')
     version('2.11.1', sha256='983a31eab45e375240e250161a556163bc8d250edaba97960909338c273a89b3')
 
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm@1.15:', type='build')
