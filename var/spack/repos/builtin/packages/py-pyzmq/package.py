@@ -32,3 +32,15 @@ class PyPyzmq(PythonPackage):
     depends_on('py-cffi', type=('build', 'run'))
     depends_on('py-gevent', type=('build', 'run'))
     depends_on('libzmq')
+
+    def setup_build_environment(self, env):
+        # Needed for `spack install --test=root py-pyzmq`
+        # Fixes import failure for zmq.backend.cffi
+        # https://github.com/zeromq/pyzmq/issues/395#issuecomment-22041019
+        env.prepend_path(
+            'C_INCLUDE_PATH', self.spec['libzmq'].headers.directories[0])
+        env.prepend_path(
+            'LIBRARY_PATH', self.spec['libzmq'].libs.directories[0])
+
+    # Needed for `spack test run py-pyzmq`
+    setup_run_environment = setup_build_environment

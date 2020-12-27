@@ -11,6 +11,17 @@ class PyIpython(PythonPackage):
     homepage = "https://pypi.python.org/pypi/ipython"
     url      = "https://pypi.io/packages/source/i/ipython/ipython-7.18.1.tar.gz"
 
+    # IPython.kernel is deprecated and fails to import
+    import_modules = [
+        'IPython', 'IPython.core', 'IPython.core.tests', 'IPython.core.magics',
+        'IPython.sphinxext', 'IPython.terminal',
+        'IPython.terminal.pt_inputhooks', 'IPython.terminal.tests',
+        'IPython.utils', 'IPython.utils.tests', 'IPython.extensions',
+        'IPython.extensions.tests', 'IPython.testing', 'IPython.testing.tests',
+        'IPython.testing.plugin', 'IPython.lib', 'IPython.lib.tests',
+        'IPython.external', 'IPython.external.decorators'
+    ]
+
     version('7.18.1', sha256='a331e78086001931de9424940699691ad49dfb457cea31f5471eae7b78222d5e')
     version('7.5.0',  sha256='e840810029224b56cd0d9e7719dc3b39cf84d577f8ac686547c8ba7a06eeab26')
     version('7.3.0',  sha256='06de667a9e406924f97781bda22d5d76bfb39762b678762d86a466e63f65dc39')

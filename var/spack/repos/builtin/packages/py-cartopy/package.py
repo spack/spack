@@ -14,6 +14,12 @@ class PyCartopy(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    # Skip test files in cartopy.tests
+    import_modules = [
+        'cartopy', 'cartopy.sphinxext', 'cartopy.io', 'cartopy.geodesic',
+        'cartopy.examples', 'cartopy.mpl', 'cartopy.feature'
+    ]
+
     version('0.18.0', sha256='493ced4698361ffabec1a213d2b711dc836117242c304f3b93f5406182fd8bc2')
     version('0.17.0', sha256='137642e63952404ec0841fa0333ad14c58fbbf19cca2a5ac6a38498c4b4998fb')
     version('0.16.0', sha256='cadf62434492c965220b37f0548bc58180466ad6894a1db57dbc51cd43467e5c')
@@ -47,6 +53,24 @@ class PyCartopy(PythonPackage):
     patch('proj6.patch', when='@0.17.0')
 
     phases = ['build_ext', 'install']
+
+    def setup_build_environment(self, env):
+        # Needed for `spack install --test=root py-cartopy`
+        library_dirs = []
+        for dep in self.spec.dependencies(deptype='link'):
+            query = self.spec[dep.name]
+            library_dirs.extend(query.libs.directories)
+
+        # Cartopy uses ctypes.util.find_library, which searches LD_LIBRARY_PATH
+        # Our RPATH logic works fine, but the unit tests fail without this
+        libs = ':'.join(library_dirs)
+        if self.spec.satisfies('platform=darwin'):
+            env.prepend_path('DYLD_FALLBACK_LIBRARY_PATH', libs)
+        else:
+            env.prepend_path('LD_LIBRARY_PATH', libs)
+
+    # Needed for `spack test run py-cartopy`
+    setup_run_environment = setup_build_environment
 
     def build_ext_args(self, spec, prefix):
         args = [

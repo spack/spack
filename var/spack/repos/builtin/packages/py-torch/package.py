@@ -16,6 +16,9 @@ class PyTorch(PythonPackage, CudaPackage):
 
     maintainers = ['adamjstewart']
 
+    # Exact set of modules is version- and variant-specific
+    import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
+
     version('master', branch='master', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)
     version('1.7.0', tag='v1.7.0', submodules=True)
