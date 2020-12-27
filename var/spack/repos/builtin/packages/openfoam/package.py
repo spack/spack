@@ -549,11 +549,11 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
-    @when('@1906: %fj')
+    @when('@1812: %fj')
     @run_before('configure')
     def make_fujitsu_rules(self):
         """Create Fujitsu rules (clang variant) unless supplied upstream.
-        Implemented for 1906 and later (older rules are too messy to edit).
+        Implemented for 1812 and later (older rules are too messy to edit).
         Already included after 1912.
         """
         general_rules = 'wmake/rules/General'
@@ -574,15 +574,22 @@ class Openfoam(Package):
         tty.info('Add Fujitsu wmake rules')
         copy_tree(src, dst)
 
-        for cfg in ['c', 'c++', 'general']:
-            rule = join_path(dst, cfg)
-            filter_file('Clang', 'Fujitsu', rule, backup=False)
+        if self.spec.version >= Version('1906'):
+            for cfg in ['c', 'c++', 'general']:
+                rule = join_path(dst, cfg)
+                filter_file('Clang', 'Fujitsu', rule, backup=False)
+        else:
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
+            filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
+                        backup=False, string=True)
 
         src = join_path(general_rules, 'Clang')
         dst = join_path(general_rules, 'Fujitsu')  # self.compiler
         copy_tree(src, dst)
-        filter_file('clang', spack_cc, join_path(dst, 'c'),
-                    backup=False, string=True)
+        if self.spec.version >= Version('1906'):
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
         filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
                     backup=False, string=True)
 
