@@ -10,7 +10,7 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.1.5.tar.gz"
+    url = "https://pypi.io/packages/source/p/pandas/pandas-1.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [
@@ -29,6 +29,7 @@ class PyPandas(PythonPackage):
         'pandas._config'
     ]
 
+    version('1.2.0',  sha256='e03386615b970b8b41da6a68afe717626741bb2431cec993640685614c0680e4')
     version('1.1.5',  sha256='f10fc41ee3c75a474d3bdf68d396f10782d013d7f67db99c0efbfd0acb99701b')
     version('1.1.4',  sha256='a979d0404b135c63954dea79e6246c45dd45371a88631cdbb4877d844e6de3b6')
     version('1.1.3',  sha256='babbeda2f83b0686c9ad38d93b10516e68cdcd5771007eb80a763e98aaf44613')
@@ -58,6 +59,7 @@ class PyPandas(PythonPackage):
 
     # Required dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#dependencies
+    depends_on('python@3.7.1:', type=('build', 'run'), when='@1.2:')
     depends_on('python@3.6.1:', type=('build', 'run'), when='@1:')
     depends_on('python@3.5.3:', type=('build', 'run'), when='@0.25:')
     # https://pandas.pydata.org/docs/whatsnew/v1.0.0.html#build-changes
@@ -68,15 +70,18 @@ class PyPandas(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'), when='@0.25:')
     depends_on('py-numpy@1.15.4:', type=('build', 'run'), when='@1.1:')
+    depends_on('py-numpy@1.16.5:', type=('build', 'run'), when='@1.2:')
     depends_on('py-python-dateutil', type=('build', 'run'))
     depends_on('py-python-dateutil@2.6.1:', type=('build', 'run'), when='@0.25:')
     depends_on('py-python-dateutil@2.7.3:', type=('build', 'run'), when='@1.1:')
     depends_on('py-pytz@2017.2:', type=('build', 'run'))
+    depends_on('py-pytz@2017.3:', type=('build', 'run'), when='@1.2:')
 
     # Recommended dependencies
     # https://pandas.pydata.org/pandas-docs/stable/getting_started/install.html#recommended-dependencies
     depends_on('py-numexpr', type=('build', 'run'))
     depends_on('py-numexpr@2.6.2:', type=('build', 'run'), when='@0.25:')
+    depends_on('py-numexpr@2.6.8:', type=('build', 'run'), when='@1.2:')
     depends_on('py-bottleneck', type=('build', 'run'))
     depends_on('py-bottleneck@1.2.1:', type=('build', 'run'), when='@0.25:')
 
