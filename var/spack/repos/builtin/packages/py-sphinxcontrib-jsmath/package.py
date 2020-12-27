@@ -12,6 +12,10 @@ class PySphinxcontribJsmath(PythonPackage):
     homepage = "http://sphinx-doc.org/"
     url      = "https://pypi.io/packages/source/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz"
 
+    # Sphinx requires sphinxcontrib-jsmath at build-time, but
+    # sphinxcontrib-jsmath requires sphinx at run-time
+    import_modules = []
+
     version('1.0.1', sha256='a9925e4a4587247ed2191a22df5f6970656cb8ca2bd6284309578f2153e0c4b8')
 
     depends_on('python@3.5:', type=('build', 'run'))
