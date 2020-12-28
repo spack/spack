@@ -39,6 +39,7 @@ class Zoltan(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
 
+    depends_on('parmetis@4: +int64', when='+parmetis+int64')
     depends_on('parmetis@4:', when='+parmetis')
     depends_on('metis+int64', when='+parmetis+int64')
     depends_on('metis', when='+parmetis')
