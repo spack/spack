@@ -141,8 +141,8 @@ class NetcdfFortran(AutotoolsPackage):
         """AOCC support for NETCDF-F"""
         if '%aocc' in self.spec:
             filter_file(
-                '\\${wl}-soname \\$wl\\$soname',
-                '-fuse-ld=ld -Wl,-soname,\\$soname',
+                r'\${wl}-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
                 'libtool', string=True)
 
     @when('@:4.4.5')

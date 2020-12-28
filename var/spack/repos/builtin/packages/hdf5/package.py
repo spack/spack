@@ -329,8 +329,8 @@ class Hdf5(AutotoolsPackage):
         """AOCC support for HDF5"""
         if '%aocc' in self.spec:
             filter_file(
-                '\\$wl-soname \\$wl\\$soname',
-                '-fuse-ld=ld -Wl,-soname,\\$soname',
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
                 'libtool', string=True)
 
     @run_after('install')
