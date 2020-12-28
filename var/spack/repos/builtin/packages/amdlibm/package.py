@@ -29,7 +29,7 @@ class Amdlibm(SConsPackage):
     # Mandatory dependencies
     depends_on("python@3.6.1:", type=("build", "run"))
     depends_on("scons@3.1.2:", type=("build"))
-    depends_on("mpfr", type=("build"))
+    depends_on("mpfr", type=("link"))
 
     patch('0001-libm-ose-Scripts-cleanup-pyc-files.patch')
     patch('0002-libm-ose-prevent-log-v3.c-from-building.patch')
@@ -42,11 +42,9 @@ class Amdlibm(SConsPackage):
 
         if "%aocc" in spec:
             args.append("--compiler=aocc")
-            args.append("CC={0}".format(self.compiler.cc))
-            args.append("CXX={0}".format(self.compiler.cxx))
-        else:
-            args.append("CC={0}".format(self.compiler.cc))
-            args.append("CXX={0}".format(self.compiler.cxx))
+
+        args.append("CC={0}".format(self.compiler.cc))
+        args.append("CXX={0}".format(self.compiler.cxx))
 
         if "+verbose" in spec:
             args.append("verbose=1")
@@ -55,23 +53,4 @@ class Amdlibm(SConsPackage):
 
         return args
 
-    def install_args(self, spec, prefix):
-        """Setting install arguments for amdlibm """
-        args = [
-            "--prefix={0}".format(prefix),
-        ]
-
-        if "%aocc" in spec:
-            args.append("--compiler=aocc")
-            args.append("CC={0}".format(self.compiler.cc))
-            args.append("CXX={0}".format(self.compiler.cxx))
-        else:
-            args.append("CC={0}".format(self.compiler.cc))
-            args.append("CXX={0}".format(self.compiler.cxx))
-
-        if "+verbose" in spec:
-            args.append("verbose=1")
-        else:
-            args.append("verbose=0")
-
-        return args
+    install_args = build_args
