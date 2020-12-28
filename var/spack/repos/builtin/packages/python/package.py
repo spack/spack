@@ -31,8 +31,10 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21', preferred=True)
+    version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac', preferred=True)
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
     version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
     version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
