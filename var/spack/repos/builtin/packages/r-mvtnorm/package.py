@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,8 +11,13 @@ class RMvtnorm(RPackage):
     deviates and densities."""
 
     homepage = "http://mvtnorm.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mvtnorm"
+    url      = "https://cloud.r-project.org/src/contrib/mvtnorm_1.0-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mvtnorm"
 
-    version('1.0-6', 'cb69426868fd3e330412b8491901d9d4')
-    version('1.0-5', '5894dd3969bbfa26f4862c45f9a48a52')
+    version('1.0-11', sha256='0321612de99aa9bc75a45c7e029d3372736014223cbdefb80d8cae600cbc7252')
+    version('1.0-10', sha256='31df19cd8b4cab9d9a70dba00442b7684e625d4ca143a2c023c2c5872b07ad12')
+    version('1.0-6', sha256='4a015b57b645b520151b213eb04b7331598c06442a3f652c7dc149425bd2e444')
+    version('1.0-5', sha256='d00f9f758f0d0d4b999f259223485dc55d23cbec09004014816f180045ac81dd')
+
+    depends_on('r@1.9.0:', when='@:1.0-8', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@1.0-9:', type=('build', 'run'))

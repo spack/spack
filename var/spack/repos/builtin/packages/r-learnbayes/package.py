@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,8 +15,9 @@ class RLearnbayes(RPackage):
     for regression models, hierarchical models, Bayesian tests, and
     illustrations of Gibbs sampling."""
 
-    homepage = "https://CRAN.R-project.org/package=LearnBayes"
-    url      = "https://cran.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/LearnBayes"
+    homepage = "https://cloud.r-project.org/package=LearnBayes"
+    url      = "https://cloud.r-project.org/src/contrib/LearnBayes_2.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/LearnBayes"
 
-    version('2.15', '213713664707bc79fd6d3a109555ef76')
+    version('2.15.1', sha256='9b110858456523ca0b2a63f22013c4e1fbda6674b9d84dc1f4de8bffc5260532')
+    version('2.15', sha256='45c91114b4aaa0314feeb4311dbe78f5b75a3b76bb2d1ca0f8adb2e0f1cbe233')

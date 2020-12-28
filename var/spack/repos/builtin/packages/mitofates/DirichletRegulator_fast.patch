@@ -1,0 +1,13 @@
+--- a/bin/modules/DirichletRegulator_fast.pm	2014-10-23 01:59:55.000000000 -0500
++++ b/bin/modules/DirichletRegulator_fast.pm	2018-07-11 11:19:07.814358134 -0500
+@@ -10,9 +10,7 @@
+ use strict;
+ use warnings;
+ use FindBin qw($Bin);
+-use Inline (Config => 
+-	      DIRECTORY => "$Bin/modules/_Inline/",
+-            );
++use Inline;
+ use Inline 'C';
+ 
+ # Sub-routin: DirichletParser

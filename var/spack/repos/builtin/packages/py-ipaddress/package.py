@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 #
 from spack import *
 
@@ -30,8 +11,10 @@ class PyIpaddress(PythonPackage):
     """Python 3.3's ipaddress for older Python versions"""
 
     homepage = "https://github.com/phihag/ipaddress"
-    url      = "https://pypi.io/packages/source/i/ipaddress/ipaddress-1.0.18.tar.gz"
+    url      = "https://pypi.io/packages/source/i/ipaddress/ipaddress-1.0.23.tar.gz"
 
-    version('1.0.18', '310c2dfd64eb6f0df44aa8c59f2334a7')
+    version('1.0.23', sha256='b7f8e0369580bb4a24d5ba1d7cc29660a4a6987763faf1d8a8046830e020e7e2')
+    version('1.0.22', sha256='b146c751ea45cad6188dd6cf2d9b757f6f4f8d6ffb96a023e6f2e26eea02a72c')
+    version('1.0.18', sha256='5d8534c8e185f2d8a1fda1ef73f2c8f4b23264e8e30063feeb9511d492a413e1')
 
     depends_on('py-setuptools', type='build')

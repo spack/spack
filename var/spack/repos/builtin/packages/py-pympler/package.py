@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,10 +14,10 @@ class PyPympler(PythonPackage):
     homepage = "https://github.com/pympler/pympler"
     url      = "https://pypi.io/packages/source/P/Pympler/Pympler-0.4.3.tar.gz"
 
-    version('0.4.3', 'bbb4239126e9c99e2effc83b02bf8755')
-    version('0.4.2', '6bdfd913ad4c94036e8a2b358e49abd7')
-    version('0.4.1', '2d54032a6da91ff438f48d5f36b719a6')
-    version('0.4',   '68e4a8aa4a268996fa6a321b664918af')
-    version('0.3.1', '906ce437f46fb30991007671a59d4319')
+    version('0.4.3', sha256='430528fff6cde1bae0a305e8df647b158c3cc4930cff122bf228293829ee1e56')
+    version('0.4.2', sha256='3c3f9d8eb3dddf4f29c433433ea77c9c3f2f0dcc06575c0c2a9d81b2602893b2')
+    version('0.4.1', sha256='6a8bfd2972c4ec34ac8750358515950be4a4ca13dfa6a05a9a22419786745f90')
+    version('0.4',   sha256='b280480502df658b18cb6310d2c744fabf05d4c518f873377884b4d4b5d2992d')
+    version('0.3.1', sha256='8cb170fddfe592342856590e2239e8c20ac61eacf18bc4f65a95ccaf74475e3e')
 
     depends_on('python@2.5:')

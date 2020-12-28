@@ -1,43 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGcrma(RPackage):
-    """Background adjustment using sequence information"""
+    """Background Adjustment Using Sequence Information."""
 
-    homepage = "https://bioconductor.org/packages/gcrma/"
-    url      = "https://git.bioconductor.org/packages/gcrma"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/gcrma"
+    git      = "https://git.bioconductor.org/packages/gcrma.git"
 
-    version('2.48.0', git='https://git.bioconductor.org/packages/gcrma', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
+    version('2.56.0', commit='1f37bbfb4d3ed542b1e90704ab0fa8914d5e0224')
+    version('2.54.0', commit='9515fdbbc766a2a3b2ec61cf530c57bbded77ccc')
+    version('2.52.0', commit='d6e90b05432d2a8b0583d3fed001811ecdf49d7d')
+    version('2.50.0', commit='cbba460d131e1073059500b8d7b168a78f963992')
+    version('2.48.0', commit='3ea0eb0b5c15ffb24df76620667ae7996ed715b4')
 
-    depends_on('r-affy', type=('build', 'run'))
+    depends_on('r@2.6.0:', type=('build', 'run'))
+    depends_on('r-affy@1.23.2:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-affyio', type=('build', 'run'))
+    depends_on('r-affyio@1.13.3:', type=('build', 'run'))
     depends_on('r-xvector', type=('build', 'run'))
-    depends_on('r-biostrings', type=('build', 'run'))
+    depends_on('r-biostrings@2.11.32:', type=('build', 'run'))
     depends_on('r-biocinstaller', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@2.48.0')
+
+    depends_on('r-biocmanager', when='@2.54.0:', type=('build', 'run'))

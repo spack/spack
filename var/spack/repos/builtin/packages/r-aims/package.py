@@ -1,42 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAims(RPackage):
-    """This package contains the AIMS implementation. It contains
-    necessary functions to assign the five intrinsic molecular
-    subtypes (Luminal A, Luminal B, Her2-enriched, Basal-like,
-    Normal-like). Assignments could be done on individual samples
-    as well as on dataset of gene expression data."""
+    """AIMS : Absolute Assignment of Breast Cancer Intrinsic Molecular Subtype.
 
-    homepage = "http://bioconductor.org/packages/AIMS/"
-    url      = "https://git.bioconductor.org/packages/AIMS"
+       This package contains the AIMS implementation. It contains necessary
+       functions to assign the five intrinsic molecular subtypes (Luminal A,
+       Luminal B, Her2-enriched, Basal-like, Normal-like). Assignments could be
+       done on individual samples as well as on dataset of gene expression
+       data."""
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/AIMS', commit='86b866c20e191047492c51b43e3f73082c3f8357')
+    homepage = "https://bioconductor.org/packages/AIMS"
+    git      = "https://git.bioconductor.org/packages/AIMS.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
+    version('1.16.0', commit='86cb8c998ade3003cd34a5405b218ae07d97bf84')
+    version('1.14.1', commit='4125c4217a7e4f00169b5ba65dcc3778fdd33c6f')
+    version('1.12.0', commit='d7eaa723d19a6aca37df244fd0b3d5426ed0a626')
+    version('1.10.0', commit='972945980b39168502a02ac3aa396f9b99fb3d71')
+    version('1.8.0', commit='86b866c20e191047492c51b43e3f73082c3f8357')
+
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-e1071', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))

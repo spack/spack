@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,13 +14,13 @@ class LinuxHeaders(Package):
     list_url = "https://www.kernel.org/pub/linux/kernel"
     list_depth = 2
 
-    version('4.9.10', 'ce5ab2a86c9b880617e36e84aa2deb6c')
+    version('4.9.10', sha256='bd6e05476fd8d9ea4945e11598d87bc97806bbc8d03556abbaaf809707661525')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # This variable is used in the Makefile. If it is defined on the
         # system, it can break the build if there is no build recipe for
         # that specific ARCH
-        spack_env.unset('ARCH')
+        env.unset('ARCH')
 
     def install(self, spec, prefix):
         make('headers_install', 'INSTALL_HDR_PATH={0}'.format(prefix))

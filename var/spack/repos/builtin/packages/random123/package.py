@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,12 +15,20 @@ class Random123(Package):
     homepage = "http://www.deshawresearch.com/resources_random123.html"
     url      = "http://www.deshawresearch.com/downloads/download_random123.cgi/Random123-1.09.tar.gz"
 
-    version('1.09', '67ae45ff94b12acea590a6aa04ed1123')
+    version('1.13.2', sha256='74a1c6bb66b2684f03d3b1008642a2e9141909103cd09f428d2c60bcaa51cb40')
+    version('1.10', sha256='4afdfba4b941e33e23b5de9b7907b7e3ac326cb4d34b5fa8225edd00b5fe053b')
+    version('1.09', sha256='cf6abf623061bcf3d17e5e49bf3f3f0ae400ee89ae2e97c8cb8dcb918b1ebabe')
+
+    patch('ibmxl.patch', when='@1.09')
+    patch('arm-gcc.patch', when='@1.09')
+    patch('v1132-xl161.patch', when='@1.13.2')
 
     def install(self, spec, prefix):
         # Random123 doesn't have a build system.
         # We have to do our own install here.
         install_tree('include', prefix.include)
         install('./LICENSE', "%s" % prefix)
-        # used by some packages, e.g. quinoa
-        install('examples/uniform.hpp', join_path(prefix.include, 'Random123'))
+        if spec.satisfies('@1.09'):
+            # used by some packages, e.g. quinoa
+            install('examples/uniform.hpp',
+                    join_path(prefix.include, 'Random123'))

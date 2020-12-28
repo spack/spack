@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,14 +14,15 @@ class RPbkrtest(RPackage):
     models."""
 
     homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
-    url      = "https://cran.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pbkrtest"
+    url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
-    version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
-    version('0.4-4', '5e54b1b1b35413dd1d24ef15735ec645')
+    version('0.4-7', sha256='5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea')
+    version('0.4-6', sha256='9d28b8916fea3ffec8d5958bb8c531279b1e273f21fdbeb2fcad6d7e300a9c01')
+    version('0.4-4', sha256='a685392ef3fca0ddc2254f6cc9bba6bc22b298fa823359fc4515e64e753abd31')
 
-    depends_on('r@3.2.3:')
-
+    depends_on('r@3.0.2:', when='@:0.4-5', type=('build', 'run'))
+    depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
     depends_on('r-lme4@1.1.10:', type=('build', 'run'))
     depends_on('r-matrix@1.2.3:', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

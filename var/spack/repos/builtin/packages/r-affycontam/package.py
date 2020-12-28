@@ -1,40 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffycontam(RPackage):
-    """structured corruption of cel file data to demonstrate QA
-    effectiveness."""
+    """structured corruption of affymetrix cel file data.
 
-    homepage = "https://www.bioconductor.org/packages/affyContam/"
-    url      = "https://git.bioconductor.org/packages/affyContam"
+       structured corruption of cel file data to demonstrate QA
+       effectiveness"""
 
-    version('1.34.0', git='https://git.bioconductor.org/packages/affyContam', commit='03529f26d059c19e069cdda358dbf7789b6d4c40')
+    homepage = "https://bioconductor.org/packages/affyContam"
+    git      = "https://git.bioconductor.org/packages/affyContam.git"
 
-    depends_on('r@3.4.0:3.4.9', when=('@1.34.0'))
+    version('1.42.0', commit='8a5e94a5ae8c2ecfafa6177b84a6e8ab07e14fbe')
+    version('1.40.0', commit='dfd5fd6ae04941dddbda03f656540b71b2fbc614')
+    version('1.38.0', commit='84651e8eade61619afefc83bb290047da101a5bc')
+    version('1.36.0', commit='aeb684a7d3f6fa9243f3946d214de53649fa4fd6')
+    version('1.34.0', commit='03529f26d059c19e069cdda358dbf7789b6d4c40')
+
+    depends_on('r@2.7.0:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-affydata', type=('build', 'run'))

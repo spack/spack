@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,10 +10,13 @@ class RRcpparmadillo(RPackage):
     """'Rcpp' Integration for the 'Armadillo' Templated Linear
     Algebra Library."""
 
-    homepage = "https://cran.r-project.org/package=RcppArmadillo"
-    url      = "https://cran.r-project.org/src/contrib/RcppArmadillo_0.8.100.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RcppArmadillo"
+    homepage = "https://cloud.r-project.org/package=RcppArmadillo"
+    url      = "https://cloud.r-project.org/src/contrib/RcppArmadillo_0.8.100.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppArmadillo"
 
-    version('0.8.100.1.0', 'a79c0ee967f502702414bc3c80c88f56')
+    version('0.9.600.4.0', sha256='2057b7aa965a4c821dd734276d8e6a01cd59a1b52536b65cb815fa7e8c114f1e')
+    version('0.9.400.3.0', sha256='56936d501fe8e6f8796ae1a6badb9294d7dad98a0b557c3b3ce6bd4ecaad13b0')
+    version('0.8.100.1.0', sha256='97ca929b34d84d99d7cadc3612b544632cdd0c43ed962933a3d47caa27854fa7')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@0.8.500.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))

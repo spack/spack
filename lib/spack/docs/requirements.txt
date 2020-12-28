@@ -3,3 +3,5 @@
 
 sphinx
 sphinxcontrib-programoutput
+sphinx-rtd-theme
+python-levenshtein

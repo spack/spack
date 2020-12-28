@@ -1,53 +1,75 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 #
 # This file is part of Spack and sets up the spack environment for
-# csh and tcsh.  This includes dotkit support, module support, and
+# csh and tcsh.  This includes environment modules and lmod support, and
 # it also puts spack in your path.  Source it like this:
 #
-#    setenv SPACK_ROOT /path/to/spack
-#    source $SPACK_ROOT/share/spack/setup-env.csh
+#    source /path/to/spack/share/spack/setup-env.csh
 #
-if ($?SPACK_ROOT) then
-    set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
-    set _spack_share_dir   = $SPACK_ROOT/share/spack
 
-    # Command aliases point at separate source files
-    alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
-    alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
-
-    # Shamelessly stolen from setup-env.sh
-    set _sp_sys_type    = `$SPACK_ROOT/bin/spack python -c 'print(spack.architecture.sys_type())'`
-    set _sp_dotkit_root = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('dotkit')))"`
-    set _sp_tcl_root    = `$SPACK_ROOT/bin/spack python -c "print(spack.util.path.canonicalize_path(spack.config.get_config('config').get('module_roots').get('tcl')))"`
-
-    # Set up modules and dotkit search paths in the user environment
-    _spack_pathadd DK_NODE    "$_sp_dotkit_root/$_sp_sys_type"
-    _spack_pathadd MODULEPATH "$_sp_tcl_root/$_sp_sys_type"
-    _spack_pathadd PATH       "$SPACK_ROOT/bin"
-else
-    echo "ERROR: Sourcing spack setup-env.csh requires setting SPACK_ROOT to the root of your spack installation"
+# prevent infinite recursion when spack shells out (e.g., on cray for modules)
+if ($?_sp_initializing) then
+    exit 0
 endif
+setenv _sp_initializing true
+
+# If SPACK_ROOT is not set, we'll try to find it ourselves.
+# csh/tcsh don't have a built-in way to do this, but both keep files
+# they are sourcing open. We use /proc on linux and lsof on macs to
+# find this script's full path in the current process's open files.
+if (! $?SPACK_ROOT) then
+    # figure out a command to list open files
+    if (-d /proc/$$/fd) then
+        set _sp_lsof = "ls -l /proc/$$/fd"
+    else
+        which lsof > /dev/null
+        if ($? == 0) then
+            set _sp_lsof = "lsof -p $$"
+        endif
+    endif
+
+    # filter this script out of list of open files
+    if ( $?_sp_lsof ) then
+        set _sp_source_file = `$_sp_lsof | sed -e 's/^[^/]*//' | grep "/setup-env.csh"`
+    endif
+
+    # This script is in $SPACK_ROOT/share/spack; get the root with dirname
+    if ($?_sp_source_file) then
+        set _sp_share_spack = `dirname "$_sp_source_file"`
+        set _sp_share = `dirname "$_sp_share_spack"`
+        setenv SPACK_ROOT `dirname "$_sp_share"`
+    endif
+
+    if (! $?SPACK_ROOT) then
+        echo "==> Error: setup-env.csh couldn't figure out where spack lives."
+        echo "    Set SPACK_ROOT to the root of your spack installation and try again."
+        exit 1
+    endif
+endif
+
+# Command aliases point at separate source files
+set _spack_source_file = $SPACK_ROOT/share/spack/setup-env.csh
+set _spack_share_dir = $SPACK_ROOT/share/spack
+alias spack          'set _sp_args = (\!*); source $_spack_share_dir/csh/spack.csh'
+alias spacktivate    'spack env activate'
+alias _spack_pathadd 'set _pa_args = (\!*) && source $_spack_share_dir/csh/pathadd.csh'
+
+# Set variables needed by this script
+_spack_pathadd PATH "$SPACK_ROOT/bin"
+eval `spack --print-shell-vars csh`
+
+# Set up module search paths in the user environment
+set tcl_roots = `echo $_sp_tcl_roots:q | sed 's/:/ /g'`
+set compatible_sys_types = `echo $_sp_compatible_sys_types:q | sed 's/:/ /g'`
+foreach tcl_root ($tcl_roots:q)
+    foreach systype ($compatible_sys_types:q)
+        _spack_pathadd MODULEPATH "$tcl_root/$systype"
+    end
+end
+
+# done: unset sentinel variable as we're no longer initializing
+unsetenv _sp_initializing

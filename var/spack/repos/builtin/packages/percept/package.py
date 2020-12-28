@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,22 +12,20 @@ class Percept(CMakePackage):
     """
 
     homepage = "https://github.com/PerceptTools/percept"
-    url      = "https://github.com/PerceptTools/percept.git"
+    git      = "https://github.com/PerceptTools/percept.git"
 
-    # This package file was created at percept
-    # commit dc1c8ec0175213146ac139946beca185a84c22e8
-    version('develop',
-            git='https://github.com/PerceptTools/percept.git', branch='master')
+    # The open version of Percept does not seem to be supported on
+    # github and it doesn't have tags. So we specify a specific commit
+    # here and the patch allows us to build the mesh_transfer exe and
+    # creates a make install target so Spack can install Percept
+    version('master', commit='363cdd0050443760d54162f140b2fb54ed9decf0')
+    patch('cmakelists.patch')
 
-    depends_on('googletest')
+    depends_on('googletest~shared')
     depends_on('opennurbs@percept')
     depends_on('boost+graph+mpi')
     depends_on('yaml-cpp+pic~shared@0.5.3:')
-    # Percept was initially tested against Trilinos 12.12.1
-    depends_on('trilinos~shared+exodus+tpetra+epetra+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+aztec+sacado~openmp+shards+intrepid+cgns@master,12.12.1:')
-
-    patch('fix_cmakelists.patch')
-    patch('fix_header.patch')
+    depends_on('trilinos~shared+exodus+tpetra+epetra+epetraext+muelu+belos+ifpack2+amesos2+zoltan+stk+boost~superlu-dist+superlu+hdf5+zlib+pnetcdf+aztec+sacado~openmp+shards+intrepid+cgns@master,12.14.1:')
 
     def cmake_args(self):
         spec = self.spec
@@ -69,7 +48,6 @@ class Percept(CMakePackage):
             spec['opennurbs'].prefix.lib,
             '-DPERCEPT_TPLS_INSTALL_DIR:PATH=%s' %
             spec['googletest'].prefix,
-            '-DENABLE_INSTALL:BOOL=ON'
         ])
 
         return options

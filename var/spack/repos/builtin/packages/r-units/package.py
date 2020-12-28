@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,9 +15,14 @@ class RUnits(RPackage):
        conversion."""
 
     homepage = "https://github.com/edzer/units/"
-    url      = "https://cran.r-project.org/src/contrib/units_0.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/units"
+    url      = "https://cloud.r-project.org/src/contrib/units_0.4-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/units"
 
-    version('0.4-6', '0bb90dde5dad7608fa6feb1599381bf2')
+    version('0.6-3', sha256='03de88d9dcfe80d22dd3813413f33657c576aed24a8091dbfc7f68602020a64f')
+    version('0.6-2', sha256='5e286775d0712c8e15b6ae3a533d4c4349b0f6410c2d9d897ca519c3d0e5f170')
+    version('0.4-6', sha256='db383c9b7ec221a5da29a2ddf4f74f9064c44ea2102ea7e07cc1cc5bb30fa1ef')
 
-    depends_on('r-udunits2', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r-udunits2@0.13:', when='@:0.5-1', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.10:', type=('build', 'run'))
+    depends_on('udunits', when='@0.6-0:')

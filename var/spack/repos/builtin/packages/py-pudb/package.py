@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,8 +13,8 @@ class PyPudb(PythonPackage):
     homepage = "http://mathema.tician.de/software/pudb"
     url      = "https://pypi.io/packages/source/p/pudb/pudb-2017.1.1.tar.gz"
 
-    version('2017.1.1', '4ec3302ef90f22b13c60db16b3557c56')
-    version('2016.2',   '4573b70163329c1cb59836a357bfdf7c')
+    version('2017.1.1', sha256='87117640902c5f602c8517d0167eb5c953a5bdede97975ba29ff17e3d570442c')
+    version('2016.2',   sha256='e958d7f7b1771cf297714e95054075df3b2a47455d7a740be4abbbd41289505a')
 
     # Most Python packages only require setuptools as a build dependency.
     # However, pudb requires setuptools during runtime as well.

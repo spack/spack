@@ -1,36 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RDnacopy(RPackage):
-    """Implements the circular binary segmentation (CBS) algorithm
-    to segment DNA copy number data and identify genomic regions
-    with abnormal copy number."""
+    """DNA copy number data analysis.
 
-    homepage = "https://www.bioconductor.org/packages/DNAcopy/"
-    url      = "https://git.bioconductor.org/packages/DNAcopy"
+       Implements the circular binary segmentation (CBS) algorithm to segment
+       DNA copy number data and identify genomic regions with abnormal copy
+       number."""
 
-    version('1.50.1', git='https://git.bioconductor.org/packages/DNAcopy', commit='a20153029e28c009df813dbaf13d9f519fafa4e8')
+    homepage = "https://bioconductor.org/packages/DNAcopy"
+    git      = "https://git.bioconductor.org/packages/DNAcopy.git"
+
+    version('1.58.0', commit='1954745eafca990d6ddeefe84059c54a8c37df23')
+    version('1.56.0', commit='e521826f2515b309921272f65db421cbe2ff961a')
+    version('1.54.0', commit='fe2657936afbce8ee03221461dff4265e3ded4c4')
+    version('1.52.0', commit='2632fbecec4cef3705b85676942a59188ae9bba4')
+    version('1.50.1', commit='a20153029e28c009df813dbaf13d9f519fafa4e8')

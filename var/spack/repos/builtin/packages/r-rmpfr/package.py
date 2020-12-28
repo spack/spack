@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,10 +14,16 @@ class RRmpfr(RPackage):
        is based on the GMP (GNU Multiple Precision) Library."""
 
     homepage = "http://rmpfr.r-forge.r-project.org"
-    url      = "https://cran.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/Rmpfr"
+    url      = "https://cloud.r-project.org/src/contrib/Rmpfr_0.6-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Rmpfr"
 
-    version('0.6-1', '55d4ec257bd2a9233bafee9e444d0265')
+    version('0.7-2', sha256='ec1da6ec5292ea6ac95495c6a299591d367e520ae324719817fb884c865603ff')
+    version('0.7-1', sha256='9b3021617a22b0710b0f1acc279290762317ff123fd9e8fd03f1449f4bbfe204')
+    version('0.6-1', sha256='bf50991055e9336cd6a110d711ae8a91a0551b96f9eaab5fef8c05f578006e1c')
 
+    depends_on('r@3.0.1:', when='@:0.6-1', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@0.7-0', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@0.7-1:', type=('build', 'run'))
     depends_on('r-gmp@0.5-8:', type=('build', 'run'))
     depends_on('mpfr@3.0.0:')
+    depends_on('gmp@4.2.3:')

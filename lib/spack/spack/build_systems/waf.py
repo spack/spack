@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 import inspect
 
@@ -66,10 +47,10 @@ class WafPackage(PackageBase):
     build_system_class = 'WafPackage'
 
     # Callback names for build-time test
-    build_time_test_callbacks = ['test']
+    build_time_test_callbacks = ['build_test']
 
     # Callback names for install-time test
-    install_time_test_callbacks = ['installtest']
+    install_time_test_callbacks = ['install_test']
 
     # Much like AutotoolsPackage does not require automake and autoconf
     # to build, WafPackage does not require waf to build. It only requires
@@ -94,13 +75,14 @@ class WafPackage(PackageBase):
 
     def configure(self, spec, prefix):
         """Configures the project."""
-        args = self.configure_args()
+        args = ['--prefix={0}'.format(self.prefix)]
+        args += self.configure_args()
 
         self.waf('configure', *args)
 
     def configure_args(self):
         """Arguments to pass to configure."""
-        return ['--prefix={0}'.format(self.prefix)]
+        return []
 
     def build(self, spec, prefix):
         """Executes the build."""
@@ -124,7 +106,7 @@ class WafPackage(PackageBase):
 
     # Testing
 
-    def test(self):
+    def build_test(self):
         """Run unit tests after build.
 
         By default, does nothing. Override this if you want to
@@ -134,7 +116,7 @@ class WafPackage(PackageBase):
 
     run_after('build')(PackageBase._run_default_build_time_test_callbacks)
 
-    def installtest(self):
+    def install_test(self):
         """Run unit tests after install.
 
         By default, does nothing. Override this if you want to

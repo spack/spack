@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,11 +11,15 @@ class RXml(RPackage):
     (including DTDs), both local and accessible via HTTP or FTP. Also offers
     access to an 'XPath' "interpreter"."""
 
-    homepage = "https://cran.r-project.org/web/packages/XML/index.html"
-    url      = "https://cran.r-project.org/src/contrib/XML_3.98-1.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/XML"
-    version('3.98-1.9', '70dd9d711cf3cbd218eb2b870aee9503')
-    version('3.98-1.5', 'd1cfcd56f7aec96a84ffca91aea507ee')
-    version('3.98-1.4', '1a7f3ce6f264eeb109bfa57bedb26c14')
+    homepage = "https://cloud.r-project.org/package=XML"
+    url      = "https://cloud.r-project.org/src/contrib/XML_3.98-1.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/XML"
 
-    depends_on('libxml2')
+    version('3.98-1.20', sha256='46af86376ea9a0fb1b440cf0acdf9b89178686a05c4b77728fcff1f023aa4858')
+    version('3.98-1.19', sha256='81b1c4a2df24c5747fa8b8ec2d76b4e9c3649b56ca94f6c93fbd106c8a72beab')
+    version('3.98-1.9', sha256='a3b70169cb2fbd8d61a41ff222d27922829864807e9ecad373f55ba0df6cf3c3')
+    version('3.98-1.5', sha256='deaff082e4d37931d2dabea3a60c3d6916d565821043b22b3f9522ebf3918d35')
+    version('3.98-1.4', sha256='9c0abc75312f66aac564266b6b79222259c678aedee9fc347462978354f11126')
+
+    depends_on('r@2.13.0:', type=('build', 'run'))
+    depends_on('libxml2@2.6.3:')

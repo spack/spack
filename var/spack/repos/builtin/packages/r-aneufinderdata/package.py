@@ -1,37 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAneufinderdata(RPackage):
-    """Whole-genome single cell sequencing data for demonstration
-    purposes in the AneuFinder package."""
+    """WGSCS Data for Demonstration Purposes.
 
-    homepage = "https://www.bioconductor.org/packages/AneuFinderData/"
-    url      = "https://git.bioconductor.org/packages/AneuFinderData"
+       Whole-genome single cell sequencing data for demonstration purposes in
+       the AneuFinder package."""
 
-    version('1.4.0', git='https://git.bioconductor.org/packages/AneuFinderData', commit='55c8807ee4a37a2eb6d0defafaf843f980b22c40')
+    homepage = "https://bioconductor.org/packages/AneuFinderData"
+    git      = "https://git.bioconductor.org/packages/AneuFinderData.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0')
+    version('1.12.0', commit='7350f38856b6278e07eca141f7f3cb24bc60c3a1')
+    version('1.10.0', commit='ef7fc27f9af4f178fa45a21aba30709e1ebde035')
+    version('1.8.0', commit='4f00f8d5f2e968fea667a7feafc0a4607d6e0c6e')
+    version('1.6.0', commit='8fe5b221619aab75fe84c9094708d240dd1e6730')
+    version('1.4.0', commit='55c8807ee4a37a2eb6d0defafaf843f980b22c40')
+
+    depends_on('r@3.3:', type=('build', 'run'))

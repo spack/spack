@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,12 +10,14 @@ class RModelmetrics(RPackage):
     """Collection of metrics for evaluating models written in C++ using
     'Rcpp'."""
 
-    homepage = "https://cran.r-project.org/package=ModelMetrics"
-    url      = "https://cran.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ModelMetrics"
+    homepage = "https://cloud.r-project.org/package=ModelMetrics"
+    url      = "https://cloud.r-project.org/src/contrib/ModelMetrics_1.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ModelMetrics"
 
-    version('1.1.0', 'd43175001f0531b8810d2802d76b7b44')
+    version('1.2.2', sha256='66d6fc75658287fdbae4d437b51d26781e138b8baa558345fb9e5a2df86a0d95')
+    version('1.2.0', sha256='3021ae88733695a35d66e279e8e61861431f14c9916a341f0a562f675cf6ede9')
+    version('1.1.0', sha256='487d53fda57da4b29f83a927dda8b1ae6655ab044ee3eec33c38aeb27eed3d85')
 
-    depends_on('r@3.2.2:')
-
+    depends_on('r@3.2.2:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-data-table', when='@1.2.0:', type=('build', 'run'))

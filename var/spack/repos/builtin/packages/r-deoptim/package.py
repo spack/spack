@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -30,8 +11,9 @@ class RDeoptim(RPackage):
     """Implements the differential evolution algorithm for global optimization
     of a real-valued function of a real-valued parameter vector."""
 
-    homepage = "https://cran.r-project.org/package=DEoptim"
-    url      = "https://cran.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DEoptim"
+    homepage = "https://cloud.r-project.org/package=DEoptim"
+    url      = "https://cloud.r-project.org/src/contrib/DEoptim_2.2-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/DEoptim"
 
-    version('2.2-3', 'ed406e6790f8f1568aa9bec159f80326')
+    version('2.2-4', sha256='0a547784090d1e9b93efc53768110621f35bed3692864f6ce5c0dda2ebd6d482')
+    version('2.2-3', sha256='af2120feea3a736ee7a5a93c6767d464abc0d45ce75568074b233405e73c9a5d')

@@ -1,0 +1,66 @@
+--- Utilities/Histogram.h.orig	2018-11-07 14:46:18.967689784 +0100
++++ Utilities/Histogram.h	2018-11-07 14:46:32.755601195 +0100
+@@ -111,7 +111,7 @@
+    *  Function to add a weighted point to the histogram
+    */
+   void addWeighted(double input, double weight) {
+-    if(isnan(input)) return;
++    if(std::isnan(input)) return;
+     unsigned int ibin;
+     for(ibin=1; ibin<_bins.size(); ++ibin) {
+       if(input<_bins[ibin].limit)
+--- Contrib/AlpGen/BasicLesHouchesFileReader.cc.orig	2018-11-07 15:38:46.819306762 +0100
++++ Contrib/AlpGen/BasicLesHouchesFileReader.cc	2018-11-07 15:39:04.927190111 +0100
+@@ -383,9 +383,9 @@
+ 	          >> hepeup.PUP[i][3] >> hepeup.PUP[i][4]
+         	  >> hepeup.VTIMUP[i] >> hepeup.SPINUP[i] ) )
+       return false;
+-    if(isnan(hepeup.PUP[i][0])||isnan(hepeup.PUP[i][1])||
+-       isnan(hepeup.PUP[i][2])||isnan(hepeup.PUP[i][3])||
+-       isnan(hepeup.PUP[i][4])) 
++    if(std::isnan(hepeup.PUP[i][0])||std::isnan(hepeup.PUP[i][1])||
++       std::isnan(hepeup.PUP[i][2])||std::isnan(hepeup.PUP[i][3])||
++       std::isnan(hepeup.PUP[i][4])) 
+       throw Exception() 
+ 	<< "nan's as momenta in Les Houches file "
+ 	<< Exception::eventerror;
+--- DipoleShower/Base/DipoleChain.cc.orig	2018-12-14 16:51:47.597597788 +0100
++++ DipoleShower/Base/DipoleChain.cc	2018-12-14 16:52:09.450796951 +0100
+@@ -15,6 +15,7 @@
+ #include "Herwig++/DipoleShower/Utility/DipolePartonSplitter.h"
+ 
+ #include <boost/utility.hpp>
++#include <boost/next_prior.hpp>
+ 
+ using namespace Herwig;
+ 
+--- Exsample2/exsample/config.h.orig	2018-12-14 16:56:31.729186139 +0100
++++ Exsample2/exsample/config.h	2018-12-14 16:56:55.969406851 +0100
+@@ -25,6 +25,7 @@
+ #include <limits>
+ 
+ #include <boost/utility.hpp>
++#include <boost/next_prior.hpp>
+ #include <boost/scoped_array.hpp>
+ #include <boost/scoped_ptr.hpp>
+ 
+--- DipoleShower/Base/DipoleEventRecord.cc.orig	2018-12-14 16:58:33.878298134 +0100
++++ DipoleShower/Base/DipoleEventRecord.cc	2018-12-14 16:58:47.983426512 +0100
+@@ -19,6 +19,7 @@
+ #include "ThePEG/PDF/PartonExtractor.h"
+ 
+ #include <boost/utility.hpp>
++#include <boost/next_prior.hpp>
+ 
+ #include <algorithm>
+ 
+--- ./Exsample2/BinnedStatistics.h.orig	2018-12-14 17:11:37.396421246 +0100
++++ ./Exsample2/BinnedStatistics.h	2018-12-14 17:12:00.762633435 +0100
+@@ -16,6 +16,7 @@
+ #include "ThePEG/Repository/UseRandom.h"
+ 
+ #include <boost/utility.hpp>
++#include <boost/next_prior.hpp>
+ 
+ namespace Herwig {
+ 

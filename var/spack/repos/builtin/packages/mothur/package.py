@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,13 +14,16 @@ class Mothur(MakefilePackage):
     homepage = "https://github.com/mothur/mothur"
     url      = "https://github.com/mothur/mothur/archive/v1.39.5.tar.gz"
 
-    version('1.39.5', '1f826ea4420e6822fc0db002c5940b92')
+    version('1.43.0', sha256='12ccd95a85bec3bb1564b8feabd244ea85413973740754803d01fc71ecb0a2c1')
+    version('1.42.1', sha256='6b61591dda289ac2d8361f9c1547ffbeeba3b9fbdff877dd286bad850bbd5539')
+    version('1.40.5', sha256='a0fbdfa68b966d7adc4560e3787506a0dad8b47b4b996c2663cd6c0b416d101a')
+    version('1.39.5', sha256='9f1cd691e9631a2ab7647b19eb59cd21ea643f29b22cde73d7f343372dfee342')
 
-    variant('mpi', default=True, description='Enable MPI parallel support')
+    variant('vsearch', default=False,  description='Use vsearch')
 
-    depends_on('mpi', when='+mpi')
     depends_on('boost')
     depends_on('readline')
+    depends_on('vsearch@2.13.3',  when='+vsearch', type='run')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('Makefile')

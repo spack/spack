@@ -1,3 +1,8 @@
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 ============
 Known Issues
 ============
@@ -5,43 +10,11 @@ Known Issues
 This is a list of known bugs in Spack. It provides ways of getting around these
 problems if you encounter them.
 
------------------------------------------------------------------
-Default variants are not taken into account during concretization
------------------------------------------------------------------
-
-**Status:** Expected to be fixed in the next release
-
-Current concretization algorithm does not take into account default values
-of variants when adding extra constraints to the spec via CLI. For example
-you may encounter the following error when trying to specify which MPI provider
-to use:
-
-.. code-block:: console
-
-   $ spack install hdf5 ^openmpi
-   ==> Error: hdf5 does not depend on openmpi
-
-although the hdf5 package contains:
-
-.. code-block:: python
-
-   variant('mpi', default=True, description='Enable MPI support')
-   depends_on('mpi', when='+mpi')
-
-A workaround is to explicitly activate the variant related to the dependency:
-
-.. code-block:: console
-
-   $ spack install hdf5+mpi ^openmpi
-
-See https://github.com/spack/spack/issues/397 for further details.
-
-
 ---------------------------------------------------
 Variants are not properly forwarded to dependencies
 ---------------------------------------------------
 
-**Status:** Expected to be fixed in the next release
+**Status:** Expected to be fixed by Spack's new concretizer
 
 Sometimes, a variant of a package can also affect how its dependencies are
 built. For example, in order to build MPI support for a package, it may
@@ -76,15 +49,29 @@ A workaround is to explicitly activate the variants of dependencies as well:
 See https://github.com/spack/spack/issues/267 and
 https://github.com/spack/spack/issues/2546 for further details.
 
+-----------------------------------------------
+depends_on cannot handle recursive dependencies
+-----------------------------------------------
 
-----------------------------
-``spack setup`` doesn't work
-----------------------------
+**Status:** Not yet a work in progress
 
-**Status:** Work in progress
+Although ``depends_on`` can handle any aspect of Spack's spec syntax,
+it currently cannot handle recursive dependencies. If the ``^`` sigil
+appears in a ``depends_on`` statement, the concretizer will hang.
+For example, something like:
 
-Spack provides a ``setup`` command that is useful for the development of
-software outside of Spack. Unfortunately, this command no longer works.
-See https://github.com/spack/spack/issues/2597 and
-https://github.com/spack/spack/issues/2662 for details. This is expected
-to be fixed by https://github.com/spack/spack/pull/2664.
+.. code-block:: python
+
+   depends_on('mfem+cuda ^hypre+cuda', when='+cuda')
+
+
+should be rewritten as:
+
+.. code-block:: python
+
+   depends_on('mfem+cuda', when='+cuda')
+   depends_on('hypre+cuda', when='+cuda')
+
+
+See https://github.com/spack/spack/issues/17660 and
+https://github.com/spack/spack/issues/11160 for more details.

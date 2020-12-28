@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -42,9 +23,11 @@ class RNcdf4(RPackage):
     package does not provide an interface for netcdf version 4 files."""
 
     homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
-    url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
+    url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
 
-    version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
+    version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
+    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
+    version('1.15', sha256='d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d')
 
-    depends_on('netcdf')
+    depends_on('netcdf-c@4.1:')

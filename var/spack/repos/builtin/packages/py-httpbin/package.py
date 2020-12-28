@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,13 +10,17 @@ class PyHttpbin(PythonPackage):
     """HTTP Request and Response Service"""
 
     homepage = "https://github.com/Runscope/httpbin"
-    url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.5.0.tar.gz"
+    url = "https://pypi.io/packages/source/h/httpbin/httpbin-0.7.0.tar.gz"
 
-    version('0.5.0', '923793df99156caa484975ade96ee115')
+    version('0.7.0', sha256='cbb37790c91575f4f15757f42ad41d9f729eb227d5edbe89e4ec175486db8dfa')
+    version('0.5.0', sha256='79fbc5d27e4194ea908b0fa18e09a59d95d287c91667aa69bcd010342d1589b5')
 
-    depends_on('py-setuptools',         type='build')
-    depends_on('py-decorator@3.4.0:',   type=('build', 'run'))
-    depends_on('py-flask@0.10.1:',      type=('build', 'run'))
-    depends_on('py-itsdangerous@0.24:', type=('build', 'run'))
-    depends_on('py-markupsafe@0.23:',   type=('build', 'run'))
-    depends_on('py-six@1.6.1:',         type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-flask', type=('build', 'run'))
+    depends_on('py-markupsafe', type=('build', 'run'))
+    depends_on('py-decorator', type=('build', 'run'))
+    depends_on('py-itsdangerous', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-brotlipy', type=('build', 'run'))
+    depends_on('py-raven+flask', type=('build', 'run'))
+    depends_on('py-werkzeug@0.14.1:', type=('build', 'run'))

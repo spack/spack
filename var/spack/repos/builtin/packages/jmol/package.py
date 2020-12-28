@@ -1,29 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-from distutils.dir_util import copy_tree
+import os.path
 
 
 class Jmol(Package):
@@ -31,15 +12,26 @@ class Jmol(Package):
     with features for chemicals, crystals, materials and biomolecules."""
 
     homepage = "http://jmol.sourceforge.net/"
-    url      = "https://sourceforge.net/projects/jmol/files/Jmol/Version%2014.8/Jmol%2014.8.0/Jmol-14.8.0-binary.tar.gz"
+    url = "https://sourceforge.net/projects/jmol/files/Jmol/Version%2014.8/Jmol%2014.8.0/Jmol-14.8.0-binary.tar.gz"
 
-    version('14.8.0', '3c9f4004b9e617ea3ea0b78ab32397ea')
+    version('14.31.0', sha256='eee0703773607c8bd6d51751d0d062c3e10ce44c11e1d7828e4ea3d5f710e892')
+    version('14.8.0', sha256='8ec45e8d289aa0762194ca71848edc7d736121ddc72276031a253a3651e6d588')
+
+    def url_for_version(self, version):
+        url = 'https://sourceforge.net/projects/jmol/files/Jmol/Version%20{0}/Jmol%20{1}/Jmol-{1}-binary.tar.gz'
+        return url.format(version.up_to(2), version)
 
     depends_on('java', type='run')
 
     def install(self, spec, prefix):
-        copy_tree('jmol-{0}'.format(self.version), prefix)
+        if os.path.exists('jmol-{0}'.format(self.version)):
+            # tar ball contains subdir with different versions
+            install_tree('jmol-{0}'.format(self.version), prefix)
+        else:
+            # no subdirs - tarball was unpacked in spack-src
+            install_tree('./', prefix)
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.prefix)
-        run_env.set('JMOL_HOME', self.prefix)
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix)
+        env.set('JMOL_HOME', self.prefix)
+        env.prepend_path('PATH', self.spec['java'].prefix.bin)

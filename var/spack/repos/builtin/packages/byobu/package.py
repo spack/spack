@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -32,6 +13,11 @@ class Byobu(AutotoolsPackage):
     homepage = "http://www.byobu.co"
     url      = "https://launchpad.net/byobu/trunk/5.123/+download/byobu_5.123.orig.tar.gz"
 
-    version('5.123', '961e0072c01c78c9ce4c20d1aa1b0dc4')
+    maintainers = ['matthiasdiener']
+
+    version('5.131', sha256='77ac751ae79d8e3f0377ac64b64bc9738fa68d68466b8d2ff652b63b1d985e52')
+    version('5.127', sha256='4bafc7cb69ff5b0ab6998816d58cd1ef7175e5de75abc1dd7ffd6d5288a4f63b')
+    version('5.125', sha256='5022c82705a5d57f1d4e8dcb1819fd04628af2d4b4618b7d44fa27ebfcdda9db')
+    version('5.123', sha256='2e5a5425368d2f74c0b8649ce88fc653420c248f6c7945b4b718f382adc5a67d')
 
     depends_on('tmux', type=('build', 'run'))

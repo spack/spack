@@ -1,38 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffypdnn(RPackage):
-    """The package contains functions to perform the PDNN method
-    described by Li Zhang et al."""
+    """Probe Dependent Nearest Neighbours (PDNN) for the affy package.
 
-    homepage = "https://www.bioconductor.org/packages/affypdnn/"
-    url      = "https://git.bioconductor.org/packages/affypdnn"
+       The package contains functions to perform the PDNN method described by
+       Li Zhang et al."""
 
-    version('1.50.0', git='https://git.bioconductor.org/packages/affypdnn', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
+    homepage = "https://bioconductor.org/packages/affypdnn"
+    git      = "https://git.bioconductor.org/packages/affypdnn.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0')
-    depends_on('r-affy', type=('build', 'run'))
+    version('1.58.0', commit='83d8b6b0d9606845bd77dbf7164dd5b160f32ccf')
+    version('1.56.0', commit='5fd9c5265fb895a1f646cf72e8d5169669d979f2')
+    version('1.54.0', commit='ea971b1b9cc443695a6614bef92e8e116ee87d55')
+    version('1.52.0', commit='17d74c593ce4f0dfd43f13a5016e482c1399d21e')
+    version('1.50.0', commit='97ff68e9f51f31333c0330435ea23b212b3ed18a')
+
+    depends_on('r@2.13.0:', type=('build', 'run'))
+    depends_on('r-affy@1.5:', type=('build', 'run'))

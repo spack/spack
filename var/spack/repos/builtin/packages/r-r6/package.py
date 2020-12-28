@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,11 +15,12 @@ class RR6(RPackage):
     classes are defined in different packages."""
 
     homepage = "https://github.com/wch/R6/"
-    url      = "https://cran.rstudio.com/src/contrib/R6_2.2.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/R6"
+    url      = "https://cloud.r-project.org/src/contrib/R6_2.2.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/R6"
 
-    version('2.2.2', '635b58c65bff624a1fab69c6b1989801')
-    version('2.2.0', '659d83b2d3f7a308a48332b4cfbdab49')
-    version('2.1.2', 'b6afb9430e48707be87638675390e457')
+    version('2.4.0', sha256='70be110174fbf5f5304049b186a6f9c05b77bfaec6d8caf980fcef5da6e0abce')
+    version('2.2.2', sha256='087756f471884c3b3ead80215a7cc5636a78b8a956e91675acfe2896426eae8f')
+    version('2.2.0', sha256='7d7bddc4303fafa99954182ccad938166d681499d4e9ae7001d21b0fd60d25c7')
+    version('2.1.2', sha256='1bfbb14d9da85b5f8eb865aa6355b2c71c9f86b71f616bfe5a28939b62484d79')
 
-    depends_on('r@3.0:')
+    depends_on('r@3.0:', type=('build', 'run'))

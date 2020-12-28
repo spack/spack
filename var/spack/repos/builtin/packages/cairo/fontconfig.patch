@@ -1,0 +1,36 @@
+diff --git a/test/Makefile.am b/test/Makefile.am
+index e3c42ea88..7b5568d85 100644
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -158,8 +158,10 @@ ps-features			\
+ svg-clip			\
+ svg-surface			\
+ toy-font-face			\
+-font-variations			\
+ user-data
++#if CAIRO_HAS_FT_FONT
++NOLOG_TESTS += font-variations
++#endif
+
+ # A target to summarise the failures
+ check-summary:
+diff --git a/test/Makefile.sources b/test/Makefile.sources
+index c47131faf..8568f7cf8 100644
+--- a/test/Makefile.sources
++++ b/test/Makefile.sources
+@@ -144,7 +144,6 @@ test_sources = \
+ 	font-face-get-type.c				\
+ 	font-matrix-translation.c			\
+ 	font-options.c					\
+-	font-variations.c				\
+ 	glyph-cache-pressure.c				\
+ 	get-and-set.c					\
+ 	get-clip.c					\
+@@ -399,6 +398,7 @@ pthread_test_sources =					\
+
+ ft_font_test_sources = \
+ 	bitmap-font.c \
++	font-variations.c				\
+ 	ft-font-create-for-ft-face.c \
+ 	ft-show-glyphs-positioning.c \
+ 	ft-show-glyphs-table.c \

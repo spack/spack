@@ -1,0 +1,75 @@
+diff -ur bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/DecompositionReward.cpp bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/DecompositionReward.cpp
+--- bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/DecompositionReward.cpp	2019-10-21 14:56:59.567938605 +0900
++++ bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/DecompositionReward.cpp	2019-10-21 14:59:43.645224219 +0900
+@@ -137,7 +137,7 @@
+   for (size_t j = 0; j < nbStates_; j++) {
+     for (size_t k = 0; k < nbStates_; k++) {
+       rewards_(j, k) /= P(j, k);
+-      if (isnan(rewards_(j, k)))
++      if (std::isnan(rewards_(j, k)))
+         rewards_(j, k) = 0.;
+     }
+   }
+diff -ur bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/DecompositionSubstitutionCount.cpp bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/DecompositionSubstitutionCount.cpp
+--- bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/DecompositionSubstitutionCount.cpp	2019-10-21 14:56:59.567938605 +0900
++++ bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/DecompositionSubstitutionCount.cpp	2019-10-21 15:00:02.147173408 +0900
+@@ -166,7 +166,7 @@
+     for (size_t j = 0; j < nbStates_; j++) {
+       for (size_t k = 0; k < nbStates_; k++) {
+         counts_[i](j, k) /= P(j, k);
+-        if (isnan(counts_[i](j, k)) || counts_[i](j, k) < 0.) {
++        if (std::isnan(counts_[i](j, k)) || counts_[i](j, k) < 0.) {
+           counts_[i](j, k) = 0.;
+         //Weights:
+         if (weights_)
+diff -ur bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/SubstitutionMappingTools.cpp bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/SubstitutionMappingTools.cpp
+--- bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/SubstitutionMappingTools.cpp	2019-10-21 14:56:59.567938605 +0900
++++ bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/SubstitutionMappingTools.cpp	2019-10-21 15:00:45.601751367 +0900
+@@ -1427,7 +1427,7 @@
+       for (size_t t = 0; t < nbTypes; ++t)
+       {
+         tmp[t] = (*mapping)(mapping->getNodeIndex(ids[k]), i, t);
+-        error = isnan(tmp[t]);
++        error = std::isnan(tmp[t]);
+         if (error)
+           goto ERROR;
+         s += tmp[t];
+@@ -1509,7 +1509,7 @@
+       for (size_t t = 0; t < nbTypes; ++t)
+       {
+         tmp[t] = (*mapping)(mapping->getNodeIndex(ids[k]), i, t);
+-        error = isnan(tmp[t]);
++        error = std::isnan(tmp[t]);
+         if (error)
+           goto ERROR;
+         s += tmp[t];
+@@ -1609,7 +1609,7 @@
+       for (size_t i = 0; i < nbSites; ++i)
+       {
+         double tmp = (*mapping)(k, i);
+-        if (isnan(tmp))
++        if (std::isnan(tmp))
+         {
+           if (verbose)
+             ApplicationTools::displayWarning("On branch " + TextTools::toString(ids[k]) + ", reward for type " + reg.getTypeName(nbt + 1) + " could not be computed.");
+@@ -1689,7 +1689,7 @@
+           for (size_t i = 0; i < nbSites; ++i)
+           {
+             double tmp = (*mapping)(mapping->getNodeIndex(mids[k]), i);
+-            if (isnan(tmp))
++            if (std::isnan(tmp))
+             {
+               if (verbose)
+                 ApplicationTools::displayWarning("On branch " + TextTools::toString(mids[k]) + ", reward for type " + reg.getTypeName(nbt + 1) + " could not be computed.");
+diff -ur bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/UniformizationSubstitutionCount.cpp bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/UniformizationSubstitutionCount.cpp
+--- bpp-phyl-2.2.0.back/src/Bpp/Phyl/Mapping/UniformizationSubstitutionCount.cpp	2019-10-21 14:56:59.567938605 +0900
++++ bpp-phyl-2.2.0/src/Bpp/Phyl/Mapping/UniformizationSubstitutionCount.cpp	2019-10-21 15:01:30.276461683 +0900
+@@ -163,7 +163,7 @@
+     for (size_t j = 0; j < nbStates_; j++) {
+       for(size_t k = 0; k < nbStates_; k++) {
+         counts_[i](j, k) /= P(j, k);
+-        if (isnan(counts_[i](j, k)) || counts_[i](j, k) < 0.)
++        if (std::isnan(counts_[i](j, k)) || counts_[i](j, k) < 0.)
+           counts_[i](j, k) = 0;
+         //Weights:
+         if (weights_)

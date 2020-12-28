@@ -1,48 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RBiomformat(RPackage):
-    """This is an R package for interfacing with the BIOM format. This
-    package includes basic tools for reading biom-format files, accessing
-    and subsetting data tables from a biom object (which is more complex
-    than a single table), as well as limited support for writing a
-    biom-object back to a biom-format file. The design of this API is
-    intended to match the python API and other tools included with the
-    biom-format project, but with a decidedly "R flavor" that should be
-    familiar to R users. This includes S4 classes and methods, as well
-    as extensions of common core functions/methods."""
+    """An interface package for the BIOM file format.
 
-    homepage = "https://www.bioconductor.org/packages/biomformat/"
-    url      = "https://git.bioconductor.org/packages/biomformat"
+       This is an R package for interfacing with the BIOM format. This package
+       includes basic tools for reading biom-format files, accessing and
+       subsetting data tables from a biom object (which is more complex than a
+       single table), as well as limited support for writing a biom-object back
+       to a biom-format file. The design of this API is intended to match the
+       python API and other tools included with the biom-format project, but
+       with a decidedly "R flavor" that should be familiar to R users. This
+       includes S4 classes and methods, as well as extensions of common core
+       functions/methods."""
 
-    version('1.4.0', git='https://git.bioconductor.org/packages/biomformat', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
+    homepage = "https://bioconductor.org/packages/biomformat"
+    git      = "https://git.bioconductor.org/packages/biomformat.git"
 
-    depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
-    depends_on('r-matrix', type=('build', 'run'))
+    version('1.12.0', commit='6e946123bb59da262cbb0c17dc5ab49328a89d4a')
+    version('1.10.1', commit='e67c6f4b70201f748fa49a4938e1af0cd0613f09')
+    version('1.8.0', commit='acd207377b24e4d8310eaff06c16dcfe6c04509a')
+    version('1.6.0', commit='61fb8c7b34ad561c3c46cacc0dd1957be56da85e')
+    version('1.4.0', commit='83b4b1883bc56ea93a0a6ca90fc1b18712ef0f1a')
+
+    depends_on('r@3.2:', type=('build', 'run'))
+    depends_on('r-plyr@1.8:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', type=('build', 'run'))
+    depends_on('r-matrix@1.2:', type=('build', 'run'))
     depends_on('r-rhdf5', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.4.0')

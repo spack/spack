@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,7 +11,10 @@ class PyPexpect(PythonPackage):
     homepage = "https://pypi.python.org/pypi/pexpect"
     url      = "https://pypi.io/packages/source/p/pexpect/pexpect-4.2.1.tar.gz"
 
-    version('4.2.1', '3694410001a99dff83f0b500a1ca1c95')
-    version('3.3', '0de72541d3f1374b795472fed841dce8')
+    version('4.7.0', sha256='9e2c1fd0e6ee3a49b28f95d4b33bc389c89b20af6a1255906e90ff1262ce62eb')
+    version('4.6.0', sha256='2a8e88259839571d1251d278476f3eec5db26deb73a70be5ed5dc5435e418aba')
+    version('4.2.1', sha256='3d132465a75b57aa818341c6521392a06cc660feb3988d7f1074f39bd23c9a92')
+    version('3.3', sha256='dfea618d43e83cfff21504f18f98019ba520f330e4142e5185ef7c73527de5ba')
 
     depends_on('py-ptyprocess', type=('build', 'run'))
+    depends_on('py-ptyprocess@0.5:', type=('build', 'run'), when='@4.7.0:')

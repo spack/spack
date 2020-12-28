@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,6 +12,32 @@ class AlsaLib(AutotoolsPackage):
     space library that developers compile ALSA applications against."""
 
     homepage = "https://www.alsa-project.org"
-    url      = "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.1.4.1.tar.bz2"
+    url      = "ftp://ftp.alsa-project.org/pub/lib/alsa-lib-1.2.3.2.tar.bz2"
 
-    version('1.1.4.1', '29fa3e69122d3cf3e8f0e01a0cb1d183')
+    version('1.2.3.2', sha256='e81fc5b7afcaee8c9fd7f64a1e3043e88d62e9ad2c4cff55f578df6b0a9abe15')
+    version('1.2.2',   sha256='d8e853d8805574777bbe40937812ad1419c9ea7210e176f0def3e6ed255ab3ec')
+    version('1.1.4.1', sha256='91bb870c14d1c7c269213285eeed874fa3d28112077db061a3af8010d0885b76')
+
+    variant('python', default=False, description='enable python')
+
+    patch('python.patch', when='@1.1.4:1.1.5 +python')
+
+    depends_on('python', type=('link', 'run'), when='+python')
+
+    conflicts('platform=darwin', msg='ALSA only works for Linux')
+
+    def configure_args(self):
+        spec = self.spec
+        args = []
+        if spec.satisfies('+python'):
+            args.append(
+                '--with-pythonlibs={0}'.format(spec['python'].libs.ld_flags)
+            )
+            args.append(
+                '--with-pythonincludes={0}'.format(
+                    spec['python'].headers.include_flags
+                )
+            )
+        else:
+            args.append('--disable-python')
+        return args

@@ -1,0 +1,37 @@
+--- spack-src/Common/kmbDebug.h.org	2020-05-26 14:12:24.977659640 +0900
++++ spack-src/Common/kmbDebug.h	2020-05-26 14:15:11.118470571 +0900
+@@ -52,29 +52,29 @@
+ 	#define REVOCAP_Debug_X(format)
+ #else
+ 	/* _DEBUG マクロに関係なく出力 */
+-	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: "fmt,__FILE__,__LINE__, ##__VA_ARGS__)
++	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: " fmt,__FILE__,__LINE__, ##__VA_ARGS__)
+ 
+ 	#if defined _DEBUG || _DEBUG_
+ 	#include <cstdio>
+-	#define REVOCAP_Debug(fmt, ...) fprintf(stderr,"%s, line %d: "fmt,__FILE__,__LINE__, ##__VA_ARGS__)
++	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: " fmt,__FILE__,__LINE__, ##__VA_ARGS__)
+ 	#else
+ 	#define REVOCAP_Debug(format, ...)
+ 	#endif
+ 
+ 	#if ( _DEBUG >= 1 ) || ( _DEBUG_ >= 1 )
+-	#define REVOCAP_Debug_1(fmt, ...) fprintf(stderr,"%s, line %d: "fmt,__FILE__,__LINE__, ##__VA_ARGS__)
++	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: " fmt,__FILE__,__LINE__, ##__VA_ARGS__)
+ 	#else
+ 	#define REVOCAP_Debug_1(format, ...)
+ 	#endif
+ 
+ 	#if ( _DEBUG >= 2 ) || ( _DEBUG_ >= 2 )
+-	#define REVOCAP_Debug_2(fmt, ...) fprintf(stderr,"%s, line %d: "fmt,__FILE__,__LINE__, ##__VA_ARGS__)
++	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: " fmt,__FILE__,__LINE__, ##__VA_ARGS__)
+ 	#else
+ 	#define REVOCAP_Debug_2(format, ...)
+ 	#endif
+ 
+ 	#if ( _DEBUG >= 3 ) || ( _DEBUG_ >= 3 )
+-	#define REVOCAP_Debug_3(fmt, ...) fprintf(stderr,"%s, line %d: "fmt,__FILE__,__LINE__, ##__VA_ARGS__)
++	#define REVOCAP_Debug_X(fmt, ...) fprintf(stderr,"%s, line %d: " fmt,__FILE__,__LINE__, ##__VA_ARGS__)
+ 	#else
+ 	#define REVOCAP_Debug_3(format, ...)
+ 	#endif

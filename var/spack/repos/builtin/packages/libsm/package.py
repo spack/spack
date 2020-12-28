@@ -1,41 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Libsm(AutotoolsPackage):
+class Libsm(AutotoolsPackage, XorgPackage):
     """libSM - X Session Management Library."""
 
     homepage = "http://cgit.freedesktop.org/xorg/lib/libSM"
-    url      = "https://www.x.org/archive/individual/lib/libSM-1.2.2.tar.gz"
+    xorg_mirror_path = "lib/libSM-1.2.2.tar.gz"
 
-    version('1.2.2', '18e5084ed9500b1b47719fd1758f0ec8')
+    version('1.2.3', sha256='1e92408417cb6c6c477a8a6104291001a40b3bb56a4a60608fdd9cd2c5a0f320')
+    version('1.2.2', sha256='14bb7c669ce2b8ff712fbdbf48120e3742a77edcd5e025d6b3325ed30cf120f4')
 
     depends_on('libice@1.0.5:')
+    depends_on('libuuid')
 
     depends_on('xproto', type='build')
     depends_on('xtrans', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
+    depends_on('libuuid')

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,7 +12,9 @@ class PerlHttpDaemon(PerlPackage):
     homepage = "http://search.cpan.org/~gaas/HTTP-Daemon-6.01/lib/HTTP/Daemon.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/G/GA/GAAS/HTTP-Daemon-6.01.tar.gz"
 
-    version('6.01', 'ed0ae02d25d7f1e89456d4d69732adc2')
+    version('6.01', sha256='43fd867742701a3f9fcc7bd59838ab72c6490c0ebaf66901068ec6997514adc2')
 
     depends_on('perl-lwp-mediatypes', type=('build', 'run'))
     depends_on('perl-http-message', type=('build', 'run'))
+    depends_on('perl-http-date', type=('build', 'run'))
+    depends_on('perl-module-build-tiny', type='build')

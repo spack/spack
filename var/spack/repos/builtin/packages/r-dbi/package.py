@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,7 +12,12 @@ class RDbi(RPackage):
     virtual and need to be extended by the various R/DBMS implementations."""
 
     homepage = "http://rstats-db.github.io/DBI"
-    url      = "https://cran.rstudio.com/src/contrib/DBI_0.7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/DBI"
-    version('0.4-1', 'c7ee8f1c5037c2284e99c62698d0f087')
-    version('0.7', '66065dd687d758b72d638adb6a8cab2e')
+    url      = "https://cloud.r-project.org/src/contrib/DBI_0.7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/DBI"
+
+    version('1.1.0', sha256='a96db7fa39a58f1ed34c6e78d8f5f7e4cf0882afb301323b5c6975d6729203e4')
+    version('1.0.0', sha256='ff16f118eb3f759183441835e932b87358dd80ab9800ce576a8f3df1b6f01cf5')
+    version('0.4-1', sha256='eff14a9af4975f23f8e1f4347d82c33c32c0b4f4f3e11370c582a89aeb8ac68e')
+    version('0.7', sha256='2557d5d59a45620ec9de340c2c25eec4cc478d3fc3f8b87979cf337c5bcfde11')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))

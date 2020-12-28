@@ -1,45 +1,36 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RBamsignals(RPackage):
-    """This package allows to efficiently obtain count vectors
-    from indexed bam files. It counts the number of reads in given
-    genomic ranges and it computes reads profiles and coverage
-    profiles. It also handles paired-end data."""
+    """Extract read count signals from bam files.
 
-    homepage = "https://www.bioconductor.org/packages/bamsignals/"
-    url      = "https://git.bioconductor.org/packages/bamsignals"
+       This package allows to efficiently obtain count vectors from indexed bam
+       files. It counts the number of reads in given genomic ranges and it
+       computes reads profiles and coverage profiles. It also handles paired-
+       end data."""
 
-    version('1.8.0', git='https://git.bioconductor.org/packages/bamsignals', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
+    homepage = "https://bioconductor.org/packages/bamsignals"
+    git      = "https://git.bioconductor.org/packages/bamsignals.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.8.0')
+    version('1.16.0', commit='dba9a4ae1613d2700f122ade1e9b90ca8fce5657')
+    version('1.14.0', commit='3107d3a35830e879eeddf127a81016ea1ca9b53d')
+    version('1.12.1', commit='06b6282df377cf9db58e8016be4ac8ddcc960939')
+    version('1.10.0', commit='7499312ce71e8680680eda10b49d7dff682fc776')
+    version('1.8.0', commit='b123b83e8e026c9ec91209d4498aff3e95a5de23')
+
+    depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.10.6:', type=('build', 'run'))
     depends_on('r-iranges', type=('build', 'run'))
     depends_on('r-genomicranges', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
     depends_on('r-rhtslib', type=('build', 'run'))
+
+    depends_on('r-rhtslib@1.12.1:', when='@1.12.1:', type=('build', 'run'))
+
+    depends_on('r-rhtslib@1.13.1:', when='@1.14.0:', type=('build', 'run'))

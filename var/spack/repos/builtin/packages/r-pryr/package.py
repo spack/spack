@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -31,10 +12,14 @@ class RPryr(RPackage):
     at a deeper level."""
 
     homepage = "https://github.com/hadley/pryr"
-    url      = "https://cran.r-project.org/src/contrib/pryr_0.1.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pryr"
+    url      = "https://cloud.r-project.org/src/contrib/pryr_0.1.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pryr"
 
-    version('0.1.2', '66b597a762aa15a3b7037779522983b6')
+    version('0.1.4', sha256='d39834316504c49ecd4936cbbcaf3ee3dae6ded287af42475bf38c9e682f721b')
+    version('0.1.3', sha256='6acd88341dde4fe247a5cafd3949b281dc6742b7d60f68b57c1feb84b96739ac')
+    version('0.1.2', sha256='65c2b7c9f96e2aa683ac9cdab3c215fd3039ecd66a2ba7002a8e77881428c3c6')
 
+    depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))

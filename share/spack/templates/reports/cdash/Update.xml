@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Update>
+  <Site>{{ site }}</Site>
+  <BuildName>{{ buildname }}</BuildName>
+  <BuildStamp>{{ buildstamp }}</BuildStamp>
+  <StartTime>{{ update.starttime }}</StartTime>
+  <UpdateCommand></UpdateCommand>
+  <UpdateType>GIT</UpdateType>
+  <Revision>{{ update.revision }}</Revision>
+  <EndTime>{{ update.endtime }}</EndTime>
+{% if update.log %}
+  <UpdateReturnStatus>{{ update.log }}</UpdateReturnStatus>
+{% endif %}
+</Update>

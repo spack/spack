@@ -1,0 +1,18 @@
+diff --git a/cmake/Modules/G4BuildSettings.cmake b/cmake/Modules/G4BuildSettings.cmake
+index f68cb0a44..6bf4b6948 100644
+--- a/cmake/Modules/G4BuildSettings.cmake
++++ b/cmake/Modules/G4BuildSettings.cmake
+@@ -205,6 +205,13 @@ endif()
+ # Add Definition to flags for temporary back compatibility
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DG4USE_STD11")
+ 
++# Spack patch to support use of C++ features deprecated/removed in C++17
++# Only checked on AppleClang for now
++if(GEANT4_BUILD_CXXSTD GREATER 14)
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_LIBCPP_ENABLE_CXX17_REMOVED_FEATURES=1")
++endif()
++#----
++
+ # Hold any appropriate compile flag(s) in variable for later export to
+ # config files. Needed to support clients using late CMake 2.8 where compile features
+ # are not available.

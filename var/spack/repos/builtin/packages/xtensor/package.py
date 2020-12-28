@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,22 +11,46 @@ class Xtensor(CMakePackage):
 
     homepage = "http://quantstack.net/xtensor"
     url      = "https://github.com/QuantStack/xtensor/archive/0.13.1.tar.gz"
+    git      = "https://github.com/QuantStack/xtensor.git"
+
     maintainers = ['ax3l']
 
-    version('develop', branch='master',
-            git='https://github.com/QuantStack/xtensor.git')
-    version('0.13.1', '80e7e33f05066d17552bf0f8b582dcc5')
+    version('develop', branch='master')
+    version('0.20.7', sha256='b45290d1bb0d6cef44771e7482f1553b2aa54dbf99ef9406fec3eb1e4d01d52b')
+    version('0.15.1', sha256='2f4ac632f7aa8c8e9da99ebbfc949d9129b4d644f715ef16c27658bf4fddcdd3')
+    version('0.13.1', sha256='f9ce4cd2110386d49e3f36bbab62da731c557b6289be19bc172bd7209b92a6bc')
 
     variant('xsimd', default=True,
             description='Enable SIMD intrinsics')
+    variant('tbb', default=True,
+            description='Enable TBB parallelization')
 
-    depends_on('xtl')
-    depends_on('xtl@0.3.4:', when='@develop')
-    depends_on('xtl@0.3.3:', when='@0.13.1')
-    depends_on('xsimd@3.1.0', when='+xsimd')
+    depends_on('xtl', when='@develop')
+    depends_on('xtl@0.6.4:0.6.99', when='@0.20.7')
+    depends_on('xtl@0.4.0:0.4.99', when='@0.15.1')
+    depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
+    depends_on('xsimd', when='@develop')
+    depends_on('xsimd@7.2.3:7.99', when='@0.20.7 +xsimd')
+    depends_on('xsimd@4.0.0:4.99', when='@0.15.1 +xsimd')
+    depends_on('xsimd@3.1.0:3.99', when='@0.13.1 +xsimd')
+    depends_on('intel-tbb', when='+tbb')
 
     # C++14 support
     conflicts('%gcc@:4.8')
     conflicts('%clang@:3.5')
     # untested: conflicts('%intel@:15')
     # untested: conflicts('%pgi@:14')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = [
+            '-DBUILD_TESTS:BOOL={0}'.format(
+                'ON' if self.run_tests else 'OFF'),
+            '-DXTENSOR_USE_XSIMD:BOOL={0}'.format(
+                'ON' if '+xsimd' in spec else 'OFF'),
+            '-DXTENSOR_USE_TBB:BOOL={0}'.format(
+                'ON' if '+tbb' in spec else 'OFF')
+        ]
+
+        return args

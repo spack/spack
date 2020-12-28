@@ -1,0 +1,107 @@
+diff -ru a/matlab/bart.m b/matlab/bart.m
+--- a/matlab/bart.m	2020-04-10 18:50:50.056248692 -0500
++++ b/matlab/bart.m	2020-04-10 18:52:20.541178180 -0500
+@@ -11,7 +11,7 @@
+ 		return
+ 	end
+ 
+-	bart_path = getenv('TOOLBOX_PATH');
++	bart_path = [getenv('TOOLBOX_PATH') '/bin'];
+ 	isWSL = false;
+ 
+ 	if isempty(bart_path)
+diff -ru a/python/bart.py b/python/bart.py
+--- a/python/bart.py	2020-04-10 18:50:50.056248692 -0500
++++ b/python/bart.py	2020-04-10 19:18:09.481950358 -0500
+@@ -19,7 +19,7 @@
+         return None
+ 
+     try:
+-        bart_path = os.environ['TOOLBOX_PATH'] + '/bart '
++        bart_path = os.environ['TOOLBOX_PATH'] + '/bin '
+     except:
+         bart_path = None
+     isWSL = False
+diff -ru a/scripts/espirit_econ.sh b/scripts/espirit_econ.sh
+--- a/scripts/espirit_econ.sh	2020-04-10 18:50:50.055248693 -0500
++++ b/scripts/espirit_econ.sh	2020-04-10 19:13:06.463193324 -0500
+@@ -56,8 +56,6 @@
+ fi
+ 
+ 
+-export PATH=$TOOLBOX_PATH:$PATH
+-
+ input=$(readlink -f "$1")
+ output=$(readlink -f "$2")
+ 
+@@ -67,7 +65,7 @@
+ 	exit 1
+ fi
+ 
+-if [ ! -e $TOOLBOX_PATH/bart ] ; then
++if [ ! -e $TOOLBOX_PATH/bin/bart ] ; then
+         echo "\$TOOLBOX_PATH is not set correctly!" >&2
+ 	exit 1
+ fi
+diff -ru a/scripts/grasp.sh b/scripts/grasp.sh
+--- a/scripts/grasp.sh	2020-04-10 18:50:50.055248693 -0500
++++ b/scripts/grasp.sh	2020-04-10 19:13:31.461173327 -0500
+@@ -90,8 +90,6 @@
+ fi
+ 
+ 
+-export PATH=$TOOLBOX_PATH:$PATH
+-
+ input=$(readlink -f "$1")
+ output=$(readlink -f "$2")
+ 
+@@ -101,7 +99,7 @@
+ 	exit 1
+ fi
+ 
+-if [ ! -e $TOOLBOX_PATH/bart ] ; then
++if [ ! -e $TOOLBOX_PATH/bin/bart ] ; then
+         echo "\$TOOLBOX_PATH is not set correctly!" >&2
+ 	exit 1
+ fi
+diff -ru a/scripts/octview.m b/scripts/octview.m
+--- a/scripts/octview.m	2020-04-10 18:50:50.055248693 -0500
++++ b/scripts/octview.m	2020-04-10 19:14:33.386123750 -0500
+@@ -1,6 +1,6 @@
+ #! /usr/bin/octave -qf
+ 
+-addpath(strcat(getenv("TOOLBOX_PATH"), "/matlab"));
++addpath(strcat(getenv("TOOLBOX_PATH"), "/bin", "/matlab"));
+ arg_list = argv();
+ 
+ 
+diff -ru a/scripts/profile.sh b/scripts/profile.sh
+--- a/scripts/profile.sh	2020-04-10 18:50:50.055248693 -0500
++++ b/scripts/profile.sh	2020-04-10 19:15:00.723101850 -0500
+@@ -45,7 +45,7 @@
+         exit 1
+ fi
+ 
+-if [ ! -e $TOOLBOX_PATH/bart ] ; then
++if [ ! -e $TOOLBOX_PATH/bin/bart ] ; then
+         echo "\$TOOLBOX_PATH is not set correctly!" >&2
+         exit 1
+ fi
+@@ -57,7 +57,7 @@
+ cd $WORKDIR
+ 
+ 
+-nm --defined-only $TOOLBOX_PATH/bart | cut -c11-16,19- | sort > bart.syms
++nm --defined-only $TOOLBOX_PATH/bin/bart | cut -c11-16,19- | sort > bart.syms
+ 
+ 
+ cat $in	| grep "^TRACE" \
+diff -ru a/startup.m b/startup.m
+--- a/startup.m	2020-04-10 18:50:50.048248699 -0500
++++ b/startup.m	2020-04-10 18:51:40.390209486 -0500
+@@ -1,4 +1,3 @@
+ % set Matlab path and TOOLBOX_PATH environment variable
+-addpath(fullfile(pwd, 'matlab'));
+-setenv('TOOLBOX_PATH', pwd);
++addpath(fullfile(getenv('TOOLBOX_PATH'), 'matlab'));
+ 

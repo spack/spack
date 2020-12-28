@@ -1,0 +1,19 @@
+--- spack-src/src/libfastx/fastx.h.org	2019-12-19 12:05:37.497936486 +0900
++++ spack-src/src/libfastx/fastx.h	2019-12-19 13:44:55.481837853 +0900
+@@ -58,7 +58,7 @@
+ 	OUTPUT_SAME_AS_INPUT=3
+ } OUTPUT_FILE_TYPE;
+ 
+-#pragma pack(1) 
++#pragma pack(push, 1) 
+ typedef struct 
+ {
+ 	/* Record data - common for FASTA/FASTQ */
+@@ -115,6 +115,7 @@
+ 	FILE*	input;
+ 	FILE*	output;
+ } FASTX ;
++#pragma pack(pop)
+ 
+ 
+ void fastx_init_reader(FASTX *pFASTX, const char* filename, 

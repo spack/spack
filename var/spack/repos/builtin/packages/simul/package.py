@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,10 +13,10 @@ class Simul(Package):
     homepage = "https://github.com/LLNL/simul"
     url      = "https://github.com/LLNL/simul/archive/1.16.tar.gz"
 
-    version('1.16', 'd616c1046a170c1e1b7956c402d23a95')
-    version('1.15', 'a5744673c094a87c05c6f0799d1f496f')
-    version('1.14', 'f8c14f0bac15741e2af354e3f9a0e30f')
-    version('1.13', '8a80a62d569557715d6c9c326e39a8ef')
+    version('1.16', sha256='63fce55346b22113f05efe3d1ca6ddbaea5abb959e28b24c6821bce949859a9b')
+    version('1.15', sha256='39a2458cd31c9266c58effd598611c610c5a2616ca6a7318f76830d203f3783f')
+    version('1.14', sha256='cbc70881b2a03e9a5076dbdf82b6fdfa48351ab381e379935b9c7db0ee315c92')
+    version('1.13', sha256='42a67258181fbf723cfe13d4d2dabc5aed0d0daa606b9d817108c354e37d1c64')
 
     depends_on('mpi')
 

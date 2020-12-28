@@ -1,40 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGenefilter(RPackage):
-    """Some basic functions for filtering genes"""
+    """genefilter: methods for filtering genes from high-throughput
+       experiments."""
 
-    homepage = "https://bioconductor.org/packages/genefilter/"
-    url      = "https://git.bioconductor.org/packages/genefilter"
-    list_url = homepage
-    version('1.58.1', git='https://git.bioconductor.org/packages/genefilter', commit='ace2556049677f60882adfe91f8cc96791556fc2')
+    homepage = "https://bioconductor.org/packages/genefilter"
+    git      = "https://git.bioconductor.org/packages/genefilter.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.58.1')
-    depends_on('r-s4vectors', type=('build', 'run'))
+    version('1.66.0', commit='1c4c471ccca873bf92dcf0b50f611eaa64c4f0cf')
+    version('1.64.0', commit='82e91b7751bae997b9c898c219ea201fd02a8512')
+    version('1.62.0', commit='eb119894f015c759f93f458af7733bdb770a22ad')
+    version('1.60.0', commit='c98f695253c330a9380b2b4ffa27f3b7d66773e4')
+    version('1.58.1', commit='ace2556049677f60882adfe91f8cc96791556fc2')
+
+    depends_on('r-s4vectors@0.9.42:', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
     depends_on('r-annotate', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
+    depends_on('r-survival', type=('build', 'run'))

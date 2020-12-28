@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,7 +12,10 @@ class PerlMoose(PerlPackage):
     homepage = "http://search.cpan.org/~ether/Moose-2.2006/lib/Moose.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/Moose-2.2006.tar.gz"
 
-    version('2.2006', '929c6b3877a6054ef617cf7ef1e220b5')
+    version('2.2010', sha256='af0905b69f18c27de1177c9bc7778ee495d4ec91be1f223e8ca8333af4de08c5')
+    version('2.2009', sha256='63ba8a5e27dbcbdbac2cd8f4162fff50a31e9829d8955a196a5898240c02d194')
+    version('2.2007', sha256='bc75a320b55ba26ac9e60e11a77b3471066cb615bf7097537ed22e20df88afe8')
+    version('2.2006', sha256='a4e00ab25cc41bebc5e7a11d71375fb5e64b56d5f91159afee225d698e06392b')
 
     depends_on('perl-cpan-meta-check', type=('build', 'run'))
     depends_on('perl-test-cleannamespaces', type=('build', 'run'))

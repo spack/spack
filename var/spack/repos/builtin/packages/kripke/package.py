@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,17 +10,23 @@ class Kripke(CMakePackage):
     """Kripke is a simple, scalable, 3D Sn deterministic particle
        transport proxy/mini app.
     """
-    homepage = "https://codesign.llnl.gov/kripke.php"
-    url      = "https://codesign.llnl.gov/downloads/kripke-openmp-1.1.tar.gz"
+    homepage = "https://computing.llnl.gov/projects/co-design/kripke"
+    git      = "https://github.com/LLNL/Kripke.git"
 
     tags = ['proxy-app']
-    version('1.1', '7fe6f2b26ed983a6ce5495ab701f85bf')
+    version('1.2.4', submodules=True, tag='v1.2.4')
+    version('1.2.3', submodules=True, tag='v1.2.3')
+    version('1.2.2', submodules=True, tag='v1.2.2-CORAL2')
+    version('1.2.1', submodules=True, tag='v1.2.1-CORAL2')
+    version('1.2.0', submodules=True, tag='v1.2.0-CORAL2')
 
     variant('mpi',    default=True, description='Build with MPI.')
     variant('openmp', default=True, description='Build with OpenMP enabled.')
+    variant('caliper', default=False, description='Build with Caliper support enabled.')
 
     depends_on('mpi', when='+mpi')
     depends_on('cmake@3.0:', type='build')
+    depends_on('caliper', when='+caliper')
 
     def cmake_args(self):
         def enabled(variant):
@@ -48,10 +35,11 @@ class Kripke(CMakePackage):
         return [
             '-DENABLE_OPENMP=%d' % enabled('+openmp'),
             '-DENABLE_MPI=%d' % enabled('+mpi'),
+            '-DENABLE_CALIPER=%d' % enabled('+caliper'),
         ]
 
     def install(self, spec, prefix):
         # Kripke does not provide install target, so we have to copy
         # things into place.
         mkdirp(prefix.bin)
-        install('spack-build/kripke', prefix.bin)
+        install(join_path(self.build_directory, 'bin/kripke.exe'), prefix.bin)

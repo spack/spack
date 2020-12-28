@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,13 @@ class Xterm(AutotoolsPackage):
     that can't use the window system directly."""
 
     homepage = "http://invisible-island.net/xterm/"
-    url      = "http://invisible-island.net/xterm/xterm-327.tgz"
+    url      = "ftp://ftp.invisible-island.net/xterm/xterm-327.tgz"
 
-    version('327', '3c32e931adcad44e64e57892e75d9e02')
+    version('353', sha256='e521d3ee9def61f5d5c911afc74dd5c3a56ce147c7071c74023ea24cac9bb768')
+    version('350', sha256='aefb59eefd310268080d1a90a447368fb97a9a6737bfecfc3800bf6cc304104d')
+    version('340', sha256='b5c7f77b7afade798461e2a2f86d5af64f9c9c9f408b1af0f545add978df722a')
+    version('330', sha256='7aeef9f29f6b95e09f481173c8c3053357bf5ffe162585647f690fd1707556df')
+    version('327', sha256='66fb2f6c35b342148f549c276b12a3aa3fb408e27ab6360ddec513e14376150b')
 
     depends_on('libxft')
     depends_on('fontconfig')

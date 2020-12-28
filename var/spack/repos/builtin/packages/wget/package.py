@@ -1,42 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Wget(AutotoolsPackage):
+class Wget(AutotoolsPackage, GNUMirrorPackage):
     """GNU Wget is a free software package for retrieving files using
     HTTP, HTTPS and FTP, the most widely-used Internet protocols. It is a
     non-interactive commandline tool, so it may easily be called from scripts,
     cron jobs, terminals without X-Windows support, etc."""
 
     homepage = "http://www.gnu.org/software/wget/"
-    url      = "http://ftp.gnu.org/gnu/wget/wget-1.19.1.tar.gz"
+    gnu_mirror_path = "wget/wget-1.19.1.tar.gz"
 
-    version('1.19.1', '87cea36b7161fd43e3fd51a4e8b89689')
-    version('1.17',   'c4c4727766f24ac716936275014a0536')
-    version('1.16',   '293a37977c41b5522f781d3a3a078426')
+    version('1.20.3', sha256='31cccfc6630528db1c8e3a06f6decf2a370060b982841cfab2b8677400a5092e')
+    version('1.19.1', sha256='9e4f12da38cc6167d0752d934abe27c7b1599a9af294e73829be7ac7b5b4da40')
+    version('1.17',   sha256='3e04ad027c5b6ebd67c616eec13e66fbedb3d4d8cbe19cc29dadde44b92bda55')
+    version('1.16',   sha256='b977fc10ac7a72d987d48136251aeb332f2dced1aabd50d6d56bdf72e2b79101')
 
     variant('ssl', default='openssl', values=('gnutls', 'openssl'),
             description='Specify SSL backend')
@@ -61,9 +43,9 @@ class Wget(AutotoolsPackage):
 
     depends_on('perl@5.12.0:', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on('iconv')
 
-    # TODO: Add a 'test' deptype
-    # depends_on('valgrind', type='test')
+    depends_on('valgrind', type='test')
 
     build_directory = 'spack-build'
 

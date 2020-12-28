@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,9 +11,18 @@ class JsonC(AutotoolsPackage):
     homepage = "https://github.com/json-c/json-c/wiki"
     url      = "https://s3.amazonaws.com/json-c_releases/releases/json-c-0.12.1.tar.gz"
 
-    version('0.12.1', '55f7853f7d8cf664554ce3fa71bf1c7d')
-    version('0.11',   'aa02367d2f7a830bf1e3376f77881e98')
+    version('0.13.1', sha256='b87e608d4d3f7bfdd36ef78d56d53c74e66ab278d318b71e6002a369d36f4873')
+    version('0.12.1', sha256='2a136451a7932d80b7d197b10441e26e39428d67b1443ec43bbba824705e1123')
+    version('0.12',   sha256='000c01b2b3f82dcb4261751eb71f1b084404fb7d6a282f06074d3c17078b9f3f')
+    version('0.11',   sha256='28dfc65145dc0d4df1dfe7701ac173c4e5f9347176c8983edbfac9149494448c')
 
     depends_on('autoconf', type='build')
 
     parallel = False
+
+    @when('@0.12:0.12.1 %gcc@7:')
+    def patch(self):
+        filter_file('-Wextra',
+                    '-Wextra -Wno-error=implicit-fallthrough '
+                    '-Wno-error=unused-but-set-variable',
+                    'Makefile.in')

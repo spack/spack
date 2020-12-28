@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,10 +14,14 @@ class RZoo(RPackage):
     methods to extend standard generics."""
 
     homepage = "http://zoo.r-forge.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/zoo_1.7-14.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/zoo"
+    url      = "https://cloud.r-project.org/src/contrib/zoo_1.7-14.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/zoo"
 
-    version('1.7-14', '8c577a7c1e535c899ab14177b1039c32')
-    version('1.7-13', '99521dfa4c668e692720cefcc5a1bf30')
+    version('1.8-6', sha256='2217a4f362f2201443b5fdbfd9a77d9a6caeecb05f02d703ee8b3b9bf2af37cc')
+    version('1.8-5', sha256='8773969973d28d7d1a48f74b73be1dbd97acb3b22a4668a102e8bb585a7de826')
+    version('1.7-14', sha256='4858675fed056a4329c4998517cc944db386447483390bd342de719e0509f598')
+    version('1.7-13', sha256='0ca5264d6077c785963705e462aec3e57e0d0651379f9bf4ee32e4f3b25dc754')
 
-    depends_on('r-lattice', type=('build', 'run'))
+    depends_on('r@2.10.0:', when='@:1.8-1', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@1.8-2:', type=('build', 'run'))
+    depends_on('r-lattice@0.20-27:', type=('build', 'run'))

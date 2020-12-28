@@ -497,26 +497,6 @@ class PluginManager(object):
                                 "unknown hook %r in plugin %r" %
                                 (name, hookimpl.plugin))
 
-    def load_setuptools_entrypoints(self, entrypoint_name):
-        """ Load modules from querying the specified setuptools entrypoint name.
-        Return the number of loaded plugins. """
-        from pkg_resources import (iter_entry_points, DistributionNotFound,
-                                   VersionConflict)
-        for ep in iter_entry_points(entrypoint_name):
-            # is the plugin registered or blocked?
-            if self.get_plugin(ep.name) or self.is_blocked(ep.name):
-                continue
-            try:
-                plugin = ep.load()
-            except DistributionNotFound:
-                continue
-            except VersionConflict as e:
-                raise PluginValidationError(
-                    "Plugin %r could not be loaded: %s!" % (ep.name, e))
-            self.register(plugin, name=ep.name)
-            self._plugin_distinfo.append((plugin, ep.dist))
-        return len(self._plugin_distinfo)
-
     def list_plugin_distinfo(self):
         """ return list of distinfo/plugin tuples for all setuptools registered
         plugins. """
@@ -540,7 +520,7 @@ class PluginManager(object):
         of HookImpl instances and the keyword arguments for the hook call.
 
         ``after(outcome, hook_name, hook_impls, kwargs)`` receives the
-        same arguments as ``before`` but also a :py:class:`_CallOutcome`` object
+        same arguments as ``before`` but also a :py:class:`_CallOutcome <_pytest.vendored_packages.pluggy._CallOutcome>` object
         which represents the result of the overall hook call.
         """
         return _TracedHookExecution(self, before, after).undo

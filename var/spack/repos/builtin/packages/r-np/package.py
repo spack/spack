@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,10 +16,14 @@ class RNp(RPackage):
     Research Computing Network (SHARCNET:www.sharcnet.ca)."""
 
     homepage = "https://github.com/JeffreyRacine/R-Package-np/"
-    url      = "https://cran.r-project.org/src/contrib/np_0.60-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/np"
+    url      = "https://cloud.r-project.org/src/contrib/np_0.60-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/np"
 
-    version('0.60-2', 'e094d52ddff7280272b41e6cb2c74389')
+    version('0.60-9', sha256='fe31a8985f0b1a576a7775022b7131093b1c9a8337734136d5fcad85fa6592fc')
+    version('0.60-8', sha256='924c342feb2a862fa3871a45db5f8434dbbfb900cfc40c001a0872108a3a069e')
+    version('0.60-2', sha256='25d667fc1056899516584b9d5d933377e6f4694d8e5e868dd047db572b69417f')
 
     depends_on('r-boot', type=('build', 'run'))
     depends_on('r-cubature', type=('build', 'run'))
+    depends_on('r-quadprog', when='@0.60-8:', type=('build', 'run'))
+    depends_on('r-quantreg', when='@0.60-8:', type=('build', 'run'))

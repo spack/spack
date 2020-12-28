@@ -1,33 +1,67 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-"""This module contains jsonschema files for all of Spack's YAML formats.
-"""
-from llnl.util.lang import list_modules
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+"""This module contains jsonschema files for all of Spack's YAML formats."""
 
-# Automatically bring in all sub-modules
-__all__ = []
-for mod in list_modules(__path__[0]):
-    __import__('%s.%s' % (__name__, mod))
-    __all__.append(mod)
+import six
+
+import llnl.util.lang
+import llnl.util.tty
+import spack.spec
+
+
+# jsonschema is imported lazily as it is heavy to import
+# and increases the start-up time
+def _make_validator():
+    import jsonschema
+
+    def _validate_spec(validator, is_spec, instance, schema):
+        """Check if the attributes on instance are valid specs."""
+        import jsonschema
+        if not validator.is_type(instance, "object"):
+            return
+
+        for spec_str in instance:
+            try:
+                spack.spec.parse(spec_str)
+            except spack.spec.SpecParseError as e:
+                yield jsonschema.ValidationError(
+                    '"{0}" is an invalid spec [{1}]'.format(spec_str, str(e))
+                )
+
+    def _deprecated_properties(validator, deprecated, instance, schema):
+        if not (validator.is_type(instance, "object") or
+                validator.is_type(instance, "array")):
+            return
+
+        # Get a list of the deprecated properties, return if there is none
+        deprecated_properties = [
+            x for x in instance if x in deprecated['properties']
+        ]
+        if not deprecated_properties:
+            return
+
+        # Retrieve the template message
+        msg_str_or_func = deprecated['message']
+        if isinstance(msg_str_or_func, six.string_types):
+            msg = msg_str_or_func.format(properties=deprecated_properties)
+        else:
+            msg = msg_str_or_func(instance, deprecated_properties)
+
+        is_error = deprecated['error']
+        if not is_error:
+            llnl.util.tty.warn(msg)
+        else:
+            import jsonschema
+            yield jsonschema.ValidationError(msg)
+
+    return jsonschema.validators.extend(
+        jsonschema.Draft4Validator, {
+            "validate_spec": _validate_spec,
+            "deprecatedProperties": _deprecated_properties
+        }
+    )
+
+
+Validator = llnl.util.lang.Singleton(_make_validator)

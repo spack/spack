@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,11 +12,12 @@ class Lzo(AutotoolsPackage):
     homepage = 'https://www.oberhumer.com/opensource/lzo/'
     url = 'http://www.oberhumer.com/opensource/lzo/download/lzo-2.09.tar.gz'
 
-    version('2.09', 'c7ffc9a103afe2d1bba0b015e7aa887f')
-    version('2.08', 'fcec64c26a0f4f4901468f360029678f')
-    version('2.07', '4011935e95171e78ad4894f7335c982a')
-    version('2.06', '95380bd4081f85ef08c5209f4107e9f8')
-    version('2.05', 'c67cda5fa191bab761c7cb06fe091e36')
+    version('2.10', sha256='c0f892943208266f9b6543b3ae308fab6284c5c90e627931446fb49b4221a072')
+    version('2.09', sha256='f294a7ced313063c057c504257f437c8335c41bfeed23531ee4e6a2b87bcb34c')
+    version('2.08', sha256='ac1b3e4dee46febe9fd28737eb7f5692d3232ef1a01da10444394c3d47536614')
+    version('2.07', sha256='9298ccf43f856ef00643d110042b2fefe694b569c161aef0c6f8e4ada590e6d4')
+    version('2.06', sha256='ff79e6f836d62d3f86ef6ce893ed65d07e638ef4d3cb952963471b4234d43e73')
+    version('2.05', sha256='449f98186d76ba252cd17ff1241ca2a96b7f62e0d3e4766f88730dab0ea5f333')
 
     def configure_args(self):
         return [

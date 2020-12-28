@@ -1,56 +1,35 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class PyUnicycler(PythonPackage):
-    """hybrid assembly pipeline for bacterial genomes"""
+    """Unicycler is an assembly pipeline for bacterial genomes. It can
+    assemble Illumina-only read sets where it functions as a SPAdes-optimiser.
+    It can also assembly long-read-only sets (PacBio or Nanopore) where it
+    runs a miniasm+Racon pipeline. For the best possible assemblies, give it
+    both Illumina reads and long reads, and it will conduct a hybrid assembly.
+    """
 
     homepage = "https://github.com/rrwick/Unicycler"
-    url      = "https://github.com/rrwick/Unicycler"
+    url      = "https://github.com/rrwick/Unicycler/archive/v0.4.5.tar.gz"
 
-    version('master', git='https://github.com/rrwick/Unicycler.git',
-            commit='947fdc8')
+    version('0.4.7', sha256='a8cf65e46dc2694b0fbd4e9190c73a1f300921457aadfab27a1792b785620d63')
+    version('0.4.6', sha256='56f6f358a5d1f8dd0fcd1df04504079fc42cec8453a36ee59ff89295535d03f5')
+    version('0.4.5', sha256='67043656b31a4809f8fa8f73368580ba7658c8440b9f6d042c7f70b5eb6b19ae')
 
-    # minimum required compiler versions
-    conflicts('%gcc@:4.9')
+    depends_on('python@3.4:', type=('build', 'link', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('spades', type='run')
+    depends_on('pilon', type='run')
+    depends_on('jdk', type=('build', 'run'))
+    depends_on('bowtie2', type='run')
+    depends_on('samtools@1.0:', type=('build', 'link', 'run'))
+    depends_on('racon', type=('build', 'link', 'run'))
+    depends_on('blast-plus', type='run')
+
+    conflicts('%gcc@:4.9.0')
     conflicts('%clang@:3.4.2')
-
-    depends_on('python@3.4:', type=('build','run'))
-    depends_on('py-setuptools', type='build')
-    depends_on('spades@3.6.2:')
-    depends_on('racon')
-    depends_on('pilon')
-    depends_on('java@8', type='run')
-    depends_on('bowtie2')
-    depends_on('samtools')
-
-    # without ~python, i.e., +python, for some reason the blast configure
-    # script barfs on finding python3.6 installation.
-    depends_on('blast-plus~python')
-
-    def build_args(self, spec, prefix):
-        args = []
-        return args

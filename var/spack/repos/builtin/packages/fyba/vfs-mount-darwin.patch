@@ -1,0 +1,48 @@
+diff -Naur a/configure.ac b/configure.ac
+--- a/configure.ac	2014-09-22 00:36:49.000000000 -0500
++++ b/configure.ac	2018-05-19 12:37:15.000000000 -0500
+@@ -18,7 +18,7 @@
+ # Checks for libraries.
+ 
+ # Checks for header files.
+-AC_CHECK_HEADERS([fcntl.h float.h inttypes.h limits.h locale.h memory.h stdint.h stdlib.h string.h sys/ioctl.h sys/statvfs.h sys/time.h sys/vfs.h termios.h unistd.h])
++AC_CHECK_HEADERS([fcntl.h float.h inttypes.h limits.h locale.h memory.h stdint.h stdlib.h string.h sys/ioctl.h sys/statvfs.h sys/time.h sys/mount.h termios.h unistd.h])
+ 
+ # Checks for typedefs, structures, and compiler characteristics.
+ AC_HEADER_STDBOOL
+diff -Naur a/src/UT/DISKINFO.cpp b/src/UT/DISKINFO.cpp
+--- a/src/UT/DISKINFO.cpp	2014-09-22 00:36:49.000000000 -0500
++++ b/src/UT/DISKINFO.cpp	2018-05-19 12:38:08.000000000 -0500
+@@ -17,7 +17,7 @@
+ #     include <sys/statvfs.h>
+ #  else
+ #     include <sys/stat.h>
+-#     include <sys/vfs.h>
++#     include <sys/mount.h>
+ #  endif
+ 
+ #  include <sys/types.h>
+diff -Naur a/src/UT/INQSIZE.cpp b/src/UT/INQSIZE.cpp
+--- a/src/UT/INQSIZE.cpp	2014-09-22 00:36:49.000000000 -0500
++++ b/src/UT/INQSIZE.cpp	2018-05-19 12:37:45.000000000 -0500
+@@ -16,7 +16,7 @@
+ #  include<stdio.h>
+ #  include<sys/time.h>
+ #  include<sys/types.h>
+-#  include<sys/vfs.h>
++#  include<sys/mount.h>
+ #  include<fcntl.h>
+ #  include<sys/stat.h>
+ #  include<errno.h>
+diff -Naur a/src/UT/INQTID.cpp b/src/UT/INQTID.cpp
+--- a/src/UT/INQTID.cpp	2014-09-22 00:36:49.000000000 -0500
++++ b/src/UT/INQTID.cpp	2018-05-19 12:37:57.000000000 -0500
+@@ -15,7 +15,7 @@
+ #  include<stdio.h>
+ #  include<sys/time.h>
+ #  include<sys/types.h>
+-#  include<sys/vfs.h>
++#  include<sys/mount.h>
+ #  include<fcntl.h>
+ #  include<sys/stat.h>
+ #  include<errno.h>

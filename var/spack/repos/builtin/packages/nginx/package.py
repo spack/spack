@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,17 +14,20 @@ class Nginx(AutotoolsPackage):
     homepage = "https://nginx.org/en/"
     url      = "https://nginx.org/download/nginx-1.12.0.tar.gz"
 
-    version('1.13.8', 'df4be9294365782dc1349ca33ce8c4ac')
-    version('1.12.0', '995eb0a140455cf0cfc497e5bd7f94b3')
+    version('1.15.6', sha256='a3d8c67c2035808c7c0d475fffe263db8c353b11521aa7ade468b780ed826cc6')
+    version('1.13.8', sha256='8410b6c31ff59a763abf7e5a5316e7629f5a5033c95a3a0ebde727f9ec8464c5')
+    version('1.12.0', sha256='b4222e26fdb620a8d3c3a3a8b955e08b713672e1bc5198d1e4f462308a795b30')
 
     depends_on('openssl')
     depends_on('pcre')
     depends_on('zlib')
 
+    conflicts('%gcc@8:', when='@:1.14')
+
     def configure_args(self):
         args = ['--with-http_ssl_module']
         return args
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         """Prepend the sbin directory to PATH."""
-        run_env.prepend_path('PATH', join_path(self.prefix, 'sbin'))
+        env.prepend_path('PATH', self.prefix.sbin)

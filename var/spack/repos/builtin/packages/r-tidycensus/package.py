@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,21 +13,23 @@ class RTidycensus(RPackage):
     data frames, and optionally returns a list-column with feature
     geometry for many geographies."""
 
-    homepage = "https://cran.r-project.org/package=tidycensus"
-    url      = "https://cran.rstudio.com/src/contrib/tidycensus_0.3.1.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/tidycensus"
+    homepage = "https://cloud.r-project.org/package=tidycensus"
+    url      = "https://cloud.r-project.org/src/contrib/tidycensus_0.3.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/tidycensus"
 
-    version('0.3.1', '420d046b5a408d321e775c3d410e7699')
+    version('0.9.2', sha256='2454525301caff9eaaf6ebe14f58706ece1fbace6187ce8bf3fff04c842b9536')
+    version('0.3.1', sha256='d03cbee7abbf87bb4ce2e649726bdd143d47b549f30b5a11aaaa6c4aff78e778')
 
+    depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-httr', type=('build', 'run'))
     depends_on('r-sf', type=('build', 'run'))
-    depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-dplyr@0.7.0:', type=('build', 'run'))
     depends_on('r-tigris', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-jsonlite@1.5.0:', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
     depends_on('r-rvest', type=('build', 'run'))
-    depends_on('r-tidyr', type=('build', 'run'))
+    depends_on('r-tidyr@0.7.0:', type=('build', 'run'))
     depends_on('r-rappdirs', type=('build', 'run'))
     depends_on('r-readr', type=('build', 'run'))
     depends_on('r-xml2', type=('build', 'run'))

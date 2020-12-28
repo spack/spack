@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,14 +12,18 @@ class RIgraph(RPackage):
     graphs, graph visualization, centrality methods and much more."""
 
     homepage = "http://igraph.org/"
-    url      = "https://cran.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/igraph"
+    url      = "https://cloud.r-project.org/src/contrib/igraph_1.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/igraph"
 
-    version('1.0.1', 'ea33495e49adf4a331e4ba60ba559065')
+    version('1.2.4.1', sha256='891acc763b5a4a4a245358a95dee69280f4013c342f14dd6a438e7bb2bf2e480')
+    version('1.2.4', sha256='1048eb26ab6b592815bc269c1d91e974c86c9ab827ccb80ae0a40042019592cb')
+    version('1.1.2', sha256='89b16b41bc77949ea208419e52a18b78b5d418c7fedc52cd47d06a51a6e746ec')
+    version('1.0.1', sha256='dc64ed09b8b5f8d66ed4936cde3491974d6bc5178dd259b6eab7ef3936aa5602')
 
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-nmf', type=('build', 'run'))
-    depends_on('r-irlba', type=('build', 'run'))
+    depends_on('r-pkgconfig@2.0.0:', type=('build', 'run'))
+    depends_on('r-irlba', when='@:1.1.9', type=('build', 'run'))
     depends_on('gmp')
     depends_on('libxml2')
+    depends_on('glpk', when='@1.2.0:')

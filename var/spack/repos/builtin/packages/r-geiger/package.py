@@ -1,46 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RGeiger(RPackage):
     """Methods for fitting macroevolutionary models to phylogenetic trees."""
 
-    homepage = "https://cran.r-project.org/package=geiger"
-    url      = "https://cran.r-project.org/src/contrib/geiger_2.0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/geiger"
+    homepage = "https://cloud.r-project.org/package=geiger"
+    url      = "https://cloud.r-project.org/src/contrib/geiger_2.0.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/geiger"
 
-    version('2.0.6', 'e5e1a407ea56805227d0f91bf6d95afc')
+    version('2.0.6.2', sha256='9153047b608d652821251206d1450bb3f517c8884379f498a695315574ae001d')
+    version('2.0.6.1', sha256='2a95e20a3a90c096343b014344dd97e699e954da99c151c17fc6c245c77dba0b')
+    version('2.0.6', sha256='e13b2c526378eaf9356b00bbe21b3c2c956327f8062fed638ccc1f49591c3eff')
 
-    depends_on('r-ape@3.0:', type=('build', 'run'))
+    depends_on('r@2.15.0:', type=('build', 'run'))
+    depends_on('r-ape@3.0-6:', type=('build', 'run'))
     depends_on('r-mvtnorm', type=('build', 'run'))
     depends_on('r-subplex', type=('build', 'run'))
     depends_on('r-desolve@1.7:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-rcpp@0.9.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
     depends_on('r-coda', type=('build', 'run'))
-    depends_on('r-ncbit', type=('build', 'run')) 
+    depends_on('r-ncbit', type=('build', 'run'))
     depends_on('r-colorspace', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))

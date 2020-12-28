@@ -1,39 +1,43 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RSva(RPackage):
-    """Surrogate Variable Analysis."""
+    """Surrogate Variable Analysis.
 
-    homepage = "https://www.bioconductor.org/packages/sva/"
-    url      = "https://git.bioconductor.org/packages/sva"
+       The sva package contains functions for removing batch effects and other
+       unwanted variation in high-throughput experiment. Specifically, the sva
+       package contains functions for the identifying and building surrogate
+       variables for high-dimensional data sets. Surrogate variables are
+       covariates constructed directly from high-dimensional data (like gene
+       expression/RNA sequencing/methylation/brain imaging data) that can be
+       used in subsequent analyses to adjust for unknown, unmodeled, or latent
+       sources of noise. The sva package can be used to remove artifacts in
+       three ways: (1) identifying and estimating surrogate variables for
+       unknown sources of variation in high-throughput experiments (Leek and
+       Storey 2007 PLoS Genetics,2008 PNAS), (2) directly removing known batch
+       effects using ComBat (Johnson et al. 2007 Biostatistics) and (3)
+       removing batch effects with known control probes (Leek 2014 biorXiv).
+       Removing batch effects and using surrogate variables in differential
+       expression analysis have been shown to reduce dependence, stabilize
+       error rate estimates, and improve reproducibility, see (Leek and Storey
+       2007 PLoS Genetics, 2008 PNAS or Leek et al. 2011 Nat. Reviews
+       Genetics)."""
 
-    version('3.24.4', git='https://git.bioconductor.org/packages/sva', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
+    homepage = "https://bioconductor.org/packages/sva"
+    git      = "https://git.bioconductor.org/packages/sva.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@3.24.4')
+    version('3.32.1', commit='1b8286734d00533b49d9f1456b6523cc778bb744')
+    version('3.30.1', commit='fdb98bc2299dc5213c62d83cb7c0b1c1b4912f0c')
+    version('3.28.0', commit='dd4937229dbccd2f383a04d5237fe147a884728d')
+    version('3.26.0', commit='3cc5e75413c35ed5511892f5c36a8b5cb454937e')
+    version('3.24.4', commit='ed2ebb6e33374dc9ec50e6ea97cc1d9aef836c73')
+
+    depends_on('r@3.2:', type=('build', 'run'))
     depends_on('r-mgcv', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))
     depends_on('r-biocparallel', type=('build', 'run'))

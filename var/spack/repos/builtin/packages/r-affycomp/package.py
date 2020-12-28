@@ -1,38 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffycomp(RPackage):
-    """The package contains functions that can be used to compare
-    expression measures for Affymetrix Oligonucleotide Arrays."""
+    """Graphics Toolbox for Assessment of Affymetrix Expression Measures.
 
-    homepage = "https://www.bioconductor.org/packages/affycomp/"
-    url      = "https://git.bioconductor.org/packages/affycomp"
+       The package contains functions that can be used to compare expression
+       measures for Affymetrix Oligonucleotide Arrays."""
 
-    version('1.52.0', git='https://git.bioconductor.org/packages/affycomp', commit='1b97a1cb21ec93bf1e5c88d5d55b988059612790')
+    homepage = "https://bioconductor.org/packages/affycomp"
+    git      = "https://git.bioconductor.org/packages/affycomp.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.52.0')
-    depends_on('r-biobase', type=('build', 'run'))
+    version('1.60.0', commit='5dbe61fa04941529a0fc70b728021c8e00c4ba0c')
+    version('1.58.0', commit='99607b2c4aad37e3e63eccbd12d0d533762f28ef')
+    version('1.56.0', commit='b0994da338be19396e647c680059fd35341b50a2')
+    version('1.54.0', commit='65281c1ca37147c2a54ad3722a8d5ff0ffa5acc5')
+    version('1.52.0', commit='1b97a1cb21ec93bf1e5c88d5d55b988059612790')
+
+    depends_on('r@2.13.0:', type=('build', 'run'))
+    depends_on('r-biobase@2.3.3:', type=('build', 'run'))

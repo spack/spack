@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -34,14 +15,18 @@ class RHtmltable(RPackage):
     few text formatting functions that help outputting text
     compatible with HTML/'LaTeX'."""
 
-    homepage = "https://CRAN.R-project.org/package=htmlTable"
-    url      = "https://cran.rstudio.com/src/contrib/htmlTable_1.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/htmlTable"
+    homepage = "https://cloud.r-project.org/package=htmlTable"
+    url      = "https://cloud.r-project.org/src/contrib/htmlTable_1.11.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/htmlTable"
 
-    version('1.9', '08c62c19e1ffe570e7d8fa57db5094b9')
+    version('1.13.1', sha256='689f32b65da6a57ad500e8d9ef3309d346401dca277c6b264a46c8d7c75884d0')
+    version('1.11.2', sha256='64a273b1cdf07a7c57b9031315ca665f95d78e70b4320d020f64a139278877d1')
+    version('1.9', sha256='5b487a7f33af77db7d987bf61f3ef2ba18bb629fe7b9802409f8b3485c603132')
 
     depends_on('r-stringr', type=('build', 'run'))
-    depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-knitr@1.6:', type=('build', 'run'))
+    depends_on('r-magrittr@1.5:', type=('build', 'run'))
     depends_on('r-checkmate', type=('build', 'run'))
     depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'), when="@1.11.0:")
+    depends_on('r-rstudioapi@0.6:', type=('build', 'run'), when="@1.11.0:")

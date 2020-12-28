@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,11 +13,13 @@ class Libassuan(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libassuan/index.html"
     url = "https://gnupg.org/ftp/gcrypt/libassuan/libassuan-2.4.5.tar.bz2"
 
-    version('2.4.5', '4f22bdb70d424cfb41b64fd73b7e1e45')
-    version('2.4.3', '8e01a7c72d3e5d154481230668e6eb5a')
+    version('2.5.3', sha256='91bcb0403866b4e7c4bc1cc52ed4c364a9b5414b3994f718c70303f7f765e702')
+    version('2.4.5', sha256='fbfea5d1dbcdee34f2597b0afb3d8bb4eda96c924a1e01b01c2acde68b81625f')
+    version('2.4.3', sha256='22843a3bdb256f59be49842abf24da76700354293a066d82ade8134bb5aa2b71')
 
-    depends_on('libgpg-error')
+    depends_on('libgpg-error@1.17:')
 
     def configure_args(self):
-        args = ['--with-libgpp-error=%s' % self.spec['libgpg-error'].prefix]
-        return args
+        return [
+            '--with-libgpg-error-prefix=' + self.spec['libgpg-error'].prefix
+        ]

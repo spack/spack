@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,7 +13,7 @@ class Mpest(MakefilePackage):
     homepage = "http://faculty.franklin.uga.edu/lliu/content/mp-est"
     url      = "https://faculty.franklin.uga.edu/lliu/sites/faculty.franklin.uga.edu.lliu/files/mpest_1.5.zip"
 
-    version('1.5', 'f176d5301aa26567918664e5e30027d1')
+    version('1.5', sha256='536895120fc34b19b0740c7fef6467b74c284ae4f1f29c9f5fc5c633f30e4916')
 
     @property
     def build_directory(self):
@@ -43,8 +24,8 @@ class Mpest(MakefilePackage):
             mkdirp(prefix.bin)
             install('mpest', prefix.bin)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         if self.spec.satisfies('platform=darwin'):
-            spack_env.set('ARCHITECTURE', 'mac')
+            env.set('ARCHITECTURE', 'mac')
         else:
-            spack_env.set('ARCHITECTURE', 'unix')
+            env.set('ARCHITECTURE', 'unix')

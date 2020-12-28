@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,11 +14,14 @@ class RMaptools(RPackage):
     maps, RArcInfo, Stata tmap, WinBUGS, Mondrian, and others."""
 
     homepage = "http://r-forge.r-project.org/projects/maptools/"
-    url      = "https://cran.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/maptools"
+    url      = "https://cloud.r-project.org/src/contrib/maptools_0.8-39.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/maptools"
 
-    version('0.8-39', '3690d96afba8ef22c8e27ae540ffb836')
+    version('0.9-5', sha256='5d9511f09fb49d57a51f28495b02239800596a4fcfad7b03ee1074d793657bdd')
+    version('0.9-4', sha256='930875f598a516f0f9049fa2fae7391bc9bdf7e3e5db696059ab4ec2fc9ba39c')
+    version('0.8-39', sha256='4b81e313e45dbb75e0fbb180b02985d1c34aaa5669e483283b632788e6a67dd2')
 
-    depends_on('r-sp', type=('build', 'run'))
-    depends_on('r-foreign', type=('build', 'run'))
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-sp@1.0-11:', type=('build', 'run'))
+    depends_on('r-foreign@0.8:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

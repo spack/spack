@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,9 @@ class Signify(MakefilePackage):
     homepage = "https://github.com/aperezdc/signify"
     url      = "https://github.com/aperezdc/signify/archive/v23.tar.gz"
 
-    version('23', '0552295572a172740ae8427eb018ede8')
+    version('23', sha256='1c690bf0e4283e0764a4a9dd784cb3debf4bb456b975b275dd1aaac7d5afe030')
 
     depends_on('libbsd@0.8:')
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('PREFIX', self.prefix)
+    def setup_build_environment(self, env):
+        env.set('PREFIX', self.prefix)

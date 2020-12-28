@@ -1,46 +1,33 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffyplm(RPackage):
-    """A package that extends and improves the functionality of
-    the base affy package. Routines that make heavy use of compiled
-    code for speed. Central focus is on implementation of methods
-    for fitting probe-level models and tools using these models.
-    PLM based quality assessment tools."""
+    """Methods for fitting probe-level models.
 
-    homepage = "https://www.bioconductor.org/packages/affyPLM/"
-    url      = "https://git.bioconductor.org/packages/affyPLM"
+       A package that extends and improves the functionality of the base affy
+       package. Routines that make heavy use of compiled code for speed.
+       Central focus is on implementation of methods for fitting probe-level
+       models and tools using these models. PLM based quality assessment
+       tools."""
 
-    version('1.52.1', git='https://git.bioconductor.org/packages/affyPLM', commit='e8613a6018c4ee58045df6bf19128844f50a1f43')
+    homepage = "https://bioconductor.org/packages/affyPLM"
+    git      = "https://git.bioconductor.org/packages/affyPLM.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.52.1')
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-affy', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
+    version('1.60.0', commit='b11e377d6af3fd0f28aba8195ebf171003da1a9d')
+    version('1.58.0', commit='32764c7691d9a72a301d50042a8844112887a1c8')
+    version('1.56.0', commit='13dfc558281af9a177d4d592c34cf7ace629af0e')
+    version('1.54.0', commit='09cf5f6e01dd2d0aae3e9ddab27301f04bfd645c')
+    version('1.52.1', commit='e8613a6018c4ee58045df6bf19128844f50a1f43')
+
+    depends_on('r@2.6.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.3.2:', type=('build', 'run'))
+    depends_on('r-affy@1.11.0:', type=('build', 'run'))
+    depends_on('r-biobase@2.17.8:', type=('build', 'run'))
     depends_on('r-gcrma', type=('build', 'run'))
-    depends_on('r-preprocesscore', type=('build', 'run'))
+    depends_on('r-preprocesscore@1.5.1:', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))

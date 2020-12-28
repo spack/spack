@@ -1,36 +1,21 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RPlotrix(RPackage):
     """Lots of plots, various labeling, axis and color scaling functions."""
 
-    homepage = "https://cran.r-project.org/package=plotrix"
-    url      = "https://cran.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/plotrix"
+    homepage = "https://cloud.r-project.org/package=plotrix"
+    url      = "https://cloud.r-project.org/src/contrib/plotrix_3.6-4.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/plotrix"
 
-    version('3.6-4', 'efe9b9b093d8903228a9b56c46d943fa')
-    version('3.6-3', '23e3e022a13a596e9b77b40afcb4a2ef')
+    version('3.7-6', sha256='83d5f7574592953288b4fe39c4c0dd7670d097598ad7f6bddbb0687a32954e46')
+    version('3.7-5', sha256='b22f3f9d93961d23ad46e41597d1e45d2665ced04dcad8c40f6806a67cded14c')
+    version('3.6-4', sha256='883b7d0a00c1b2b418f9167c72ed9e86eca3c9865d34158a7a6ad0b9bf95bff3')
+    version('3.6-3', sha256='217164bdd04405c3280a0c8b2691f289287f9851fa8248648a5ae38f54962741')
+
+    depends_on('r@3.5.0:', when='@3.7-6:', type=('build', 'run'))

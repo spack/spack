@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,8 +11,10 @@ class RMime(RPackage):
     from /etc/mime.types in UNIX-type systems."""
 
     homepage = "https://github.com/yihui/mime"
-    url      = "https://cran.r-project.org/src/contrib/mime_0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/mime"
+    url      = "https://cloud.r-project.org/src/contrib/mime_0.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/mime"
 
-    version('0.5', '87e00b6d57b581465c19ae869a723c4d')
-    version('0.4', '789cb33e41db2206c6fc7c3e9fbc2c02')
+    version('0.7', sha256='11083ee44c92569aadbb9baf60a2e079ab7a721c849b74d102694975cc8d778b')
+    version('0.6', sha256='4775b605ab0117406bee7953c8af59eea8b35e67d1bd63f4007686a7097fc401')
+    version('0.5', sha256='fcc72115afb0eb43237da872754464f37ae9ae097f332ec7984149b5e3a82145')
+    version('0.4', sha256='d790c7e38371d03774a7d53f75aed3151835b1aebbb663b0fe828b221e6bac90')

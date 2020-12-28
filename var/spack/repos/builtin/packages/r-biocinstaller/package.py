@@ -1,38 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RBiocinstaller(RPackage):
-    """This package is used to install and update Bioconductor, CRAN,
-    and (some) github packages."""
+    """Install/Update Bioconductor, CRAN, and github Packages.
 
-    homepage = "https://bioconductor.org/packages/BiocInstaller/"
-    url      = "https://git.bioconductor.org/packages/BiocInstaller"
-    list_url = homepage
+       This package is used to install and update Bioconductor, CRAN, and
+       (some) github packages."""
 
-    version('1.26.1', git='https://git.bioconductor.org/packages/BiocInstaller', commit='9049b82a77aefa98e3f8e4dd7068317505d70e98')
+    homepage = "https://bioconductor.org/packages/3.8/bioc/html/BiocInstaller.html"
+    git      = "https://git.bioconductor.org/packages/BiocInstaller.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.26.1')
+    version('1.33.1', commit='6193f31c18e7e64d91e0e15ed0ba6924eda1416f')
+    version('1.32.1', commit='4c2a39e1cae470af3a5cf1491715f272b70f4bb4')
+    version('1.30.0', commit='27bcb7a378cb5d8b5d23b7b840340463f7e090bc')
+    version('1.28.0', commit='7261763529a0a1f730cde8a1bbdbf454c3e25603')
+    version('1.26.1', commit='9049b82a77aefa98e3f8e4dd7068317505d70e98')
+
+    depends_on('r@3.4.0:', type=('build', 'run'))
+
+    depends_on('r@3.5.0:', when='@1.30.0:', type=('build', 'run'))

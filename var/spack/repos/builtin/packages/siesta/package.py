@@ -1,29 +1,11 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
+import os
 
 
 class Siesta(Package):
@@ -31,17 +13,17 @@ class Siesta(Package):
        dynamics simulations of molecules and solids."""
 
     homepage = "https://departments.icmab.es/leem/siesta/"
-    url      = "https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz"
 
-    version('4.0.1', '5cb60ce068f2f6e84fa9184ffca94c08')
+    version('4.0.1', sha256='bfb9e4335ae1d1639a749ce7e679e739fdead5ee5766b5356ea1d259a6b1e6d1', url='https://launchpad.net/siesta/4.0/4.0.1/+download/siesta-4.0.1.tar.gz')
+    version('3.2-pl-5', sha256='e438bb007608e54c650e14de7fa0b5c72562abb09cbd92dcfb5275becd929a23', url='http://departments.icmab.es/leem/siesta/CodeAccess/Code/siesta-3.2-pl-5.tgz')
 
-    patch('configure.patch')
+    patch('configure.patch', when='@:4.0')
 
     depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
-    depends_on('netcdf')
+    depends_on('netcdf-c')
     depends_on('netcdf-fortran')
 
     phases = ['configure', 'build', 'install']
@@ -58,23 +40,29 @@ class Siesta(Package):
                                                spec['blas'].libs),
                           '--with-scalapack=%s' % spec['scalapack'].libs,
                           '--with-netcdf=%s' % (spec['netcdf-fortran'].libs +
-                                                spec['netcdf'].libs),
+                                                spec['netcdf-c'].libs),
                           # need to specify MPIFC explicitly below, otherwise
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
-        with working_dir('Obj'):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
-        with working_dir('Obj_trans', create=True):
-            sh('../Src/configure', *configure_args)
-            sh('../Src/obj_setup.sh')
+        for d in ['Obj', 'Obj_trans']:
+            with working_dir(d, create=True):
+                sh('../Src/configure', *configure_args)
+                if spec.satisfies('@:4.0%intel'):
+                    with open('arch.make', 'a') as f:
+                        f.write('\natom.o: atom.F\n')
+                        f.write('\t$(FC) -c $(FFLAGS) -O1')
+                        f.write('$(INCFLAGS) $(FPPFLAGS) $<')
+                sh('../Src/obj_setup.sh')
 
     def build(self, spec, prefix):
         with working_dir('Obj'):
             make(parallel=False)
         with working_dir('Obj_trans'):
             make('transiesta', parallel=False)
+        with working_dir('Util'):
+            sh = which('sh')
+            sh('build_all.sh')
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)
@@ -82,3 +70,8 @@ class Siesta(Package):
             install('siesta', prefix.bin)
         with working_dir('Obj_trans'):
             install('transiesta', prefix.bin)
+        for root, _, files in os.walk('Util'):
+            for fname in files:
+                fname = join_path(root, fname)
+                if os.access(fname, os.X_OK):
+                    install(fname, prefix.bin)

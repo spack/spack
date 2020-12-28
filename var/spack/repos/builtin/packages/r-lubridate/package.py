@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,10 +14,15 @@ class RLubridate(RPackage):
     a consistent and memorable syntax that makes working with dates easy and
     fun."""
 
-    homepage = "https://cran.r-project.org/web/packages/lubridate/index.html"
-    url      = "https://cran.r-project.org/src/contrib/lubridate_1.5.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/lubridate"
+    homepage = "https://cloud.r-project.org/package=lubridate"
+    url      = "https://cloud.r-project.org/src/contrib/lubridate_1.7.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/lubridate"
 
-    version('1.5.6', 'a5dc44817548ee219d26a10bae92e611')
+    version('1.7.4', sha256='510ca87bd91631c395655ee5029b291e948b33df09e56f6be5839f43e3104891')
+    version('1.7.3', sha256='2cffbf54afce1d068e65241fb876a77b10ee907d5a19d2ffa84d5ba8a2c3f3df')
+    version('1.7.1', sha256='898c3f482ab8f5e5b415eecd13d1238769c88faed19b63fcb074ffe5ff57fb5f')
+    version('1.5.6', sha256='9b1627ba3212e132ce2b9a29d7513e250cc682ab9b4069f6788a22e84bf8d2c4')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.12.13:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))

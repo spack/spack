@@ -1,39 +1,33 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class LibgpgError(AutotoolsPackage):
-    """Libgpg-error is a small library that defines common error
-       values for all GnuPG components. Among these are GPG, GPGSM,
-       GPGME, GPG-Agent, libgcrypt, Libksba, DirMngr, Pinentry,
-       SmartCard Daemon and possibly more in the future. """
+    """Common error values for all GnuPG components."""
 
-    homepage = "https://www.gnupg.org/related_software/libgpg-error"
-    url = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.27.tar.bz2"
+    homepage = "https://www.gnupg.org/related_software/libgpg-error/index.en.html"
+    url      = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.37.tar.bz2"
 
-    version('1.27', '5217ef3e76a7275a2a3b569a12ddc989')
-    version('1.21', 'ab0b5aba6d0a185b41d07bda804fd8b2')
-    version('1.18', '12312802d2065774b787cbfc22cc04e9')
+    version('1.37', sha256='b32d6ff72a73cf79797f7f2d039e95e9c6f92f0c1450215410840ab62aea9763')
+    version('1.36', sha256='babd98437208c163175c29453f8681094bcaf92968a15cafb1a276076b33c97c')
+    version('1.27', sha256='4f93aac6fecb7da2b92871bb9ee33032be6a87b174f54abf8ddf0911a22d29d2')
+    version('1.21', sha256='b7dbdb3cad63a740e9f0c632a1da32d4afdb694ec86c8625c98ea0691713b84d')
+    version('1.18', sha256='9ff1d6e61d4cef7c1d0607ceef6d40dc33f3da7a3094170c3718c00153d80810')
+
+    depends_on('awk', type=('build'))
+    # Patch for using gawk@5, c.f. https://dev.gnupg.org/T4459
+    patch('awk-5.patch', when='@1.36^gawk@5:')
+
+    def configure_args(self):
+        args = ['--enable-static']
+
+        if self.run_tests:
+            args.append('--enable-tests')
+        else:
+            args.append('--disable-tests')
+
+        return args

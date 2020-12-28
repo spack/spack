@@ -1,39 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RA4(RPackage):
     """Automated Affymetrix Array Analysis Umbrella Package."""
 
-    homepage = "https://www.bioconductor.org/packages/a4/"
-    url      = "https://git.bioconductor.org/packages/a4"
-    list_url = homepage
-    version('1.24.0', git='https://git.bioconductor.org/packages/a4', commit='79b5143652176787c85a0d587b3bbfad6b4a19f4')
+    homepage = "https://bioconductor.org/packages/a4"
+    git      = "https://git.bioconductor.org/packages/a4.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.24.0')
+    version('1.32.0', commit='03770d4e53be4eed1bd0ab8f8cddba66854b4712')
+    version('1.30.0', commit='771e01ae3aaac1c4db12f781c41d90fa7191b64d')
+    version('1.28.0', commit='e81a8c15e1062ed9433e2d4d333f0484bc0e8bfb')
+    version('1.26.0', commit='e6af2cba5b684f81cc6e44dbc432916f75a2f774')
+    version('1.24.0', commit='79b5143652176787c85a0d587b3bbfad6b4a19f4')
+
     depends_on('r-a4base', type=('build', 'run'))
     depends_on('r-a4preproc', type=('build', 'run'))
     depends_on('r-a4classif', type=('build', 'run'))

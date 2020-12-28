@@ -1,42 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffyrnadegradation(RPackage):
-    """The package helps with the assessment and correction of
-    RNA degradation effects in Affymetrix 3' expression arrays.
-    The parameter d gives a robust and accurate measure of RNA
-    integrity. The correction removes the probe positional bias,
-    and thus improves comparability of samples that are affected
-    by RNA degradation."""
+    """Analyze and correct probe positional bias in microarray data due to RNA
+       degradation.
 
-    homepage = "https://www.bioconductor.org/packages/AffyRNADegradation/"
-    url      = "https://git.bioconductor.org/packages/AffyRNADegradation"
+       The package helps with the assessment and correction of RNA degradation
+       effects in Affymetrix 3' expression arrays. The parameter d gives a
+       robust and accurate measure of RNA integrity. The correction removes the
+       probe positional bias, and thus improves comparability of samples that
+       are affected by RNA degradation."""
 
-    version('1.22.0', git='https://git.bioconductor.org/packages/AffyRNADegradation', commit='0fa78f8286494711a239ded0ba587b0de47c15d3')
+    homepage = "https://bioconductor.org/packages/AffyRNADegradation"
+    git      = "https://git.bioconductor.org/packages/AffyRNADegradation.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.22.0')
+    version('1.30.0', commit='620c464fb09248e1c7a122828eab59a4fb778cc1')
+    version('1.28.0', commit='aff91d78fa9e76edaa3ef6a9a43b98b86cc44c24')
+    version('1.26.0', commit='6ab03ad624701464280bf7dfe345d200e846298a')
+    version('1.24.0', commit='1f85f3da4720cef94623828713eb84d8accbcf8a')
+    version('1.22.0', commit='0fa78f8286494711a239ded0ba587b0de47c15d3')
+
+    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))

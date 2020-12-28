@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,7 +14,7 @@ class Libcanberra(AutotoolsPackage):
     homepage = "http://0pointer.de/lennart/projects/libcanberra/"
     url      = "http://0pointer.de/lennart/projects/libcanberra/libcanberra-0.30.tar.xz"
 
-    version('0.30', '34cb7e4430afaf6f447c4ebdb9b42072')
+    version('0.30', sha256='c2b671e67e0c288a69fc33dc1b6f1b534d07882c2aceed37004bf48c601afa72')
 
     # TODO: Add variants and dependencies for the following audio support:
     # ALSA, OSS, PulseAudio, udev, GStreamer, null, GTK3+ , tdb

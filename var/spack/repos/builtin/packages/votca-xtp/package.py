@@ -1,26 +1,8 @@
-##############################################################################
-# Copyright (c) 2017, The VOTCA Development Team (http://www.votca.org)
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -34,15 +16,26 @@ class VotcaXtp(CMakePackage):
        This package contains the VOTCA exciton transport engine.
     """
     homepage = "http://www.votca.org"
-    url      = "https://github.com/votca/xtp/tarball/v1.4"
+    url      = "https://github.com/votca/xtp/tarball/v1.4.1"
+    git      = "https://github.com/votca/xtp.git"
+    maintainers = ['junghans']
 
-    version('develop', git='https://github.com/votca/xtp', branch='master')
-    version('1.4.1', '31a2dbd8bd48bf337bc88b20ab312050')
+    version('master', branch='master')
+    version('stable', branch='stable')
+    version('1.6.3', sha256='757b9a6a470b3c356f638d62269c5b72b8ace374f006658aef8bb6afd1ad1413')
+    version('1.6.2', sha256='b51a28cddceca6998b981ad61466617ad624d577ce424c0653d92a680f460061')
+    version('1.6.1', sha256='886af50bc12457bbafb06dc927b7fd4cadc3db1b4615b24a08953f6b358debef')
+    version('1.6', sha256='695c2d9d3f924103481529f992e3723bdce10b8edfc294421a849cdf51dbbb6e')
+    version('1.5.1', sha256='17a7722e5a32d236e4f1f6f88b680da4ba5f52bcf65bca3687c6a1c731d10881')
+    version('1.5', sha256='b40b6d19e13f0650e84b8beebe86ce5c09071624f18d66df826f9d8584b4d3c8')
+    version('1.4.1', sha256='4b53d371d6cf648c9e9e9bd1f104d349cafeaf10a02866e3f1d05c574b595a21')
 
     depends_on("cmake@2.8:", type='build')
-    depends_on("votca-tools@develop", when='@develop')
-    depends_on("votca-tools@1.4:1.4.999", when='@1.4:1.4.999')
-    depends_on("votca-csg@develop", when='@develop')
-    depends_on("votca-csg@1.4:1.4.999", when='@1.4:1.4.999')
-    depends_on("votca-ctp@develop", when='@develop')
-    depends_on("votca-moo@develop", when='@develop')
+    for v in ["1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
+              "1.6.3", "master", "stable"]:
+        depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
+        depends_on('votca-csg@%s' % v, when="@%s:%s.0" % (v, v))
+    depends_on("libxc", when='@stable,1.5:')
+    depends_on("ceres-solver", when='@1.5:1.5.9999')
+    depends_on("hdf5+cxx~mpi")
+    depends_on("libint@2.6.0:", when="@1.7:")

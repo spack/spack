@@ -1,43 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class RubyNarray(Package):
+class RubyNarray(RubyPackage):
     """Numo::NArray is an Numerical N-dimensional Array class for fast
        processing and easy manipulation of multi-dimensional numerical data,
        similar to numpy.ndaray."""
 
-    homepage = "https://rubygems.org/gems/narray"
-    url      = "https://github.com/ruby-numo/narray"
+    homepage = "https://masa16.github.io/narray/"
+    url      = "https://github.com/ruby-numo/numo-narray/archive/v0.9.1.8.tar.gz"
+    git      = "https://github.com/ruby-numo/numo-narray.git"
 
-    version('0.9.0.9', '9cadbbccf1e01b6d1bc143c19d598cad1c420869',
-            git='https://github.com/ruby-numo/narray.git')
+    version('master',  branch='master')
+    version('0.9.1.8', sha256='48814c6ebf2c4846fcf6cfd2705a15a97a608960c1676cb6c7b5c9254b0dd51b')
 
-    extends('ruby')
-
-    def install(self, spec, prefix):
-        gem('build', 'numo-narray.gemspec')
-        gem('install', 'numo-narray-{0}.gem'.format(self.version))
+    depends_on('ruby@2.2:2.999', type=('build', 'run'))

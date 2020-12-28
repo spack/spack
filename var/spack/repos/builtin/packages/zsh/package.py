@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,11 +13,14 @@ class Zsh(AutotoolsPackage):
     """
 
     homepage = "http://www.zsh.org"
-    url = "http://downloads.sourceforge.net/project/zsh/zsh/5.4.2/zsh-5.4.2.tar.gz"
+    url = "http://downloads.sourceforge.net/project/zsh/zsh/5.4.2/zsh-5.4.2.tar.xz"
 
-    version('5.4.2', checksum='dfe156fd69b0d8d1745ecf6d6e02e047')
-    version('5.3.1', checksum='d583fbca0c2410bf9542ce8a651c26ca')
-    version('5.1.1', checksum='8ba28a9ef82e40c3a271602f18343b2f')
+    version('5.8', sha256='dcc4b54cc5565670a65581760261c163d720991f0d06486da61f8d839b52de27')
+    version('5.7.1', sha256='7260292c2c1d483b2d50febfa5055176bd512b32a8833b116177bf5f01e77ee8')
+    version('5.6.2', sha256='a50bd66c0557e8eca3b8fa24e85d0de533e775d7a22df042da90488623752e9e')
+    version('5.4.2', sha256='a80b187b6b770f092ea1f53e89021d06c03d8bbe6a5e996bcca3267de14c5e52')
+    version('5.3.1', sha256='fc886cb2ade032d006da8322c09a7e92b2309177811428b121192d44832920da')
+    version('5.1.1', sha256='74e9453b5470b3c0970f9f93cfd603d241c3d7b1968adc0e4b3951073e8d3dec')
 
     # Testing for terminal related things causes failures in e.g. Jenkins.
     # See e.g. https://www.zsh.org/mla/users/2003/msg00845.html,

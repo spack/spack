@@ -1,40 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAffycoretools(RPackage):
-    """Various wrapper functions that have been written to streamline
-    the more common analyses that a core Biostatistician might see."""
+    """Functions useful for those doing repetitive analyses with Affymetrix
+       GeneChips.
 
-    homepage = "https://www.bioconductor.org/packages/affycoretools/"
-    url      = "https://git.bioconductor.org/packages/affycoretools"
+       Various wrapper functions that have been written to streamline the more
+       common analyses that a core Biostatistician might see."""
 
-    version('1.48.0', git='https://git.bioconductor.org/packages/affycoretools', commit='e0d52e34eead1ac45d3e60c59efd940e4889eb99')
+    homepage = "https://bioconductor.org/packages/affycoretools"
+    git      = "https://git.bioconductor.org/packages/affycoretools.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0')
+    version('1.56.0', commit='71eab04056a8d696470420a600b14900186be898')
+    version('1.54.0', commit='1e1f9680bc3e1fa443f4a81ce5ab81349959b845')
+    version('1.52.2', commit='2f98c74fad238b94c1e453b972524ab7b573b0de')
+    version('1.50.6', commit='4be92bcb55d7bace2a110865b7530dcfac14e76e')
+    version('1.48.0', commit='e0d52e34eead1ac45d3e60c59efd940e4889eb99')
+
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-affy', type=('build', 'run'))
     depends_on('r-limma', type=('build', 'run'))
@@ -52,3 +39,5 @@ class RAffycoretools(RPackage):
     depends_on('r-edger', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-biocgenerics', type=('build', 'run'))
+
+    depends_on('r-dbi', when='@1.50.6:', type=('build', 'run'))

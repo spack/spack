@@ -1,43 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAlsace(RPackage):
-    """Alternating Least Squares (or Multivariate Curve Resolution)
-    for analytical chemical data, in particular hyphenated data where
-    the first direction is a retention time axis, and the second a
-    spectral axis. Package builds on the basic als function from the
-    ALS package and adds functionality for high-throughput analysis,
-    including definition of time windows, clustering of profiles,
-    retention time correction, etcetera."""
+    """ALS for the Automatic Chemical Exploration of mixtures.
 
-    homepage = "https://www.bioconductor.org/packages/alsace/"
-    url      = "https://git.bioconductor.org/packages/alsace"
+       Alternating Least Squares (or Multivariate Curve Resolution) for
+       analytical chemical data, in particular hyphenated data where the first
+       direction is a retention time axis, and the second a spectral axis.
+       Package builds on the basic als function from the ALS package and adds
+       functionality for high-throughput analysis, including definition of time
+       windows, clustering of profiles, retention time correction, etcetera."""
 
-    version('1.12.0', git='https://git.bioconductor.org/packages/alsace', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
+    homepage = "https://bioconductor.org/packages/alsace"
+    git      = "https://git.bioconductor.org/packages/alsace.git"
 
+    version('1.20.0', commit='47f1cf8daafc864e5e3418009f349ce85d6b0389')
+    version('1.18.0', commit='c9fc43c7b441de43b14ef1be69926c4c4a566191')
+    version('1.16.0', commit='5a51a19aeccbba0123222201cb7a228559f29653')
+    version('1.14.0', commit='aebb13b00eb850f9569391c4c92183b55b70ae89')
+    version('1.12.0', commit='1364c65bbff05786d05c02799fd44fd57748fae3')
+
+    depends_on('r@2.10:', type=('build', 'run'))
     depends_on('r-als', type=('build', 'run'))
-    depends_on('r-ptw', type=('build', 'run'))
+    depends_on('r-ptw@1.0.6:', type=('build', 'run'))

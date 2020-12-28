@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,15 +12,21 @@ class PySphinxcontribBibtex(PythonPackage):
     homepage = "https://pypi.python.org/pypi/sphinxcontrib-bibtex"
     url      = "https://pypi.io/packages/source/s/sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
-    import_modules = ['sphinxcontrib', 'sphinxcontrib.bibtex']
+    version('2.0.0', sha256='98e18eb0b088d3f556199f3fbb91d3d48ebb7596fe86b6c37cc4c4dc5419b7a1')
+    version('1.0.0', sha256='629612b001f86784669d65e662377a482052decfd9a0a17c46860878eef7b9e0')
+    version('0.3.5', sha256='c93e2b4a0d14f0ab726f95f0a33c1675965e9df3ed04839635577b8f978206cd')
 
-    version('0.3.5', 'd3c86836e2f6227b55a5ca9108590b1c')
-
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'), when='@1:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2:')
     depends_on('py-setuptools', type='build')
     depends_on('py-latexcodec@0.3.0:', type=('build', 'run'))
-    depends_on('py-pybtex@0.17:', type=('build', 'run'))
-    depends_on('py-pybtex-docutils@0.2.0:', type=('build', 'run'))
-    depends_on('py-six@1.4.1:', type=('build', 'run'))
-    depends_on('py-sphinx@1.0:', type=('build', 'run'))
+    depends_on('py-pybtex@0.17:', type=('build', 'run'), when='@:1.9.9')
+    depends_on('py-pybtex@0.20:', type=('build', 'run'), when='@2.0.0:')
+    depends_on('py-pybtex-docutils@0.2.0:', type=('build', 'run'), when='@:1.9.9')
+    depends_on('py-pybtex-docutils@0.2.2:', type=('build', 'run'), when='@2.0.0:')
+    depends_on('py-six@1.4.1:', type=('build', 'run'), when='@0.3.5')
+    depends_on('py-sphinx@1.0:', type=('build', 'run'), when='@:1.9.9')
+    depends_on('py-sphinx@2.0:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-oset@0.1.3:', type=('build', 'run'))
     depends_on('py-ordereddict@1.1:', when='^python@:2.6', type=('build', 'run'))

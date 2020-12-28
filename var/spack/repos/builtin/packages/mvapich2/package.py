@@ -1,66 +1,52 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+import os.path
 import sys
-
-from spack import *
-from spack.error import SpackError
-
-
-def _process_manager_validator(values):
-    if len(values) > 1 and 'slurm' in values:
-        raise SpackError(
-            'slurm cannot be activated along with other process managers'
-        )
 
 
 class Mvapich2(AutotoolsPackage):
-    """MVAPICH2 is an MPI implementation for Infiniband networks."""
-    homepage = "http://mvapich.cse.ohio-state.edu/"
-    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.2.tar.gz"
+    """Mvapich2 is a High-Performance MPI Library for clusters with diverse
+    networks (InfiniBand, Omni-Path, Ethernet/iWARP, and RoCE) and computing
+    platforms (x86 (Intel and AMD), ARM and OpenPOWER)"""
+
+    homepage = "http://mvapich.cse.ohio-state.edu/userguide/userguide_spack/"
+    url = "http://mvapich.cse.ohio-state.edu/download/mvapich/mv2/mvapich2-2.3.5.tar.gz"
     list_url = "http://mvapich.cse.ohio-state.edu/downloads/"
 
-    # Newer alpha release
-    version('2.3a', '87c3fbf8a755b53806fa9ecb21453445')
+    maintainers = ['nithintsk', 'harisubramoni']
+
+    executables = ['^mpiname$']
 
     # Prefer the latest stable release
-    version('2.2', '939b65ebe5b89a5bc822cdab0f31f96e', preferred=True)
-    version('2.1', '0095ceecb19bbb7fb262131cb9c2cdd6')
-    version('2.0', '9fbb68a4111a8b6338e476dc657388b4')
-    version('1.9', '5dc58ed08fd3142c260b70fe297e127c')
-
-    patch('ad_lustre_rwcontig_open_source.patch', when='@1.9')
+    version('2.3.5', sha256='f9f467fec5fc981a89a7beee0374347b10c683023c76880f92a1a0ad4b961a8c')
+    version('2.3.4', sha256='7226a45c7c98333c8e5d2888119cce186199b430c13b7b1dca1769909e68ea7a')
+    version('2.3.3', sha256='41d3261be57e5bc8aabf4e32981543c015c5443ff032a26f18205985e18c2b73')
+    version('2.3.2', sha256='30cc0d7bcaa075d204692f76bca4d65a539e0f661c7460ffa9f835d6249e1ebf')
+    version('2.3.1', sha256='314e12829f75f3ed83cd4779a972572d1787aac6543a3d024ea7c6080e0ee3bf')
+    version('2.3', sha256='01d5fb592454ddd9ecc17e91c8983b6aea0e7559aa38f410b111c8ef385b50dd')
+    version('2.3rc2', sha256='dc3801f879a54358d17002a56afd45186e2e83edc5b8367b5c317e282eb6d6bf')
+    version('2.3rc1', sha256='607d309c864a6d57f5fa78fe6dd02368919736b8be0f4ddb938aba303ef9c45c')
+    version('2.3a', sha256='7f0bc94265de9f66af567a263b1be6ef01755f7f6aedd25303d640cc4d8b1cff')
+    version('2.2', sha256='791a6fc2b23de63b430b3e598bf05b1b25b82ba8bf7e0622fc81ba593b3bb131')
+    version('2.1', sha256='49f3225ad17d2f3b6b127236a0abdc979ca8a3efb8d47ab4b6cd4f5252d05d29')
 
     provides('mpi')
-    provides('mpi@:2.2', when='@1.9')  # MVAPICH2-1.9 supports MPI 2.2
-    provides('mpi@:3.0', when='@2.0:')  # MVAPICH2-2.0 supports MPI 3.0
+    provides('mpi@:3.1', when='@2.3:')
+    provides('mpi@:3.0', when='@2.1:')
 
+    variant('wrapperrpath', default=True, description='Enable wrapper rpath')
     variant('debug', default=False,
             description='Enable debug info and error messages at run-time')
 
     variant('cuda', default=False,
             description='Enable CUDA extension')
+
+    variant('regcache', default=True,
+            description='Enable memory registration cache')
 
     # Accepted values are:
     #   single      - No threads (MPI_THREAD_SINGLE)
@@ -88,31 +74,175 @@ class Mvapich2(AutotoolsPackage):
     variant(
         'process_managers',
         description='List of the process managers to activate',
-        values=('slurm', 'hydra', 'gforker', 'remshell'),
-        multi=True,
-        validator=_process_manager_validator
+        values=disjoint_sets(
+            ('auto',), ('slurm',), ('hydra', 'gforker', 'remshell')
+        ).prohibit_empty_set().with_error(
+            "'slurm' or 'auto' cannot be activated along with "
+            "other process managers"
+        ).with_default('auto').with_non_feature_values('auto'),
     )
 
     variant(
         'fabrics',
-        description='The fabric enabled for this build',
-        default='psm',
+        description='Select the fabric to be enabled for this build.'
+        'If you have verbs (either from OFED or MOFED), PSM or PSM2 '
+        'installed on the system already, you may need to setup external '
+        'packages in the package.yaml file for rdma-core, psm or opa-psm2. '
+        'This is recommended to avoid unexpected runtime failures. For '
+        'more info, visit the homepage url.',
+        default='mrail',
         values=(
-            'psm', 'sock', 'nemesisib', 'nemesis', 'mrail', 'nemesisibtcp',
-            'nemesistcpib'
+            'psm', 'psm2', 'sock', 'nemesisib', 'nemesis', 'mrail',
+            'nemesisibtcp', 'nemesistcpib', 'nemesisofi'
         )
     )
 
-    depends_on('bison', type='build')
-    depends_on('libpciaccess', when=(sys.platform != 'darwin'))
-    depends_on('cuda', when='+cuda')
+    variant(
+        'alloca',
+        default=False,
+        description='Use alloca to allocate temporary memory if available'
+    )
 
-    def url_for_version(self, version):
-        base_url = "http://mvapich.cse.ohio-state.edu/download"
-        if version < Version('2.0'):
-            return "%s/mvapich2/mv2/mvapich2-%s.tar.gz" % (base_url, version)
-        else:
-            return "%s/mvapich/mv2/mvapich2-%s.tar.gz"  % (base_url, version)
+    variant(
+        'file_systems',
+        description='List of the ROMIO file systems to activate',
+        values=auto_or_any_combination_of('lustre', 'gpfs', 'nfs', 'ufs'),
+    )
+
+    depends_on('findutils', type='build')
+    depends_on('bison', type='build')
+    depends_on('pkgconfig', type='build')
+    depends_on('zlib')
+    depends_on('libpciaccess', when=(sys.platform != 'darwin'))
+    depends_on('libxml2')
+    depends_on('cuda', when='+cuda')
+    depends_on('psm', when='fabrics=psm')
+    depends_on('opa-psm2', when='fabrics=psm2')
+    depends_on('rdma-core', when='fabrics=mrail')
+    depends_on('rdma-core', when='fabrics=nemesisib')
+    depends_on('rdma-core', when='fabrics=nemesistcpib')
+    depends_on('rdma-core', when='fabrics=nemesisibtcp')
+    depends_on('libfabric', when='fabrics=nemesisofi')
+    depends_on('slurm', when='process_managers=slurm')
+
+    conflicts('fabrics=psm2', when='@:2.1')  # psm2 support was added at version 2.2
+
+    filter_compiler_wrappers(
+        'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
+    )
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-a', output=str, error=str)
+        match = re.search(r'^MVAPICH2 (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def get_spack_compiler_spec(path):
+            spack_compilers = spack.compilers.find_compilers([path])
+            for spack_compiler in spack_compilers:
+                if os.path.dirname(spack_compiler.cc) == path:
+                    return spack_compiler.spec
+            return None
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)('-a', output=str, error=str)
+
+            if re.search(r'--enable-wrapper-rpath=yes', output):
+                variants += '+wrapperrpath'
+            else:
+                variants += '~wrapperrpath'
+
+            if (re.search(r'--disable-fast', output)
+                and re.search(r'--enable-error-checking=runtime', output)
+                and re.search(r'--enable-error-messages', output)
+                and re.search(r'--enable-g', output)
+                and re.search(r'--enable-debuginfo', output)):
+                variants += '+debug'
+            else:
+                variants += '~debug'
+
+            if re.search('--enable-cuda', output):
+                variants += '+cuda'
+            else:
+                variants += '~cuda'
+
+            if re.search('--enable-registration-cache', output):
+                variants += '+regcache'
+            else:
+                variants += '~regcache'
+
+            match = re.search(r'--enable-threads=(\S+)', output)
+            if match:
+                variants += " threads=" + match.group(1)
+
+            match = re.search(r'--with-ch3-rank-bits=(\S+)', output)
+            if match:
+                variants += " ch3_rank_bits=" + match.group(1)
+
+            pms = []
+            if re.search(r'--with-pm=slurm', output):
+                pms.append('slurm')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*hydra', output):
+                pms.append('hydra')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*gforker', output):
+                pms.append('gforker')
+            if re.search(r'--with-pm=[A-Za-z0-9:]*remshell', output):
+                pms.append('remshell')
+            if pms:
+                variants += " process_managers=" + ",".join(pms)
+
+            fabrics = {
+                'sock': 'ch3:sock',
+                'nemesistcpib': 'ch3:nemesis:tcp,ib',
+                'nemesisibtcp': 'ch3:nemesis:ib,tcp',
+                'nemesisib': 'ch3:nemesis:ib',
+                'nemesis': 'ch3:nemesis',
+                'mrail': 'ch3:mrail',
+                'nemesisofi': 'ch3:nemesis:ofi',
+            }
+            for fabric_name, conf_flag in fabrics.items():
+                if re.search(r'--with-device=' + conf_flag, output):
+                    variants += ' fabrics=' + fabric_name
+                    break
+            else:
+                if re.search(r'--with-device=psm', output):
+                    if re.search(r'--with-psm=', output):
+                        variants += ' fabrics=psm'
+                    elif re.search(r'--with-psm2=', output):
+                        variants += ' fabrics=psm2'
+
+            used_fs = []
+            for fs in ('lustre', 'gpfs', 'nfs', 'ufs'):
+                if re.search(
+                        '--with-file-system=[a-zA-Z0-9+]*' + fs,
+                        output):
+                    used_fs.append(fs)
+            if used_fs:
+                variants += ' file_systems=' + ",".join(used_fs)
+
+            match = re.search(r'CC: (\S+)', output)
+            if match:
+                comp_spec = get_spack_compiler_spec(
+                    os.path.dirname(match.group(1)))
+                if comp_spec:
+                    variants += " %" + str(comp_spec)
+            results.append(variants)
+        return results
+
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libmpi']
+
+        if 'cxx' in query_parameters:
+            libraries = ['libmpicxx'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
 
     @property
     def process_manager_options(self):
@@ -122,20 +252,18 @@ class Mvapich2(AutotoolsPackage):
         for x in ('hydra', 'gforker', 'remshell'):
             if 'process_managers={0}'.format(x) in spec:
                 other_pms.append(x)
-        opts = ['--with-pm=%s' % ':'.join(other_pms)]
+
+        opts = []
+        if len(other_pms) > 0:
+            opts = ['--with-pm=%s' % ':'.join(other_pms)]
 
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
-            if self.version > Version('2.0'):
-                opts = [
-                    '--with-pmi=pmi2',
-                    '--with-pm=slurm'
-                ]
-            else:
-                opts = [
-                    '--with-pmi=slurm',
-                    '--with-pm=no'
-                ]
+            opts = [
+                '--with-pmi=pmi2',
+                '--with-pm=slurm',
+                '--with-slurm={0}'.format(spec['slurm'].prefix),
+            ]
 
         return opts
 
@@ -144,7 +272,15 @@ class Mvapich2(AutotoolsPackage):
         opts = []
         # From here on I can suppose that only one variant has been selected
         if 'fabrics=psm' in self.spec:
-            opts = ["--with-device=ch3:psm"]
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm={0}".format(self.spec['psm'].prefix)
+            ]
+        elif 'fabrics=psm2' in self.spec:
+            opts = [
+                "--with-device=ch3:psm",
+                "--with-psm2={0}".format(self.spec['opa-psm2'].prefix)
+            ]
         elif 'fabrics=sock' in self.spec:
             opts = ["--with-device=ch3:sock"]
         elif 'fabrics=nemesistcpib' in self.spec:
@@ -156,34 +292,94 @@ class Mvapich2(AutotoolsPackage):
         elif 'fabrics=nemesis' in self.spec:
             opts = ["--with-device=ch3:nemesis"]
         elif 'fabrics=mrail' in self.spec:
-            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2"]
+            opts = ["--with-device=ch3:mrail", "--with-rdma=gen2",
+                    "--disable-mcast"]
+        elif 'fabrics=nemesisofi' in self.spec:
+            opts = ["--with-device=ch3:nemesis:ofi",
+                    "--with-ofi={0}".format(self.spec['libfabric'].prefix)]
         return opts
 
-    def setup_environment(self, spack_env, run_env):
+    @property
+    def file_system_options(self):
         spec = self.spec
-        if 'process_managers=slurm' in spec and spec.satisfies('@2.0:'):
-            run_env.set('SLURM_MPI_TYPE', 'pmi2')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
-        spack_env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
-        spack_env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        spack_env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        fs = []
+        for x in ('lustre', 'gpfs', 'nfs', 'ufs'):
+            if 'file_systems={0}'.format(x) in spec:
+                fs.append(x)
 
-        spack_env.set('MPICH_CC', spack_cc)
-        spack_env.set('MPICH_CXX', spack_cxx)
-        spack_env.set('MPICH_F77', spack_f77)
-        spack_env.set('MPICH_F90', spack_fc)
-        spack_env.set('MPICH_FC', spack_fc)
+        opts = []
+        if len(fs) > 0:
+            opts.append('--with-file-system=%s' % '+'.join(fs))
+
+        return opts
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
+
+    def setup_build_environment(self, env):
+        # mvapich2 configure fails when F90 and F90FLAGS are set
+        env.unset('F90')
+        env.unset('F90FLAGS')
+
+    def setup_run_environment(self, env):
+        if 'process_managers=slurm' in self.spec:
+            env.set('SLURM_MPI_TYPE', 'pmi2')
+
+        # Because MPI functions as a compiler, we need to treat it as one and
+        # add its compiler paths to the run environment.
+        self.setup_compiler_environment(env)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self.setup_compiler_environment(env)
+
+        # use the Spack compiler wrappers under MPI
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
+
+    def setup_compiler_environment(self, env):
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            env.set('MPICC',  spack_cc)
+            env.set('MPICXX', spack_cxx)
+            env.set('MPIF77', spack_fc)
+            env.set('MPIF90', spack_fc)
+        else:
+            env.set('MPICC',  join_path(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.prefix.bin, 'mpicxx'))
+            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
     def setup_dependent_package(self, module, dependent_spec):
-        self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
-        self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
-        self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
-        self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mvapich"
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            self.spec.mpicc = spack_cc
+            self.spec.mpicxx = spack_cxx
+            self.spec.mpifc = spack_fc
+            self.spec.mpif77 = spack_f77
+        else:
+            self.spec.mpicc  = join_path(self.prefix.bin, 'mpicc')
+            self.spec.mpicxx = join_path(self.prefix.bin, 'mpicxx')
+            self.spec.mpifc  = join_path(self.prefix.bin, 'mpif90')
+            self.spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+
         self.spec.mpicxx_shared_libs = [
-            join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
-            join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
+            os.path.join(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
+            os.path.join(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
     @run_before('configure')
@@ -201,12 +397,17 @@ class Mvapich2(AutotoolsPackage):
         args = [
             '--enable-shared',
             '--enable-romio',
-            '-disable-silent-rules',
+            '--disable-silent-rules',
+            '--disable-new-dtags',
             '--enable-fortran=all',
             "--enable-threads={0}".format(spec.variants['threads'].value),
             "--with-ch3-rank-bits={0}".format(
                 spec.variants['ch3_rank_bits'].value),
+            '--enable-wrapper-rpath={0}'.format('no' if '~wrapperrpath' in
+                                                spec else 'yes')
         ]
+
+        args.extend(self.enable_or_disable('alloca'))
 
         if '+debug' in self.spec:
             args.extend([
@@ -228,36 +429,12 @@ class Mvapich2(AutotoolsPackage):
         else:
             args.append('--disable-cuda')
 
+        if '+regcache' in self.spec:
+            args.append('--enable-registration-cache')
+        else:
+            args.append('--disable-registration-cache')
+
         args.extend(self.process_manager_options)
         args.extend(self.network_options)
+        args.extend(self.file_system_options)
         return args
-
-    @run_after('install')
-    def filter_compilers(self):
-        """Run after install to make the MPI compilers use the
-           compilers that Spack built the package with.
-
-           If this isn't done, they'll have CC, CXX, F77, and FC set
-           to Spack's generic cc, c++, f77, and f90.  We want them to
-           be bound to whatever compiler they were built with.
-        """
-        bin = self.prefix.bin
-        mpicc = join_path(bin, 'mpicc')
-        mpicxx = join_path(bin, 'mpicxx')
-        mpif77 = join_path(bin, 'mpif77')
-        mpif90 = join_path(bin, 'mpif90')
-        mpifort = join_path(bin, 'mpifort')
-
-        # Substitute Spack compile wrappers for the real
-        # underlying compiler
-        kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
-        filter_file(env['CC'], self.compiler.cc, mpicc, **kwargs)
-        filter_file(env['CXX'], self.compiler.cxx, mpicxx, **kwargs)
-        filter_file(env['F77'], self.compiler.f77, mpif77, **kwargs)
-        filter_file(env['FC'], self.compiler.fc, mpif90, **kwargs)
-        filter_file(env['FC'], self.compiler.fc, mpifort, **kwargs)
-
-        # Remove this linking flag if present
-        # (it turns RPATH into RUNPATH)
-        for wrapper in (mpicc, mpicxx, mpif77, mpif90, mpifort):
-            filter_file('-Wl,--enable-new-dtags', '', wrapper, **kwargs)

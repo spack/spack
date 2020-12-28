@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -30,8 +11,21 @@ class Exmcutils(AutotoolsPackage):
     """ExM C-Utils: Generic C utility library for ADLB/X and Swift/T"""
 
     homepage = 'http://swift-lang.org/Swift-T'
-    url      = 'http://swift-lang.github.io/swift-t-downloads/exmcutils-0.5.3.tar.gz'
+    url      = 'http://swift-lang.github.io/swift-t-downloads/spack/exmcutils-0.5.7.tar.gz'
+    git      = "https://github.com/swift-lang/swift-t.git"
 
-    version('0.5.3', '0e3ed6cc2991c684cd8f08db45c99a39')
+    version('master', branch='master')
+    version('0.5.7', sha256='6b84f43e8928d835dbd68c735ece6a9b7c648a1a4488ec2b1d2f3c4ceec508e8')
+    version('0.5.6', sha256='296ba85cc828bd816c7c4de9453f589da37f32854a58ffda3586b6f371a23abf')
 
-    # This package has no dependencies.
+    @property
+    def configure_directory(self):
+        if self.version == Version('master'):
+            return 'c-utils/code'
+        else:
+            return '.'
+
+    depends_on('m4', when='@master')
+    depends_on('autoconf', when='@master')
+    depends_on('automake', when='@master')
+    depends_on('libtool', when='@master')

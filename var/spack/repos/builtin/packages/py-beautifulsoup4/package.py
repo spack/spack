@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,10 +12,12 @@ class PyBeautifulsoup4(PythonPackage):
     of navigating, searching, and modifying the parse tree."""
 
     homepage = "https://www.crummy.com/software/BeautifulSoup"
-    url = "https://pypi.io/packages/source/b/beautifulsoup4/beautifulsoup4-4.5.3.tar.gz"
+    url = "https://pypi.io/packages/source/b/beautifulsoup4/beautifulsoup4-4.8.0.tar.gz"
 
-    version('4.5.3', '937e0df0d699a1237646f38fd567f0c6')
-    version('4.5.1', '994abd90e691beaf7d42c00ffb2f3a67')
-    version('4.4.1', '8fbd9a7cac0704645fa20d1419036815')
+    version('4.8.0', sha256='25288c9e176f354bf277c0a10aa96c782a6a18a17122dba2e8cec4a97e03343b')
+    version('4.5.3', sha256='b21ca09366fa596043578fd4188b052b46634d22059e68dd0077d9ee77e08a3e')
+    version('4.5.1', sha256='3c9474036afda9136aac6463def733f81017bf9ef3510d25634f335b0c87f5e1')
+    version('4.4.1', sha256='87d4013d0625d4789a4f56b8d79a04d5ce6db1152bb65f1d39744f7709a366b4')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-soupsieve@1.2:', when='@4.7.0:', type=('build', 'run'))

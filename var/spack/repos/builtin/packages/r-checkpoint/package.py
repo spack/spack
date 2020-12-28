@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,11 +12,12 @@ class RCheckpoint(RPackage):
     install packages as they existed on CRAN on a specific snapshot
     date as if you had a CRAN time machine."""
 
-    homepage = "https://cran.r-project.org/package=checkpoint"
-    url      = "https://cran.r-project.org/src/contrib/checkpoint_0.3.18.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/checkpoint"
+    homepage = "https://cloud.r-project.org/package=checkpoint"
+    url      = "https://cloud.r-project.org/src/contrib/checkpoint_0.4.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/checkpoint"
 
-    version('0.3.18', '021d7faeb72c36167951e103b2b065ea')
-    version('0.3.15', 'a4aa8320338f1434a330d984e97981ea')
+    version('0.4.6', sha256='fd1a5edb5cb1a40d7ed26bb196de566110fe2ef62e70b4e947c003576a03ebb2')
+    version('0.4.3', sha256='c3e862f89f8838183d6028f7ed13683aec562e6dab77ad4b6a5e24ec653cfb64')
+    version('0.3.15', sha256='09f1feeb2b5b8b409a2e16a9185827b8da5e555f1aa84442a287f15e452beed7')
 
-    depends_on('r@3.0.0:')
+    depends_on('r@3.0.0:', type=('build', 'run'))

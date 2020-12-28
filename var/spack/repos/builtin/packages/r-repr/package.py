@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -31,7 +12,15 @@ class RRepr(RPackage):
     mime types."""
 
     homepage = "https://github.com/IRkernel/repr"
-    url      = "https://cran.r-project.org/src/contrib/repr_0.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/repr"
+    url      = "https://cloud.r-project.org/src/contrib/repr_0.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/repr"
 
-    version('0.9', 'db5ff74893063b492f684e42283070bd')
+    version('1.0.1', sha256='ecde22c17fd800e1ff5c2b2962689119aa486fba40fbc6f2c50e8d4cc61bc44b')
+    version('1.0.0', sha256='98b2eb1058c1cb2caa8f98708b63726f5564b45de03d38b95ff6b963a8261f49')
+    version('0.9', sha256='24cac6e98f2a7e5483cf87aaffcb37611702099b63d3783e319441b4ecd0264b')
+
+    depends_on('r@3.0.1:', type=('build', 'run'))
+    depends_on('r-htmltools', when='@0.13:', type=('build', 'run'))
+    depends_on('r-base64enc', when='@0.13:', type=('build', 'run'))
+    depends_on('r-jsonlite', when='@0.19.1:', type=('build', 'run'))
+    depends_on('r-pillar@1.4.0:', when='@1.0.0:', type=('build', 'run'))

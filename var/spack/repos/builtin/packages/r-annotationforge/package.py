@@ -1,44 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAnnotationforge(RPackage):
-    """Provides code for generating Annotation packages and
-    their databases. Packages produced are intended to be used
-    with AnnotationDbi."""
+    """Tools for building SQLite-based annotation data packages.
 
-    homepage = "https://www.bioconductor.org/packages/AnnotationForge/"
-    url      = "https://git.bioconductor.org/packages/AnnotationForge"
+       Provides code for generating Annotation packages and their databases.
+       Packages produced are intended to be used with AnnotationDbi."""
 
-    version('1.18.2', git='https://git.bioconductor.org/packages/AnnotationForge', commit='44ca3d4ef9e9825c14725ffdbbaa57ea059532e1')
+    homepage = "https://bioconductor.org/packages/AnnotationForge"
+    git      = "https://git.bioconductor.org/packages/AnnotationForge.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.18.2')
-    depends_on('r-biocgenerics', type=('build', 'run'))
-    depends_on('r-biobase', type=('build', 'run'))
-    depends_on('r-annotationdbi', type=('build', 'run'))
+    version('1.26.0', commit='5d181f32df1fff6446af64a2538a7d25c23fe46e')
+    version('1.24.0', commit='3e1fe863573e5b0f69f35a9ad6aebce11ef83d0d')
+    version('1.22.2', commit='8eafb1690c1c02f6291ccbb38ac633d54b8217f8')
+    version('1.20.0', commit='7b440f1570cb90acce8fe2fa8d3b5ac34f638882')
+    version('1.18.2', commit='44ca3d4ef9e9825c14725ffdbbaa57ea059532e1')
+
+    depends_on('r@2.7.0:', type=('build', 'run'))
+    depends_on('r-biocgenerics@0.15.10:', type=('build', 'run'))
+    depends_on('r-biobase@1.17.0:', type=('build', 'run'))
+    depends_on('r-annotationdbi@1.33.14:', type=('build', 'run'))
     depends_on('r-dbi', type=('build', 'run'))
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-xml', type=('build', 'run'))

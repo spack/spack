@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -36,9 +17,12 @@ class RRsnns(RPackage):
     and learning algorithms integrate seamlessly into R."""
 
     homepage = "http://sci2s.ugr.es/dicits/software/RSNNS"
-    url      = "https://cran.r-project.org/src/contrib/RSNNS_0.4-7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RSNNS"
+    url      = "https://cloud.r-project.org/src/contrib/RSNNS_0.4-7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RSNNS"
 
-    version('0.4-7', 'ade7736611c456effb5f72e0ce0a1e6f')
+    version('0.4-11', sha256='87943126e98ae47f366e3025d0f3dc2f5eb0aa2924508fd9ee9a0685d7cb477c')
+    version('0.4-10.1', sha256='38bb3d172390bd01219332ec834744274b87b01f94d23b29a9d818c2bca04071')
+    version('0.4-7', sha256='ec941dddda55e4e29ed281bd8768a93d65e0d86d56ecab0f2013c64c8d1a4994')
 
-    depends_on('r-rcpp', type=('build', 'run'))
+    depends_on('r@2.10.0:', type=('build', 'run'))
+    depends_on('r-rcpp@0.8.5:', type=('build', 'run'))

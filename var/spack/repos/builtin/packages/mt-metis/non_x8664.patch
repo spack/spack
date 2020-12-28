@@ -1,0 +1,14 @@
+diff --git a/domlib/dlmacros.h b/domlib/dlmacros.h
+index 2cbca90..d231b75 100644
+--- a/domlib/dlmacros.h
++++ b/domlib/dlmacros.h
+@@ -211,7 +211,9 @@
+ #else
+ static inline void _mm_pause(void)
+ {
++#ifdef _x86_64__
+   __asm__ ( "pause;" );
++#endif
+ }
+ #endif
+ 

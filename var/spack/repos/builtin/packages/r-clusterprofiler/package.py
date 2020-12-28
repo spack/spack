@@ -1,47 +1,42 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RClusterprofiler(RPackage):
-    """This package implements methods to analyze and visualize functional
-    profiles (GO and KEGG) of gene and gene clusters."""
+    """statistical analysis and visualization of functional profiles for genes
+       and gene clusters.
 
-    homepage = "https://www.bioconductor.org/packages/clusterProfiler/"
-    url      = "https://git.bioconductor.org/packages/clusterProfiler"
+       This package implements methods to analyze and visualize functional
+       profiles (GO and KEGG) of gene and gene clusters."""
 
-    version('3.4.4', git='https://git.bioconductor.org/packages/clusterProfiler', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
+    homepage = "https://bioconductor.org/packages/clusterProfiler"
+    git      = "https://git.bioconductor.org/packages/clusterProfiler.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@3.4.4')
-    depends_on('r-tidyr', type=('build', 'run'))
-    depends_on('r-rvcheck', type=('build', 'run'))
-    depends_on('r-qvalue', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
-    depends_on('r-magrittr', type=('build', 'run'))
-    depends_on('r-gosemsim', type=('build', 'run'))
-    depends_on('r-go-db', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
+    version('3.12.0', commit='6ec88d10832bdfd938e9c065b377015eedb7eee2')
+    version('3.10.1', commit='39927ef7ff6f97e27557bcf4147e2133b364fd3c')
+    version('3.8.1', commit='81e1a7ac49e4713703c55f87f945b20de5e7ab36')
+    version('3.6.0', commit='ff15e3dba69b93bc872d5f5d07821cd9ae20d829')
+    version('3.4.4', commit='b86b00e8405fe130e439362651a5567736e2d9d7')
+
+    depends_on('r@3.3.1:', type=('build', 'run'))
+    depends_on('r-dose@3.1.3:', type=('build', 'run'))
     depends_on('r-annotationdbi', type=('build', 'run'))
-    depends_on('r-dose', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-go-db', type=('build', 'run'))
+    depends_on('r-gosemsim@2.0.0:', when='@3.4.4:3.6.0', type=('build', 'run'))
+    depends_on('r-gosemsim', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r-qvalue', type=('build', 'run'))
+    depends_on('r-rvcheck', type=('build', 'run'))
+    depends_on('r-tidyr', type=('build', 'run'))
+
+    depends_on('r-dose@3.3.2:', when='@3.6.0:', type=('build', 'run'))
+
+    depends_on('r@3.4.0:', when='@3.8.1:', type=('build', 'run'))
+    depends_on('r-dose@3.5.1:', when='@3.8.1:', type=('build', 'run'))
+    depends_on('r-enrichplot@0.99.7:', when='@3.8.1:', type=('build', 'run'))

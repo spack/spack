@@ -1,90 +1,86 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import division
 
+import multiprocessing
 import os
 import re
 import functools
 import collections
 import inspect
-from datetime import datetime
+from datetime import datetime, timedelta
 from six import string_types
+import sys
+
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 
 
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
+# method. Spack cannot currently handle this, so force the process to start
+# using the 'fork' start method.
+#
+# TODO: This solution is not ideal, as the 'fork' start method can lead to
+# crashes of the subprocess. Figure out how to make 'spawn' work.
+#
+# See:
+# * https://github.com/spack/spack/pull/18124
+# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
+# * https://bugs.python.org/issue33725
+if sys.version_info >= (3,):  # novm
+    fork_context = multiprocessing.get_context('fork')
+else:
+    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
-       set of objects on unique values of the supplied functions.
-       Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this::
+    set of objects on unique values of the supplied functions.
 
-          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+    Values are used as keys. For example, suppose you have four
+    objects with attributes that look like this::
 
-          list_of_specs = [a,b,c,d]
-          index1 = index_by(list_of_specs, lambda s: s.arch,
-                            lambda s: s.compiler)
-          index2 = index_by(list_of_specs, lambda s: s.compiler)
+        a = Spec("boost %gcc target=skylake")
+        b = Spec("mrnet %intel target=zen2")
+        c = Spec("libelf %xlc target=skylake")
+        d = Spec("libdwarf %intel target=zen2")
 
-       ``index1`` now has two levels of dicts, with lists at the
-       leaves, like this::
+        list_of_specs = [a,b,c,d]
+        index1 = index_by(list_of_specs, lambda s: str(s.target),
+                          lambda s: s.compiler)
+        index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
-             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
-           }
+    ``index1`` now has two levels of dicts, with lists at the
+    leaves, like this::
 
-       And ``index2`` is a single level dictionary of lists that looks
-       like this::
+        { 'zen2'    : { 'gcc' : [a], 'xlc' : [c] },
+          'skylake' : { 'intel' : [b, d] }
+        }
 
-           { 'gcc'    : [a],
-             'intel'  : [b,d],
-             'xlc'    : [c]
-           }
+    And ``index2`` is a single level dictionary of lists that looks
+    like this::
 
-       If any elemnts in funcs is a string, it is treated as the name
-       of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be::
+        { 'gcc'    : [a],
+          'intel'  : [b,d],
+          'xlc'    : [c]
+        }
 
-           index1 = index_by(list_of_specs, 'arch', 'compiler')
-           index2 = index_by(list_of_specs, 'compiler')
+    If any elements in funcs is a string, it is treated as the name
+    of an attribute, and acts like getattr(object, name).  So
+    shorthand for the above two indexes would be::
 
-       You can also index by tuples by passing tuples::
+        index1 = index_by(list_of_specs, 'arch', 'compiler')
+        index2 = index_by(list_of_specs, 'compiler')
 
-           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+    You can also index by tuples by passing tuples::
 
-       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
+        index1 = index_by(list_of_specs, ('target', 'compiler'))
+
+    Keys in the resulting dict will look like ('gcc', 'skylake').
     """
     if not funcs:
         return objects
@@ -165,30 +161,44 @@ def has_method(cls, name):
     return False
 
 
-class memoized(object):
-    """Decorator that caches the results of a function, storing them
-       in an attribute of that function."""
+def union_dicts(*dicts):
+    """Use update() to combine all dicts into one.
 
-    def __init__(self, func):
-        self.func = func
-        self.cache = {}
+    This builds a new dictionary, into which we ``update()`` each element
+    of ``dicts`` in order.  Items from later dictionaries will override
+    items from earlier dictionaries.
 
-    def __call__(self, *args):
+    Args:
+        dicts (list): list of dictionaries
+
+    Return: (dict): a merged dictionary containing combined keys and
+        values from ``dicts``.
+
+    """
+    result = {}
+    for d in dicts:
+        result.update(d)
+    return result
+
+
+def memoized(func):
+    """Decorator that caches the results of a function, storing them in
+    an attribute of that function.
+    """
+    func.cache = {}
+
+    @functools.wraps(func)
+    def _memoized_function(*args):
         if not isinstance(args, collections.Hashable):
             # Not hashable, so just call the function.
-            return self.func(*args)
+            return func(*args)
 
-        if args not in self.cache:
-            self.cache[args] = self.func(*args)
-        return self.cache[args]
+        if args not in func.cache:
+            func.cache[args] = func(*args)
 
-    def __get__(self, obj, objtype):
-        """Support instance methods."""
-        return functools.partial(self.__call__, obj)
+        return func.cache[args]
 
-    def clear(self):
-        """Expunge cache so that self.func will be called again."""
-        self.cache.clear()
+    return _memoized_function
 
 
 def list_modules(directory, **kwargs):
@@ -282,8 +292,8 @@ class HashableMap(collections.MutableMapping):
     def copy(self):
         """Type-agnostic clone method.  Preserves subclass type."""
         # Construct a new dict of my type
-        T = type(self)
-        clone = T()
+        self_type = type(self)
+        clone = self_type()
 
         # Copy everything from this dict into it.
         for key in self:
@@ -323,7 +333,7 @@ def check_kwargs(kwargs, fun):
     if kwargs:
         raise TypeError(
             "'%s' is an invalid keyword argument for function %s()."
-            % (next(kwargs.iterkeys()), fun.__name__))
+            % (next(iter(kwargs)), fun.__name__))
 
 
 def match_predicate(*args):
@@ -442,6 +452,70 @@ def pretty_date(time, now=None):
         return str(diff) + " years ago"
 
 
+def pretty_string_to_date(date_str, now=None):
+    """Parses a string representing a date and returns a datetime object.
+
+    Args:
+        date_str (str): string representing a date. This string might be
+            in different format (like ``YYYY``, ``YYYY-MM``, ``YYYY-MM-DD``,
+            ``YYYY-MM-DD HH:MM``, ``YYYY-MM-DD HH:MM:SS``)
+            or be a *pretty date* (like ``yesterday`` or ``two months ago``)
+
+    Returns:
+        (datetime): datetime object corresponding to ``date_str``
+    """
+
+    pattern = {}
+
+    now = now or datetime.now()
+
+    # datetime formats
+    pattern[re.compile(r'^\d{4}$')] = lambda x: datetime.strptime(x, '%Y')
+    pattern[re.compile(r'^\d{4}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m'
+    )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2}$')] = lambda x: datetime.strptime(
+        x, '%Y-%m-%d'
+    )
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M')
+    pattern[re.compile(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$')] = \
+        lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+
+    pretty_regex = re.compile(
+        r'(a|\d+)\s*(year|month|week|day|hour|minute|second)s?\s*ago')
+
+    def _n_xxx_ago(x):
+        how_many, time_period = pretty_regex.search(x).groups()
+
+        how_many = 1 if how_many == 'a' else int(how_many)
+
+        # timedelta natively supports time periods up to 'weeks'.
+        # To apply month or year we convert to 30 and 365 days
+        if time_period == 'month':
+            how_many *= 30
+            time_period = 'day'
+        elif time_period == 'year':
+            how_many *= 365
+            time_period = 'day'
+
+        kwargs = {(time_period + 's'): how_many}
+        return now - timedelta(**kwargs)
+
+    pattern[pretty_regex] = _n_xxx_ago
+
+    # yesterday
+    callback = lambda x: now - timedelta(days=1)
+    pattern[re.compile('^yesterday$')] = callback
+
+    for regexp, parser in pattern.items():
+        if bool(regexp.match(date_str)):
+            return parser(date_str)
+
+    msg = 'date "{0}" does not match any valid format'.format(date_str)
+    raise ValueError(msg)
+
+
 class RequiredAttributeError(ValueError):
 
     def __init__(self, message):
@@ -458,5 +532,151 @@ class ObjectWrapper(object):
     def __init__(self, wrapped_object):
         wrapped_cls = type(wrapped_object)
         wrapped_name = wrapped_cls.__name__
-        self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+
+        # If the wrapped object is already an ObjectWrapper, or a derived class
+        # of it, adding type(self) in front of type(wrapped_object)
+        # results in an inconsistent MRO.
+        #
+        # TODO: the implementation below doesn't account for the case where we
+        # TODO: have different base classes of ObjectWrapper, say A and B, and
+        # TODO: we want to wrap an instance of A with B.
+        if type(self) not in wrapped_cls.__mro__:
+            self.__class__ = type(wrapped_name, (type(self), wrapped_cls), {})
+        else:
+            self.__class__ = type(wrapped_name, (wrapped_cls,), {})
+
         self.__dict__ = wrapped_object.__dict__
+
+
+class Singleton(object):
+    """Simple wrapper for lazily initialized singleton objects."""
+
+    def __init__(self, factory):
+        """Create a new singleton to be inited with the factory function.
+
+        Args:
+            factory (function): function taking no arguments that
+                creates the singleton instance.
+        """
+        self.factory = factory
+        self._instance = None
+
+    @property
+    def instance(self):
+        if self._instance is None:
+            self._instance = self.factory()
+        return self._instance
+
+    def __getattr__(self, name):
+        # When unpickling Singleton objects, the 'instance' attribute may be
+        # requested but not yet set. The final 'getattr' line here requires
+        # 'instance'/'_instance' to be defined or it will enter an infinite
+        # loop, so protect against that here.
+        if name in ['_instance', 'instance']:
+            raise AttributeError()
+        return getattr(self.instance, name)
+
+    def __getitem__(self, name):
+        return self.instance[name]
+
+    def __contains__(self, element):
+        return element in self.instance
+
+    def __call__(self, *args, **kwargs):
+        return self.instance(*args, **kwargs)
+
+    def __iter__(self):
+        return iter(self.instance)
+
+    def __str__(self):
+        return str(self.instance)
+
+    def __repr__(self):
+        return repr(self.instance)
+
+
+class LazyReference(object):
+    """Lazily evaluated reference to part of a singleton."""
+
+    def __init__(self, ref_function):
+        self.ref_function = ref_function
+
+    def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
+        return getattr(self.ref_function(), name)
+
+    def __getitem__(self, name):
+        return self.ref_function()[name]
+
+    def __str__(self):
+        return str(self.ref_function())
+
+    def __repr__(self):
+        return repr(self.ref_function())
+
+
+def load_module_from_file(module_name, module_path):
+    """Loads a python module from the path of the corresponding file.
+
+    Args:
+        module_name (str): namespace where the python module will be loaded,
+            e.g. ``foo.bar``
+        module_path (str): path of the python file containing the module
+
+    Returns:
+        A valid module object
+
+    Raises:
+        ImportError: when the module can't be loaded
+        FileNotFoundError: when module_path doesn't exist
+    """
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location(  # novm
+            module_name, module_path)
+        module = importlib.util.module_from_spec(spec)  # novm
+        spec.loader.exec_module(module)
+    elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
+        import importlib.machinery
+        loader = importlib.machinery.SourceFileLoader(  # novm
+            module_name, module_path)
+        module = loader.load_module()
+    elif sys.version_info[0] == 2:
+        import imp
+        module = imp.load_source(module_name, module_path)
+    return module
+
+
+def uniq(sequence):
+    """Remove strings of duplicate elements from a list.
+
+    This works like the command-line ``uniq`` tool.  It filters strings
+    of duplicate elements in a list. Adjacent matching elements are
+    merged into the first occurrence.
+
+    For example::
+
+        uniq([1, 1, 1, 1, 2, 2, 2, 3, 3]) == [1, 2, 3]
+        uniq([1, 1, 1, 1, 2, 2, 2, 1, 1]) == [1, 2, 1]
+
+    """
+    if not sequence:
+        return []
+
+    uniq_list = [sequence[0]]
+    last = sequence[0]
+    for element in sequence[1:]:
+        if element != last:
+            uniq_list.append(element)
+            last = element
+    return uniq_list
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

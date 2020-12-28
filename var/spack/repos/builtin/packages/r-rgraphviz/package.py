@@ -1,38 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RRgraphviz(RPackage):
-    """Interfaces R with the AT and T graphviz library for plotting
-    R graph objects from the graph package."""
+    """Provides plotting capabilities for R graph objects.
 
-    homepage = "http://bioconductor.org/packages/Rgraphviz/"
-    url      = "https://git.bioconductor.org/packages/Rgraphviz"
+       Interfaces R with the AT and T graphviz library for plotting R graph
+       objects from the graph package."""
 
-    version('2.20.0', git='https://git.bioconductor.org/packages/Rgraphviz', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
+    homepage = "https://bioconductor.org/packages/Rgraphviz"
+    git      = "https://git.bioconductor.org/packages/Rgraphviz.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@2.20.0')
+    version('2.28.0', commit='c1f57c11f037c977f1d17f227f12a09a999e8c0b')
+    version('2.26.0', commit='e9b08c77121a45c65129d94a12b5c0b31c65617f')
+    version('2.24.0', commit='7d1fb00afed0d44e32b4a46f10137ab34f100577')
+    version('2.22.0', commit='5b8ebbf9b38574c08959dd4632e802b3fbccc121')
+    version('2.20.0', commit='eface6298150667bb22eac672f1a45e52fbf8c90')
+
+    depends_on('r@2.6.0:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))
+
+    depends_on('graphviz@2.16:', type='run')

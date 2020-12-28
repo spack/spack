@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,12 @@ class RGmp(RPackage):
        using the C library GMP (GNU Multiple Precision Arithmetic)."""
 
     homepage = "http://mulcyber.toulouse.inra.fr/projects/gmp"
-    url      = "https://cran.r-project.org/src/contrib/gmp_0.5-13.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/gmp"
+    url      = "https://cloud.r-project.org/src/contrib/gmp_0.5-13.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/gmp"
 
-    version('0.5-13.1', '4a45d45e53bf7140720bd44f10b075ed')
+    version('0.5-13.5', sha256='f681ab2ff3d1e379ba8ac44a8abddd08d08170723e885abc0b469b6fa8fe5510')
+    version('0.5-13.4', sha256='f05605b40fc39fc589e3a4d2f526a591a649faa45eef7f95c096e1bff8775196')
+    version('0.5-13.1', sha256='2f805374a26742cd43f6b2054130d8670eda1940070aabb9971e9e48226d0976')
 
+    depends_on('r@3.0.0:', type=('build', 'run'))
     depends_on('gmp@4.2.3:')

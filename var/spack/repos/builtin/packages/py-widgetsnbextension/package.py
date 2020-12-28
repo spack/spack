@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,13 @@ class PyWidgetsnbextension(PythonPackage):
     homepage = "https://pypi.python.org/pypi/widgetsnbextension"
     url      = "https://pypi.io/packages/source/w/widgetsnbextension/widgetsnbextension-1.2.6.tar.gz"
 
-    version('1.2.6', '0aa4e152c9ba2d704389dc2453f448c7')
+    version('3.5.1', sha256='079f87d87270bce047512400efd70238820751a11d2d8cb137a5a5bdbaf255c7')
+    version('3.4.2', sha256='fa618be8435447a017fd1bf2c7ae922d0428056cfc7449f7a8641edf76b48265')
+    version('3.4.0', sha256='c9d6e426a1d79d132b57b93b368feba2c66eb7b0fd34bdb901716b4b88e94497')
+    version('3.3.0', sha256='c5280a62d293735cdadc7b8884e2affcfb0488420ee09963577f042359726392')
+    version('1.2.6', sha256='c618cfb32978c9517caf0b4ef3aec312f8dd138577745e7b0d4abfcc7315ce51')
 
     depends_on('py-setuptools', type='build')
-    depends_on('python@2.7:2.8,3.3:')
-    depends_on('py-jupyter-notebook@4.2.0:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
+    depends_on('py-notebook@4.2.0:', type=('build', 'run'))
+    depends_on('py-notebook@4.4.1:', type=('build', 'run'), when='@3.3.0:')

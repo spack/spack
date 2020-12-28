@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,8 +10,12 @@ class RExpm(RPackage):
     """Computation of the matrix exponential, logarithm, sqrt, and related
     quantities."""
 
-    homepage = "http://R-Forge.R-project.org/projects/expm"
-    url      = "https://cran.r-project.org/src/contrib/expm_0.999-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/expm"
+    homepage = "http://r-forge.r-project.org/projects/expm"
+    url      = "https://cloud.r-project.org/src/contrib/expm_0.999-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/expm"
 
-    version('0.999-2', 'e05fa3f995754af92bd03227625da984')
+    version('0.999-4', sha256='58d06427a08c9442462b00a5531e2575800be13ed450c5a1546261251e536096')
+    version('0.999-3', sha256='511bac5860cc5b3888bca626cdf23241b6118eabcc82d100935386039e516412')
+    version('0.999-2', sha256='38f1e5bfa90f794486789695d0d9e49158c7eb9445dc171dd83dec3d8fa130d6')
+
+    depends_on('r-matrix', type=('build', 'run'))

@@ -1,0 +1,6 @@
+# Tests that Spack can handle a simple Ninja build script
+
+rule cc
+  command = true
+
+build check: cc

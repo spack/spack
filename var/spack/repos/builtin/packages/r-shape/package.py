@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,9 +10,12 @@ class RShape(RPackage):
     """Functions for plotting graphical shapes such as ellipses, circles,
        cylinders, arrows, ..."""
 
-    homepage = "https://cran.r-project.org/package=shape"
-    url      = "https://cran.r-project.org/src/contrib/shape_1.4.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shape"
+    homepage = "https://cloud.r-project.org/package=shape"
+    url      = "https://cloud.r-project.org/src/contrib/shape_1.4.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/shape"
 
-    version('1.4.3', '2a807bf95e7decc71478f805221852da')
-    version('1.4.2', '75557c43a385b9cc0c4dff361af6e06c')
+    version('1.4.4', sha256='f4cb1b7d7c84cf08d2fa97f712ea7eb53ed5fa16e5c7293b820bceabea984d41')
+    version('1.4.3', sha256='720f6ca9c70a39a3900af9d074bff864b18ac58013b21d48b779047481b93ded')
+    version('1.4.2', sha256='c6c08ba9cc2e90e5c9d3d5223529b57061a041f637886ad7665b9fa27465637a')
+
+    depends_on('r@2.0.1:', type=('build', 'run'))

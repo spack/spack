@@ -1,0 +1,10 @@
+--- a/GraphBLAS/CMakeLists.txt
++++ b/GraphBLAS/CMakeLists.txt
+@@ -87,6 +87,7 @@
+     C_STANDARD_REQUIRED 11
+     PUBLIC_HEADER "Include/GraphBLAS.h" )
+ set_property ( TARGET graphblas PROPERTY C_STANDARD 11 )
++target_link_libraries ( graphblas m )
+
+ # create the static graphblas library.  Requires ANSI C11
+ add_library ( graphblas_static STATIC ${GRAPHBLAS_SOURCES} )

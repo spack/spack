@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -29,12 +10,15 @@ class RNetworkd3(RPackage):
     """Creates 'D3' 'JavaScript' network, tree, dendrogram, and Sankey graphs
     from 'R'."""
 
-    homepage = "http://cran.r-project.org/package=networkD3"
-    url      = "https://cran.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/networkD3"
+    homepage = "https://cloud.r-project.org/package=networkD3"
+    url      = "https://cloud.r-project.org/src/contrib/networkD3_0.2.12.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/networkD3"
 
-    version('0.2.12', '356fe4be59698e6fb052644bd9659d84')
+    version('0.4', sha256='33b82585f1eec6233303ec14033a703d0b17def441c7a0a67bf7e6764c9c9d0b')
+    version('0.3', sha256='6f9d6b35bb1562883df734bef8fbec166dd365e34c6e656da7be5f8a8d42343c')
+    version('0.2.12', sha256='b81b59c3c992609e25e1621e51d1240e3d086c2b9c3e9da49a6cb0c9ef7f4ea5')
 
-    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-htmlwidgets@0.3.2:', type=('build', 'run'))
     depends_on('r-igraph', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))

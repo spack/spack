@@ -1,32 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from __future__ import print_function
+
+import sys
 
 from llnl.util.tty.colify import colify
 import llnl.util.tty as tty
-import spack
+
+import spack.cmd.common.arguments as arguments
+import spack.repo
+from spack.version import VersionList, ver
 
 description = "list available versions of a package"
 section = "packaging"
@@ -34,27 +20,68 @@ level = "long"
 
 
 def setup_parser(subparser):
-    subparser.add_argument('package', metavar='PACKAGE',
-                           help='package to list versions for')
+    output = subparser.add_mutually_exclusive_group()
+    output.add_argument('-s', '--safe', action='store_true',
+                        help='only list safe versions of the package')
+    output.add_argument('--safe-only', action='store_true',
+                        help='[deprecated] only list safe versions '
+                        'of the package')
+    output.add_argument('-r', '--remote', action='store_true',
+                        help='only list remote versions of the package')
+    output.add_argument('-n', '--new', action='store_true',
+                        help='only list remote versions newer than '
+                        'the latest checksummed version')
+    subparser.add_argument(
+        '-c', '--concurrency', default=32, type=int,
+        help='number of concurrent requests'
+    )
+    arguments.add_common_arguments(subparser, ['package'])
 
 
 def versions(parser, args):
     pkg = spack.repo.get(args.package)
 
     safe_versions = pkg.versions
-    fetched_versions = pkg.fetch_remote_versions()
-    remote_versions = set(fetched_versions).difference(safe_versions)
 
-    tty.msg("Safe versions (already checksummed):")
-    colify(sorted(safe_versions, reverse=True), indent=2)
+    if args.safe_only:
+        tty.warn('"--safe-only" is deprecated. Use "--safe" instead.')
+        args.safe = args.safe_only
 
-    tty.msg("Remote versions (not yet checksummed):")
-    if not remote_versions:
-        if not fetched_versions:
-            print("  Found no versions for %s" % pkg.name)
-            tty.debug("Check the list_url and list_depth attribute on the "
-                      "package to help Spack find versions.")
+    if not (args.remote or args.new):
+        if sys.stdout.isatty():
+            tty.msg('Safe versions (already checksummed):')
+
+        if not safe_versions:
+            if sys.stdout.isatty():
+                tty.warn('Found no versions for {0}'.format(pkg.name))
+                tty.debug('Manually add versions to the package.')
         else:
-            print("  Found no unchecksummed versions for %s" % pkg.name)
+            colify(sorted(safe_versions, reverse=True), indent=2)
+
+        if args.safe:
+            return
+
+    fetched_versions = pkg.fetch_remote_versions(args.concurrency)
+
+    if args.new:
+        if sys.stdout.isatty():
+            tty.msg('New remote versions (not yet checksummed):')
+        highest_safe_version = VersionList(safe_versions).highest_numeric()
+        remote_versions  = set([ver(v) for v in set(fetched_versions)
+                                if v > highest_safe_version])
+    else:
+        if sys.stdout.isatty():
+            tty.msg('Remote versions (not yet checksummed):')
+        remote_versions = set(fetched_versions).difference(safe_versions)
+
+    if not remote_versions:
+        if sys.stdout.isatty():
+            if not fetched_versions:
+                tty.warn('Found no versions for {0}'.format(pkg.name))
+                tty.debug('Check the list_url and list_depth attributes of '
+                          'the package to help Spack find versions.')
+            else:
+                tty.warn('Found no unchecksummed versions for {0}'.format(
+                    pkg.name))
     else:
         colify(sorted(remote_versions, reverse=True), indent=2)

@@ -1,24 +1,41 @@
 #!/bin/bash -e
 #
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+#
 # Description:
 #     Common setup code to be sourced by Spack's test scripts.
 #
 
 QA_DIR="$(dirname ${BASH_SOURCE[0]})"
-SPACK_ROOT="$QA_DIR/../../.."
+export SPACK_ROOT=$(realpath "$QA_DIR/../../..")
 
 # Source the setup script
 . "$SPACK_ROOT/share/spack/setup-env.sh"
 
+# by default coverage is off.
+coverage=""
+coverage_run=""
+
 # Set up some variables for running coverage tests.
-if [[ "$COVERAGE" == true ]]; then
+if [[ "$COVERAGE" == "true" ]]; then
+    # these set up coverage for Python
     coverage=coverage
     coverage_run="coverage run"
-    coverage_combine="coverage combine"
-else
-    coverage=""
-    coverage_run=""
-    coverage_combine=""
+
+    # bash coverage depends on some other factors
+    mkdir -p coverage
+    bashcov=$(realpath ${QA_DIR}/bashcov)
+
+    # instrument scripts requiring shell coverage
+    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
+    if [ "$(uname -o)" != "Darwin" ]; then
+        # On darwin, #! interpreters must be binaries, so no sbang for bashcov
+        sed -i~ "s@#\!/bin/sh@#\!${bashcov}@"   "$SPACK_ROOT/bin/sbang"
+    fi
 fi
 
 #
@@ -49,6 +66,10 @@ check_dependencies() {
                     spack_package=py-flake8
                     pip_package=flake8
                     ;;
+                mypy)
+                    spack_package=py-mypy
+                    pip_package=mypy
+                    ;;
                 dot)
                     spack_package=graphviz
                     ;;
@@ -58,6 +79,9 @@ check_dependencies() {
                 hg)
                     spack_package=mercurial
                     pip_package=mercurial
+                    ;;
+                kcov)
+                    spack_package=kcov
                     ;;
                 svn)
                     spack_package=subversion

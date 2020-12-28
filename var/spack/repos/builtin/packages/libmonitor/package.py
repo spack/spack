@@ -1,38 +1,67 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class Libmonitor(AutotoolsPackage):
-    """Libmonitor is a library for process and thread control."""
-    homepage = "https://github.com/HPCToolkit/libmonitor"
-    version('20130218', git='https://github.com/HPCToolkit/libmonitor.git',
-            commit='4f2311e')
-    variant('krellpatch', default=False,
-            description="build with openspeedshop based patch.")
+    """Libmonitor is a library providing callback functions for the
+    begin and end of processes and threads.  It provides a layer on
+    which to build process monitoring tools and profilers."""
 
-    patch('libmonitorkrell-0000.patch', when='@20130218+krellpatch')
-    patch('libmonitorkrell-0001.patch', when='@20130218+krellpatch')
-    patch('libmonitorkrell-0002.patch', when='@20130218+krellpatch')
+    homepage = "https://github.com/HPCToolkit/libmonitor"
+    git      = "https://github.com/HPCToolkit/libmonitor.git"
+    maintainers = ['mwkrentel']
+
+    version('master', branch='master')
+    version('2020.10.15', commit='36e5cb7ebeadfff01476b79ff04f6ec772ba831d')
+    version('2019.05.31', commit='c9767087d52e58a719aa7f149136b101e499db44')
+    version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166')
+    version('2013.02.18', commit='4f2311e413fd90583263d6f20453bbe552ccfef3')
+
+    # Configure for Rice HPCToolkit.
+    variant('hpctoolkit', default=False,
+            description='Configure for HPCToolkit')
+
+    # Configure for Krell and OpenSpeedshop.
+    variant('krellpatch', default=False,
+            description="Build with openspeedshop based patch.")
+
+    variant('dlopen', default=True,
+            description='Override dlopen and dlclose')
+
+    patch('libmonitorkrell-0000.patch', when='@2013.02.18+krellpatch')
+    patch('libmonitorkrell-0001.patch', when='@2013.02.18+krellpatch')
+    patch('libmonitorkrell-0002.patch', when='@2013.02.18+krellpatch')
+
+    signals = 'SIGBUS, SIGSEGV, SIGPROF, 36, 37, 38'
+
+    # Set default cflags (-g -O2) and move to the configure line.
+    def flag_handler(self, name, flags):
+        if name != 'cflags':
+            return (flags, None, None)
+
+        if '-g' not in flags:
+            flags.append('-g')
+        for flag in flags:
+            if flag.startswith('-O'):
+                break
+        else:
+            flags.append('-O2')
+
+        return (None, None, flags)
+
+    def configure_args(self):
+        args = []
+
+        if '+hpctoolkit' in self.spec:
+            args.append('--enable-client-signals=%s' % self.signals)
+
+        if '+dlopen' in self.spec:
+            args.append('--enable-dlfcn')
+        else:
+            args.append('--disable-dlfcn')
+
+        return args

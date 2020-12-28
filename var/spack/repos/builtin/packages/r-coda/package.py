@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,10 +12,13 @@ class RCoda(RPackage):
        diagnostic tests of convergence to the equilibrium distribution
        of the Markov chain."""
 
-    homepage = "https://cran.r-project.org/web/packages/coda/index.html"
-    url      = "https://cran.r-project.org/src/contrib/coda_0.19-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/coda"
+    homepage = "https://cloud.r-project.org/package=coda"
+    url      = "https://cloud.r-project.org/src/contrib/coda_0.19-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/coda"
 
-    version('0.19-1', '0d2aca6a5a3bdae9542708817c1ec001')
+    version('0.19-3', sha256='d3df1fc848bcf1af8fae13d61eeab60e99a3d4b4db384bec4326f909f502c5d6')
+    version('0.19-2', sha256='678a7e6a87a2723089daeb780ea37ac3d4319b37eabe26928ea3fa9c9b1eda0d')
+    version('0.19-1', sha256='d41ff5731da6805170769dba75dd011ab33f916d15b2336001f279e21a524491')
 
+    depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))

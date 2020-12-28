@@ -1,87 +1,72 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
-from glob import glob
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Bowtie2(Package):
+class Bowtie2(MakefilePackage):
     """Bowtie 2 is an ultrafast and memory-efficient tool for aligning
        sequencing reads to long reference sequences"""
 
-    homepage = "bowtie-bio.sourceforge.net/bowtie2/index.shtml"
+    homepage = "http://bowtie-bio.sourceforge.net/bowtie2/index.shtml"
     url      = "http://downloads.sourceforge.net/project/bowtie-bio/bowtie2/2.3.1/bowtie2-2.3.1-source.zip"
 
-    version('2.3.1', 'b4efa22612e98e0c23de3d2c9f2f2478')
-    version('2.3.0', '3ab33f30f00f3c30fec1355b4e569ea2')
-    version('2.2.5', '51fa97a862d248d7ee660efc1147c75f')
+    version('2.4.2', sha256='4cc555eeeeb8ae2d47aaa1551f3f01b57f567a013e4e0d1f30e90f462865027e')
+    version('2.4.1', sha256='566d6fb01a361883747103d797308ee4bdb70f6db7d27bfc72a520587815df22')
+    version('2.3.5.1', sha256='335c8dafb1487a4a9228ef922fbce4fffba3ce8bc211e2d7085aac092155a53f')
+    version('2.3.5', sha256='2b6b2c46fbb5565ba6206b47d07ece8754b295714522149d92acebefef08347b')
+    version('2.3.4.1', sha256='a1efef603b91ecc11cfdb822087ae00ecf2dd922e03c85eea1ed7f8230c119dc')
+    version('2.3.1', sha256='33bd54f5041a31878e7e450cdcf0afba08345fa1133ce8ac6fd00bf7e521a443')
+    version('2.3.0', sha256='f9f841e780e78b1ae24b17981e2469e6d5add90ec22ef563af23ae2dd5ca003c')
+    version('2.2.5', sha256='e22766dd9421c10e82a3e207ee1f0eb924c025b909ad5fffa36633cd7978d3b0')
 
     depends_on('tbb', when='@2.3.0:')
     depends_on('readline', when='@2.3.1:')
     depends_on('perl', type='run')
     depends_on('python', type='run')
     depends_on('zlib', when='@2.3.1:')
+    depends_on('simde', type='link')
 
     patch('bowtie2-2.2.5.patch', when='@2.2.5', level=0)
     patch('bowtie2-2.3.1.patch', when='@2.3.1', level=0)
     patch('bowtie2-2.3.0.patch', when='@2.3.0', level=0)
 
     # seems to have trouble with 6's -std=gnu++14
-    conflicts('%gcc@6:')
+    conflicts('%gcc@6:', when='@:2.3.1')
+    conflicts('@:2.3.5.0', when='target=aarch64:')
+    conflicts('@2.4.1', when='target=aarch64:')
 
-    @run_before('install')
-    def filter_sbang(self):
-        """Run before install so that the standard Spack sbang install hook
-           can fix up the path to the perl|python binary.
-        """
+    def edit(self, spec, prefix):
+        kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
 
-        with working_dir(self.stage.source_path):
-            kwargs = {'ignore_absent': True, 'backup': False, 'string': False}
+        match = '^#!/usr/bin/env perl'
+        perl = spec['perl'].command
+        substitute = "#!{perl}".format(perl=perl)
+        files = ['bowtie2', ]
+        filter_file(match, substitute, *files, **kwargs)
 
-            match = '^#!/usr/bin/env perl'
-            perl = self.spec['perl'].command
-            substitute = "#!{perl}".format(perl=perl)
-            files = ['bowtie2', ]
-            filter_file(match, substitute, *files, **kwargs)
+        match = '^#!/usr/bin/env python'
+        python = spec['python'].command
+        substitute = "#!{python}".format(python=python)
+        files = ['bowtie2-build', 'bowtie2-inspect']
+        filter_file(match, substitute, *files, **kwargs)
 
-            match = '^#!/usr/bin/env python'
-            python = self.spec['python'].command
-            substitute = "#!{python}".format(python=python)
-            files = ['bowtie2-build', 'bowtie2-inspect']
-            filter_file(match, substitute, *files, **kwargs)
+        match = '-Ithird_party/simde'
+        simdepath = spec['simde'].prefix.include
+        substitute = "-I{simdepath}".format(simdepath=simdepath)
+        files = ['Makefile']
+        filter_file(match, substitute, *files, **kwargs)
 
-    def install(self, spec, prefix):
-        make()
-        mkdirp(prefix.bin)
-        for bow in glob("bowtie2*"):
-            install(bow, prefix.bin)
-        # install('bowtie2',prefix.bin)
-        # install('bowtie2-align-l',prefix.bin)
-        # install('bowtie2-align-s',prefix.bin)
-        # install('bowtie2-build',prefix.bin)
-        # install('bowtie2-build-l',prefix.bin)
-        # install('bowtie2-build-s',prefix.bin)
-        # install('bowtie2-inspect',prefix.bin)
-        # install('bowtie2-inspect-l',prefix.bin)
-        # install('bowtie2-inspect-s',prefix.bin)
+    @property
+    def build_targets(self):
+        make_arg = ['PREFIX={0}'.format(self.prefix)]
+        if self.spec.satisfies('target=aarch64:'):
+            make_arg.append('POPCNT_CAPABILITY=0')
+        return make_arg
+
+    @property
+    def install_targets(self):
+        if self.spec.satisfies('@:2.3.9'):
+            return ['prefix={0}'.format(self.prefix), 'install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

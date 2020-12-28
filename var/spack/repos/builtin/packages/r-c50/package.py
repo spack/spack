@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -29,10 +10,14 @@ from spack import *
 class RC50(RPackage):
     """C5.0 decision trees and rule-based models for pattern recognition."""
 
-    homepage = "https://cran.r-project.org/package=C50"
-    url      = "https://cran.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/C50"
+    homepage = "https://cloud.r-project.org/package=C50"
+    url      = "https://cloud.r-project.org/src/contrib/C50_0.1.0-24.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/C50"
 
-    version('0.1.0-24', '42631e65c5c579532cc6edf5ea175949')
+    version('0.1.2', sha256='8f459856e0309274bee24462b7145db4eba1d71031c236db39000a5375bdfaba')
+    version('0.1.1', sha256='03bc1fc2f64bcd5c680568a24902deafab1965074a66f8802bc4cd0335bd01df')
+    version('0.1.0-24', sha256='617ee8ae617a075213414c07739ce92d9e6927783d01588fd0e2315157065e9d')
 
+    depends_on('r@2.10.0:', type=('build', 'run'))
     depends_on('r-partykit', type=('build', 'run'))
+    depends_on('r-cubist@0.2.1:', type=('build', 'run'))

@@ -1,45 +1,31 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-#
-#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAnnaffy(RPackage):
-    """Functions for handling data from Bioconductor Affymetrix
-    annotation data packages. Produces compact HTML and text
-    reports including experimental data and URL links to many
-    online databases. Allows searching biological metadata
-    using various criteria."""
+    """Annotation tools for Affymetrix biological metadata.
 
-    homepage = "https://www.bioconductor.org/packages/annaffy/"
-    url      = "https://git.bioconductor.org/packages/annaffy"
+       Functions for handling data from Bioconductor Affymetrix annotation data
+       packages. Produces compact HTML and text reports including experimental
+       data and URL links to many online databases. Allows searching biological
+       metadata using various criteria."""
 
-    version('1.48.0', git='https://git.bioconductor.org/packages/annaffy', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
+    homepage = "https://bioconductor.org/packages/annaffy"
+    git      = "https://git.bioconductor.org/packages/annaffy.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.48.0')
+    version('1.56.0', commit='8c8e16aa0f3073880c39684fd8e554a052ec6233')
+    version('1.54.0', commit='e1b3bf10515255eb994cd8bdf85697ea728c3484')
+    version('1.52.0', commit='ef84030163045f702941c8d5a59fbd4a09f30e2c')
+    version('1.50.0', commit='a822e20f3e961a8afa5eb23536343115a33fb259')
+    version('1.48.0', commit='89a03c64ac9df5d963ed60b87893a3fffa6798a0')
+
+    depends_on('r@2.5.0:', type=('build', 'run'))
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-go-db', type=('build', 'run'))
     depends_on('r-kegg-db', type=('build', 'run'))
+    depends_on('r-annotationdbi@0.1.15:', type=('build', 'run'))
+    depends_on('r-dbi', type=('build', 'run'))

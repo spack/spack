@@ -1,42 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RSiggenes(RPackage):
-    """Identification of differentially expressed genes and estimation of the
+    """Multiple Testing using SAM and Efron's Empirical Bayes Approaches.
+
+       Identification of differentially expressed genes and estimation of the
        False Discovery Rate (FDR) using both the Significance Analysis of
        Microarrays (SAM) and the Empirical Bayes Analyses of Microarrays
        (EBAM)."""
 
-    homepage = "http://bioconductor.org/packages/siggenes/"
-    url      = "https://git.bioconductor.org/packages/siggenes"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/siggenes"
+    git      = "https://git.bioconductor.org/packages/siggenes.git"
 
-    version('1.50.0', git='https://git.bioconductor.org/packages/siggenes', commit='b1818f26e1449005ffd971df6bda8da0303080bc')
+    version('1.58.0', commit='69500158d69942cf7c62f583830933cf8baf89a1')
+    version('1.56.0', commit='3e929feaa76311be07ff51ad807e657b0b521f6f')
+    version('1.54.0', commit='1630e42652192e3e4e48e9e78e53665a120cfc7f')
+    version('1.52.0', commit='dc46cf4b6053ea99c6c841d661f97390653c2e71')
+    version('1.50.0', commit='b1818f26e1449005ffd971df6bda8da0303080bc')
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-multtest', type=('build', 'run'))
-    depends_on('r@3.4.0:3.4.9', when='@1.50.0')
+
+    depends_on('r-scrime@1.2.5:', when='@1.58.0:', type=('build', 'run'))

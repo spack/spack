@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -35,7 +16,19 @@ class RSurvey(RPackage):
     sampling without replacement. Principal components, factor analysis."""
 
     homepage = "http://r-survey.r-forge.r-project.org/survey/"
-    url      = "https://cran.r-project.org/src/contrib/survey_3.30-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/survey"
+    url      = "https://cloud.r-project.org/src/contrib/survey_3.30-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/survey"
 
-    version('3.30-3', 'c70cdae9cb43d35abddd11173d64cad0')
+    version('3.36', sha256='90f32e9d2b52eacf881e6717a4b5edfc5a3beb5da516f8372293549589d79475')
+    version('3.35-1', sha256='11e5ddde9c8c21dfaed0b1247036e068ad32782c76ff71f7937eb7585dd364db')
+    version('3.30-3', sha256='be45d00b22d857e66905789031f2db1037505f80ce15d4b0ea84dabb03bc9e6d')
+
+    depends_on('r@2.14.0:', when='@:3.31-5', type=('build', 'run'))
+    depends_on('r@2.16.0:', when='@3.32:3.34', type=('build', 'run'))
+    depends_on('r@3.1.0:', when='@3.35:', type=('build', 'run'))
+    depends_on('r-matrix', when='@3.31:', type=('build', 'run'))
+    depends_on('r-survival', when='@3.31:', type=('build', 'run'))
+    depends_on('r-lattice', when='@3.31:', type=('build', 'run'))
+    depends_on('r-minqa', when='@3.34:', type=('build', 'run'))
+    depends_on('r-numderiv', when='@3.34:', type=('build', 'run'))
+    depends_on('r-mitools@2.4:', when='@3.36:', type=('build', 'run'))

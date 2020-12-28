@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,8 +12,10 @@ class RAssertthat(RPackage):
     producing friendly error messages so that your users know what they've done
     wrong."""
 
-    homepage = "https://cran.r-project.org/package=assertthat"
-    url      = "https://cran.r-project.org/src/contrib/assertthat_0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertthat"
-    version('0.2.0', '8134f0072c6a84fd738d3bfc5e7f68ef')
-    version('0.1', '59f9d7f7c00077ea54d763b78eeb5798')
+    homepage = "https://cloud.r-project.org/package=assertthat"
+    url      = "https://cloud.r-project.org/src/contrib/assertthat_0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertthat"
+
+    version('0.2.1', sha256='85cf7fcc4753a8c86da9a6f454e46c2a58ffc70c4f47cac4d3e3bcefda2a9e9f')
+    version('0.2.0', sha256='d73ef79b1e75293ed889a99571b237a95829c099f7da094d4763f83ea6fde5f2')
+    version('0.1', sha256='1363645a9a128f615aa0641dc5f5c5abd960b1c38320492366dad1e7a5c29a37')

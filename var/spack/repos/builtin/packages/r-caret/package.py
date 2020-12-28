@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -30,19 +11,23 @@ class RCaret(RPackage):
     models."""
 
     homepage = "https://github.com/topepo/caret/"
-    url      = "https://cran.r-project.org/src/contrib/caret_6.0-73.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/caret"
+    url      = "https://cloud.r-project.org/src/contrib/caret_6.0-73.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/caret"
 
-    version('6.0-73', 'ca869e3357b5358f028fb926eb62eb70')
-    version('6.0-70', '202d7abb6a679af716ea69fb2573f108')
+    version('6.0-84', sha256='a1831c086a9c71b469f7405649ba04517683cdf229e119c005189cf57244090d')
+    version('6.0-83', sha256='9bde5e4da1f0b690bfe06c2439c0136504e851a8d360bf56b644f171fe20dcef')
+    version('6.0-73', sha256='90a0a4a10f1a3b37502cb0ed7d8830063d059a548faabb9cc5d8d34736c7eacb')
+    version('6.0-70', sha256='21c5bdf7cf07bece38729465366564d8ca104c2466ee9fd800ca1fd88eb82f38')
 
-    depends_on('r@2.10:')
-
+    depends_on('r@2.10:', when='@:6.0-81', type=('build', 'run'))
+    depends_on('r@3.2.0:', when='@6.0-82:', type=('build', 'run'))
     depends_on('r-lattice@0.20:', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-car', type=('build', 'run'))
+    depends_on('r-car', when='@:6.0-73', type=('build', 'run'))
     depends_on('r-foreach', type=('build', 'run'))
     depends_on('r-plyr', type=('build', 'run'))
     depends_on('r-modelmetrics@1.1.0:', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
     depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-recipes@0.1.4:', when='@6.0-83:', type=('build', 'run'))
+    depends_on('r-withr@2.0.0:', when='@6.0-83:', type=('build', 'run'))

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 
 from spack import *
 
@@ -33,14 +14,13 @@ class RFormatr(RPackage):
     human-readable and tidy. There is also a Shiny app as a user interface in
     this package."""
 
-    homepage = "https://cran.r-project.org/package=formatR"
-    url      = "https://cran.r-project.org/src/contrib/formatR_1.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/formatR"
+    homepage = "https://cloud.r-project.org/package=formatR"
+    url      = "https://cloud.r-project.org/src/contrib/formatR_1.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/formatR"
 
-    version('1.5', 'ac735515b8e4c32097154f1b68c5ecc7')
-    version('1.4', '98b9b64b2785b35f9df403e1aab6c73c')
+    version('1.7', sha256='a366621b3ff5f8e86a499b6f87858ad47eefdace138341b1377ecc307a5e5ddb')
+    version('1.6', sha256='f5c98f0c3506ca51599671a2cdbc17738d0f326e8e3bb18b7a38e9f172122229')
+    version('1.5', sha256='874c197ae3720ec11b44984a055655b99a698e1912104eb9034c11fdf6104da7')
+    version('1.4', sha256='6ec47a7b1f18efb5fd7559b81427363b66415d81cded9d5e7e2907e900b67ebb')
 
-    depends_on('r-codetools', type=('build', 'run'))
-    depends_on('r-shiny', type=('build', 'run'))
-    depends_on('r-testit', type=('build', 'run'))
-    # depends_on('r-knitr', type=('build', 'run')) - mutual dependency
+    depends_on('r@3.0.2:', type=('build', 'run'))

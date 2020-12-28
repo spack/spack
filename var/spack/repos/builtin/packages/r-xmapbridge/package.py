@@ -1,38 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RXmapbridge(RPackage):
-    """xmapBridge can plot graphs in the X:Map genome browser. This package
+    """Export plotting files to the xmapBridge for visualisation in X:Map.
+
+       xmapBridge can plot graphs in the X:Map genome browser. This package
        exports plotting files in a suitable format."""
 
-    homepage = "https://www.bioconductor.org/packages/xmapbridge/"
-    url      = "https://git.bioconductor.org/packages/xmapbridge"
-    list_url = homepage
+    homepage = "https://bioconductor.org/packages/xmapbridge"
+    git      = "https://git.bioconductor.org/packages/xmapbridge.git"
 
-    version('1.34.0', git='https://git.bioconductor.org/packages/xmapbridge', commit='f162e1f72ead5f5a1aede69032d5771a6572d965')
+    version('1.42.0', commit='d79c80dfc1a0ed3fd6d3e7a7c3a4aff778537ca9')
+    version('1.40.0', commit='00a2993863f28711e237bc937fa0ba2d05f81684')
+    version('1.38.0', commit='08138f00385fa0c669ff4cc33d7eac3d29cd615d')
+    version('1.36.0', commit='e44f648c9da9eaa130849a738d90dc11685050e2')
+    version('1.34.0', commit='f162e1f72ead5f5a1aede69032d5771a6572d965')
 
-    depends_on('r@3.4.0:3.4.9', when='@1.34.0')
+    depends_on('r@2.0:', type=('build', 'run'))

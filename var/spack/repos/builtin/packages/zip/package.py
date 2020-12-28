@@ -1,46 +1,37 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 class Zip(MakefilePackage):
     """Zip is a compression and file packaging/archive utility."""
 
-    homepage = 'http://www.info-zip.org/Zip.html'
-    url      = 'http://downloads.sourceforge.net/infozip/zip30.tar.gz'
+    homepage = 'https://www.info-zip.org/Zip.html'
+    url      = 'https://downloads.sourceforge.net/infozip/zip30.tar.gz'
 
-    version('3.0', '7b74551e63f8ee6aab6fbc86676c0d37')
+    version('3.0', sha256='f0e8bb1f9b7eb0b01285495a2699df3a4b766784c1765a8f1aeedf63c0806369')
 
     depends_on('bzip2')
+
+    # Upstream is unmaintained, get patches from:
+    # https://deb.debian.org/debian/pool/main/z/zip/zip_3.0-11.debian.tar.xz
+    patch('01-typo-it-is-transferring-not-transfering.patch')
+    patch('02-typo-it-is-privileges-not-priviliges.patch')
+    patch('03-manpages-in-section-1-not-in-section-1l.patch')
+    patch('04-do-not-set-unwanted-cflags.patch')
+    patch('05-typo-it-is-preceding-not-preceeding.patch')
+    patch('06-stack-markings-to-avoid-executable-stack.patch')
+    patch('07-fclose-in-file-not-fclose-x.patch')
+    patch('08-hardening-build-fix-1.patch')
+    patch('09-hardening-build-fix-2.patch')
+    patch('10-remove-build-date.patch')
 
     def url_for_version(self, version):
         return 'http://downloads.sourceforge.net/infozip/zip{0}.tar.gz'.format(version.joined)
 
-    make_args = ['-f', 'unix/Makefile']
-    build_targets = make_args + ['generic']
+    def build(self, spec, prefix):
+        make('-f', 'unix/Makefile', 'CC=' + spack_cc, 'generic')
 
-    @property
-    def install_targets(self):
-        return self.make_args + ['prefix={0}'.format(self.prefix), 'install']
+    def install(self, spec, prefix):
+        make('-f', 'unix/Makefile', 'prefix=' + prefix, 'install')

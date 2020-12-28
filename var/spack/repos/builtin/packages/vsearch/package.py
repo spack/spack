@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,7 +12,9 @@ class Vsearch(AutotoolsPackage):
     homepage = "https://github.com/torognes/vsearch"
     url      = "https://github.com/torognes/vsearch/archive/v2.4.3.tar.gz"
 
-    version('2.4.3', '8f57210fe447a781078fde06e6402650')
+    version('2.14.1', sha256='388529a39eb0618a09047bf91e0a8ae8c9fd851a05f8d975e299331748f97741')
+    version('2.13.3', sha256='e5f34ece28b76403d3ba4a673eca41178fe399c35a1023dbc87d0c0da5efaa52')
+    version('2.4.3', sha256='f7ffc2aec5d76bdaf1ffe7fb733102138214cec3e3846eb225455dcc3c088141')
 
     depends_on('m4',       type='build')
     depends_on('autoconf', type='build')

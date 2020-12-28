@@ -1,41 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Datamash(AutotoolsPackage):
+class Datamash(AutotoolsPackage, GNUMirrorPackage):
     """GNU datamash is a command-line program which performs basic numeric,
     textual and statistical operations on input textual data files.
     """
 
     homepage = "https://www.gnu.org/software/datamash/"
-    url      = "http://ftp.gnu.org/gnu/datamash/datamash-1.0.5.tar.gz"
+    gnu_mirror_path = "datamash/datamash-1.0.5.tar.gz"
 
-    version('1.1.0', '79a6affca08107a095e97e4237fc8775')
-    version('1.0.7', '9f317bab07454032ba9c068e7f17b04b')
-    version('1.0.6', 'ff26fdef0f343cb695cf1853e14a1a5b')
-    version('1.0.5', '9a29549dc7feca49fdc5fab696614e11')
+    version('1.3',   sha256='eebb52171a4353aaad01921384098cf54eb96ebfaf99660e017f6d9fc96657a6')
+    version('1.1.0', sha256='a9e5acc86af4dd64c7ac7f6554718b40271aa67f7ff6e9819bdd919a25904bb0')
+    version('1.0.7', sha256='1a0b300611a5dff89e08e20773252b00f5e2c2d65b2ad789872fc7df94fa8978')
+    version('1.0.6', sha256='0154c25c45b5506b6d618ca8e18d0ef093dac47946ac0df464fb21e77b504118')
+    version('1.0.5', sha256='cb7c0b7bf654eea5bb80f10c1710c8dffab8106549fd6b4341cba140e15a9938')
 
     build_directory = 'spack-build'

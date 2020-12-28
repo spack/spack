@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -33,15 +14,19 @@ class RGgally(RPackage):
        group pairwise plot matrix, a parallel coordinates plot, a survival
        plot, and several functions to plot networks."""
 
-    homepage = "https://cran.r-project.org/package=GGally"
-    url      = "https://cran.r-project.org/src/contrib/GGally_1.3.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/GGally"
+    homepage = "https://cloud.r-project.org/package=GGally"
+    url      = "https://cloud.r-project.org/src/contrib/GGally_1.3.2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/GGally"
 
-    version('1.3.2', 'efe58133ba8431198af7afb6bcb76264')
+    version('1.4.0', sha256='9a47cdf004c41f5e4024327b94227707f4dad3a0ac5556d8f1fba9bf0a6355fe')
+    version('1.3.2', sha256='f4143f45254fed794be991180aeffe459f6756bfa08acad963707d8e843cfd0a')
 
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-gtable', type=('build', 'run'))
-    depends_on('r-plyr', type=('build', 'run'))
+    depends_on('r@3.1:', type=('build', 'run'))
+    depends_on('r-ggplot2@2.2.0:', type=('build', 'run'))
+    depends_on('r-gtable@0.2.0:', type=('build', 'run'))
+    depends_on('r-plyr@1.8.3:', type=('build', 'run'))
     depends_on('r-progress', type=('build', 'run'))
     depends_on('r-rcolorbrewer', type=('build', 'run'))
-    depends_on('r-reshape', type=('build', 'run'))
+    depends_on('r-reshape@0.8.5:', type=('build', 'run'))
+    depends_on('r-rlang', when='@1.4.0:', type=('build', 'run'))
+    depends_on('openssl', when='@1.4.0:')

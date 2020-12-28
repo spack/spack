@@ -1,29 +1,9 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
-import shutil
 
 from spack import *
 
@@ -42,12 +22,13 @@ class Spark(Package):
     depends_on('java', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
-    version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
-    version('2.0.2', '32110c1bb8f081359738742bd26bced1')
-    version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
-    version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
-    version('1.6.1', 'fcf4961649f15af1fea78c882e65b001')
-    version('1.6.0', '2c28edc89ca0067e63e525c04f7b1d89')
+    version('2.3.0', sha256='a7e29e78bd43aa6d137f0bb0afd54a3017865d471456c6d436ae79475bbeb161')
+    version('2.1.0', sha256='3ca4ecb0eb9a00de5099cc2564ed957433a2d15d9d645a60470324621853c5ae')
+    version('2.0.2', sha256='122ec1af0fcb23c0345f20f77d33cf378422ffe966efe4b9ef90e55cf7a46a3c')
+    version('2.0.0', sha256='7c90bc4b7689df30f187e00845db8c7c9fb4045a0bcf2fa70a4954cc17d2c0d1')
+    version('1.6.2', sha256='f6b43333ca80629bacbbbc2e460d21064f53f50880f3f0a3f68745fdf8b3137e')
+    version('1.6.1', sha256='3d67678c5cb5eeba1cab125219fa2f9f17609368ea462e3993d2eae7c8f37207')
+    version('1.6.0', sha256='9f62bc1d1f7668becd1fcedd5ded01ad907246df287d2525cfc562d88a3676da')
 
     def install(self, spec, prefix):
 
@@ -63,19 +44,16 @@ class Spark(Package):
         install_dir('yarn')
 
         # required for spark to recognize binary distribution
-        shutil.copy('RELEASE', prefix)
+        install('RELEASE', prefix)
 
     @when('+hadoop')
-    def setup_environment(self, spack_env, run_env):
-
-        env['JAVA_HOME'] = self.spec['java'].prefix
-        # spack_env.set('JAVA_HOME', self.spec['jdk'].prefix)
-
+    def setup_run_environment(self, env):
         hadoop = self.spec['hadoop'].command
+        hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
 
         # Remove whitespaces, as they can compromise syntax in
         # module files
-        hadoop_classpath = re.sub('[\s+]', '', hadoop_classpath)
+        hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
-        run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
+        env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

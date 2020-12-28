@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,11 +12,13 @@ class PyPythonGitlab(PythonPackage):
     homepage = "https://github.com/gpocentek/python-gitlab"
     url      = "https://pypi.io/packages/source/p/python-gitlab/python-gitlab-0.19.tar.gz"
 
-    version('0.19', '6564d7204c2b7e65c54b3fa89ec91df6')
-    version('0.18', 'c31dae1d0bab3966cb830f2308a96308')
-    version('0.17', '8a69c602e07dd4731856531d79bb58eb')
-    version('0.16', 'e0421d930718021e7d796d74d2ad7194')
+    version('1.8.0', sha256='a6b03bc53f6e2e22b88d5ff9772b1bb360570ec82752f1def3d6eb60cda093e7')
+    version('0.19',  sha256='88b65591db7a10a0d9979797e4e654a113e2b93b3a559309f6092b27ab93934a')
+    version('0.18',  sha256='d60d67c82fedd8c3e4f0bb8b5241bf2df32307c98fdf2f02a94850e21db2d804')
+    version('0.17',  sha256='f79337cd8b2343195b7ac0909e0483624d4235cca78fc76196a0ee4e109c9a70')
+    version('0.16',  sha256='2c50dc0bd3ed7c6b1edb6e556b0f0109493ae9dfa46e3bffcf3e5e67228d7d53')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-requests@1.0:', type=('build', 'run'))
+    depends_on('py-requests@2.4.2:', type=('build', 'run'), when='@1.4.0:')

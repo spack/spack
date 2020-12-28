@@ -1,35 +1,20 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RCubature(RPackage):
     """Adaptive multivariate integration over hypercubes"""
 
-    homepage = "https://cran.r-project.org/package=cubature"
-    url      = "https://cran.r-project.org/src/contrib/cubature_1.1-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/cubature"
+    homepage = "https://cloud.r-project.org/package=cubature"
+    url      = "https://cloud.r-project.org/src/contrib/cubature_1.1-2.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/cubature"
 
-    version('1.1-2', '5617e1d82baa803a3814d92461da45c9')
+    version('2.0.3', sha256='79bf03ebdb64b0de1ef19d24051b9d922df9310254bee459bb47764522407a73')
+    version('2.0.2', sha256='641165c665ff490c523bccc05c42bb6851e42676b6b366b55fc442a51a8fbe8c')
+    version('1.1-2', sha256='0a05469bdc85d6bd8165a42a3fc5c35a06700d279e4e8b3cf4669df19edffeed')
+
+    depends_on('r-rcpp', when='@2.0.3:', type=('build', 'run'))

@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,17 +13,23 @@ class RShiny(RPackage):
     powerful applications with minimal effort."""
 
     homepage = "http://shiny.rstudio.com/"
-    url      = "https://cran.rstudio.com/src/contrib/shiny_1.0.5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/shiny"
+    url      = "https://cloud.r-project.org/src/contrib/shiny_1.0.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/shiny"
 
-    version('1.0.5', '419dd5d3ea0bd87a07f8f0b1ef14fc13')
-    version('0.13.2', 'cb5bff7a28ad59ec2883cd0912ca9611')
+    version('1.3.2', sha256='28b851ae6c196ca845f6e815c1379247595ac123a4faa10a16533d1a9ce0c24f')
+    version('1.0.5', sha256='20e25f3f72f3608a2151663f7836f2e0c6da32683a555d7541063ae7a935fa42')
+    version('0.13.2', sha256='0fe7e952f468242d7c43ae49afcc764788f7f2fd5436d18c3d20a80db7296231')
 
-    depends_on('r-httpuv', type=('build', 'run'))
-    depends_on('r-mime', type=('build', 'run'))
-    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r-httpuv@1.5.0:', type=('build', 'run'))
+    depends_on('r-mime@0.3:', type=('build', 'run'))
+    depends_on('r-jsonlite@0.9.16:', type=('build', 'run'))
     depends_on('r-xtable', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
-    depends_on('r-htmltools', type=('build', 'run'))
-    depends_on('r-r6', type=('build', 'run'))
+    depends_on('r-htmltools@0.3.6:', type=('build', 'run'))
+    depends_on('r-r6@2.0:', type=('build', 'run'))
     depends_on('r-sourcetools', type=('build', 'run'))
+    depends_on('r-later@0.7.2:', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-promises@1.0.1:', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-crayon', when='@1.1.0:', type=('build', 'run'))
+    depends_on('r-rlang', when='@1.1.0:', type=('build', 'run'))

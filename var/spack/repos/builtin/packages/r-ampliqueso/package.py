@@ -1,51 +1,38 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class RAmpliqueso(RPackage):
-    """The package provides tools and reports for the analysis of
-    amplicon sequencing panels, such as AmpliSeq."""
+    """Analysis of amplicon enrichment panels.
 
-    homepage = "https://www.bioconductor.org/packages/ampliQueso/"
-    url      = "https://git.bioconductor.org/packages/ampliQueso"
+       The package provides tools and reports for the analysis of amplicon
+       sequencing panels, such as AmpliSeq"""
 
-    version('1.14.0', git='https://git.bioconductor.org/packages/ampliQueso', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
+    homepage = "https://bioconductor.org/packages/3.8/bioc/html/ampliQueso.html"
+    git      = "https://git.bioconductor.org/packages/ampliQueso.git"
 
-    depends_on('r@3.4.0:3.4.9', when='@1.14.0')
-    depends_on('r-samr', type=('build', 'run'))
-    depends_on('r-deseq', type=('build', 'run'))
-    depends_on('r-edger', type=('build', 'run'))
-    depends_on('r-xtable', type=('build', 'run'))
-    depends_on('r-statmod', type=('build', 'run'))
-    depends_on('r-genefilter', type=('build', 'run'))
-    depends_on('r-variantannotation', type=('build', 'run'))
-    depends_on('r-foreach', type=('build', 'run'))
-    depends_on('r-doparallel', type=('build', 'run'))
-    depends_on('r-gplots', type=('build', 'run'))
-    depends_on('r-ggplot2', type=('build', 'run'))
-    depends_on('r-rgl', type=('build', 'run'))
+    version('1.21.0', commit='ed99c5194a452ee299a93e981da2224e4dab5bdd')
+    version('1.20.0', commit='ed064ffe9c5f2b47136e5f0f2e2c4214af4deae8')
+    version('1.18.0', commit='c27fa51094135ef8da52cd2b34a27ec6454abd8e')
+    version('1.16.0', commit='25d2543ff9dedef4f966f999c95cdf87185d3bb3')
+    version('1.14.0', commit='9a4c26ec594171279aba8ab7fe59c4a2ea09b06b')
+
+    depends_on('r@2.15.0:', type=('build', 'run'))
+    depends_on('r-rnaseqmap@2.17.1:', type=('build', 'run'))
     depends_on('r-knitr', type=('build', 'run'))
-    depends_on('r-rnaseqmap', type=('build', 'run'))
+    depends_on('r-rgl', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-gplots', type=('build', 'run'))
+    depends_on('r-doparallel', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-variantannotation', type=('build', 'run'))
+    depends_on('r-genefilter', type=('build', 'run'))
+    depends_on('r-statmod', type=('build', 'run'))
+    depends_on('r-xtable', type=('build', 'run'))
+    depends_on('r-edger', type=('build', 'run'))
+    depends_on('r-deseq', type=('build', 'run'))
+    depends_on('r-samr', type=('build', 'run'))

@@ -1,40 +1,60 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class Fish(AutotoolsPackage):
+class Fish(CMakePackage):
     """fish is a smart and user-friendly command line shell for OS X, Linux, and
     the rest of the family.
     """
 
     homepage = "https://fishshell.com/"
-    url      = "https://fishshell.com/files/2.7.0/fish-2.7.0.tar.gz"
-    list_url = "https://fishshell.com/"
+    url      = "https://github.com/fish-shell/fish-shell/releases/download/3.1.2/fish-3.1.2.tar.gz"
+    git      = "https://github.com/fish-shell/fish-shell.git"
+    list_url = homepage
 
+    version('master', branch='master')
+    version('3.1.2', sha256='d5b927203b5ca95da16f514969e2a91a537b2f75bec9b21a584c4cd1c7aa74ed')
+    version('3.1.0', sha256='e5db1e6839685c56f172e1000c138e290add4aa521f187df4cd79d4eab294368')
+    version('3.0.0', sha256='ea9dd3614bb0346829ce7319437c6a93e3e1dfde3b7f6a469b543b0d2c68f2cf')
+
+    variant('docs', default=False, description='Build documentation')
+
+    # https://github.com/fish-shell/fish-shell#dependencies-1
+    depends_on('cmake@3.2:', type='build')
     depends_on('ncurses')
+    depends_on('pcre2@10.21:')
+    depends_on('gettext')
+    depends_on('py-sphinx', when='+docs', type='build')
+    depends_on('python@3.3:', type='test')
+    depends_on('py-pexpect', type='test')
 
-    version('2.7.0', '3a76b7cae92f9f88863c35c832d2427fb66082f98e92a02203dc900b8fa87bcb')
-    version('2.2.0', 'a76339fd14ce2ec229283c53e805faac48c3e99d9e3ede9d82c0554acfc7b77a')
+    # https://github.com/fish-shell/fish-shell/issues/7310
+    patch('codesign.patch', when='@3.1.2 platform=darwin')
+
+    executables = ['^fish$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'fish, version (\S+)', output)
+        return match.group(1) if match else None
+
+    def setup_build_environment(self, env):
+        env.append_flags('LDFLAGS', self.spec['ncurses'].libs.link_flags)
+
+    def cmake_args(self):
+        args = [
+            '-DBUILD_SHARED_LIBS=ON',
+            '-DMAC_CODESIGN_ID=OFF',
+            '-DPCRE2_LIB=' + self.spec['pcre2'].libs[0],
+            '-DPCRE2_INCLUDE_DIR=' + self.spec['pcre2'].headers.directories[0],
+        ]
+
+        if '+docs' in self.spec:
+            args.append('-DBUILD_DOCS=ON')
+        else:
+            args.append('-DBUILD_DOCS=OFF')
+
+        return args

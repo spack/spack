@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -32,10 +13,11 @@ class PySimplejson(PythonPackage):
     homepage = "https://github.com/simplejson/simplejson"
     url      = "https://pypi.io/packages/source/s/simplejson/simplejson-3.10.0.tar.gz"
 
-    version('3.10.0', '426a9631d22851a7a970b1a677368b15')
-    version('3.9.0',  '01db2db1b96bd8e59bcab45bca12639b')
-    version('3.8.2',  '53b1371bbf883b129a12d594a97e9a18')
-    version('3.8.1',  'b8441f1053edd9dc335ded8c7f98a974')
-    version('3.8.0',  '72f3b93a6f9808df81535f79e79565a2')
+    version('3.16.0', sha256='b1f329139ba647a9548aa05fb95d046b4a677643070dc2afc05fa2e975d09ca5')
+    version('3.10.0', sha256='953be622e88323c6f43fad61ffd05bebe73b9fd9863a46d68b052d2aa7d71ce2')
+    version('3.9.0',  sha256='e9abeee37424f4bfcd27d001d943582fb8c729ffc0b74b72bd0e9b626ed0d1b6')
+    version('3.8.2',  sha256='d58439c548433adcda98e695be53e526ba940a4b9c44fb9a05d92cd495cdd47f')
+    version('3.8.1',  sha256='428ac8f3219c78fb04ce05895d5dff9bd813c05a9a7922c53dc879cd32a12493')
+    version('3.8.0',  sha256='217e4797da3a9a4a9fbe6722e0db98070b8443a88212d7acdbd241a7668141d9')
 
     depends_on('py-setuptools', type='build')

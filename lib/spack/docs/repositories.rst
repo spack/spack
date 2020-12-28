@@ -1,3 +1,8 @@
+.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _repositories:
 
 =============================
@@ -36,7 +41,7 @@ Package repositories allow you to:
 
 1. Maintain your own packages separately from Spack;
 
-2. Share your packages (e.g. by hosting them in a shared file system),
+2. Share your packages (e.g., by hosting them in a shared file system),
    without committing them to the built-in Spack package repository; and
 
 3. Override built-in Spack packages with your own implementation.
@@ -72,7 +77,7 @@ paths to repositories. Each path is on a separate line starting with
   - /opt/local-repo
   - $spack/var/spack/repos/builtin
 
-When Spack interprets a spec, e.g. ``mpich`` in ``spack install mpich``,
+When Spack interprets a spec, e.g., ``mpich`` in ``spack install mpich``,
 it searches these repositories in order (first to last) to resolve each
 package name.  In this example, Spack will look for the following
 packages and use the first valid file:
@@ -142,7 +147,7 @@ packages created by the Computation directorate might use ``llnl.comp``.
 Spack cannot ensure that every repository is named uniquely, but it will
 prevent you from registering two repositories with the same namespace at
 the same time.  If you try to add a repository that has the same name as
-an existing one, e.g. ``builtin``, Spack will print a warning message.
+an existing one, e.g., ``builtin``, Spack will print a warning message.
 
 .. _namespace-example:
 
@@ -275,16 +280,16 @@ you install it, you can use ``spack spec -N``:
 
    Concretized
    --------------------------------
-   builtin.hdf5@1.10.0-patch1%clang@7.0.2-apple+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=darwin-elcapitan-x86_64
-       ^builtin.openmpi@2.0.1%clang@7.0.2-apple~mxm~pmi~psm~psm2~slurm~sqlite3~thread_multiple~tm~verbs+vt arch=darwin-elcapitan-x86_64
-           ^builtin.hwloc@1.11.4%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-               ^builtin.libpciaccess@0.13.4%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                   ^builtin.libtool@2.4.6%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                       ^builtin.m4@1.4.17%clang@7.0.2-apple+sigsegv arch=darwin-elcapitan-x86_64
-                           ^builtin.libsigsegv@2.10%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-                   ^builtin.pkg-config@0.29.1%clang@7.0.2-apple+internal_glib arch=darwin-elcapitan-x86_64
-                   ^builtin.util-macros@1.19.0%clang@7.0.2-apple arch=darwin-elcapitan-x86_64
-       ^builtin.zlib@1.2.8%clang@7.0.2-apple+pic arch=darwin-elcapitan-x86_64
+   builtin.hdf5@1.10.0-patch1%apple-clang@7.0.2+cxx~debug+fortran+mpi+shared~szip~threadsafe arch=darwin-elcapitan-x86_64
+       ^builtin.openmpi@2.0.1%apple-clang@7.0.2~mxm~pmi~psm~psm2~slurm~sqlite3~thread_multiple~tm~verbs+vt arch=darwin-elcapitan-x86_64
+           ^builtin.hwloc@1.11.4%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+               ^builtin.libpciaccess@0.13.4%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                   ^builtin.libtool@2.4.6%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                       ^builtin.m4@1.4.17%apple-clang@7.0.2+sigsegv arch=darwin-elcapitan-x86_64
+                           ^builtin.libsigsegv@2.10%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+                   ^builtin.pkg-config@0.29.1%apple-clang@7.0.2+internal_glib arch=darwin-elcapitan-x86_64
+                   ^builtin.util-macros@1.19.0%apple-clang@7.0.2 arch=darwin-elcapitan-x86_64
+       ^builtin.zlib@1.2.8%apple-clang@7.0.2+pic arch=darwin-elcapitan-x86_64
 
 .. warning::
 
@@ -445,7 +450,7 @@ Spack repo namespaces are actually Python namespaces tacked on under
 ``spack.pkg``.  The search semantics of ``repos.yaml`` are actually
 implemented using Python's built-in `sys.path
 <https://docs.python.org/2/library/sys.html#sys.path>`_ search.  The
-:py:mod:`spack.repository` module implements a custom `Python importer
+:py:mod:`spack.repo` module implements a custom `Python importer
 <https://docs.python.org/2/library/imp.html>`_.
 
 .. warning::

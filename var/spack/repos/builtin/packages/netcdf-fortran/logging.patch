@@ -1,0 +1,13 @@
+--- a/fortran/nf_logging.F90
++++ b/fortran/nf_logging.F90
+@@ -1,3 +1,10 @@
++! This file is compiled only if logging is enabled. However, the macro LOGGING
++! is never defined. For most of the compilers this simply leads to an empty
++! object: they do not complain when a source file is empty. This is not the
++! case for NAG: the compiler fails the compilation of empty sources. To fix
++! this problem, we define the macro here.
++#define LOGGING
++
+ #ifdef LOGGING
+ ! Function to turn on logging
+ !-------------------------------- nf_set_log_level ----------------------------

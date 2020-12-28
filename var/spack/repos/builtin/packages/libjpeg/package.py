@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2017, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/spack/spack
-# Please also see the NOTICE and LICENSE files for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -31,9 +12,15 @@ class Libjpeg(AutotoolsPackage):
     alongside various utilities for handling JPEG data."""
 
     homepage = "http://www.ijg.org"
-    url      = "http://www.ijg.org/files/jpegsrc.v9b.tar.gz"
+    url      = "http://www.ijg.org/files/jpegsrc.v9c.tar.gz"
 
-    version('9b', '6a9996ce116ec5c52b4870dbcd6d3ddb')
-    version('9a', '3353992aecaee1805ef4109aadd433e7')
+    version('9c', sha256='650250979303a649e21f87b5ccd02672af1ea6954b911342ea491f351ceb7122')
+    version('9b', sha256='240fd398da741669bf3c90366f58452ea59041cacc741a489b99f2f6a0bad052')
+    version('9a', sha256='3a753ea48d917945dd54a2d97de388aa06ca2eb1066cbfdc6652036349fe05a7')
 
     provides('jpeg')
+
+    def check(self):
+        # Libjpeg has both 'check' and 'test' targets that are aliases.
+        # Only need to run the tests once.
+        make('check')
