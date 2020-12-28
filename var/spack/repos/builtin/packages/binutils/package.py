@@ -61,10 +61,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
-        #jgw#
-        import os
-        os.environ['LDFLAGS'] = "-L%s" % self.spec['gettext'].prefix.lib + " -lintl"
-        print "-L%s" % self.spec['gettext'].prefix.lib + " -lintl"
         configure_args = [
             '--disable-dependency-tracking',
             '--disable-werror',

@@ -40,8 +40,6 @@ class Exodusii(CMakePackage):
         cxx_path = spec['mpi'].mpicxx if '+mpi' in spec else self.compiler.cxx
 
         options = [
-            # jgw
-            '-DSEACASProj_ENABLE_ALL_PACKAGES:BOOL=ON',
             # General Flags #
             '-DSEACASProj_ENABLE_SEACASExodus=ON',
             '-DSEACASProj_ENABLE_TESTS=ON',
@@ -57,9 +55,6 @@ class Exodusii(CMakePackage):
             '-DTPL_ENABLE_MPI={0}'.format('ON' if '+mpi' in spec else 'OFF'),
             '-DCMAKE_C_COMPILER={0}'.format(cc_path),
             '-DCMAKE_CXX_COMPILER={0}'.format(cxx_path),
-
-            # jgw
-            '-DCMAKE_CXX_FLAGS={0}'.format("-std=c++11"),
         ]
 
         return options
