@@ -67,6 +67,9 @@ spack install "${CLI_INSTALL_ARGS[@]}" 'python@2.7.18~dbm~pyexpat+shared'
 # unless we also enable +binutils.
 spack install "${CLI_INSTALL_ARGS[@]}" -j 6 'gcc@10.2.0+binutils'
 
+# Please use this mildly recent gcc now.
+spack load 'gcc@10.2.0+binutils'
+
 # Load the newer python to avoid having this build fail while looking for the
 # broken centos6 python library in /usr/lib64.
 spack load 'python@2.7.18~dbm~pyexpat+shared'
@@ -76,8 +79,6 @@ spack install "${CLI_INSTALL_ARGS[@]}" "python@$(cat python-full-version.txt)~db
 # Our python is now the same (version) again, but with a reasonable header and shared
 # library arrangement!
 spack load "python@$(cat python-full-version.txt)~dbm~pyexpat+shared"
-# Ensure spack has registered the built gcc as a compiler (this should error if not).
-spack compiler find
 # Build clingo.
 spack install "${CLI_INSTALL_ARGS[@]}" 'clingo@spack+python%gcc@10.2.0'
 
