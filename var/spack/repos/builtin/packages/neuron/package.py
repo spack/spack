@@ -69,6 +69,7 @@ class Neuron(CMakePackage):
     @when("+cmake")
     def cmake_args(self):
         spec = self.spec
+
         def cmake_options(spec_options):
             value = "TRUE" if spec_options in spec else "FALSE"
             cmake_name = spec_options[1:].upper().replace("-", "_")
@@ -184,7 +185,6 @@ class Neuron(CMakePackage):
             options.append("MPICC=%s" % spec["mpi"].mpicc)
             options.append("MPICXX=%s" % spec["mpi"].mpicxx)
 
-
         ld_flags = "LDFLAGS="
 
         if "readline" in spec:
@@ -195,9 +195,9 @@ class Neuron(CMakePackage):
 
         if "ncurses" in spec:
             options.extend([
-              "CURSES_LIBS={0.libs.ld_flags} -Wl,-rpath,{0.prefix.lib}".format(
-                spec["ncurses"]),
-              "CURSES_CFLAGS={0}".format(spec["ncurses"].prefix.include),
+                "CURSES_LIBS={0.ld_flags} -Wl,-rpath,{1}".format(
+                    spec["ncurses"].libs, spec["ncurses"].prefix.lib),
+                "CURSES_CFLAGS={0}".format(spec["ncurses"].prefix.include),
             ])
             ld_flags += " {0.libs.ld_flags} -Wl,-rpath,{0.prefix.lib}".format(
                 spec["ncurses"]
@@ -290,7 +290,7 @@ class Neuron(CMakePackage):
 
         if spec.satisfies("+coreneuron"):
             corenrn_makefile = join_path(self.prefix,
-                                 "share/coreneuron/nrnivmodl_core_makefile")
+                                         "share/coreneuron/nrnivmodl_core_makefile")
             filter_file(env["CXX"], cxx_compiler, corenrn_makefile, **kwargs)
 
     def setup_run_environment(self, env):
