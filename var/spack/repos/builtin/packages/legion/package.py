@@ -25,6 +25,8 @@ class Legion(CMakePackage):
     url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
     git      = "https://github.com/StanfordLegion/legion.git"
 
+    maintainers = ['streichler']
+
     version('master', branch='master')
     version('ctrl-rep', branch='control_replication')
     version('20.03.0', sha256='ae5feedb5ed9f357b56424b9d73cea4f224a61e291e022556f796d1ff24d1244')
