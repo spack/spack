@@ -1,0 +1,105 @@
+From e6334e5542440111d299e8d4f1dd8b436a6447dc Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Alexandru=20S=C4=83vulescu?= <alexandru.savulescu@epfl.ch>
+Date: Mon, 30 Nov 2020 16:06:52 +0100
+Subject: [PATCH] nrnversion fails when not in git (#831)
+
+More useful build error message with building from archive file.
+
+nrnversion details are unknown when no git metadata.
+
+This reverts commit c777da1ba5c72f36ef815b18ab71b018c82ff095.
+---
+ CONTRIBUTING.md                   |  2 +-
+ cmake/ExternalProjectHelper.cmake | 15 ++++++++++++++-
+ git2nrnversion_h.sh               |  9 ++++-----
+ src/nrniv/CMakeLists.txt          |  3 ++-
+ 4 files changed, 21 insertions(+), 8 deletions(-)
+
+diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
+index 04dac980..9ab399c8 100644
+--- a/CONTRIBUTING.md
++++ b/CONTRIBUTING.md
+@@ -100,7 +100,7 @@ Currently we have enabled CMake code formatting using [cmake-format](https://git
+ * Make sure to install cmake-format utility with Python version you are using:
+ 
+ ```
+-pip3.7 install cmake-format==0.6.0 --user
++pip3.7 install cmake-format==0.6.0 pyyaml --user
+ ```
+ Now you should have `cmake-format` command available.
+ 
+diff --git a/cmake/ExternalProjectHelper.cmake b/cmake/ExternalProjectHelper.cmake
+index 57094e7e..eeb6dfc2 100644
+--- a/cmake/ExternalProjectHelper.cmake
++++ b/cmake/ExternalProjectHelper.cmake
+@@ -1,5 +1,15 @@
+ find_package(Git QUIET)
+ 
++if(${GIT_FOUND} AND EXISTS ${CMAKE_SOURCE_DIR}/.git)
++  execute_process(
++    COMMAND ${GIT_EXECUTABLE} --git-dir=.git describe --all
++    RESULT_VARIABLE NOT_A_GIT_REPO
++    ERROR_QUIET
++    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
++else()
++  set(NOT_A_GIT_REPO "NotAGitRepo")
++endif()
++
+ # initialize submodule with given path
+ function(initialize_submodule path)
+   if(NOT ${GIT_FOUND})
+@@ -9,7 +19,7 @@ function(initialize_submodule path)
+   message(STATUS "Sub-module : missing ${path} : running git submodule update --init --recursive")
+   execute_process(
+     COMMAND
+-      git submodule update --init --recursive -- ${path}
++      ${GIT_EXECUTABLE}  submodule update --init --recursive -- ${path}
+     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+ endfunction()
+ 
+@@ -20,6 +30,9 @@ function(add_external_project name)
+     NAMES CMakeLists.txt
+     PATHS "${PROJECT_SOURCE_DIR}/external/${name}")
+   if(NOT EXISTS ${${name}_PATH})
++    if(NOT_A_GIT_REPO)
++      message(FATAL_ERROR "Looks like you are building from source. Git needed for ${name} feature.")
++    endif()
+     initialize_submodule(external/${name})
+   else()
+     message(STATUS "Sub-project : using ${name} from from external/${name}")
+diff --git a/git2nrnversion_h.sh b/git2nrnversion_h.sh
+index d62b7410..4d8e4015 100755
+--- a/git2nrnversion_h.sh
++++ b/git2nrnversion_h.sh
+@@ -20,10 +20,9 @@ if git log > /dev/null && test -d .git ; then
+ elif test -f src/nrnoc/nrnversion.h ; then
+         sed -n '1,$p' src/nrnoc/nrnversion.h
+ else
+-        echo "#define GIT_DATE \"1999-12-31\""
+-        echo "#define GIT_BRANCH \"?\""
+-        echo "#define GIT_CHANGESET \"?\""
+-        echo "#define GIT_DESCRIBE \"?\""
+-        exit 1
++        echo "#define GIT_DATE \"Build Time: $(date "+%Y-%m-%d-%H:%M:%S")\""
++        echo "#define GIT_BRANCH \"unknown branch\""
++        echo "#define GIT_CHANGESET \"unknown commit id\""
++        echo "#define GIT_DESCRIBE \"${PROJECT_VERSION}.dev0\""
+ fi
+ 
+diff --git a/src/nrniv/CMakeLists.txt b/src/nrniv/CMakeLists.txt
+index ccd28e35..aaaf53b4 100644
+--- a/src/nrniv/CMakeLists.txt
++++ b/src/nrniv/CMakeLists.txt
+@@ -140,7 +140,8 @@ set(NRN_INCLUDE_DIRS
+ # is different from the contents of nrnversion.h
+ # ~~~
+ add_custom_target(
+-  nrnversion_h ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh ${PROJECT_SOURCE_DIR} > nrnversion.h.tmp
++  nrnversion_h
++  COMMAND ${CMAKE_COMMAND} -E env PROJECT_VERSION=${PROJECT_VERSION} $ENV{SHELL} ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh ${PROJECT_SOURCE_DIR} > nrnversion.h.tmp
+   COMMAND ${CMAKE_COMMAND} -E copy_if_different nrnversion.h.tmp ${NRN_NRNOC_SRC_DIR}/nrnversion.h
+   DEPENDS ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh)
+ 
+-- 
+2.29.2
+
