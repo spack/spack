@@ -463,7 +463,7 @@ class SpackSolverSetup(object):
 
         # id for dummy variables
         self.card = 0
-        self._condition_id_counter = 0
+        self._condition_id_counter = itertools.count()
 
         # Caches to optimize the setup phase of the solver
         self.target_specs_cache = None
@@ -557,12 +557,11 @@ class SpackSolverSetup(object):
                 clauses = [x for x in clauses if x.name not in to_be_filtered]
 
                 # Emit facts based on clauses
-                cond_id = self._condition_id_counter
-                self._condition_id_counter += 1
-                self.gen.fact(fn.conflict(cond_id, pkg.name))
+                condition_id = next(self._condition_id_counter)
+                self.gen.fact(fn.conflict(condition_id, pkg.name))
                 for clause in clauses:
                     self.gen.fact(fn.conflict_condition(
-                        cond_id, clause.name, *clause.args
+                        condition_id, clause.name, *clause.args
                     ))
                 self.gen.newline()
 
@@ -702,14 +701,13 @@ class SpackSolverSetup(object):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
-                global_condition_id = self._condition_id_counter
-                self._condition_id_counter += 1
+                condition_id = next(self._condition_id_counter)
                 named_cond = cond.copy()
                 named_cond.name = named_cond.name or pkg.name
 
                 # each independent condition has an id
                 self.gen.fact(fn.dependency_condition(
-                    global_condition_id, dep.pkg.name, dep.spec.name
+                    condition_id, dep.pkg.name, dep.spec.name
                 ))
 
                 for t in sorted(dep.type):
@@ -723,13 +721,13 @@ class SpackSolverSetup(object):
                         continue
 
                     # there is a declared dependency of type t
-                    self.gen.fact(fn.dependency_type(global_condition_id, t))
+                    self.gen.fact(fn.dependency_type(condition_id, t))
 
                 # if it has conditions, declare them.
                 conditions = self.spec_clauses(named_cond, body=True)
                 for cond in conditions:
                     self.gen.fact(fn.required_dependency_condition(
-                        global_condition_id, cond.name, *cond.args
+                        condition_id, cond.name, *cond.args
                     ))
 
                 # add constraints on the dependency from dep spec.
@@ -751,7 +749,7 @@ class SpackSolverSetup(object):
                     clauses = self.spec_clauses(dep.spec)
                     for clause in clauses:
                         self.gen.fact(fn.imposed_dependency_condition(
-                            global_condition_id, clause.name, *clause.args
+                            condition_id, clause.name, *clause.args
                         ))
 
                 self.gen.newline()
@@ -821,21 +819,22 @@ class SpackSolverSetup(object):
                 ))
 
             for local_idx, spec in enumerate(external_specs):
-                global_id = self._condition_id_counter
-                self._condition_id_counter += 1
+                condition_id = next(self._condition_id_counter)
 
                 # Declare the global ID associated with this external spec
-                self.gen.fact(fn.external_spec(global_id, pkg_name))
+                self.gen.fact(fn.external_spec(condition_id, pkg_name))
 
                 # Local index into packages.yaml
-                self.gen.fact(fn.external_spec_index(global_id, pkg_name, local_idx))
+                self.gen.fact(
+                    fn.external_spec_index(condition_id, pkg_name, local_idx))
 
                 # Add conditions to be satisfied for this external
                 self.possible_versions[spec.name].add(spec.version)
                 clauses = self.spec_clauses(spec, body=True)
                 for clause in clauses:
                     self.gen.fact(
-                        fn.external_spec_condition(global_id, clause.name, *clause.args)
+                        fn.external_spec_condition(
+                            condition_id, clause.name, *clause.args)
                     )
                 self.gen.newline()
 
@@ -1335,7 +1334,8 @@ class SpackSolverSetup(object):
             specs (list): list of Specs to solve
 
         """
-        self._condition_id_counter = 0
+        self._condition_id_counter = itertools.count()
+
         # preliminary checks
         check_packages_exist(specs)
 
@@ -1499,7 +1499,7 @@ class SpecBuilder(object):
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
 
-    def external_spec_selected(self, global_id, pkg, idx):
+    def external_spec_selected(self, condition_id, pkg, idx):
         """This means that the external spec and index idx
         has been selected for this package.
         """
