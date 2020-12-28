@@ -102,12 +102,20 @@ class Itensor(MakefilePackage):
 
         # 1.CCCOM
         ccopts = 'CCCOM={0}'.format(self.compiler.cxx)
+        ccopts += ' ' + ' '.join(spec.compiler_flags['cxxflags'])
         if spec.satisfies('%fj'):
-            ccopts += ' -Nclang'
+            ccopts += ' ' + env["FCC_ENV"]
         ccopts += self.getcopts(spec)
         filter_file(r'^CCCOM.+', ccopts, mf)
 
-        # 2.prefix
+        # 2.LDFLAGS
+        vlib = 'BLAS_LAPACK_LIB= '
+        vlib += ' '.join(spec.compiler_flags['ldflags']) + ' '
+        vlib += ' '.join(spec.compiler_flags['ldlibs'])  + ' '
+        print(vlib)
+        filter_file(r'^BLAS_LAPACK_LIB=', vlib, mf)
+
+        # 3.prefix
         filter_file(
             r'^PREFIX.+',
             'PREFIX={0}'.format(prefix),
