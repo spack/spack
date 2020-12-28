@@ -34,7 +34,6 @@ class Neuron(CMakePackage):
     variant("cross-compile", default=False, description="Build for cross-compile environment")
     variant("interviews",    default=False, description="Enable GUI with INTERVIEWS")
     variant("legacy-unit",   default=False, description="Enable legacy units")
-    variant("gpu",           default=False, description="Enable GPU support via CoreNEURON")
     variant("mpi",           default=True,  description="Enable MPI parallelism")
     variant("python",        default=True,  description="Enable python")
     variant("rx3d",          default=False,  description="Enable cython translated 3-d rxd")
@@ -48,7 +47,6 @@ class Neuron(CMakePackage):
     depends_on("pkgconfig", type="build", when="~cmake")
     depends_on("py-cython", when="+rx3d", type="build")
 
-    depends_on("cuda@8:",     when="+gpu")
     depends_on("gettext")
     depends_on("mpi",         when="+mpi")
     depends_on("ncurses")
@@ -58,8 +56,7 @@ class Neuron(CMakePackage):
 
     conflicts("+cmake",       when="@0:7.8.0")
     conflicts("+coreneuron",  when="~cmake")
-    conflicts("+gpu",         when="@:7.99")
-    conflicts("+gpu",         when="~coreneuron")
+    conflicts("+coreneuron",  when="@:7.99")
     conflicts("+interviews",  when="~cmake")
     conflicts("+rx3d",        when="~python")
 
@@ -72,25 +69,25 @@ class Neuron(CMakePackage):
     @when("+cmake")
     def cmake_args(self):
         spec = self.spec
-        def cmake_enable_option(spec_options):
+        def cmake_options(spec_options):
             value = "TRUE" if spec_options in spec else "FALSE"
             cmake_name = spec_options[1:].upper().replace("-", "_")
             return "-DNRN_ENABLE_" + cmake_name + ":BOOL=" + value
 
-        args = [cmake_enable_option(variant) for variant in ["+coreneuron",
-                                                             "+interviews",
-                                                             "+mpi",
-                                                             "+python",
-                                                             "+rx3d",
-                                                             "+coreneuron",
-                                                             "+tests"]]
+        args = [cmake_options(variant) for variant in ["+coreneuron",
+                                                       "+interviews",
+                                                       "+mpi",
+                                                       "+python",
+                                                       "+rx3d",
+                                                       "+coreneuron",
+                                                       "+tests"]]
         args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
-
-        if "+gpu" in spec:
-            args.append("-DCORENRN_ENABLE_GPU=ON")
 
         if "+mpi" in spec:
             args.append("-DNRN_ENABLE_MPI_DYNAMIC=ON")
+
+        if "~mpi" in spec and '+coreneuron' in spec:
+            args.append("-DCORENRN_ENABLE_MPI=OFF")
 
         if "+python" in spec:
             args.append("-DPYTHON_EXECUTABLE:FILEPATH="
@@ -105,7 +102,6 @@ class Neuron(CMakePackage):
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
 
         return args
-
 
     # ==============================================
     # == Autotools build system related functions ==
@@ -198,14 +194,11 @@ class Neuron(CMakePackage):
             )
 
         if "ncurses" in spec:
-            options.extend(
-                [
-                    "CURSES_LIBS={0.libs.ld_flags} -Wl,-rpath,{0.prefix.lib}".format(
-                        spec["ncurses"]
-                    ),
-                    "CURSES_CFLAGS={0}".format(spec["ncurses"].prefix.include),
-                ]
-            )
+            options.extend([
+              "CURSES_LIBS={0.libs.ld_flags} -Wl,-rpath,{0.prefix.lib}".format(
+                spec["ncurses"]),
+              "CURSES_CFLAGS={0}".format(spec["ncurses"].prefix.include),
+            ])
             ld_flags += " {0.libs.ld_flags} -Wl,-rpath,{0.prefix.lib}".format(
                 spec["ncurses"]
             )
@@ -247,7 +240,8 @@ class Neuron(CMakePackage):
             file_list = find(self.prefix, "*/bin/nrniv_makefile")
             # check needed as during first evaluation the prefix is empty
             if file_list:
-                neuron_basedir = os.path.dirname(os.path.dirname(file_list[0]))
+                arch_dir = os.path.dirname(file_list[0])
+                neuron_basedir = os.path.dirname(arch_dir)
 
         return neuron_basedir
 
@@ -268,13 +262,12 @@ class Neuron(CMakePackage):
             cc_compiler = self.compiler.cc
             cxx_compiler = self.compiler.cxx
 
-
         kwargs = {"backup": False, "string": True}
         nrnmech_makefile = join_path(self.prefix,
                                      self.basedir,
                                      "./bin/nrnmech_makefile")
 
-        # nrnmech_makefile exists in cmake and autotools but with different syntax
+        # nrnmech_makefile exists in cmake and autotools
         assign_operator = "?=" if spec.satisfies("+cmake") else "="
         filter_file("CC {0} {1}".format(assign_operator, env["CC"]),
                     "CC = {0}".format(cc_compiler),
@@ -294,6 +287,11 @@ class Neuron(CMakePackage):
             filter_file(env["CXX"], cxx_compiler, nrniv_makefile, **kwargs)
             filter_file(env["CC"], cc_compiler, libtool_makefile, **kwargs)
             filter_file(env["CXX"], cxx_compiler, libtool_makefile, **kwargs)
+
+        if spec.satisfies("+coreneuron"):
+            corenrn_makefile = join_path(self.prefix,
+                                 "share/coreneuron/nrnivmodl_core_makefile")
+            filter_file(env["CXX"], cxx_compiler, corenrn_makefile, **kwargs)
 
     def setup_run_environment(self, env):
         env.prepend_path("PATH", join_path(self.basedir, "bin"))
