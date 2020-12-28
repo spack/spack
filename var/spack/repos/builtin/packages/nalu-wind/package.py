@@ -38,6 +38,9 @@ class NaluWind(CMakePackage):
     variant('fftw', default=False,
             description='Compile with FFTW support')
 
+    variant('wind-utils', default=False,
+            description='Build wind-utils')
+
     # Required dependencies
     depends_on('mpi')
     depends_on('yaml-cpp@0.5.3:', when='+shared')
@@ -116,6 +119,11 @@ class NaluWind(CMakePackage):
         else:
             options.append('-DENABLE_FFTW:BOOL=OFF')
 
+        if '+wind-utils' in spec:
+            options.append('-DENABLE_WIND_UTILS=ON')
+        else:
+            options.append('-DENABLE_WIND_UTILS=OFF')
+
         if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
@@ -139,6 +147,6 @@ class NaluWind(CMakePackage):
 
     @run_before('cmake')
     def add_submodules(self):
-        if self.run_tests:
+        if self.run_tests or '+wind-utils' in self.spec:
             git = which('git')
             git('submodule', 'update', '--init', '--recursive')
