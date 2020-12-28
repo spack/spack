@@ -925,6 +925,7 @@ class SpackSolverSetup(object):
         # TODO: do this with consistent suffixes.
         class Head(object):
             node = fn.node
+            virtual_node = fn.virtual_node
             node_platform = fn.node_platform_set
             node_os = fn.node_os_set
             node_target = fn.node_target_set
@@ -935,6 +936,7 @@ class SpackSolverSetup(object):
 
         class Body(object):
             node = fn.node
+            virtual_node = fn.virtual_node
             node_platform = fn.node_platform
             node_os = fn.node_os
             node_target = fn.node_target
@@ -946,7 +948,9 @@ class SpackSolverSetup(object):
         f = Body if body else Head
 
         if spec.name:
-            clauses.append(f.node(spec.name))
+            clauses.append(
+                f.node(spec.name) if not spec.virtual
+                else f.virtual_node(spec.name))
 
         clauses.extend(self.spec_versions(spec))
 
@@ -973,7 +977,8 @@ class SpackSolverSetup(object):
                     continue
 
                 # validate variant value
-                if vname not in spack.directives.reserved_names:
+                reserved_names = spack.directives.reserved_names
+                if (not spec.virtual and vname not in reserved_names):
                     variant_def = spec.package.variants[vname]
                     variant_def.validate_or_raise(variant, spec.package)
 
@@ -1014,11 +1019,7 @@ class SpackSolverSetup(object):
         # add all clauses from dependencies
         if transitive:
             for dep in spec.traverse(root=False):
-                if dep.virtual:
-                    clauses.extend(self.virtual_spec_clauses(dep))
-                else:
-                    clauses.extend(
-                        self.spec_clauses(dep, body, transitive=False))
+                clauses.extend(self.spec_clauses(dep, body, transitive=False))
 
         return clauses
 
@@ -1392,17 +1393,12 @@ class SpackSolverSetup(object):
 
         self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
-            if not spec.virtual:
-                self.gen.fact(fn.root(spec.name))
-            else:
-                self.gen.fact(fn.virtual_root(spec.name))
-
             self.gen.h2('Spec: %s' % str(spec))
-            if spec.virtual:
-                clauses = self.virtual_spec_clauses(spec)
-            else:
-                clauses = self.spec_clauses(spec)
-            for clause in clauses:
+            self.gen.fact(
+                fn.virtual_root(spec.name) if spec.virtual
+                else fn.root(spec.name)
+            )
+            for clause in self.spec_clauses(spec):
                 self.gen.fact(clause)
 
         self.gen.h1("Variant Values defined in specs")
@@ -1419,15 +1415,6 @@ class SpackSolverSetup(object):
 
         self.gen.h1("Target Constraints")
         self.define_target_constraints()
-
-    def virtual_spec_clauses(self, dep):
-        assert dep.virtual
-        self.virtual_constraints.add(str(dep))
-        clauses = [
-            fn.virtual_node(dep.name),
-            fn.single_provider_for(str(dep.name), str(dep.versions))
-        ]
-        return clauses
 
 
 class SpecBuilder(object):
@@ -1590,6 +1577,13 @@ class SpecBuilder(object):
                 continue
 
             assert action and callable(action)
+
+            # ignore predicates on virtual packages, as they're used for
+            # solving but don't construct anything
+            pkg = args[0]
+            if spack.repo.path.is_virtual(pkg):
+                continue
+
             action(*args)
 
         # namespace assignment is done after the fact, as it is not
