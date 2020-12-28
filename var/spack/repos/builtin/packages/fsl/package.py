@@ -41,11 +41,20 @@ class Fsl(Package, CudaPackage):
 
     patch('build_log.patch')
     patch('eddy_Makefile.patch', when='@6:')
+    patch('iconv.patch')
     patch('fslpython_install_v5.patch', when='@:5')
     patch('fslpython_install_v6.patch', when='@6:')
+
+    # These patches disable FSL's attempts to try to submit a subset of FSL
+    # computations to an SGE queue system. That auto-submit mechanism only
+    # works for SGE and requires someone to edit the fsl_sub script to
+    # accommodate their system. These patches disable the auto submission
+    # scheme and allow the fsl_sub script to behave the same on all systems,
+    # and without further modification, whether the computation is submitted to
+    # a "local" system, like a workstation, or as a batch job to a cluster
+    # queueing system, regardless of queue system type.
     patch('fsl_sub_v5.patch', when='@:5')
     patch('fsl_sub_v6.patch', when='@6:')
-    patch('iconv.patch')
 
     def patch(self):
         # Uncomment lines in source file to allow building from source
