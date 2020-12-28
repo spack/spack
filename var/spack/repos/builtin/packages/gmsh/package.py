@@ -35,8 +35,6 @@ class Gmsh(CMakePackage):
     version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
     version('develop', branch='master', git='https://gitlab.onelab.info/gmsh/gmsh.git')
 
-    patch('gmsh-4.7.1-cgns-type.patch', sha256='bee4401602d114cbd011336261cd90a69d8cd80f4472f59ce9dfc65e8850dddb', when='@4.7.1')
-
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=True,  description='Builds MPI support for parser and solver')
     variant('openmp',      default=False, description='Enable OpenMP support')
