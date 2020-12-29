@@ -15,6 +15,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     git      = "https://github.com/arrayfire/arrayfire.git"
 
     version('master', submodules=True)
+    version('3.7.3', submodules=True, tag='v3.7.3')
     version('3.7.0', submodules=True, tag='v3.7.0')
 
     variant('cuda',   default=False, description='Enable Cuda backend')
