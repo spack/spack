@@ -72,6 +72,10 @@ class PyCartopy(PythonPackage):
     # Needed for `spack test run py-cartopy`
     setup_run_environment = setup_build_environment
 
+    # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_build_environment(env)
+
     def build_ext_args(self, spec, prefix):
         args = [
             spec['geos'].headers.include_flags,
