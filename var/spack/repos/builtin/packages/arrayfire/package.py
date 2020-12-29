@@ -24,7 +24,7 @@ class Arrayfire(CMakePackage, CudaPackage):
     variant('opencl', default=False, description='Enable OpenCL backend')
 
     depends_on('boost@1.65:')
-    depends_on('fftw')
+    depends_on('fftw-api@3:')
     depends_on('blas')
     depends_on('cuda@7.5:', when='+cuda')
     depends_on('cudnn', when='+cuda')
@@ -46,4 +46,9 @@ class Arrayfire(CMakePackage, CudaPackage):
             '-DAF_BUILD_OPENCL={0}'.format(
                 'ON' if '+opencl' in self.spec else 'OFF'),
         ])
+        if '^mkl' in self.spec:
+            args.append('-DUSE_CPU_MKL=ON')
+            if '%intel' not in self.spec:
+                args.append('-DMKL_THREAD_LAYER=GNU OpenMP')
+
         return args
