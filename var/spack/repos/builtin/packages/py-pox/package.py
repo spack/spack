@@ -22,7 +22,7 @@ class PyPox(PythonPackage):
     depends_on('py-setuptools@0.6:', type='build')
 
     def url_for_version(self, version):
-        pypi = "pox/"
+        url = "https://pypi.io/packages/source/p/pox/"
         if version >= Version('0.2.4'):
             url += 'pox-{0}.tar.gz'
         else:

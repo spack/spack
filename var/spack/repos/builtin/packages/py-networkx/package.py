@@ -33,5 +33,5 @@ class PyNetworkx(PythonPackage):
         if Version('2.0') <= version <= Version('2.3'):
             ext = 'zip'
 
-        pypi = 'networkx/networkx-{0}.{1}'
+        url = 'https://pypi.io/packages/source/n/networkx/networkx-{0}.{1}'
         return url.format(version, ext)

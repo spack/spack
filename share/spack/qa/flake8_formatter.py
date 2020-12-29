@@ -27,6 +27,7 @@ pattern_exemptions = {
             r"^\s*git\s*=",
             r"^\s*svn\s*=",
             r"^\s*hg\s*=",
+            r"^\s*pypi\s*=",
             r"^\s*list_url\s*=",
             r"^\s*version\(",
             r"^\s*variant\(",

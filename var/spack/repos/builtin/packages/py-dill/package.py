@@ -29,7 +29,7 @@ class PyDill(PythonPackage):
     depends_on('py-setuptools@0.6:', type='build')
 
     def url_for_version(self, version):
-        pypi = "dill/"
+        url = "https://pypi.io/packages/source/d/dill/"
 
         if version >= Version('0.2.7'):
             url += 'dill-{0}.tar.gz'

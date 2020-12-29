@@ -24,7 +24,7 @@ class PyPpft(PythonPackage):
     depends_on('py-dill@0.2.6:', type=('build', 'run'))
 
     def url_for_version(self, version):
-        pypi = "ppft/"
+        url = "https://pypi.io/packages/source/p/ppft/"
         if version >= Version('1.6.4.8'):
             url += 'ppft-{0}.tar.gz'
         else:

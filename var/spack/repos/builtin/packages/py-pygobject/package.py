@@ -10,6 +10,7 @@ class PyPygobject(PythonPackage):
     """bindings for the GLib, and GObject,
        to be used in Python."""
 
+    homepage = "https://pypi.python.org/pypi/pygobject"
 
     version('3.38.0', sha256='0372d1bb9122fc19f500a249b1f38c2bb67485000f5887497b4b205b3e7084d5')
     version('3.28.3', sha256='3dd3e21015d06e00482ea665fc1733b77e754a6ab656a5db5d7f7bfaf31ad0b0')

@@ -40,7 +40,7 @@ class PySetuptools(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43.99.99')
 
     def url_for_version(self, version):
-        pypi = 'setuptools/setuptools-{0}'
+        url = 'https://pypi.io/packages/source/s/setuptools/setuptools-{0}'
         url = url.format(version)
 
         if version > Version('32.1.2'):
