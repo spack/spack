@@ -43,6 +43,9 @@ class Amdlibm(SConsPackage):
         if "%aocc" in spec:
             args.append("--compiler=aocc")
 
+        #we are circumventing the use of
+        #Spacks compiler wrappers because
+        #SCons wipes out all environment variables.
         args.append("CC={0}".format(self.compiler.cc))
         args.append("CXX={0}".format(self.compiler.cxx))
 
