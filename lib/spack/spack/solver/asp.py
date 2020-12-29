@@ -793,9 +793,6 @@ class SpackSolverSetup(object):
             if pkg_name not in spack.repo.path:
                 continue
 
-            if 'externals' not in data:
-                self.gen.fact(fn.external(pkg_name).symbol(positive=False))
-
             self.gen.h2('External package: {0}'.format(pkg_name))
             # Check if the external package is buildable. If it is
             # not then "external(<pkg>)" is a fact.
@@ -807,52 +804,40 @@ class SpackSolverSetup(object):
             externals = data.get('externals', [])
             external_specs = [spack.spec.Spec(x['spec']) for x in externals]
 
-            # Compute versions with appropriate weights
+            # Compute versions with appropriate weights. This accounts for the
+            # fact that we should prefer more recent versions, but specs in
+            # packages.yaml may not be ordered in that sense.
             external_versions = [
-                (x.version, idx) for idx, x in enumerate(external_specs)
+                (x.version, local_idx)
+                for local_idx, x in enumerate(external_specs)
             ]
             external_versions = [
-                (v, -(w + 1), idx)
-                for w, (v, idx) in enumerate(sorted(external_versions))
+                (v, -(w + 1), local_idx)
+                for w, (v, local_idx) in enumerate(sorted(external_versions))
             ]
             for version, weight, id in external_versions:
                 self.gen.fact(fn.external_version_declared(
                     pkg_name, str(version), weight, id
                 ))
 
-            # Establish an equivalence between "external_spec(pkg, id)"
-            # and the clauses of that spec, so that we have a uniform
-            # way to identify it
-            spec_id_list = []
-            for id, spec in enumerate(external_specs):
-                self.gen.newline()
-                spec_id = fn.external_spec(pkg_name, id)
+            for local_idx, spec in enumerate(external_specs):
+                global_id = self._condition_id_counter
+                self._condition_id_counter += 1
+
+                # Declare the global ID associated with this external spec
+                self.gen.fact(fn.external_spec(global_id, pkg_name))
+
+                # Local index into packages.yaml
+                self.gen.fact(fn.external_spec_index(global_id, pkg_name, local_idx))
+
+                # Add conditions to be satisfied for this external
                 self.possible_versions[spec.name].add(spec.version)
                 clauses = self.spec_clauses(spec, body=True)
-                # This is an iff below, wish it could be written in a
-                # more compact form
-                self.gen.rule(head=spec_id.symbol(), body=AspAnd(*clauses))
                 for clause in clauses:
-                    self.gen.rule(clause, spec_id.symbol())
-                spec_id_list.append(spec_id)
-
-            # TODO: find another way to do everything below, without
-            # TODO: generating ground rules.
-
-            # If one of the external specs is selected then the package
-            # is external and viceversa
-            # TODO: make it possible to declare the rule like below
-            # self.gen.iff(expr1=fn.external(pkg_name),
-            #              expr2=one_of_the_externals)
-            self.gen.newline()
-            # FIXME: self.gen.one_of_iff(fn.external(pkg_name), spec_id_list)
-            one_of_the_externals = self.gen.one_of(*spec_id_list)
-            external_str = fn.external(pkg_name)
-            external_rule = "{0} :- {1}.\n{1} :- {0}.\n".format(
-                external_str, str(one_of_the_externals)
-            )
-            self.gen.out.write(external_rule)
-            self.gen.control.add("base", [], external_rule)
+                    self.gen.fact(
+                        fn.external_spec_condition(global_id, clause.name, *clause.args)
+                    )
+                self.gen.newline()
 
     def preferred_variants(self, pkg_name):
         """Facts on concretization preferences, as read from packages.yaml"""
@@ -1514,7 +1499,7 @@ class SpecBuilder(object):
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
 
-    def external_spec(self, pkg, idx):
+    def external_spec_selected(self, global_id, pkg, idx):
         """This means that the external spec and index idx
         has been selected for this package.
         """

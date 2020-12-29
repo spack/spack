@@ -258,9 +258,25 @@ external(Package) :-
     version(Package, Version), version_weight(Package, Weight),
     external_version_declared(Package, Version, Weight, ID).
 
-external_spec(Package, ID) :-
+% determine if an external spec has been selected
+external_spec_selected(ID, Package, LocalIndex) :-
     version(Package, Version), version_weight(Package, Weight),
-    external_version_declared(Package, Version, Weight, ID).
+    external_spec_index(ID, Package, LocalIndex),
+    external_version_declared(Package, Version, Weight, LocalIndex),
+    external_spec_conditions_hold(ID, Package).
+
+% determine if all the conditions on an external spec hold. If they do
+% the spec can be selected.
+external_spec_conditions_hold(ID, Package) :-
+  attr(Name, Arg1)             : external_spec_condition(ID, Name, Arg1);
+  attr(Name, Arg1, Arg2)       : external_spec_condition(ID, Name, Arg1, Arg2);
+  attr(Name, Arg1, Arg2, Arg3) : external_spec_condition(ID, Name, Arg1, Arg2, Arg3);
+  external_spec(ID, Package);
+  node(Package).
+
+% it cannot happen that a spec is external, but none of the external specs
+% conditions hold.
+:- external(Package), not external_spec_conditions_hold(_, Package).
 
 %-----------------------------------------------------------------------------
 % Variant semantics
