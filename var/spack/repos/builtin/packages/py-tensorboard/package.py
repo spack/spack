@@ -9,6 +9,7 @@ class PyTensorboard(Package):
     inspecting and understanding your TensorFlow runs and
     graphs."""
 
+    homepage = "https://github.com/tensorflow/tensorboard"
     url      = "https://github.com/tensorflow/tensorboard/archive/2.2.0.tar.gz"
 
     maintainers = ['aweits']
