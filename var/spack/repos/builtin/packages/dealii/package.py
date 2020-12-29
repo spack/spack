@@ -159,6 +159,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('ginkgo',           when='@9.1:+ginkgo')
     depends_on('gmsh+tetgen+netgen+oce', when='@9.0:+gmsh', type=('build', 'run'))
     depends_on('gsl',              when='@8.5.0:+gsl')
+    # FIXME: next line fixes concretization with trilinos and adol-c
+    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c')
     # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+mpi+hl+fortran', when='+hdf5+mpi+petsc')
     depends_on('hdf5+mpi+hl',      when='+hdf5+mpi~petsc')
