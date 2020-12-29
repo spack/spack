@@ -10,7 +10,7 @@ class PyQtconsole(PythonPackage):
     """Jupyter Qt console"""
 
     homepage = "http://ipython.org"
-    url      = "https://pypi.io/packages/source/q/qtconsole/qtconsole-4.2.1.tar.gz"
+    pypi = "qtconsole/qtconsole-4.2.1.tar.gz"
 
     version('4.5.1', sha256='4af84facdd6f00a6b9b2927255f717bb23ae4b7a20ba1d9ef0a5a5a8dbe01ae2')
     version('4.2.1', sha256='25ec7d345528b3e8f3c91be349dd3c699755f206dc4b6ec668e2e5dd60ea18ef')

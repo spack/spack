@@ -10,7 +10,7 @@ class PyPyudev(PythonPackage):
     """Pure Python libudev binding"""
 
     homepage = "https://pyudev.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/pyudev/pyudev-0.9.tar.gz"
+    pypi = "pyudev/pyudev-0.9.tar.gz"
 
     version('0.21.0', sha256='094b7a100150114748aaa3b70663485dd360457a709bfaaafe5a977371033f2b')
     version('0.15', sha256='12f462b777388c447edaac9e4b423a38a76eeb43f36b1a42288e771309d663c2')

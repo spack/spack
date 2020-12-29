@@ -8,7 +8,7 @@ class PyJupyterlabPygments(PythonPackage):
     """Pygments theme using JupyterLab CSS variables."""
 
     homepage = "https://jupyter.org/"
-    url      = "https://pypi.io/packages/source/j/jupyterlab-pygments/jupyterlab_pygments-0.1.1.tar.gz"
+    pypi = "jupyterlab-pygments/jupyterlab_pygments-0.1.1.tar.gz"
 
     version('0.1.1', sha256='19a0ccde7daddec638363cd3d60b63a4f6544c9181d65253317b2fb492a797b9')
 

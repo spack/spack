@@ -9,7 +9,7 @@ class PyHiredis(PythonPackage):
     It primarily speeds up parsing of multi bulk replies."""
 
     homepage = "https://github.com/redis/hiredis-py"
-    url      = "https://pypi.io/packages/source/h/hiredis/hiredis-1.1.0.tar.gz"
+    pypi = "hiredis/hiredis-1.1.0.tar.gz"
 
     version('1.1.0', sha256='996021ef33e0f50b97ff2d6b5f422a0fe5577de21a8873b58a779a5ddd1c3132')
 

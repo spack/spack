@@ -10,7 +10,7 @@ class PySymengine(PythonPackage):
     """Python wrappers for SymEngine, a symbolic manipulation library."""
 
     homepage = "https://github.com/symengine/symengine.py"
-    url      = "https://pypi.io/packages/source/s/symengine/symengine-0.2.0.tar.gz"
+    pypi = "symengine/symengine-0.2.0.tar.gz"
     git      = "https://github.com/symengine/symengine.py.git"
 
     version('develop', branch='master')

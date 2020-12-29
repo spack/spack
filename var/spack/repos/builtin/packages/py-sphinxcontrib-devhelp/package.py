@@ -11,7 +11,7 @@ class PySphinxcontribDevhelp(PythonPackage):
     Devhelp document."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-devhelp/sphinxcontrib-devhelp-1.0.1.tar.gz"
+    pypi = "sphinxcontrib-devhelp/sphinxcontrib-devhelp-1.0.1.tar.gz"
 
     # Sphinx requires sphinxcontrib-devhelp at build-time, but
     # sphinxcontrib-devhelp requires sphinx at run-time

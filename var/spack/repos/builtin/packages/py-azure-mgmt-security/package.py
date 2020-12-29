@@ -8,7 +8,7 @@ class PyAzureMgmtSecurity(PythonPackage):
     """Microsoft Azure Security Center Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-security/azure-mgmt-security-0.4.1.zip"
+    pypi = "azure-mgmt-security/azure-mgmt-security-0.4.1.zip"
 
     version('0.4.1', sha256='391c8df5400485049a6c19d50e536304c186bb64fd569eec0c6d01d20220ee21')
 

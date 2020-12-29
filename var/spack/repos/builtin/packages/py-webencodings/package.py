@@ -10,7 +10,7 @@ class PyWebencodings(PythonPackage):
     """This is a Python implementation of the WHATWG Encoding standard."""
 
     homepage = "https://github.com/gsnedders/python-webencodings"
-    url      = "https://pypi.io/packages/source/w/webencodings/webencodings-0.5.1.tar.gz"
+    pypi = "webencodings/webencodings-0.5.1.tar.gz"
 
     version('0.5.1', sha256='b36a1c245f2d304965eb4e0a82848379241dc04b865afcc4aab16748587e1923')
 

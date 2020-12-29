@@ -10,7 +10,7 @@ class PyPythonRapidjson(PythonPackage):
     """Python wrapper around rapidjson."""
 
     homepage = "https://github.com/python-rapidjson/python-rapidjson"
-    url      = "https://pypi.io/packages/source/p/python-rapidjson/python-rapidjson-0.9.1.tar.gz"
+    pypi = "python-rapidjson/python-rapidjson-0.9.1.tar.gz"
 
     version('0.9.1', sha256='ad80bd7e4bb15d9705227630037a433e2e2a7982b54b51de2ebabdd1611394a1')
 

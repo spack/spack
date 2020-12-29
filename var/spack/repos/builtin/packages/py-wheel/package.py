@@ -10,7 +10,7 @@ class PyWheel(PythonPackage):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.34.2.tar.gz"
+    pypi = "wheel/wheel-0.34.2.tar.gz"
 
     version('0.34.2', sha256='8788e9155fe14f54164c1b9eb0a319d98ef02c160725587ad60f14ddc57b6f96')
     version('0.33.4', sha256='62fcfa03d45b5b722539ccbc07b190e4bfff4bb9e3a4d470dd9f6a0981002565')

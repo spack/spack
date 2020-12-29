@@ -10,7 +10,7 @@ class PyCodecov(PythonPackage):
     """Hosted coverage reports for Github, Bitbucket and Gitlab."""
 
     homepage = "https://github.com/codecov/codecov-python"
-    url      = "https://pypi.io/packages/source/c/codecov/codecov-2.0.15.tar.gz"
+    pypi = "codecov/codecov-2.0.15.tar.gz"
 
     version('2.0.15', sha256='8ed8b7c6791010d359baed66f84f061bba5bd41174bf324c31311e8737602788')
 

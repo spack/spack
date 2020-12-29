@@ -10,7 +10,7 @@ class PyHepunits(PythonPackage):
     """Units and constants in the HEP system of units."""
 
     git = "https://github.com/scikit-hep/hepunits.git"
-    url = "https://pypi.io/packages/source/h/hepunits/hepunits-1.2.1.tar.gz"
+    pypi = "hepunits/hepunits-1.2.1.tar.gz"
     homepage = "https://github.com/scikit-hep/hepunits"
 
     tags = ['hep']

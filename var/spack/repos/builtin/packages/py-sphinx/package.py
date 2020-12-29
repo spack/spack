@@ -10,7 +10,7 @@ class PySphinx(PythonPackage):
     """Sphinx Documentation Generator."""
 
     homepage = "https://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/S/Sphinx/Sphinx-3.2.0.tar.gz"
+    pypi = "Sphinx/Sphinx-3.2.0.tar.gz"
 
     version('3.2.0', sha256='cf2d5bc3c6c930ab0a1fbef3ad8a82994b1bf4ae923f8098a05c7e5516f07177')
     version('3.0.0', sha256='6a099e6faffdc3ceba99ca8c2d09982d43022245e409249375edf111caf79ed3')

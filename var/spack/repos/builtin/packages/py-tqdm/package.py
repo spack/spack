@@ -10,7 +10,7 @@ class PyTqdm(PythonPackage):
     """A Fast, Extensible Progress Meter"""
 
     homepage = "https://github.com/tqdm/tqdm"
-    url      = "https://pypi.io/packages/source/t/tqdm/tqdm-4.45.0.tar.gz"
+    pypi = "tqdm/tqdm-4.45.0.tar.gz"
 
     version('4.45.0', sha256='00339634a22c10a7a22476ee946bbde2dbe48d042ded784e4d88e0236eca5d81')
     version('4.36.1', sha256='abc25d0ce2397d070ef07d8c7e706aede7920da163c64997585d42d3537ece3d')

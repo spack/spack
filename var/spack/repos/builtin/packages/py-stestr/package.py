@@ -10,7 +10,7 @@ class PyStestr(PythonPackage):
     """A parallel Python test runner built around subunit."""
 
     homepage = "https://stestr.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/s/stestr/stestr-2.5.1.tar.gz"
+    pypi = "stestr/stestr-2.5.1.tar.gz"
 
     version('2.5.1', sha256='151479fdf2db9f5f492b5285f4696f2d38960639054835dbdcd4c0687122c0fd')
 

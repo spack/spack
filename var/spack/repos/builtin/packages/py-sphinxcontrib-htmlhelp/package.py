@@ -11,7 +11,7 @@ class PySphinxcontribHtmlhelp(PythonPackage):
     document."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-htmlhelp/sphinxcontrib-htmlhelp-1.0.2.tar.gz"
+    pypi = "sphinxcontrib-htmlhelp/sphinxcontrib-htmlhelp-1.0.2.tar.gz"
 
     # Sphinx requires sphinxcontrib-htmlhelp at build-time, but
     # sphinxcontrib-htmlhelp requires sphinx at run-time

@@ -10,7 +10,7 @@ class PyNetcdf4(PythonPackage):
     """Python interface to the netCDF Library."""
 
     homepage = "https://github.com/Unidata/netcdf4-python"
-    url      = "https://pypi.io/packages/source/n/netCDF4/netCDF4-1.2.7.tar.gz"
+    pypi = "netCDF4/netCDF4-1.2.7.tar.gz"
 
     maintainers = ['skosukhin']
 

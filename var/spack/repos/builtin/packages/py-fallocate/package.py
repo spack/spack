@@ -11,6 +11,6 @@ class PyFallocate(PythonPackage):
     """
 
     homepage = "https://github.com/trbs/fallocate"
-    url      = "https://pypi.io/packages/source/f/fallocate/fallocate-1.6.4.tar.gz"
+    pypi = "fallocate/fallocate-1.6.4.tar.gz"
 
     version('1.6.4', sha256='85ebeb2786761fbe80d88c52590a610bd3425fc89e188c208a3f261a5bd6acb3')

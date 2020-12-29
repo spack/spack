@@ -13,7 +13,7 @@ class PyTpot(PythonPackage):
     """
 
     homepage = "http://epistasislab.github.io/tpot/"
-    url      = "https://pypi.io/packages/source/t/tpot/TPOT-0.11.5.tar.gz"
+    pypi = "tpot/TPOT-0.11.5.tar.gz"
 
     version('0.11.5', sha256='909be08b29165ce48de5e5d2e3fd73fee9aeeaf1030f2e0912ce0f0bd9c3d2f3')
 

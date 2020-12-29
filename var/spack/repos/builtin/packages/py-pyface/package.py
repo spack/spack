@@ -12,7 +12,7 @@ class PyPyface(PythonPackage):
     care of the details of displaying them."""
 
     homepage = "https://docs.enthought.com/pyface"
-    url      = "https://pypi.io/packages/source/p/pyface/pyface-6.1.2.tar.gz"
+    pypi = "pyface/pyface-6.1.2.tar.gz"
 
     version('6.1.2', sha256='7c2ac3d5cbec85e8504b3b0b63e9307be12c6d710b46bae372ce6562d41f4fbc')
 

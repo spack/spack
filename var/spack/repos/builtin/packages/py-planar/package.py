@@ -10,6 +10,6 @@ class PyPlanar(PythonPackage):
     """2D planar geometry library for Python."""
 
     homepage = "https://bitbucket.org/caseman/planar/src/default/"
-    url      = "https://pypi.io/packages/source/p/planar/planar-0.4.zip"
+    pypi = "planar/planar-0.4.zip"
 
     version('0.4', sha256='cbfb9cbae8b0e296e6e7e3552b7d685c7ed5cae295b7a61f2b2b096b231dad76')

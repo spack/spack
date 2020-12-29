@@ -12,8 +12,7 @@ class PyAstunparse(PythonPackage):
     distribution; under Demo/parser in Python 2 and under Tools/parser in
     Python 3."""
 
-    homepage = "https://pypi.org/project/astunparse/"
-    url      = "https://pypi.io/packages/source/a/astunparse/astunparse-1.6.2.tar.gz"
+    pypi = "astunparse/astunparse-1.6.2.tar.gz"
 
     version('1.6.3', sha256='5ad93a8456f0d084c3456d059fd9a92cce667963232cbf763eac3bc5b7940872')
     version('1.6.2', sha256='dab3e426715373fd76cd08bb1abe64b550f5aa494cf1e32384f26fd60961eb67')

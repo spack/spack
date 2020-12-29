@@ -13,7 +13,7 @@ class PyTypingExtensions(PythonPackage):
        details about protocols and static duck typing)."""
 
     homepage = "https://github.com/python/typing/tree/master/typing_extensions"
-    url      = "https://pypi.io/packages/source/t/typing_extensions/typing_extensions-3.7.4.tar.gz"
+    pypi = "typing_extensions/typing_extensions-3.7.4.tar.gz"
 
     version('3.7.4', sha256='2ed632b30bb54fc3941c382decfd0ee4148f5c591651c9272473fea2c6397d95')
     version('3.7.2', sha256='fb2cd053238d33a8ec939190f30cfd736c00653a85a2919415cecf7dc3d9da71')

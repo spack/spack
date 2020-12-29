@@ -12,7 +12,7 @@ class PyConvertdate(PythonPackage):
     Indian Civil, Islamic, ISO, Julian, Mayan and Persian."""
 
     homepage = "https://github.com/fitnr/convertdate/"
-    url      = "https://pypi.io/packages/source/c/convertdate/convertdate-2.2.0.tar.gz"
+    pypi = "convertdate/convertdate-2.2.0.tar.gz"
 
     version('2.2.0', sha256='9d2b0cd8d5382d2458d4cfa59665abba398a9e9bfd3a01c6f61b7b47768d28bf')
 

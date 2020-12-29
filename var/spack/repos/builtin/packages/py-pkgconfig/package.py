@@ -10,7 +10,7 @@ class PyPkgconfig(PythonPackage):
     """Interface Python with pkg-config."""
 
     homepage = "http://github.com/matze/pkgconfig"
-    url      = "https://pypi.io/packages/source/p/pkgconfig/pkgconfig-1.2.2.tar.gz"
+    pypi = "pkgconfig/pkgconfig-1.2.2.tar.gz"
 
     version('1.5.1', sha256='97bfe3d981bab675d5ea3ef259045d7919c93897db7d3b59d4e8593cba8d354f')
     version('1.4.0',  sha256='048c3b457da7b6f686b647ab10bf09e2250e4c50acfe6f215398a8b5e6fcdb52')

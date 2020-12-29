@@ -10,7 +10,7 @@ class PyGsi(PythonPackage):
     """Python interface for GSI authentication"""
 
     homepage = "https://github.com/DIRACGrid/pyGSI"
-    url      = "https://pypi.io/packages/source/g/gsi/GSI-0.6.5.tar.gz"
+    pypi = "gsi/GSI-0.6.5.tar.gz"
 
     version('0.6.5', sha256='8291dd2fab2be12626272629f7f9661487c4e29f1f9ab8c61614c54b06cb0643')
 

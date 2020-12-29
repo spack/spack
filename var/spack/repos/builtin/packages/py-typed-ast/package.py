@@ -10,7 +10,7 @@ class PyTypedAst(PythonPackage):
     """A fork of Python 2 and 3 ast modules with type comment support."""
 
     homepage = "https://github.com/python/typed_ast"
-    url      = "https://pypi.io/packages/source/t/typed-ast/typed_ast-1.4.0.tar.gz"
+    pypi = "typed-ast/typed_ast-1.4.0.tar.gz"
 
     version('1.4.0', sha256='66480f95b8167c9c5c5c87f32cf437d585937970f3fc24386f313a4c97b44e34')
 

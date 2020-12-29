@@ -9,7 +9,7 @@ from spack import *
 class PyBlessings(PythonPackage):
     """A nicer, kinder way to write to the terminal """
     homepage = "https://github.com/erikrose/blessings"
-    url      = "https://pypi.io/packages/source/b/blessings/blessings-1.6.tar.gz"
+    pypi = "blessings/blessings-1.6.tar.gz"
 
     version('1.6', sha256='edc5713061f10966048bf6b40d9a514b381e0ba849c64e034c4ef6c1847d3007')
 

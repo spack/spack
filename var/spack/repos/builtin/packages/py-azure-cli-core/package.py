@@ -8,7 +8,7 @@ class PyAzureCliCore(PythonPackage):
     """Microsoft Azure Command-Line Tools Core Module."""
 
     homepage = "https://github.com/Azure/azure-cli"
-    url      = "https://pypi.io/packages/source/a/azure-cli-core/azure-cli-core-2.9.1.tar.gz"
+    pypi = "azure-cli-core/azure-cli-core-2.9.1.tar.gz"
 
     version('2.9.1', sha256='8618a30f7ea2188506f29801220c06396d731c26e4de92c327e6b0e8cc790db5')
 

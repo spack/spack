@@ -11,7 +11,7 @@ class PyXmltodict(PythonPackage):
     you are working with JSON."""
 
     homepage = "https://github.com/martinblech/xmltodict"
-    url      = "https://pypi.io/packages/source/x/xmltodict/xmltodict-0.12.0.tar.gz"
+    pypi = "xmltodict/xmltodict-0.12.0.tar.gz"
 
     version('0.12.0', sha256='50d8c638ed7ecb88d90561beedbf720c9b4e851a9fa6c47ebd64e99d166d8a21')
 

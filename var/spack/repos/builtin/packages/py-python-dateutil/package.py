@@ -10,7 +10,7 @@ class PyPythonDateutil(PythonPackage):
     """Extensions to the standard Python datetime module."""
 
     homepage = "https://dateutil.readthedocs.io/"
-    url      = "https://pypi.io/packages/source/p/python-dateutil/python-dateutil-2.8.0.tar.gz"
+    pypi = "python-dateutil/python-dateutil-2.8.0.tar.gz"
 
     version('2.8.0', sha256='c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e')
     version('2.7.5', sha256='88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02')

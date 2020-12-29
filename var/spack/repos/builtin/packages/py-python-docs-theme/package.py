@@ -11,7 +11,7 @@ class PyPythonDocsTheme(PythonPackage):
     """
 
     homepage = "https://docs.python.org/3/"
-    url      = "https://pypi.io/packages/source/p/python-docs-theme/python-docs-theme-2018.7.tar.gz"
+    pypi = "python-docs-theme/python-docs-theme-2018.7.tar.gz"
 
     version('2020.1', sha256='29c33ba393bdb9377910116a0c1cc329573a4e040227c58a3293d27928d8262a')
     version('2018.7', sha256='018a5bf2a7318c9c9a8346303dac8afc6bc212d92e86561c9b95a3372714155a')

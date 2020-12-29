@@ -11,7 +11,7 @@ class PyPynvml(PythonPackage):
     http://developer.nvidia.com/nvidia-management-library-nvml"""
 
     homepage = "http://www.nvidia.com/"
-    url = "https://pypi.io/packages/source/p/pynvml/pynvml-8.0.4.tar.gz"
+    pypi = "pynvml/pynvml-8.0.4.tar.gz"
 
     version('8.0.4', sha256='c8d4eadc648c7e12a3c9182a9750afd8481b76412f83747bcc01e2aa829cde5d')
 

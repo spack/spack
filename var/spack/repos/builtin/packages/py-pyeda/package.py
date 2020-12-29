@@ -10,7 +10,7 @@ class PyPyeda(PythonPackage):
     """PyEDA is a Python library for electronic design automation."""
 
     homepage = "https://github.com/cjdrake/pyeda"
-    url      = "https://pypi.io//packages/source/p/pyeda/pyeda-0.28.0.tar.gz"
+    pypi = "pyeda/pyeda-0.28.0.tar.gz"
 
     version('0.28.0', sha256='07185f458d5d0b2ba5058da8b95dad6ab7684ceaf41237a25bcd3f005490f59d')
 

@@ -13,7 +13,7 @@ class PyBlack(PythonPackage):
     """
 
     homepage = "https://github.com/psf/black"
-    url      = "https://pypi.io/packages/source/b/black/black-20.8b1.tar.gz"
+    pypi = "black/black-20.8b1.tar.gz"
 
     version('20.8b1', sha256='1c02557aa099101b9d21496f8a914e9ed2222ef70336404eeeac8edba836fbea')
     version('19.3b0', sha256='68950ffd4d9169716bcb8719a56c07a2f4485354fec061cdd5910aa07369731c')

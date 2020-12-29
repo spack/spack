@@ -10,7 +10,7 @@ class PyPyserial(PythonPackage):
     """Python Serial Port Extension"""
 
     homepage = "https://github.com/pyserial/pyserial"
-    url      = "https://pypi.io/packages/source/p/pyserial/pyserial-3.1.1.tar.gz"
+    pypi = "pyserial/pyserial-3.1.1.tar.gz"
 
     version('3.1.1', sha256='d657051249ce3cbd0446bcfb2be07a435e1029da4d63f53ed9b4cdde7373364c')
 

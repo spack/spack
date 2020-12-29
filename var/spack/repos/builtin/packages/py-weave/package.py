@@ -15,7 +15,7 @@ class PyWeave(PythonPackage):
     ``scipy.weave``. For new code, users are recommended to use Cython."""
 
     homepage = "https://www.github.com/scipy/weave"
-    url      = "https://pypi.io/packages/source/w/weave/weave-0.17.0.tar.gz"
+    pypi = "weave/weave-0.17.0.tar.gz"
 
     version('0.17.0', sha256='2703f3ae6d23ad47b5f09b6bcb7affd0fb587120a0c973e7be40ef24de709998')
 

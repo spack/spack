@@ -11,7 +11,7 @@ class PySpdlog(PythonPackage):
     to the C++ spdlog library."""
 
     homepage = 'https://github.com/bodgergely/spdlog-python'
-    url = 'https://pypi.io/packages/source/s/spdlog/spdlog-2.0.0.tar.gz'
+    pypi = 'spdlog/spdlog-2.0.0.tar.gz'
     git = 'https://github.com/bodgergely/spdlog-python.git'
 
     # NOTE: Righ now py-spdlog works with a git submodule containing a copy

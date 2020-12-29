@@ -9,8 +9,7 @@ from spack import *
 class PySphinxcontribBibtex(PythonPackage):
     """A Sphinx extension for BibTeX style citations."""
 
-    homepage = "https://pypi.python.org/pypi/sphinxcontrib-bibtex"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
+    pypi = "sphinxcontrib-bibtex/sphinxcontrib-bibtex-0.3.5.tar.gz"
 
     version('2.0.0', sha256='98e18eb0b088d3f556199f3fbb91d3d48ebb7596fe86b6c37cc4c4dc5419b7a1')
     version('1.0.0', sha256='629612b001f86784669d65e662377a482052decfd9a0a17c46860878eef7b9e0')

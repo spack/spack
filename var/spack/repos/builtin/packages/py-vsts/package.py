@@ -8,7 +8,7 @@ class PyVsts(PythonPackage):
     """Python wrapper around the VSTS APIs."""
 
     homepage = "https://github.com/Microsoft/vsts-python-api"
-    url      = "https://pypi.io/packages/source/v/vsts/vsts-0.1.25.tar.gz"
+    pypi = "vsts/vsts-0.1.25.tar.gz"
 
     version('0.1.25', sha256='da179160121f5b38be061dbff29cd2b60d5d029b2207102454d77a7114e64f97')
 

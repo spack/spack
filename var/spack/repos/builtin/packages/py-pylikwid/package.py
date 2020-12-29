@@ -13,7 +13,7 @@ class PyPylikwid(PythonPackage):
        prefetchers."""
 
     homepage = "https://github.com/RRZE-HPC/pylikwid"
-    url = "https://pypi.io/packages/source/p/pylikwid/pylikwid-0.4.0.tar.gz"
+    pypi = "pylikwid/pylikwid-0.4.0.tar.gz"
     git = "https://github.com/RRZE-HPC/pylikwid.git"
 
     maintainers = ['TomTheBear']

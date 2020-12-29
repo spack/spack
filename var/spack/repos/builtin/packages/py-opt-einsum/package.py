@@ -10,7 +10,7 @@ class PyOptEinsum(PythonPackage):
     """Optimized Einsum: A tensor contraction order optimizer."""
 
     homepage = "https://github.com/dgasmith/opt_einsum"
-    url      = "https://pypi.io/packages/source/o/opt_einsum/opt_einsum-3.1.0.tar.gz"
+    pypi = "opt_einsum/opt_einsum-3.1.0.tar.gz"
 
     version('3.2.1', sha256='83b76a98d18ae6a5cc7a0d88955a7f74881f0e567a0f4c949d24c942753eb998')
     version('3.2.0', sha256='738b0a1db1d3084d360081bb64d826f9db06d2df7cc0bf8e2c9356028da1fa31')

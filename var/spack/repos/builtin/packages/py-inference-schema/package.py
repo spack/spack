@@ -9,7 +9,6 @@ class PyInferenceSchema(Package):
     learning applications, as well as a set of decorators that can be used to
     aid in web based ML prediction applications."""
 
-    homepage = "https://pypi.org/project/inference-schema/"
     url      = "https://pypi.io/packages/py3/i/inference-schema/inference_schema-1.0.2-py3-none-any.whl"
 
     version('1.0.2', sha256='fd379becbd12dcf9f7a1ad5c03b163d501ef1dcc4fb85204735c84b1d139f478', expand=False)

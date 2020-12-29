@@ -11,7 +11,7 @@ class PySetuptools(PythonPackage):
        upgrading, installing, and uninstalling Python packages."""
 
     homepage = "https://github.com/pypa/setuptools"
-    url      = "https://pypi.io/packages/source/s/setuptools/setuptools-49.2.0.zip"
+    pypi = "setuptools/setuptools-49.2.0.zip"
 
     version('50.3.2', sha256='ed0519d27a243843b05d82a5e9d01b0b083d9934eaa3d02779a23da18077bd3c')
     version('50.1.0', sha256='4a7708dafd2d360ce5e2ac7577374da9fb65fc867bc4cdaf461f9f834dfa6ac3')
@@ -40,7 +40,7 @@ class PySetuptools(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43.99.99')
 
     def url_for_version(self, version):
-        url = 'https://pypi.io/packages/source/s/setuptools/setuptools-{0}'
+        pypi = 'setuptools/setuptools-{0}'
         url = url.format(version)
 
         if version > Version('32.1.2'):

@@ -10,7 +10,7 @@ class PyUsgs(PythonPackage):
     """Client library for interfacing with USGS datasets"""
 
     homepage = "https://github.com/kapadia/usgs"
-    url      = "https://pypi.io/packages/source/u/usgs/usgs-0.2.7.tar.gz"
+    pypi = "usgs/usgs-0.2.7.tar.gz"
 
     maintainers = ['adamjstewart']
 

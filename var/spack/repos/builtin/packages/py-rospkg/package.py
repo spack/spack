@@ -8,7 +8,7 @@ class PyRospkg(PythonPackage):
     """Library for retrieving information about ROS packages and stacks."""
 
     homepage = "https://wiki.ros.org/rospkg"
-    url      = "https://pypi.io/packages/source/r/rospkg/rospkg-1.2.9.tar.gz"
+    pypi = "rospkg/rospkg-1.2.9.tar.gz"
 
     version('1.2.9', sha256='d57aea0e7fdbf42e8189ef5e21b9fb4f8a70ecb6cd1a56a278eab301f6a2b074')
 

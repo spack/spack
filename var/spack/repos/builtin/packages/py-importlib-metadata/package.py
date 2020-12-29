@@ -10,7 +10,7 @@ class PyImportlibMetadata(PythonPackage):
     """Read metadata from Python packages."""
 
     homepage = "https://importlib-metadata.readthedocs.io/"
-    url      = "https://pypi.io/packages/source/i/importlib_metadata/importlib_metadata-1.2.0.tar.gz"
+    pypi = "importlib_metadata/importlib_metadata-1.2.0.tar.gz"
 
     version('2.0.0', sha256='77a540690e24b0305878c37ffd421785a6f7e53c8b5720d211b211de8d0e95da')
     version('1.2.0', sha256='41e688146d000891f32b1669e8573c57e39e5060e7f5f647aa617cd9a9568278')

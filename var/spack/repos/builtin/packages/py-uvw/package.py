@@ -13,7 +13,7 @@ class PyUvw(PythonPackage):
     """
 
     homepage = "https://github.com/prs513rosewood/uvw"
-    url      = "https://pypi.io/packages/source/u/uvw/uvw-0.3.1.tar.gz"
+    pypi = "uvw/uvw-0.3.1.tar.gz"
 
     maintainers = ['prs513rosewood']
 

@@ -12,7 +12,7 @@ class PyMock(PythonPackage):
     they have been used."""
 
     homepage = "https://github.com/testing-cabal/mock"
-    url      = "https://pypi.io/packages/source/m/mock/mock-3.0.5.tar.gz"
+    pypi = "mock/mock-3.0.5.tar.gz"
 
     version('3.0.5', sha256='83657d894c90d5681d62155c82bda9c1187827525880eda8ff5df4ec813437c3')
     version('2.0.0', sha256='b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba')

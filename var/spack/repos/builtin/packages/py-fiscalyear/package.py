@@ -13,7 +13,7 @@ class PyFiscalyear(PythonPackage):
     the fiscal year and fiscal quarter of a date or datetime object."""
 
     homepage = "https://github.com/adamjstewart/fiscalyear"
-    url      = "https://pypi.io/packages/source/f/fiscalyear/fiscalyear-0.2.0.tar.gz"
+    pypi = "fiscalyear/fiscalyear-0.2.0.tar.gz"
     git      = "https://github.com/adamjstewart/fiscalyear.git"
 
     maintainers = ['adamjstewart']

@@ -12,7 +12,7 @@ class PyQsymm(PythonPackage):
     constraints and finds the full symmetry group of your Hamiltonian."""
 
     homepage = "https://gitlab.kwant-project.org/qt/qsymm"
-    url = "https://pypi.io/packages/source/q/qsymm/qsymm-1.2.7.tar.gz"
+    pypi = "qsymm/qsymm-1.2.7.tar.gz"
     git = "https://gitlab.kwant-project.org/qt/qsymm.git"
 
     # Add a list of GitHub accounts to notify when the

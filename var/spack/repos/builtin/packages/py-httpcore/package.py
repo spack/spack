@@ -11,7 +11,7 @@ class PyHttpcore(PythonPackage):
     which does one thing only. Sending HTTP requests."""
 
     homepage = "https://github.com/encode/httpcore"
-    url      = "https://pypi.io/packages/source/h/httpcore/httpcore-0.11.0.tar.gz"
+    pypi = "httpcore/httpcore-0.11.0.tar.gz"
 
     version('0.11.0', sha256='35ffc735d746b83f8fc6d36f82600e56117b9e8adc65d0c0423264b6ebfef7bf')
 

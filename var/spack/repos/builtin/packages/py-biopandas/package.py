@@ -10,7 +10,7 @@ class PyBiopandas(PythonPackage):
     """Working with molecular structures in pandas DataFrames"""
 
     homepage = "http://rasbt.github.io/biopandas"
-    url      = "https://pypi.io/packages/source/b/biopandas/biopandas-0.2.5.tar.gz"
+    pypi = "biopandas/biopandas-0.2.5.tar.gz"
     git      = "https://github.com/rasbt/biopandas.git"
 
     # Note that the source package on PyPi is broken as it

@@ -9,8 +9,7 @@ from spack import *
 class PySix(PythonPackage):
     """Python 2 and 3 compatibility utilities."""
 
-    homepage = "https://pypi.python.org/pypi/six"
-    url      = "https://pypi.io/packages/source/s/six/six-1.11.0.tar.gz"
+    pypi = "six/six-1.11.0.tar.gz"
 
     version('1.14.0', sha256='236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a')
     version('1.12.0', sha256='d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73')

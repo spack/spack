@@ -8,8 +8,7 @@ class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using
     Python interactively."""
 
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-7.18.1.tar.gz"
+    pypi = "ipython/ipython-7.18.1.tar.gz"
 
     # IPython.kernel is deprecated and fails to import
     import_modules = [

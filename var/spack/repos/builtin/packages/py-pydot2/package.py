@@ -9,8 +9,7 @@ from spack import *
 class PyPydot2(PythonPackage):
     """Python interface to Graphviz's Dot"""
 
-    homepage = "https://pypi.org/project/pydot2/"
-    url      = "https://pypi.io/packages/source/p/pydot2/pydot2-1.0.33.tar.gz"
+    pypi = "pydot2/pydot2-1.0.33.tar.gz"
 
     version('1.0.33', sha256='02c0e681a1c437077e2bb2522fb81fa322e53ba7002cfda8b894db0392a1bc9b')
 

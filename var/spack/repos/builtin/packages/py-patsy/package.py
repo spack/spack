@@ -9,7 +9,7 @@ class PyPatsy(PythonPackage):
     building design matrices."""
 
     homepage = "https://github.com/pydata/patsy"
-    url      = "https://pypi.io/packages/source/p/patsy/patsy-0.4.1.zip"
+    pypi = "patsy/patsy-0.4.1.zip"
 
     version('0.5.1', sha256='f115cec4201e1465cd58b9866b0b0e7b941caafec129869057405bfe5b5e3991',
             url="https://pypi.io/packages/source/p/patsy/patsy-0.5.1.tar.gz")

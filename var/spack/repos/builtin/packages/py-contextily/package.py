@@ -10,7 +10,7 @@ class PyContextily(PythonPackage):
     """Context geo-tiles in Python."""
 
     homepage = "https://github.com/darribas/contextily"
-    url      = "https://pypi.io/packages/source/c/contextily/contextily-1.0.1.tar.gz"
+    pypi = "contextily/contextily-1.0.1.tar.gz"
 
     maintainers = ['adamjstewart']
 

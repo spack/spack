@@ -10,7 +10,7 @@ class PyParameterized(PythonPackage):
     """Parameterized testing with any Python test framework."""
 
     homepage = "https://github.com/wolever/parameterized"
-    url      = "https://pypi.io/packages/source/p/parameterized/parameterized-0.7.1.tar.gz"
+    pypi = "parameterized/parameterized-0.7.1.tar.gz"
 
     version('0.7.1', sha256='6a94dbea30c6abde99fd4c2f2042c1bf7f980e48908bf92ead62394f93cf57ed')
 

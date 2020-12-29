@@ -11,7 +11,7 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    pypi     = "matplotlib/matplotlib-3.3.2.tar.gz"
+    pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [

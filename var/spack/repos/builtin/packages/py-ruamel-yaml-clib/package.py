@@ -9,7 +9,7 @@ class PyRuamelYamlClib(PythonPackage):
     libyaml."""
 
     homepage = "https://bitbucket.org/ruamel/yaml.clib"
-    url      = "https://pypi.io/packages/source/r/ruamel.yaml.clib/ruamel.yaml.clib-0.2.0.tar.gz"
+    pypi = "ruamel.yaml.clib/ruamel.yaml.clib-0.2.0.tar.gz"
 
     version('0.2.0', sha256='b66832ea8077d9b3f6e311c4a53d06273db5dc2db6e8a908550f3c14d67e718c')
 

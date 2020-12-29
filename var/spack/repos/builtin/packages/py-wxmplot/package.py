@@ -10,7 +10,7 @@ class PyWxmplot(PythonPackage):
     """wxPython plotting widgets using matplotlib."""
 
     homepage = "https://newville.github.io/wxmplot/"
-    url      = "https://pypi.io/packages/source/w/wxmplot/wxmplot-0.9.38.tar.gz"
+    pypi = "wxmplot/wxmplot-0.9.38.tar.gz"
 
     version('0.9.38', sha256='82dc64abb42bdd03ec7067a3aa2a475001f2bc8e4772149bae47facf460c0081')
 

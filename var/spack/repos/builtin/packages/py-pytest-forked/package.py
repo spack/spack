@@ -10,7 +10,7 @@ class PyPytestForked(PythonPackage):
     """Run tests in isolated forked subprocesses."""
 
     homepage = "https://github.com/pytest-dev/pytest-forked"
-    url      = "https://pypi.io/packages/source/p/pytest-forked/pytest-forked-1.1.1.tar.gz"
+    pypi = "pytest-forked/pytest-forked-1.1.1.tar.gz"
 
     version('1.1.1', sha256='e2d46f319c8063a3a0536b18f9cdea6eea3bc9fe2cb16c94e1d6fad3abc37300')
 

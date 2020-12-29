@@ -10,7 +10,7 @@ class PyHepdataValidator(PythonPackage):
     """Validation schema and code for HEPdata submissions."""
 
     homepage = "https://github.com/hepdata/hepdata-validator"
-    url = "https://pypi.io/packages/source/h/hepdata_validator/hepdata_validator-0.1.16.tar.gz"
+    pypi = "hepdata_validator/hepdata_validator-0.1.16.tar.gz"
 
     tags = ['hep']
 

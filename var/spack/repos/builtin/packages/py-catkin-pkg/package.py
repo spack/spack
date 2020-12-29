@@ -8,7 +8,7 @@ class PyCatkinPkg(PythonPackage):
     """Library for retrieving information about catkin packages."""
 
     homepage = "https://wiki.ros.org/catkin_pkg"
-    url      = "https://pypi.io/packages/source/c/catkin-pkg/catkin_pkg-0.4.23.tar.gz"
+    pypi = "catkin-pkg/catkin_pkg-0.4.23.tar.gz"
 
     version('0.4.23', sha256='28ee181cca827c0aabf9397351f58a97e1475ca5ac7c106a5916e3ee191cd3d0')
 

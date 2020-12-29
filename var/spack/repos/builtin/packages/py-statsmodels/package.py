@@ -11,7 +11,7 @@ class PyStatsmodels(PythonPackage):
     """Statistical computations and models for use with SciPy"""
 
     homepage = "http://www.statsmodels.org"
-    url      = "https://pypi.io/packages/source/s/statsmodels/statsmodels-0.8.0.tar.gz"
+    pypi = "statsmodels/statsmodels-0.8.0.tar.gz"
 
     version('0.10.2', sha256='9cd2194c6642a8754e85f9a6e6912cdf996bebf6ff715d3cc67f65dadfd37cc9')
     version('0.10.1', sha256='320659a80f916c2edf9dfbe83512d9004bb562b72eedb7d9374562038697fa10')

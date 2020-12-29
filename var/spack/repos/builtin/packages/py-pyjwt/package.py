@@ -10,7 +10,7 @@ class PyPyjwt(PythonPackage):
     """JSON Web Token implementation in Python"""
 
     homepage = "https://github.com/jpadilla/pyjwt"
-    url      = "https://pypi.io/packages/source/P/PyJWT/PyJWT-1.7.1.tar.gz"
+    pypi = "PyJWT/PyJWT-1.7.1.tar.gz"
 
     version('1.7.1', sha256='8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96')
 

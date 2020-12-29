@@ -9,7 +9,7 @@ class PyAzureMgmtDatalakeAnalytics(PythonPackage):
     Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-datalake-analytics/azure-mgmt-datalake-analytics-0.6.0.zip"
+    pypi = "azure-mgmt-datalake-analytics/azure-mgmt-datalake-analytics-0.6.0.zip"
 
     version('0.6.0', sha256='0d64c4689a67d6138eb9ffbaff2eda2bace7d30b846401673183dcb42714de8f')
     version('0.2.1', sha256='4c7960d094f5847d9a456c18b8a3c8e60c428e3080a3905f1c943d81ba6351a4')

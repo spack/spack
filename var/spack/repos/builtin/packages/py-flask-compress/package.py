@@ -11,7 +11,7 @@ class PyFlaskCompress(PythonPackage):
     responses with gzip."""
 
     homepage = "https://github.com/libwilliam/flask-compress"
-    url      = "https://pypi.io/packages/source/F/Flask-Compress/Flask-Compress-1.4.0.tar.gz"
+    pypi = "Flask-Compress/Flask-Compress-1.4.0.tar.gz"
 
     version('1.4.0', sha256='468693f4ddd11ac6a41bca4eb5f94b071b763256d54136f77957cfee635badb3')
 

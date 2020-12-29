@@ -8,7 +8,7 @@ class PyAzureIdentity(PythonPackage):
     """Microsoft Azure Identity Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/identity/azure-identity"
-    url      = "https://pypi.io/packages/source/a/azure-identity/azure-identity-1.3.1.zip"
+    pypi = "azure-identity/azure-identity-1.3.1.zip"
 
     version('1.3.1', sha256='5a59c36b4b05bdaec455c390feda71b6495fc828246593404351b9a41c2e877a')
     version('1.2.0', sha256='b32acd1cdb6202bfe10d9a0858dc463d8960295da70ae18097eb3b85ab12cb91')

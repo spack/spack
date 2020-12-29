@@ -9,7 +9,7 @@ class PyAzureMgmtIothubprovisioningservices(PythonPackage):
     """
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-iothubprovisioningservices/azure-mgmt-iothubprovisioningservices-0.2.0.zip"
+    pypi = "azure-mgmt-iothubprovisioningservices/azure-mgmt-iothubprovisioningservices-0.2.0.zip"
 
     version('0.2.0', sha256='8c37acfd1c33aba845f2e0302ef7266cad31cba503cc990a48684659acb7b91d')
 

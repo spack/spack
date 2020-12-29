@@ -14,7 +14,7 @@ class PyPygeos(PythonPackage):
     improvement when operating on arrays of geometries."""
 
     homepage = "https://github.com/pygeos/pygeos"
-    url      = "https://pypi.io/packages/source/p/pygeos/pygeos-0.8.tar.gz"
+    pypi = "pygeos/pygeos-0.8.tar.gz"
 
     maintainers = ['adamjstewart']
 

@@ -11,7 +11,7 @@ class PyJunitXml(PythonPackage):
     such as Jenkins"""
 
     homepage = "https://github.com/kyrus/python-junit-xml"
-    url      = "https://pypi.io/packages/source/j/junit-xml/junit-xml-1.7.tar.gz"
+    pypi = "junit-xml/junit-xml-1.7.tar.gz"
 
     version('1.7', sha256='5bc851b53e3e2153dcc62278ce2aa796a8ae9208f1dec36d1507b5af445ce355')
 

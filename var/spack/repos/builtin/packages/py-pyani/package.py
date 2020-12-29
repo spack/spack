@@ -14,7 +14,7 @@ class PyPyani(PythonPackage):
     with SGE/OGE-type job schedulers for the sequence comparisons."""
 
     homepage = "http://widdowquinn.github.io/pyani"
-    url      = "https://pypi.io/packages/source/p/pyani/pyani-0.2.7.tar.gz"
+    pypi = "pyani/pyani-0.2.7.tar.gz"
 
     version('0.2.7', sha256='dbc6c71c46fbbfeced3f8237b84474221268b51170caf044bec8559987a7deb9')
     version('0.2.6', sha256='e9d899bccfefaabe7bfa17d48eef9c713d321d2d15465f7328c8984807c3dd8d')

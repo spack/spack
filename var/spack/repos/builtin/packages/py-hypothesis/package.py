@@ -10,7 +10,7 @@ class PyHypothesis(PythonPackage):
     """A library for property based testing."""
 
     homepage = "https://github.com/HypothesisWorks/hypothesis-python"
-    url      = "https://pypi.io/packages/source/h/hypothesis/hypothesis-4.41.2.tar.gz"
+    pypi = "hypothesis/hypothesis-4.41.2.tar.gz"
 
     version('5.3.0',  sha256='c9fdb53fe3bf1f8e7dcca1a7dd6e430862502f088aca2903d141511212e79429')
     version('4.57.1', sha256='3c4369a4b0a1348561048bcda5f1db951a1b8e2a514ea8e8c70d36e656bf6fa0')

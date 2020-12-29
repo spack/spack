@@ -13,7 +13,7 @@ class PyLmodule(PythonPackage):
     environment-modules to interact with module using the Module class."""
 
     homepage = "https://lmodule.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/l/lmodule/lmodule-0.1.0.tar.gz"
+    pypi = "lmodule/lmodule-0.1.0.tar.gz"
     git      = "https://github.com/buildtesters/lmodule"
 
     maintainers = ['shahzebsiddiqui']

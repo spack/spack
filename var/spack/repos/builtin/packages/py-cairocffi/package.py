@@ -13,7 +13,7 @@ class PyCairocffi(PythonPackage):
     buffers, PNG, PostScript, PDF, and SVG file output."""
 
     homepage = "https://github.com/Kozea/cairocffi"
-    url      = "https://pypi.io/packages/source/c/cairocffi/cairocffi-1.0.2.tar.gz"
+    pypi = "cairocffi/cairocffi-1.0.2.tar.gz"
 
     version('1.0.2', sha256='01ac51ae12c4324ca5809ce270f9dd1b67f5166fe63bd3e497e9ea3ca91946ff')
 

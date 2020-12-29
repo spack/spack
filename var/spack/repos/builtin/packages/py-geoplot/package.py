@@ -13,7 +13,7 @@ class PyGeoplot(PythonPackage):
     like seaborn for geospatial."""
 
     homepage = "https://github.com/ResidentMario/geoplot"
-    url      = "https://pypi.io/packages/source/g/geoplot/geoplot-0.4.1.tar.gz"
+    pypi = "geoplot/geoplot-0.4.1.tar.gz"
 
     maintainers = ['adamjstewart']
 

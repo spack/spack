@@ -11,7 +11,7 @@ class PyQueryablelist(PythonPackage):
     items"""
 
     homepage = "https://github.com/kata198/QueryableList"
-    url      = "https://pypi.io/packages/source/q/queryablelist/QueryableList-3.1.0.tar.gz"
+    pypi = "queryablelist/QueryableList-3.1.0.tar.gz"
 
     version('3.1.0', sha256='8891dccbadc69a35f5944e1826d8f8db224522aa3af913e301a7a448f5b411e9')
 

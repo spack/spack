@@ -8,7 +8,7 @@ class PyArchspec(PythonPackage):
     """
 
     homepage = "https://archspec.readthedocs.io/en/latest/"
-    url = "https://pypi.io/packages/source/a/archspec/archspec-0.1.1.tar.gz"
+    pypi = "archspec/archspec-0.1.1.tar.gz"
 
     maintainers = ['alalazo']
 

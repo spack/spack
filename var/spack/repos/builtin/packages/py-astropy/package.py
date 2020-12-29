@@ -13,7 +13,7 @@ class PyAstropy(PythonPackage):
     Python astronomy packages."""
 
     homepage = 'https://astropy.org/'
-    url = 'https://pypi.io/packages/source/a/astropy/astropy-4.0.1.post1.tar.gz'
+    pypi = 'astropy/astropy-4.0.1.post1.tar.gz'
 
     version('4.0.1.post1', sha256='5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5')
     version('3.2.1', sha256='706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28')

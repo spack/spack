@@ -15,7 +15,7 @@ class PyRecommonmark(PythonPackage):
     http://recommonmark.readthedocs.org"""
 
     homepage = "https://github.com/readthedocs/recommonmark"
-    url      = "https://pypi.io/packages/source/r/recommonmark/recommonmark-0.6.0.tar.gz"
+    pypi = "recommonmark/recommonmark-0.6.0.tar.gz"
 
     version('0.6.0', sha256='29cd4faeb6c5268c633634f2d69aef9431e0f4d347f90659fd0aab20e541efeb')
 

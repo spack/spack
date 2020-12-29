@@ -11,7 +11,7 @@ class PyDryscrape(PythonPackage):
        for Python"""
 
     homepage = "https://github.com/niklasb/dryscrape"
-    url      = "https://pypi.io/packages/source/d/dryscrape/dryscrape-1.0.tar.gz"
+    pypi = "dryscrape/dryscrape-1.0.tar.gz"
     git      = "https://github.com/niklasb/dryscrape.git"
 
     version('develop', branch='master')

@@ -11,7 +11,7 @@ class PyUrllib3(PythonPackage):
     more."""
 
     homepage = "https://urllib3.readthedocs.io/"
-    url = "https://pypi.io/packages/source/u/urllib3/urllib3-1.25.6.tar.gz"
+    pypi = "urllib3/urllib3-1.25.6.tar.gz"
 
     version('1.25.6', sha256='9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86')
     version('1.25.3', sha256='dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232')

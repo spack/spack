@@ -8,7 +8,7 @@ class PyRosinstallGenerator(PythonPackage):
     """A tool for generating rosinstall files."""
 
     homepage = "https://wiki.ros.org/rosinstall_generator"
-    url      = "https://pypi.io/packages/source/r/rosinstall-generator/rosinstall_generator-0.1.22.tar.gz"
+    pypi = "rosinstall-generator/rosinstall_generator-0.1.22.tar.gz"
 
     version('0.1.22', sha256='22d22599cd3f08a1f77fb2b1d9464cc8062ede50752a75564d459fcf5447b8c5')
 

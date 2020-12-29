@@ -10,7 +10,7 @@ class PyLuigi(PythonPackage):
     """Workflow mgmgt + task scheduling + dependency resolution"""
 
     homepage = "https://github.com/spotify/luigi"
-    url      = "https://pypi.io/packages/source/l/luigi/luigi-2.8.3.tar.gz"
+    pypi = "luigi/luigi-2.8.3.tar.gz"
 
     version('2.8.3', sha256='8b5c84a3c3f4df07309056d3b98348b93c054f1931b7ee22fc29e7989f645c9e')
 

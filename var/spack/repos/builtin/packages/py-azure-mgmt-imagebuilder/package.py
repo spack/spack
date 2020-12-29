@@ -8,7 +8,7 @@ class PyAzureMgmtImagebuilder(PythonPackage):
     """Microsoft Azure Image Builder Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-imagebuilder/azure-mgmt-imagebuilder-0.4.0.zip"
+    pypi = "azure-mgmt-imagebuilder/azure-mgmt-imagebuilder-0.4.0.zip"
 
     version('0.4.0', sha256='4c9291bf16b40b043637e5e4f15650f71418ac237393e62219cab478a7951733')
 

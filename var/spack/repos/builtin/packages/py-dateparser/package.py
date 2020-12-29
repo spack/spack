@@ -10,7 +10,7 @@ class PyDateparser(PythonPackage):
     """dateparser -- python parser for human readable dates"""
 
     homepage = "https://github.com/scrapinghub/dateparser"
-    url      = "https://pypi.io/packages/source/d/dateparser/dateparser-0.7.2.tar.gz"
+    pypi = "dateparser/dateparser-0.7.2.tar.gz"
 
     version('0.7.2', sha256='e1eac8ef28de69a554d5fcdb60b172d526d61924b1a40afbbb08df459a36006b')
 

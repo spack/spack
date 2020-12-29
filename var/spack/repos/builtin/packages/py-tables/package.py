@@ -11,7 +11,7 @@ class PyTables(PythonPackage):
     efficiently and easily cope with extremely large amounts of data."""
 
     homepage = "http://www.pytables.org/"
-    url      = "https://pypi.io/packages/source/t/tables/tables-3.6.1.tar.gz"
+    pypi = "tables/tables-3.6.1.tar.gz"
 
     version('3.6.1', sha256='49a972b8a7c27a8a173aeb05f67acb45fe608b64cd8e9fa667c0962a60b71b49')
     version('3.6.0', sha256='db3488214864fb313a611fca68bf1c9019afe4e7877be54d0e61c84416603d4d')

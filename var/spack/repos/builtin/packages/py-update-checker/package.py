@@ -10,7 +10,7 @@ class PyUpdateChecker(PythonPackage):
     """A python module that will check for package updates."""
 
     homepage = "https://github.com/bboe/update_checker"
-    url      = "https://pypi.io/packages/source/u/update_checker/update_checker-0.18.0.tar.gz"
+    pypi = "update_checker/update_checker-0.18.0.tar.gz"
 
     version('0.18.0', sha256='6a2d45bb4ac585884a6b03f9eade9161cedd9e8111545141e9aa9058932acb13')
     version('0.17',   sha256='2def8db7f63bd45c7d19df5df570f3f3dfeb1a1f050869d7036529295db10e62')

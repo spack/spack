@@ -11,7 +11,7 @@ class PyMaestrowf(PythonPackage):
        simulation studies."""
 
     homepage = "https://github.com/LLNL/maestrowf/"
-    url      = "https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.8.tar.gz"
+    pypi = "maestrowf/maestrowf-1.1.8.tar.gz"
     git      = "https://github.com/LLNL/maestrowf/"
 
     maintainers = ['FrankD412']

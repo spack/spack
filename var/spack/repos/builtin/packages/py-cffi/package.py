@@ -11,7 +11,7 @@ class PyCffi(PythonPackage):
     """Foreign Function Interface for Python calling C code"""
 
     homepage = "https://cffi.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/c/cffi/cffi-1.13.0.tar.gz"
+    pypi = "cffi/cffi-1.13.0.tar.gz"
 
     version('1.14.3', sha256='f92f789e4f9241cd262ad7a555ca2c648a98178a953af117ef7fad46aa1d5591')
     version('1.13.0', sha256='8fe230f612c18af1df6f348d02d682fe2c28ca0a6c3856c99599cdacae7cf226')

@@ -10,7 +10,7 @@ class PyPackaging(PythonPackage):
     """Core utilities for Python packages."""
 
     homepage = "https://github.com/pypa/packaging"
-    url      = "https://pypi.io/packages/source/p/packaging/packaging-19.2.tar.gz"
+    pypi = "packaging/packaging-19.2.tar.gz"
 
     version('19.2', sha256='28b924174df7a2fa32c1953825ff29c61e2f5e082343165438812f00d3a7fc47')
     version('19.1', sha256='c491ca87294da7cc01902edbe30a5bc6c4c28172b5138ab4e4aa1b9d7bfaeafe')

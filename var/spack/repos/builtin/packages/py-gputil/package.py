@@ -11,7 +11,7 @@ class PyGputil(PythonPackage):
     using nvidia-smi."""
 
     homepage = "https://github.com/anderskm/gputil"
-    url      = "https://pypi.io/packages/source/G/GPUtil/GPUtil-1.4.0.tar.gz"
+    pypi = "GPUtil/GPUtil-1.4.0.tar.gz"
 
     version('1.4.0', sha256='099e52c65e512cdfa8c8763fca67f5a5c2afb63469602d5dcb4d296b3661efb9')
 

@@ -14,7 +14,7 @@ class PyEnvisage(PythonPackage):
     to the Eclipse and Netbeans frameworks for Java applications."""
 
     homepage = "https://docs.enthought.com/envisage"
-    url      = "https://pypi.io/packages/source/e/envisage/envisage-4.9.2.tar.gz"
+    pypi = "envisage/envisage-4.9.2.tar.gz"
 
     version('4.9.2', sha256='ed9580ac6ea17b333f1cce5b94656aed584798d56d8bd364f996a06fe1ac32eb')
 

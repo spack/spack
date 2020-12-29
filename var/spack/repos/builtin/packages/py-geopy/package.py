@@ -10,7 +10,7 @@ class PyGeopy(PythonPackage):
     """geopy is a Python client for several popular geocoding web services."""
 
     homepage = "https://github.com/geopy/geopy"
-    url      = "https://pypi.io/packages/source/g/geopy/geopy-2.1.0.tar.gz"
+    pypi = "geopy/geopy-2.1.0.tar.gz"
 
     maintainers = ['adamjstewart']
 

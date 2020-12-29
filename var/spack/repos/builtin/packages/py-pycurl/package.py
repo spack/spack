@@ -11,7 +11,7 @@ class PyPycurl(PythonPackage):
     objects identified by a URL from a Python program."""
 
     homepage = "http://pycurl.io/"
-    url      = "https://pypi.io/packages/source/p/pycurl/pycurl-7.43.0.tar.gz"
+    pypi = "pycurl/pycurl-7.43.0.tar.gz"
 
     version('7.43.0', sha256='aa975c19b79b6aa6c0518c0cc2ae33528900478f0b500531dbcdbf05beec584c')
 

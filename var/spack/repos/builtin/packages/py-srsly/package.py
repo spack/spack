@@ -8,7 +8,7 @@ class PySrsly(PythonPackage):
     """srsly: Modern high-performance serialization utilities for Python."""
 
     homepage = "https://github.com/explosion/srsly"
-    url      = "https://pypi.io/packages/source/s/srsly/srsly-2.0.1.tar.gz"
+    pypi = "srsly/srsly-2.0.1.tar.gz"
 
     version('2.0.1', sha256='fa3c7375be8fe75f23c27feafbfb5f738d55ffdbf02964c6896fb7684f519a52')
     version('2.0.0', sha256='785b00e00406120dbef4ca82925051e6b60fe870c5f84f0d22b3632d574eb870')

@@ -12,7 +12,7 @@ class PyVscInstall(PythonPackage):
     """
 
     homepage = 'https://github.com/hpcugent/vsc-install/'
-    url      = 'https://pypi.io/packages/source/v/vsc-install/vsc-install-0.10.25.tar.gz'
+    pypi = 'vsc-install/vsc-install-0.10.25.tar.gz'
 
     version('0.10.25', sha256='744fa52b45577251d94e9298ecb115afd295f2530eba64c524f469b5e283f19c')
 

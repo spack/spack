@@ -8,7 +8,7 @@ class PyJsondiff(PythonPackage):
     """Diff JSON and JSON-like structures in Python."""
 
     homepage = "https://github.com/ZoomerAnalytics/jsondiff"
-    url      = "https://pypi.io/packages/source/j/jsondiff/jsondiff-1.2.0.tar.gz"
+    pypi = "jsondiff/jsondiff-1.2.0.tar.gz"
 
     version('1.2.0', sha256='34941bc431d10aa15828afe1cbb644977a114e75eef6cc74fb58951312326303')
 

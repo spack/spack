@@ -11,7 +11,7 @@ class PyTheano(PythonPackage, CudaPackage):
     and GPUs."""
 
     homepage = "http://deeplearning.net/software/theano/"
-    url      = "https://pypi.io/packages/source/T/Theano/Theano-0.8.2.tar.gz"
+    pypi = "Theano/Theano-0.8.2.tar.gz"
     git      = "https://github.com/Theano/Theano.git"
 
     version('master', branch='master')

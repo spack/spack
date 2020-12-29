@@ -8,7 +8,7 @@ class PyCmocean(PythonPackage):
     """Colormaps for Oceanography."""
 
     homepage = "https://matplotlib.org/cmocean/"
-    url      = "https://pypi.io/packages/source/c/cmocean/cmocean-2.0.tar.gz"
+    pypi = "cmocean/cmocean-2.0.tar.gz"
 
     version('2.0', sha256='13eea3c8994d8e303e32a2db0b3e686f6edfb41cb21e7b0e663c2b17eea9b03a')
 

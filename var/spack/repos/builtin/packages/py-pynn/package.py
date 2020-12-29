@@ -12,7 +12,7 @@ class PyPynn(PythonPackage):
     """
 
     homepage = "http://neuralensemble.org/PyNN/"
-    url      = "https://pypi.io/packages/source/P/PyNN/PyNN-0.8.3.tar.gz"
+    pypi = "PyNN/PyNN-0.8.3.tar.gz"
     git      = "https://github.com/NeuralEnsemble/PyNN.git"
 
     version('0.9.1', sha256='bbc60fea3235427191feb2daa0e2fa07eb1c3946104c068ac8a2a0501263b0b1')

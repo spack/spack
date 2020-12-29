@@ -10,7 +10,7 @@ class PyTraceback2(PythonPackage):
     """Backports of the traceback module"""
 
     homepage = "https://github.com/testing-cabal/traceback2"
-    url      = "https://pypi.io/packages/source/t/traceback2/traceback2-1.4.0.tar.gz"
+    pypi = "traceback2/traceback2-1.4.0.tar.gz"
 
     version('1.4.0', sha256='05acc67a09980c2ecfedd3423f7ae0104839eccb55fc645773e1caa0951c3030')
 

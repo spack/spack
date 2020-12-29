@@ -13,7 +13,7 @@ class PyH5glance(PythonPackage):
     """
 
     homepage = "https://github.com/European-XFEL/h5glance"
-    url      = "https://pypi.io/packages/source/h/h5glance/h5glance-0.4.tar.gz"
+    pypi = "h5glance/h5glance-0.4.tar.gz"
 
     version('0.6', sha256='203369ab614273aaad3419f151e234609bb8390b201b65f678d7e17c57633e35')
     version('0.5', sha256='bc34ee42429f0440b329083e3f67fbf3d7016a4aed9e8b30911e5905217bc8d9')

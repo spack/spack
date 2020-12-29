@@ -10,7 +10,7 @@ class PyNbclient(PythonPackage):
     Formally nbconvert's ExecutePreprocessor."""
 
     homepage = "https://jupyter.org/"
-    url      = "https://pypi.io/packages/source/n/nbclient/nbclient-0.5.0.tar.gz"
+    pypi = "nbclient/nbclient-0.5.0.tar.gz"
 
     version('0.5.0', sha256='8ad52d27ba144fca1402db014857e53c5a864a2f407be66ca9d74c3a56d6591d')
 
