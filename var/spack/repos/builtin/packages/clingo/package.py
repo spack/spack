@@ -56,15 +56,35 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        return [
-            '-DCLINGO_REQUIRE_PYTHON=ON',
-            '-DCLINGO_BUILD_WITH_PYTHON=ON',
-            '-DCLINGO_BUILD_PY_SHARED=ON',
-            '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
-                self.spec['python'].command.path),
-            '-DCLINGO_PYTHON_VERSION:STRING={0}'.format(
-                self.spec['python'].version.up_to(2)),
-            '-DPYCLINGO_USER_INSTALL=OFF',
-            '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+        spec = self.spec
+        args = [
             '-DCLINGO_BUILD_WITH_LUA=OFF'
         ]
+
+        if '+python' in spec:
+            args += [
+                '-DCLINGO_BUILD_WITH_PYTHON=ON',
+                '-DCLINGO_REQUIRE_PYTHON=ON',
+                '-DCLINGO_BUILD_PY_SHARED=ON',
+                '-DPYCLINGO_USER_INSTALL=OFF',
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON'
+            ]
+
+            if spec['cmake'].version <= Version('3.15.0'):
+                args += [
+                    '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+                        spec['python'].command.path),
+                ]
+
+            if self.version == Version('master'):
+                args += [
+                    '-DCLINGO_PYTHON_VERSION:STRING={0}'.format(
+                        spec['python'].version.up_to(2))
+                ]
+        else:
+            args += [
+                '-DCLINGO_BUILD_WITH_PYTHON=OFF',
+                '-DCLINGO_REQUIRE_PYTHON=OFF'
+            ]
+
+        return args
