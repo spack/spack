@@ -71,6 +71,11 @@ class Amrex(CMakePackage):
             description='Enable PETSc interfaces')
     variant('cuda', default=False,
             description='Enable CUDA interfaces')
+    variant('cuda_arch', default='Auto',
+            # AMReX does not support architecures less than 6.0
+            values=('Auto',
+                    '6.0', '6.1', '6.2', '7.0', '7.2', '7.5', '8.0', '8.6'),
+            description='Supported CUDA architecture')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -137,6 +142,7 @@ class Amrex(CMakePackage):
             self.define_from_variant('ENABLE_HYPRE', 'hypre'),
             self.define_from_variant('ENABLE_PETSC', 'petsc'),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
+            self.define_from_variant('CUDA_ARCH', 'cuda_arch'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
@@ -167,6 +173,9 @@ class Amrex(CMakePackage):
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
             self.define_from_variant('AMReX_CUDA', 'cuda'),
+            self.define_from_variant('AMReX_CUDA_ARCH', 'cuda_arch'),
+            'AMReX_CUDA_ERROR_CAPTURE_THIS:BOOL=ON',
+            'AMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL:BOOL=ON',
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
