@@ -36,6 +36,22 @@ class Arrayfire(CMakePackage, CudaPackage):
     depends_on('fontconfig', when='+forge')
     depends_on('glfw@3.1.4:', when='+forge')
 
+    @property
+    def libs(self):
+        query_parameters = self.spec.last_query.extra_parameters
+
+        libraries = []
+        if 'cpu' in query_parameters:
+            libraries.append('libafcpu')
+        if 'cuda' in query_parameters and '+cuda' in self.spec:
+            libraries.append('libafcuda')
+        if 'opencl' in query_parameters and '+opencl' in self.spec:
+            libraries.append('libafopencl')
+        if not query_parameters or 'unified' in query_parameters:
+            libraries.append('libaf')
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)
+
     def cmake_args(self):
         args = []
         args.extend([
