@@ -39,8 +39,13 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
         if '@:1.15.1' in self.spec:
             files_to_be_patched_fmt = 't/wrap/{0}.in'
 
+        if '@1.16.3:' in self.spec:
+            shebang_string = '^#!@PERL@'
+        else:
+            shebang_string = '^#!@PERL@ -w'
+
         for file in ('aclocal', 'automake'):
-            filter_file('^#!@PERL@ -w',
+            filter_file(shebang_string,
                         '#!/usr/bin/env perl',
                         files_to_be_patched_fmt.format(file))
 
