@@ -6,10 +6,12 @@
 from spack import *
 
 
-class AppleLibuuid(Package):
+class AppleLibuuid(BundlePackage):
     """Placeholder package for Apple's analogue to non-GNU libuuid"""
 
     homepage = "https://opensource.apple.com/tarballs/Libsystem/"
+
+    version('1353.100.2')
 
     provides('uuid')
 
