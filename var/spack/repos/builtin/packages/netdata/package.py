@@ -19,4 +19,4 @@ class Netdata(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('libuv')
-    depends_on('libuuid')
+    depends_on('uuid')

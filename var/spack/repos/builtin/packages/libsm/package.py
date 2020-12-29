@@ -16,10 +16,9 @@ class Libsm(AutotoolsPackage, XorgPackage):
     version('1.2.2', sha256='14bb7c669ce2b8ff712fbdbf48120e3742a77edcd5e025d6b3325ed30cf120f4')
 
     depends_on('libice@1.0.5:')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     depends_on('xproto', type='build')
     depends_on('xtrans', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
-    depends_on('libuuid')

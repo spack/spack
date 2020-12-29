@@ -23,7 +23,7 @@ class Rsyslog(AutotoolsPackage):
     depends_on('libestr')
     depends_on('libfastjson')
     depends_on('zlib')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libgcrypt')
     depends_on('curl')
     depends_on('byacc', type='build')

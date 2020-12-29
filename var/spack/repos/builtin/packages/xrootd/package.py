@@ -56,7 +56,7 @@ class Xrootd(CMakePackage):
     depends_on('bzip2')
     depends_on('cmake@2.6:', type='build')
     depends_on('libxml2', when='+http')
-    depends_on('libuuid', when="@4.11.0:")
+    depends_on('uuid', when="@4.11.0:")
     depends_on('openssl')
     depends_on('python', when='+python')
     depends_on('readline', when='+readline')

@@ -16,6 +16,6 @@ class Task(CMakePackage):
 
     depends_on('cmake@2.8:', type='build')
     depends_on('gnutls')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     conflicts('%gcc@:4.7')

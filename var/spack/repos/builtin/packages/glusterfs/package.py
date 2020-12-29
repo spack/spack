@@ -31,7 +31,7 @@ class Glusterfs(AutotoolsPackage):
     depends_on('bison',    type='build')
     depends_on('rpcsvc-proto')
     depends_on('acl')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libtirpc')
     depends_on('userspace-rcu')
     depends_on('pkgconfig', type='build')

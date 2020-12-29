@@ -174,7 +174,7 @@ class Python(AutotoolsPackage):
         # system-provided version is sufficient to build Python's UUID support,
         # the easy solution is to only depend on Spack's libuuid when *not* on
         # a Mac.
-        depends_on('libuuid', when='+uuid')
+        depends_on('uuid', when='+uuid')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files

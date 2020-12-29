@@ -23,6 +23,7 @@ class OciSystemdHook(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('gettext')
     depends_on('yajl')
+    depends_on('uuid')
     depends_on('util-linux')
     depends_on('go-md2man')
 

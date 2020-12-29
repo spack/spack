@@ -71,7 +71,7 @@ class Cdo(AutotoolsPackage):
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     conflicts('grib2=eccodes', when='@:1.8',
               msg='Eccodes is supported starting version 1.9.0')
