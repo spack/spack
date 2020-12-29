@@ -29,7 +29,7 @@ class PyRasterio(PythonPackage):
     depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.2:')
     depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1.999')
     depends_on('python@2.7:2.8,3.5:3.7', type=('build', 'link', 'run'), when='@:1.0')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type='build', when='@master')
     depends_on('py-affine', type=('build', 'run'))
     depends_on('py-attrs', type=('build', 'run'))
