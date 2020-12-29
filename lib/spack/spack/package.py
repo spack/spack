@@ -646,6 +646,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: index of patches by sha256 sum, built lazily
     _patches_by_hash = None
 
+    #: Package homepage where users can find more information about the package
+    homepage = None
+
+    #: Default list URL (place to find available versions)
+    list_url = None
+
+    #: Link depth to which list_url should be searched for new versions
+    list_depth = 0
+
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
     maintainers = []  # type: List[str]
@@ -682,13 +691,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             msg = "a package can have either a 'url' or a 'urls' attribute"
             msg += " [package '{0.name}' defines both]"
             raise ValueError(msg.format(self))
-
-        # Set a default list URL (place to find available versions)
-        if not hasattr(self, 'list_url'):
-            self.list_url = None
-
-        if not hasattr(self, 'list_depth'):
-            self.list_depth = 0
 
         # init internal variables
         self._stage = None

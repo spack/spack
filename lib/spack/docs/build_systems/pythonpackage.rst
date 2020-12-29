@@ -134,9 +134,9 @@ The zip file will not contain a ``setup.py``, but it will contain a
 ``METADATA`` file which contains all the information you need to
 write a ``package.py`` build recipe.
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Finding Python packages
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^
+PyPI
+^^^^
 
 The vast majority of Python packages are hosted on PyPI - The Python
 Package Index. ``pip`` only supports packages hosted on PyPI, making
@@ -147,6 +147,26 @@ version. Click on the "Latest Version" button to the top right to see
 if a newer version is available. The download page is usually at::
 
    https://pypi.org/project/<package-name>
+
+
+Since PyPI is so common, the ``PythonPackage`` base class has a
+``pypi`` attribute that can be set. Once set, ``pypi`` will be used
+to define the ``homepage``, ``url``, and ``list_url``. For example,
+the following:
+
+.. code-block:: python
+
+   homepage = 'https://pypi.org/project/setuptools/'
+   url      = 'https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip'
+   list_url = 'https://pypi.org/simple/setuptools/'
+
+
+is equivalent to:
+
+.. code-block:: python
+
+   pypi = 'setuptools/setuptools-49.2.0.zip'
+
 
 ^^^^^^^^^^^
 Description
@@ -184,50 +204,11 @@ also get the homepage on the command-line by running:
 URL
 ^^^
 
-You may have noticed that Spack allows you to add multiple versions of
-the same package without adding multiple versions of the download URL.
-It does this by guessing what the version string in the URL is and
-replacing this with the requested version. Obviously, if Spack cannot
-guess the version correctly, or if non-version-related things change
-in the URL, Spack cannot substitute the version properly.
-
-Once upon a time, PyPI offered nice, simple download URLs like::
-
-   https://pypi.python.org/packages/source/n/numpy/numpy-1.13.1.zip
-
-
-As you can see, the version is 1.13.1. It probably isn't hard to guess
-what URL to use to download version 1.12.0, and Spack was perfectly
-capable of performing this calculation.
-
-However, PyPI switched to a new download URL format::
-
-   https://pypi.python.org/packages/c0/3a/40967d9f5675fbb097ffec170f59c2ba19fc96373e73ad47c2cae9a30aed/numpy-1.13.1.zip#md5=2c3c0f4edf720c3a7b525dacc825b9ae
-
-
-and more recently::
-
-   https://files.pythonhosted.org/packages/b0/2b/497c2bb7c660b2606d4a96e2035e92554429e139c6c71cdff67af66b58d2/numpy-1.14.3.zip
-
-
-As you can imagine, it is impossible for Spack to guess what URL to
-use to download version 1.12.0 given this URL. There is a solution,
-however. PyPI offers a new hidden interface for downloading
-Python packages that does not include a hash in the URL::
-
-   https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip
-
-
-This URL redirects to the https://files.pythonhosted.org URL. The general
-syntax for this https://pypi.io URL is::
-
-   https://pypi.io/packages/<type>/<first-letter-of-name>/<name>/<name>-<version>.<extension>
-
-
-Please use the https://pypi.io URL instead of the https://pypi.python.org
-URL. If both ``.tar.gz`` and ``.zip`` versions are available, ``.tar.gz``
-is preferred. If some releases offer both ``.tar.gz`` and ``.zip`` versions,
-but some only offer ``.zip`` versions, use ``.zip``.
+If ``pypi`` is set as mentioned above, ``url`` and ``list_url`` will
+be automatically set for you. If both ``.tar.gz`` and ``.zip`` versions
+are available, ``.tar.gz`` is preferred. If some releases offer both
+``.tar.gz`` and ``.zip`` versions, but some only offer ``.zip`` versions,
+use ``.zip``.
 
 Some Python packages are closed-source and do not ship ``.tar.gz`` or ``.zip``
 files on either PyPI or GitHub. If this is the case, you can still download
@@ -237,10 +218,9 @@ and can be downloaded from::
    https://pypi.io/packages/py3/a/azureml_sdk/azureml_sdk-1.11.0-py3-none-any.whl
 
 
-Note that instead of ``<type>`` being ``source``, it is now ``py3`` since this
-wheel will work for any generic version of Python 3. You may see Python-specific
-or OS-specific URLs. Note that when you add a ``.whl`` URL, you should add
-``expand=False`` to ensure that Spack doesn't try to extract the wheel:
+You may see Python-specific or OS-specific URLs. Note that when you add a
+``.whl`` URL, you should add ``expand=False`` to ensure that Spack doesn't
+try to extract the wheel:
 
 .. code-block:: python
 

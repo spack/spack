@@ -72,6 +72,9 @@ class PythonPackage(PackageBase):
        def configure(self, spec, prefix):
            self.setup_py('configure')
     """
+    #: Package name, version, and extension on PyPI
+    pypi = None
+
     # Default phases
     phases = ['build', 'install']
 
@@ -87,6 +90,26 @@ class PythonPackage(PackageBase):
     depends_on('python', type=('build', 'run'))
 
     py_namespace = None
+
+    @property
+    def homepage(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/project/' + name + '/'
+
+    @property
+    def url(self):
+        if self.pypi:
+            return (
+                'https://files.pythonhosted.org/packages/source/'
+                + self.pypi[0] + '/' + self.pypi
+            )
+
+    @property
+    def list_url(self):
+        if self.pypi:
+            name = self.pypi.split('/')[0]
+            return 'https://pypi.org/simple/' + name + '/'
 
     @property
     def import_modules(self):
