@@ -176,9 +176,9 @@ class Fsl(Package, CudaPackage):
             for v in vars_to_unset:
                 del os.environ[v]
 
-        script = Executable(join_path(prefix, 'etc', 'fslconf',
-                                      'post_install.sh'))
-        script('-f', prefix)
+            script = Executable(join_path(prefix, 'etc', 'fslconf',
+                                          'post_install.sh'))
+            script('-f', prefix)
 
     def setup_build_environment(self, env):
         if not self.stage.source_path:
