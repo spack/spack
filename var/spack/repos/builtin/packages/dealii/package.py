@@ -103,7 +103,7 @@ class Dealii(CMakePackage, CudaPackage):
     # FIXME @9.3: enable by default
     variant('taskflow',  default=False,
             description='Compile with multi-threading via Taskflow')
-    # FIXME @9.3: disable by default 
+    # FIXME @9.3: disable by default
     # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant('threads',  default=True,
             description='Compile with multi-threading via TBB')
@@ -190,8 +190,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:9.2+sundials')
-    depends_on('sundials@5:',      when='@9.3:+sundials') 
-    depends_on('taskflow',         when='@9.3:+taskflow') 
+    depends_on('sundials@5:',      when='@9.3:+sundials')
+    depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # FIXME: next line fixes concretization with trilinos and adol-c
     depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
@@ -207,12 +207,16 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('symengine@0.6:', when='@9.2:+symengine')
     depends_on('tbb',            when='+threads')
     # do not require +rol to make concretization of xsdk possible
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',       when='+trilinos+mpi~int64~cuda')
-    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre', when='+trilinos+mpi+int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos',
+               when='+trilinos+mpi~int64~cuda')
+    depends_on('trilinos+amesos+aztec+epetra+ifpack+ml+muelu+sacado+teuchos~hypre',
+               when='+trilinos+mpi+int64~cuda')
     # FIXME: temporary disable Tpetra when using CUDA due to
     # namespace "Kokkos::Impl" has no member "cuda_abort"
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',       when='+trilinos+mpi~int64+cuda')
-    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2', when='+trilinos+mpi+int64+cuda')
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
+               when='+trilinos+mpi~int64+cuda')
+    depends_on('trilinos@master+amesos+aztec+epetra+ifpack+ml+muelu+rol+sacado+teuchos~hypre~amesos2~ifpack2~intrepid2~kokkos~tpetra~zoltan2',
+               when='+trilinos+mpi+int64+cuda')
 
     # Explicitly provide a destructor in BlockVector,
     # otherwise deal.II may fail to build with Intel compilers.
