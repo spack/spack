@@ -10,7 +10,7 @@ class PyFiona(PythonPackage):
     """Fiona reads and writes spatial data files."""
 
     homepage = "https://github.com/Toblerity/Fiona"
-    url      = "https://pypi.io/packages/source/F/Fiona/Fiona-1.8.18.tar.gz"
+    pypi = "Fiona/Fiona-1.8.18.tar.gz"
     git      = "https://github.com/Toblerity/Fiona.git"
 
     maintainers = ['adamjstewart']

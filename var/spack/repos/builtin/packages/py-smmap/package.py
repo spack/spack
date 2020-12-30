@@ -12,7 +12,7 @@ class PySmmap(PythonPackage):
     """
 
     homepage = "https://github.com/gitpython-developers/smmap"
-    url      = "https://pypi.io/packages/source/s/smmap/smmap-3.0.4.tar.gz"
+    pypi = "smmap/smmap-3.0.4.tar.gz"
 
     version('3.0.4', sha256='9c98bbd1f9786d22f14b3d4126894d56befb835ec90cef151af566c7e19b5d24')
 

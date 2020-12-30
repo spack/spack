@@ -8,7 +8,7 @@ class PyPynacl(PythonPackage):
     """Python binding to the Networking and Cryptography (NaCl) library."""
 
     homepage = "https://github.com/pyca/pynacl/"
-    url      = "https://pypi.io/packages/source/P/PyNaCl/PyNaCl-1.4.0.tar.gz"
+    pypi = "PyNaCl/PyNaCl-1.4.0.tar.gz"
 
     version('1.4.0', sha256='54e9a2c849c742006516ad56a88f5c74bf2ce92c9f67435187c3c5953b346505')
 

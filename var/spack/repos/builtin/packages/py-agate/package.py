@@ -12,7 +12,7 @@ class PyAgate(PythonPackage):
     real-world problems with readable code."""
 
     homepage = "https://agate.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/a/agate/agate-1.6.1.tar.gz"
+    pypi = "agate/agate-1.6.1.tar.gz"
 
     version('1.6.1', sha256='c93aaa500b439d71e4a5cf088d0006d2ce2c76f1950960c8843114e5f361dfd3')
 

@@ -8,7 +8,7 @@ class PyImmutables(PythonPackage):
     """An immutable mapping type for Python."""
 
     homepage = "https://github.com/MagicStack/immutables"
-    url      = "https://pypi.io/packages/source/i/immutables/immutables-0.14.tar.gz"
+    pypi = "immutables/immutables-0.14.tar.gz"
 
     version('0.14', sha256='a0a1cc238b678455145bae291d8426f732f5255537ed6a5b7645949704c70a78')
 

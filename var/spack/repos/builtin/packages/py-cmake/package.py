@@ -12,7 +12,7 @@ class PyCmake(PythonPackage):
     """
 
     homepage = "https://cmake.org/"
-    url      = "https://pypi.io/packages/source/c/cmake/cmake-3.18.0.tar.gz"
+    pypi = "cmake/cmake-3.18.0.tar.gz"
 
     version('3.18.0', sha256='52b98c5ee70b5fa30a8623e96482227e065292f78794eb085fdf0fecb204b79b')
 

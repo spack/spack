@@ -8,7 +8,7 @@ class PyAzureMgmtKeyvault(PythonPackage):
     """Microsoft Azure Key Vault Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-keyvault/azure-mgmt-keyvault-2.2.0.zip"
+    pypi = "azure-mgmt-keyvault/azure-mgmt-keyvault-2.2.0.zip"
 
     version('2.2.0', sha256='1883e12eeb5819064dc52bf3a3ade05c791f4b66e4aeec948bda28df6ce2bce4')
 

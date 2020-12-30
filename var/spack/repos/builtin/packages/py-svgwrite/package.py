@@ -10,8 +10,7 @@ from spack import *
 class PySvgwrite(PythonPackage):
     """A Python library to create SVG drawings."""
 
-    homepage = "https://pypi.org/project/svgwrite/"
-    url      = "https://pypi.io/packages/source/s/svgwrite/svgwrite-1.1.12.zip"
+    pypi = "svgwrite/svgwrite-1.1.12.zip"
 
     version('1.1.12', sha256='968c99f193f34f0fa7f0b3e82f49b93789c7c45cd89ce190480f16020d41ab79')
 

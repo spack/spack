@@ -13,7 +13,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     """
 
     homepage = "https://arrow.apache.org"
-    url = 'https://pypi.io/packages/source/p/pyarrow/pyarrow-0.17.1.tar.gz'
+    pypi = 'pyarrow/pyarrow-0.17.1.tar.gz'
 
     version('0.17.1', sha256='278d11800c2e0f9bea6314ef718b2368b4046ba24b6c631c14edad5a1d351e49')
     version('0.15.1', sha256='7ad074690ba38313067bf3bbda1258966d38e2037c035d08b9ffe3cce07747a5')

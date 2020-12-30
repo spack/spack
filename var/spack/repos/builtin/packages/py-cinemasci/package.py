@@ -11,7 +11,7 @@ class PyCinemasci(PythonPackage):
     databases"""
 
     homepage = "https://github.com/cinemascience"
-    url      = "https://pypi.io/packages/source/c/cinemasci/cinemasci-1.3.tar.gz"
+    pypi = "cinemasci/cinemasci-1.3.tar.gz"
 
     maintainers = ['EthanS94']
 

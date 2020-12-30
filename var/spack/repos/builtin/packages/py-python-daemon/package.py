@@ -18,8 +18,7 @@ class PyPythonDaemon(PythonPackage):
        environment for the program; use the instance as a context manager
        to enter a daemon state.
     """
-    homepage = "https://pypi.python.org/pypi/python-daemon/"
-    url      = "https://pypi.io/packages/source/p/python-daemon/python-daemon-2.0.5.tar.gz"
+    pypi = "python-daemon/python-daemon-2.0.5.tar.gz"
 
     version('2.0.5', sha256='afde4fa433d94d007206ee31a0941d55b5eb232a5422b670aad628547b46bf68')
 

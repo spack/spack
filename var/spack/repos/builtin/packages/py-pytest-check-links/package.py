@@ -11,7 +11,7 @@ class PyPytestCheckLinks(PythonPackage):
     """pytest plugin that checks URLs for HTML-containing files."""
 
     homepage = "https://github.com/jupyterlab/pytest-check-links"
-    url      = "https://pypi.io/packages/source/p/pytest-check-links/pytest_check_links-0.3.4.tar.gz"
+    pypi = "pytest-check-links/pytest_check_links-0.3.4.tar.gz"
 
     version('0.3.4', sha256='4b3216548431bf9796557e8ee8fd8e5e77a69a4690b3b2f9bcf6fb5af16a502b')
 

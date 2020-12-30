@@ -10,8 +10,7 @@ class PyPythonEditor(PythonPackage):
     """python-editor is a library that provides the editor module for
     programmatically interfacing with your system's EDITOR variable."""
 
-    homepage = "https://pypi.org/project/python-editor/"
-    url      = "https://pypi.io/packages/source/p/python-editor/python-editor-1.0.4.tar.gz"
+    pypi = "python-editor/python-editor-1.0.4.tar.gz"
 
     version('1.0.4', sha256='51fda6bcc5ddbbb7063b2af7509e43bd84bfc32a4ff71349ec7847713882327b')
 

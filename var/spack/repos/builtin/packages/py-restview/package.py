@@ -10,7 +10,7 @@ class PyRestview(PythonPackage):
     """A viewer for ReStructuredText documents that renders them on the fly."""
 
     homepage = "https://mg.pov.lt/restview/"
-    url = "https://pypi.io/packages/source/r/restview/restview-2.6.1.tar.gz"
+    pypi = "restview/restview-2.6.1.tar.gz"
 
     version('2.6.1', sha256='14d261ee0edf30e0ebc1eb320428ef4898e97422b00337863556966b851fb5af')
 

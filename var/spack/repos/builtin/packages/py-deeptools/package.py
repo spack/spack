@@ -10,8 +10,8 @@ class PyDeeptools(PythonPackage):
     """deepTools addresses the challenge of handling the large amounts of data
        that are now routinely generated from DNA sequencing centers."""
 
-    homepage = "https://pypi.io/packages/source/d/deepTools"
     # The test suite and associated test data is missing in the pypi tarball.
+    homepage = "https://pypi.python.org/pypi/deepTools/"
     url      = "https://github.com/deeptools/deepTools/archive/3.3.0.tar.gz"
 
     version('3.3.0', sha256='a7aaf79fe939ca307fe6ec5e156750389fdfa4324bf0dd6bf5f53d5fda109358')

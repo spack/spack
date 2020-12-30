@@ -11,7 +11,7 @@ class PySniffio(PythonPackage):
     async library your code is running under."""
 
     homepage = "https://github.com/python-trio/sniffio"
-    url      = "https://pypi.io/packages/source/s/sniffio/sniffio-1.1.0.tar.gz"
+    pypi = "sniffio/sniffio-1.1.0.tar.gz"
 
     version('1.1.0', sha256='8e3810100f69fe0edd463d02ad407112542a11ffdc29f67db2bf3771afb87a21')
 

@@ -10,7 +10,7 @@ class PyRequests(PythonPackage):
     """Python HTTP for Humans."""
 
     homepage = "http://python-requests.org"
-    url = "https://pypi.io/packages/source/r/requests/requests-2.24.0.tar.gz"
+    pypi = "requests/requests-2.24.0.tar.gz"
 
     version('2.24.0', sha256='b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b')
     version('2.23.0', sha256='b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6')

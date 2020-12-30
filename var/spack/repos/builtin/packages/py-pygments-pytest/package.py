@@ -10,7 +10,7 @@ class PyPygmentsPytest(PythonPackage):
     """A pygments lexer for pytest output."""
 
     homepage = "https://github.com/asottile/pygments-pytest"
-    url      = "https://pypi.io/packages/source/P/pygments-pytest-1.2.0.tar.gz"
+    pypi = "pygments-pytest/pygments_pytest-1.2.0.tar.gz"
 
     version('1.2.0', sha256='fc48e2fffd6d3c047a61c1db8b88ab069983f50e733fe70a7846098eb28bc955')
 

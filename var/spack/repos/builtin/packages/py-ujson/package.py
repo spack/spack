@@ -11,7 +11,7 @@ class PyUjson(PythonPackage):
        bindings."""
 
     homepage = "https://github.com/esnme/ultrajson"
-    url      = "https://pypi.io/packages/source/u/ujson/ujson-1.35.tar.gz"
+    pypi = "ujson/ujson-1.35.tar.gz"
 
     version('1.35', sha256='f66073e5506e91d204ab0c614a148d5aa938bdbf104751be66f8ad7a222f5f86')
 

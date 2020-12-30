@@ -11,7 +11,7 @@ class PyAgateExcel(PythonPackage):
     agate."""
 
     homepage = "https://agate-excel.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/a/agate-excel/agate-excel-0.2.3.tar.gz"
+    pypi = "agate-excel/agate-excel-0.2.3.tar.gz"
 
     version('0.2.3', sha256='8f255ef2c87c436b7132049e1dd86c8e08bf82d8c773aea86f3069b461a17d52')
 

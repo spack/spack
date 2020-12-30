@@ -11,7 +11,7 @@ class PyXdot(PythonPackage):
     dot language."""
 
     homepage = "https://github.com/jrfonseca/xdot.py"
-    url      = "https://pypi.io/packages/source/x/xdot/xdot-1.0.tar.gz"
+    pypi = "xdot/xdot-1.0.tar.gz"
     git      = "https://github.com/jrfonseca/xdot.py.git"
 
     version('master', branch='master')

@@ -11,7 +11,7 @@ class PySphinxcontribSerializinghtml(PythonPackage):
     "serialized" HTML files (json and pickle)."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-serializinghtml/sphinxcontrib-serializinghtml-1.1.3.tar.gz"
+    pypi = "sphinxcontrib-serializinghtml/sphinxcontrib-serializinghtml-1.1.3.tar.gz"
 
     # Sphinx requires sphinxcontrib-serializinghtml at build-time, but
     # sphinxcontrib-serializinghtml requires sphinx at run-time

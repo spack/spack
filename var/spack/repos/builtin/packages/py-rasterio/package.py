@@ -15,7 +15,7 @@ class PyRasterio(PythonPackage):
     arrays."""
 
     homepage = "https://github.com/mapbox/rasterio"
-    url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.1.8.tar.gz"
+    pypi = "rasterio/rasterio-1.1.8.tar.gz"
     git      = "https://github.com/mapbox/rasterio.git"
 
     maintainers = ['adamjstewart']

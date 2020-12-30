@@ -8,7 +8,7 @@ class PyMurmurhash(PythonPackage):
     """Cython bindings for MurmurHash."""
 
     homepage = "https://github.com/explosion/murmurhash"
-    url      = "https://pypi.io/packages/source/m/murmurhash/murmurhash-1.0.2.tar.gz"
+    pypi = "murmurhash/murmurhash-1.0.2.tar.gz"
 
     version('1.0.2', sha256='c7a646f6b07b033642b4f52ae2e45efd8b80780b3b90e8092a0cec935fbf81e2')
 

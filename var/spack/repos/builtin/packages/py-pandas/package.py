@@ -10,7 +10,7 @@ class PyPandas(PythonPackage):
     programming language."""
 
     homepage = "https://pandas.pydata.org/"
-    url = "https://pypi.io/packages/source/p/pandas/pandas-1.2.0.tar.gz"
+    pypi = "pandas/pandas-1.2.0.tar.gz"
 
     maintainers = ['adamjstewart']
     import_modules = [

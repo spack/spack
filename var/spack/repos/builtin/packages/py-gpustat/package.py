@@ -8,7 +8,7 @@ class PyGpustat(PythonPackage):
     """An utility to monitor NVIDIA GPU status and usage."""
 
     homepage = "https://github.com/wookayin/gpustat"
-    url      = "https://pypi.io/packages/source/g/gpustat/gpustat-0.6.0.tar.gz"
+    pypi = "gpustat/gpustat-0.6.0.tar.gz"
 
     version('0.6.0', sha256='f69135080b2668b662822633312c2180002c10111597af9631bb02e042755b6c')
 

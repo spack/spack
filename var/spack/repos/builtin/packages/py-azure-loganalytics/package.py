@@ -8,7 +8,7 @@ class PyAzureLoganalytics(PythonPackage):
     """Microsoft Azure Log Analytics Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-loganalytics/azure-loganalytics-0.1.0.zip"
+    pypi = "azure-loganalytics/azure-loganalytics-0.1.0.zip"
 
     version('0.1.0', sha256='3ceb350def677a351f34b0a0d1637df6be0c6fe87ff32a5270b17f540f6da06e')
 

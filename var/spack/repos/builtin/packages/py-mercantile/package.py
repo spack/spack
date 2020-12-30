@@ -10,7 +10,7 @@ class PyMercantile(PythonPackage):
     """Web mercator XYZ tile utilities."""
 
     homepage = "https://github.com/mapbox/mercantile"
-    url      = "https://pypi.io/packages/source/m/mercantile/mercantile-1.1.6.tar.gz"
+    pypi = "mercantile/mercantile-1.1.6.tar.gz"
 
     maintainers = ['adamjstewart']
 

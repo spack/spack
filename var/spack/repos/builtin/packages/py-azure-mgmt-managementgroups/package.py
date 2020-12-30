@@ -8,7 +8,7 @@ class PyAzureMgmtManagementgroups(PythonPackage):
     """Microsoft Azure Management Groups Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-managementgroups/azure-mgmt-managementgroups-0.2.0.zip"
+    pypi = "azure-mgmt-managementgroups/azure-mgmt-managementgroups-0.2.0.zip"
 
     version('0.2.0', sha256='3d5237947458dc94b4a392141174b1c1258d26611241ee104e9006d1d798f682')
 

@@ -11,7 +11,7 @@ class PySphinxcontribQthelp(PythonPackage):
     document."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-qthelp/sphinxcontrib-qthelp-1.0.2.tar.gz"
+    pypi = "sphinxcontrib-qthelp/sphinxcontrib-qthelp-1.0.2.tar.gz"
 
     # Sphinx requires sphinxcontrib-qthelp at build-time, but
     # sphinxcontrib-qthelp requires sphinx at run-time

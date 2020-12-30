@@ -10,7 +10,7 @@ class PyBrian2(PythonPackage):
     """A clock-driven simulator for spiking neural networks"""
 
     homepage = "http://www.briansimulator.org"
-    url      = "https://pypi.io/packages/source/B/Brian2/Brian2-2.2.2.1.tar.gz"
+    pypi = "Brian2/Brian2-2.2.2.1.tar.gz"
 
     version('2.2.2.1', sha256='02075f66d42fd243fc5e28e1add8862709ae9fdabaffb69858e6d7f684a91525')
     version('2.0.1',   sha256='195d8ced0d20e9069917776948f92aa70b7457bbc6b5222b8199654402ee1153')

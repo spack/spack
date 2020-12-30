@@ -10,7 +10,7 @@ class PyMypy(PythonPackage):
     """Optional static typing for Python."""
 
     homepage = "http://www.mypy-lang.org/"
-    url      = "https://pypi.io/packages/source/m/mypy/mypy-0.740.tar.gz"
+    pypi = "mypy/mypy-0.740.tar.gz"
 
     version('0.740', sha256='48c8bc99380575deb39f5d3400ebb6a8a1cb5cc669bbba4d3bb30f904e0a0e7d')
 

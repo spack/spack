@@ -11,7 +11,7 @@ class PySncosmo(PythonPackage):
     analysis."""
 
     homepage = "http://sncosmo.readthedocs.io/"
-    url = "https://pypi.io/packages/source/s/sncosmo/sncosmo-1.2.0.tar.gz"
+    pypi = "sncosmo/sncosmo-1.2.0.tar.gz"
 
     version('1.2.0', sha256='f3969eec5b25f60c70418dbd64765a2b4735bb53c210c61d0aab68916daea588')
 

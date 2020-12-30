@@ -10,8 +10,7 @@ class PyBackportsShutilGetTerminalSize(PythonPackage):
     """A backport of the get_terminal_size function
     from Python 3.3's shutil."""
 
-    homepage = "https://pypi.python.org/pypi/backports.shutil_get_terminal_size"
-    url      = "https://pypi.io/packages/source/b/backports.shutil_get_terminal_size/backports.shutil_get_terminal_size-1.0.0.tar.gz"
+    pypi = "backports.shutil_get_terminal_size/backports.shutil_get_terminal_size-1.0.0.tar.gz"
 
     py_namespace = 'backports'
 

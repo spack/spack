@@ -10,7 +10,7 @@ class PyGoogleapisCommonProtos(PythonPackage):
     """Common protobufs used in Google APIs."""
 
     homepage = "https://github.com/googleapis/googleapis"
-    url      = "https://pypi.io/packages/source/g/googleapis-common-protos/googleapis-common-protos-1.6.0.tar.gz"
+    pypi = "googleapis-common-protos/googleapis-common-protos-1.6.0.tar.gz"
 
     version('1.6.0', sha256='e61b8ed5e36b976b487c6e7b15f31bb10c7a0ca7bd5c0e837f4afab64b53a0c6')
 

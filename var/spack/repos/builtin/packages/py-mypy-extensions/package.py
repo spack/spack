@@ -11,7 +11,7 @@ class PyMypyExtensions(PythonPackage):
     mypy typechecker."""
 
     homepage = "https://github.com/python/mypy_extensions"
-    url      = "https://pypi.io/packages/source/m/mypy-extensions/mypy_extensions-0.4.3.tar.gz"
+    pypi = "mypy-extensions/mypy_extensions-0.4.3.tar.gz"
 
     version('0.4.3', sha256='2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8')
 

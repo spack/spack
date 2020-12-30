@@ -10,7 +10,7 @@ class PyJedi(PythonPackage):
     """An autocompletion tool for Python that can be used for text editors."""
 
     homepage = "https://github.com/davidhalter/jedi"
-    url      = "https://pypi.io/packages/source/j/jedi/jedi-0.9.0.tar.gz"
+    pypi = "jedi/jedi-0.9.0.tar.gz"
 
     version('0.13.3', sha256='2bb0603e3506f708e792c7f4ad8fc2a7a9d9c2d292a358fbbd58da531695595b')
     # unfortunately pypi.io only offers a .whl for 0.10.0

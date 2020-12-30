@@ -10,7 +10,7 @@ class PyWxpython(PythonPackage):
     """Cross platform GUI toolkit for Python."""
 
     homepage = "https://www.wxpython.org/"
-    url      = "https://pypi.io/packages/source/w/wxPython/wxPython-4.0.6.tar.gz"
+    pypi = "wxPython/wxPython-4.0.6.tar.gz"
 
     version('4.0.6', sha256='35cc8ae9dd5246e2c9861bb796026bbcb9fb083e4d49650f776622171ecdab37')
 

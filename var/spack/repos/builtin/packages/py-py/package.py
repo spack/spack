@@ -10,7 +10,7 @@ class PyPy(PythonPackage):
     """Library with cross-python path, ini-parsing, io, code, log facilities"""
 
     homepage = "http://pylib.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/p/py/py-1.8.0.tar.gz"
+    pypi = "py/py-1.8.0.tar.gz"
 
     version('1.8.0', sha256='dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53')
     version('1.5.4',  sha256='3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7')

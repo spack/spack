@@ -11,7 +11,7 @@ class PyPetsc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    url      = "https://pypi.io/packages/source/p/petsc4py/petsc4py-3.14.0.tar.gz"
+    pypi = "petsc4py/petsc4py-3.14.0.tar.gz"
     git      = "https://gitlab.com/petsc/petsc4py.git"
 
     maintainers = ['dalcinl', 'balay']

@@ -10,8 +10,7 @@ class PyPbr(PythonPackage):
     """PBR is a library that injects some useful and sensible default
        behaviors into your setuptools run."""
 
-    homepage = "https://pypi.python.org/pypi/pbr"
-    url      = "https://pypi.io/packages/source/p/pbr/pbr-5.4.3.tar.gz"
+    pypi = "pbr/pbr-5.4.3.tar.gz"
 
     version('5.4.3',  sha256='2c8e420cd4ed4cec4e7999ee47409e876af575d4c35a45840d59e8b5f3155ab8')
     version('5.2.1',  sha256='93d2dc6ee0c9af4dbc70bc1251d0e545a9910ca8863774761f92716dece400b6')

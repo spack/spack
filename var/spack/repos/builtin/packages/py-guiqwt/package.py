@@ -11,7 +11,7 @@ class PyGuiqwt(PythonPackage):
     (extension to PythonQwt)"""
 
     homepage = "https://github.com/PierreRaybaut/guiqwt"
-    url      = "https://pypi.io/packages/source/g/guiqwt/guiqwt-3.0.2.zip"
+    pypi = "guiqwt/guiqwt-3.0.2.zip"
 
     version('3.0.2', sha256='387c0b9430624ecc87931e33ff963785194968c9f848337eb050eca48c6cd858')
 

@@ -8,7 +8,7 @@ class PyAzureMgmtCdn(PythonPackage):
     """Microsoft Azure CDN Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-cdn/azure-mgmt-cdn-4.0.0.zip"
+    pypi = "azure-mgmt-cdn/azure-mgmt-cdn-4.0.0.zip"
 
     # Release candidate needed for py-azure-cli
     version('4.1.0rc1', sha256='853c73d612f5d97387e079c5841a9f1a05702173d0c7c0c59ba7b0fd86380503')

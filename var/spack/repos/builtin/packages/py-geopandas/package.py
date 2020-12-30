@@ -14,7 +14,7 @@ class PyGeopandas(PythonPackage):
        and descartes and matplotlib for plotting."""
 
     homepage = "https://geopandas.org/"
-    url      = "https://pypi.io/packages/source/g/geopandas/geopandas-0.8.1.tar.gz"
+    pypi = "geopandas/geopandas-0.8.1.tar.gz"
     git      = "https://github.com/geopandas/geopandas.git"
 
     maintainers = ['adamjstewart']

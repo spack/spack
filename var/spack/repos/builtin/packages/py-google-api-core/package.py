@@ -10,7 +10,7 @@ class PyGoogleApiCore(PythonPackage):
     """Google API client core library."""
 
     homepage = "https://github.com/GoogleCloudPlatform/google-cloud-python"
-    url      = "https://pypi.io/packages/source/g/google-api-core/google-api-core-1.14.2.tar.gz"
+    pypi = "google-api-core/google-api-core-1.14.2.tar.gz"
 
     # google.api_core.operations_v1 and google.api_core.gapic_v1 require
     # grpc optional dependency

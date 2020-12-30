@@ -15,7 +15,7 @@ class PyOntFast5Api(PythonPackage):
     API, without having to directly invoke the h5py library."""
 
     homepage = "https://github.com/nanoporetech/ont_fast5_api"
-    url      = "https://pypi.io/packages/source/o/ont-fast5-api/ont-fast5-api-0.3.2.tar.gz"
+    pypi = "ont-fast5-api/ont-fast5-api-0.3.2.tar.gz"
 
     version('0.3.2', sha256='ae44b1bcd812e8acf8beff3db92456647c343cf19340f97cff4847de5cc905d8')
 

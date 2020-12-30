@@ -10,7 +10,7 @@ class PyGitpython(PythonPackage):
     """GitPython is a python library used to interact with Git repositories."""
 
     homepage = "http://gitpython.readthedocs.org"
-    url      = "https://pypi.io/packages/source/g/gitpython/GitPython-3.1.7.tar.gz"
+    pypi = "gitpython/GitPython-3.1.7.tar.gz"
 
     version('3.1.8', sha256='49d4f859bda7bd6ef9ce72d9a2cddb6a59dd70f34a18ce409670bc655431c517')
     version('3.1.6', sha256='00d459b1fd2d4a2106252867701f7303485654bdb115275fa6f788756d18879e')

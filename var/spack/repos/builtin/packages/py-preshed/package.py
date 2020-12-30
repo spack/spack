@@ -8,7 +8,7 @@ class PyPreshed(PythonPackage):
     """preshed: Cython Hash Table for Pre-Hashed Keys."""
 
     homepage = "https://github.com/explosion/preshed"
-    url      = "https://pypi.io/packages/source/p/preshed/preshed-3.0.2.tar.gz"
+    pypi = "preshed/preshed-3.0.2.tar.gz"
 
     version('3.0.2', sha256='61d73468c97c1d6d5a048de0b01d5a6fd052123358aca4823cdb277e436436cb')
 

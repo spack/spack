@@ -18,7 +18,7 @@ class PyNetworkit(PythonPackage):
        parallelism and scalability."""
 
     homepage = "https://networkit.github.io/"
-    url      = "https://pypi.io/packages/source/n/networkit/networkit-6.1.tar.gz"
+    pypi = "networkit/networkit-6.1.tar.gz"
 
     version('7.1', sha256='8609dc7a574a8a82d8880b8b1e3dfdd9c59ad67cd02135628e675c482fe98a96')
     version('7.0', sha256='eea4b5e565d6990b674e1c7f4d598be9377d57b61d0d82883ecc39edabaf3631')

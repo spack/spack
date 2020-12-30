@@ -10,7 +10,7 @@ class PyBleach(PythonPackage):
     """An easy whitelist-based HTML-sanitizing tool."""
 
     homepage = "http://github.com/mozilla/bleach"
-    url      = "https://pypi.io/packages/source/b/bleach/bleach-3.1.0.tar.gz"
+    pypi = "bleach/bleach-3.1.0.tar.gz"
 
     version('3.1.0', sha256='3fdf7f77adcf649c9911387df51254b813185e32b2c6619f690b593a617e19fa')
     version('1.5.0', sha256='978e758599b54cd3caa2e160d74102879b230ea8dc93871d0783721eef58bc65')

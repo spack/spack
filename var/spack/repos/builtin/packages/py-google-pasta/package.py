@@ -10,7 +10,7 @@ class PyGooglePasta(PythonPackage):
     """pasta is an AST-based Python refactoring library."""
 
     homepage = "https://github.com/google/pasta"
-    url      = "https://pypi.io/packages/source/g/google-pasta/google-pasta-0.1.8.tar.gz"
+    pypi = "google-pasta/google-pasta-0.1.8.tar.gz"
 
     version('0.1.8', sha256='713813a9f7d6589e5defdaf21e80e4392eb124662f8bd829acd51a4f8735c0cb')
 

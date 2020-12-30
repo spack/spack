@@ -10,7 +10,7 @@ class PyIniparse(PythonPackage):
     """Accessing and Modifying INI files"""
 
     homepage = "https://github.com/candlepin/python-iniparse"
-    url      = "https://pypi.io/packages/source/i/iniparse/iniparse-0.4.tar.gz"
+    pypi = "iniparse/iniparse-0.4.tar.gz"
     git      = "https://github.com/candlepin/python-iniparse.git"
 
     version('master', branch='master')

@@ -11,7 +11,7 @@ class PyPyopencl(PythonPackage):
     """Python wrapper for OpenCL."""
 
     homepage = "https://documen.tician.de/pyopencl/"
-    url      = "https://pypi.io/packages/source/p/pyopencl/pyopencl-2020.2.2.tar.gz"
+    pypi = "pyopencl/pyopencl-2020.2.2.tar.gz"
 
     maintainers = ['matthiasdiener']
 

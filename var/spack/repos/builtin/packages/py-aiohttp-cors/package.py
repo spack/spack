@@ -9,7 +9,7 @@ class PyAiohttpCors(PythonPackage):
     support for aiohttp asyncio-powered asynchronous HTTP server."""
 
     homepage = "https://github.com/aio-libs/aiohttp-cors"
-    url      = "https://pypi.io/packages/source/a/aiohttp_cors/aiohttp-cors-0.7.0.tar.gz"
+    pypi = "aiohttp_cors/aiohttp-cors-0.7.0.tar.gz"
 
     version('0.7.0', sha256='4d39c6d7100fd9764ed1caf8cebf0eb01bf5e3f24e2e073fda6234bc48b19f5d')
 

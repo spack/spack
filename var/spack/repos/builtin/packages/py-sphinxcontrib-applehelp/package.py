@@ -11,7 +11,7 @@ class PySphinxcontribApplehelp(PythonPackage):
     help books."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-applehelp/sphinxcontrib-applehelp-1.0.1.tar.gz"
+    pypi = "sphinxcontrib-applehelp/sphinxcontrib-applehelp-1.0.1.tar.gz"
 
     # Sphinx requires sphinxcontrib-applehelp at build-time, but
     # sphinxcontrib-applehelp requires sphinx at run-time

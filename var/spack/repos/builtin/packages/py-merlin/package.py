@@ -10,7 +10,7 @@ class PyMerlin(PythonPackage):
     """Merlin Workflow for HPC."""
 
     homepage = "https://github.com/LLNL/merlin"
-    url      = "https://pypi.io/packages/source/m/merlin/merlin-1.4.1.tar.gz"
+    pypi = "merlin/merlin-1.4.1.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
     version('1.7.5', sha256='1994c1770ec7fc9da216f9d0ca8214684dcc0daa5fd55337b96e308b2e68daaa')

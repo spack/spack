@@ -13,7 +13,7 @@ class PyYolk3k(PythonPackage):
     adds additional features."""
 
     homepage = "https://github.com/myint/yolk"
-    url      = "https://pypi.io/packages/source/y/yolk3k/yolk3k-0.9.tar.gz"
+    pypi = "yolk3k/yolk3k-0.9.tar.gz"
 
     version('0.9', sha256='cf8731dd0a9f7ef50b5dc253fe0174383e3fed295a653672aa918c059eef86ae')
 

@@ -10,7 +10,7 @@ class PyTestrepository(PythonPackage):
     """A repository of test results."""
 
     homepage = "https://launchpad.net/testrepository"
-    url      = "https://pypi.io/packages/source/t/testrepository/testrepository-0.0.20.tar.gz"
+    pypi = "testrepository/testrepository-0.0.20.tar.gz"
 
     version('0.0.20', sha256='752449bc98c20253ec4611c40564aea93d435a5bf3ff672208e01cc10e5858eb')
 

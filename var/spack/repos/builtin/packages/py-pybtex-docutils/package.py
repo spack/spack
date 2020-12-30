@@ -9,8 +9,7 @@ from spack import *
 class PyPybtexDocutils(PythonPackage):
     """A docutils backend for pybtex."""
 
-    homepage = "https://pypi.python.org/pypi/pybtex-docutils/"
-    url      = "https://pypi.io/packages/source/p/pybtex-docutils/pybtex-docutils-0.2.1.tar.gz"
+    pypi = "pybtex-docutils/pybtex-docutils-0.2.1.tar.gz"
 
     version('0.2.2', sha256='ea90935da188a0f4de2fe6b32930e185c33a0e306154322ccc12e519ebb5fa7d')
     version('0.2.1', sha256='e4b075641c1d68a3e98a6d73ad3d029293fcf9e0773512315ef9c8482f251337')

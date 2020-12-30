@@ -10,7 +10,7 @@ class PyPyyaml(PythonPackage):
     """PyYAML is a YAML parser and emitter for Python."""
 
     homepage = "https://pyyaml.org/wiki/PyYAML"
-    url      = "https://pypi.io/packages/source/P/PyYAML/PyYAML-5.3.1.tar.gz"
+    pypi = "PyYAML/PyYAML-5.3.1.tar.gz"
     git      = "https://github.com/yaml/pyyaml.git"
 
     maintainers = ['adamjstewart']

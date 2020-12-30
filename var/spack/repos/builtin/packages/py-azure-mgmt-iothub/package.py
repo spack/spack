@@ -8,7 +8,7 @@ class PyAzureMgmtIothub(PythonPackage):
     """Microsoft Azure IoTHub Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-iothub/azure-mgmt-iothub-0.12.0.zip"
+    pypi = "azure-mgmt-iothub/azure-mgmt-iothub-0.12.0.zip"
 
     version('0.12.0', sha256='da20ee2b9b9a2c2f89be9037c3ee5421152e7f6d718eafbf50a91dbf0a07ffa0')
 

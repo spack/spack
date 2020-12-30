@@ -12,7 +12,7 @@ class PyAse(PythonPackage):
     visualizing and analyzing atomistic simulations."""
 
     homepage = "https://wiki.fysik.dtu.dk/ase/"
-    url      = "https://pypi.io/packages/source/a/ase/ase-3.13.0.tar.gz"
+    pypi = "ase/ase-3.13.0.tar.gz"
 
     version('3.18.0',
             sha256='39d45f12def2669605bffc82926acfb13a0d0610e6d82740fa316aafa70f97f9')

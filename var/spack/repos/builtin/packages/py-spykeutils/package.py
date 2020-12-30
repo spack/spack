@@ -10,7 +10,7 @@ class PySpykeutils(PythonPackage):
     """Utilities for analyzing electrophysiological data"""
 
     homepage = "https://github.com/rproepp/spykeutils"
-    url      = "https://pypi.io/packages/source/s/spykeutils/spykeutils-0.4.3.tar.gz"
+    pypi = "spykeutils/spykeutils-0.4.3.tar.gz"
 
     version('0.4.3', sha256='ff6206d9116d665024109c997377bfed37d953a4cac2859b79a610f395b6b37b')
 

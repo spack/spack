@@ -8,7 +8,7 @@ class PyAzureMgmtMedia(PythonPackage):
     """Microsoft Azure Media Services Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-media/azure-mgmt-media-2.2.0.zip"
+    pypi = "azure-mgmt-media/azure-mgmt-media-2.2.0.zip"
 
     version('2.2.0', sha256='0adeee9e654a9011f5107def06fea6838864a3514a1e5a9ed495f3a56a687cc7')
 

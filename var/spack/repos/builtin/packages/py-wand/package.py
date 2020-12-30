@@ -11,7 +11,7 @@ class PyWand(PythonPackage):
     """
 
     homepage = "http://docs.wand-py.org"
-    url      = "https://pypi.io/packages/source/W/Wand/Wand-0.5.6.tar.gz"
+    pypi = "Wand/Wand-0.5.6.tar.gz"
 
     version('0.5.6', sha256='d06b59f36454024ce952488956319eb542d5dc65f1e1b00fead71df94dbfcf88')
     version('0.4.2', sha256='a0ded99a9824ddd82617a4b449164e2c5c93853aaff96f9e0bab8b405d62ca7c')

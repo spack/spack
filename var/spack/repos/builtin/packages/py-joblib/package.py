@@ -10,7 +10,7 @@ class PyJoblib(PythonPackage):
     """Python function as pipeline jobs"""
 
     homepage = "http://packages.python.org/joblib/"
-    url      = "https://pypi.io/packages/source/j/joblib/joblib-0.14.0.tar.gz"
+    pypi = "joblib/joblib-0.14.0.tar.gz"
 
     import_modules = [
         'joblib', 'joblib.externals', 'joblib.externals.cloudpickle',

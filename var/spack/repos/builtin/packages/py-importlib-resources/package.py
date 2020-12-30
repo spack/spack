@@ -9,8 +9,7 @@ from spack import *
 class PyImportlibResources(PythonPackage):
     """Read resources from Python packages"""
 
-    homepage = "https://pypi.org/project/importlib_resources/"
-    url      = "https://pypi.io/packages/source/i/importlib_resources/importlib_resources-1.0.2.tar.gz"
+    pypi = "importlib_resources/importlib_resources-1.0.2.tar.gz"
 
     version('1.0.2', sha256='d3279fd0f6f847cced9f7acc19bd3e5df54d34f93a2e7bb5f238f81545787078')
 

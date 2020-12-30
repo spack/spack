@@ -10,7 +10,7 @@ class PyGeographiclib(PythonPackage):
     """The geodesic routines from GeographicLib."""
 
     homepage = "https://geographiclib.sourceforge.io/1.50/python"
-    url      = "https://pypi.io/packages/source/g/geographiclib/geographiclib-1.50.tar.gz"
+    pypi = "geographiclib/geographiclib-1.50.tar.gz"
 
     maintainers = ['adamjstewart']
 

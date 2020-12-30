@@ -8,7 +8,7 @@ class PyRosinstall(PythonPackage):
     """The installer for ROS."""
 
     homepage = "https://wiki.ros.org/rosinstall"
-    url      = "https://pypi.io/packages/source/r/rosinstall/rosinstall-0.7.8.tar.gz"
+    pypi = "rosinstall/rosinstall-0.7.8.tar.gz"
 
     version('0.7.8', sha256='2ba808bf8bac2cc3f13af9745184b9714c1426e11d09eb96468611b2ad47ed40')
 

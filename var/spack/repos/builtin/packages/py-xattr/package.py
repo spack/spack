@@ -10,7 +10,7 @@ class PyXattr(PythonPackage):
     """
 
     homepage = "http://pyxattr.k1024.org/"
-    url = "https://pypi.io/packages/source/x/xattr/xattr-0.9.6.tar.gz"
+    pypi = "xattr/xattr-0.9.6.tar.gz"
     git = "https://github.com/iustin/pyxattr.git"
 
     version('master', branch='master')

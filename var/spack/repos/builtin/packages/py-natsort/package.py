@@ -9,7 +9,7 @@ from spack import *
 class PyNatsort(PythonPackage):
     """Simple yet flexible natural sorting in Python."""
 
-    homepage = "https://pypi.org/project/natsort/"
+    homepage = "https://github.com/SethMMorton/natsort"
     url = "https://github.com/SethMMorton/natsort/archive/5.2.0.zip"
 
     version('5.2.0', sha256='0ae15082842e8a3598750b4bbaa4f7c138caf004e59c7040429d56bf9e9631bd')

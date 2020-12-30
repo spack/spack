@@ -10,7 +10,7 @@ class PyArgs(PythonPackage):
     """Command Arguments for Humans."""
 
     homepage = "https://github.com/kennethreitz/args"
-    url      = "https://pypi.io/packages/source/a/args/args-0.1.0.tar.gz"
+    pypi = "args/args-0.1.0.tar.gz"
 
     version('0.1.0', sha256='a785b8d837625e9b61c39108532d95b85274acd679693b71ebb5156848fcf814')
 

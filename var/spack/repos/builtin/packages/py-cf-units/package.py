@@ -12,7 +12,7 @@ class PyCfUnits(PythonPackage):
     """
 
     homepage = "https://scitools.org.uk"
-    url      = "https://pypi.io/packages/source/c/cf-units/cf-units-2.1.1.tar.gz"
+    pypi = "cf-units/cf-units-2.1.1.tar.gz"
     git      = "https://github.com/SciTools/cf-units.git"
 
     version('master', branch='master')

@@ -11,7 +11,7 @@ class PyCounter(PythonPackage):
        bags or multisets in other languages."""
 
     homepage = "https://github.com/KelSolaar/Counter"
-    url      = "https://pypi.io/packages/source/C/Counter/Counter-1.0.0.tar.gz"
+    pypi = "Counter/Counter-1.0.0.tar.gz"
 
     version('1.0.0', sha256='9e008590e360936a66c98e1a01e7a9a0ecf6af19cc588107121f5fb4613bb60c')
 

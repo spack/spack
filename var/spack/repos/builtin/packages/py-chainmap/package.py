@@ -12,7 +12,7 @@ class PyChainmap(PythonPackage):
        ChainMap implementations."""
 
     homepage = "https://bitbucket.org/jeunice/chainmap/src/default/"
-    url      = "https://pypi.io/packages/source/c/chainmap/chainmap-1.0.3.tar.gz"
+    pypi = "chainmap/chainmap-1.0.3.tar.gz"
 
     version('1.0.3', sha256='e42aaa4b3e2f66102a11bfd563069704bfbfd84fdcb517b564effd736bf53cd9')
     version('1.0.2', sha256='405da3bce9913bfb33e6e497803b447b60d12ab44031ca357626143e087e0526')

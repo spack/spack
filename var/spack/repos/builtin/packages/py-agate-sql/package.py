@@ -10,7 +10,7 @@ class PyAgateSql(PythonPackage):
     """agate-sql adds SQL read/write support to agate."""
 
     homepage = "https://agate-sql.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/a/agate-sql/agate-sql-0.5.4.tar.gz"
+    pypi = "agate-sql/agate-sql-0.5.4.tar.gz"
 
     version('0.5.4', sha256='9277490ba8b8e7c747a9ae3671f52fe486784b48d4a14e78ca197fb0e36f281b')
 

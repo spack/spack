@@ -12,7 +12,7 @@ class PyPybtex(PythonPackage):
        Python."""
 
     homepage = "https://pybtex.org"
-    url      = "https://pypi.io/packages/source/P/Pybtex/pybtex-0.21.tar.gz"
+    pypi = "Pybtex/pybtex-0.21.tar.gz"
 
     version('0.21', sha256='af8a6c7c74954ad305553b118d2757f68bc77c5dd5d5de2cc1fd16db90046000')
 

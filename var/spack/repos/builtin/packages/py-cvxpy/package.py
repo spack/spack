@@ -11,7 +11,7 @@ class PyCvxpy(PythonPackage):
     """Convex optimization, for everyone."""
 
     homepage = "https://www.cvxpy.org/index.html"
-    url      = "https://www.pypi.io/packages/source/c/cvxpy/cvxpy-1.0.25.tar.gz"
+    pypi = "cvxpy/cvxpy-1.0.25.tar.gz"
 
     version('1.0.25', sha256='8535529ddb807067b0d59661dce1d9a6ddb2a218398a38ea7772328ad8a6ea13')
 

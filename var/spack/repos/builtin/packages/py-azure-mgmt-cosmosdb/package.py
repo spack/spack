@@ -8,7 +8,7 @@ class PyAzureMgmtCosmosdb(PythonPackage):
     """Microsoft Azure Cosmos DB Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-cosmosdb/azure-mgmt-cosmosdb-0.15.0.zip"
+    pypi = "azure-mgmt-cosmosdb/azure-mgmt-cosmosdb-0.15.0.zip"
 
     version('0.15.0', sha256='e70fe9b3d9554c501d46e69f18b73de18d77fbcb98a7a87b965b3dd027cada0f')
 

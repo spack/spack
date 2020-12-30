@@ -11,7 +11,7 @@ class PyWeblogo(PythonPackage):
     sequence logos as easy and painless as possible."""
 
     homepage = "http://weblogo.threeplusone.com"
-    url      = "https://pypi.io/packages/source/w/weblogo/weblogo-3.6.0.tar.gz"
+    pypi = "weblogo/weblogo-3.6.0.tar.gz"
 
     version('3.6.0', sha256='af5a9f065581f18d71bd7c22b160c1e443932f22cab992d439d3dc8757c80a85')
 

@@ -11,7 +11,7 @@ class Py4suiteXml(PythonPackage):
     XLink, XUpdate"""
 
     homepage = "http://4suite.org/"
-    url      = "https://pypi.io/packages/source/4/4Suite-XML/4Suite-XML-1.0.2.tar.gz"
+    pypi = "4Suite-XML/4Suite-XML-1.0.2.tar.gz"
 
     version('1.0.2', sha256='f0c24132eb2567e64b33568abff29a780a2f0236154074d0b8f5262ce89d8c03')
 

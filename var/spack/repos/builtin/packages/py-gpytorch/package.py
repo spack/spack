@@ -10,7 +10,7 @@ class PyGpytorch(PythonPackage):
     process models with ease."""
 
     homepage = "https://gpytorch.ai/"
-    url      = "https://pypi.io/packages/source/g/gpytorch/gpytorch-1.2.1.tar.gz"
+    pypi = "gpytorch/gpytorch-1.2.1.tar.gz"
 
     maintainers = ['adamjstewart']
 

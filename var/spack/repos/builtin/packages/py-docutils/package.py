@@ -15,7 +15,7 @@ class PyDocutils(PythonPackage):
     markup language."""
 
     homepage = "http://docutils.sourceforge.net/"
-    url      = "https://pypi.io/packages/source/d/docutils/docutils-0.15.2.tar.gz"
+    pypi = "docutils/docutils-0.15.2.tar.gz"
 
     version('0.15.2', sha256='a2aeea129088da402665e92e0b25b04b073c04b2dce4ab65caaa38b7ce2e1a99')
     version('0.14',   sha256='51e64ef2ebfb29cae1faa133b3710143496eca21c530f3f71424d77687764274')

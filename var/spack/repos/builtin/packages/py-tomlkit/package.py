@@ -10,7 +10,7 @@ class PyTomlkit(PythonPackage):
     """Style preserving TOML library"""
 
     homepage = "https://github.com/sdispater/tomlkit"
-    url      = "https://pypi.io/packages/source/t/tomlkit/tomlkit-0.7.0.tar.gz"
+    pypi = "tomlkit/tomlkit-0.7.0.tar.gz"
 
     version('0.7.0', sha256='ac57f29693fab3e309ea789252fcce3061e19110085aa31af5446ca749325618')
 

@@ -11,7 +11,7 @@ class PyGoogleApiPythonClient(PythonPackage):
     Plus, Moderator, and many other Google APIs."""
 
     homepage = "http://github.com/google/google-api-python-client/"
-    url      = "https://pypi.io/packages/source/g/google-api-python-client/google-api-python-client-1.7.10.tar.gz"
+    pypi = "google-api-python-client/google-api-python-client-1.7.10.tar.gz"
 
     version('1.7.10', sha256='2e55a5c7b56233c68945b6804c73e253445933f4d485d4e69e321b38772b9dd6')
 

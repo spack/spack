@@ -8,7 +8,7 @@ class PyTorchtext(PythonPackage):
     """Text utilities and datasets for PyTorch."""
 
     homepage = "https://github.com/pytorch/text"
-    url      = "https://pypi.io/packages/source/t/torchtext/torchtext-0.5.0.tar.gz"
+    pypi = "torchtext/torchtext-0.5.0.tar.gz"
 
     maintainers = ['adamjstewart']
 

@@ -11,7 +11,7 @@ class PySemver(PythonPackage):
     Simplifies comparing versions."""
 
     homepage = "https://semver.org/"
-    url      = "https://pypi.io/packages/source/s/semver/semver-2.8.1.tar.gz"
+    pypi = "semver/semver-2.8.1.tar.gz"
 
     version('2.8.1', sha256='5b09010a66d9a3837211bb7ae5a20d10ba88f8cb49e92cb139a69ef90d5060d8')
 

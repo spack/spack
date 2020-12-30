@@ -8,7 +8,7 @@ class PyAzureMgmtBatchai(PythonPackage):
     """Microsoft Azure Batch AI Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-batchai/azure-mgmt-batchai-2.0.0.zip"
+    pypi = "azure-mgmt-batchai/azure-mgmt-batchai-2.0.0.zip"
 
     version('2.0.0', sha256='f1870b0f97d5001cdb66208e5a236c9717a0ed18b34dbfdb238a828f3ca2a683')
 

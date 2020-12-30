@@ -10,7 +10,7 @@ class PyWebkitServer(PythonPackage):
     """a Webkit-based, headless web client"""
 
     homepage = "https://github.com/niklasb/webkit-server"
-    url      = "https://pypi.io/packages/source/w/webkit-server/webkit-server-1.0.tar.gz"
+    pypi = "webkit-server/webkit-server-1.0.tar.gz"
     git      = "https://github.com/niklasb/webkit-server.git"
 
     version('develop', branch='master')

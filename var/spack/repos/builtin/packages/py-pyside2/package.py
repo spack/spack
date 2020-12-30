@@ -8,8 +8,8 @@ from spack import *
 
 class PyPyside2(PythonPackage):
     """Python bindings for Qt."""
-    homepage = "https://pypi.org/project/PySide2/"
-    url      = "https://code.qt.io/pyside/pyside-setup.git"
+
+    homepage = "https://www.pyside.org/"
     git      = "https://code.qt.io/pyside/pyside-setup.git"
 
     # More recent versions of PySide2 (for Qt5) have been taken under

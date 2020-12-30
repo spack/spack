@@ -13,7 +13,7 @@ class PyTensorboardPluginWit(Package):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
-    homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
+    homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
     url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 

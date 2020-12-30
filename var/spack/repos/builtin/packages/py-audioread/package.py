@@ -11,7 +11,7 @@ class PyAudioread(PythonPackage):
     Python."""
 
     homepage = "https://github.com/beetbox/audioread"
-    url      = "https://pypi.io/packages/source/a/audioread/audioread-2.1.8.tar.gz"
+    pypi = "audioread/audioread-2.1.8.tar.gz"
 
     version('2.1.8', sha256='073904fabc842881e07bd3e4a5776623535562f70b1655b635d22886168dd168')
 

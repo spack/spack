@@ -8,7 +8,7 @@ class PyAzureMgmtCore(PythonPackage):
     """Microsoft Azure Management Core Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/core/azure-mgmt-core"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-core/azure-mgmt-core-1.2.0.zip"
+    pypi = "azure-mgmt-core/azure-mgmt-core-1.2.0.zip"
 
     version('1.2.0', sha256='8fe3b59446438f27e34f7b24ea692a982034d9e734617ca1320eedeee1939998')
     version('1.0.0', sha256='510faf49a10daec8346cc086143d8e667ef3b4f8c8022a8e710091027631a55e')

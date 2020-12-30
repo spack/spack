@@ -11,7 +11,7 @@ class PyLxml(PythonPackage):
     XML and HTML in the Python language."""
 
     homepage = "https://lxml.de/"
-    url      = "https://pypi.io/packages/source/l/lxml/lxml-4.6.1.tar.gz"
+    pypi = "lxml/lxml-4.6.1.tar.gz"
 
     version('4.6.1', sha256='c152b2e93b639d1f36ec5a8ca24cde4a8eefb2b6b83668fcd8e83a67badcb367')
     version('4.5.2', sha256='cdc13a1682b2a6241080745b1953719e7fe0850b40a5c71ca574f090a1391df6')

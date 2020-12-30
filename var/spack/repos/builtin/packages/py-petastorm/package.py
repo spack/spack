@@ -9,7 +9,7 @@ class PyPetastorm(PythonPackage):
     Tensorflow, Pytorch, and other Python-based ML training frameworks."""
 
     homepage = "https://github.com/uber/petastorm"
-    url      = "https://pypi.io/packages/source/p/petastorm/petastorm-0.8.2.tar.gz"
+    pypi = "petastorm/petastorm-0.8.2.tar.gz"
 
     maintainers = ['adamjstewart']
 

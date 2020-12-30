@@ -7,8 +7,7 @@
 class PyScikitLearn(PythonPackage):
     """A set of python modules for machine learning and data mining."""
 
-    homepage = "https://pypi.python.org/pypi/scikit-learn"
-    url      = "https://pypi.io/packages/source/s/scikit-learn/scikit-learn-0.24.0.tar.gz"
+    pypi = "scikit-learn/scikit-learn-0.24.0.tar.gz"
     git      = "https://github.com/scikit-learn/scikit-learn.git"
 
     maintainers = ['adamjstewart']

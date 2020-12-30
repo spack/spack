@@ -12,8 +12,7 @@ class PyPythonMemcached(PythonPackage):
     or more, possibly remote, memcached servers. Search google for memcached
     for more information."""
 
-    homepage = "https://pypi.org/project/python-memcached/"
-    url      = "https://pypi.io/packages/source/p/python-memcached/python-memcached-1.59.tar.gz"
+    pypi = "python-memcached/python-memcached-1.59.tar.gz"
 
     version('1.59', sha256='a2e28637be13ee0bf1a8b6843e7490f9456fd3f2a4cb60471733c7b5d5557e4f')
 

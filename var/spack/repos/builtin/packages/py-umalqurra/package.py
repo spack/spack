@@ -9,7 +9,7 @@ class PyUmalqurra(PythonPackage):
     """Date Api that support Hijri Umalqurra calendar."""
 
     homepage = "https://github.com/tytkal/python-hijiri-ummalqura"
-    url      = "https://pypi.io/packages/source/u/umalqurra/umalqurra-0.2.tar.gz"
+    pypi = "umalqurra/umalqurra-0.2.tar.gz"
 
     version('0.2', sha256='719f6a36f908ada1c29dae0d934dd0f1e1f6e3305784edbec23ad719397de678')
 

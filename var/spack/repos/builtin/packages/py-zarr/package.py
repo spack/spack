@@ -11,7 +11,7 @@ class PyZarr(PythonPackage):
     compressed, N-dimensional arrays."""
 
     homepage = "https://zarr.readthedocs.io"
-    url      = "https://pypi.io/packages/source/z/zarr/zarr-2.3.2.tar.gz"
+    pypi = "zarr/zarr-2.3.2.tar.gz"
 
     version('2.3.2', sha256='c62d0158fb287151c978904935a177b3d2d318dea3057cfbeac8541915dfa105')
 

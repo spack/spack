@@ -14,7 +14,7 @@ class PyCupy(PythonPackage):
     full use of the GPU architecture."""
 
     homepage = "https://cupy.dev/"
-    url = "https://pypi.io/packages/source/c/cupy/cupy-8.0.0.tar.gz"
+    pypi = "cupy/cupy-8.0.0.tar.gz"
 
     version('8.0.0', sha256='d1dcba5070dfa754445d010cdc952ff6b646d5f9bdcd7a63e8246e2472c3ddb8')
 

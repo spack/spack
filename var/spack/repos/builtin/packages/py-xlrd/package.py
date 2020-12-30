@@ -11,6 +11,6 @@ class PyXlrd(PythonPackage):
     spreadsheet files"""
 
     homepage = 'http://www.python-excel.org/'
-    url      = "https://pypi.io/packages/source/x/xlrd/xlrd-0.9.4.tar.gz"
+    pypi = "xlrd/xlrd-0.9.4.tar.gz"
 
     version('0.9.4', sha256='8e8d3359f39541a6ff937f4030db54864836a06e42988c452db5b6b86d29ea72')

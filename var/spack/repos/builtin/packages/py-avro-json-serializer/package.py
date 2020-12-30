@@ -10,7 +10,7 @@ class PyAvroJsonSerializer(PythonPackage):
     """Serializes data into a JSON format using AVRO schema."""
 
     homepage = "https://github.com/linkedin/python-avro-json-serializer"
-    url      = "https://pypi.io/packages/source/a/avro_json_serializer/avro_json_serializer-0.4.tar.gz"
+    pypi = "avro_json_serializer/avro_json_serializer-0.4.tar.gz"
 
     version('0.4',  sha256='f9dac2dac92036c5dd5aba8c716545fc0a0630cc365a51ab15bc2ac47eac28f1')
 

@@ -12,7 +12,7 @@ class PyShapely(PythonPackage):
     """
 
     homepage = "https://github.com/Toblerity/Shapely"
-    url      = "https://pypi.io/packages/source/S/Shapely/Shapely-1.7.1.tar.gz"
+    pypi = "Shapely/Shapely-1.7.1.tar.gz"
     git      = "https://github.com/Toblerity/Shapely.git"
 
     maintainers = ['adamjstewart']

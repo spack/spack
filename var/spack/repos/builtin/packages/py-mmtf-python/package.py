@@ -11,7 +11,7 @@ class PyMmtfPython(PythonPackage):
     biological structures."""
 
     homepage = "https://github.com/rcsb/mmtf-python"
-    url      = "https://pypi.io/packages/source/m/mmtf-python/mmtf-python-1.1.2.tar.gz"
+    pypi = "mmtf-python/mmtf-python-1.1.2.tar.gz"
 
     version('1.1.2', sha256='a5caa7fcd2c1eaa16638b5b1da2d3276cbd3ed3513f0c2322957912003b6a8df')
 

@@ -10,7 +10,7 @@ class PyTesttools(PythonPackage):
     """Extensions to the Python standard library unit testing framework."""
 
     homepage = "https://github.com/testing-cabal/testtools"
-    url      = "https://pypi.io/packages/source/t/testtools/testtools-2.3.0.tar.gz"
+    pypi = "testtools/testtools-2.3.0.tar.gz"
 
     version('2.3.0', sha256='5827ec6cf8233e0f29f51025addd713ca010061204fdea77484a2934690a0559')
 

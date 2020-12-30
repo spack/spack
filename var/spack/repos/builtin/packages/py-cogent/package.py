@@ -10,7 +10,7 @@ class PyCogent(PythonPackage):
     """A toolkit for statistical analysis of biological sequences."""
 
     homepage = "http://pycogent.org"
-    url      = "https://pypi.io/packages/source/c/cogent/cogent-1.9.tar.gz"
+    pypi = "cogent/cogent-1.9.tar.gz"
 
     version('1.9', sha256='57d8c58e0273ffe4f2b907874f9b49dadfd0600f5507b7666369f4e44d56ce14')
     version('1.5.3', url="https://pypi.io/packages/source/c/cogent/cogent-1.5.3.tgz",

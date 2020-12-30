@@ -12,7 +12,7 @@ class PyTatsu(PythonPackage):
     parsers in Python."""
 
     homepage = "https://github.com/neogeny/tatsu"
-    url      = "https://pypi.io/packages/source/T/TatSu/TatSu-4.4.0.zip"
+    pypi = "TatSu/TatSu-4.4.0.zip"
 
     version('4.4.0', sha256='80713413473a009f2081148d0f494884cabaf9d6866b71f2a68a92b6442f343d')
 

@@ -10,7 +10,7 @@ class PyPythonSubunit(PythonPackage):
     """Python implementation of subunit test streaming protocol."""
 
     homepage = "https://launchpad.net/subunit"
-    url      = "https://pypi.io/packages/source/p/python-subunit/python-subunit-1.3.0.tar.gz"
+    pypi = "python-subunit/python-subunit-1.3.0.tar.gz"
 
     version('1.3.0', sha256='9607edbee4c1e5a30ff88549ce8d9feb0b9bcbcb5e55033a9d76e86075465cbb')
 

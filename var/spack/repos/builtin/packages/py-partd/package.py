@@ -10,7 +10,7 @@ class PyPartd(PythonPackage):
     """Key-value byte store with appendable values."""
 
     homepage = "http://github.com/dask/partd/"
-    url      = "https://pypi.io/packages/source/p/partd/partd-0.3.8.tar.gz"
+    pypi = "partd/partd-0.3.8.tar.gz"
 
     version('1.1.0', sha256='6e258bf0810701407ad1410d63d1a15cfd7b773fd9efe555dac6bb82cc8832b0')
     version('0.3.10', sha256='33722a228ebcd1fa6f44b1631bdd4cff056376f89eb826d7d880b35b637bcfba')

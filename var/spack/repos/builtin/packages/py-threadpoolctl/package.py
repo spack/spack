@@ -10,7 +10,7 @@ class PyThreadpoolctl(PythonPackage):
     computing and data science (e.g. BLAS and OpenMP)."""
 
     homepage = "https://github.com/joblib/threadpoolctl"
-    url      = "https://pypi.io/packages/source/t/threadpoolctl/threadpoolctl-2.0.0.tar.gz"
+    pypi = "threadpoolctl/threadpoolctl-2.0.0.tar.gz"
 
     version('2.0.0', sha256='48b3e3e9ee079d6b5295c65cbe255b36a3026afc6dde3fb49c085cd0c004bbcf')
 

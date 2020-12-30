@@ -11,7 +11,7 @@ class PyHpcbench(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/hpcbench"
 
-    url      = "https://pypi.io/packages/source/h/hpcbench/hpcbench-0.8.tar.gz"
+    pypi = "hpcbench/hpcbench-0.8.tar.gz"
     git      = "https://github.com/BlueBrain/hpcbench.git"
 
     version('master', branch='master')

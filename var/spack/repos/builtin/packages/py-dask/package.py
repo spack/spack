@@ -10,7 +10,7 @@ class PyDask(PythonPackage):
     """Dask is a flexible parallel computing library for analytics."""
 
     homepage = "https://github.com/dask/dask/"
-    url      = "https://pypi.io/packages/source/d/dask/dask-1.1.0.tar.gz"
+    pypi = "dask/dask-1.1.0.tar.gz"
 
     maintainers = ['skosukhin']
 

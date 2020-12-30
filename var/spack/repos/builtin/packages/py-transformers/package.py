@@ -9,7 +9,7 @@ class PyTransformers(PythonPackage):
     PyTorch"""
 
     homepage = "https://github.com/huggingface/transformers"
-    url      = "https://pypi.io/packages/source/t/transformers/transformers-2.8.0.tar.gz"
+    pypi = "transformers/transformers-2.8.0.tar.gz"
 
     maintainers = ['adamjstewart']
 

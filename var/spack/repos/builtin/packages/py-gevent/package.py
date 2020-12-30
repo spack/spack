@@ -10,7 +10,7 @@ class PyGevent(PythonPackage):
     """gevent is a coroutine-based Python networking library."""
 
     homepage = "http://www.gevent.org"
-    url      = "https://pypi.io/packages/source/g/gevent/gevent-1.3a2.tar.gz"
+    pypi = "gevent/gevent-1.3a2.tar.gz"
 
     version('1.3a2', sha256='f7ab82697111ea233c7beeadf5240f669dfad9c4bbc89a3ec80a49e2c48a65bd')
 

@@ -12,7 +12,7 @@ class PyAvroPython3(PythonPackage):
     functions will be made available for both python2 and python3."""
 
     homepage = "https://github.com/apache/avro/tree/master/lang/py3"
-    url      = "https://pypi.io/packages/source/a/avro-python3/avro-python3-1.10.0.tar.gz"
+    pypi = "avro-python3/avro-python3-1.10.0.tar.gz"
 
     version('1.10.0', sha256='a455c215540b1fceb1823e2a918e94959b54cb363307c97869aa46b5b55bde05')
 

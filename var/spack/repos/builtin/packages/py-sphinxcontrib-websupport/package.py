@@ -11,7 +11,7 @@ class PySphinxcontribWebsupport(PythonPackage):
     Sphinx documentation into your Web application."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-websupport/sphinxcontrib-websupport-1.1.2.tar.gz"
+    pypi = "sphinxcontrib-websupport/sphinxcontrib-websupport-1.1.2.tar.gz"
 
     version('1.1.2', sha256='1501befb0fdf1d1c29a800fdbf4ef5dc5369377300ddbdd16d2cd40e54c6eefc')
     version('1.1.0', sha256='9de47f375baf1ea07cdb3436ff39d7a9c76042c10a769c52353ec46e4e8fc3b9')

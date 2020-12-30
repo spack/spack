@@ -12,7 +12,7 @@ class PySpatialist(PythonPackage):
     processing using GDAL and OGR."""
 
     homepage = "https://github.com/johntruckenbrodt/spatialist"
-    url      = "https://pypi.io/packages/source/s/spatialist/spatialist-0.4.tar.gz"
+    pypi = "spatialist/spatialist-0.4.tar.gz"
 
     maintainers = ['adamjstewart']
 

@@ -10,7 +10,7 @@ class PyMapclassify(PythonPackage):
     """Classification Schemes for Choropleth Maps."""
 
     homepage = "https://github.com/pysal/mapclassify"
-    url      = "https://pypi.io/packages/source/m/mapclassify/mapclassify-2.4.2.tar.gz"
+    pypi = "mapclassify/mapclassify-2.4.2.tar.gz"
 
     maintainers = ['adamjstewart']
 

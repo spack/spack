@@ -11,7 +11,7 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.7.1.tar.gz"
+    pypi = "libensemble/libensemble-0.7.1.tar.gz"
     git      = "https://github.com/Libensemble/libensemble.git"
 
     version('develop', branch='develop')

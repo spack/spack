@@ -7,8 +7,7 @@
 class PyIpykernel(PythonPackage):
     """IPython Kernel for Jupyter"""
 
-    homepage = "https://pypi.python.org/pypi/ipykernel"
-    url      = "https://pypi.io/packages/source/i/ipykernel/ipykernel-5.3.4.tar.gz"
+    pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
     version('5.3.4',  sha256='9b2652af1607986a1b231c62302d070bc0534f564c393a5d9d130db9abbbe89d')
     version('5.1.1',  sha256='f0e962052718068ad3b1d8bcc703794660858f58803c3798628817f492a8769c')

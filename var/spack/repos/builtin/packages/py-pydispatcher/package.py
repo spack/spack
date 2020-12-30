@@ -10,7 +10,7 @@ class PyPydispatcher(PythonPackage):
     """Multi-producer-multi-consumer signal dispatching mechanism."""
 
     homepage = "http://pydispatcher.sourceforge.net/"
-    url      = "https://pypi.io/packages/source/P/PyDispatcher/PyDispatcher-2.0.5.tar.gz"
+    pypi = "PyDispatcher/PyDispatcher-2.0.5.tar.gz"
 
     version('2.0.5', sha256='5570069e1b1769af1fe481de6dd1d3a388492acddd2cdad7a3bde145615d5caf')
 

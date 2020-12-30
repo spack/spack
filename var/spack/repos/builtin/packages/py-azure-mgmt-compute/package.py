@@ -8,7 +8,7 @@ class PyAzureMgmtCompute(PythonPackage):
     """Microsoft Azure Compute Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-compute/azure-mgmt-compute-13.0.0.zip"
+    pypi = "azure-mgmt-compute/azure-mgmt-compute-13.0.0.zip"
 
     version('13.0.0', sha256='7f331bafcbedf25d65aa42038f7553747dab18d7f10a5af3297192d31c45339e')
 

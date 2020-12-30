@@ -11,6 +11,6 @@ class PyEmpy(PythonPackage):
     """A powerful and robust templating system for Python"""
 
     homepage = "http://www.alcyone.com/software/empy"
-    url      = "https://pypi.io/packages/source/e/empy/empy-3.3.4.tar.gz"
+    pypi = "empy/empy-3.3.4.tar.gz"
 
     version('3.3.4', sha256='73ac49785b601479df4ea18a7c79bc1304a8a7c34c02b9472cf1206ae88f01b3')

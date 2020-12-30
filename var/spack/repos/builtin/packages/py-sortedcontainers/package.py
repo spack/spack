@@ -11,7 +11,7 @@ class PySortedcontainers(PythonPackage):
     written in pure-Python, and fast as C-extensions."""
 
     homepage = "http://www.grantjenks.com/docs/sortedcontainers/"
-    url      = "https://pypi.io/packages/source/s/sortedcontainers/sortedcontainers-2.1.0.tar.gz"
+    pypi = "sortedcontainers/sortedcontainers-2.1.0.tar.gz"
 
     version('2.1.0', sha256='974e9a32f56b17c1bac2aebd9dcf197f3eb9cd30553c5852a3187ad162e1a03a')
 

@@ -8,7 +8,7 @@ class PyRosdep(PythonPackage):
     """rosdep package manager abstraction tool for ROS."""
 
     homepage = "https://wiki.ros.org/rosdep"
-    url      = "https://pypi.io/packages/source/r/rosdep/rosdep-0.20.0.tar.gz"
+    pypi = "rosdep/rosdep-0.20.0.tar.gz"
 
     version('0.20.0', sha256='1de76e41ef17c7289a11d9de594f6c08e8422f26ad09bc855b4f1f4da5e9bfe7')
 

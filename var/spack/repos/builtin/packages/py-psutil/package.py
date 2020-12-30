@@ -11,8 +11,7 @@ class PyPsutil(PythonPackage):
     running processes and system utilization (CPU, memory, disks, network)
     in Python."""
 
-    homepage = "https://pypi.python.org/pypi/psutil"
-    url      = "https://pypi.io/packages/source/p/psutil/psutil-5.6.3.tar.gz"
+    pypi = "psutil/psutil-5.6.3.tar.gz"
 
     version('5.7.2', sha256='90990af1c3c67195c44c9a889184f84f5b2320dce3ee3acbd054e3ba0b4a7beb')
     version('5.6.3', sha256='863a85c1c0a5103a12c05a35e59d336e1d665747e531256e061213e2e90f63f3')

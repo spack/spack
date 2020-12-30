@@ -9,8 +9,7 @@ from spack import *
 class PyCython(PythonPackage):
     """The Cython compiler for writing C extensions for the Python language."""
 
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.29.21.tar.gz"
+    pypi = "cython/Cython-0.29.21.tar.gz"
 
     version('0.29.21', sha256='e57acb89bd55943c8d8bf813763d20b9099cc7165c0f16b707631a7654be9cad')
     version('0.29.16', sha256='232755284f942cbb3b43a06cd85974ef3c970a021aef19b5243c03ee2b08fa05')

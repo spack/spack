@@ -8,7 +8,7 @@ class PyRosdistro(PythonPackage):
     """A tool to work with rosdistro files."""
 
     homepage = "https://wiki.ros.org/rosdistro"
-    url      = "https://pypi.io/packages/source/r/rosdistro/rosdistro-0.8.3.tar.gz"
+    pypi = "rosdistro/rosdistro-0.8.3.tar.gz"
 
     version('0.8.3', sha256='e14893e0408a2e1fb3ecaef0a9fc978a3675519b828c1fff29ba6a78299b37bd')
 

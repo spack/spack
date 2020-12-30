@@ -8,7 +8,7 @@ class PyVcstools(PythonPackage):
     """VCS/SCM source control library for svn, git, hg, and bzr."""
 
     homepage = "https://wiki.ros.org/vcstools"
-    url      = "https://pypi.io/packages/source/v/vcstools/vcstools-0.1.42.tar.gz"
+    pypi = "vcstools/vcstools-0.1.42.tar.gz"
 
     version('0.1.42', sha256='9e48d8ed8b0fdda739af56e05bf10da1a509cb7d4950a19c73264c770802777a')
 

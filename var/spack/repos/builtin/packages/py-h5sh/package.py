@@ -9,7 +9,7 @@ from spack import *
 class PyH5sh(PythonPackage):
     """Shell-like environment for HDF5."""
 
-    homepage = "https://pypi.python.org/pypi/h5sh"
+    homepage = "https://github.com/sethrj/h5sh"
     url      = "https://github.com/sethrj/h5sh/archive/v0.1.1.tar.gz"
 
     maintainers = ['sethrj']

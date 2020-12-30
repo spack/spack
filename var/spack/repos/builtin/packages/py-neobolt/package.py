@@ -10,7 +10,7 @@ class PyNeobolt(PythonPackage):
     """Neo4j Bolt connector for Python"""
 
     homepage = "https://github.com/neo4j-drivers/neobolt"
-    url      = "https://pypi.io/packages/source/n/neobolt/neobolt-1.7.16.tar.gz"
+    pypi = "neobolt/neobolt-1.7.16.tar.gz"
 
     version('1.7.16', sha256='ca4e87679fe3ed39aec23638658e02dbdc6bbc3289a04e826f332e05ab32275d')
 

@@ -106,7 +106,7 @@ class PyPillow(PyPillowBase):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
+    pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')
