@@ -78,6 +78,7 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Metis')
     variant('muparser', default=True,
             description='Compile with muParser')
+    # FIXME @9.3: disable by default
     variant('nanoflann', default=True,
             description='Compile with Nanoflann')
     variant('netcdf',   default=False,
@@ -96,6 +97,14 @@ class Dealii(CMakePackage, CudaPackage):
             description='Compile with Slepc (only with Petsc and MPI)')
     variant('symengine', default=True,
             description='Compile with SymEngine')
+    # FIXME @9.3: enable by default
+    variant('simplex', default=False,
+            description='Compile with Simplex support')
+    # FIXME @9.3: enable by default
+    variant('taskflow',  default=False,
+            description='Compile with multi-threading via Taskflow')
+    # FIXME @9.3: disable by default 
+    # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant('threads',  default=True,
             description='Compile with multi-threading via TBB')
     variant('trilinos', default=True,
@@ -180,10 +189,12 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc',            when='+slepc+petsc+mpi')
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
-    depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    depends_on('sundials@:3~pthread', when='@9.0:9.2+sundials')
+    depends_on('sundials@5:',      when='@9.3:+sundials') 
+    depends_on('taskflow',         when='@9.3:+taskflow') 
+    depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # FIXME: next line fixes concretization with trilinos and adol-c
     depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
-    depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
     # headers when they are not compiled in the same mode.
@@ -248,6 +259,13 @@ class Dealii(CMakePackage, CudaPackage):
     for p in ['ginkgo', 'symengine']:
         conflicts('+{0}'.format(p), when='@:9.0',
                   msg='The interface to {0} is supported from version 9.1.0 '
+                      'onwards. Please explicitly disable this variant '
+                      'via ~{0}'.format(p))
+
+    # interfaces added in 9.3.0:
+    for p in ['simplex', 'taskflow']:
+        conflicts('+{0}'.format(p), when='@:9.2',
+                  msg='The interface to {0} is supported from version 9.3.0 '
                       'onwards. Please explicitly disable this variant '
                       'via ~{0}'.format(p))
 
@@ -346,6 +364,11 @@ class Dealii(CMakePackage, CudaPackage):
         # Examples / tutorial programs
         options.append(self.define_from_variant(
             'DEAL_II_COMPONENT_EXAMPLES', 'examples'
+        ))
+
+        # Simplex support
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
         ))
 
         # Enforce the specified C++ standard
@@ -460,7 +483,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo'):
+                'symengine', 'ginkgo', 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))
