@@ -51,6 +51,10 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('cuda_arch', default='native', multi=False,
+            values=('native', 'fermi', 'kepler', 'maxwell',
+                    'pascal', 'volta', 'turing', 'all', 'none'),
+            description='CUDA architecture')
 
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -334,6 +338,9 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             cmake_args.append('-DVTKm_ENABLE_CUDA:BOOL=%s' %
                               variant_bool('+cuda'))
+        if spec.satisfies('+cuda') and not spec.satisfies('cuda_arch=native'):
+            cmake_args.append('-DVTKm_CUDA_Architecture=%s' %
+                              spec.variants['cuda_arch'].value)
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([
