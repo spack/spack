@@ -558,6 +558,8 @@ def determine_number_of_jobs(
 
     if command_line is None and "command_line" in spack.config.scopes():
         command_line = spack.config.get("config:build_jobs", scope="command_line")
+        if command_line == 0:
+            command_line = min(16, cpus_available())
 
     if command_line is not None:
         return command_line
@@ -566,6 +568,8 @@ def determine_number_of_jobs(
 
     # in some rare cases _builtin config may not be set, so default to max 16
     config_default = config_default or spack.config.get("config:build_jobs", 16)
+    if config_default == 0:
+        config_default = min(16, cpus_available())
 
     return min(max_cpus, config_default)
 

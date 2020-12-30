@@ -61,7 +61,6 @@ import spack.schema.upstreams
 import spack.util.spack_yaml as syaml
 import spack.util.web as web_util
 from spack.error import SpackError
-from spack.util.cpus import cpus_available
 
 #: Dict from section names -> schema for that section
 section_schemas = {
@@ -96,7 +95,7 @@ config_defaults = {
         "verify_ssl": True,
         "checksum": True,
         "dirty": False,
-        "build_jobs": min(16, cpus_available()),
+        "build_jobs": 0,
         "build_stage": "$tempdir/spack-stage",
         "concretizer": "clingo",
         "license_dir": spack.paths.default_license_dir,

@@ -79,7 +79,7 @@ properties = {
             "locks": {"type": "boolean"},
             "dirty": {"type": "boolean"},
             "build_language": {"type": "string"},
-            "build_jobs": {"type": "integer", "minimum": 1},
+            "build_jobs": {"type": "integer", "minimum": 0},
             "ccache": {"type": "boolean"},
             "concretizer": {"type": "string", "enum": ["original", "clingo"]},
             "db_lock_timeout": {"type": "integer", "minimum": 1},
