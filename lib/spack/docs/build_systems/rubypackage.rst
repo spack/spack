@@ -113,7 +113,6 @@ the base class contains:
 .. code-block:: python
 
    extends('ruby')
-   depends_on('ruby', type=('build', 'run'))
 
 
 The ``*.gemspec`` file may contain something like:

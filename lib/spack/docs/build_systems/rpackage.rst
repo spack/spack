@@ -138,7 +138,6 @@ every R package needs this, the ``RPackage`` base class contains:
 .. code-block:: python
 
    extends('r')
-   depends_on('r', type=('build', 'run'))
 
 
 Take a close look at the homepage for ``caret``. If you look at the

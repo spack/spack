@@ -5,7 +5,7 @@
 
 import inspect
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 
 
@@ -27,7 +27,6 @@ class OctavePackage(PackageBase):
     build_system_class = 'OctavePackage'
 
     extends('octave')
-    depends_on('octave', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         # octave does not like those environment variables to be set:

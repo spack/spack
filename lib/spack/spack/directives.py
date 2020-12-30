@@ -393,7 +393,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 
 @directive(('extendees', 'dependencies'))
-def extends(spec, **kwargs):
+def extends(spec, type=('build', 'run'), **kwargs):
     """Same as depends_on, but allows symlinking into dependency's
     prefix tree.
 
@@ -414,7 +414,7 @@ def extends(spec, **kwargs):
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when)
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 

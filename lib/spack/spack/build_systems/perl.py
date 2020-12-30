@@ -7,7 +7,7 @@
 import inspect
 import os
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 from spack.util.executable import Executable
 from llnl.util.filesystem import filter_file
@@ -44,8 +44,6 @@ class PerlPackage(PackageBase):
     build_time_test_callbacks = ['check']
 
     extends('perl')
-
-    depends_on('perl', type=('build', 'run'))
 
     def configure_args(self):
         """Produces a list containing the arguments that must be passed to

@@ -120,8 +120,6 @@ so ``PerlPackage`` contains:
 
    extends('perl')
 
-   depends_on('perl', type=('build', 'run'))
-
 
 If your package requires a specific version of Perl, you should
 specify this.
