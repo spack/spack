@@ -11,6 +11,7 @@
 /share/spack/modules
 /share/spack/lmod
 # Debug logs
+spack-db.*
 *.in.log
 *.out.log
 
