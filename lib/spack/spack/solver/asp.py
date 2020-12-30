@@ -117,11 +117,11 @@ class AspFunction(AspObject):
     def symbol(self, positive=True):
         def argify(arg):
             if isinstance(arg, bool):
-                return str(arg)
+                return clingo.String(str(arg))
             elif isinstance(arg, int):
-                return arg
+                return clingo.Number(arg)
             else:
-                return str(arg)
+                return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
 
@@ -307,7 +307,7 @@ class PyclingoDriver(object):
     def _register_rule_for_cores(self, rule_str):
         # rule atoms need to be choices before we can assume them
         if self.cores:
-            rule_sym = clingo.Function("rule", [rule_str])
+            rule_sym = clingo.Function("rule", [clingo.String(rule_str)])
             rule_atom = self.backend.add_atom(rule_sym)
             self.backend.add_rule([rule_atom], [], choice=True)
             self.assumptions.append(rule_atom)
