@@ -510,6 +510,25 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
     return needs_list
 
 
+def add_pr_mirror(url):
+    cfg_scope = cfg.default_modify_scope()
+    mirrors = cfg.get('mirrors', scope=cfg_scope)
+    if not mirrors:
+        mirrors = syaml.syaml_dict()
+    items = [(n, u) for n, u in mirrors.items()]
+    items.insert(0, ('ci_pr_mirror', url))
+    cfg.set('mirrors', syaml.syaml_dict(items), scope=cfg_scope)
+
+
+def remove_pr_mirror():
+    cfg_scope = cfg.default_modify_scope()
+    mirrors = cfg.get('mirrors', scope=cfg_scope)
+    if not mirrors:
+        mirrors = syaml.syaml_dict()
+    mirrors.pop('ci_pr_mirror')
+    cfg.set('mirrors', mirrors, scope=cfg_scope)
+
+
 def generate_gitlab_ci_yaml(env, print_summary, output_file,
                             run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
@@ -588,12 +607,22 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
         'strip-compilers': False,
     })
 
+    # Add this mirror if it's enabled, as some specs might be up to date
+    # here and thus not need to be rebuilt.
+    if pr_mirror_url:
+        add_pr_mirror(pr_mirror_url)
+
     staged_phases = {}
-    for phase in phases:
-        phase_name = phase['name']
-        with spack.concretize.disable_compiler_existence_check():
-            staged_phases[phase_name] = stage_spec_jobs(
-                env.spec_lists[phase_name])
+    try:
+        for phase in phases:
+            phase_name = phase['name']
+            with spack.concretize.disable_compiler_existence_check():
+                staged_phases[phase_name] = stage_spec_jobs(
+                    env.spec_lists[phase_name])
+    finally:
+        # Clean up PR mirror if enabled
+        if pr_mirror_url:
+            remove_pr_mirror()
 
     if print_summary:
         for phase in phases:

@@ -533,7 +533,7 @@ spack:
 
 def test_ci_generate_for_pr_pipeline(tmpdir, mutable_mock_env_path,
                                      env_deactivate, install_mockery,
-                                     mock_packages):
+                                     mock_packages, monkeypatch):
     """Test that PR pipelines do not include a final stage job for
     rebuilding the mirror index, even if that job is specifically
     configured"""
@@ -569,6 +569,9 @@ spack:
 
         with ev.read('test'):
             os.environ['SPACK_IS_PR_PIPELINE'] = 'True'
+            os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
+            monkeypatch.setattr(
+                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -582,7 +585,7 @@ spack:
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
                                        env_deactivate, install_mockery,
-                                       mock_packages):
+                                       mock_packages, monkeypatch):
     """Make sure we do not generate jobs for external pkgs"""
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
@@ -609,6 +612,8 @@ spack:
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
 
         with ev.read('test'):
+            monkeypatch.setattr(
+                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
@@ -851,6 +856,8 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 spack.main, 'get_version', lambda: '0.15.3-416-12ad69eb1')
+            monkeypatch.setattr(
+                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
             ci_cmd('generate', '--output-file', outputfile)
 
         with open(outputfile) as f:
