@@ -21,6 +21,7 @@ class Libtheora(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('doxygen',  type='build')
     depends_on('libogg')
+    depends_on('libpng')
 
     patch('exit-prior-to-running-configure.patch', when='@1.1.1')
     patch('dont_use_png_sizeof.patch', when='@1.1.1')
