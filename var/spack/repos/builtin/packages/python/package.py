@@ -7,7 +7,6 @@ import ast
 import os
 import platform
 import re
-import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
@@ -167,14 +166,8 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('uuid', when='+uuid')
     depends_on('tix', when='+tix')
-    if sys.platform != 'darwin':
-        # On macOS systems, Spack's libuuid conflicts with the system-installed
-        # version and breaks anything linked against Cocoa/Carbon. Since the
-        # system-provided version is sufficient to build Python's UUID support,
-        # the easy solution is to only depend on Spack's libuuid when *not* on
-        # a Mac.
-        depends_on('uuid', when='+uuid')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
