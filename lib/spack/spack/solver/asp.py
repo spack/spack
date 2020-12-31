@@ -40,10 +40,6 @@ import spack.variant
 from spack.version import ver
 
 
-#: max line length for ASP programs in characters
-_max_line = 80
-
-
 class Timer(object):
     """Simple timer for timing phases of a solve"""
     def __init__(self):
@@ -137,26 +133,6 @@ class AspFunction(AspObject):
         return str(self)
 
 
-class AspAnd(AspObject):
-    def __init__(self, *args):
-        args = listify(args)
-        self.args = args
-
-    def __str__(self):
-        s = ", ".join(str(arg) for arg in self.args)
-        return s
-
-
-class AspOneOf(AspObject):
-    def __init__(self, *args):
-        args = listify(args)
-        self.args = args
-
-    def __str__(self):
-        body = "; ".join(str(arg) for arg in self.args)
-        return "1 { %s } 1" % body
-
-
 class AspFunctionBuilder(object):
     def __getattr__(self, name):
         return AspFunction(name)
@@ -232,9 +208,7 @@ def _normalize(body):
     """Accept an AspAnd object or a single Symbol and return a list of
     symbols.
     """
-    if isinstance(body, AspAnd):
-        args = [getattr(f, 'symbol', lambda: f)() for f in body.args]
-    elif isinstance(body, clingo.Symbol):
+    if isinstance(body, clingo.Symbol):
         args = [body]
     elif hasattr(body, 'symbol'):
         args = [body.symbol()]
@@ -298,24 +272,6 @@ class PyclingoDriver(object):
     def newline(self):
         self.out.write('\n')
 
-    def one_of(self, *args):
-        return AspOneOf(*args)
-
-    def _and(self, *args):
-        return AspAnd(*args)
-
-    def _register_rule_for_cores(self, rule_str):
-        # rule atoms need to be choices before we can assume them
-        if self.cores:
-            rule_sym = clingo.Function("rule", [rule_str])
-            rule_atom = self.backend.add_atom(rule_sym)
-            self.backend.add_rule([rule_atom], [], choice=True)
-            self.assumptions.append(rule_atom)
-            rule_atoms = [rule_atom]
-        else:
-            rule_atoms = []
-        return rule_atoms
-
     def fact(self, head):
         """ASP fact (a rule without a body)."""
         symbols = _normalize(head)
@@ -331,30 +287,6 @@ class PyclingoDriver(object):
         if self.cores:
             for s in symbols:
                 self.assumptions.append(atoms[s])
-
-    def rule(self, head, body):
-        """ASP rule (an implication)."""
-        head_symbols = _normalize(head)
-        body_symbols = _normalize(body)
-
-        symbols = head_symbols + body_symbols
-        atoms = {}
-        for s in symbols:
-            atoms[s] = self.backend.add_atom(s)
-
-        # Special assumption atom to allow rules to be in unsat cores
-        head_str = ",".join(str(a) for a in head_symbols)
-        body_str = ",".join(str(a) for a in body_symbols)
-        rule_str = "%s :- %s." % (head_str, body_str)
-
-        rule_atoms = self._register_rule_for_cores(rule_str)
-
-        # print rule before adding
-        self.out.write("%s\n" % rule_str)
-        self.backend.add_rule(
-            [atoms[s] for s in head_symbols],
-            [atoms[s] for s in body_symbols] + rule_atoms
-        )
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
@@ -460,7 +392,6 @@ class SpackSolverSetup(object):
         self.post_facts = []
 
         # id for dummy variables
-        self.card = 0
         self._condition_id_counter = itertools.count()
 
         # Caches to optimize the setup phase of the solver
