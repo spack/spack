@@ -18,6 +18,7 @@ class PyScipy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.6.0',  sha256='cb6dc9f82dfd95f6b9032a8d7ea70efeeb15d5b5fd6ed4e8537bb3c673580566')
     version('1.5.4',  sha256='4a453d5e5689de62e5d38edf40af3f17560bfd63c9c5bd228c18c1f99afa155b')
     version('1.5.3',  sha256='ddae76784574cc4c172f3d5edd7308be16078dd3b977e8746860c76c195fa707')
     version('1.5.2',  sha256='066c513d90eb3fd7567a9e150828d39111ebd88d3e924cdfc9f8ce19ab6f90c9')
@@ -44,6 +45,7 @@ class PyScipy(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@0.18:', type=('build', 'link', 'run'))
     depends_on('python@3.5:', when='@1.3:', type=('build', 'link', 'run'))
     depends_on('python@3.6:', when='@1.5:', type=('build', 'link', 'run'))
+    depends_on('python@3.7:', when='@1.6:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pybind11@2.2.4:', when='@1.4.0:', type=('build', 'link'))
     depends_on('py-pybind11@2.4.0:', when='@1.4.1:', type=('build', 'link'))
@@ -54,6 +56,7 @@ class PyScipy(PythonPackage):
     depends_on('py-numpy@1.8.2:+blas+lapack', when='@0.19:', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.13.3:+blas+lapack', when='@1.3:', type=('build', 'link', 'run'))
     depends_on('py-numpy@1.14.5:+blas+lapack', when='@1.5:', type=('build', 'link', 'run'))
+    depends_on('py-numpy@1.16.5:+blas+lapack', when='@1.6:', type=('build', 'link', 'run'))
     depends_on('py-pytest', type='test')
 
     # NOTE: scipy picks up Blas/Lapack from numpy, see
