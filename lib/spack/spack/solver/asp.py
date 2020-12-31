@@ -456,8 +456,6 @@ class SpackSolverSetup(object):
         self.variant_values_from_specs = set()
         self.version_constraints = set()
         self.target_constraints = set()
-        self.providers_by_vspec_name = collections.defaultdict(list)
-        self.virtual_constraints = set()
         self.compiler_version_constraints = set()
         self.post_facts = []
 
@@ -686,6 +684,9 @@ class SpackSolverSetup(object):
         # default compilers for this package
         self.package_compiler_defaults(pkg)
 
+        # virtuals
+        self.package_provider_rules(pkg)
+
         # dependencies
         self.package_dependencies_rules(pkg, tests)
 
@@ -697,18 +698,74 @@ class SpackSolverSetup(object):
             )
         )
 
+    def _condition_facts(
+            self, pkg_name, cond_spec, dep_spec,
+            cond_fn, require_fn, impose_fn
+    ):
+        """Generate facts for a dependency or virtual provider condition.
+
+        Arguments:
+            pkg_name (str): name of the package that triggers the
+                condition (e.g., the dependent or the provider)
+            cond_spec (Spec): the dependency spec representing the
+                condition that needs to be True (can be anonymous)
+            dep_spec (Spec): the sepc of the dependency or provider
+                to be depended on/provided if the condition holds.
+            cond_fn (AspFunction): function to use to declare the condition;
+                will be called with the cond id, pkg_name, an dep_spec.name
+            require_fn (AspFunction): function to use to declare the conditions
+                required of the dependent/provider to trigger
+            impose_fn (AspFunction): function to use for constraints imposed
+                on the dependency/virtual
+
+        Returns:
+            (int): id of the condition created by this function
+        """
+        condition_id = next(self._condition_id_counter)
+        named_cond = cond_spec.copy()
+        named_cond.name = named_cond.name or pkg_name
+
+        self.gen.fact(cond_fn(condition_id, pkg_name, dep_spec.name))
+
+        # conditions that trigger the condition
+        conditions = self.spec_clauses(named_cond, body=True)
+        for pred in conditions:
+            self.gen.fact(require_fn(condition_id, pred.name, *pred.args))
+
+        imposed_constraints = self.spec_clauses(dep_spec)
+        for pred in imposed_constraints:
+            # imposed "node"-like conditions are no-ops
+            if pred.name in ("node", "virtual_node"):
+                continue
+            self.gen.fact(impose_fn(condition_id, pred.name, *pred.args))
+
+        return condition_id
+
+    def package_provider_rules(self, pkg):
+        for provider_name in sorted(set(s.name for s in pkg.provided.keys())):
+            self.gen.fact(fn.possible_provider(pkg.name, provider_name))
+
+        for provided, whens in pkg.provided.items():
+            for when in whens:
+                self._condition_facts(
+                    pkg.name, when, provided,
+                    fn.provider_condition,
+                    fn.required_provider_condition,
+                    fn.imposed_dependency_condition
+                )
+
+            self.gen.newline()
+
     def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
-                condition_id = next(self._condition_id_counter)
-                named_cond = cond.copy()
-                named_cond.name = named_cond.name or pkg.name
-
-                # each independent condition has an id
-                self.gen.fact(fn.dependency_condition(
-                    condition_id, dep.pkg.name, dep.spec.name
-                ))
+                condition_id = self._condition_facts(
+                    pkg.name, cond, dep.spec,
+                    fn.dependency_condition,
+                    fn.required_dependency_condition,
+                    fn.imposed_dependency_condition
+                )
 
                 for t in sorted(dep.type):
                     # Skip test dependencies if they're not requested at all
@@ -722,35 +779,6 @@ class SpackSolverSetup(object):
 
                     # there is a declared dependency of type t
                     self.gen.fact(fn.dependency_type(condition_id, t))
-
-                # if it has conditions, declare them.
-                conditions = self.spec_clauses(named_cond, body=True)
-                for cond in conditions:
-                    self.gen.fact(fn.required_dependency_condition(
-                        condition_id, cond.name, *cond.args
-                    ))
-
-                # add constraints on the dependency from dep spec.
-
-                # TODO: nest this in the type loop so that dependency
-                # TODO: constraints apply only for their deptypes and
-                # TODO: specific conditions.
-                if spack.repo.path.is_virtual(dep.spec.name):
-                    self.virtual_constraints.add(str(dep.spec))
-                    conditions = ([fn.real_node(pkg.name)] +
-                                  self.spec_clauses(named_cond, body=True))
-                    self.gen.rule(
-                        head=fn.single_provider_for(
-                            str(dep.spec.name), str(dep.spec.versions)
-                        ),
-                        body=self.gen._and(*conditions)
-                    )
-                else:
-                    clauses = self.spec_clauses(dep.spec)
-                    for clause in clauses:
-                        self.gen.fact(fn.imposed_dependency_condition(
-                            condition_id, clause.name, *clause.args
-                        ))
 
                 self.gen.newline()
 
@@ -1167,24 +1195,7 @@ class SpackSolverSetup(object):
         # what provides what
         for vspec in sorted(self.possible_virtuals):
             self.gen.fact(fn.virtual(vspec))
-            all_providers = sorted(spack.repo.path.providers_for(vspec))
-            for idx, provider in enumerate(all_providers):
-                provides_atom = fn.provides_virtual(provider.name, vspec)
-                possible_provider_fn = fn.possible_provider(
-                    vspec, provider.name, idx
-                )
-                item = (idx, provider, possible_provider_fn)
-                self.providers_by_vspec_name[vspec].append(item)
-                clauses = self.spec_clauses(provider, body=True)
-                clauses_but_node = [c for c in clauses if c.name != 'node']
-                if clauses_but_node:
-                    self.gen.rule(provides_atom, AspAnd(*clauses_but_node))
-                else:
-                    self.gen.fact(provides_atom)
-                for clause in clauses:
-                    self.gen.rule(clause, possible_provider_fn)
-                self.gen.newline()
-            self.gen.newline()
+        self.gen.newline()
 
     def generate_possible_compilers(self, specs):
         compilers = all_compilers_in_config()
@@ -1233,26 +1244,20 @@ class SpackSolverSetup(object):
             self.gen.newline()
 
     def define_virtual_constraints(self):
-        for vspec_str in sorted(self.virtual_constraints):
-            vspec = spack.spec.Spec(vspec_str)
+        # aggregate constraints into per-virtual sets
+        constraint_map = collections.defaultdict(lambda: set())
+        for pkg_name, versions in self.version_constraints:
+            if not spack.repo.path.is_virtual(pkg_name):
+                continue
+            constraint_map[pkg_name].add(versions)
 
-            self.gen.h2("Virtual spec: {0}".format(vspec_str))
-            providers = spack.repo.path.providers_for(vspec_str)
-            candidates = self.providers_by_vspec_name[vspec.name]
-            possible_providers = [
-                func for idx, spec, func in candidates if spec in providers
-            ]
-
-            self.gen.newline()
-            single_provider_for = fn.single_provider_for(
-                vspec.name, vspec.versions
-            )
-            one_of_the_possibles = self.gen.one_of(*possible_providers)
-            single_provider_rule = "{0} :- {1}.\n{1} :- {0}.\n".format(
-                single_provider_for, str(one_of_the_possibles)
-            )
-            self.gen.out.write(single_provider_rule)
-            self.gen.control.add("base", [], single_provider_rule)
+        for pkg_name, versions in sorted(constraint_map.items()):
+            for v1 in sorted(versions):
+                for v2 in sorted(versions):
+                    if v1.satisfies(v2):
+                        self.gen.fact(
+                            fn.version_constraint_satisfies(pkg_name, v1, v2)
+                        )
 
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
