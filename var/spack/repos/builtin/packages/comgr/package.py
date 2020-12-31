@@ -12,10 +12,11 @@ class Comgr(CMakePackage):
        contains one library, the Code Object Manager (Comgr)"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-3.10.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='f389601fb70b2d9a60d0e2798919af9ddf7b8376a2e460141507fe50073dfb31')
     version('3.10.0', sha256='b44ee5805a6236213d758fa4b612bb859d8f774b9b4bdc3a2699bb009dd631bc')
     version('3.9.0', sha256='6600e144d72dadb6d893a3388b42af103b9443755ce556f4e9e205ccd8ec0c83')
     version('3.8.0', sha256='62a35480dfabaa98883d91ed0f7c490daa9bbd424af37e07e5d85a6e8030b146')
@@ -35,7 +36,7 @@ class Comgr(CMakePackage):
     depends_on('z3', type='link')
     depends_on('ncurses', type='link')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
