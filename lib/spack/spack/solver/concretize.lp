@@ -1,5 +1,5 @@
 %=============================================================================
-% Generate
+% This logic program implements Spack's concretizer
 %=============================================================================
 
 %-----------------------------------------------------------------------------
@@ -24,7 +24,8 @@ version_weight(Package, Weight)
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
-  :- version_satisfies(Package, Constraint).
+  :- version_satisfies(Package, Constraint),
+  not virtual(Package).   % TODO: fix this and handle versionless virtuals separately
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
@@ -44,15 +45,25 @@ depends_on(Package, Dependency, Type)
     not virtual(Dependency),
     not external(Package).
 
-% if you declare a dependency on a virtual AND the package is not an external,
-% you depend on one of its providers
-1 {
-  depends_on(Package, Provider, Type)
-  : provides_virtual(Provider, Virtual)
-} 1
- :- dependency_conditions(Package, Virtual, Type),
-    virtual(Virtual),
-    not external(Package).
+% every root must be a node
+node(Package) :- root(Package).
+
+% dependencies imply new nodes
+node(Dependency) :- node(Package), depends_on(Package, Dependency).
+
+% all nodes in the graph must be reachable from some root
+% this ensures a user can't say `zlib ^libiconv` (neither of which have any
+% dependencies) and get a two-node unconnected graph
+needed(Package) :- root(Package).
+needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
+:- node(Package), not needed(Package).
+
+% Avoid cycles in the DAG
+% some combinations of conditional dependencies can result in cycles;
+% this ensures that we solve around them
+path(Parent, Child) :- depends_on(Parent, Child).
+path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
+:- path(A, B), path(B, A).
 
 %-----------------------------------------------------------------------------
 % Conditional dependencies
@@ -67,8 +78,8 @@ dependency_conditions(Package, Dependency, Type) :-
 #defined dependency_type/2.
 
 % collect all the dependency conditions into a single conditional rule
-% distinguishing between Parent and Package is needed to account for
-% conditions like:
+% distinguishing between Parent and Package (Arg1) is needed to account
+% for conditions like:
 %
 % depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
 %
@@ -86,23 +97,20 @@ dependency_conditions_hold(ID, Parent, Dependency) :-
 #defined required_dependency_condition/5.
 
 %-----------------------------------------------------------------------------
-% Imposed dependencies
+% Imposed constraints on dependencies
 %
-% This handles the `@1.0+bar` in `depends_on("foo@1.0+bar", when="SPEC")`.
+% This handles the `@1.0+bar` in `depends_on("foo@1.0+bar", when="SPEC")`, or
+% the `mpi@2:` in `provides("mpi@2:", when="@1.9:")`.
 %-----------------------------------------------------------------------------
-% this rule instantiates every non-root node in the DAG
-node(Dependency) :-
-  dependency_conditions_hold(ID, Package, Dependency),
-  depends_on(Package, Dependency).
+% NOTE: `attr(Name, Arg1)` is omitted here b/c the only single-arg attribute is
+% NOTE: `node()`, which is handled above under "Dependency Semantics"
 
 attr(Name, Arg1, Arg2) :-
   dependency_conditions_hold(ID, Package, Dependency),
-  depends_on(Package, Dependency),
   imposed_dependency_condition(ID, Name, Arg1, Arg2).
 
 attr(Name, Arg1, Arg2, Arg3) :-
   dependency_conditions_hold(ID, Package, Dependency),
-  depends_on(Package, Dependency),
   imposed_dependency_condition(ID, Name, Arg1, Arg2, Arg3).
 
 #defined imposed_dependency_condition/4.
@@ -125,18 +133,60 @@ attr(Name, Arg1, Arg2, Arg3) :-
 %-----------------------------------------------------------------------------
 % Virtual dependencies
 %-----------------------------------------------------------------------------
+% if you declare a dependency on a virtual AND the package is not an external,
+% you depend on one of its providers
+1 {
+  depends_on(Package, Provider, Type) : possible_provider(Provider, Virtual)
+} 1
+  :- dependency_conditions(Package, Virtual, Type),
+     virtual(Virtual),
+     not external(Package).
+
 % if a virtual was required by some package, one provider is in the DAG
-1 { node(Package) : provides_virtual(Package, Virtual) } 1
+1 { node(Package) : provider(Package, Virtual) } 1
  :- virtual_node(Virtual).
+
+% virtual roots imply virtual nodes, and that one provider is a root
+virtual_node(Virtual) :- virtual_root(Virtual).
+1 { root(Package) : possible_provider(Package, Virtual) } 1
+  :- virtual_root(Virtual).
+
+% all virtual providers come from provider conditions like this
+dependency_conditions_hold(ID, Provider, Virtual) :-
+  attr(Name, Arg1)             : required_provider_condition(ID, Name, Arg1);
+  attr(Name, Arg1, Arg2)       : required_provider_condition(ID, Name, Arg1, Arg2);
+  attr(Name, Arg1, Arg2, Arg3) : required_provider_condition(ID, Name, Arg1, Arg2, Arg3);
+  virtual(Virtual);
+  provider_condition(ID, Provider, Virtual).
+
+% virtuals do not have well defined possible versions, so just ensure
+% that all constraints on versions are consistent
+:- virtual_node(Virtual),
+   version_satisfies(Virtual, V1), version_satisfies(Virtual, V2),
+   not version_constraint_satisfies(Virtual, V1, V2).
+
+% The provider provides the virtual if some provider condition holds.
+provides_virtual(Provider, Virtual) :-
+   provider_condition(ID, Provider, Virtual),
+   dependency_conditions_hold(ID, Provider, Virtual),
+   virtual(Virtual).
 
 % a node that provides a virtual is a provider
 provider(Package, Virtual)
   :- node(Package), provides_virtual(Package, Virtual).
 
+% dependencies on virtuals also imply that the virtual is a virtual node
+virtual_node(Virtual)
+  :- dependency_conditions(Package, Virtual, Type),
+     virtual(Virtual), not external(Package).
+
 % for any virtual, there can be at most one provider in the DAG
 0 { provider(Package, Virtual) :
     node(Package), provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
 
+%-----------------------------------------------------------------------------
+% Virtual dependency weights
+%-----------------------------------------------------------------------------
 % give dependents the virtuals they want
 provider_weight(Dependency, 0)
  :- virtual(Virtual), depends_on(Package, Dependency),
@@ -177,23 +227,11 @@ provider_weight(Package, 100)
     provider(Package, Virtual),
     not default_provider_preference(Virtual, Package, _).
 
-% all nodes must be reachable from some root
-node(Package) :- root(Package).
-
-1 { root(Package) : provides_virtual(Package, Virtual) } 1
-  :- virtual_root(Virtual).
-
-needed(Package) :- root(Package).
-needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
-:- node(Package), not needed(Package).
-
-% real dependencies imply new nodes.
-node(Dependency) :- node(Package), depends_on(Package, Dependency).
-
-% Avoid cycles in the DAG
-path(Parent, Child) :- depends_on(Parent, Child).
-path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-:- path(A, B), path(B, A).
+#defined provider_condition/3.
+#defined required_provider_condition/3.
+#defined required_provider_condition/4.
+#defined required_provider_condition/5.
+#defined version_constraint_satisfies/3.
 
 %-----------------------------------------------------------------------------
 % Spec Attributes
@@ -295,6 +333,11 @@ external_spec_conditions_hold(ID, Package) :-
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
 :- external(Package), not external_spec_conditions_hold(_, Package).
+
+#defined external_spec_index/3.
+#defined external_spec_condition/3.
+#defined external_spec_condition/4.
+#defined external_spec_condition/5.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
