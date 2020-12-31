@@ -370,11 +370,6 @@ class Dealii(CMakePackage, CudaPackage):
             'DEAL_II_COMPONENT_EXAMPLES', 'examples'
         ))
 
-        # Simplex support
-        options.append(self.define_from_variant(
-            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
-        ))
-
         # Enforce the specified C++ standard
         if spec.variants['cxxstd'].value != 'default':
             cxxstd = spec.variants['cxxstd'].value
@@ -459,6 +454,11 @@ class Dealii(CMakePackage, CudaPackage):
                     self.define('PYTHON_INCLUDE_DIR', python_include),
                     self.define('PYTHON_LIBRARY', python_library)
                 ])
+
+        # Simplex support
+        options.append(self.define_from_variant(
+            'DEAL_II_WITH_SIMPLEX_SUPPORT', 'simplex'
+        ))
 
         # Threading
         options.append(self.define_from_variant(
