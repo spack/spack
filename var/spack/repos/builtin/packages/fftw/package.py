@@ -207,6 +207,7 @@ class Fftw(FftwBase):
     url = "http://www.fftw.org/fftw-3.3.4.tar.gz"
     list_url = "http://www.fftw.org/download.html"
 
+    version('3.3.9', sha256='bf2c7ce40b04ae811af714deb512510cc2c17b9ab9d6ddcf49fe4487eea7af3d')
     version('3.3.8', sha256='6113262f6e92c5bd474f2875fa1b01054c4ad5040f6b0da7c03c98821d9ae303')
     version('3.3.7', sha256='3b609b7feba5230e8f6dd8d245ddbefac324c5a6ae4186947670d9ac2cd25573')
     version('3.3.6-pl2', sha256='a5de35c5c824a78a058ca54278c706cdf3d4abba1c56b63531c2cb05f5d57da2')
