@@ -67,14 +67,10 @@ class Clingo(CMakePackage):
                 '-DCLINGO_REQUIRE_PYTHON=ON',
                 '-DCLINGO_BUILD_PY_SHARED=ON',
                 '-DPYCLINGO_USER_INSTALL=OFF',
-                '-DPYCLINGO_USE_INSTALL_PREFIX=ON'
+                '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
+                '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+                    spec['python'].command.path),
             ]
-
-            if spec['cmake'].version <= Version('3.15.0'):
-                args += [
-                    '-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
-                        spec['python'].command.path),
-                ]
 
             if self.version == Version('master'):
                 args += [
