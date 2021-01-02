@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Doxygen(CMakePackage):
@@ -32,6 +33,29 @@ class Doxygen(CMakePackage):
 
     variant('mscgen', default=False,
             description='Build with support for code graphs from mscgen.')
+
+    executables = ['doxygen']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-v', output=str, error=str)
+        match = re.search(r"^([\d\.]+)$", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = ''
+        if which('dot'):
+            variants += "+graphviz"
+        else:
+            variants += "~graphviz"
+
+        if which('mscgen'):
+            variants += "+mscgen"
+        else:
+            variants += "~mscgen"
+
+        return variants
 
     depends_on("cmake@2.8.12:", type='build')
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
