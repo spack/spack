@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,12 +37,14 @@ licensed_files = [
     # all of spack core
     r'^lib/spack/spack/.*\.py$',
     r'^lib/spack/spack/.*\.sh$',
+    r'^lib/spack/spack/.*\.lp$',
     r'^lib/spack/llnl/.*\.py$',
     r'^lib/spack/env/cc$',
 
     # rst files in documentation
     r'^lib/spack/docs/(?!command_index|spack|llnl).*\.rst$',
     r'^lib/spack/docs/.*\.py$',
+    r'^lib/spack/docs/spack.yaml$',
 
     # 2 files in external
     r'^lib/spack/external/__init__.py$',
@@ -52,7 +54,13 @@ licensed_files = [
     r'^share/spack/.*\.sh$',
     r'^share/spack/.*\.bash$',
     r'^share/spack/.*\.csh$',
+    r'^share/spack/.*\.fish$',
     r'^share/spack/qa/run-[^/]*$',
+    r'^share/spack/bash/spack-completion.in$',
+    r'^share/spack/templates/misc/coconcretization.pyt$',
+
+    # action workflows
+    r'^.github/actions/.*\.py$',
 
     # all packages
     r'^var/spack/repos/.*/package.py$'
