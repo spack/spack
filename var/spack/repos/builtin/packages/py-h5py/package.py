@@ -52,16 +52,17 @@ class PyH5py(PythonPackage):
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
-    @property
-    def phases(self):
-        return ['install'] if self.spec.satisfies('@3:') \
-            else ['configure', 'install']
+    phases = ['configure', 'install']
 
     def setup_build_environment(self, env):
-        if '+mpi' in spec:
+        if '+mpi' in self.spec:
             env.set('CC', self.spec['mpi'].mpicc)
             env.set('HDF5_MPI', 'ON')
             env.set('HDF5_DIR', self.spec['hdf5'].prefix)
+
+    @when('@3.0.0:')
+    def configure(self, spec, prefix):
+        pass
 
     @when('@:2.99')
     def configure(self, spec, prefix):
