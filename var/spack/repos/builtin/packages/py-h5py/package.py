@@ -29,7 +29,7 @@ class PyH5py(PythonPackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     # Python versions
-    depends_on('python@3.6:', when='@3.0.0:', type=('build','run'))
+    depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:')
 
     # Build dependencies
     depends_on('py-cython@0.23:', type='build', when='@:2.99')
