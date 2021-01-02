@@ -12,7 +12,6 @@ class PyH5py(PythonPackage):
 
     homepage = "http://www.h5py.org/"
     pypi     = "h5py/h5py-3.1.0.tar.gz"
-    url      = "https://pypi.io/packages/source/h/h5py/h5py-3.1.0.tar.gz"
     git      = "https://github.com/h5py/h5py.git"
 
     version('master', branch='master')
@@ -30,7 +29,7 @@ class PyH5py(PythonPackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     # Python versions
-    depends_on('python@3.6:', when='@3.0.0:')
+    depends_on('python@3.6:', when='@3.0.0:', type=('build','run'))
 
     # Build dependencies
     depends_on('py-cython@0.23:', type='build', when='@:2.99')
