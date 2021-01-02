@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -647,10 +647,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     _patches_by_hash = None
 
     #: Package homepage where users can find more information about the package
-    homepage = None
+    homepage = None  # type: str
 
     #: Default list URL (place to find available versions)
-    list_url = None
+    list_url = None  # type: str
 
     #: Link depth to which list_url should be searched for new versions
     list_depth = 0
