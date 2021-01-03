@@ -20,4 +20,4 @@ class PyHollandBackup(PythonPackage):
     version('1.2.2', sha256='836337c243b2dff5ff6a3ce0b647f123ab24697a5de8ac8ae8b7839aa23dff68')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-configobj', type=('build', 'run'))
+    depends_on('py-configobj@4.6.0:', type=('build', 'run'))
