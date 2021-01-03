@@ -483,28 +483,12 @@ class SpackSolverSetup(object):
 
     def conflict_rules(self, pkg):
         for trigger, constraints in pkg.conflicts.items():
+            trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
+            self.gen.fact(fn.conflict_trigger(trigger_id))
+
             for constraint, _ in constraints:
-                constraint_body = spack.spec.Spec(pkg.name)
-                constraint_body.constrain(constraint)
-                constraint_body.constrain(trigger)
-
-                clauses = []
-                for s in constraint_body.traverse():
-                    clauses += self.spec_clauses(s, body=True)
-
-                # TODO: find a better way to generate clauses for integrity
-                # TODO: constraints, instead of generating them for the body
-                # TODO: of a rule and filter unwanted functions.
-                to_be_filtered = ['node_compiler_hard']
-                clauses = [x for x in clauses if x.name not in to_be_filtered]
-
-                # Emit facts based on clauses
-                condition_id = next(self._condition_id_counter)
-                self.gen.fact(fn.conflict(condition_id, pkg.name))
-                for clause in clauses:
-                    self.gen.fact(fn.conflict_condition(
-                        condition_id, clause.name, *clause.args
-                    ))
+                constraint_id = self.condition(constraint, name=pkg.name)
+                self.gen.fact(fn.conflict(pkg.name, trigger_id, constraint_id))
                 self.gen.newline()
 
     def available_compilers(self):
@@ -642,50 +626,44 @@ class SpackSolverSetup(object):
             )
         )
 
-    def _condition_facts(
-            self, pkg_name, cond_spec, dep_spec,
-            cond_fn, require_fn, impose_fn
-    ):
+    def condition(self, required_spec, imposed_spec=None, name=None):
         """Generate facts for a dependency or virtual provider condition.
 
         Arguments:
-            pkg_name (str): name of the package that triggers the
-                condition (e.g., the dependent or the provider)
-            cond_spec (Spec): the dependency spec representing the
-                condition that needs to be True (can be anonymous)
-            dep_spec (Spec): the sepc of the dependency or provider
-                to be depended on/provided if the condition holds.
-            cond_fn (AspFunction): function to use to declare the condition;
-                will be called with the cond id, pkg_name, an dep_spec.name
-            require_fn (AspFunction): function to use to declare the conditions
-                required of the dependent/provider to trigger
-            impose_fn (AspFunction): function to use for constraints imposed
-                on the dependency/virtual
+            required_spec (Spec): the spec that triggers this condition
+            imposed_spec (optional, Spec): the sepc with constraints that
+                are imposed when this condition is triggered
+            name (optional, str): name for `required_spec` (required if
+                required_spec is anonymous, ignored if not)
 
         Returns:
             (int): id of the condition created by this function
         """
+        named_cond = required_spec.copy()
+        named_cond.name = named_cond.name or name
+        assert named_cond.name, "must provide name for anonymous condtions!"
+
         condition_id = next(self._condition_id_counter)
-        named_cond = cond_spec.copy()
-        named_cond.name = named_cond.name or pkg_name
+        self.gen.fact(fn.condition(condition_id))
 
-        self.gen.fact(cond_fn(condition_id, pkg_name, dep_spec.name))
+        # requirements trigger the condition
+        requirements = self.checked_spec_clauses(
+            named_cond, body=True, required_from=name)
+        for pred in requirements:
+            self.gen.fact(
+                fn.condition_requirement(condition_id, pred.name, *pred.args)
+            )
 
-        # conditions that trigger the condition
-        conditions = self.checked_spec_clauses(
-            named_cond, body=True, required_from=pkg_name
-        )
-        for pred in conditions:
-            self.gen.fact(require_fn(condition_id, pred.name, *pred.args))
-
-        imposed_constraints = self.checked_spec_clauses(
-            dep_spec, required_from=pkg_name
-        )
-        for pred in imposed_constraints:
-            # imposed "node"-like conditions are no-ops
-            if pred.name in ("node", "virtual_node"):
-                continue
-            self.gen.fact(impose_fn(condition_id, pred.name, *pred.args))
+        if imposed_spec:
+            imposed_constraints = self.checked_spec_clauses(
+                imposed_spec, body=False, required_from=name)
+            for pred in imposed_constraints:
+                # imposed "node"-like conditions are no-ops
+                if pred.name in ("node", "virtual_node"):
+                    continue
+                self.gen.fact(
+                    fn.imposed_constraint(condition_id, pred.name, *pred.args)
+                )
 
         return condition_id
 
@@ -695,25 +673,20 @@ class SpackSolverSetup(object):
 
         for provided, whens in pkg.provided.items():
             for when in whens:
-                self._condition_facts(
-                    pkg.name, when, provided,
-                    fn.provider_condition,
-                    fn.required_provider_condition,
-                    fn.imposed_dependency_condition
-                )
-
+                condition_id = self.condition(when, provided, pkg.name)
+                self.gen.fact(fn.provider_condition(
+                    condition_id, when.name, provided.name
+                ))
             self.gen.newline()
 
     def package_dependencies_rules(self, pkg, tests):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
-                condition_id = self._condition_facts(
-                    pkg.name, cond, dep.spec,
-                    fn.dependency_condition,
-                    fn.required_dependency_condition,
-                    fn.imposed_dependency_condition
-                )
+                condition_id = self.condition(cond, dep.spec, pkg.name)
+                self.gen.fact(fn.dependency_condition(
+                    condition_id, pkg.name, dep.spec.name
+                ))
 
                 for t in sorted(dep.type):
                     # Skip test dependencies if they're not requested at all
@@ -794,24 +767,13 @@ class SpackSolverSetup(object):
                     pkg_name, str(version), weight, id
                 ))
 
+            # Declare external conditions with a local index into packages.yaml
             for local_idx, spec in enumerate(external_specs):
-                condition_id = next(self._condition_id_counter)
-
-                # Declare the global ID associated with this external spec
-                self.gen.fact(fn.external_spec(condition_id, pkg_name))
-
-                # Local index into packages.yaml
+                condition_id = self.condition(spec)
                 self.gen.fact(
-                    fn.external_spec_index(condition_id, pkg_name, local_idx))
-
-                # Add conditions to be satisfied for this external
+                    fn.possible_external(condition_id, pkg_name, local_idx)
+                )
                 self.possible_versions[spec.name].add(spec.version)
-                clauses = self.spec_clauses(spec, body=True)
-                for clause in clauses:
-                    self.gen.fact(
-                        fn.external_spec_condition(
-                            condition_id, clause.name, *clause.args)
-                    )
                 self.gen.newline()
 
     def preferred_variants(self, pkg_name):
@@ -1475,7 +1437,7 @@ class SpecBuilder(object):
     def no_flags(self, pkg, flag_type):
         self._specs[pkg].compiler_flags[flag_type] = []
 
-    def external_spec_selected(self, condition_id, pkg, idx):
+    def external_spec_selected(self, pkg, idx):
         """This means that the external spec and index idx
         has been selected for this package.
         """
