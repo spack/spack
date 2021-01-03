@@ -24,8 +24,7 @@ version_weight(Package, Weight)
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
 1 { version(Package, Version) : version_satisfies(Package, Constraint, Version) } 1
-  :- version_satisfies(Package, Constraint),
-  not virtual(Package).   % TODO: fix this and handle versionless virtuals separately
+  :- version_satisfies(Package, Constraint).
 version_satisfies(Package, Constraint)
   :- version(Package, Version), version_satisfies(Package, Constraint, Version).
 
@@ -159,12 +158,6 @@ dependency_conditions_hold(ID, Provider, Virtual) :-
   virtual(Virtual);
   provider_condition(ID, Provider, Virtual).
 
-% virtuals do not have well defined possible versions, so just ensure
-% that all constraints on versions are consistent
-:- virtual_node(Virtual),
-   version_satisfies(Virtual, V1), version_satisfies(Virtual, V2),
-   not version_constraint_satisfies(Virtual, V1, V2).
-
 % The provider provides the virtual if some provider condition holds.
 provides_virtual(Provider, Virtual) :-
    provider_condition(ID, Provider, Virtual),
@@ -231,7 +224,6 @@ provider_weight(Package, 100)
 #defined required_provider_condition/3.
 #defined required_provider_condition/4.
 #defined required_provider_condition/5.
-#defined version_constraint_satisfies/3.
 
 %-----------------------------------------------------------------------------
 % Spec Attributes
