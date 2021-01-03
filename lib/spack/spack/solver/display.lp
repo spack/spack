@@ -24,4 +24,4 @@
 #show compiler_weight/2.
 #show node_target_match/2.
 #show node_target_weight/2.
-#show external_spec_selected/3.
+#show external_spec_selected/2.
