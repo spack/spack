@@ -37,7 +37,7 @@ import spack.package
 import spack.package_prefs
 import spack.repo
 import spack.variant
-from spack.version import ver
+import spack.version
 
 
 class Timer(object):
@@ -451,7 +451,7 @@ class SpackSolverSetup(object):
         if spec.concrete:
             return [fn.version(spec.name, spec.version)]
 
-        if spec.versions == ver(":"):
+        if spec.versions == spack.version.ver(":"):
             return []
 
         # record all version constraints for later
@@ -1174,6 +1174,10 @@ class SpackSolverSetup(object):
             self.gen.newline()
 
     def define_virtual_constraints(self):
+        """Define versions for constraints on virtuals.
+
+        Must be called before define_version_constraints().
+        """
         # aggregate constraints into per-virtual sets
         constraint_map = collections.defaultdict(lambda: set())
         for pkg_name, versions in self.version_constraints:
@@ -1181,13 +1185,28 @@ class SpackSolverSetup(object):
                 continue
             constraint_map[pkg_name].add(versions)
 
+        # extract all the real versions mentioned in version ranges
+        def versions_for(v):
+            if isinstance(v, spack.version.Version):
+                return [v]
+            elif isinstance(v, spack.version.VersionRange):
+                result = [v.start] if v.start else []
+                result += [v.end] if v.end else []
+                return result
+            elif isinstance(v, spack.version.VersionList):
+                return sum((versions_for(e) for e in v), [])
+            else:
+                raise TypeError("expected version type, found: %s" % type(v))
+
+        # define a set of synthetic possible versions for virtuals, so
+        # that `version_satisfies(Package, Constraint, Version)` has the
+        # same semantics for virtuals as for regular packages.
         for pkg_name, versions in sorted(constraint_map.items()):
-            for v1 in sorted(versions):
-                for v2 in sorted(versions):
-                    if v1.satisfies(v2):
-                        self.gen.fact(
-                            fn.version_constraint_satisfies(pkg_name, v1, v2)
-                        )
+            possible_versions = set(
+                sum([versions_for(v) for v in versions], [])
+            )
+            for version in sorted(possible_versions):
+                self.possible_versions[pkg_name].add(version)
 
     def define_compiler_version_constraints(self):
         compiler_list = spack.compilers.all_compiler_specs()
@@ -1400,7 +1419,7 @@ class SpecBuilder(object):
         self._specs[pkg].update_variant_validate(name, value)
 
     def version(self, pkg, version):
-        self._specs[pkg].versions = ver([version])
+        self._specs[pkg].versions = spack.version.ver([version])
 
     def node_compiler(self, pkg, compiler):
         self._specs[pkg].compiler = spack.spec.CompilerSpec(compiler)
