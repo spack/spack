@@ -104,7 +104,7 @@ class Aomp(Package):
     # Python 2 is needed for 3.5.0 and 3.8.0, limit py-setuptools
     # to avoid spec error
     depends_on('python@2.7:2.8', when='@3.5.0:3.8.0', type='build')
-    depends_on('py-setuptools@44', when='@3.5.0:3.8.0',
+    depends_on('py-setuptools@:44', when='@3.5.0:3.8.0',
                type='build')
 
     depends_on('python@3:', type='build', when='@3.9.0:')
