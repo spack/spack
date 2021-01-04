@@ -104,12 +104,12 @@ class ProcessInProcess(Package):
              when='@3 os=rhel7')
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
-             branch='centos/gdb-7.6.1-94.el7.pip.branch',
+             branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@3 os=centos8')
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
-             branch='centos/gdb-7.6.1-94.el7.pip.branch',
+             branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@3 os=rhel8')
 
@@ -117,6 +117,14 @@ class ProcessInProcess(Package):
     resource(name='PiP-Testsuite',
              git='https://github.com/RIKEN-SysSoft/PiP-Testsuite.git',
              destination='PiP-Testsuite')
+    ## The following settings are borrowed form ../gdb/package.py
+    # Required dependency
+    depends_on('texinfo', type='build')
+
+    # Optional dependencies
+    depends_on('python', when='+python')
+    depends_on('xz', when='+xz')
+    depends_on('source-highlight', when='+source-highlight')
 
     def install(self, spec, prefix):
         "Install Process-in-Process inclduing PiP-glibc, PiP-gdb and PiP-Testsuite"
@@ -143,12 +151,12 @@ class ProcessInProcess(Package):
         make('install')
         make('doc')  # installing already-doxygen-ed documents (man pages, html, ...)
 
-        # installing PiP-gdb
-        with working_dir(join_path('PiP-gdb', 'PiP-gdb')):
-            bash('build.sh', '--prefix=%s' % prefix, '--with-pip=%s' % prefix)
-
         # running testsuite
         with working_dir(join_path('PiP-Testsuite', 'PiP-Testsuite')):
             bash('configure', '--with-pip=%s' % prefix)
             make()
             make('test')
+
+        # installing PiP-gdb
+        with working_dir(join_path('PiP-gdb', 'PiP-gdb')):
+            bash('build.sh', '--prefix=%s' % prefix, '--with-pip=%s' % prefix)
