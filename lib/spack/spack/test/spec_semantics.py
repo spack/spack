@@ -985,6 +985,18 @@ class TestSpecSematics(object):
         assert 'avx512' not in spec.target
         assert spec.target < 'broadwell'
 
+    def test_splice(self):
+        # TODO: Use a mock version of mpich that is different than the default
+        # concretization candidate for mpileaks.
+        # TODO: Test that this fails appropriately when one of the specs is not
+        # concrete.
+        spec = Spec('mpileaks')
+        dep = Spec('mpich')
+        spec.concretize()
+        dep.concretize()
+        spec.splice(dep, True)
+        assert spec.concrete
+
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
         ('libelf target=haswell', 'target=haswell', True),

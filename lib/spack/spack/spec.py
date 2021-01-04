@@ -1088,6 +1088,11 @@ class Spec(object):
         # external specs. None signal that it was not set yet.
         self.extra_attributes = None
 
+        # This attribute holds the original build copy of the spec if it is
+        # deployed differently than it was built. None signals that the spec
+        # is deployed "as built."
+        self.build_spec = None
+
         if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
             if len(spec_list) > 1:
@@ -4218,6 +4223,54 @@ class Spec(object):
         # This property returns the underlying microarchitecture object
         # to give to the attribute the appropriate comparison semantic
         return self.architecture.target.microarchitecture
+
+    def splice(self, other, transitive):
+        """Splices dependency "other" into this ("target") Spec.
+        If transitive, then other and its dependencies will be extrapolated to
+        a list of Specs and spliced in accordingly.
+        """
+        assert self.concrete
+        assert other.concrete
+        assert other.name in self
+
+        if transitive:
+            other_deps = []
+            for other_dep in other.traverse(order='pre'):
+                other_deps.append(other_dep)
+        else:
+            other_deps = [other]
+
+        target_direct_deps = []
+        for other_dep in self.dependencies(deptype=('link', 'run')):
+            target_direct_deps.append(other_dep.name)
+
+        for target_dep in self.traverse(order='pre'):
+            for other_dep in other_deps:
+                if target_dep.name == other_dep.name:
+                    target_dep.build_spec = target_dep.copy()
+                    other_dep.build_spec = other_dep.copy()
+
+                    if other_dep.name in target_direct_deps:  # root case
+                        del self._dependencies[target_dep.name]
+                        if self.name in other._dependents.keys():
+                            del other._dependents[self.name]
+                        self._add_dependency(other_dep,
+                                             deptypes=('link', 'run'))
+                    else:  # down in the DAG
+                        target_dependents = target_dep.dependents()
+                        target_dependencies = target_dep.dependencies()
+                        for dependency in target_dependencies:
+                            if dependency.name in \
+                                other_dep._dependencies.keys():
+                                del other_dep._dependencies[dependency.name]
+                            other_dep._add_dependency(dependency,
+                                                      deptypes=('link', 'run'))
+                        for dependent in target_dependents:
+                            if dependent.name in other._dependents.keys():
+                                del other._dependents[dependent.name]
+                            dependent._add_dependency(other_dep,
+                                                      deptypes=('link', 'run'))
+        return
 
 
 class LazySpecCache(collections.defaultdict):
