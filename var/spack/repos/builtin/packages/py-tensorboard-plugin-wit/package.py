@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyTensorboardPluginWit(Package):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
-    homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
+    homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
     url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 

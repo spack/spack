@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Coin3d(AutotoolsPackage):
     depends_on('libsm', type='link')
     depends_on('libxext', type='link')
     depends_on('libice', type='link')
-    depends_on('libuuid', type='link')
+    depends_on('uuid', type='link')
     depends_on('libxcb', type='link')
     depends_on('libxau', type='link')
 

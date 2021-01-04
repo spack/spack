@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,12 @@ import inspect
 import itertools
 import re
 from six import StringIO
+import sys
+
+if sys.version_info >= (3, 5):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
 
 import llnl.util.tty.color
 import llnl.util.lang as lang
@@ -19,11 +25,6 @@ import llnl.util.lang as lang
 from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
-
-try:
-    from collections.abc import Sequence  # novm
-except ImportError:
-    from collections import Sequence
 
 special_variant_values = [None, 'none', '*']
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyDask(PythonPackage):
     """Dask is a flexible parallel computing library for analytics."""
 
     homepage = "https://github.com/dask/dask/"
-    url      = "https://pypi.io/packages/source/d/dask/dask-1.1.0.tar.gz"
+    pypi = "dask/dask-1.1.0.tar.gz"
 
     maintainers = ['skosukhin']
 

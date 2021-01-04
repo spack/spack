@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureCliTelemetry(PythonPackage):
     """Microsoft Azure CLI Telemetry Package."""
 
     homepage = "https://github.com/Azure/azure-cli"
-    url      = "https://pypi.io/packages/source/a/azure-cli-telemetry/azure-cli-telemetry-1.0.4.tar.gz"
+    pypi = "azure-cli-telemetry/azure-cli-telemetry-1.0.4.tar.gz"
 
     version('1.0.4', sha256='1f239d544d309c29e827982cc20113eb57037dba16db6cdd2e0283e437e0e577')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,7 @@ class Silo(AutotoolsPackage):
     depends_on('zlib')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
+    patch('H5FD_class_t-terminate.patch', when='^hdf5@1.10.0:')
 
     def flag_handler(self, name, flags):
         spec = self.spec
