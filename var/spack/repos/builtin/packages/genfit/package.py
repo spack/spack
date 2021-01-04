@@ -18,4 +18,3 @@ class Genfit(CMakePackage):
     version('master', branch='master')
 
     depends_on('root')
-    depends_on('cmake', type='build')
