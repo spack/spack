@@ -47,6 +47,45 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
         raise
 
 
+def test_install_to_different_install_tree(
+    install_mockery, mock_fetch, monkeypatch):
+
+    # Create new store with different root
+    real_store = spack.store.store
+    spack.store.install_root = 'user'
+    spack.store.store = spack.store._store()
+    root1 = spack.store.store.root
+
+    # Get a basic concrete spec for the trivial install package.
+    spec = Spec('trivial-install-test-package')
+    spec.concretize()
+    assert spec.concrete
+
+    # Ensure non-default install_root used in install
+    assert root1 in spec.prefix
+    assert real_store.root not in spec.prefix
+
+    # Get the package
+    pkg = spec.package
+
+    # Do install and check install is in new store
+    try:
+        pkg.do_install()
+
+        spec._package = None
+        monkeypatch.setattr(spack.repo, 'get', find_nothing)
+        with pytest.raises(spack.repo.UnknownPackageError):
+            spec.package
+
+        pkg.do_uninstall()
+    except Exception:
+        pkg.remove_prefix()
+        raise
+
+    # Restore old store
+    spack.store.store = real_store
+
+
 def mock_remove_prefix(*args):
     raise MockInstallError(
         "Intentional error",
