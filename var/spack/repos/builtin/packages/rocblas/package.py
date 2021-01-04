@@ -11,10 +11,11 @@ class Rocblas(CMakePackage):
     """Radeon Open Compute BLAS library"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocBLAS/"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-3.5.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='78e37a7597b581d90a29e4b956fa65d0f8d1c8fb51667906b5fe2a223338d401')
     version('3.10.0', sha256='9bfd0cf99662192b1ac105ab387531cfa9338ae615db80ed690c6a14d987e0e8')
     version('3.9.0', sha256='3ecd2d9fd2be0e1697a191d143a2d447b53a91ae01afb50231d591136ad5e2fe')
     version('3.8.0', sha256='568a9da0360349b1b134d74cc67cbb69b43c06eeca7c33b50072cd26cd3d8900')
@@ -27,7 +28,7 @@ class Rocblas(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
@@ -70,6 +71,11 @@ class Rocblas(CMakePackage):
              git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
              commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
              when='@3.10.0')
+
+    resource(name='Tensile',
+             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+             commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
+             when='@4.0.0')
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
