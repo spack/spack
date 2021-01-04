@@ -48,7 +48,7 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
 
 def test_install_to_different_install_tree(
-    install_mockery, mock_fetch, monkeypatch):
+        install_mockery, mock_fetch, monkeypatch):
 
     # Create new store with different root
     real_store = spack.store.store
