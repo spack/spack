@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,11 +20,6 @@ class Gdal(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['adamjstewart']
-
-    import_modules = [
-        'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
-        'osgeo.gdal_array', 'osgeo.gdalconst'
-    ]
 
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
@@ -169,6 +164,8 @@ class Gdal(AutotoolsPackage):
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     executables = ['^gdal-config$']
+
+    import_modules = PythonPackage.import_modules
 
     @classmethod
     def determine_version(cls, exe):
@@ -554,15 +551,11 @@ class Gdal(AutotoolsPackage):
                 install('*.jar', prefix)
 
     @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if '+python' in self.spec:
-            with working_dir('spack-test', create=True):
-                for module in self.import_modules:
-                    python('-c', 'import {0}'.format(module))
-
-    @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
         if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)
+
+    def test(self):
+        if '+python' in self.spec:
+            PythonPackage.test(self)

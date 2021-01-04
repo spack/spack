@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyDistributed(PythonPackage):
     """Distributed scheduler for Dask"""
 
     homepage = "https://distributed.dask.org/"
-    url      = "https://pypi.io/packages/source/d/distributed/distributed-2.10.0.tar.gz"
+    pypi = "distributed/distributed-2.10.0.tar.gz"
 
     version('2.10.0', sha256='2f8cca741a20f776929cbad3545f2df64cf60207fb21f774ef24aad6f6589e8b')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Warpx(MakefilePackage):
             multi=True,
             description='Programming model for compute kernels')
     variant('mpi', default=True, description='Enable MPI support')
-    variant('psatd', default=False, description='Enable PSATD solver')
+    variant('psatd', default=True, description='Enable PSATD solver support')
     variant('debug', default=False, description='Enable debugging features')
     variant('tprof', default=True, description='Enable tiny profiling features')
     variant('openpmd', default=True, description='Enable openPMD I/O')
@@ -41,13 +41,13 @@ class Warpx(MakefilePackage):
 
     depends_on('cuda@9.2.88:', when='backend=cuda')
     depends_on('mpi', when='+mpi')
-    depends_on('fftw@3:', when='+psatd')
-    depends_on('fftw +mpi', when='+psatd +mpi')
+    depends_on('fftw@3:', when='+psatd backend=openmp')
+    depends_on('fftw +mpi', when='+psatd +mpi backend=openmp')
     depends_on('blaspp', when='+psatd dims=rz')
     depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('pkgconfig', type='build', when='+openpmd')
     depends_on('python', type='build')  # AMReX' build system info
-    depends_on('openpmd-api@0.11.0:,dev', when='+openpmd')
+    depends_on('openpmd-api@0.12.0:,dev', when='+openpmd')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
     depends_on('ascent', when='+ascent')
     depends_on('ascent +cuda', when='+ascent backend=cuda')

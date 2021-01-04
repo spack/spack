@@ -1,8 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import itertools
 import os
 import pytest
 import shlex
@@ -806,3 +806,26 @@ class TestSpecSyntax(object):
     ])
     def test_target_tokenization(self, expected_tokens, spec_string):
         self.check_lex(expected_tokens, spec_string)
+
+    @pytest.mark.regression('20310')
+    def test_compare_abstract_specs(self):
+        """Spec comparisons must be valid for abstract specs.
+
+        Check that the spec cmp_key appropriately handles comparing specs for
+        which some attributes are None in exactly one of two specs"""
+        # Add fields in order they appear in `Spec._cmp_node`
+        constraints = [
+            None,
+            'foo',
+            'foo.foo',
+            'foo.foo@foo',
+            'foo.foo@foo+foo',
+            'foo.foo@foo+foo arch=foo-foo-foo',
+            'foo.foo@foo+foo arch=foo-foo-foo %foo',
+            'foo.foo@foo+foo arch=foo-foo-foo %foo cflags=foo',
+        ]
+        specs = [Spec(s) for s in constraints]
+
+        for a, b in itertools.product(specs, repeat=2):
+            # Check that we can compare without raising an error
+            assert a <= b or b < a

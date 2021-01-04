@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -149,11 +149,16 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # These vars affect how the compiler finds libraries and include dirs.
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
+    env.unset('OBJC_INCLUDE_PATH')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -750,6 +755,9 @@ def setup_package(pkg, dirty, context='build'):
     elif context == 'test':
         import spack.user_environment as uenv  # avoid circular import
         env.extend(uenv.environment_modifications_for_spec(pkg.spec))
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
         set_module_variables_for_package(pkg)
         env.prepend_path('PATH', '.')
 
@@ -814,7 +822,8 @@ def modifications_from_dependencies(spec, context):
     }
     deptype, method = deptype_and_method[context]
 
-    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+    root = context == 'test'
+    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module

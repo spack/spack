@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPythonSlugify(PythonPackage):
     """A Python Slugify application that handles Unicode"""
 
     homepage = "https://github.com/un33k/python-slugify"
-    url      = "https://pypi.io/packages/source/p/python-slugify/python-slugify-4.0.0.tar.gz"
+    pypi = "python-slugify/python-slugify-4.0.0.tar.gz"
 
     version('4.0.0', sha256='a8fc3433821140e8f409a9831d13ae5deccd0b033d4744d94b31fea141bdd84c')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyJsonschema(PythonPackage):
     """Jsonschema: An(other) implementation of JSON Schema for Python."""
 
     homepage = "http://github.com/Julian/jsonschema"
-    url      = "https://pypi.io/packages/source/j/jsonschema/jsonschema-3.2.0.tar.gz"
+    pypi = "jsonschema/jsonschema-3.2.0.tar.gz"
 
     version('3.2.0', sha256='c8a85b28d377cc7737e46e2d9f2b4f44ee3c0e1deac6bf46ddefc7187d30797a')
     version('3.1.1', sha256='2fa0684276b6333ff3c0b1b27081f4b2305f0a36cf702a23db50edb141893c3f')

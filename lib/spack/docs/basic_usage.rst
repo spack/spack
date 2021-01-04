@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -133,8 +133,7 @@ dependencies first.  It then fetches the ``mpileaks`` tarball, expands
 it, verifies that it was downloaded without errors, builds it, and
 installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
 a number of messages from Spack, a lot of build output, and a message
-that the package is installed.  Add one or more debug options (``-d``)
-to get increasingly detailed output.
+that the package is installed.
 
 .. code-block:: console
 
@@ -151,8 +150,8 @@ to get increasingly detailed output.
 The last line, with the ``[+]``, indicates where the package is
 installed.
 
-Add the debug option -- ``spack  install -d mpileaks`` -- to get additional
-output.
+Add the Spack debug option (one or more times) -- ``spack -d install
+mpileaks`` -- to get additional (and even more verbose) output.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a specific version

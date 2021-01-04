@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,10 @@ import platform
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '20.11': {
+        'Linux-aarch64': ('2f26ca45b07b694b8669e4f761760d4f7faa8d032b21e430adee1af0a27032c1', 'https://developer.download.nvidia.com/hpc-sdk/20.11/nvhpc_2020_2011_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('99e5a5437e82f3914e0fe81feb761a5b599a3fe8b31f3c2cac8ae47e8cdc7b0f', 'https://developer.download.nvidia.com/hpc-sdk/20.11/nvhpc_2020_2011_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('c80fc26e5ba586696f7030f03054c1aaca0752a891c7923faf47eb23b66857ec', 'https://developer.download.nvidia.com/hpc-sdk/20.11/nvhpc_2020_2011_Linux_x86_64_cuda_multi.tar.gz')},
     '20.9': {
         'Linux-aarch64': ('3bfb3d17f5ee99998bcc30d738e818d3b94b828e2d8da7db48bf152a01e22023', 'https://developer.download.nvidia.com/hpc-sdk/20.9/nvhpc_2020_209_Linux_aarch64_cuda_11.0.tar.gz'),
         'Linux-ppc64le': ('b2966d4047e1dfd981ce63b333ab9c0acbdc2a6a505fa217456ac9fa3b8e7474', 'https://developer.download.nvidia.com/hpc-sdk/20.9/nvhpc_2020_209_Linux_ppc64le_cuda_multi.tar.gz'),

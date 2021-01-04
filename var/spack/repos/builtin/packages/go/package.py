@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,9 +38,13 @@ class Go(Package):
     extendable = True
     executables = ['^go$']
 
+    version('1.15.6', sha256='890bba73c5e2b19ffb1180e385ea225059eb008eb91b694875dd86ea48675817')
+    version('1.15.5', sha256='c1076b90cf94b73ebed62a81d802cd84d43d02dea8c07abdc922c57a071c84f1')
     version('1.15.2', sha256='28bf9d0bcde251011caae230a4a05d917b172ea203f2a62f2c2f9533589d4b4d')
     version('1.15.1', sha256='d3743752a421881b5cc007c76b4b68becc3ad053e61275567edab1c99e154d30')
     version('1.15', sha256='69438f7ed4f532154ffaf878f3dfd83747e7a00b70b3556eddabf7aaee28ac3a')
+    version('1.14.13', sha256='ba1d244c6b5c0ed04aa0d7856d06aceb89ed31b895de6ff783efb1cc8ab6b177')
+    version('1.14.12', sha256='b34f4b7ad799eab4c1a52bdef253602ce957125a512f5a1b28dce43c6841b971')
     version('1.14.9', sha256='c687c848cc09bcabf2b5e534c3fc4259abebbfc9014dd05a1a2dc6106f404554')
     version('1.14.8', sha256='d9a613fb55f508cf84e753456a7c6a113c8265839d5b7fe060da335c93d6e36a')
     version('1.14.6', sha256='73fc9d781815d411928eccb92bf20d5b4264797be69410eac854babe44c94c09')
@@ -171,19 +175,18 @@ class Go(Package):
             tty.warn('GOROOT is set, this is not recommended')
 
         # Set to include paths of dependencies
-        path_components = []
+        path_components = [dependent_spec.prefix]
         for d in dependent_spec.traverse():
             if d.package.extends(self.spec):
                 path_components.append(d.prefix)
-        return path_components
+        return ':'.join(path_components)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # This *MUST* be first, this is where new code is installed
-        env.set('GOPATH', ':'.join(self.generate_path_components(
-            dependent_spec)))
+        env.prepend_path('GOPATH', self.generate_path_components(
+            dependent_spec))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         # Allow packages to find this when using module files
-        env.prepend_path('GOPATH', ':'.join(
-            [dependent_spec.prefix] + self.generate_path_components(
-                dependent_spec)))
+        env.prepend_path('GOPATH', self.generate_path_components(
+            dependent_spec))

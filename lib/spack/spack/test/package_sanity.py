@@ -1,8 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
 import re
@@ -14,9 +13,10 @@ import spack.package
 import spack.paths
 import spack.repo
 import spack.util.executable as executable
+import spack.variant
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
-import spack.cmd.flake8 as flake8
+import spack.cmd.style as style
 import spack.util.crypto as crypto
 import pickle
 
@@ -207,7 +207,7 @@ def test_prs_update_old_api():
     deprecated calls to any method.
     """
     changed_package_files = [
-        x for x in flake8.changed_files() if flake8.is_package(x)
+        x for x in style.changed_files() if style.is_package(x)
     ]
     failing = []
     for file in changed_package_files:
@@ -256,4 +256,16 @@ def test_variant_defaults_are_parsable_from_cli():
             )
             if not default_is_parsable:
                 failing.append((pkg.name, variant_name))
+    assert not failing
+
+
+def test_variant_defaults_listed_explicitly_in_values():
+    failing = []
+    for pkg in spack.repo.path.all_packages():
+        for variant_name, variant in pkg.variants.items():
+            vspec = variant.make_default()
+            try:
+                variant.validate_or_raise(vspec, pkg=pkg)
+            except spack.variant.InvalidVariantValueError:
+                failing.append((pkg.name, variant.name))
     assert not failing

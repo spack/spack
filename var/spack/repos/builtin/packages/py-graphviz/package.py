@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyGraphviz(PythonPackage):
     """Simple Python interface for Graphviz"""
 
     homepage = "https://github.com/xflr6/graphviz"
-    url      = "https://pypi.io/packages/source/g/graphviz/graphviz-0.10.1.zip"
+    pypi = "graphviz/graphviz-0.10.1.zip"
 
     version('0.13.2', sha256='60acbeee346e8c14555821eab57dbf68a169e6c10bce40e83c1bf44f63a62a01')
     version('0.13', sha256='dc08677f37c65a4a480f00df4bd0d19a0a103c06aad95f21a37f0b7fd440de81')
@@ -30,10 +30,5 @@ class PyGraphviz(PythonPackage):
     depends_on('py-pep8-naming', type=('build', 'run'), when='+dev')
     depends_on('py-wheel', type=('build', 'run'), when='+dev')
     depends_on('py-twine', type=('build', 'run'), when='+dev')
-    depends_on('py-mock@2:', type='test')
-    depends_on('py-pytest@3.4:', type='test')
-    depends_on('py-pytest@3.4:3.9,3.11:', when='@0.11.1', type='test')
-    depends_on('py-pytest-mock@1.8:', type='test')
-    depends_on('py-pytest-cov', type='test')
     depends_on('py-sphinx@1.7:', type=('build', 'run'), when='+docs')
     depends_on('py-sphinx-rtd-theme', type=('build', 'run'), when='+docs')

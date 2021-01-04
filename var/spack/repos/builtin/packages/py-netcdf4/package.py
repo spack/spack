@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyNetcdf4(PythonPackage):
     """Python interface to the netCDF Library."""
 
     homepage = "https://github.com/Unidata/netcdf4-python"
-    url      = "https://pypi.io/packages/source/n/netCDF4/netCDF4-1.2.7.tar.gz"
+    pypi = "netCDF4/netCDF4-1.2.7.tar.gz"
 
     maintainers = ['skosukhin']
 

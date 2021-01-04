@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,11 @@ class Libquo(AutotoolsPackage):
         bash('./autogen')
 
     def configure_args(self):
-        return [
+        config_args = [
             'CC={0}'.format(self.spec['mpi'].mpicc),
             'FC={0}'.format(self.spec['mpi'].mpifc)
         ]
+        if '%pgi' in self.spec:
+            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
+            config_args.append('FCFLAGS={0}'.format(self.compiler.fc_pic_flag))
+        return config_args
