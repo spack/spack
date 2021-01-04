@@ -409,7 +409,10 @@ class PyclingoDriver(object):
         result.satisfiable = solve_result.satisfiable
 
         def stringify(x):
-            return x.string or str(x)
+            try:
+               return x.string
+            except:
+                return str(x)
 
         if result.satisfiable:
             builder = SpecBuilder(specs)
