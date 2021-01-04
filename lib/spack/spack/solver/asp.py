@@ -1601,7 +1601,12 @@ class SpecBuilder(object):
         # fix flags after all specs are constructed
         self.reorder_flags()
 
-        for root in set([spec.root for spec in self._specs.values()]):
+        # inject patches -- note that we' can't use set() to unique the
+        # roots here, because the specs aren't complete, and the hash
+        # function will loop forever.
+        roots = [spec.root for spec in self._specs.values()]
+        roots = dict((id(r), r) for r in roots)
+        for root in roots.values():
             spack.spec.Spec.inject_patches_variant(root)
 
         # Add external paths to specs with just external modules
