@@ -305,6 +305,10 @@ spack package at this time.''',
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
         external_modules = self.spec.external_modules
         if external_modules and 'cray' in external_modules[0]:
+            # This is intended to support external MPICH instances registered
+            # by Spack on Cray machines prior to a879c87; users defining an
+            # external MPICH entry for Cray should generally refer to the
+            # "cray-mpich" package
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
