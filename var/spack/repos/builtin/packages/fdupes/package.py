@@ -20,6 +20,7 @@ class Fdupes(AutotoolsPackage):
     variant('ncurses', default=True, description='ncurses support')
 
     depends_on('ncurses', when='+ncurses')
+    depends_on('pcre2', when='+ncurses')
 
     def configure_args(self):
         return self.with_or_without('ncurses')
