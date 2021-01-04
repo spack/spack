@@ -9,7 +9,7 @@ spack:
         - [
             coreneuron,
             coreneuron+debug,
-            hdf5+mpi@1.10.5,
+            hdf5+mpi,
             highfive+mpi,
             neuron,
             neuron+debug,
