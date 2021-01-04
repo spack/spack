@@ -1,35 +1,23 @@
-# FAQ for BBP Spack Usage
+# FAQ for BlueBrain Spack Usage
 
 ## Building Software
 
 <details>
   <summary>Q: How do I build and *load* a piece of software?</summary>
 
-  We'll install `Ed(1)`, the standard editor.
+  We'll install `MG(1)`, a standard editor.
 
-  Make sure you're setup as per [this](https://github.com/BlueBrain/spack#building-software-on-bluebrain5).
+  Make sure you're setup as per
+  [the instructions linked on the README](https://github.com/BlueBrain/spack),
+  then install the editor via
 
-  Specifically that you have the `spack` git repo on the `develop` branch,
-  and have created and linked the files into `~/.spack/`
+      $ spack install mg
 
-      $ spack install ed
+  One can then run `mg` with
 
-  This produces output, and should end with something like:
-  `$SPACK_INSTALL_PREFIX/linux-rhel7-x86_64/gcc-6.4.0/ed-1.4-35jlkv`
+      $ spack load mg
+      $ mg foo.txt
 
-  One can then run `ed` with
-
-      $SPACK_INSTALL_PREFIX/linux-rhel7-x86_64/gcc-6.4.0/ed-1.4-35jlkv/ed
-
-  More complex packages will have an environment that needs to be setup by
-  the module system.
-  To find the module that was built, issue:
-
-      $ spack module tcl find --full-path ed
-
-  At which point, you should be able to:
-
-      $ module load $path_from_above
 </details>
 
 <details>
@@ -37,31 +25,35 @@
 
   We want to add a new version 2.0.0 to `mypackage`.
 
-  Make sure you're setup as per [the instructions](https://github.com/BlueBrain/spack#building-software-on-bluebrain5).
-
-  Change your package recipe to add or update the version specifying the 
-  corresponding tag or commit.
+  Make sure you're setup as per
+  [the instructions linked on the README](https://github.com/BlueBrain/spack),
+  then change your package recipe to add or update the version specifying
+  the corresponding tag or commit.
 
       $ spack edit mypackage
-      ...
+      …
       version('2.0.0', tag='v2.0.0')
-      ...
+      …
 
-  Then you can edit the packages yaml files depending on the type of
-  package (`bbp-packages.yaml`, `external-libraries.yaml`…).
+  If the package is not yet deployed, then you can edit the environment
+  depending on the type of package (`applications.yaml`,
+  `libraries.yaml`…).
 
-  Assuming `mypackage` is an external library:
+  Assuming `mypackage` is a library:
 
-      $ vim deploy/packages/external-libraries.yaml
+      $ nvim deploy/environments/libraries.yaml
 
-  Under the spec section
+  Under the `specs` section, make sure that the package is mentioned:
 
-      - mypackage@2.0.0
+      - mypackage
+
+  Only specify a version if future updates to the package should be
+  ignored.
 
   After that you should edit the module file that will be at
-  `deploy/config/external-libraries/`
+  `deploy/config/libraries/`
 
-      $ vim deploy/config/external-libraries/modules.yaml
+      $ nvim deploy/config/libraries/modules.yaml
 
   Under the whitelist section, ensure that your software is mentioned:
 
@@ -74,30 +66,24 @@
 <details>
   <summary>Q: Why do I have to rebuild the entire world?</summary>
 
-  If you are on the `BB5`, you shouldn't need to.
+  If you are on the BlueBrain5, you shouldn't need to.
 
-  As [described here](https://github.com/BlueBrain/spack#building-software-on-bluebrain5),
+  As [described here](https://github.com/BlueBrain/spack/deploy/docs/setup_bb5.md),
   one can use the system packages available with an appropriate
-  `~/.spack/packages.yaml` and `~/.spack/upstreams.yaml`.
-</details>
-
-<details>
-  <summary>Q: Why do I see <code>PACK_INSTALL_PREFIX</code> in my install?  Things are failing!</summary>
-
-  As [described here](https://github.com/BlueBrain/spack#building-software-on-bluebrain5),
-  the BlueBrain "default" configuration expects that the environment
-  variable `$SPACK_INSTALL_PREFIX` is defined.
+  `packages.yaml` and `upstreams.yaml` in `${SPACK_ROOT}/etc/spack`.
 </details>
 
 <details>
   <summary>Q: Why are the module files not being rebuilt?</summary>
 
-  The `spack module tcl refresh` command respects a blacklists that are in:
-  * `~/.spack/modules.yaml`
+  The `spack module tcl refresh` command respects a blacklist that can be
+  found via:
+
+      $ spack config blame modules
 
   Examples from our deployment workflow can be found in:
   * `spack/deploy/configs/applications/modules.yaml`
-  * `spack/deploy/configs/serial-libraries/modules.yaml`
+  * `spack/deploy/configs/libraries/modules.yaml`
 
   Run `spack --debug module tcl refresh` and search for the module you
   expect to be built.
@@ -154,30 +140,10 @@
 ## Pull Requests
 
 <details>
-  <summary>Q: How do I reproduce the Travis checks of a Pull Request?</summary>
-
-  You can use the native Spack commands:
-
-      $ spack test
-      $ module load unstable py-flake8
-      $ spack flake8
-
-  For the latter, you can also use the official Spack QA script:
-
-      $ ./share/spack/qa/run-flake8-tests
-
-  Similarly, the full unit test suite can be run with
-
-      $ ./share/spack/qa/run-unit-tests
-
-  but this requires you to install additional software.
-</details>
-
-<details>
   <summary>Q: How do I test modules generated by a Pull Request?</summary>
 
   If you followed the previous point you should be able to see if your 
-  PR was succesfully built [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
+  PR was successfully built [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
 
   Then you can log into `BB5` and run the following commands:
 

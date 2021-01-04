@@ -7,6 +7,12 @@ The following commands are a good way to get started:
     $ . spack/share/spack/setup-env.sh
     $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ${SPACK_ROOT}/etc/spack
 
+Note that the `git clone` should be executed in a subdirectory of the home
+directory.
+The project directories are backed by a slower file system, and using a
+Spack installation from the project directories will result in a big
+performance penalty.
+
 This will install all software into the directory that Spack was cloned
 into.
 The configuration linked into the `etc/spack` subdirectory will provide a

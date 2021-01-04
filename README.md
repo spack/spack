@@ -6,134 +6,17 @@ The concepts of our deployment are described in [Deployment
 Concepts](deploy/Concepts.md), and deployment duties in [Deployment
 Workflows](deploy/Workflows.md).
 
-For some common issues, please see the [FAQ](FAQ.md). Further
+For some common issues, please see the [FAQ](deploy/docs/FAQ.md). Further
 documentation:
 
 * [Setting Spack up on BlueBrain5](deploy/docs/setup_bb5.md)
 * [Setting Spack up on personal machines](deploy/docs/setup_personal.md)
 * [Installing software from local sources](deploy/docs/installing_from_source.md)
 * [Installing software using environments](deploy/docs/installing_with_environments.md),
-  allowing to customize software used in complex build scenarios
-
-## Using Spack for Continuous Integration on BlueBrain5
-
-<details>
-<summary>
-Use our central deployment with our Jenkins instance
-</summary>
-
-When building Spack packages with Jenkins, please use the `bb5` executors.
-Then you will be able to install software with:
-
-    $ git clone https://github.com/BlueBrain/spack.git
-    $ . spack/share/spack/setup-env.sh
-    $ mkdir fake_home
-    $ export HOME=${PWD}/fake_home
-    $ mkdir -p ~/.spack
-    $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ~/.spack
-    $ export SPACK_INSTALL_PREFIX=${HOME}/software
-    $ spack build-dev <my_package>
-
-*Note that a custom home directory is created* to avoid any interference from
-a shared configuration of Spack.
-</details>
-
-## Using Spack for Continuous Integration with Travis
-
-<details>
-<summary>
-Use our automated Docker build to test on Travis
-</summary>
-
-The [MVDTool CI configuration](https://github.com/BlueBrain/MVDTool/blob/master/.travis.yml) shows how to use our continuously updated Docker image with Travis for a simple build:
-
-    services:
-      - docker
-
-    matrix:
-      include:
-      - name: "C++ Build"
-        before_install:
-          - docker pull bluebrain/spack
-          - docker run -v $PWD:/source -w /source bluebrain/spack:latest spack diy --test=root mvdtool@develop
-      - name: "Python Build"
-        before_install:
-          - docker pull bluebrain/spack
-          - docker run -v $PWD:/source -w /source bluebrain/spack:latest spack diy --test=root "py-mvdtool@develop^python@3:"
-
-    script: "ruby -ne 'puts $_ if /^==>.*make.*test|^==>.*python.*setup\\.py.*test/../.*phase.*install/ and not /^==>|make: \\*\\*\\*/' spack-build.out"
-
-The last line will extract the results from running unit tests during
-installation for your convenience.  This requires either a valid test
-target for `make` in CMake or a corresponding command in `setup.py` for
-Python.
-</details>
-
-## Deploying software on BlueBrain5
-
-<details>
-<summary>
-Add new software to our module system
-</summary>
-
-Centrally build modules can be made available by sourcing the following
-script:
-
-    $ . /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/modules.sh
-    $ module avail|&tail
-
-     /gpfs/bbp.cscs.ch/apps/hpc/jenkins/deploy/applications/2018-12-19/modules/tcl/linux-rhel7-x86_64
-    functionalizer/3.11.0             py-bluepyopt/1.6.56/python2
-    neurodamus/hippocampus/python3    py-bluepyopt/1.6.56/python3
-    neurodamus/master/python3         py-efel/3.0.22/python2
-    neurodamus/plasticity/python3     py-efel/3.0.22/python3
-    neurodamus/plasticity/python3-knl spykfunc/0.12.0/python3
-    parquet-converters/0.3            steps/3.3.0/python3/parallel
-    py-bluepymm/0.6.38/python2        synapsetool/0.3.2/parallel
-    py-bluepymm/0.6.38/python3        touchdetector/4.3.3
-
-The output above shows the `applications` category of modules, which are
-generated from centrally build packages.
-
-To update the version of any of these modules, first we have to make sure
-that the corresponding software is built by edit the corresponding YAML
-configuration:
-
-    $ vim spack/deploy/packages/bbp-packages.yaml
-
-If there are dependencies used in a broader scope/by several software
-packages, consider adding them to one of the following steps in the
-deployment chain (all found in `spack/deploy/packages`):
-
-* `parallel-libraries` for everything using MPI or highly performant
-* `serial-libraries`, `python-packages` for general purpose libraries
-* `external-libraries` for packages that are seldomly changed and for which
-  the dependency graph may be truncated by Spack (e.g., Spark, Python) - mainly dependencies for building
-
-Following this, we may have to enable the generation of corresponding
-module files.
-If this is the first time the  software is deployed,
-it has to be whitelisted in the module configuration for spack,
-e.g. by editing:
-
-    $ vim spack/deploy/configs/applications/modules.yaml
-
-Look for a key `whitelist`, and add the package. Packages listed in the
-module whitelist should be as generic as possible, i.e., not tied to
-specific versions.
-
-Commit the changes and file a pull request on Github.
-Jenkins will build the additional software required, with all output
-available in a separate directory:
-
-    $ ls /gpfs/bbp.cscs.ch/apps/hpc/jenkins/pulls/165
-    config  deploy  mirror  spack
-
-Software packages and modules should be updated upon pull request merge and
-a nightly basis.
-The `config` directory contains the same configuration files as the regular
-deployment and can be used instead.
-</details>
+  allowing to customize software used in complex build [scenarios](scenarios)
+* [Deploying modules on BlueBrain5](deploy/docs/deploy_bb5.md)
+* [Continuous Integration with Spack on BlueBrain5](deploy/docs/ci_bb5.md)
+* [Continuous Integration with Spack on Travis](deploy/docs/ci_travis.md)
 
 # <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
