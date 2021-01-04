@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyGoogleAuth(PythonPackage):
     authentication mechanisms to access Google APIs."""
 
     homepage = "https://github.com/GoogleCloudPlatform/google-auth-library-python"
-    url      = "https://pypi.io/packages/source/g/google-auth/google-auth-1.6.3.tar.gz"
+    pypi = "google-auth/google-auth-1.6.3.tar.gz"
 
     version('1.6.3', sha256='0f7c6a64927d34c1a474da92cfc59e552a5d3b940d3266606c6a28b72888b9e4')
 

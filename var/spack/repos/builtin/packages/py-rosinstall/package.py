@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyRosinstall(PythonPackage):
     """The installer for ROS."""
 
     homepage = "https://wiki.ros.org/rosinstall"
-    url      = "https://pypi.io/packages/source/r/rosinstall/rosinstall-0.7.8.tar.gz"
+    pypi = "rosinstall/rosinstall-0.7.8.tar.gz"
 
     version('0.7.8', sha256='2ba808bf8bac2cc3f13af9745184b9714c1426e11d09eb96468611b2ad47ed40')
 

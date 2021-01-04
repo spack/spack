@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,9 @@ class PyTorch(PythonPackage, CudaPackage):
     git      = "https://github.com/pytorch/pytorch.git"
 
     maintainers = ['adamjstewart']
+
+    # Exact set of modules is version- and variant-specific
+    import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -333,7 +333,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars -u --upstream -g --global --install-root --init-upstream"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -913,7 +913,7 @@ _spack_find() {
 _spack_flake8() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -b --base -k --keep-temp -a --all -o --output -r --root-relative -U --no-untracked"
+        SPACK_COMPREPLY="-h --help -b --base -a --all -o --output -r --root-relative -U --no-untracked --no-flake8 --no-mypy --black"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1042,9 +1042,9 @@ _spack_install() {
 _spack_license() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --root"
     else
-        SPACK_COMPREPLY="list-files verify"
+        SPACK_COMPREPLY="list-files verify update-copyright-year"
     fi
 }
 
@@ -1053,7 +1053,11 @@ _spack_license_list_files() {
 }
 
 _spack_license_verify() {
-    SPACK_COMPREPLY="-h --help --root"
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_license_update_copyright_year() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_list() {
@@ -1510,6 +1514,15 @@ _spack_stage() {
         SPACK_COMPREPLY="-h --help -n --no-checksum -p --path"
     else
         _all_packages
+    fi
+}
+
+_spack_style() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -b --base -a --all -o --output -r --root-relative -U --no-untracked --no-flake8 --no-mypy --black"
+    else
+        SPACK_COMPREPLY=""
     fi
 }
 

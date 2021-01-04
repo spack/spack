@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyCfgv(PythonPackage):
     """Validate configuration and produce human readable error messages."""
 
     homepage = "https://github.com/asottile/cfgv/"
-    url      = "https://pypi.io/packages/source/c/cfgv/cfgv-2.0.1.tar.gz"
+    pypi = "cfgv/cfgv-2.0.1.tar.gz"
 
     version('2.0.1', sha256='edb387943b665bf9c434f717bf630fa78aecd53d5900d2e05da6ad6048553144')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -265,6 +265,7 @@ class Openfoam(Package):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='master', submodules='True')
+    version('2012', sha256='3d6e39e39e7ae61d321fbc6db6c3748e6e5e1c4886454207a7f1a7321469e65a')
     version('2006_201012', sha256='9afb7eee072bfddcf7f3e58420c93463027db2394997ac4c3b87a8b07c707fb0')
     version('2006', sha256='30c6376d6f403985fc2ab381d364522d1420dd58a42cb270d2ad86f8af227edc')
     version('1912_200506', sha256='831a39ff56e268e88374d0a3922479fd80260683e141e51980242cc281484121')
@@ -548,11 +549,11 @@ class Openfoam(Package):
                     rcfile,
                     backup=False)
 
-    @when('@1906: %fj')
+    @when('@1812: %fj')
     @run_before('configure')
     def make_fujitsu_rules(self):
         """Create Fujitsu rules (clang variant) unless supplied upstream.
-        Implemented for 1906 and later (older rules are too messy to edit).
+        Implemented for 1812 and later (older rules are too messy to edit).
         Already included after 1912.
         """
         general_rules = 'wmake/rules/General'
@@ -573,15 +574,22 @@ class Openfoam(Package):
         tty.info('Add Fujitsu wmake rules')
         copy_tree(src, dst)
 
-        for cfg in ['c', 'c++', 'general']:
-            rule = join_path(dst, cfg)
-            filter_file('Clang', 'Fujitsu', rule, backup=False)
+        if self.spec.version >= Version('1906'):
+            for cfg in ['c', 'c++', 'general']:
+                rule = join_path(dst, cfg)
+                filter_file('Clang', 'Fujitsu', rule, backup=False)
+        else:
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
+            filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
+                        backup=False, string=True)
 
         src = join_path(general_rules, 'Clang')
         dst = join_path(general_rules, 'Fujitsu')  # self.compiler
         copy_tree(src, dst)
-        filter_file('clang', spack_cc, join_path(dst, 'c'),
-                    backup=False, string=True)
+        if self.spec.version >= Version('1906'):
+            filter_file('clang', spack_cc, join_path(dst, 'c'),
+                        backup=False, string=True)
         filter_file('clang++', spack_cxx, join_path(dst, 'c++'),
                     backup=False, string=True)
 

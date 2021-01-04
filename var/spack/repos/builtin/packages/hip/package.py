@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,7 +82,10 @@ class Hip(CMakePackage):
                           for name in ('llvm-amdgpu', 'hsa-rocr-dev',
                                        'rocminfo', 'rocm-device-libs'))
             mydict['rocm-path'] = self.spec.prefix
-            device_lib_path = mydict['rocm-device-libs'].amdgcn.bitcode
+            if '@:3.8.0' in self.spec:
+                device_lib_path = mydict['rocm-device-libs'].lib
+            else:
+                device_lib_path = mydict['rocm-device-libs'].amdgcn.bitcode
             mydict['device_lib_path'] = device_lib_path
             return mydict
 

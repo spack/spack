@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPyugrid(PythonPackage):
     """Work with triangular unstructured grids and the data on them."""
 
     homepage = "https://github.com/pyugrid/pyugrid"
-    url      = "https://pypi.io/packages/source/p/pyugrid/pyugrid-0.3.1.tar.gz"
+    pypi = "pyugrid/pyugrid-0.3.1.tar.gz"
 
     version('0.3.1', sha256='eddadc1e88c0e801f780b1e6f636fbfc00e3d14cdab82b43300fde0918310053')
 

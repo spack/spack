@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ from spack.build_systems.aspell_dict import AspellDictPackage
 from spack.build_systems.autotools import AutotoolsPackage
 from spack.build_systems.cmake import CMakePackage
 from spack.build_systems.cuda import CudaPackage
+from spack.build_systems.oneapi import IntelOneApiPackage
+from spack.build_systems.oneapi import IntelOneApiLibraryPackage
 from spack.build_systems.rocm import ROCmPackage
 from spack.build_systems.qmake import QMakePackage
 from spack.build_systems.maven import MavenPackage

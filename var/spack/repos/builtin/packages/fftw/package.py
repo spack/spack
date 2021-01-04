@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -111,9 +111,14 @@ class FftwBase(AutotoolsPackage):
         # float only
         float_simd_features = ['altivec', 'sse']
 
-        # Workaround NVIDIA compiler bug when avx512 is enabled
-        if spec.satisfies('%nvhpc') and 'avx512' in simd_features:
-            simd_features.remove('avx512')
+        # Workaround PGI compiler bug when avx2 is enabled
+        if spec.satisfies('%pgi') and 'avx2' in simd_features:
+            simd_features.remove('avx2')
+
+        # Workaround NVIDIA/PGI compiler bug when avx512 is enabled
+        if spec.satisfies('%nvhpc') or spec.satisfies('%pgi'):
+            if 'avx512' in simd_features:
+                simd_features.remove('avx512')
 
         # NVIDIA compiler does not support Altivec intrinsics
         if spec.satisfies('%nvhpc') and 'vsx' in simd_features:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,10 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-try:
+if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
     from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
+else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
 
@@ -554,7 +554,10 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?$'
+        url_regex += r'(\/download)?'
+        # PyPI adds #sha256=... to the end of the URL
+        url_regex += '(#sha256=.*)?'
+        url_regex += '$'
 
         regexes.append(url_regex)
 

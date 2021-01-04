@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,7 @@ class Mesa(MesonPackage):
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
+    depends_on('expat')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -82,6 +83,12 @@ class Mesa(MesonPackage):
 
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
+
+    def patch(self):
+        filter_file(
+            r"_llvm_method = 'auto'",
+            "_llvm_method = 'config-tool'",
+            "meson.build")
 
     def meson_args(self):
         spec = self.spec

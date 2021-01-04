@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyScp(PythonPackage):
     """scp module for paramiko"""
 
     homepage = "https://github.com/jbardin/scp.py"
-    url      = "https://pypi.io/packages/source/s/scp/scp-0.13.2.tar.gz"
+    pypi = "scp/scp-0.13.2.tar.gz"
 
     version('0.13.2', sha256='ef9d6e67c0331485d3db146bf9ee9baff8a48f3eb0e6c08276a8584b13bf34b3')
 
