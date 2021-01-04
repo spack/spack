@@ -15,7 +15,4 @@ class PyTestfixtures(PythonPackage):
 
     version('6.16.0', sha256='6b5bbca4f7d5692ca4566c60c0383b121d9f1cfecbc3de8442c499a63c264eb8')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest@3.6:', type='test')
-    depends_on('py-pytest-cov', type='test')
