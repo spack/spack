@@ -18,6 +18,8 @@ import archspec.cpu
 
 try:
     import clingo
+    # There may be a better way to detect this
+    clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
 
@@ -409,10 +411,14 @@ class PyclingoDriver(object):
         result.satisfiable = solve_result.satisfiable
 
         def stringify(x):
-            try:
-               return x.string
-            except:
-                return str(x)
+            if clingo_cffi:
+                # Clingo w/ CFFI will throw an exception on failure
+                try:
+                    return x.string
+                except:
+                    return str(x)
+            else:
+                return x.string or str(x)
 
         if result.satisfiable:
             builder = SpecBuilder(specs)
