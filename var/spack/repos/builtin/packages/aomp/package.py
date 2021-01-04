@@ -99,12 +99,12 @@ class Aomp(Package):
 
     # Cmake above 3.18 would fail the build on 3.5.0
     depends_on('cmake@3:', type='build')
-    depends_on('cmake@3:3.17.4', when='@3.5.0', type='build')
+    depends_on('cmake@3:3.17', when='@3.5.0', type='build')
 
     # Python 2 is needed for 3.5.0 and 3.8.0, limit py-setuptools
     # to avoid spec error
-    depends_on('python@2.7.8:2.7.18', when='@3.5.0:3.8.0', type='build')
-    depends_on('py-setuptools@44.1.0:44.99.99', when='@3.5.0:3.8.0',
+    depends_on('python@2.7:2.8', when='@3.5.0:3.8.0', type='build')
+    depends_on('py-setuptools@44', when='@3.5.0:3.8.0',
                type='build')
 
     depends_on('python@3:', type='build', when='@3.9.0:')
@@ -427,7 +427,7 @@ class Aomp(Package):
         if self.spec.version >= Version('3.9.0'):
             components['openmp-debug'] += [
                 '-DENABLE_SOURCE_COPY=ON',
-                '-DOPENMP_SOURCE_DEBUG_MAP="{0}"'.format(debug_map_format)
+                '-DOPENMP_SOURCE_DEBUG_MAP={0}'.format(debug_map_format)
             ]
 
         if self.spec.version >= Version('3.8.0'):
