@@ -29,6 +29,7 @@ lib/spack/spack/test/.cache
 *.in.log
 *.out.log
 *.orig
+.mypy_cache/
 
 # Eclipse files
 .project
