@@ -415,7 +415,7 @@ class PyclingoDriver(object):
                 # Clingo w/ CFFI will throw an exception on failure
                 try:
                     return x.string
-                except:
+                except RuntimeError:
                     return str(x)
             else:
                 return x.string or str(x)
