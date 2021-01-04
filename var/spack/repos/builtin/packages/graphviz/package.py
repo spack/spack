@@ -65,6 +65,8 @@ class Graphviz(AutotoolsPackage):
             description='Build with Quartz and PDF support')
     variant('x', default=False,
             description='Use the X Window System')
+    variant('documentation', default=True,
+            description='Build the documentation')
 
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
@@ -119,8 +121,8 @@ class Graphviz(AutotoolsPackage):
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
     # required to build docs
-    depends_on('groff', type='build')
-    depends_on('ghostscript', type='build')
+    depends_on('groff', when="+documentation", type='build')
+    depends_on('ghostscript', when="+documentation", type='build')
 
     parallel = False
 
