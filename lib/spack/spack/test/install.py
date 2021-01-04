@@ -54,7 +54,6 @@ def test_install_to_different_install_tree(
     real_store = spack.store.store
     spack.store.install_root = 'user'
     spack.store.store = spack.store._store()
-    root1 = spack.store.store.root
 
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
@@ -62,7 +61,7 @@ def test_install_to_different_install_tree(
     assert spec.concrete
 
     # Ensure non-default install_root used in install
-    assert root1 in spec.prefix
+    assert spack.store.store.root in spec.prefix
     assert real_store.root not in spec.prefix
 
     # Get the package
