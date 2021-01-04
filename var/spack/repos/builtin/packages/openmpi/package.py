@@ -266,7 +266,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('pkgconfig', type='build')
 
-    depends_on('libevent@2.0:')
+    depends_on('libevent@2.0:', when='@4:')
 
     depends_on('hwloc@2.0:', when='@4:')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
@@ -679,7 +679,8 @@ class Openmpi(AutotoolsPackage):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
         # external libevent
-        config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
+        if spec.satisfies('@4.0.0:'):
+            config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
         if spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
