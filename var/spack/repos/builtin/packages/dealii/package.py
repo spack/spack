@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -219,7 +219,6 @@ class Dealii(CMakePackage, CudaPackage):
           when='@9.0.0:9.1.1')
 
     # Check for sufficiently modern versions
-    conflicts('cxxstd=98', when='@9.0:')
     conflicts('cxxstd=11', when='@9.3:')
 
     # Interfaces added in 8.5.0:

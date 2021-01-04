@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Slurm(AutotoolsPackage):
     homepage = 'https://slurm.schedmd.com'
     url = 'https://github.com/SchedMD/slurm/archive/slurm-19-05-6-1.tar.gz'
 
+    version('20-11-0-1', sha256='404f72c287c5aad887a5b141304e4962548c12f79b04fc9c88550bc024604228')
     version('20-02-4-1', sha256='d32a39df20a99430973de6692870269f38443d8b963c32b4d6475c9d5e92cd73')
     version('19-05-6-1', sha256='1b83bce4260af06d644253b1f2ec2979b80b4418c631e9c9f48c2729ae2c95ba')
     version('19-05-5-1', sha256='e53e67bd0bb4c37a9c481998764a746467a96bc41d6527569080514f36452c07')

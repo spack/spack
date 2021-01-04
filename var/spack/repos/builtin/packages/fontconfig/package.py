@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class Fontconfig(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('pkgconfig', type='build')
     depends_on('font-util')
-    depends_on('libuuid', when='@2.13.1:')
+    depends_on('uuid', when='@2.13.1:')
 
     def configure_args(self):
         font_path = join_path(self.spec['font-util'].prefix, 'share', 'fonts')

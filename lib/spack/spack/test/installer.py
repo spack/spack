@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -450,7 +450,8 @@ def test_packages_needed_to_bootstrap_compiler_none(install_mockery):
     spec.concretize()
     assert spec.concrete
 
-    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    packages = inst._packages_needed_to_bootstrap_compiler(
+        spec.compiler, spec.architecture, [spec.package])
     assert not packages
 
 
@@ -468,7 +469,8 @@ def test_packages_needed_to_bootstrap_compiler_packages(install_mockery,
     monkeypatch.setattr(spack.compilers, 'pkg_spec_for_compiler', _conc_spec)
     monkeypatch.setattr(spack.spec.Spec, 'concretize', _noop)
 
-    packages = inst._packages_needed_to_bootstrap_compiler(spec.package)
+    packages = inst._packages_needed_to_bootstrap_compiler(
+        spec.compiler, spec.architecture, [spec.package])
     assert packages
 
 
@@ -626,7 +628,7 @@ def test_check_deps_status_upstream(install_mockery, monkeypatch):
 def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     from collections import defaultdict
 
-    def _pkgs(pkg):
+    def _pkgs(compiler, architecture, pkgs):
         spec = spack.spec.Spec('mpi').concretized()
         return [(spec.package, True)]
 
@@ -636,7 +638,8 @@ def test_add_bootstrap_compilers(install_mockery, monkeypatch):
     all_deps = defaultdict(set)
 
     monkeypatch.setattr(inst, '_packages_needed_to_bootstrap_compiler', _pkgs)
-    installer._add_bootstrap_compilers(request.pkg, request, all_deps)
+    installer._add_bootstrap_compilers(
+        'fake', 'fake', [request.pkg], request, all_deps)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtDatamigration(PythonPackage):
     """Microsoft Azure Data Migration Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-datamigration/azure-mgmt-datamigration-4.0.0.zip"
+    pypi = "azure-mgmt-datamigration/azure-mgmt-datamigration-4.0.0.zip"
 
     version('4.0.0', sha256='1efda568d67af911156591eb308432b5f9a56075b57ac0a5dd9f7aee17d79217')
     version('0.1.0', sha256='e754928992743f54d999800a5e0679ee3e91d804d23a25f12c2e6f2f86cd05df')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ import platform as py_platform
 import pytest
 
 import spack.architecture
+import spack.concretize
 from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
@@ -223,3 +224,29 @@ def test_satisfy_strict_constraint_when_not_concrete(
     architecture = spack.spec.ArchSpec(architecture_tuple)
     constraint = spack.spec.ArchSpec(constraint_tuple)
     assert not architecture.satisfies(constraint, strict=True)
+
+
+@pytest.mark.parametrize('root_target_range,dep_target_range,result', [
+    (('x86_64:nocona', 'x86_64:core2', 'nocona')),  # pref not in intersection
+    (('x86_64:core2', 'x86_64:nocona', 'nocona')),
+    (('x86_64:haswell', 'x86_64:mic_knl', 'core2')),  # pref in intersection
+    (('ivybridge', 'nocona:skylake', 'ivybridge')),  # one side concrete
+    (('haswell:icelake', 'broadwell', 'broadwell')),
+    # multiple ranges in lists with multiple overlaps
+    (('x86_64:nocona,haswell:broadwell', 'nocona:haswell,skylake:',
+      'nocona')),
+    # lists with concrete targets, lists compared to ranges
+    (('x86_64,haswell', 'core2:broadwell', 'haswell'))
+])
+@pytest.mark.usefixtures('mock_packages', 'config')
+def test_concretize_target_ranges(
+        root_target_range, dep_target_range, result
+):
+    # use foobar=bar to make the problem simpler for the old concretizer
+    # the new concretizer should not need that help
+    spec = Spec('a %%gcc@10 foobar=bar target=%s ^b target=%s' %
+                (root_target_range, dep_target_range))
+    with spack.concretize.disable_compiler_existence_check():
+        spec.concretize()
+
+    assert str(spec).count('arch=test-debian6-%s' % result) == 2

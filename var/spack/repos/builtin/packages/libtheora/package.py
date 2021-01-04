@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,9 @@ class Libtheora(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('doxygen',  type='build')
     depends_on('libogg')
+
+    patch('exit-prior-to-running-configure.patch', when='@1.1.1')
+    patch('dont_use_png_sizeof.patch', when='@1.1.1')
 
     def autoreconf(self, spec, prefix):
         sh = which('sh')

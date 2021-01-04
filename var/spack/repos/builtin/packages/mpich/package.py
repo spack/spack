@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -87,9 +87,10 @@ spack package at this time.''',
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
+    # landed in v3.4b1 v3.4a3
     patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
           sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
-          when='@3.3 +hwloc')
+          when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
@@ -159,10 +160,10 @@ spack package at this time.''',
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
-    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
-    depends_on("m4", when="@3.3 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+    depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3:3.3.99 +hwloc', type="build")
 
     # MPICH's Yaksa submodule requires python to configure
     depends_on("python@3.0:", when="@develop", type="build")
@@ -300,19 +301,10 @@ spack package at this time.''',
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = self.spec.external_modules
-        if external_modules and 'cray' in external_modules[0]:
-            env.set('MPICC', spack_cc)
-            env.set('MPICXX', spack_cxx)
-            env.set('MPIF77', spack_fc)
-            env.set('MPIF90', spack_fc)
-        else:
-            env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
-            env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
@@ -326,21 +318,12 @@ spack package at this time.''',
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
-        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
-        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
-        external_modules = spec.external_modules
-        if external_modules and 'cray' in external_modules[0]:
-            spec.mpicc = spack_cc
-            spec.mpicxx = spack_cxx
-            spec.mpifc = spack_fc
-            spec.mpif77 = spack_f77
-        else:
-            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+        spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-            if '+fortran' in spec:
-                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+        if '+fortran' in spec:
+            spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+            spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
         spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
@@ -351,7 +334,7 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         if (os.path.exists(self.configure_abs_path) and
-            not spec.satisfies('@3.3 +hwloc')):
+            not spec.satisfies('@3.3:3.3.99 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')

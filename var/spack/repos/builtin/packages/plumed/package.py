@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,9 +25,11 @@ class Plumed(AutotoolsPackage):
     git = 'https://github.com/plumed/plumed2.git'
 
     version('master', branch='master')
+    version('2.7.0', sha256='14450ea566c25ac9bf71fd77bb9c0c95e9038462b5739c73a515be82e2011cd6')
+    version('2.6.2', preferred=True, sha256='bbc2ef0cb08d404513b8b737c72333b6656389e15effd6a0f9ace2a5758c9a4a')
     version('2.6.1', sha256='c1b3c397b2d971140aa240dde50e48a04ce78e3dedb02b6dca80fa53f8026e4e')
     version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
-    version('2.5.5', preferred=True, sha256='70faa9ff1938e286dc388cb793b39840953e5646855b684f48df1bc864b737e8')
+    version('2.5.5', sha256='70faa9ff1938e286dc388cb793b39840953e5646855b684f48df1bc864b737e8')
     version('2.5.4', sha256='a1647e598191f261e75d06351e607475d395af481315052a4c28563ac9989a7f')
     version('2.5.3', sha256='543288be667dc4201fc461ecd2dd4878ddfbeac682d0c021c99ea8e501c7c9dc')
     version('2.5.2', sha256='85d10cc46e2e37c7719cf51c0931278f56c2c8f8a9d86188b2bf97c2535a2ab4')

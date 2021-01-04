@@ -27,6 +27,47 @@
 # - N813: camelcase imported as lowercase
 # - N814: camelcase imported as constant
 #
+# F4: pyflakes import checks, these are now checked by mypy more precisely
+# - F403: from module import *
+# - F405: undefined name or from *
+#
+# Black ignores, these are incompatible with black style and do not follow PEP-8
+# - E203: white space around slice operators can be required, ignore : warn
+# - W503: see above, already ignored for line-breaks
+#
 [flake8]
-ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814
-max-line-length = 79
+ignore = E129,E221,E241,E272,E731,W503,W504,F999,N801,N813,N814,F403,F405
+max-line-length = 88
+
+# F4: Import
+# - F405: `name` may be undefined, or undefined from star imports: `module`
+#
+# F8: Name
+# - F821: undefined name `name`
+#
+per-file-ignores =
+  var/spack/repos/*/package.py:F405,F821
+
+# exclude things we usually do not want linting for.
+# These still get linted when passed explicitly, as when spack flake8 passes
+# them on the command line.
+exclude =
+  .git
+  etc/
+  opt/
+  share/
+  var/spack/cache/
+  var/spack/gpg*/
+  var/spack/junit-report/
+  var/spack/mock-configs/
+  lib/spack/external
+  __pycache__
+  var
+
+format = spack
+
+[flake8:local-plugins]
+report =
+  spack = flake8_formatter:SpackFormatter
+paths =
+  ./share/spack/qa/

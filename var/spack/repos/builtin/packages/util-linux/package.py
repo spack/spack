@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class UtilLinux(AutotoolsPackage):
     list_url = "https://www.kernel.org/pub/linux/utils/util-linux"
     list_depth = 1
 
+    version('2.36', sha256='82942cd877a989f6d12d4ce2c757fb67ec53d8c5cd9af0537141ec5f84a2eea3')
     version('2.35.1', sha256='37ac05d82c6410d89bc05d43cee101fefc8fe6cf6090b3ce7a1409a6f35db606')
     version('2.35',   sha256='98acab129a8490265052e6c1e033ca96d68758a13bb7fcd232c06bf16cc96238')
     version('2.34',   sha256='b62c92e5e1629642113cd41cec1ee86d1ee7e36b8ffe8ec3ac89c11797e9ac25')
@@ -24,12 +25,9 @@ class UtilLinux(AutotoolsPackage):
     version('2.29.1', sha256='a6a7adba65a368e6dad9582d9fbedee43126d990df51266eaee089a73c893653')
     version('2.25',   sha256='7e43273a9e2ab99b5a54ac914fddf5d08ba7ab9b114c550e9f03474672bd23a1')
 
-    depends_on('python@2.7:')
-    depends_on('pkgconfig')
+    depends_on('python@2.7:', type='build')
+    depends_on('pkgconfig', type='build')
 
-    # Make it possible to disable util-linux's libuuid so that you may
-    # reliably depend_on(`libuuid`).
-    variant('libuuid', default=True, description='Build libuuid')
     variant('bash', default=False, description='Install bash completion scripts')
 
     depends_on('bash', when="+bash", type='run')
@@ -43,6 +41,7 @@ class UtilLinux(AutotoolsPackage):
             '--disable-use-tty-group',
             '--disable-makeinstall-chown',
             '--without-systemd',
+            '--disable-libuuid',
         ]
         if "+bash" in self.spec:
             config_args.extend(
@@ -52,7 +51,6 @@ class UtilLinux(AutotoolsPackage):
                      "share", "bash-completion", "completions")])
         else:
             config_args.append('--disable-bash-completion')
-        config_args.extend(self.enable_or_disable('libuuid'))
 
         return config_args
 

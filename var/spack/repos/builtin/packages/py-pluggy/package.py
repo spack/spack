@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,7 @@ class PyPluggy(PythonPackage):
     """Plugin and hook calling mechanisms for python."""
 
     homepage = "https://github.com/pytest-dev/pluggy"
-    url      = "https://pypi.io/packages/source/p/pluggy/pluggy-0.13.0.tar.gz"
-
-    import_modules = ['pluggy']
+    pypi = "pluggy/pluggy-0.13.0.tar.gz"
 
     version('0.13.0', sha256='fa5fa1622fa6dd5c030e9cad086fa19ef6a0cf6d7a2d12318e10cb49d6d68f34')
     version('0.12.0', sha256='0825a152ac059776623854c1543d65a4ad408eb3d33ee114dff91e57ec6ae6fc')

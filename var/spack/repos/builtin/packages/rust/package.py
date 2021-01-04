@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,6 +62,7 @@ class Rust(Package):
     depends_on('python@2.7:2.8', when='@:1.43', type='build')
     depends_on('gmake@3.81:', type='build')
     depends_on('cmake@3.4.3:', type='build')
+    depends_on('ninja', when='@1.48.0:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('openssl')
     depends_on('libssh2')
@@ -87,6 +88,7 @@ class Rust(Package):
     # The `x.py` bootstrapping script did not exist prior to Rust 1.17. It
     # would be possible to support both, but for simplicitly, we only support
     # Rust 1.17 and newer
+    version('1.48.0', sha256='0e763e6db47d5d6f91583284d2f989eacc49b84794d1443355b85c58d67ae43b')
     version('1.47.0', sha256='3185df064c4747f2c8b9bb8c4468edd58ff4ad6d07880c879ac1b173b768d81d')
     version('1.46.0', sha256='2d6a3b7196db474ba3f37b8f5d50a1ecedff00738d7846840605b42bfc922728')
     version('1.45.1', sha256='ea53e6424e3d1fe56c6d77a00e72c5d594b509ec920c5a779a7b8e1dbd74219b')
@@ -133,6 +135,12 @@ class Rust(Package):
     # This dictionary contains a version: hash dictionary for each supported
     # Rust target.
     rust_releases = {
+        '1.48.0': {
+            'x86_64-unknown-linux-gnu':      '950420a35b2dd9091f1b93a9ccd5abc026ca7112e667f246b1deb79204e2038b',
+            'powerpc64le-unknown-linux-gnu': 'e6457a0214f3b1b04bd5b2618bba7e3826e254216420dede2971b571a1c13bb1',
+            'aarch64-unknown-linux-gnu':     'c4769418d8d89f432e4a3a21ad60f99629e4b13bbfc29aef7d9d51c4e8ee8a8a',
+            'x86_64-apple-darwin':           'f30ce0162b39dc7cf877020cec64d4826cad50467af493d180b5b28cf5eb50b3'
+        },
         '1.47.0': {
             'x86_64-unknown-linux-gnu':      'd0e11e1756a072e8e246b05d54593402813d047d12e44df281fbabda91035d96',
             'powerpc64le-unknown-linux-gnu': '5760c3b1897ea70791320c2565f3eef700a3d54059027b84bbe6b8d6157f81c8',
@@ -437,9 +445,8 @@ class Rust(Package):
                     ),
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
-                    when='@{version} platform={platform} target={target}'\
-                    .format(
-                        version=rust_version,
+                    when='@{ver} platform={platform} target={target}'.format(
+                        ver=rust_version,
                         platform=rust_arch['platform'],
                         target=rust_arch['target']
                     )
@@ -513,7 +520,7 @@ class Rust(Package):
         ar = which('ar', required=True)
 
         extra_targets = []
-        if self.spec.variants['extra_targets'].value != 'none':
+        if not self.spec.satisfies('extra_targets=none'):
             extra_targets = list(self.spec.variants['extra_targets'].value)
 
         targets = [self.get_rust_target()] + extra_targets

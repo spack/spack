@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,17 +12,14 @@ class AwsParallelcluster(PythonPackage):
     tool to deploy and manage HPC clusters in the AWS cloud."""
 
     homepage = "https://github.com/aws/aws-parallelcluster"
-    url      = "https://pypi.io/packages/source/a/aws-parallelcluster/aws-parallelcluster-2.10.0.tar.gz"
+    pypi = "aws-parallelcluster/aws-parallelcluster-2.10.1.tar.gz"
 
     maintainers = [
         'sean-smith', 'demartinofra', 'enrico-usai', 'lukeseawalker', 'rexcsn',
         'ddeidda', 'tilne'
     ]
-    import_modules = [
-        'pcluster', 'awsbatch', 'pcluster.dcv', 'pcluster.configure',
-        'pcluster.config', 'pcluster.networking'
-    ]
 
+    version('2.10.1', sha256='b3d2ea836c08c9be1667d55a8999aae412d7c2b20f958ca5842e8fa440eb24e0')
     version('2.10.0', sha256='a7a27871b4f54cb913b0c1233e675131e9b2099549af0840d32c36b7e91b104b')
     version('2.9.1', sha256='12dc22286cd447a16931f1f8619bdd47d4543fd0de7905d52b6c6f83ff9db8a3')
     version('2.9.0', sha256='e98a8426bc46aca0860d9a2be89bbc4a90aab3ed2f60ca6c385b595fbbe79a78')

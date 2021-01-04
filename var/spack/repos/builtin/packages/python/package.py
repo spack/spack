@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ import ast
 import os
 import platform
 import re
-import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
@@ -31,8 +30,10 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart']
 
+    version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21', preferred=True)
+    version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac', preferred=True)
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
     version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
     version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
@@ -165,14 +166,8 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('uuid', when='+uuid')
     depends_on('tix', when='+tix')
-    if sys.platform != 'darwin':
-        # On macOS systems, Spack's libuuid conflicts with the system-installed
-        # version and breaks anything linked against Cocoa/Carbon. Since the
-        # system-provided version is sufficient to build Python's UUID support,
-        # the easy solution is to only depend on Spack's libuuid when *not* on
-        # a Mac.
-        depends_on('libuuid', when='+uuid')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -618,6 +613,13 @@ class Python(AutotoolsPackage):
                        os.path.join(prefix.bin, 'python-config'))
 
     @run_after('install')
+    def install_python_gdb(self):
+        # https://devguide.python.org/gdb/
+        src = os.path.join('Tools', 'gdb', 'libpython.py')
+        if os.path.exists(src):
+            install(src, self.command.path + '-gdb.py')
+
+    @run_after('install')
     @on_package_attributes(run_tests=True)
     def import_tests(self):
         """Test that basic Python functionality works."""
@@ -945,13 +947,20 @@ class Python(AutotoolsPackage):
         env.set('PYTHONPATH', pythonpath)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            for lib in ['lib', 'lib64']:
-                env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, lib,
-                    'python' + str(self.version.up_to(2)), 'site-packages'))
+        python_paths = []
+        for d in dependent_spec.traverse(deptype='run'):
+            if d.package.extends(self.spec):
+                # Python libraries may be installed in lib or lib64
+                # See issues #18520 and #17126
+                for lib in ['lib', 'lib64']:
+                    root = join_path(
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
+                        'site-packages')
+                    if os.path.exists(root):
+                        python_paths.append(root)
+
+        pythonpath = ':'.join(python_paths)
+        env.prepend_path('PYTHONPATH', pythonpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.

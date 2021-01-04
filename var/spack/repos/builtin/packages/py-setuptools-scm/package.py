@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,7 @@ class PySetuptoolsScm(PythonPackage):
     """The blessed package to manage your versions by scm tags."""
 
     homepage = "https://github.com/pypa/setuptools_scm"
-    url      = "https://pypi.io/packages/source/s/setuptools_scm/setuptools_scm-4.1.2.tar.gz"
-
-    import_modules = ['setuptools_scm']
+    pypi = "setuptools_scm/setuptools_scm-4.1.2.tar.gz"
 
     version('4.1.2',  sha256='a8994582e716ec690f33fec70cca0f85bd23ec974e3f783233e4879090a7faa8')
     version('3.3.3',  sha256='bd25e1fb5e4d603dcf490f1fde40fb4c595b357795674c3e5cb7f6217ab39ea5')
