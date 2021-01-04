@@ -16,6 +16,8 @@ class Dire(Package):
     git      = "http://gitlab.com/dire/direforpythia"
     list_url = "http://dire.gitlab.io/Downloads.html"
 
+    tags = ['hep']
+
     maintainer = ['mdiefent']
 
     version('2.004', sha256='8cc1213b58fec744fdaa50834560a14b141de99efb2c3e3d3d47f3d6d84b179f')

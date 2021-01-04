@@ -132,31 +132,27 @@ If ``mpileaks`` depends on other packages, Spack will install the
 dependencies first.  It then fetches the ``mpileaks`` tarball, expands
 it, verifies that it was downloaded without errors, builds it, and
 installs it in its own directory under ``$SPACK_ROOT/opt``. You'll see
-a number of messages from spack, a lot of build output, and a message
-that the packages is installed:
+a number of messages from Spack, a lot of build output, and a message
+that the package is installed.  Add one or more debug options (``-d``)
+to get increasingly detailed output.
 
 .. code-block:: console
 
    $ spack install mpileaks
-   ==> Installing mpileaks
-   ==> mpich is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4.
-   ==> callpath is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/callpath@1.0.2-5dce4318.
-   ==> adept-utils is already installed in ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/adept-utils@1.0-5adef8da.
-   ==> Trying to fetch from https://github.com/hpc/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz
-   ######################################################################## 100.0%
-   ==> Staging archive: ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23/mpileaks-1.0.tar.gz
-   ==> Created stage in ~/spack/var/spack/stage/mpileaks@1.0%gcc@4.4.7 arch=linux-debian7-x86_64-59f6ad23.
-   ==> No patches needed for mpileaks.
-   ==> Building mpileaks.
-
-   ... build output ...
-
-   ==> Successfully installed mpileaks.
-     Fetch: 2.16s.  Build: 9.82s.  Total: 11.98s.
-   [+] ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpileaks@1.0-59f6ad23
+   ... dependency build output ...
+   ==> Installing mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
+   ==> No binary for mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2 found: installing from source
+   ==> mpileaks: Executing phase: 'autoreconf'
+   ==> mpileaks: Executing phase: 'configure'
+   ==> mpileaks: Executing phase: 'build'
+   ==> mpileaks: Executing phase: 'install'
+   [+] ~/spack/opt/linux-rhel7-broadwell/gcc-8.1.0/mpileaks-1.0-ph7pbnhl334wuhogmugriohcwempqry2
 
 The last line, with the ``[+]``, indicates where the package is
 installed.
+
+Add the debug option -- ``spack  install -d mpileaks`` -- to get additional
+output.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Building a specific version
@@ -283,6 +279,102 @@ and removed everything that is not either:
 
 You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly installed packages
 or :ref:`dependency-types` for a more thorough treatment of dependency types.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Marking packages explicit or implicit
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, Spack will mark packages a user installs as explicitly installed,
+while all of its dependencies will be marked as implicitly installed. Packages
+can be marked manually as explicitly or implicitly installed by using
+``spack mark``. This can be used in combination with ``spack gc`` to clean up
+packages that are no longer required.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 29005: Installing libsigsegv
+  [...]
+  ==> 29005: Installing m4
+  [...]
+
+  $ spack install m4 ^libsigsegv@2.11
+  ==> 39798: Installing libsigsegv
+  [...]
+  ==> 39798: Installing m4
+  [...]
+
+  $ spack find -d
+  ==> 4 installed packages
+  -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+  libsigsegv@2.11
+
+  libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.12
+
+  m4@1.4.18
+      libsigsegv@2.11
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+  $ spack mark -i m4 ^libsigsegv@2.11
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ spack gc
+  ==> The following packages will be uninstalled:
+
+      -- linux-fedora32-haswell / gcc@10.1.1 --------------------------
+      5fj7p2o libsigsegv@2.11  c6ensc6 m4@1.4.18
+
+  ==> Do you want to proceed? [y/N]
+
+In the example above, we ended up with two versions of ``m4`` since they depend
+on different versions of ``libsigsegv``. ``spack gc`` will not remove any of
+the packages since both versions of ``m4`` have been installed explicitly
+and both versions of ``libsigsegv`` are required by the ``m4`` packages.
+
+``spack mark`` can also be used to implement upgrade workflows. The following
+example demonstrates how the ``spack mark`` and ``spack gc`` can be used to
+only keep the current version of a package installed.
+
+When updating Spack via ``git pull``, new versions for either ``libsigsegv``
+or ``m4`` might be introduced. This will cause Spack to install duplicates.
+Since we only want to keep one version, we mark everything as implicitly
+installed before updating Spack. If there is no new version for either of the
+packages, ``spack install`` will simply mark them as explicitly installed and
+``spack gc`` will not remove them.
+
+.. code-block:: console
+
+  $ spack install m4
+  ==> 62843: Installing libsigsegv
+  [...]
+  ==> 62843: Installing m4
+  [...]
+
+  $ spack mark -i -a
+  ==> m4@1.4.18 : marking the package implicit
+
+  $ git pull
+  [...]
+
+  $ spack install m4
+  [...]
+  ==> m4@1.4.18 : marking the package explicit
+  [...]
+
+  $ spack gc
+  ==> There are no unused specs. Spack's store is clean.
+
+When using this workflow for installations that contain more packages, care
+has to be taken to either only mark selected packages or issue ``spack install``
+for all packages that should be kept.
+
+You can check :ref:`cmd-spack-find-metadata` to see how to query for explicitly
+or implicitly installed packages.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Non-Downloadable Tarballs
@@ -639,8 +731,10 @@ your path:
    ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
 
 These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer
-want to use a package, you can type unload or unuse similarly:
+``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH`` according to the
+:ref:`prefix inspections <customize-env-modifications>` defined in your
+modules configuration.  When you no longer want to use a package, you
+can type unload or unuse similarly:
 
 .. code-block:: console
 

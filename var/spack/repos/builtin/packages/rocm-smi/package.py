@@ -13,10 +13,11 @@ class RocmSmi(MakefilePackage):
        management of your ROCm enabled system"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROC-smi"
-    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-3.9.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROC-smi/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.10.0', sha256='b1c7e529e8fcc53fb6b40a4126651da0ab07bcb91faac99519ba9660412ea4ed')
     version('3.9.0', sha256='af3cc6d5e2296f47b1873339faad2d27cf2f24725771bf34c7f644d20cc6ef3b')
     version('3.8.0', sha256='248d9bddc3353c74defd57f203df0648278a4613f2af7fb838d92a4bc8de575d')
     version('3.7.0', sha256='4e34b3b4e409bb89677882f47d9988d56bc2d9bb9893f0712c22a4b73789e06a')

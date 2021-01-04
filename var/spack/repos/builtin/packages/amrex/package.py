@@ -18,6 +18,7 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('20.12', sha256='a8ba1d605780250da77619939582ce44b33cd286f2dbcc0dfd5cdbaf209140a5')
     version('20.11', sha256='b86f4f2ebf414cec050e562d4ab81545944bda581b496d69767b4bf6a3060855')
     version('20.10', sha256='92def480d1f0bcb5bcb9dfae2ddc8997060414386a1d71ccbfdad785fa2e46fa')
     version('20.09', sha256='3ae203f18656117d8201da16e899a6144ec217817a2a5d9b7649e2eef9cacdf9')
@@ -79,12 +80,16 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
+    # cmake @3.17: is necessary to handle cuda @11: correctly
+    depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     conflicts('%apple-clang')
     conflicts('%clang')
 
     # Check options compatibility
     conflicts('+sundials', when='~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
+    conflicts('+sundials', when='@20.12:',
+              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')
     conflicts('+hdf5', when='@:20.06',
               msg='AMReX HDF5 support needs AMReX newer than version 20.06')
     conflicts('+hypre', when='@:20.06',
@@ -107,6 +112,10 @@ class Amrex(CMakePackage):
             url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
         return url.format(version.dotted)
 
+    #
+    # For versions <= 20.11
+    #
+    @when('@:20.11')
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
@@ -128,6 +137,36 @@ class Amrex(CMakePackage):
             self.define_from_variant('ENABLE_HYPRE', 'hypre'),
             self.define_from_variant('ENABLE_PETSC', 'petsc'),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
+        ]
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        return args
+
+    #
+    # For versions > 20.11
+    #
+    @when('@20.12:')
+    def cmake_args(self):
+        args = [
+            '-DUSE_XSDK_DEFAULTS=ON',
+            self.define_from_variant('AMReX_SPACEDIM', 'dimensions'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('AMReX_MPI', 'mpi'),
+            self.define_from_variant('AMReX_OMP', 'openmp'),
+            '-DXSDK_PRECISION:STRING=%s' %
+            self.spec.variants['precision'].value.upper(),
+            self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
+            self.define_from_variant('AMReX_FORTRAN_INTERFACES', 'fortran'),
+            self.define_from_variant('AMReX_EB', 'eb'),
+            self.define_from_variant('AMReX_LINEAR_SOLVERS',
+                                     'linear_solvers'),
+            self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
+            self.define_from_variant('AMReX_PARTICLES', 'particles'),
+            self.define_from_variant('AMReX_HDF5', 'hdf5'),
+            self.define_from_variant('AMReX_HYPRE', 'hypre'),
+            self.define_from_variant('AMReX_PETSC', 'petsc'),
+            self.define_from_variant('AMReX_CUDA', 'cuda'),
         ]
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')

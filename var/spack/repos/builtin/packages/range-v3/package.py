@@ -48,7 +48,7 @@ class RangeV3(CMakePackage):
             description='Use the specified C++ standard when building.')
 
     variant('doc',
-            default=True,
+            default=False,
             description='Build and install documentation.')
 
     variant('examples',

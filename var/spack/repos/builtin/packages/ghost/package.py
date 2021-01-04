@@ -32,7 +32,7 @@ class Ghost(CMakePackage, CudaPackage):
     # ###################### Dependencies ##########################
 
     # Everything should be compiled position independent (-fpic)
-    depends_on('cmake@3.5:')
+    depends_on('cmake@3.5:', type='build')
     depends_on('hwloc')
     depends_on('blas')
     depends_on('mpi', when='+mpi')

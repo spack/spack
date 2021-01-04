@@ -12,6 +12,8 @@ class G4ndl(Package):
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4NDL.4.5.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
     version('4.6', sha256='9d287cf2ae0fb887a2adce801ee74fb9be21b0d166dab49bcbee9408a5145408')

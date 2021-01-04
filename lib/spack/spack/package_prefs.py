@@ -50,10 +50,11 @@ class PackagePrefs(object):
        provider_spec_list.sort(key=kf)
 
     """
-    def __init__(self, pkgname, component, vpkg=None):
+    def __init__(self, pkgname, component, vpkg=None, all=True):
         self.pkgname = pkgname
         self.component = component
         self.vpkg = vpkg
+        self.all = all
 
         self._spec_order = None
 
@@ -66,7 +67,7 @@ class PackagePrefs(object):
         """
         if self._spec_order is None:
             self._spec_order = self._specs_for_pkg(
-                self.pkgname, self.component, self.vpkg)
+                self.pkgname, self.component, self.vpkg, self.all)
         spec_order = self._spec_order
 
         # integer is the index of the first spec in order that satisfies
@@ -114,12 +115,13 @@ class PackagePrefs(object):
         return []
 
     @classmethod
-    def _specs_for_pkg(cls, pkgname, component, vpkg=None):
+    def _specs_for_pkg(cls, pkgname, component, vpkg=None, all=True):
         """Given a sort order specified by the pkgname/component/second_key,
            return a list of CompilerSpecs, VersionLists, or Specs for
            that sorting list.
         """
-        pkglist = cls.order_for_package(pkgname, component, vpkg)
+        pkglist = cls.order_for_package(
+            pkgname, component, vpkg, all)
         spec_type = _spec_type(component)
         return [spec_type(s) for s in pkglist]
 
