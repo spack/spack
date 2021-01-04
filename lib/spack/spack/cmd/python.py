@@ -51,9 +51,10 @@ def python(parser, args, unknown_args):
     if unknown_args:
         tty.die("Unknown arguments:", " ".join(unknown_args))
 
-    # If arguments or a command are provided, just use python
-    if args.python_args or args.python_command:
-        args.python_interpreter = "python"
+    # Only python has support for arguments / commands
+    has_command = args.python_args or args.python_command
+    if has_command and args.python_interpreter != "python":
+        tty.die("Use the default python interpreter for args/commands.")
 
     # Run user choose of interpreter
     if args.python_interpreter == "ipython":
@@ -69,8 +70,7 @@ def ipython_interpreter(args):
     try:
         import IPython
     except ImportError:
-        tty.warning("ipython is not installed, using python.")
-        return spack.cmd.python.python_interpreter(args)
+        tty.die("ipython is not installed, install and try again.")
 
     if "PYTHONSTARTUP" in os.environ:
         startup_file = os.environ["PYTHONSTARTUP"]
