@@ -19,6 +19,5 @@ class RNfactors(RPackage):
     extends('r')
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-
     depends_on('r-mass', type=('build', 'run'))
     depends_on('r-psych', type=('build', 'run'))
