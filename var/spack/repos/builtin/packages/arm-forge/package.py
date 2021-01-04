@@ -19,6 +19,12 @@ class ArmForge(Package):
     #       versions (and checksums) based on the target platform shows up
 
     version(
+        "20.2.0-Redhat-7.0-x86_64",
+        sha256="26592a77c42f970f724f15b70cc5ce6af1078fd0ef9243a37c3215916cfa7cf4",
+        url="https://content.allinea.com/downloads/arm-forge-20.2-Redhat-7.0-x86_64.tar",
+    )
+
+    version(
         "20.0.3-Redhat-7.0-x86_64",
         sha256="ad3973ba87b64b5e0f9b04e05331f78f01ef4ec789078859e4e38ea5ac4a9f29",
         url="http://content.allinea.com/downloads/arm-forge-20.0.3-Redhat-7.0-x86_64.tar",

@@ -28,9 +28,10 @@ packages:
       - brion@3.2.0 +python
       - brion@3.3.0 +python
       - circuit-build@3.1.1
+      - circuit-analysis@0.0.4
       - connectome-tools@0.3.3
       - spatial-index@0.2.1
-      - spykfunc@0.15.7
+      - spykfunc@0.15.9
       - psp-validation@0.3.1
       - py-pytouchreader@1.4.6
       - py-basalt@0.2.9
@@ -41,9 +42,9 @@ packages:
       - py-morphology-repair-workflow@2.0.1
       - py-simwriter@1.0.1
       - py-morph-tool@2.2.21
-      - py-minis-validation@0.0.2
+      - py-minis-validation@0.0.3
       - py-morphio@2.3.4
-      - py-neurodamus@2.2.0
+      - py-neurodamus@2.3.0
       - py-sonata-network-reduction@0.1.0 ^neuron%intel@19.0.4^py-ipython%gcc
 
   gnu-stable-serial-ophiophob:
@@ -68,7 +69,7 @@ packages:
       - functionalizer@3.12.2
       - parquet-converters@0.5.7
       - synapsetool@0.6.1
-      - touchdetector@5.5.0
+      - touchdetector@5.5.1
       - brayns +opendeck +brion ^brion@3.1.0 ^ospray@1.7.3%intel@19.0.4
       - brayns@1.0.1 +brion ^brion@3.1.0 ^ospray%intel@19.0.4
       - brayns-topologyviewer@0.1.0 ^brayns@0.8.0 ^ospray@1.7.3%intel@19.0.4
@@ -125,11 +126,11 @@ packages:
       - nest@2.18.0
       - py-efel@3.0.80
       - py-bluepyefe@0.3.13
-      - py-bglibpy@4.4.10 ^neuron%intel@19.0.4
+      - py-bglibpy@4.4.20 ^neuron%intel@19.0.4
       - py-bluepy@0.14.15
-      - py-bluepymm@0.7.49 ^neuron%intel@19.0.4
+      - py-bluepymm@0.7.65 ^neuron%intel@19.0.4
       - py-bluepyopt@1.9.27 ^neuron%intel@19.0.4
-      - py-currentscape@0.0.2
+      - py-currentscape@0.0.6
 
   #### cellular ####
 
@@ -173,9 +174,9 @@ packages:
     specs:
       - neurodamus-core@3.1.0~common
       - neurodamus-neocortex@1.2-3.1.0+coreneuron
-      - neurodamus-hippocampus@1.2-3.1.0+coreneuron
+      - neurodamus-hippocampus@1.3-3.1.0+coreneuron
       - neurodamus-thalamus@1.2-3.1.0+coreneuron
       - neurodamus-mousify@1.2-3.1.0+coreneuron
       - neurodamus-neocortex@1.2-3.1.0+coreneuron^coreneuron+knl
-      - neurodamus-hippocampus@1.2-3.1.0+coreneuron^coreneuron+knl
+      - neurodamus-hippocampus@1.3-3.1.0+coreneuron^coreneuron+knl
       - neurodamus-thalamus@1.2-3.1.0+coreneuron^coreneuron+knl

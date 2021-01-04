@@ -13,6 +13,7 @@ class PyVoxcell(PythonPackage):
     git      = "ssh://bbpcode.epfl.ch/nse/voxcell"
 
     version('develop', branch='master')
+    version('2.7.4', tag='voxcell-v2.7.4')
     version('2.7.0', tag='voxcell-v2.7.0')
     version('2.6.2', tag='voxcell-v2.6.2')
     version('2.6.1', tag='voxcell-v2.6.1')
@@ -22,7 +23,7 @@ class PyVoxcell(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-future@0.16:', type='run')
-    depends_on('py-h5py~mpi@2.3:', type='run')
+    depends_on('py-h5py~mpi@2.3:2.99', type='run')
     depends_on('py-numpy@1.9:', type='run')
     depends_on('py-pandas@0.24.2:', type='run')
     depends_on('py-pynrrd@0.2:0.2.99', type='run', when='@:2.6.1')

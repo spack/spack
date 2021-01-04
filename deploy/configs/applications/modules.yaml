@@ -35,6 +35,7 @@ modules:
       - brayns-topologyviewer
       - brion+python
       - circuit-build
+      - circuit-analysis
       - connectome-tools
       - emsim
       - functionalizer

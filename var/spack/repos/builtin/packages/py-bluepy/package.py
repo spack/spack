@@ -12,6 +12,7 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy"
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
+    version('0.16.0', tag='bluepy-v0.16.0')
     version('0.14.15', tag='bluepy-v0.14.15')
     version('0.14.14', tag='bluepy-v0.14.14')
     version('0.14.13', tag='bluepy-v0.14.13')
@@ -40,8 +41,11 @@ class PyBluepy(PythonPackage):
     depends_on('py-sqlalchemy@1.0:', type='run')
 
     depends_on('py-bluepy-configfile@0.1.11:', type='run')
-    depends_on('py-libsonata@0.1.3:', type='run')
-    depends_on('py-bluepysnap@0.4.1:', type='run')
+    depends_on('py-libsonata@0.1.3:0.1.4', type='run', when='^python@:3.5.99')
+    depends_on('py-libsonata@0.1.6:', type='run', when='^python@3.6:')
+    depends_on('py-voxcell@:2.7.3', type='run', when='@:0.14.15')
+    depends_on('py-voxcell@2.7.4:2.99', type='run', when='@0.14.16:0.16.0')
+    depends_on('py-bluepysnap@0.4.1:0.7.1', type='run')
     depends_on('py-pyrsistent@:0.17', type='run')
     depends_on('brion+python@3.1.0:', type='run')
 
