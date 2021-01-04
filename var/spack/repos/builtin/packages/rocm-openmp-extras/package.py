@@ -248,8 +248,7 @@ class RocmOpenmpExtras(Package):
             '-DAOMP_STANDALONE_BUILD=0',
             '-DDEVICELIBS_ROOT={0}'.format(devlibs_src),
             '-DNEW_BC_PATH=1',
-            '-DAOMP={0}'.format(llvm_prefix),
-            '-DCMAKE_VERBOSE_MAKEFILE=1'
+            '-DAOMP={0}'.format(llvm_prefix)
         ]
 
         # Shared cmake configuration for openmp, openmp-debug
