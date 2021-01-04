@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPyodbc(PythonPackage):
        decimal."""
 
     homepage = "https://github.com/mkleehammer/pyodbc"
-    url      = "https://pypi.io/packages/source/p/pyodbc/pyodbc-4.0.26.tar.gz"
+    pypi = "pyodbc/pyodbc-4.0.26.tar.gz"
 
     version('4.0.26', sha256='e52700b5d24a846483b5ab80acd9153f8e593999c9184ffea11596288fb33de3')
 

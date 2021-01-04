@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PyParso(PythonPackage):
        Parso is also able to list multiple syntax errors
        in your python file."""
 
-    homepage = "https://pypi.org/project/parso/"
-    url      = "https://pypi.io/packages/source/p/parso/parso-0.6.1.tar.gz"
+    pypi = "parso/parso-0.6.1.tar.gz"
 
     version('0.6.1', sha256='56b2105a80e9c4df49de85e125feb6be69f49920e121406f15e7acde6c9dfc57')
 

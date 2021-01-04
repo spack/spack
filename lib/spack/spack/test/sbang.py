@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,7 +44,7 @@ sbang_line = '#!/bin/sh %s/bin/sbang\n' % spack.store.store.unpadded_root
 last_line  = "last!\n"
 
 
-@pytest.fixture
+@pytest.fixture  # type: ignore[no-redef]
 def sbang_line():
     yield '#!/bin/sh %s/bin/sbang\n' % spack.store.layout.root
 

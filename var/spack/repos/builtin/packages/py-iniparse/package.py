@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyIniparse(PythonPackage):
     """Accessing and Modifying INI files"""
 
     homepage = "https://github.com/candlepin/python-iniparse"
-    url      = "https://pypi.io/packages/source/i/iniparse/iniparse-0.4.tar.gz"
+    pypi = "iniparse/iniparse-0.4.tar.gz"
     git      = "https://github.com/candlepin/python-iniparse.git"
 
     version('master', branch='master')

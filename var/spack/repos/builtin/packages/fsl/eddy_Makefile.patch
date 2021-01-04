@@ -1,0 +1,11 @@
+--- a/src/eddy/Makefile	2020-07-22 09:11:14.000000000 -0500
++++ b/src/eddy/Makefile	2020-11-10 23:31:09.898903635 -0600
+@@ -46,7 +46,7 @@
+ 
+ 	CUDACXXFLAGS=-DCOMPILE_GPU
+ 	CUDAOBJS=CBFKernelDefinitions.o CBFSparseDiagonalMatrix.o CBFSplineField.o LSResampler_cuda.o DiffusionGP_cuda.o PostEddyCF_cuda.o EddyGpuUtils.o EddyInternalGpuUtils.o CudaVolume.o EddyMatrixKernels.o EddyKernels.o GpuPredictorChunk.o StackResampler.o DerivativeCalculator.o
+-	CUDALDFLAGS= -Xlinker -rpath $(LIB_CUDA) -L$(LIB_CUDA) -lcublas -lcudart
++	CUDALDFLAGS= -Xlinker -rpath -Xlinker $(LIB_CUDA) -L$(LIB_CUDA) -lcublas -lcudart
+ 	ifeq ($(fastbuild),1)
+ 		GENCODE_FLAGS    := -gencode arch=compute_30,code=sm_30
+ 	endif

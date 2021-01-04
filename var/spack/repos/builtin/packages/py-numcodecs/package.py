@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyNumcodecs(PythonPackage):
     """
 
     homepage = "https://github.com/zarr-developers/numcodecs"
-    url      = "https://pypi.io/packages/source/n/numcodecs/numcodecs-0.6.4.tar.gz"
+    pypi = "numcodecs/numcodecs-0.6.4.tar.gz"
 
     version('0.6.4', sha256='ef4843d5db4d074e607e9b85156835c10d006afc10e175bda62ff5412fca6e4d')
 

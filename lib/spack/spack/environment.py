@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -40,6 +40,7 @@ from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
 from spack.installer import PackageInstaller
+import spack.util.path
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -468,7 +469,7 @@ class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
         self.base = base_path
-        self.root = root
+        self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
@@ -685,7 +686,7 @@ class Environment(object):
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name)
+        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
         user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
                               self.spec_lists.copy())
         self.spec_lists[user_speclist_name] = user_specs
@@ -707,10 +708,11 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        self.concretization = configuration.get('concretization')
+        # default concretization to separately
+        self.concretization = configuration.get('concretization', 'separately')
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration['develop']
+        self.dev_specs = configuration.get('develop', {})
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
