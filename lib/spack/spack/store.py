@@ -49,8 +49,8 @@ def parse_install_tree(config_dict):
     """Parse config settings and return values relevant to the store object.
 
     Arguments:
-     config_dict (dict): dictionary of config values, as returned from
-         spack.config.get('config')
+        config_dict (dict): dictionary of config values, as returned from
+           spack.config.get('config')
 
     Returns:
         (tuple): triple of the install tree root, the unpadded install tree
@@ -110,7 +110,7 @@ def parse_install_tree(config_dict):
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
         # construct projection from previous values for backwards compatibility
         all_projection = config_dict.get(
-            'config:install_path_scheme',
+            'install_path_scheme',
             spack.directory_layout.default_projections['all'])
 
         projections = {'all': all_projection}
@@ -126,7 +126,7 @@ def parse_install_tree(config_dict):
         projections = install_tree.get(
             'projections', spack.directory_layout.default_projections)
 
-        path_scheme = config_dict.get('config:install_path_scheme', None)
+        path_scheme = config_dict.get('install_path_scheme', None)
         if path_scheme:
             tty.warn("Deprecated config value 'install_path_scheme' ignored"
                      " when using new install_tree syntax")
