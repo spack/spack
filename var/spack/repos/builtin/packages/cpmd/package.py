@@ -24,44 +24,64 @@ class Cpmd(MakefilePackage):
 
     variant('omp', description='Enables the use of OMP instructions',
             default=False)
+    variant('mpi', description='Build with MPI support', default=False)
 
     depends_on('lapack')
+    depends_on('mpi', when='+mpi')
+
+    conflicts('^openblas threads=none', when='+omp')
+    conflicts('^openblas threads=pthreads', when='+omp')
 
     def edit(self, spec, prefix):
-        # dependency check
-        ltype = spec['lapack'].name
-        if spec.satisfies('+omp'):
-            if ltype == 'openblas' and 'threads=openmp' not in spec['lapack']:
-                raise InstallError(
-                    '^openblas threads=openmp required for cpmd+omp'
-                    ' with openblas')
-
         # patch configure file
         cbase = 'LINUX-GFORTRAN'
         cp = join_path('configure', cbase)
         # Compilers
-        filter_file(
-            'FC=.+',
-            'FC=\'{0}\''.format(spack_fc),
-            cp
-        )
-        filter_file(
-            'CC=.+',
-            'CC=\'{0}\''.format(spack_cc),
-            cp
-        )
-        filter_file(
-            'LD=.+',
-            'LD=\'{0}\''.format(spack_fc),
-            cp
-        )
+        if spec.satisfies('+mpi'):
+            filter_file(
+                'FC=.+',
+                'FC=\'{0}\''.format(spec["mpi"].mpifc),
+                cp
+            )
+            filter_file(
+                'CC=.+',
+                'CC=\'{0}\''.format(spec["mpi"].mpicc),
+                cp
+            )
+            filter_file(
+                'LD=.+',
+                'LD=\'{0}\''.format(spec["mpi"].mpifc),
+                cp
+            )
+        else:
+            filter_file(
+                'FC=.+',
+                'FC=\'{0}\''.format(spack_fc),
+                cp
+            )
+            filter_file(
+                'CC=.+',
+                'CC=\'{0}\''.format(spack_cc),
+                cp
+            )
+            filter_file(
+                'LD=.+',
+                'LD=\'{0}\''.format(spack_fc),
+                cp
+            )
+
+        # MPI flag
+        if spec.satisfies('+mpi'):
+            filter_file('-D__Linux', '-D__Linux -D__PARALLEL', cp)
+
         # lapack
         filter_file(
             'LIBS=.+',
             'LIBS=\'{0}\''.format(spec['lapack'].libs.ld_flags),
             cp
         )
-        # LIBS:remove static (TODO: needed?)
+
+        # LIBS:remove -static
         if spec.satisfies('%fj') and spec.satisfies('+omp'):
             filter_file(
                 '\'-static \'',
@@ -93,7 +113,6 @@ class Cpmd(MakefilePackage):
                 cp
             )
 
-
         # create Makefile
         bash = which('bash')
         if spec.satisfies('+omp'):
@@ -111,6 +130,3 @@ class Cpmd(MakefilePackage):
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
-        #install_tree('bin', prefix.bin)
-        #install_tree('doc', join_path(prefix, 'doc'))
-        #install_tree('lib', prefix.lib)
