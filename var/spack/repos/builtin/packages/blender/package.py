@@ -51,7 +51,7 @@ class Blender(CMakePackage):
     # Upper bound per: https://developer.blender.org/T54779
     depends_on('ffmpeg@3.2.1:3.999', when='@:2.79b+ffmpeg')
     depends_on('ffmpeg@3.2.1:', when='@2.80:+ffmpeg')
-    depends_on('opencolorio@1.0:', when='+ocio')
+#    depends_on('opencolorio@1.0:', when='+ocio')
     depends_on('llvm@3.0:', when='+llvm')
     # depends_on('openshadinglanguage')
     # depends_on('openvdb@3.1:')
