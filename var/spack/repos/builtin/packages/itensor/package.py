@@ -77,7 +77,7 @@ class Itensor(MakefilePackage):
             filter_file('#PLATFORM=lapack', vinc, mf, String=True)
 
         filter_file(r'^PLATFORM.+', vpla, mf)
-        filter_file(r'^BLAS_LAPACK_LIB.+', vlib, mf)
+        filter_file(r'^BLAS_LAPACK_LIBFLAGS.+', vlib, mf)
 
         # 3.HDF5
         if '+hdf5' in spec:
@@ -109,11 +109,10 @@ class Itensor(MakefilePackage):
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.LDFLAGS
-        vlib = 'BLAS_LAPACK_LIB= '
+        vlib = 'BLAS_LAPACK_LIBFLAGS='
         vlib += ' '.join(spec.compiler_flags['ldflags']) + ' '
         vlib += ' '.join(spec.compiler_flags['ldlibs'])  + ' '
-        print(vlib)
-        filter_file(r'^BLAS_LAPACK_LIB=', vlib, mf)
+        filter_file(r'^BLAS_LAPACK_LIBFLAGS=', vlib, mf)
 
         # 3.prefix
         filter_file(
