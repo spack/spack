@@ -8,9 +8,9 @@ from spack import *
 
 class Procenv(AutotoolsPackage):
     """A command-line tool that displays as much detail about itself and
-its environment as possible.  It can be used as a test tool, to
-understand the type of environment a process runs in, and for
-comparing system environments."""
+    its environment as possible.  It can be used as a test tool, to
+    understand the type of environment a process runs in, and for
+    comparing system environments."""
 
     homepage = "https://github.com/jamesodhunt/procenv/"
     url      = "https://github.com/jamesodhunt/procenv/archive/0.51.tar.gz"
