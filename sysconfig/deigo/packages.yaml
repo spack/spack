@@ -1,64 +1,74 @@
 packages:
-    autoconf:
-        paths:
-            autoconf@2.69: /usr
-        buildable: False
-        version: [2.69]
-    automake:
-        paths:
-            automake@1.16.1: /usr
-        buildable: False
-        version: [1.16.1]
-    bison:
-        paths:
-            bison@3.0.4: /usr
-        buildable: False
-        version: [3.0.4]
-    boost:
-        variants: +pic
-    cmake:
-        paths:
-            cmake@3.18.1: /apps/free81/cmake/3.18.1
-        buildable: False
-        version: [3.18.1]
-    flex:
-        paths:
-            flex@2.6.1: /usr
-        buildable: False
-        version: [2.6.1]
-    gettext:
-        paths:
-            gettext@0.19.8: /usr
-        buildable: False
-        version: [0.19.8]
-    hdf5:
-        paths:
-            hdf5@1.10.6+mpi+hl: /apps/free81/hdf5.gcc/1.10.6
-        variants: ~fortran ~cxx
-        buildable: False
-        version: [1.10.6]
-    libtool:
-        paths:
-            libtool@2.4.6: /usr
-        buildable: False
-        version: [2.4.6]
-    ncurses:
-        paths:
-            ncurses@5.9: /usr
-        buildable: False
-        version: [5.9]
-    openmpi:
-        paths:
-            openmpi@4.0.3: /apps/free81/openmpi.gcc/4.0.3
-        buildable: False
-        version: [4.0.3]
-    pkg-config:
-        paths:
-            pkg-config@1.4.2: /usr
-        buildable: False
-        version: [1.4.2]
-    all:
-        compiler: [gcc]
-        providers:
-            mpi: [openmpi]
-
+  autoconf:
+    buildable: false
+    version: [2.69]
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr
+  automake:
+    buildable: false
+    version: [1.16.1]
+    externals:
+    - spec: automake@1.16.1
+      prefix: /usr
+  bison:
+    buildable: false
+    version: [3.0.4]
+    externals:
+    - spec: bison@3.0.4
+      prefix: /usr
+  boost:
+    variants: +pic
+  cmake:
+    buildable: false
+    version: [3.18.1]
+    externals:
+    - spec: cmake@3.18.1
+      prefix: /apps/free81/cmake/3.18.1
+  flex:
+    buildable: false
+    version: [2.6.1]
+    externals:
+    - spec: flex@2.6.1
+      prefix: /usr
+  gettext:
+    buildable: false
+    version: [0.19.8]
+    externals:
+    - spec: gettext@0.19.8
+      prefix: /usr
+  hdf5:
+    variants: ~fortran ~cxx
+    buildable: false
+    version: [1.10.6]
+    externals:
+    - spec: hdf5@1.10.6+mpi+hl
+      prefix: /apps/free81/hdf5.gcc/1.10.6
+  libtool:
+    buildable: false
+    version: [2.4.6]
+    externals:
+    - spec: libtool@2.4.6
+      prefix: /usr
+  ncurses:
+    buildable: false
+    version: [5.9]
+    externals:
+    - spec: ncurses@5.9
+      prefix: /usr
+  openmpi:
+    buildable: false
+    version: [4.0.3]
+    externals:
+    - spec: openmpi@4.0.3
+      prefix: /apps/free81/openmpi.gcc/4.0.3
+  pkg-config:
+    buildable: false
+    version: [1.4.2]
+    externals:
+    - spec: pkg-config@1.4.2
+      prefix: /usr
+  all:
+    compiler: [gcc]
+    providers:
+      mpi: [openmpi]

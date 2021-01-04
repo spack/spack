@@ -1,111 +1,131 @@
 packages:
-    autoconf:
-        paths:
-            autoconf@2.69: /usr/local/opt/autoconf
-        version: [2.69]
-    automake:
-        paths:
-            automake@1.16.1: /usr/local/opt/automake
-        version: [1.16.1]
-    bison:
-        paths:
-            bison@3.4: /usr/local/opt/bison
-        version: [3.4]
-    boost:
-        paths:
-            boost@1.68.0: /usr/local/opt/boost
-        buildable: False
-    bzip2:
-        paths:
-            bzip2@1.0.6: /usr/local/opt/bzip
-        version: [1.0.6]
-    cairo:
-        paths:
-            cairo@1.8.10: /usr/local/opt/cairo
-        version: [1.8.10]
-    catch:
-        paths:
-            catch~single_header@2.x: /usr/local/opt/catch2
-        version: [2.x]
-    cmake:
-        paths:
-            cmake@3.13.3: /usr/local/opt/cmake
-        buildable: False
-    curl:
-        paths:
-            curl@7.29.0: /usr/local/opt/curl
-        version: [7.29.0]
-    environment-modules:
-        paths:
-            environment-modules@4.1.4: /usr/local/opt/modules
-        buildable: False
-    flex:
-        paths:
-            flex@2.6.4: /usr/local/opt/flex
-        version: [2.6.4]
-    fontconfig:
-        paths:
-            fontconfig@2.10.95: /usr/local/opt/fontconfig
-        version: [2.10.95]
-    gettext:
-        paths:
-            gettext@0.20.1: /usr/local/opt/gettext
-        version: [0.20.1]
-    hdf5:
-        paths:
-            hdf5@1.12.0+mpi: /usr/local/opt/hdf5-parallel
-        version: [1.12]
-        buildable: False
-    hdf5:
-        paths:
-            hdf5@1.12.0~mpi: /usr/local/opt/hdf5
-        version: [1.12]
-    hwloc:
-        paths:
-            hwloc@1.11.2: /usr/local/opt/hwloc
-        version: [1.11.2]
-    openblas:
-        paths:
-            openblas@0.3.5: /usr/local/opt/openblas
-        version: [0.3.5]
-    openmpi:
-        paths:
-            openmpi@4.0.1: /usr/local/opt/openmpi
-        buildable: False
-    openssl:
-        paths:
-            openssl@1.0.2k: /usr/local/opt/openssl
-        version: [1.0.2k]
-    pcre:
-        paths:
-            pcre@8.32+jit+utf: /usr/local/opt/pcre
-        version: [8.32]
-    petsc:
-        variants: +patchmpi64
-    pkg-config:
-        paths:
-            pkg-config@0.29.2: /usr/local/opt/pkg-config
-        version: [0.29.2]
-    python:
-        paths:
-            python@3.7.5+shared: /Library/Frameworks/Python.framework/Versions/3.7
-        version: [3.7.5]
-    tcl:
-        paths:
-            tcl@8.5.13: /usr
-        version: [8.5.13]
-    trilinos:
-        variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
-        version: [xsdk-0.4.0-rc1]
-    tk:
-        paths:
-            tk@8.5.13: /usr
-        version: [8.5.13]
-    xz:
-        paths:
-            xz@5.2: /usr/local/opt/xz
-        version: [5.2]
-    zlib:
-        paths:
-            zlib@1.2.11: /usr/local/opt/zlib
-        version: [1.2.11]
+  autoconf:
+    version: [2.69]
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr/local/opt/autoconf
+  automake:
+    version: [1.16.1]
+    externals:
+    - spec: automake@1.16.1
+      prefix: /usr/local/opt/automake
+  bison:
+    version: [3.4]
+    externals:
+    - spec: bison@3.4
+      prefix: /usr/local/opt/bison
+  boost:
+    buildable: false
+    externals:
+    - spec: boost@1.68.0
+      prefix: /usr/local/opt/boost
+  bzip2:
+    version: [1.0.6]
+    externals:
+    - spec: bzip2@1.0.6
+      prefix: /usr/local/opt/bzip
+  cairo:
+    version: [1.8.10]
+    externals:
+    - spec: cairo@1.8.10
+      prefix: /usr/local/opt/cairo
+  catch:
+    version: [2.x]
+    externals:
+    - spec: catch~single_header@2.x
+      prefix: /usr/local/opt/catch2
+  cmake:
+    buildable: false
+    externals:
+    - spec: cmake@3.13.3
+      prefix: /usr/local/opt/cmake
+  curl:
+    version: [7.29.0]
+    externals:
+    - spec: curl@7.29.0
+      prefix: /usr/local/opt/curl
+  environment-modules:
+    buildable: false
+    externals:
+    - spec: environment-modules@4.1.4
+      prefix: /usr/local/opt/modules
+  flex:
+    version: [2.6.4]
+    externals:
+    - spec: flex@2.6.4
+      prefix: /usr/local/opt/flex
+  fontconfig:
+    version: [2.10.95]
+    externals:
+    - spec: fontconfig@2.10.95
+      prefix: /usr/local/opt/fontconfig
+  gettext:
+    version: [0.20.1]
+    externals:
+    - spec: gettext@0.20.1
+      prefix: /usr/local/opt/gettext
+  hdf5:
+    version: [1.12]
+    externals:
+    - spec: hdf5@1.12.0~mpi
+      prefix: /usr/local/opt/hdf5
+  hwloc:
+    version: [1.11.2]
+    externals:
+    - spec: hwloc@1.11.2
+      prefix: /usr/local/opt/hwloc
+  openblas:
+    version: [0.3.5]
+    externals:
+    - spec: openblas@0.3.5
+      prefix: /usr/local/opt/openblas
+  openmpi:
+    buildable: false
+    externals:
+    - spec: openmpi@4.0.1
+      prefix: /usr/local/opt/openmpi
+  openssl:
+    version: [1.0.2k]
+    externals:
+    - spec: openssl@1.0.2k
+      prefix: /usr/local/opt/openssl
+  pcre:
+    version: [8.32]
+    externals:
+    - spec: pcre@8.32+jit+utf
+      prefix: /usr/local/opt/pcre
+  petsc:
+    variants: +patchmpi64
+  pkg-config:
+    version: [0.29.2]
+    externals:
+    - spec: pkg-config@0.29.2
+      prefix: /usr/local/opt/pkg-config
+  python:
+    version: [3.7.5]
+    externals:
+    - spec: python@3.7.5+shared
+      prefix: /Library/Frameworks/Python.framework/Versions/3.7
+  tcl:
+    version: [8.5.13]
+    externals:
+    - spec: tcl@8.5.13
+      prefix: /usr
+  trilinos:
+    variants: +kokkos+teuchos~amesos~hypre~superlu-dist~mumps~metis~suite-sparse
+    version: [xsdk-0.4.0-rc1]
+  tk:
+    version: [8.5.13]
+    externals:
+    - spec: tk@8.5.13
+      prefix: /usr
+  xz:
+    version: [5.2]
+    externals:
+    - spec: xz@5.2
+      prefix: /usr/local/opt/xz
+  zlib:
+    version: [1.2.11]
+    externals:
+    - spec: zlib@1.2.11
+      prefix: /usr/local/opt/zlib

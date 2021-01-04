@@ -1,90 +1,108 @@
 packages:
-    autoconf:
-        paths:
-            autoconf@2.69: /usr
-        buildable: False
-        version: [2.69]
-    automake:
-        paths:
-            automake@1.13.4: /usr
-        buildable: False
-        version: [1.13.4]
-    bison:
-        paths:
-            bison@2.7: /usr
-        buildable: False
-        version: [2.7]
-    boost:
-        variants: +pic
-    cmake:
-        paths:
-            cmake@3.12.0: /cineca/prod/opt/tools/cmake/3.12.0/none
-        buildable: False
-        version: [3.5.2]
-    flex:
-        paths:
-            flex@2.5.37: /usr
-        buildable: False
-        version: [2.5.37]
-    gettext:
-        paths:
-            gettext@0.19.7: /usr
-        buildable: False
-        version: [0.19.7]
-    hdf5:
-        paths:
-            hdf5@1.8.18+mpi+hl: /cineca/prod/opt/libraries/hdf5/1.8.18/intel--pe-xe-2018--binary
-            hdf5@1.8.18~mpi+hl: /cineca/prod/opt/libraries/hdf5/1.8.18/gnu--7.3.0
-        variants: ~fortran ~cxx
-        buildable: False
-        version: [1.8.18]
-    intel-mpi-external:
-        paths:
-            intel-mpi-external@2018: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/impi/2018.4.274
-        buildable: False
-        version: [2018]
-    libtool:
-        paths:
-            libtool@2.4.2: /usr
-        buildable: False
-        version: [2.4.2]
-    ncurses:
-        paths:
-            ncurses@5.9: /usr
-        buildable: False
-        version: [5.9]
-    pkg-config:
-        paths:
-            pkg-config@0.27.1: /usr
-        buildable: False
-        version: [0.27.1]
-    python:
-        paths:
-            python@3.6.4: /cineca/prod/opt/compilers/python/3.6.4/none
-            python@2.7.12: /cineca/prod/opt/compilers/python/2.7.12/none
-        buildable: False
-        version: [3.6.4, 2.7.12]
-    py-matplotlib:
-        paths:
-            py-matplotlib@2.2.3: /cineca/prod/opt/compilers/python/3.6.4/none
-        buildable: False
-        version: [2.2.3]
-    py-numpy:
-        paths:
-            py-numpy@1.14.0: /cineca/prod/opt/libraries/numpy/1.14.0/python--3.6.4
-        buildable: False
-        version: [1.14.0]
-    py-scipy:
-        paths:
-            py-scipy@1.1.0: /cineca/prod/opt/libraries/scipy/1.1.0/python--3.6.4
-        buildable: False
-        version: [1.1.0]
-    zlib:
-        paths:
-            zlib@1.2.11: /cineca/prod/opt/libraries/zlib/1.2.11/intel--pe-xe-2017--binary
-        buildable: False
-        version: [1.2.11]
-    all:
-        compiler: [intel]
-        providers:
-            mpi: [intel-mpi-external]
+  autoconf:
+    buildable: false
+    version: [2.69]
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr
+  automake:
+    buildable: false
+    version: [1.13.4]
+    externals:
+    - spec: automake@1.13.4
+      prefix: /usr
+  bison:
+    buildable: false
+    version: [2.7]
+    externals:
+    - spec: bison@2.7
+      prefix: /usr
+  boost:
+    variants: +pic
+  cmake:
+    buildable: false
+    version: [3.5.2]
+    externals:
+    - spec: cmake@3.12.0
+      prefix: /cineca/prod/opt/tools/cmake/3.12.0/none
+  flex:
+    buildable: false
+    version: [2.5.37]
+    externals:
+    - spec: flex@2.5.37
+      prefix: /usr
+  gettext:
+    buildable: false
+    version: [0.19.7]
+    externals:
+    - spec: gettext@0.19.7
+      prefix: /usr
+  hdf5:
+    variants: ~fortran ~cxx
+    buildable: false
+    version: [1.8.18]
+    externals:
+    - spec: hdf5@1.8.18+mpi+hl
+      prefix: /cineca/prod/opt/libraries/hdf5/1.8.18/intel--pe-xe-2018--binary
+    - spec: hdf5@1.8.18~mpi+hl
+      prefix: /cineca/prod/opt/libraries/hdf5/1.8.18/gnu--7.3.0
+  intel-mpi-external:
+    buildable: false
+    version: [2018]
+    externals:
+    - spec: intel-mpi-external@2018
+      prefix: /cineca/prod/opt/compilers/intel/pe-xe-2018/binary/impi/2018.4.274
+  libtool:
+    buildable: false
+    version: [2.4.2]
+    externals:
+    - spec: libtool@2.4.2
+      prefix: /usr
+  ncurses:
+    buildable: false
+    version: [5.9]
+    externals:
+    - spec: ncurses@5.9
+      prefix: /usr
+  pkg-config:
+    buildable: false
+    version: [0.27.1]
+    externals:
+    - spec: pkg-config@0.27.1
+      prefix: /usr
+  python:
+    buildable: false
+    version: [3.6.4, 2.7.12]
+    externals:
+    - spec: python@3.6.4
+      prefix: /cineca/prod/opt/compilers/python/3.6.4/none
+    - spec: python@2.7.12
+      prefix: /cineca/prod/opt/compilers/python/2.7.12/none
+  py-matplotlib:
+    buildable: false
+    version: [2.2.3]
+    externals:
+    - spec: py-matplotlib@2.2.3
+      prefix: /cineca/prod/opt/compilers/python/3.6.4/none
+  py-numpy:
+    buildable: false
+    version: [1.14.0]
+    externals:
+    - spec: py-numpy@1.14.0
+      prefix: /cineca/prod/opt/libraries/numpy/1.14.0/python--3.6.4
+  py-scipy:
+    buildable: false
+    version: [1.1.0]
+    externals:
+    - spec: py-scipy@1.1.0
+      prefix: /cineca/prod/opt/libraries/scipy/1.1.0/python--3.6.4
+  zlib:
+    buildable: false
+    version: [1.2.11]
+    externals:
+    - spec: zlib@1.2.11
+      prefix: /cineca/prod/opt/libraries/zlib/1.2.11/intel--pe-xe-2017--binary
+  all:
+    compiler: [intel]
+    providers:
+      mpi: [intel-mpi-external]

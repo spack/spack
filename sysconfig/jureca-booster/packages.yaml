@@ -1,134 +1,161 @@
 packages:
-    autoconf:
-        paths:
-            autoconf@2.69: /usr
-        version: [2.69]
-        buildable: False
-    automake:
-        paths:
-            automake@1.13.4: /usr
-        version: [1.13.4]
-        buildable: False
-    bison:
-        paths:
-            bison@3.0.4: /usr
-        version: [3.0.4]
-        buildable: False
-    boost:
-        variants: +python
-        version: [1.70.0]
-    binutils:
-        paths:
-            binutils@2.30: /usr/local/software/jurecabooster/Stages/2019a/software/binutils/2.32-GCCcore-8.3.0
-        version: [2.30]
-        buildable: False
-    cmake:
-        paths:
-            cmake@3.9.4: /usr/local/software/jurecabooster/Stages/2019a/software/CMake/3.14.0-GCCcore-8.3.0
-        version: [3.13.0]
-        buildable: False
-    diffutils:
-        paths:
-            diffutils@3.3: /usr
-        version: [3.3]
-        buildable: False
-    flex:
-        paths:
-            flex@2.6.4: /usr/local/software/jurecabooster/Stages/2019a/software/flex/2.6.4-GCCcore-8.3.0
-        version: [2.6.4]
-        buildable: False
-    freetype:
-        version: [2.7.1]
-    gettext:
-        paths:
-            gettext@0.19.8: /usr
-        version: [0.19.8]
-        buildable: False
-    hdf5:
-        paths:
-            hdf5@1.10.4%intel+mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-ipsmpi-2019a-mt
-            hdf5@1.10.4%intel~mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-iccifort-2019.3.199-GCC-8.3.0-serial
-            hdf5@1.10.4%gcc+mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-gpsmpi-2019a
-            hdf5@1.10.4%gcc~mpi: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-GCCcore-8.3.0-serial
-        variants: ~fortran ~cxx +hl
-        version: [1.10.4]
-        buildable: False
-    mpich:
-        paths:
-            mpich@3.10: /usr/local/software/jurecabooster/Stages/2019a/software/psmpi/5.2.2-1-iccifort-2019.3.199-GCC-8.3.0-mt
-        version: [3.10]
-        buildable: False
-    intel-mpi-external:
-        paths:
-            intel-mpi-external@2019.6.154: /usr/local/software/jurecabooster/Stages/2019a/software/impi/2019.6.154-iccifort-2019.5.281-GCC-8.3.0
-        version: [2019.6.154]
-        buildable: False
-    intel-mkl:
-        paths:
-            intel-mkl@2019.1.144: /usr/local/software/jurecabooster/Stages/2019a/software/imkl/2019.3.199-ipsmpi-2019a-mt
-        version: [2019.1.144]
-        buildable: False
-    zeromq:
-        version: [4.1.4]
-        variants: ~libsodium
-    libtool:
-        paths:
-            libtool@2.4.6: /usr/local/software/jurecabooster/Stages/2019a/software/libtool/2.4.6-GCCcore-8.3.0
-        version: [2.4.6]
-        buildable: False
-    libxml2:
-        paths:
-            libxml2@2.9.9: /usr/local/software/jurecabooster/Stages/2019a/software/libxml2/2.9.9-GCCcore-8.3.0
-        version: [2.9.9]
-        buildable: False
-    libxslt:
-        paths:
-            libxslt@1.1.33: /usr/local/software/jurecabooster/Stages/2019a/software/libxslt/1.1.33-GCCcore-8.3.0
-        version: [1.1.33]
-        buildable: False
-    m4:
-        paths:
-            m4@1.4.16: /usr
-        version: [1.4.16]
-        buildable: False
-    ncurses:
-        paths:
-            ncurses@6.1: /usr/local/software/jurecabooster/Stages/2019a/software/ncurses/6.1-GCCcore-8.3.0
-        version: [6.1]
-        buildable: False
-    neuron:
-        variants: ~binary
-    openssl:
-        paths:
-            openssl@system: /usr
-    perl:
-        paths:
-            perl@5.16.3: /usr
-        version: [5.16.3]
-        buildable: False
-    pkg-config:
-        paths:
-            pkg-config@0.29.1: /usr
-        version: [0.29.1]
-    python:
-        paths:
-            python@2.7.15: /usr/local/software/jurecabooster/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
-            python@3.6.8: /usr/local/software/jurecabooster/Stages/2019a/software/Python/3.6.8-GCCcore-8.3.0
-        version: [2.7.15, 3.6.8]
-        buildable: False
-    py-matplotlib:
-        paths:
-            py-matplotlib@3.0.3: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
-        version: [3.0.3]
-        buildable: False
-    py-scipy:
-        paths:
-            py-scipy@1.2.1: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
-        version: [1.2.1]
-        buildable: False
-    zlib:
-        version: [1.2.8]
-    all:
-        compiler: [intel]
-        providers:
-            mpi: [intel-mpi-external]
+  autoconf:
+    version: [2.69]
+    buildable: false
+    externals:
+    - spec: autoconf@2.69
+      prefix: /usr
+  automake:
+    version: [1.13.4]
+    buildable: false
+    externals:
+    - spec: automake@1.13.4
+      prefix: /usr
+  bison:
+    version: [3.0.4]
+    buildable: false
+    externals:
+    - spec: bison@3.0.4
+      prefix: /usr
+  boost:
+    variants: +python
+    version: [1.70.0]
+  binutils:
+    version: [2.3]
+    buildable: false
+    externals:
+    - spec: binutils@2.30
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/binutils/2.32-GCCcore-8.3.0
+  cmake:
+    version: [3.13.0]
+    buildable: false
+    externals:
+    - spec: cmake@3.9.4
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/CMake/3.14.0-GCCcore-8.3.0
+  diffutils:
+    version: [3.3]
+    buildable: false
+    externals:
+    - spec: diffutils@3.3
+      prefix: /usr
+  flex:
+    version: [2.6.4]
+    buildable: false
+    externals:
+    - spec: flex@2.6.4
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/flex/2.6.4-GCCcore-8.3.0
+  freetype:
+    version: [2.7.1]
+  gettext:
+    version: [0.19.8]
+    buildable: false
+    externals:
+    - spec: gettext@0.19.8
+      prefix: /usr
+  hdf5:
+    variants: ~fortran ~cxx +hl
+    version: [1.10.4]
+    buildable: false
+    externals:
+    - spec: hdf5@1.10.4%intel+mpi
+      prefix: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-ipsmpi-2019a-mt
+    - spec: hdf5@1.10.4%intel~mpi
+      prefix: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-iccifort-2019.3.199-GCC-8.3.0-serial
+    - spec: hdf5@1.10.4%gcc+mpi
+      prefix: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-gpsmpi-2019a
+    - spec: hdf5@1.10.4%gcc~mpi
+      prefix: /usr/local/software/jureca/Stages/2019a/software/HDF5/1.10.5-GCCcore-8.3.0-serial
+  mpich:
+    version: [3.1]
+    buildable: false
+    externals:
+    - spec: mpich@3.10
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/psmpi/5.2.2-1-iccifort-2019.3.199-GCC-8.3.0-mt
+  intel-mpi-external:
+    version: [2019.6.154]
+    buildable: false
+    externals:
+    - spec: intel-mpi-external@2019.6.154
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/impi/2019.6.154-iccifort-2019.5.281-GCC-8.3.0
+  intel-mkl:
+    version: [2019.1.144]
+    buildable: false
+    externals:
+    - spec: intel-mkl@2019.1.144
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/imkl/2019.3.199-ipsmpi-2019a-mt
+  zeromq:
+    version: [4.1.4]
+    variants: ~libsodium
+  libtool:
+    version: [2.4.6]
+    buildable: false
+    externals:
+    - spec: libtool@2.4.6
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/libtool/2.4.6-GCCcore-8.3.0
+  libxml2:
+    version: [2.9.9]
+    buildable: false
+    externals:
+    - spec: libxml2@2.9.9
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/libxml2/2.9.9-GCCcore-8.3.0
+  libxslt:
+    version: [1.1.33]
+    buildable: false
+    externals:
+    - spec: libxslt@1.1.33
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/libxslt/1.1.33-GCCcore-8.3.0
+  m4:
+    version: [1.4.16]
+    buildable: false
+    externals:
+    - spec: m4@1.4.16
+      prefix: /usr
+  ncurses:
+    version: [6.1]
+    buildable: false
+    externals:
+    - spec: ncurses@6.1
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/ncurses/6.1-GCCcore-8.3.0
+  neuron:
+    variants: ~binary
+  openssl:
+    externals:
+    - spec: openssl@system
+      prefix: /usr
+  perl:
+    version: [5.16.3]
+    buildable: false
+    externals:
+    - spec: perl@5.16.3
+      prefix: /usr
+  pkg-config:
+    version: [0.29.1]
+    externals:
+    - spec: pkg-config@0.29.1
+      prefix: /usr
+  python:
+    version: [2.7.15, 3.6.8]
+    buildable: false
+    externals:
+    - spec: python@2.7.15
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/Python/2.7.16-GCCcore-8.3.0
+    - spec: python@3.6.8
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/Python/3.6.8-GCCcore-8.3.0
+  py-matplotlib:
+    version: [3.0.3]
+    buildable: false
+    externals:
+    - spec: py-matplotlib@3.0.3
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
+  py-scipy:
+    version: [1.2.1]
+    buildable: false
+    externals:
+    - spec: py-scipy@1.2.1
+      prefix: /usr/local/software/jurecabooster/Stages/2019a/software/SciPy-Stack/2019a-gcccoremkl-8.3.0-2019.3.199-Python-3.6.8
+  zlib:
+    version: [1.2.8]
+  all:
+    compiler: [intel]
+    providers:
+      mpi: [intel-mpi-external]
