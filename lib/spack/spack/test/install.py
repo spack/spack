@@ -83,6 +83,7 @@ def test_install_to_different_install_tree(
 
     # Restore old store
     spack.store.store = real_store
+    spack.store.install_root = None
 
 
 def mock_remove_prefix(*args):
