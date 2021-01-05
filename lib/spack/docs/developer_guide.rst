@@ -413,29 +413,24 @@ you can specify the interpreter with ``-i``:
    In [1]:
 
 
-Currently, there is only support for the current Python interpreter (default) 
-along with an IPython interpreter (shown above). With the Python interpreter
-you can run a single command:
+With either interpreter you can run a single command:
 
 .. code-block:: console
 
    $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Fedora', '25', 'Workstation Edition')
+   ('Ubuntu', '18.04', 'Bionic Beaver')
+
+   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
+   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
 
 or a file:
 
 .. code-block:: console
 
    $ spack python ~/test_fetching.py
+   $ spack python -i ipython ~/test_fetching.py
 
-just like you would with the normal ``python`` command. Note that for both
-commands and files, your only option is the Python interpreter. 
-If you try using IPython, you'll get an error message.
-
-.. code-block:: console
-
-   $spack python -i ipython script.py 
-   ==> Error: Use the default python interpreter for args/commands.
+just like you would with the normal ``python`` command. 
 
 
 .. _cmd-spack-url:

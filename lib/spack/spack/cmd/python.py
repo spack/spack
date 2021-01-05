@@ -51,11 +51,6 @@ def python(parser, args, unknown_args):
     if unknown_args:
         tty.die("Unknown arguments:", " ".join(unknown_args))
 
-    # Only python has support for arguments / commands
-    has_command = args.python_args or args.python_command
-    if has_command and args.python_interpreter != "python":
-        tty.die("Use the default python interpreter for args/commands.")
-
     # Run user choice of interpreter
     if args.python_interpreter == "ipython":
         return spack.cmd.python.ipython_interpreter(args)
@@ -77,12 +72,20 @@ def ipython_interpreter(args):
             with open(startup_file) as startup:
                 exec(startup.read())
 
-    header = ("Spack version %s\nPython %s, %s %s"
-              % (spack.spack_version, platform.python_version(),
-                 platform.system(), platform.machine()))
+    # IPython can also support running a script OR command, not both
+    if args.python_command and args.python_args:
+        tty.die("ipython only supports a script OR command with -c, not both.")
+    elif args.python_args:
+        IPython.start_ipython(argv=args.python_args)
+    elif args.python_command:
+        IPython.start_ipython(argv=['-c', args.python_command])
+    else:
+        header = ("Spack version %s\nPython %s, %s %s"
+                  % (spack.spack_version, platform.python_version(),
+                     platform.system(), platform.machine()))
 
-    __name__ = "__main__"  # noqa
-    IPython.embed(module="__main__", header=header)
+        __name__ = "__main__"  # noqa
+        IPython.embed(module="__main__", header=header)
 
 
 def python_interpreter(args):
@@ -97,14 +100,12 @@ def python_interpreter(args):
             with open(startup_file) as startup:
                 console.runsource(startup.read(), startup_file, 'exec')
 
-    python_args = args.python_args
-    python_command = args.python_command
-    if python_command:
-        console.runsource(python_command)
-    elif python_args:
-        sys.argv = python_args
-        with open(python_args[0]) as file:
-            console.runsource(file.read(), python_args[0], 'exec')
+    if args.python_command:
+        console.runsource(args.python_command)
+    elif args.python_args:
+        sys.argv = args.python_args
+        with open(args.python_args[0]) as file:
+            console.runsource(file.read(), args.python_args[0], 'exec')
     else:
         # Provides readline support, allowing user to use arrow keys
         console.push('import readline')
