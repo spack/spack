@@ -414,8 +414,8 @@ you can specify the interpreter with ``-i``:
 
 
 Currently, there is only support for the current Python interpreter (default) 
-along with an IPython interpreter (``-i python``). With the Python interpreter
-(which is not interactive) you can run a single command:
+along with an IPython interpreter (shown above). With the Python interpreter
+you can run a single command:
 
 .. code-block:: console
 
@@ -429,8 +429,8 @@ or a file:
    $ spack python ~/test_fetching.py
 
 just like you would with the normal ``python`` command. Note that for both
-commands and files, your only option is the Python interpreter, as it is 
-non-interactive. If you try using IPython, you'll get an error message.
+commands and files, your only option is the Python interpreter. 
+If you try using IPython, you'll get an error message.
 
 .. code-block:: console
 
