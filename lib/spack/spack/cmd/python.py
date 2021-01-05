@@ -56,7 +56,7 @@ def python(parser, args, unknown_args):
     if has_command and args.python_interpreter != "python":
         tty.die("Use the default python interpreter for args/commands.")
 
-    # Run user choose of interpreter
+    # Run user choice of interpreter
     if args.python_interpreter == "ipython":
         return spack.cmd.python.ipython_interpreter(args)
     return spack.cmd.python.python_interpreter(args)
