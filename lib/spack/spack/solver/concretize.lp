@@ -576,7 +576,7 @@ node_compiler_version_satisfies(Package, Compiler, Constraint)
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(Package, Compiler, Version).
+node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(Package, Compiler, Version).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
@@ -590,7 +590,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(
 
 % Compiler prescribed in the root spec
 node_compiler_version_match_pref(Package, Compiler, V)
- :- node_compiler_hard(Package, Compiler),
+ :- node_compiler_set(Package, Compiler),
     node_compiler_version(Package, Compiler, V),
     not external(Package).
 
@@ -599,21 +599,21 @@ node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version_match_pref(Package, Compiler, V),
     node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_hard(Dependency, Compiler).
+    not node_compiler_set(Dependency, Compiler).
 
 % Compiler inherited from the root package
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version(Package, Compiler, V), root(Package),
     node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_hard(Dependency, Compiler).
+    not node_compiler_set(Dependency, Compiler).
 
 compiler_version_match(Package, 1)
  :- node_compiler_version(Package, Compiler, V),
     node_compiler_version_match_pref(Package, Compiler, V).
 
-#defined node_compiler_hard/2.
-#defined node_compiler_version_hard/3.
+#defined node_compiler_set/2.
+#defined node_compiler_version_set/3.
 #defined compiler_supports_os/3.
 #defined allow_compiler/2.
 
