@@ -137,22 +137,21 @@ attr(Name, Arg1, Arg2, Arg3) :-
 %-----------------------------------------------------------------------------
 % Virtual dependencies
 %-----------------------------------------------------------------------------
-% if you declare a dependency on a virtual AND the package is not an external,
-% you depend on one of its providers
-1 {
-  depends_on(Package, Provider, Type) : possible_provider(Provider, Virtual)
-} 1
+
+% if a package depends on a virtual, it's not external and we have a
+% provider for that virtual then it depends on the provider
+depends_on(Package, Provider, Type)
   :- dependency_conditions(Package, Virtual, Type),
-     virtual(Virtual),
+     provides_virtual(Provider, Virtual),
      not external(Package).
 
-% if a virtual was required by some package, one provider is in the DAG
-1 { node(Package) : provider(Package, Virtual) } 1
+% if there's a virtual node, we must select one provider
+1 { provides_virtual(Package, Virtual) : possible_provider(Package, Virtual) } 1
  :- virtual_node(Virtual).
 
 % virtual roots imply virtual nodes, and that one provider is a root
 virtual_node(Virtual) :- virtual_root(Virtual).
-1 { root(Package) : possible_provider(Package, Virtual) } 1
+1 { root(Package) : provides_virtual(Package, Virtual) } 1
   :- virtual_root(Virtual).
 
 % all virtual providers come from provider conditions like this
@@ -179,8 +178,7 @@ virtual_node(Virtual)
      virtual(Virtual), not external(Package).
 
 % for any virtual, there can be at most one provider in the DAG
-0 { provider(Package, Virtual) :
-    node(Package), provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
+0 { node(Package) : provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
