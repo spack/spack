@@ -23,7 +23,7 @@ class PyBiomFormat(PythonPackage):
     depends_on('python@3:', type=('build', 'run'), when='@2.1.9:')
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython@0.29:', type='build')
-    depends_on('py-h5py', type=('build', 'run'), when='+h5py')
+    depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-click', type=('build', 'run'), when='@2.1.5:')
     depends_on('py-numpy@1.9.2:', type=('build', 'run'))
     depends_on('py-future@0.16.0:', type=('build', 'run'))
