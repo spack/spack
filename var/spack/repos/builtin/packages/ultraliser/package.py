@@ -18,3 +18,5 @@ class Ultraliser(CMakePackage):
     depends_on('ilmbase')
     depends_on('vtk~mpi')
     depends_on('hdf5+hl+cxx~mpi')
+
+    patch('fix-vtk.patch')
