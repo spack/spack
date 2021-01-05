@@ -889,8 +889,8 @@ class SpackSolverSetup(object):
             node_os = fn.node_os_set
             node_target = fn.node_target_set
             variant_value = fn.variant_set
-            node_compiler = fn.node_compiler_hard
-            node_compiler_version = fn.node_compiler_version_hard
+            node_compiler = fn.node_compiler_set
+            node_compiler_version = fn.node_compiler_version_set
             node_flag = fn.node_flag_set
 
         class Body(object):
@@ -967,8 +967,6 @@ class SpackSolverSetup(object):
         for flag_type, flags in spec.compiler_flags.items():
             for flag in flags:
                 clauses.append(f.node_flag(spec.name, flag_type, flag))
-
-        # TODO: namespace
 
         # dependencies
         if spec.concrete:
