@@ -66,7 +66,6 @@ def ipython_interpreter(args):
     """An ipython interpreter is intended to be interactive, so it doesn't
     support running a script or arguments
     """
-    # If the user doesn't have ipython, fallback to python
     try:
         import IPython
     except ImportError:
