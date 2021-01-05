@@ -396,7 +396,7 @@ other Spack modules:
    True
    >>>
 
-If you prefer using an ipython interpreter, given that ipython is installed
+If you prefer using an IPython interpreter, given that IPython is installed
 you can specify the interpreter with ``-i``:
 
 .. code-block:: console
@@ -413,7 +413,9 @@ you can specify the interpreter with ``-i``:
    In [1]:
 
 
-You can also run a single command:
+Currently, there is only support for the current Python interpreter (default) 
+along with an IPython interpreter (``-i python``). With the Python interpreter
+(which is not interactive) you can run a single command:
 
 .. code-block:: console
 
@@ -427,8 +429,13 @@ or a file:
    $ spack python ~/test_fetching.py
 
 just like you would with the normal ``python`` command. Note that for both
-commands and files, the default will always be the python interpreter,
-as ipython is intended for interactive use cases.
+commands and files, your only option is the Python interpreter, as it is 
+non-interactive. If you try using IPython, you'll get an error message.
+
+.. code-block:: console
+
+   $spack python -i ipython script.py 
+   ==> Error: Use the default python interpreter for args/commands.
 
 
 .. _cmd-spack-url:
