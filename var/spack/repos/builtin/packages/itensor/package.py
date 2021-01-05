@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -109,9 +109,8 @@ class Itensor(MakefilePackage):
         filter_file(r'^CCCOM.+', ccopts, mf)
 
         # 2.LDFLAGS
-        vlib = 'BLAS_LAPACK_LIBFLAGS='
-        vlib += ' '.join(spec.compiler_flags['ldflags']) + ' '
-        vlib += ' '.join(spec.compiler_flags['ldlibs'])  + ' '
+        vlib = 'BLAS_LAPACK_LIBFLAGS={0} '.format(' '.join(
+            spec.compiler_flags['ldflags'] + spec.compiler_flags['ldlibs']))
         filter_file(r'^BLAS_LAPACK_LIBFLAGS=', vlib, mf)
 
         # 3.prefix
