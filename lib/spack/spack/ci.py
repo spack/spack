@@ -869,8 +869,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))
 
-    tty.debug('The max_needs_job is {0}, with {1} needs'.format(
-        max_needs_job, max_length_needs))
+    if job_id > 0:
+        tty.debug('The max_needs_job is {0}, with {1} needs'.format(
+            max_needs_job, max_length_needs))
 
     # Use "all_job_names" to populate the build group for this set
     if enable_cdash_reporting and cdash_auth_token:
@@ -882,7 +883,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
-    if final_job_config and not is_pr_pipeline:
+    if final_job_config and not is_pr_pipeline and job_id > 0:
         # Add an extra, final job to regenerate the index
         final_stage = 'stage-rebuild-index'
         final_job = {
