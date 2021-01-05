@@ -8,8 +8,8 @@ The following commands are a good way to get started:
     $ ln -s /gpfs/bbp.cscs.ch/apps/hpc/jenkins/config/*.yaml ${SPACK_ROOT}/etc/spack
 
 Note that the `git clone` should be executed in a subdirectory of the home
-directory.
-The project directories are backed by a slower file system, and using a
+directory on GPFS.
+The project directories are backed by a slower GPFS setup, and using a
 Spack installation from the project directories will result in a big
 performance penalty.
 
@@ -18,6 +18,8 @@ into.
 The configuration linked into the `etc/spack` subdirectory will provide a
 setup to re-use centrally installed software and decrease installation
 times.
+
+## Customizing the Software Installation Directory
 
 To use multiple different software directories, one can override the
 configuration above by creating a `${HOME}/.spack/config.yaml` with the
@@ -33,6 +35,8 @@ config:
 ```
 and then exporting the environment variable `${SPACK_INSTALL_PREFIX}` to
 point to a location where the software should be located.
+
+## Automatically Generate Modules for all Installed Software
 
 Similarly, the module configuration can be overwritten to provide modules
 for **all** manually installed software, including new dependencies, by

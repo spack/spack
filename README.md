@@ -11,9 +11,9 @@ documentation:
 
 * [Setting Spack up on BlueBrain5](deploy/docs/setup_bb5.md)
 * [Setting Spack up on personal machines](deploy/docs/setup_personal.md)
-* [Installing software from local sources](deploy/docs/installing_from_source.md)
+* [Installing software from local sources directories](deploy/docs/installing_from_source.md)
 * [Installing software using environments](deploy/docs/installing_with_environments.md),
-  allowing to customize software used in complex build [scenarios](scenarios)
+  allowing to customize software used in complex build scenarios
 * [Deploying modules on BlueBrain5](deploy/docs/deploy_bb5.md)
 * [Continuous Integration with Spack on BlueBrain5](deploy/docs/ci_bb5.md)
 * [Continuous Integration with Spack on Travis](deploy/docs/ci_travis.md)

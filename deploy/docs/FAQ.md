@@ -2,8 +2,10 @@
 
 ## Building Software
 
+#### Q: How do I build and *load* a piece of software?
+
 <details>
-  <summary>Q: How do I build and *load* a piece of software?</summary>
+  <summary>Expand answer</summary>
 
   We'll install `MG(1)`, a standard editor.
 
@@ -20,8 +22,99 @@
 
 </details>
 
+#### Q: Why do I have to rebuild the entire world?
+
 <details>
-  <summary>Q: How do I add/update my package/module versions?</summary>
+  <summary>Expand answer</summary>
+
+  If you are on the BlueBrain5, you shouldn't need to.
+
+  As [described here](setup_bb5.md),
+  one can use the system packages available with an appropriate
+  `packages.yaml` and `upstreams.yaml` in `${SPACK_ROOT}/etc/spack`.
+</details>
+
+#### Q: Why is it so slow to interact with the Spack repository on GPFS
+
+<details>
+  <summary>Expand answer</summary>
+
+  Make sure the `spack` repo is checked out in a subdirectory of `$HOME`.
+  The `spack` repository is quite large, and when it is checked out under a
+  `/gpfs/bbp.cscs.ch/project/*` directory, performance can be 10x slower
+  than on the SSD provided storage of `$HOME`.
+</details>
+
+#### Q: Is there a binary cache?
+
+<details>
+  <summary>Expand answer</summary>
+
+  We currently have a binary cache for central deployment only. As
+  universally relocatable binaries are very fragile, we do not support
+  binary caches for end-users.
+
+  Please make sure you have setup the correct configurations in:
+  * `~/.spack/packages.yaml`
+  * `~/.spack/upstreams.yaml`
+  to avoid rebuilding packages that have already been build centrally.
+</details>
+
+## Modules
+
+#### Q: Why are the module files not being rebuilt?
+
+<details>
+  <summary>Expand answer</summary>
+
+  The `spack module tcl refresh` command respects a blacklist that can be
+  found via:
+
+      $ spack config blame modules
+
+  Examples from our deployment workflow can be found in:
+  * `spack/deploy/configs/applications/modules.yaml`
+  * `spack/deploy/configs/libraries/modules.yaml`
+
+  Run `spack --debug module tcl refresh` and search for the module you
+  expect to be built.
+  Modify the whitelist to have the module built.
+
+  [See also the general instructions](setup_bb5.md#automatically-generate-modules-for-all-installed-software).
+</details>
+
+#### Q: Why are my local modules broken after installing software manually?
+
+<details>
+  <summary>Expand answer</summary>
+
+  When installing CMake-based software with
+
+      $ spack setup package@version
+      $ mkdir build
+      $ cd build
+      $ ../spconfig.py ..
+      $ make
+      $ make install
+
+  Spack will create a skeleton installation with bogus files to directly
+  generate a module for the package to be installed.
+  This may result in a "fake" library to be picked up when installing
+  subsequent packages.
+  Please use
+
+      $ spack dev-build package@version
+
+  to install packages locally, and use `spack setup` only for local
+  development/testing that other packages do not depend on.
+</details>
+
+## Deployment
+
+#### Q: How do I add/update my package/module versions?
+
+<details>
+  <summary>Expand answer</summary>
 
   We want to add a new version 2.0.0 to `mypackage`.
 
@@ -63,84 +156,12 @@
   You can check the Jenkins build of your PR [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
 </details>
 
-<details>
-  <summary>Q: Why do I have to rebuild the entire world?</summary>
-
-  If you are on the BlueBrain5, you shouldn't need to.
-
-  As [described here](https://github.com/BlueBrain/spack/deploy/docs/setup_bb5.md),
-  one can use the system packages available with an appropriate
-  `packages.yaml` and `upstreams.yaml` in `${SPACK_ROOT}/etc/spack`.
-</details>
-
-<details>
-  <summary>Q: Why are the module files not being rebuilt?</summary>
-
-  The `spack module tcl refresh` command respects a blacklist that can be
-  found via:
-
-      $ spack config blame modules
-
-  Examples from our deployment workflow can be found in:
-  * `spack/deploy/configs/applications/modules.yaml`
-  * `spack/deploy/configs/libraries/modules.yaml`
-
-  Run `spack --debug module tcl refresh` and search for the module you
-  expect to be built.
-  Modify the whitelist to have the module built.
-</details>
-
-<details>
-  <summary>Q: Why is it so slow to interact with the Spack repository on GPFS</summary>
-
-  Make sure the `spack` repo is checked out in a subdirectory of `$HOME`.
-  The `spack` repository is quite large, and when it is checked out under a
-  `/gpfs/bbp.cscs.ch/project/*` directory, performance can be 10x slower
-  than on the SSD provided storage of `$HOME`.
-</details>
-
-<details>
-  <summary>Q: Is there a binary cache?</summary>
-
-  We currently have a binary cache for central deployment only. As
-  universally relocatable binaries are very fragile, we do not support
-  binary caches for end-users.
-
-  Please make sure you have setup the correct configurations in:
-  * `~/.spack/packages.yaml`
-  * `~/.spack/upstreams.yaml`
-  to avoid rebuilding packages that have already been build centrally.
-</details>
-
-<details>
-  <summary>Q: Why are my local modules broken after installing software
-  manually?</summary>
-
-  When installing CMake-based software with
-
-      $ spack setup package@version
-      $ mkdir build
-      $ cd build
-      $ ../spconfig.py ..
-      $ make
-      $ make install
-
-  Spack will create a skeleton installation with bogus files to directly
-  generate a module for the package to be installed.
-  This may result in a "fake" library to be picked up when installing
-  subsequent packages.
-  Please use
-
-      $ spack dev-build package@version
-
-  to install packages locally, and use `spack setup` only for local
-  development/testing that other packages do not depend on.
-</details>
-
 ## Pull Requests
 
+#### Q: How do I test modules generated by a Pull Request?
+
 <details>
-  <summary>Q: How do I test modules generated by a Pull Request?</summary>
+  <summary>Expand answer</summary>
 
   If you followed the previous point you should be able to see if your 
   PR was successfully built [on Blue Ocean](https://bbpcode.epfl.ch/ci/blue/organizations/jenkins/hpc.spack-deployment/activity).
@@ -161,8 +182,10 @@
   Now you are ready to test `mypackage`.
 </details>
 
+#### Q: How do I debug my Pull Request?
+
 <details>
-  <summary>Q: How do I debug my Pull Request?</summary>
+  <summary>Expand answer</summary>
 
   To re-create the environment a Pull Request was built in, let's say #666,
   and debug failures, it is recommended to create a throw-away shell
