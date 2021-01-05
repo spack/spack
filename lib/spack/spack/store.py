@@ -50,7 +50,7 @@ def parse_install_tree(config_dict):
 
     Arguments:
         config_dict (dict): dictionary of config values, as returned from
-           spack.config.get('config')
+            spack.config.get('config')
 
     Returns:
         (tuple): triple of the install tree root, the unpadded install tree
