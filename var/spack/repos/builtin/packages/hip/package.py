@@ -70,14 +70,24 @@ class Hip(CMakePackage):
                 msg += "a workaround."
                 raise RuntimeError(msg)
 
-            return {
-                'rocm-path': fallback_prefix,
-                'llvm-amdgpu': fallback_prefix.llvm,
-                'hsa-rocr-dev': fallback_prefix.hsa,
-                'rocminfo': fallback_prefix.bin,
-                'rocm-device-libs': fallback_prefix.lib,
-                'device_lib_path': fallback_prefix.lib
-            }
+            if '@3.8.0:' in self.spec:
+                return {
+                    'rocm-path': fallback_prefix,
+                    'llvm-amdgpu': fallback_prefix.llvm,
+                    'hsa-rocr-dev': fallback_prefix.hsa,
+                    'rocminfo': fallback_prefix.bin,
+                    'rocm-device-libs': fallback_prefix.amdgcn.bitcode,
+                    'device_lib_path': fallback_prefix.amdgcn.bitcode
+                }
+            else:
+                return {
+                    'rocm-path': fallback_prefix,
+                    'llvm-amdgpu': fallback_prefix.llvm,
+                    'hsa-rocr-dev': fallback_prefix.hsa,
+                    'rocminfo': fallback_prefix.bin,
+                    'rocm-device-libs': fallback_prefix.lib,
+                    'device_lib_path': fallback_prefix.lib
+                }
         else:
             mydict = dict((name, self.spec[name].prefix)
                           for name in ('llvm-amdgpu', 'hsa-rocr-dev',
