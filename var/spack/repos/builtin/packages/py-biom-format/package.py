@@ -19,8 +19,6 @@ class PyBiomFormat(PythonPackage):
     version('2.1.7', sha256='b47e54282ef13cddffdb00aea9183a87175a2372c91a915259086a3f444c42f4')
     version('2.1.6', sha256='8eefc275a85cc937f6d6f408d91b7b45eae854cd5d1cbda411a3af51f5b49b0d')
 
-    variant('h5py', default=True, description='For use with BIOM 2.0+ files')
-
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('python@3:', type=('build', 'run'), when='@2.1.9:')
     depends_on('py-setuptools', type=('build', 'run'))

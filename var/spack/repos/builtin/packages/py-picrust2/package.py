@@ -23,4 +23,4 @@ class PyPicrust2(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-joblib', type=('build', 'run'))
-    depends_on('py-biom-format@2.1.5:', type=('build', 'run'))
+    depends_on('py-biom-format', type=('build', 'run'))
