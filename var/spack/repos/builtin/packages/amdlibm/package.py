@@ -3,6 +3,9 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
+
 from spack import *
 
 
@@ -43,7 +46,7 @@ class Amdlibm(SConsPackage):
         if "%aocc" in spec:
             args.append("--compiler=aocc")
 
-        # We are circumventing the use of
+        # we are circumventing the use of
         # Spacks compiler wrappers because
         # SCons wipes out all environment variables.
         args.append("CC={0}".format(self.compiler.cc))
@@ -57,3 +60,10 @@ class Amdlibm(SConsPackage):
         return args
 
     install_args = build_args
+
+    @run_after('install')
+    def create_symlink(self):
+        """Symbolic link for backward compatibility"""
+        with working_dir(self.prefix.lib):
+            os.symlink('libalm.a', 'libamdlibm.a')
+            os.symlink('libalm.so', 'libamdlibm.so')
