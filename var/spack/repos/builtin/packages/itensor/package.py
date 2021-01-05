@@ -28,7 +28,7 @@ class Itensor(MakefilePackage):
     variant('openmp', default=False, description='Enable OpenMP support.')
     variant('hdf5', default=False, description='Build rockstar with HDF5 support.')
 
-    depends_on('lapack', type=('build', 'link', 'run'))
+    depends_on('lapack')
     depends_on('hdf5+hl', when='+hdf5')
 
     conflicts('^openblas threads=none', when='+openmp')
@@ -87,6 +87,7 @@ class Itensor(MakefilePackage):
         # 4.openmp
         if '+openmp' in spec:
             filter_file('#ITENSOR_USE_OMP', 'ITENSOR_USE_OMP', mf)
+            filter_file('-fopenmp', self.compiler.openmp_flag, mf)
 
         # 5.prefix
         filter_file(
