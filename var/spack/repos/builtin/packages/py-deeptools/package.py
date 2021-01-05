@@ -19,19 +19,17 @@ class PyDeeptools(PythonPackage):
     version('3.2.1', sha256='dbee7676951a9fdb1b88956fe4a3294c99950ef193ea1e9edfba1ca500bd6a75')
     version('2.5.2', sha256='16d0cfed29af37eb3c4cedd9da89b4952591dc1a7cd8ec71fcba87c89c62bf79')
 
-    depends_on('python@2.7:,3:', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy@1.8:', type=('build', 'run'))
+    depends_on('py-numpy@1.9:', type=('build', 'run'))
     depends_on('py-scipy@0.17:', type=('build', 'run'))
-    depends_on('py-py2bit@0.1:', type=('build', 'run'))
-    depends_on('py-pybigwig@0.2:', type=('build', 'run'))
-    depends_on('py-pysam@0.8:', type=('build', 'run'))
-    depends_on('py-matplotlib@1.4:', type=('build', 'run'))
-    depends_on('py-numpydoc', type=('build', 'run'))
-    depends_on('py-plotly', type=('build', 'run'))
-    depends_on('py-deeptoolsintervals', type=('build', 'run'))
-
-    depends_on('py-nose', type='test')
+    depends_on('py-matplotlib@3.1:', type=('build', 'run'))
+    depends_on('py-pysam@0.14:', type=('build', 'run'))
+    depends_on('py-numpydoc@0.5:', type=('build', 'run'))
+    depends_on('py-pybigwig@0.2.1:', type=('build', 'run'))
+    depends_on('py-py2bit@0.2:', type=('build', 'run'))
+    depends_on('py-plotly@2:', type=('build', 'run'))
+    depends_on('py-deeptoolsintervals@0.1.8:', type=('build', 'run'))
 
     def patch(self):
         # Add nosetest hook for "python setup.py test" argument.
