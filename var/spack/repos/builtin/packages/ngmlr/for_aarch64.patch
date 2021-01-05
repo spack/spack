@@ -5,7 +5,7 @@
  #include <stdint.h>
  #include <string.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  
  #ifdef __cplusplus
  extern "C" {
@@ -16,7 +16,7 @@
   */
  
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include <stdint.h>
  #include <stdlib.h>
  #include <stdio.h>
@@ -27,7 +27,7 @@
  #include <stdio.h>
  #include <algorithm>
 -#include <x86intrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  
  #include "IConfig.h"
  
