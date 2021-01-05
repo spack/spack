@@ -51,6 +51,10 @@ def python(parser, args, unknown_args):
     if unknown_args:
         tty.die("Unknown arguments:", " ".join(unknown_args))
 
+    # Unexpected behavior from supplying both
+    if args.python_command and args.python_args:
+        tty.die("You can only specify a command OR script, but not both.")
+
     # Run user choice of interpreter
     if args.python_interpreter == "ipython":
         return spack.cmd.python.ipython_interpreter(args)
@@ -73,9 +77,7 @@ def ipython_interpreter(args):
                 exec(startup.read())
 
     # IPython can also support running a script OR command, not both
-    if args.python_command and args.python_args:
-        tty.die("ipython only supports a script OR command with -c, not both.")
-    elif args.python_args:
+    if args.python_args:
         IPython.start_ipython(argv=args.python_args)
     elif args.python_command:
         IPython.start_ipython(argv=['-c', args.python_command])
