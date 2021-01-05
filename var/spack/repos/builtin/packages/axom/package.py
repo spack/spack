@@ -332,7 +332,6 @@ class Axom(CachedCMakePackage, CudaPackage):
             strings.append("# ClangFormat disabled due to disabled devtools\n")
             strings.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
 
-
         if "+python" in spec or "+devtools" in spec:
             python_path = os.path.realpath(spec['python'].command.path)
             for key in path_replacements:
