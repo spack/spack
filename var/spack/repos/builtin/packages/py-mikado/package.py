@@ -12,9 +12,9 @@ class PyMikado(PythonPackage):
        the best models in each locus."""
 
     homepage = "https://github.com/EI-CoreBioinformatics/mikado"
-    git      = "git://github.com/EI-CoreBioinformatics/mikado"
+    url = "https://pypi.io/packages/source/M/Mikado/Mikado-1.2.4.tar.gz"
 
-    version('20201016', commit='2501ba995d85e62e47165fe72592666a4c79f61a')
+    version('1.2.4', sha256='c0485dba3b7c285599809e058c83f33b5efa9522d20d9f980423410604207f61')
 
     depends_on('python@3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
@@ -38,7 +38,7 @@ class PyMikado(PythonPackage):
     depends_on('py-tabulate', type=('build', 'run'))
     depends_on('py-msgpack@1.0.0:', type=('build', 'run'))
     depends_on('py-python-rapidjson@0.8:', type=('build', 'run'))
-    depends_on('py-pandas', type=('build', 'run'))
+    depends_on('py-pandas@:1.1.5', type=('build', 'run'))
     depends_on('py-jsonref', type=('build', 'run'))
     depends_on('py-pysam@0.15.3:', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
