@@ -39,13 +39,12 @@ class RocmTensile(CMakePackage):
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
     depends_on('boost@1.58.0', type=('build', 'link'))
-    depends_on('llvm-openmp', type=('build', 'link'))
+    depends_on('llvm-openmp', type='build')
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-fix-compile-error.patch', when='@3.7.0:3.8.0')
-    patch('002-fix-boost-inc-dirs.patch', when='@3.9.0:')
 
     def patch(self):
         if '@3.9.0:' in self.spec:
@@ -67,7 +66,7 @@ class RocmTensile(CMakePackage):
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
-
+        boost_incl = self.spec['boost'].prefix.include
         args = [
             '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
             '-DTensile_COMPILER=hipcc',
@@ -75,6 +74,7 @@ class RocmTensile(CMakePackage):
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
             '-DBoost_USE_STATIC_LIBS=off',
+            '-DCMAKE_CXX_FLAGS:String=-I{0}'.format(boost_incl),
             '-DTENSILE_USE_OPENMP=ON',
             '-DOPENMP_LIBRARY={0}/libomp.so'.format(
                 self.spec['llvm-openmp'].prefix.lib),
