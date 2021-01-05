@@ -38,37 +38,15 @@ class Cpmd(MakefilePackage):
         cp = join_path('configure', cbase)
         # Compilers
         if spec.satisfies('+mpi'):
-            filter_file(
-                'FC=.+',
-                'FC=\'{0}\''.format(spec["mpi"].mpifc),
-                cp
-            )
-            filter_file(
-                'CC=.+',
-                'CC=\'{0}\''.format(spec["mpi"].mpicc),
-                cp
-            )
-            filter_file(
-                'LD=.+',
-                'LD=\'{0}\''.format(spec["mpi"].mpifc),
-                cp
-            )
+            fc = spec["mpi"].mpifc
+            cc = spec["mpi"].mpicc
         else:
-            filter_file(
-                'FC=.+',
-                'FC=\'{0}\''.format(spack_fc),
-                cp
-            )
-            filter_file(
-                'CC=.+',
-                'CC=\'{0}\''.format(spack_cc),
-                cp
-            )
-            filter_file(
-                'LD=.+',
-                'LD=\'{0}\''.format(spack_fc),
-                cp
-            )
+            fc = spack_fc
+            cc = spack_cc
+
+        filter_file('FC=.+', 'FC=\'{0}\''.format(fc), cp)
+        filter_file('CC=.+', 'CC=\'{0}\''.format(cc), cp)
+        filter_file('LD=.+', 'LD=\'{0}\''.format(fc), cp)
 
         # MPI flag
         if spec.satisfies('+mpi'):
@@ -83,39 +61,23 @@ class Cpmd(MakefilePackage):
 
         # LIBS:remove -static
         if spec.satisfies('%fj') and spec.satisfies('+omp'):
-            filter_file(
-                '\'-static \'',
-                '\'-Nlibomp \'',
-                cp
-            )
+            filter_file('\'-static \'', '\'-Nlibomp \'', cp)
         else:
-            filter_file(
-                '\'-static \'',
-                '',
-                cp
-            )
+            filter_file('\'-static \'', '', cp)
         # Non-gcc
         # fj
         if spec.satisfies('%fj'):
-            filter_file(
-                '-ffixed-form',
-                '-Fixed',
-                cp
-            )
+            filter_file('-ffixed-form', '-Fixed', cp)
             filter_file(
                 '-ffree-line-length-none -falign-commons',
                 '-Kalign_commons',
-                cp
-            )
-            filter_file(
-                '-fopenmp',
-                '-Kopenmp',
                 cp
             )
 
         # create Makefile
         bash = which('bash')
         if spec.satisfies('+omp'):
+            filter_file('-fopenmp', self.compiler.openmp_flag, cp)
             bash('./configure.sh', '-omp', cbase)
         else:
             bash('./configure.sh', cbase)
