@@ -84,6 +84,8 @@ class Mesa(MesonPackage):
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
 
+    # 'auto' needed when shared llvm is built
+    @when('^llvm~shared_libs')
     def patch(self):
         filter_file(
             r"_llvm_method = 'auto'",
