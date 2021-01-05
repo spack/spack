@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyPreCommit(PythonPackage):
     hooks."""
 
     homepage = "https://github.com/pre-commit/pre-commit"
-    url      = "https://pypi.io/packages/source/p/pre_commit/pre_commit-1.20.0.tar.gz"
+    pypi = "pre_commit/pre_commit-1.20.0.tar.gz"
 
     version('1.20.0', sha256='9f152687127ec90642a2cc3e4d9e1e6240c4eb153615cb02aa1ad41d331cbb6e')
 

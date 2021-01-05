@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,7 @@ from spack import *
 
 class PySympy(PythonPackage):
     """SymPy is a Python library for symbolic mathematics."""
-    homepage = "https://pypi.python.org/pypi/sympy"
-    url      = "https://pypi.io/packages/source/s/sympy/sympy-0.7.6.tar.gz"
+    pypi = "sympy/sympy-0.7.6.tar.gz"
 
     version('1.4', sha256='71a11e5686ae7ab6cb8feb5bd2651ef4482f8fd43a7c27e645a165e4353b23e1')
     version('1.3', sha256='e1319b556207a3758a0efebae14e5e52c648fc1db8975953b05fff12b6871b54')

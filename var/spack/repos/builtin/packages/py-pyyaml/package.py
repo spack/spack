@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPyyaml(PythonPackage):
     """PyYAML is a YAML parser and emitter for Python."""
 
     homepage = "https://pyyaml.org/wiki/PyYAML"
-    url      = "https://pypi.io/packages/source/P/PyYAML/PyYAML-5.3.1.tar.gz"
+    pypi = "PyYAML/PyYAML-5.3.1.tar.gz"
     git      = "https://github.com/yaml/pyyaml.git"
 
     maintainers = ['adamjstewart']

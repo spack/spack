@@ -1,0 +1,18 @@
+--- a/etc/fslconf/fslpython_install.sh	2017-04-07 10:29:52.000000000 -0500
++++ b/etc/fslconf/fslpython_install.sh	2020-11-12 13:34:06.665816528 -0600
+@@ -129,7 +129,7 @@
+     exit 2
+ fi
+ 
+-curl_opts='--fail' # Returns 22 on error
++curl_opts='--fail -L' # Returns 22 on error
+ if [ ${quiet} -eq 1 ]; then
+     curl_opts="${curl_opts} -s"
+ fi
+@@ -184,4 +184,4 @@
+ # binary into $FSLDIR/bin/
+ ln -sf "${fslpython_env_dir}/bin/python" "${fsl_dir}/bin/fslpython"
+ rm "${miniconda_install_log}"
+-drop_sudo rmdir "${miniconda_tmp}"
+\ No newline at end of file
++drop_sudo rmdir "${miniconda_tmp}"
