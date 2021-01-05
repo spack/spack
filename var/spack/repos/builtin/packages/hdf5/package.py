@@ -324,6 +324,15 @@ class Hdf5(AutotoolsPackage):
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
 
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for HDF5"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
+
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
