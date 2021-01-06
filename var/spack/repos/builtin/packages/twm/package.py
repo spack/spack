@@ -24,7 +24,7 @@ class Twm(AutotoolsPackage, XorgPackage):
     depends_on('libice')
     depends_on('libsm')
 
-    depends_on('xproto@7.0.17:', type='build')
+    depends_on('xproto@7.0.17:')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('pkgconfig', type='build')

@@ -14,5 +14,5 @@ class Imake(AutotoolsPackage, XorgPackage):
 
     version('1.0.7', sha256='6bda266a07eb33445d513f1e3c82a61e4822ccb94d420643d58e1be5f881e5cb')
 
-    depends_on('xproto', type='build')
+    depends_on('xproto')
     depends_on('pkgconfig', type='build')

@@ -21,9 +21,9 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
 
-    depends_on('dri2proto@2.8:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('glproto@1.4.17:', type='build')
+    depends_on('dri2proto@2.8:')
+    depends_on('dri3proto@1.0:')
+    depends_on('glproto@1.4.17:')
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')
