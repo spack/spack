@@ -68,9 +68,9 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
-    patch('https://gitlab.com/graphviz/graphviz/-/commit/3b2a27f4a04b6c816ef294fff5e94058dfc7a893.diff',
-          sha256='f6baa102238847f8cf8def7e4a6dcd575f0b0c9e3f32a2b8f894e3b7911e9e38',
-          when='@2.44.1~doc')
+    #patch('https://gitlab.com/graphviz/graphviz/-/commit/3b2a27f4a04b6c816ef294fff5e94058dfc7a893.diff',
+    #      sha256='f6baa102238847f8cf8def7e4a6dcd575f0b0c9e3f32a2b8f894e3b7911e9e38',
+    #      when='@2.44.1~doc')
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='@:2.40+qt^qt@5:')
