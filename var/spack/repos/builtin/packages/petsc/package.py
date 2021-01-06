@@ -78,6 +78,8 @@ class Petsc(Package):
 
     variant('metis',   default=True,
             description='Activates support for metis and parmetis')
+    variant('ptscotch',   default=False,
+            description='Activates support for PTScotch (only parallel)')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
     variant('hypre',   default=True,
@@ -145,6 +147,7 @@ class Petsc(Package):
     conflicts('+moab', when='~mpi', msg=mpi_msg)
     conflicts('+mumps', when='~mpi', msg=mpi_msg)
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
+    conflicts('+ptscotch', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
 
@@ -190,6 +193,11 @@ class Petsc(Package):
     # petsc-3.8+ uses default (float) metis with any (petsc) precision
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
+
+    # PTScotch: Currently disable Parmetis wrapper, this means
+    # nested disection won't be available thought PTScotch
+    depends_on('scotch+esmumps~metis+mpi', when='+ptscotch')
+    depends_on('scotch+int64', when='+ptscotch+int64')
 
     depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
     depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
@@ -408,6 +416,17 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-suitesparse=0')
+
+        # PTScotch: Since we are not using the Parmetis wrapper for now,
+        # we cannot use '--with-ptscotch-dir=...'
+        if '+ptscotch' in spec:
+            options.extend([
+                '--with-ptscotch-include=%s' % spec['scotch'].prefix.include,
+                '--with-ptscotch-lib=%s' % spec['scotch'].libs.joined(),
+                '--with-ptscotch=1'
+            ])
+        else:
+            options.append('--with-ptscotch=0')
 
         # hdf5: configure detection is convoluted for pflotran
         if '+hdf5' in spec:
