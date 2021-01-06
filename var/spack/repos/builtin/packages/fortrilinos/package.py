@@ -48,9 +48,9 @@ class Fortrilinos(CMakePackage):
 
     # Trilinos version dependencies
     depends_on('trilinos@13', when='@2.0.0:')
-    depends_on('trilinos@12.18.1', when='@2.0-dev3')
-    depends_on('trilinos@12.18.1', when='@2.0-dev2')
-    depends_on('trilinos@12.17.1', when='@2.0-dev1')
+    depends_on('trilinos@12.18.1', when='@2.0.dev3')
+    depends_on('trilinos@12.18.1', when='@2.0.dev2')
+    depends_on('trilinos@12.17.1', when='@2.0.dev1')
 
     # Baseline trilinos dependencies
     depends_on('trilinos+teuchos gotype=long_long')
