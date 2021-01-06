@@ -58,6 +58,8 @@ class Caliper(CMakePackage):
             description='Enable SOSflow support')
     variant('fortran', default=False,
             description='Enable Fortran support')
+    variant('cuda', default=False,
+            description='Enable NVTX and CUPTI support')
 
     depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
@@ -71,6 +73,8 @@ class Caliper(CMakePackage):
     depends_on('elfutils', when='+libdw')
 
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
+
+    depends_on('cuda', when='+cuda')
 
     depends_on('cmake',  type='build')
     depends_on('python', type='build')
@@ -122,5 +126,16 @@ class Caliper(CMakePackage):
         if '+mpi' in spec:
             args.append('-DMPI_C_COMPILER=%s' % spec['mpi'].mpicc)
             args.append('-DMPI_CXX_COMPILER=%s' % spec['mpi'].mpicxx)
+
+        if '+cuda' in spec:
+            args.append('-DCUDA_TOOLKIT_ROOT_DIR=%s' % spec['cuda'].prefix)
+            # technically only works with cuda 10.2+, otherwise cupti is in
+            # ${CUDA_TOOLKIT_ROOT_DIR}/extras/CUPTI
+            args.append('-DCUPTI_PREFIX=%s' % spec['cuda'].prefix)
+            args.append('-DWITH_NVTX=On')
+            args.append('-DWITH_CUPTI=On')
+        else:
+            args.append('-DWITH_NVTX=Off')
+            args.append('-DWITH_CUPTI=Off')
 
         return args
