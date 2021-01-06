@@ -16,7 +16,6 @@ class Parallelio(CMakePackage):
 
     maintainers = ['tkameyama']
 
-
     version('2_5_2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
     variant('pnetcdf', default=False, description='enable pnetcdf')
