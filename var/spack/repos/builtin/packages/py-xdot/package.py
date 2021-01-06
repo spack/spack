@@ -13,8 +13,10 @@ class PyXdot(PythonPackage):
     homepage = "https://github.com/jrfonseca/xdot.py"
     pypi = "xdot/xdot-1.0.tar.gz"
     git      = "https://github.com/jrfonseca/xdot.py.git"
+    maintainers = ['lee218llnl']
 
     version('master', branch='master')
+    version('1.2', sha256='3df91e6c671869bd2a6b2a8883fa3476dbe2ba763bd2a7646cf848a9eba71b70')
     version('1.0', sha256='7e067896d729af82f1fd0758e265f129944d469c30f550e3f15dbdb751cc42a1')
     version('0.9', sha256='a33701664ecfefe7c7313a120a587e87334f3a566409bc451538fcde5edd6907')
 
@@ -28,6 +30,7 @@ class PyXdot(PythonPackage):
     depends_on('atk', type=('build', 'run'))
     depends_on('gdk-pixbuf', type=('build', 'run'))
     depends_on('gtkplus', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='@1.2:')
 
     @run_after('install')
     def post_install(self):
