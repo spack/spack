@@ -3,7 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+from llnl.util.filesystem import LibraryList
 
 
 class Libc(Package):
@@ -20,3 +20,7 @@ class Libc(Package):
 
     provides('iconv', when='+iconv')
     provides('rpc', when='+rpc')
+
+    @property
+    def libs(self):
+        return LibraryList([])
