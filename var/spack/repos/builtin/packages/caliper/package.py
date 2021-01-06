@@ -18,7 +18,7 @@ class Caliper(CMakePackage):
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
 
-    maintainers = [ "daboehme" ]
+    maintainers = ["daboehme"]
 
     version('master')
     version('2.5.0', tag='v2.5.0')
