@@ -7,12 +7,15 @@ from spack import *
 
 
 class Parallelio(CMakePackage):
-    """he Parallel IO libraries (PIO) are high-level parallel I/O C and
+    """The Parallel IO libraries (PIO) are high-level parallel I/O C and
     Fortran libraries for applications that need to do netCDF I/O from
     large numbers of processors on a HPC system."""
 
     homepage = "https://ncar.github.io/ParallelIO/"
     url      = "https://github.com/NCAR/ParallelIO/archive/pio2_5_2.tar.gz"
+
+    maintainers = ['tkameyama']
+
 
     version('2_5_2', sha256='935bc120ef3bf4fe09fb8bfdf788d05fb201a125d7346bf6b09e27ac3b5f345c')
 
