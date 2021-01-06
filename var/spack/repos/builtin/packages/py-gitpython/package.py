@@ -27,6 +27,6 @@ class PyGitpython(PythonPackage):
     version('3.1.0',  sha256='e426c3b587bd58c482f0b7fe6145ff4ac7ae6c82673fc656f489719abca6f4cb')
     version('3.0.9',  sha256='7e5df21bfef38505115ad92544fb379e6fedb2753f3b709174c4358cecd0cb97')
 
-    depends_on('python@3.5:',   type=('build', 'run'))
+    depends_on('python@3.4:',   type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-gitdb@4.0.1:4.999', type=('build', 'run'))
