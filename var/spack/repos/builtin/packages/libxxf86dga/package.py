@@ -17,8 +17,8 @@ class Libxxf86dga(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxext')
 
-    depends_on('xproto', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('xf86dgaproto@2.0.99.2:', type='build')
+    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('xf86dgaproto@2.0.99.2:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

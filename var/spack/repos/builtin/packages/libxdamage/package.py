@@ -17,8 +17,8 @@ class Libxdamage(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('libx11')
 
-    depends_on('damageproto@1.1:', type='build')
-    depends_on('fixesproto', type='build')
-    depends_on('xextproto', type='build')
+    depends_on('damageproto@1.1:')
+    depends_on('fixesproto')
+    depends_on('xextproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

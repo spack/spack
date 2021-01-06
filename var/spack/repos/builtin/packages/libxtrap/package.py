@@ -27,7 +27,7 @@ class Libxtrap(AutotoolsPackage, XorgPackage):
     depends_on('libxt')
     depends_on('libxext')
 
-    depends_on('trapproto', type='build')
-    depends_on('xextproto', type='build')
+    depends_on('trapproto')
+    depends_on('xextproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

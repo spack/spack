@@ -17,8 +17,8 @@ class Xfs(AutotoolsPackage, XorgPackage):
     depends_on('libxfont@1.4.5:')
     depends_on('font-util')
 
-    depends_on('xproto@7.0.17:', type='build')
-    depends_on('fontsproto', type='build')
-    depends_on('xtrans', type='build')
+    depends_on('xproto@7.0.17:')
+    depends_on('fontsproto')
+    depends_on('xtrans')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

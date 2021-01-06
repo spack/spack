@@ -18,7 +18,7 @@ class Libxp(AutotoolsPackage, XorgPackage):
     depends_on('libxext')
     depends_on('libxau')
 
-    depends_on('xextproto', type='build')
-    depends_on('printproto', type='build')
+    depends_on('xextproto')
+    depends_on('printproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

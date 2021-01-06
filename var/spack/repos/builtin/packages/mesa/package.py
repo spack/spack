@@ -71,7 +71,7 @@ class Mesa(MesonPackage):
     depends_on('libxext', when='+glx')
     depends_on('libxt',  when='+glx')
     depends_on('xrandr', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
 
     # Require at least 1 front-end
     # TODO: Add egl to this conflict once made available

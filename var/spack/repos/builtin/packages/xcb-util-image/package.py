@@ -22,5 +22,5 @@ class XcbUtilImage(AutotoolsPackage):
     depends_on('libxcb@1.4:')
     depends_on('xcb-util')
 
-    depends_on('xproto@7.0.8:', type='build')
+    depends_on('xproto@7.0.8:')
     depends_on('pkgconfig', type='build')
