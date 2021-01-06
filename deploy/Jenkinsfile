@@ -24,7 +24,7 @@ def build_and_deploy_docker() {
 def deployment_directory(parent) {
     def pull = env.ghprbPullId
     if (parent || pull == null) {
-        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/merge"
+        return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins"
     } else {
         return "/gpfs/bbp.cscs.ch/ssd/apps/hpc/jenkins/pulls/${pull}"
     }
@@ -110,7 +110,7 @@ pipeline {
                choices: '1\n2\n3\n4\n5',
                description: 'How many nodes are used building software')
         string(name: 'sha1',
-               defaultValue: 'merge/2020/07',
+               defaultValue: 'develop',
                description: 'Used for fetching the right Jenkinsfile')
     }
 
@@ -147,7 +147,7 @@ pipeline {
                                       branches: [[name: "FETCH_HEAD"]],
                                       extensions: [[$class: 'LocalBranch']],
                                       userRemoteConfigs: [[
-                                            refspec: "+refs/heads/merge/2020/07:refs/remotes/origin/merge/2020/07",
+                                            refspec: "+refs/heads/develop:refs/remotes/origin/develop",
                                             url: "https://github.com/BlueBrain/spack.git"
                                       ]]])
                         }
