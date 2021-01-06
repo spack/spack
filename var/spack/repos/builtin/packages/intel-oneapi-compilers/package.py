@@ -60,3 +60,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'bin'))
+        env.prepend_path('CPATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'include'))
+        env.prepend_path('LIBRARY_PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'lib'))
