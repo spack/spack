@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from os import path
 from spack import *
 
 
-releases = {'2021.1':
+releases = {'2021.1.0':
             {'irc_id': '17427', 'build': '2684'}}
 
 
@@ -25,7 +25,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html'
 
-    version('2021.1', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
+    version('2021.1.0', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
 
     depends_on('patchelf', type='build')
 

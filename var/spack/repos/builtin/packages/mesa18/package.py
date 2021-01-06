@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,7 +65,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
 
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')

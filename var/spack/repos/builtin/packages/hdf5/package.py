@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -323,6 +323,15 @@ class Hdf5(AutotoolsPackage):
                 lambda m: 'postdeps="%s"' % ' '.join(
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
+
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for HDF5"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)

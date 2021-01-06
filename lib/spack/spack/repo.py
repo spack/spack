@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -118,7 +118,11 @@ class SpackNamespace(types.ModuleType):
     def __getattr__(self, name):
         """Getattr lazily loads modules if they're not already loaded."""
         submodule = self.__package__ + '.' + name
-        setattr(self, name, __import__(submodule))
+        try:
+            setattr(self, name, __import__(submodule))
+        except ImportError:
+            msg = "'{0}' object has no attribute {1}"
+            raise AttributeError(msg.format(type(self), name))
         return getattr(self, name)
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -1042,9 +1042,9 @@ _spack_install() {
 _spack_license() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help"
+        SPACK_COMPREPLY="-h --help --root"
     else
-        SPACK_COMPREPLY="list-files verify"
+        SPACK_COMPREPLY="list-files verify update-copyright-year"
     fi
 }
 
@@ -1053,7 +1053,11 @@ _spack_license_list_files() {
 }
 
 _spack_license_verify() {
-    SPACK_COMPREPLY="-h --help --root"
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_license_update_copyright_year() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_list() {
@@ -1369,7 +1373,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -i -m"
     else
         SPACK_COMPREPLY=""
     fi

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,8 +102,7 @@ class Gromacs(CMakePackage):
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
-    # TODO: openmpi constraint; remove when concretizer is fixed
-    depends_on('hwloc@:1.999', when='@:3.0.0')
+    depends_on('hwloc', when='+hwloc')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')

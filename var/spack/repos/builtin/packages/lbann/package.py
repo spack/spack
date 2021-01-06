@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -160,7 +160,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2', type='test')
+    depends_on('catch2', type=('build', 'test'))
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
