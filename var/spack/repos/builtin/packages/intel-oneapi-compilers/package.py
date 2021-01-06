@@ -70,3 +70,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                          'compiler', 'latest', 'linux', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
                          'compiler', 'latest', 'linux', 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH',
+                         join_path(self.prefix,
+                                   'compiler', 'latest', 'linux', 'compiler',
+                                   'lib', 'intel64_lin'))
