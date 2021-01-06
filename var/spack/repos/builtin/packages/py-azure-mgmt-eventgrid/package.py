@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtEventgrid(PythonPackage):
     """Microsoft Azure EventGrid Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-eventgrid/azure-mgmt-eventgrid-2.2.0.zip"
+    pypi = "azure-mgmt-eventgrid/azure-mgmt-eventgrid-2.2.0.zip"
 
     # Release candidate needed for py-azure-cli
     version('3.0.0rc7', sha256='68f9eb18b74fa86e07cf4e4d1a2ed16fe549bdd53f21a707b05798616b01a9d4')

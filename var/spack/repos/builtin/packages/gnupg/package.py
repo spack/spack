@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,12 @@ class Gnupg(AutotoolsPackage):
     homepage = "https://gnupg.org/index.html"
     url      = "https://gnupg.org/ftp/gcrypt/gnupg/gnupg-2.2.19.tar.bz2"
 
+    version('2.2.25', sha256='c55307b247af4b6f44d2916a25ffd1fb64ce2e509c3c3d028dbe7fbf309dc30a')
+    version('2.2.24', sha256='9090b400faae34f08469d78000cfec1cee5b9c553ce11347cc96ef16eab98c46')
+    version('2.2.23', sha256='10b55e49d78b3e49f1edb58d7541ecbdad92ddaeeb885b6f486ed23d1cd1da5c')
+    version('2.2.22', sha256='7c1370565e1910b9d8c4e0fb57b9de34aa062ec7bb91abad5803d791f38d855b')
+    version('2.2.21', sha256='61e83278fb5fa7336658a8b73ab26f379d41275bb1c7c6e694dd9f9a6e8e76ec')
+    version('2.2.20', sha256='04a7c9d48b74c399168ee8270e548588ddbe52218c337703d7f06373d326ca30')
     version('2.2.19', sha256='242554c0e06f3a83c420b052f750b65ead711cc3fddddb5e7274fcdbb4e9dec0')
     version('2.2.17', sha256='afa262868e39b651a2db4c071fba90415154243e83a830ca00516f9a807fd514')
     version('2.2.15', sha256='cb8ce298d7b36558ffc48aec961b14c830ff1783eef7a623411188b5e0f5d454')

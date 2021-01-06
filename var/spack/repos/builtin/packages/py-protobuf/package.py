@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyProtobuf(PythonPackage):
     and using a variety of languages."""
 
     homepage = 'https://developers.google.com/protocol-buffers/'
-    url      = 'https://pypi.io/packages/source/p/protobuf/protobuf-3.11.0.tar.gz'
+    pypi = 'protobuf/protobuf-3.11.0.tar.gz'
 
     variant('cpp', default=False,
             description='Enable the cpp implementation')

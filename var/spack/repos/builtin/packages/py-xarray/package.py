@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyXarray(PythonPackage):
     """N-D labeled arrays and datasets in Python"""
 
     homepage = "https://github.com/pydata/xarray"
-    url      = "https://pypi.io/packages/source/x/xarray/xarray-0.9.1.tar.gz"
+    pypi = "xarray/xarray-0.9.1.tar.gz"
 
     version('0.14.0', sha256='a8b93e1b0af27fa7de199a2d36933f1f5acc9854783646b0f1b37fed9b4da091')
     version('0.13.0', sha256='80e5746ffdebb96b997dba0430ff02d98028ef3828e6db6106cbbd6d62e32825')

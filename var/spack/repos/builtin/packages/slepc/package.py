@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,7 @@ class Slepc(Package):
 
         if '+arpack' in spec:
             options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
+                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
             if spec.satisfies('@:3.12.99'):
                 arpackopt = '--with-arpack-flags'

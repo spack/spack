@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ class Cdo(AutotoolsPackage):
     depends_on('curl', when='+curl')
     depends_on('fftw@3:', when='+fftw3')
     depends_on('magics', when='+magics')
-    depends_on('libuuid')
+    depends_on('uuid')
 
     conflicts('grib2=eccodes', when='@:1.8',
               msg='Eccodes is supported starting version 1.9.0')

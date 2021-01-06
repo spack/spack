@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyOpencensus(PythonPackage):
     """A stats collection and distributed tracing framework."""
 
     homepage = "https://github.com/census-instrumentation/opencensus-python"
-    url      = "https://pypi.io/packages/source/o/opencensus/opencensus-0.7.10.tar.gz"
+    pypi = "opencensus/opencensus-0.7.10.tar.gz"
 
     version('0.7.10', sha256='2921e3e570cfadfd123cd8e3636a405031367fddff74c55d3fe627a4cf8b981c')
 
