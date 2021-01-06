@@ -189,7 +189,7 @@ class _GpgConstants(object):
         #                "file-name-too-long" errors in gpg.
 
         try:
-            has_suitable_gpgconf = bool(_GpgConstants.gpgconf_string)
+            has_suitable_gpgconf = bool(GpgConstants.gpgconf_string)
         except SpackGPGError:
             has_suitable_gpgconf = False
 
