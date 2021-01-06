@@ -45,6 +45,8 @@ class Graphviz(AutotoolsPackage):
                 'bindings'.format(lang))
 
     # Feature variants
+    variant('doc', default=False,
+            description='Build and install graphviz documentation')
     variant('expat', default=False,
             description='Build with Expat support (enables HTML-like labels)')
     variant('gts', default=False,
@@ -66,6 +68,9 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
+    patch('https://gitlab.com/graphviz/graphviz/-/commit/3b2a27f4a04b6c816ef294fff5e94058dfc7a893.diff',
+          sha256='f6baa102238847f8cf8def7e4a6dcd575f0b0c9e3f32a2b8f894e3b7911e9e38',
+          when='@2.44.1~doc')
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='@:2.40+qt^qt@5:')
@@ -92,6 +97,9 @@ class Graphviz(AutotoolsPackage):
         depends_on('swig', when=('+' + lang))
 
     # Feature dependencies
+    depends_on('zlib')
+    depends_on('groff', type='build', when='+doc')
+    depends_on('ghostscript', type='build', when='+doc')
     depends_on('expat', when='+expat')
     depends_on('libgd', when='+libgd')
     depends_on('fontconfig', when='+libgd')
@@ -106,7 +114,6 @@ class Graphviz(AutotoolsPackage):
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
     depends_on('poppler+glib', when='+poppler')
-    depends_on('zlib')
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
@@ -118,8 +125,6 @@ class Graphviz(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
-    # required to build docs
-    depends_on('groff', type='build')
 
     parallel = False
 
