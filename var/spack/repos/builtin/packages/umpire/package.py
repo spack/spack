@@ -107,8 +107,8 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ",".join(archs)
                 options.append(
-#                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}/amdgcn/bitcode'.format(arch_str,os.getenv('ROCM_PATH'))
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'.format(arch_str,os.getenv('DEVICE_LIB_PATH'))
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
+                    .format(arch_str, os.getenv('DEVICE_LIB_PATH'))
                 )
         else:
             options.append('-DENABLE_HIP=OFF')

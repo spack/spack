@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Care(CMakePackage, CudaPackage, ROCmPackage):
     """
     Algorithms for chai managed arrays.
@@ -88,8 +89,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ",".join(archs)
                 options.append(
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'.format(arch_str,os.getenv('DEVICE_LIB_PATH'))
-#                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
+                    .format(arch_str, os.getenv('DEVICE_LIB_PATH'))
                 )
         else:
             options.append('-DENABLE_HIP=OFF')
