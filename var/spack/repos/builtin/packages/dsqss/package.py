@@ -18,13 +18,17 @@ class Dsqss(CMakePackage):
 
     version('2.0.3', sha256='11255dd1f1317fb4ac2d6ae95535f027d627d03f5470717cd277dd9ab94496e0')
 
-    depends_on('mpi')
+    variant("mpi", default=True, description="build mpi support")
+
+    depends_on('mpi', when='+mpi')
     depends_on('python', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-toml', type=('build', 'run'))
 
     patch('ctest.patch')
+
+    extends('python')
 
     @run_before('cmake')
     def rm_macos(self):
@@ -34,13 +38,9 @@ class Dsqss(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DCMAKE_INSTALL_PREFIX=%s' % self.spec.prefix)
-        return args
+        if self.spec.satisfies('+mpi'):
+            args.append('-DENABLE_MPI=ON')
+        else:
+            args.append('-DENABLE_MPI=OFF')
 
-    def setup_run_environment(self, env):
-        python_version = self.spec['python'].version.up_to(2)
-        env.prepend_path('PYTHONPATH', join_path(
-                         self.prefix,
-                         'lib',
-                         'python{0}'.format(python_version),
-                         'site-packages'))
+        return args
