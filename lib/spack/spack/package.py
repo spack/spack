@@ -2585,6 +2585,9 @@ def test_process(pkg, kwargs):
             # reset debug level
             tty.set_debug(old_debug)
 
+    def dynamic_dependencies(self):
+        return []
+
 
 inject_flags = PackageBase.inject_flags
 env_flags = PackageBase.env_flags
