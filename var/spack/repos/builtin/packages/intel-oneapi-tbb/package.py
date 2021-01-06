@@ -19,6 +19,8 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     version('2021.1.1', sha256='535290e3910a9d906a730b24af212afa231523cf13a668d480bade5f2a01b53b', expand=False)
 
+    provides('tbb')
+
     def __init__(self, spec):
         self.component_info(dir_name='tbb',
                             components='intel.oneapi.lin.tbb.devel',
