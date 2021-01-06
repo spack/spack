@@ -33,6 +33,7 @@ class Qthreads(AutotoolsPackage):
     test_base_path = 'test/basics/'
     test_list = ['hello_world_multi', 'hello_world']
 
+    version('1.15', sha256='3ac2dc24debff004a2998933de5724b1e14e1ae262fa9942acbb01f77819a23b')
     version("1.14", sha256="16f15e5b2e35b6329a857d24c283a1e43cd49921ee49a1446d4f31bf9c6f5cf9")
     version("1.12", sha256="2c13a5f6f45bc2f22038d272be2e748e027649d3343a9f824da9e86a88b594c9")
     version("1.11", sha256="dbde6c7cb7de7e89921e47363d09cecaebf775c9d090496c2be8350355055571")
