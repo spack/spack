@@ -69,8 +69,8 @@ class Hip(CMakePackage):
                 msg += "manually edit fallback_prefix in the package file as "
                 msg += "a workaround."
                 raise RuntimeError(msg)
-
-            if '@3.8.0:' in self.spec:
+            # ROCm 3.9 changes the default location of the device_lib_path
+            if '@3.9.0:' in self.spec:
                 return {
                     'rocm-path': fallback_prefix,
                     'llvm-amdgpu': fallback_prefix.llvm,
