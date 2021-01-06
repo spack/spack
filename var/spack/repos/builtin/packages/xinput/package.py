@@ -20,9 +20,9 @@ class Xinput(AutotoolsPackage, XorgPackage):
     depends_on('libxrandr')
     depends_on('libxinerama')
 
-    depends_on('inputproto@2.1.99.1:', type='build')
-    depends_on('fixesproto', type='build')
-    depends_on('randrproto', type='build')
-    depends_on('xineramaproto', type='build')
+    depends_on('inputproto@2.1.99.1:')
+    depends_on('fixesproto')
+    depends_on('randrproto')
+    depends_on('xineramaproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -16,6 +16,6 @@ class Transset(AutotoolsPackage, XorgPackage):
 
     depends_on('libx11')
 
-    depends_on('xproto@7.0.17:', type='build')
+    depends_on('xproto@7.0.17:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

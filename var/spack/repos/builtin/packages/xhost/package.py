@@ -19,6 +19,6 @@ class Xhost(AutotoolsPackage, XorgPackage):
     depends_on('libxmu')
     depends_on('libxau')
 
-    depends_on('xproto@7.0.22:', type='build')
+    depends_on('xproto@7.0.22:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
