@@ -17,8 +17,8 @@ class Libxxf86misc(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxext')
 
-    depends_on('xproto', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('xf86miscproto', type='build')
+    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('xf86miscproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

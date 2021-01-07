@@ -11,10 +11,11 @@ class RocmDeviceLibs(CMakePackage):
     """set of AMD specific device-side language runtime libraries"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs"
-    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-3.10.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/ROCm-Device-Libs/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='d0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a')
     version('3.10.0', sha256='bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc')
     version('3.9.0', sha256='c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7')
     version('3.8.0', sha256='e82cc9a8eb7d92de02cabb856583e28f17a05c8cf9c97aec5275608ef1a38574')
@@ -26,7 +27,7 @@ class RocmDeviceLibs(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('zlib', type='link', when='@3.9.0:')
     depends_on('texinfo', type='link', when='@3.9.0:')
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
 

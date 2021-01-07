@@ -26,4 +26,4 @@ class PerconaServer(CMakePackage):
     depends_on('curl')
     depends_on('bison', type='build')
     depends_on('flex',  type='build')
-    depends_on('rpcsvc-proto', type='build')
+    depends_on('rpcsvc-proto')

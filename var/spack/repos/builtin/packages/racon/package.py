@@ -25,6 +25,7 @@ class Racon(CMakePackage):
 
     depends_on('cmake@3.2:', type='build')
     depends_on('python', type='build')
+    depends_on('sse2neon', when='target=aarch64:')
 
     conflicts('%gcc@:4.7')
     conflicts('%clang@:3.1')

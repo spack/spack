@@ -20,6 +20,7 @@ class RocmOpencl(CMakePackage):
         url = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('4.0.0', sha256='d43ea5898c6b9e730b5efabe8367cc136a9260afeac5d0fe85b481d625dd7df1')
     version('3.10.0', sha256='3aa9dc5a5f570320b04b35ee129ce9ff21062d2770df934c6c307913f975e93d')
     version('3.9.0', sha256='286ff64304905384ce524cd8794c28aee216befd6c9267d4187a12e5a21e2daf')
     version('3.8.0', sha256='7f75dd1abf3d771d554b0e7b0a7d915ab5f11a74962c92b013ee044a23c1270a')
@@ -30,7 +31,7 @@ class RocmOpencl(CMakePackage):
     depends_on('mesa18~llvm@18.3:', type='link')
     depends_on('numactl', type='link', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hip-rocclr@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)

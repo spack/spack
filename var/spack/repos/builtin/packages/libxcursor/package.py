@@ -18,6 +18,6 @@ class Libxcursor(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('libx11')
 
-    depends_on('fixesproto', type='build')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -16,7 +16,7 @@ class Xsetpointer(AutotoolsPackage, XorgPackage):
 
     depends_on('libxi', type='link')
     depends_on('libx11', type='link')
-    depends_on('inputproto@1.4:', type='link')
+    depends_on('inputproto@1.4:')
 
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

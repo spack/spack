@@ -11,10 +11,11 @@ class Rocminfo(CMakePackage):
     """Radeon Open Compute (ROCm) Runtime rocminfo tool"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocminfo"
-    url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-3.9.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='0b3d692959dd4bc2d1665ab3a838592fcd08d2b5e373593b9192ca369e2c4aa7')
     version('3.10.0', sha256='ed02375be3be518b83aea7309ef5ca62dc9b6dbad0aae33e92995102d6d660be')
     version('3.9.0', sha256='9592781e0c62b910c4adc5c7f4c27c7a0cddbed13111a19dd91a2ff43720e43d')
     version('3.8.0', sha256='c135dc98ecb5f420e22a6efd2f461ba9ed90be3f42e2ac29356e05c6a0706f8f')
@@ -23,7 +24,7 @@ class Rocminfo(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 

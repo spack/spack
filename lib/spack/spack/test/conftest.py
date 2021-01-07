@@ -469,9 +469,8 @@ def mock_uarch_configuration(mock_uarch_json):
         with open(mock_uarch_json) as f:
             return json.load(f)
 
-    targets_json = archspec.cpu.schema.LazyDictionary(load_json)
-    targets = archspec.cpu.microarchitecture.LazyDictionary(
-        archspec.cpu.microarchitecture._known_microarchitectures)
+    targets_json = load_json()
+    targets = archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
