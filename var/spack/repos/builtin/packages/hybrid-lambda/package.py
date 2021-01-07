@@ -17,28 +17,19 @@ class HybridLambda(AutotoolsPackage):
        represent hybridization events between species."""
 
     homepage = "https://github.com/hybridLambda/hybrid-Lambda"
-    #url      = "https://github.com/hybridLambda/hybrid-Lambda/archive/v0.6.3-beta.tar.gz"
     git      = "https://github.com/hybridLambda/hybrid-Lambda.git"
 
     version('dev', submodules=True)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
-    depends_on('m4',       type='build')
-
-    depends_on('doxygen', type='build')
-    depends_on('graphviz', type='build')
+    depends_on('libtool', type='build')
+    depends_on('m4', type='build')
     depends_on('boost', type='build')
     depends_on('cppunit', type='build')
 
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
-
-    def configure_args(self):
-        # args = ['--disable-doxygen-doc', '--disable-doxygen-dot']
-        args = []
-        return args
 
     def build(self, spec, prefix):
         with working_dir('src'):
