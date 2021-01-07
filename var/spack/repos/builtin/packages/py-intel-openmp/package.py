@@ -23,7 +23,7 @@
 from spack import *
 
 
-class PyIntelOpenmp(PythonPackage):
+class PyIntelOpenmp(Package):
     """FIXME: Put a proper description of your package here."""
 
     # FIXME: Add a proper url for your package's homepage here.
@@ -34,7 +34,7 @@ class PyIntelOpenmp(PythonPackage):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('2021.1.2', sha256='2af893738b4b06cb0183746f2992169111031340b59c84a0fd4dec1ed66b80f2')
+    version('2021.1.2', sha256='2af893738b4b06cb0183746f2992169111031340b59c84a0fd4dec1ed66b80f2', expand=False)
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
@@ -42,9 +42,8 @@ class PyIntelOpenmp(PythonPackage):
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('py-pip', type='build')
 
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
+    def install(self, spec, prefix):
+        pip = which('pip')
+        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
