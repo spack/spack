@@ -711,10 +711,13 @@ def protobuf_deps():
             # Ask bazel to explain what it's up to
             # Needs a filename as argument
             '--explain=explainlogfile.txt',
-            '--incompatible_no_support_tools_in_action_inputs=false',
             # Increase verbosity of explanation,
             '--verbose_explanations',
         ]
+
+        if spec.satisfies('^bazel@:3.5'):
+            # removed in bazel 3.6
+            args.append('--incompatible_no_support_tools_in_action_inputs=false')
 
         # See .bazelrc for when each config flag is supported
         if spec.satisfies('@1.12.1:'):
