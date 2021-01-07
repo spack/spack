@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,11 +28,11 @@ class PyDask(PythonPackage):
     variant('distributed', default=True, description='Install requirements for dask.distributed')
     variant('diagnostics', default=False, description='Install requirements for dask.diagnostics')
     variant('delayed',     default=True, description='Install requirements for dask.delayed (dask.imperative)')
-    variant('yaml',        default=True, description='Ensure support for YAML configuration files')
+    variant('yaml',        default=False, description='Ensure support for YAML configuration files')
 
     conflicts('+distributed', when='@:0.4.0,0.7.6:0.8.1')
     conflicts('+diagnostics', when='@:0.5.0')
-    conflicts('+yaml', when='@:0.17.5')
+    conflicts('+yaml', when='@:0.17.5,2.17.1:')
 
     depends_on('python@2.7:2.8,3.5:',   type=('build', 'run'))
     depends_on('python@3.5:',           type=('build', 'run'), when='@2.0.0:')
@@ -135,7 +135,8 @@ class PyDask(PythonPackage):
     depends_on('py-toolz@0.8.2:',       type=('build', 'run'), when='@2.13.0: +delayed')
 
     # Support for YAML configuration files
-    depends_on('py-pyyaml',             type=('build', 'run'), when='+yaml')
+    depends_on('py-pyyaml',             type=('build', 'run'), when='@:2.17.0 +yaml')
+    depends_on('py-pyyaml',             type=('build', 'run'), when='@2.17.1:')
 
     @property
     def import_modules(self):
