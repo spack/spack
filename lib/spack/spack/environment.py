@@ -557,7 +557,8 @@ class ViewDescriptor(object):
             if not os.path.isabs(root):
                 root = os.path.normpath(os.path.join(self.base, self.root))
             fs.mkdirp(root)
-            with fs.replace_directory_transaction(root):
+
+            with fs.replace_directory_transaction(root, os.path.dirname(root)):
                 view = self.view()
 
                 view.clean()
