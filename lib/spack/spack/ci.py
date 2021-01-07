@@ -883,63 +883,97 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
-    if final_job_config and not is_pr_pipeline and job_id > 0:
-        # Add an extra, final job to regenerate the index
-        final_stage = 'stage-rebuild-index'
-        final_job = {
-            'stage': final_stage,
-            'script': 'spack buildcache update-index --keys -d {0}'.format(
-                mirror_urls[0]),
-            'tags': final_job_config['tags'],
-            'when': 'always'
-        }
-        if 'image' in final_job_config:
-            final_job['image'] = final_job_config['image']
-        if before_script:
-            final_job['before_script'] = before_script
-        if after_script:
-            final_job['after_script'] = after_script
-        output_object['rebuild-index'] = final_job
-        stage_names.append(final_stage)
+    if job_id > 0:
+        if final_job_config and not is_pr_pipeline:
+            # Add an extra, final job to regenerate the index
+            final_stage = 'stage-rebuild-index'
+            final_job = {
+                'stage': final_stage,
+                'script': 'spack buildcache update-index --keys -d {0}'.format(
+                    mirror_urls[0]),
+                'tags': final_job_config['tags'],
+                'when': 'always'
+            }
+            if 'image' in final_job_config:
+                final_job['image'] = final_job_config['image']
+            if before_script:
+                final_job['before_script'] = before_script
+            if after_script:
+                final_job['after_script'] = after_script
+            output_object['rebuild-index'] = final_job
+            stage_names.append(final_stage)
 
-    output_object['stages'] = stage_names
+        output_object['stages'] = stage_names
 
-    # Capture the version of spack used to generate the pipeline, transform it
-    # into a value that can be passed to "git checkout", and save it in a
-    # global yaml variable
-    spack_version = spack.main.get_version()
-    version_to_clone = None
-    v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
-    if v_match:
-        version_to_clone = 'v{0}'.format(v_match.group(0))
-    else:
-        v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+        # Capture the version of spack used to generate the pipeline, transform it
+        # into a value that can be passed to "git checkout", and save it in a
+        # global yaml variable
+        spack_version = spack.main.get_version()
+        version_to_clone = None
+        v_match = re.match(r"^\d+\.\d+\.\d+$", spack_version)
         if v_match:
-            version_to_clone = v_match.group(1)
+            version_to_clone = 'v{0}'.format(v_match.group(0))
         else:
-            version_to_clone = spack_version
+            v_match = re.match(r"^[^-]+-[^-]+-([a-f\d]+)$", spack_version)
+            if v_match:
+                version_to_clone = v_match.group(1)
+            else:
+                version_to_clone = spack_version
 
-    output_object['variables'] = {
-        'SPACK_VERSION': spack_version,
-        'SPACK_CHECKOUT_VERSION': version_to_clone,
-    }
+        output_object['variables'] = {
+            'SPACK_VERSION': spack_version,
+            'SPACK_CHECKOUT_VERSION': version_to_clone,
+        }
 
-    if pr_mirror_url:
-        output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
+        if pr_mirror_url:
+            output_object['variables']['SPACK_PR_MIRROR_URL'] = pr_mirror_url
 
-    sorted_output = {}
-    for output_key, output_value in sorted(output_object.items()):
-        sorted_output[output_key] = output_value
+        sorted_output = {}
+        for output_key, output_value in sorted(output_object.items()):
+            sorted_output[output_key] = output_value
 
-    # TODO(opadron): remove this or refactor
-    if run_optimizer:
-        import spack.ci_optimization as ci_opt
-        sorted_output = ci_opt.optimizer(sorted_output)
+        # TODO(opadron): remove this or refactor
+        if run_optimizer:
+            import spack.ci_optimization as ci_opt
+            sorted_output = ci_opt.optimizer(sorted_output)
 
-    # TODO(opadron): remove this or refactor
-    if use_dependencies:
-        import spack.ci_needs_workaround as cinw
-        sorted_output = cinw.needs_to_dependencies(sorted_output)
+        # TODO(opadron): remove this or refactor
+        if use_dependencies:
+            import spack.ci_needs_workaround as cinw
+            sorted_output = cinw.needs_to_dependencies(sorted_output)
+
+        # with open(output_file, 'w') as outf:
+        #     outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
+    else:
+        # No jobs were generated
+        tty.debug('No specs to rebuild, generating no-op job')
+        noop_runner_attribs = {}
+        attrib_list = ['image', 'tags', 'variables']
+        if 'noop-pipeline-job-attributes' in gitlab_ci:
+            copy_attributes(attrib_list,
+                            gitlab_ci['noop-pipeline-job-attributes'],
+                            noop_runner_attribs)
+        elif ('tags' in gitlab_ci and
+                ('image' in gitlab_ci or 'variables' in gitlab_ci)):
+            copy_attributes(attrib_list,
+                            gitlab_ci,
+                            noop_runner_attribs)
+        else:
+            copy_attributes(attrib_list,
+                            gitlab_ci['mappings'][0]['runner-attributes'],
+                            noop_runner_attribs)
+
+        noop_job = {
+            'script': [
+                'echo "Nothing to do"',
+            ]
+        }
+
+        copy_attributes(['image', 'variables', 'tags'],
+                        noop_runner_attribs,
+                        noop_job)
+
+        sorted_output = {'noop': noop_job}
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
