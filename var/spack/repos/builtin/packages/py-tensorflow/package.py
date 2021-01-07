@@ -213,7 +213,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('curl', when='+gcp')
     # depends_on('computecpp', when='+opencl+computecpp')
     # depends_on('trisycl',    when='+opencl~computepp')
-    depends_on('cuda@:11.0', when='+cuda @:2.3')
+    depends_on('cuda@:10.2', when='+cuda @:2.3')
     depends_on('cuda@:11.1', when='+cuda @2.4.0:')
     depends_on('cudnn', when='+cuda')
     depends_on('cudnn@6.5', when='@0.5:0.6 +cuda')
@@ -277,7 +277,7 @@ class PyTensorflow(Package, CudaPackage):
     # "Remove contrib cloud bigtable and storage ops/kernels."
     # Allows 2.0.* releases to build with '--config=nogcp'
     patch('0001-Remove-contrib-cloud-bigtable-and-storage-ops-kernel.patch',
-          when='@2.0.0:2.0.1')
+          when='@2.0.0:2.0.999')
 
     # for fcc
     patch('1-1_fcc_tf_patch.patch', when='@2.1.0:2.1.99%fj')
@@ -665,7 +665,7 @@ def protobuf_deps():
                 '.tf_configure.bazelrc')
 
         # see tensorflow issue #31187 on github
-        if spec.satisfies('@2.0.0:2.0.1'):
+        if spec.satisfies('@2.0.0:2.0.999'):
             filter_file(r'\#define RUY_DONOTUSEDIRECTLY_AVX512 1',
                         '#define RUY_DONOTUSEDIRECTLY_AVX512 0',
                         'tensorflow/lite/experimental/ruy/platform.h')
