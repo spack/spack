@@ -41,6 +41,7 @@ class PyImageioFfmpeg(PythonPackage):
     # added implicity by the PythonPackage class.
     depends_on('python@3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('ffmpeg', type='run')
     # depends_on('py-foo',        type=('build', 'run'))
 
     def build_args(self, spec, prefix):
