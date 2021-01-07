@@ -7,7 +7,9 @@ from spack import *
 
 
 class Fparser(CMakePackage):
-    """This C++ library offers a class which can be used to parse and
+    """Parse and evaluate a mathematical function from a string.
+    
+    This C++ library offers a class which can be used to parse and
     evaluate a mathematical function from a string (which might be eg
     requested from the user). The syntax of the function string is
     similar to mathematical expressions written in C/C++ (the exact
