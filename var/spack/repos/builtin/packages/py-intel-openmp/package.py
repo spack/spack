@@ -34,7 +34,11 @@ class PyIntelOpenmp(Package):
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('2021.1.2', sha256='2af893738b4b06cb0183746f2992169111031340b59c84a0fd4dec1ed66b80f2', expand=False)
+    #version('2021.1.2', sha256='2af893738b4b06cb0183746f2992169111031340b59c84a0fd4dec1ed66b80f2', expand=False)
+    version('2021.1.2-py2.py3-none-manylinux1_x86_64',
+            url='https://files.pythonhosted.org/packages/27/92/68c00e053c0e38fc5e7b0eb1a47a048ce499e12829aede84b400a4c38a96/intel_openmp-2021.1.2-py2.py3-none-manylinux1_x86_64.whl',
+            sha256='8796797ecae99f39b27065e4a7f1f435e2ca08afba654ca57a77a2717f864dca',
+            expand=False)
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
