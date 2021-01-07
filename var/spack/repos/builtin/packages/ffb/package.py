@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -150,12 +150,14 @@ class Ffb(MakefilePackage):
         cxx_fortran_flags = []
         if spec.satisfies('%gcc'):
             cxx_fortran_flags.append('-lgfortran')
-        elif spec.satisfies('%intel'):
-            cxx_fortran_flags.expand(['-lifcore', '-limf'])
+            m = FileFilter(editfile)
+            m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
         elif spec.satisfies('%fj'):
             cxx_fortran_flags.append('--linkfortran')
-        m = FileFilter(editfile)
-        m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
+            m = FileFilter(editfile)
+            m.filter('-lifcore -limf', ' '.join(cxx_fortran_flags))
+        elif spec.satisfies('%intel'):
+            pass
 
     def build(self, spec, prefix):
         for m in [join_path('make',  'Makeall'),

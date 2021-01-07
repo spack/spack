@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Libarchive(AutotoolsPackage):
     homepage = "http://www.libarchive.org"
     url      = "http://www.libarchive.org/downloads/libarchive-3.1.2.tar.gz"
 
+    version('3.5.1', sha256='9015d109ec00bb9ae1a384b172bf2fc1dff41e2c66e5a9eeddf933af9db37f5a')
     version('3.4.1', sha256='fcf87f3ad8db2e4f74f32526dee62dd1fb9894782b0a503a89c9d7a70a235191')
     version('3.3.2', sha256='ed2dbd6954792b2c054ccf8ec4b330a54b85904a80cef477a1c74643ddafa0ce')
     version('3.2.1', sha256='72ee1a4e3fd534525f13a0ba1aa7b05b203d186e0c6072a8a4738649d0b3cfd2')

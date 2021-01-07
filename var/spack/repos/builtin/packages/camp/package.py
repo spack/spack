@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Camp(CMakePackage, CudaPackage):
+class Camp(CMakePackage, CudaPackage, ROCmPackage):
     """
     Compiler agnostic metaprogramming library providing concepts,
     type operations and tuples for C++ and cuda
@@ -19,34 +19,17 @@ class Camp(CMakePackage, CudaPackage):
     version('master', branch='master', submodules='True')
     version('0.1.0', sha256='fd4f0f2a60b82a12a1d9f943f8893dc6fe770db493f8fae5ef6f7d0c439bebcc')
 
-    depends_on('cmake@3.8:', type='build')
-    depends_on('cmake@3.9:', type='build', when="+cuda")
+    # TODO: figure out gtest dependency and then set this default True.
+    variant('tests', default=False, description='Build tests')
 
-    variant('hip', default=False, description='Enable HIP support')
-
-    # possible amd gpu targets for hip builds
-    # TODO: we should add a hip build system description equivalent to
-    # lib/spack/spack/build_systems/cuda.py, where possible hip amd gpu
-    # architectures are defined in a similar way as for cuda gpu
-    # architectures. In the meantime, require users to define
-    # amd gpu type for hip builds with a variant here.
-    amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012', 'none'
-    )
-    variant('amdgpu_target', default='none', values=amdgpu_targets)
-
-    depends_on('llvm-amdgpu', when='+hip')
-    depends_on('hip', when='+hip')
-
-    # need amd gpu type for hip builds
-    conflicts('amdgpu_target=none', when='+hip')
+    depends_on('blt', type='build')
+    depends_on('blt@0.3.7:', type='build', when='+rocm')
 
     def cmake_args(self):
         spec = self.spec
 
         options = []
+        options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
 
         if '+cuda' in spec:
             options.extend([
@@ -61,16 +44,21 @@ class Camp(CMakePackage, CudaPackage):
         else:
             options.append('-DENABLE_CUDA=OFF')
 
-        if '+hip' in spec:
-            arch = self.spec.variants['amdgpu_target'].value
+        if '+rocm' in spec:
             options.extend([
                 '-DENABLE_HIP=ON',
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(arch)])
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
+            ])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                options.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                )
         else:
             options.append('-DENABLE_HIP=OFF')
 
         options.append('-DENABLE_TESTS={0}'.format(
-            "On" if self.run_tests else "Off"))
+            'ON' if '+tests' in spec else 'OFF'))
 
         return options

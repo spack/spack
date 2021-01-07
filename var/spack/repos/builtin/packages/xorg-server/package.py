@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,9 +21,9 @@ class XorgServer(AutotoolsPackage, XorgPackage):
     depends_on('libdrm@2.3.0:')
     depends_on('libx11')
 
-    depends_on('dri2proto@2.8:', type='build')
-    depends_on('dri3proto@1.0:', type='build')
-    depends_on('glproto@1.4.17:', type='build')
+    depends_on('dri2proto@2.8:')
+    depends_on('dri3proto@1.0:')
+    depends_on('glproto@1.4.17:')
 
     depends_on('flex', type='build')
     depends_on('bison', type='build')

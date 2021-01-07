@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyApacheBeam(PythonPackage):
     """Apache Beam is a unified programming model for Batch and Streaming."""
 
     homepage = "https://github.com/apache/beam"
-    url      = "https://pypi.io/packages/source/a/apache-beam/apache-beam-2.24.0.zip"
+    pypi = "apache-beam/apache-beam-2.24.0.zip"
 
     version('2.24.0', sha256='55c50b1a964bacc840a5e4cc3b4a42c4ef09d12192d215ba3cad65d4d22e09dd')
 

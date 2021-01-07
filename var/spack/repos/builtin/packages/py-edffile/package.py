@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,6 @@ class PyEdffile(PythonPackage):
 
     homepage = "https://github.com/vasole/pymca/blob/master/PyMca5/PyMcaIO/EdfFile.py"
     git      = "https://github.com/conda-forge/edffile-feedstock.git"
-
-    import_modules = ['EdfFile']
 
     version('5.0.0', commit='be5ab4199db9f8209c59e31874934b8536b52301')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class Erlang(AutotoolsPackage):
     homepage = "https://erlang.org/"
     url      = "https://erlang.org/download/otp_src_22.2.tar.gz"
 
-    version('23.0', sha256='42dcf3c721f4de59fe74ae7b65950c2174c46dc8d1dd4e27c0594d86f606a635') 
+    version('23.0', sha256='42dcf3c721f4de59fe74ae7b65950c2174c46dc8d1dd4e27c0594d86f606a635')
     version('22.2', sha256='89c2480cdac566065577c82704a48e10f89cf2e6ca5ab99e1cf80027784c678f')
     version('22.1', sha256='cd33a102cbac6dd1c7b1e7a9a0d82d13587771fac4e96e8fff92e403d15e32c8')
     version('22.0', sha256='042e168d74055a501c75911694758a30597446accd8c82ec569552b9e9fcd272')

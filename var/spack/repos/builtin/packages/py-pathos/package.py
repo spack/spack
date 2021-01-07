@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPathos(PythonPackage):
     """Parallel graph management and execution in heterogeneous computing """
 
     homepage = "https://github.com/uqfoundation/pathos"
-    url      = "https://pypi.io/packages/source/p/pathos/pathos-0.2.3.tar.gz"
+    pypi = "pathos/pathos-0.2.3.tar.gz"
 
     version('0.2.3', sha256='954c5b0a8b257c375e35d311c65fa62a210a3d65269195557de38418ac9f61f9')
     version('0.2.0', sha256='2f4e67e7914c95fb0cce766bab173eb2c5860ee420108fa183099557ac2e50e9')

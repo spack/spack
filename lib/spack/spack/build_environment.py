@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,8 @@ There are two parts to the build environment:
 Skimming this module is a nice way to get acquainted with the types of
 calls you can make from within the install() function.
 """
-import re
 import inspect
+import re
 import multiprocessing
 import os
 import shutil
@@ -53,10 +53,14 @@ import spack.build_systems.meson
 import spack.config
 import spack.main
 import spack.paths
+import spack.package
+import spack.repo
 import spack.schema.environment
 import spack.store
+import spack.install_test
 import spack.subprocess_context
 import spack.architecture as arch
+import spack.util.path
 from spack.util.string import plural
 from spack.util.environment import (
     env_flag, filter_system_paths, get_path, is_system_path,
@@ -145,11 +149,16 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # These vars affect how the compiler finds libraries and include dirs.
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
+    env.unset('OBJC_INCLUDE_PATH')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -453,7 +462,6 @@ def _set_variables_for_single_module(pkg, module):
 
     jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
     jobs = min(jobs, multiprocessing.cpu_count())
-    assert jobs is not None, "no default set for config:build_jobs"
 
     m = module
     m.make_jobs = jobs
@@ -713,28 +721,45 @@ def load_external_modules(pkg):
             load_module(external_module)
 
 
-def setup_package(pkg, dirty):
+def setup_package(pkg, dirty, context='build'):
     """Execute all environment setup routines."""
-    build_env = EnvironmentModifications()
+    env = EnvironmentModifications()
 
     if not dirty:
         clean_environment()
 
-    set_compiler_environment_variables(pkg, build_env)
-    set_build_environment_variables(pkg, build_env, dirty)
-    pkg.architecture.platform.setup_platform_environment(pkg, build_env)
+    # setup compilers and build tools for build contexts
+    need_compiler = context == 'build' or (context == 'test' and
+                                           pkg.test_requires_compiler)
+    if need_compiler:
+        set_compiler_environment_variables(pkg, env)
+        set_build_environment_variables(pkg, env, dirty)
 
-    build_env.extend(
-        modifications_from_dependencies(pkg.spec, context='build')
-    )
+    # architecture specific setup
+    pkg.architecture.platform.setup_platform_environment(pkg, env)
 
-    if (not dirty) and (not build_env.is_unset('CPATH')):
-        tty.debug("A dependency has updated CPATH, this may lead pkg-config"
-                  " to assume that the package is part of the system"
-                  " includes and omit it when invoked with '--cflags'.")
+    if context == 'build':
+        # recursive post-order dependency information
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
 
-    set_module_variables_for_package(pkg)
-    pkg.setup_build_environment(build_env)
+        if (not dirty) and (not env.is_unset('CPATH')):
+            tty.debug("A dependency has updated CPATH, this may lead pkg-"
+                      "config to assume that the package is part of the system"
+                      " includes and omit it when invoked with '--cflags'.")
+
+        # setup package itself
+        set_module_variables_for_package(pkg)
+        pkg.setup_build_environment(env)
+    elif context == 'test':
+        import spack.user_environment as uenv  # avoid circular import
+        env.extend(uenv.environment_modifications_for_spec(pkg.spec))
+        env.extend(
+            modifications_from_dependencies(pkg.spec, context=context)
+        )
+        set_module_variables_for_package(pkg)
+        env.prepend_path('PATH', '.')
 
     # Loading modules, in particular if they are meant to be used outside
     # of Spack, can change environment variables that are relevant to the
@@ -744,15 +769,16 @@ def setup_package(pkg, dirty):
     # unnecessary. Modules affecting these variables will be overwritten anyway
     with preserve_environment('CC', 'CXX', 'FC', 'F77'):
         # All module loads that otherwise would belong in previous
-        # functions have to occur after the build_env object has its
+        # functions have to occur after the env object has its
         # modifications applied. Otherwise the environment modifications
         # could undo module changes, such as unsetting LD_LIBRARY_PATH
         # after a module changes it.
-        for mod in pkg.compiler.modules:
-            # Fixes issue https://github.com/spack/spack/issues/3153
-            if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
-                load_module("cce")
-            load_module(mod)
+        if need_compiler:
+            for mod in pkg.compiler.modules:
+                # Fixes issue https://github.com/spack/spack/issues/3153
+                if os.environ.get("CRAY_CPU_TARGET") == "mic-knl":
+                    load_module("cce")
+                load_module(mod)
 
         # kludge to handle cray libsci being automatically loaded by PrgEnv
         # modules on cray platform. Module unload does no damage when
@@ -766,12 +792,12 @@ def setup_package(pkg, dirty):
 
     implicit_rpaths = pkg.compiler.implicit_rpaths()
     if implicit_rpaths:
-        build_env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
-                      ':'.join(implicit_rpaths))
+        env.set('SPACK_COMPILER_IMPLICIT_RPATHS',
+                ':'.join(implicit_rpaths))
 
     # Make sure nothing's strange about the Spack environment.
-    validate(build_env, tty.warn)
-    build_env.apply_modifications()
+    validate(env, tty.warn)
+    env.apply_modifications()
 
 
 def modifications_from_dependencies(spec, context):
@@ -791,11 +817,13 @@ def modifications_from_dependencies(spec, context):
     deptype_and_method = {
         'build': (('build', 'link', 'test'),
                   'setup_dependent_build_environment'),
-        'run': (('link', 'run'), 'setup_dependent_run_environment')
+        'run': (('link', 'run'), 'setup_dependent_run_environment'),
+        'test': (('link', 'run', 'test'), 'setup_dependent_run_environment')
     }
     deptype, method = deptype_and_method[context]
 
-    for dspec in spec.traverse(order='post', root=False, deptype=deptype):
+    root = context == 'test'
+    for dspec in spec.traverse(order='post', root=root, deptype=deptype):
         dpkg = dspec.package
         set_module_variables_for_package(dpkg)
         # Allow dependencies to modify the module
@@ -807,6 +835,8 @@ def modifications_from_dependencies(spec, context):
 
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
+
+    context = kwargs.get('context', 'build')
 
     try:
         # We are in the child process. Python sets sys.stdin to
@@ -821,7 +851,8 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
 
         if not kwargs.get('fake', False):
             kwargs['unmodified_env'] = os.environ.copy()
-            setup_package(pkg, dirty=kwargs.get('dirty', False))
+            setup_package(pkg, dirty=kwargs.get('dirty', False),
+                          context=context)
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -841,13 +872,18 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         # show that, too.
         package_context = get_package_context(tb)
 
-        build_log = None
-        try:
-            if hasattr(pkg, 'log_path'):
-                build_log = pkg.log_path
-        except NameError:
-            # 'pkg' is not defined yet
-            pass
+        logfile = None
+        if context == 'build':
+            try:
+                if hasattr(pkg, 'log_path'):
+                    logfile = pkg.log_path
+            except NameError:
+                # 'pkg' is not defined yet
+                pass
+        elif context == 'test':
+            logfile = os.path.join(
+                pkg.test_suite.stage,
+                spack.install_test.TestSuite.test_log_name(pkg.spec))
 
         # make a pickleable exception to send to parent.
         msg = "%s: %s" % (exc_type.__name__, str(exc))
@@ -855,7 +891,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
         ce = ChildError(msg,
                         exc_type.__module__,
                         exc_type.__name__,
-                        tb_string, build_log, package_context)
+                        tb_string, logfile, context, package_context)
         child_pipe.send(ce)
 
     finally:
@@ -873,9 +909,6 @@ def start_build_process(pkg, function, kwargs):
             child process for.
         function (callable): argless function to run in the child
             process.
-        dirty (bool): If True, do NOT clean the environment before
-            building.
-        fake (bool): If True, skip package setup b/c it's not a real build
 
     Usage::
 
@@ -961,6 +994,7 @@ def get_package_context(traceback, context=3):
     Args:
         traceback (traceback): A traceback from some exception raised during
             install
+
         context (int): Lines of context to show before and after the line
             where the error happened
 
@@ -1067,13 +1101,14 @@ class ChildError(InstallError):
     # context instead of Python context.
     build_errors = [('spack.util.executable', 'ProcessError')]
 
-    def __init__(self, msg, module, classname, traceback_string, build_log,
-                 context):
+    def __init__(self, msg, module, classname, traceback_string, log_name,
+                 log_type, context):
         super(ChildError, self).__init__(msg)
         self.module = module
         self.name = classname
         self.traceback = traceback_string
-        self.build_log = build_log
+        self.log_name = log_name
+        self.log_type = log_type
         self.context = context
 
     @property
@@ -1081,26 +1116,16 @@ class ChildError(InstallError):
         out = StringIO()
         out.write(self._long_message if self._long_message else '')
 
+        have_log = self.log_name and os.path.exists(self.log_name)
+
         if (self.module, self.name) in ChildError.build_errors:
             # The error happened in some external executed process. Show
-            # the build log with errors or warnings highlighted.
-            if self.build_log and os.path.exists(self.build_log):
-                errors, warnings = parse_log_events(self.build_log)
-                nerr = len(errors)
-                nwar = len(warnings)
-                if nerr > 0:
-                    # If errors are found, only display errors
-                    out.write(
-                        "\n%s found in build log:\n" % plural(nerr, 'error'))
-                    out.write(make_log_context(errors))
-                elif nwar > 0:
-                    # If no errors are found but warnings are, display warnings
-                    out.write(
-                        "\n%s found in build log:\n" % plural(nwar, 'warning'))
-                    out.write(make_log_context(warnings))
+            # the log with errors or warnings highlighted.
+            if have_log:
+                write_log_summary(out, self.log_type, self.log_name)
 
         else:
-            # The error happened in in the Python code, so try to show
+            # The error happened in the Python code, so try to show
             # some context from the Package itself.
             if self.context:
                 out.write('\n')
@@ -1110,14 +1135,14 @@ class ChildError(InstallError):
         if out.getvalue():
             out.write('\n')
 
-        if self.build_log and os.path.exists(self.build_log):
-            out.write('See build log for details:\n')
-            out.write('  %s\n' % self.build_log)
+        if have_log:
+            out.write('See {0} log for details:\n'.format(self.log_type))
+            out.write('  {0}\n'.format(self.log_name))
 
         return out.getvalue()
 
     def __str__(self):
-        return self.message + self.long_message + self.traceback
+        return self.message
 
     def __reduce__(self):
         """__reduce__ is used to serialize (pickle) ChildErrors.
@@ -1130,13 +1155,14 @@ class ChildError(InstallError):
             self.module,
             self.name,
             self.traceback,
-            self.build_log,
+            self.log_name,
+            self.log_type,
             self.context)
 
 
-def _make_child_error(msg, module, name, traceback, build_log, context):
+def _make_child_error(msg, module, name, traceback, log, log_type, context):
     """Used by __reduce__ in ChildError to reconstruct pickled errors."""
-    return ChildError(msg, module, name, traceback, build_log, context)
+    return ChildError(msg, module, name, traceback, log, log_type, context)
 
 
 class StopPhase(spack.error.SpackError):
@@ -1147,3 +1173,30 @@ class StopPhase(spack.error.SpackError):
 
 def _make_stop_phase(msg, long_msg):
     return StopPhase(msg, long_msg)
+
+
+def write_log_summary(out, log_type, log, last=None):
+    errors, warnings = parse_log_events(log)
+    nerr = len(errors)
+    nwar = len(warnings)
+
+    if nerr > 0:
+        if last and nerr > last:
+            errors = errors[-last:]
+            nerr = last
+
+        # If errors are found, only display errors
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nerr, 'error'), log_type))
+        out.write(make_log_context(errors))
+    elif nwar > 0:
+        if last and nwar > last:
+            warnings = warnings[-last:]
+            nwar = last
+
+        # If no errors are found but warnings are, display warnings
+        out.write(
+            "\n%s found in %s log:\n" %
+            (plural(nwar, 'warning'), log_type))
+        out.write(make_log_context(warnings))

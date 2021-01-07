@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -181,6 +181,8 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc@:3.6.3',     when='@:8.4.1+slepc+petsc+mpi')
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:+sundials')
+    # FIXME: next line fixes concretization with trilinos and adol-c
+    depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # Both Trilinos and SymEngine bundle the Teuchos RCP library.
     # This leads to conflicts between macros defined in the included
@@ -218,8 +220,13 @@ class Dealii(CMakePackage, CudaPackage):
           sha256='6f876dc8eadafe2c4ec2a6673864fb451c6627ca80511b6e16f3c401946fdf33',
           when='@9.0.0:9.1.1')
 
+    # Explicitly include a boost header, otherwise deal.II fails to compile
+    # https://github.com/dealii/dealii/pull/11438
+    patch('https://github.com/dealii/dealii/commit/3b815e21c4bfd82c792ba80e4d90314c8bb9edc9.patch',
+          sha256='5f9f411ab9336bf49d8293b9936344bad6e1cf720955b9d8e8b29883593b0ed9',
+          when='@9.2.0 ^boost@1.72.0:')
+
     # Check for sufficiently modern versions
-    conflicts('cxxstd=98', when='@9.0:')
     conflicts('cxxstd=11', when='@9.3:')
 
     # Interfaces added in 8.5.0:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Openloops(Package):
 
     homepage = "https://openloops.hepforge.org/"
     url      = "https://openloops.hepforge.org/downloads?f=OpenLoops-2.1.1.tar.gz"
+
+    tags = ['hep']
 
     version('2.1.1', sha256='f1c47ece812227eab584e2c695fef74423d2f212873f762b8658f728685bcb91')
 
@@ -97,7 +99,11 @@ class Openloops(Package):
                 f.write('gfortran_f_flags = -ffree-line-length-none\n')
             if self.spec.satisfies('@2.1.1') and not is_intel:
                 f.write('gfortran_f_flags = -ffree-line-length-none ' +
-                        '-fdollar-ok -mcmodel=medium\n')
+                        '-fdollar-ok ')
+                if self.spec.target.family == 'aarch64':
+                    f.write('-mcmodel=small\n')
+                else:
+                    f.write('-mcmodel=medium\n')
 
         if self.spec.satisfies('@:1.999.999 processes=lcg.coll'):
             copy(join_path(os.path.dirname(__file__), 'sft1.coll'), 'lcg.coll')

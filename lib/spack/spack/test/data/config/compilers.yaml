@@ -8,6 +8,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: gcc@4.5.0
     operating_system: {0.name}{0.version}
@@ -17,6 +18,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: clang@3.3
     operating_system: CNL
@@ -35,6 +37,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: clang@3.3
     operating_system: yosemite
@@ -44,6 +47,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -62,6 +66,7 @@ compilers:
     operating_system: SuSE11
     spec: gcc@4.5.0
     modules: 'None'
+    target: x86_64
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -71,6 +76,7 @@ compilers:
     operating_system: yosemite
     spec: gcc@4.5.0
     modules: 'None'
+    target: x86_64
 - compiler:
     paths:
       cc: /path/to/gcc
@@ -80,6 +86,7 @@ compilers:
     operating_system: elcapitan
     spec: gcc@4.5.0
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: clang@3.3
     operating_system: elcapitan
@@ -89,6 +96,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: gcc@4.7.2
     operating_system: redhat6
@@ -102,6 +110,16 @@ compilers:
       cxxflags: -O0 -g
       fflags: -O0 -g
     modules: 'None'
+    target: x86_64
+- compiler:
+    spec: gcc@4.4.0
+    operating_system: redhat6
+    paths:
+      cc: /path/to/gcc440
+      cxx: /path/to/g++440
+      f77: /path/to/gfortran440
+      fc: /path/to/gfortran440
+    modules: 'None'
 - compiler:
     spec: clang@3.5
     operating_system: redhat6
@@ -114,6 +132,7 @@ compilers:
       cflags: -O3
       cxxflags: -O3
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: clang@8.0.0
     operating_system: redhat7
@@ -126,6 +145,7 @@ compilers:
       cflags: -O3
       cxxflags: -O3
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: apple-clang@9.1.0
     operating_system: elcapitan
@@ -135,6 +155,7 @@ compilers:
       f77: None
       fc: None
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: gcc@foo
     operating_system: redhat6
@@ -144,6 +165,7 @@ compilers:
       f77: /path/to/gfortran
       fc: /path/to/gfortran
     modules: 'None'
+    target: x86_64
 - compiler:
     spec: gcc@4.4.0-special
     operating_system: redhat6
@@ -153,3 +175,4 @@ compilers:
       f77: /path/to/gfortran
       fc: /path/to/gfortran
     modules: 'None'
+    target: x86_64

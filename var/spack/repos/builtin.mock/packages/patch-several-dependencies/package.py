@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,14 @@ class PatchSeveralDependencies(Package):
     version('2.0', '0123456789abcdef0123456789abcdef')
     version('1.0', '0123456789abcdef0123456789abcdef')
 
+    variant('foo', default=False,
+            description='Forces a version on libelf')
+
     # demonstrate all the different ways to patch things
 
     # single patch file in repo
     depends_on('libelf', patches='foo.patch')
+    depends_on('libelf@0.8.10', patches='foo.patch', when='+foo')
 
     # using a list of patches in one depends_on
     depends_on('libdwarf', patches=[

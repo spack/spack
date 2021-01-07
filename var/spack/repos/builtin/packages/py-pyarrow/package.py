@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyPyarrow(PythonPackage, CudaPackage):
     """
 
     homepage = "https://arrow.apache.org"
-    url = 'https://pypi.io/packages/source/p/pyarrow/pyarrow-0.17.1.tar.gz'
+    pypi = 'pyarrow/pyarrow-0.17.1.tar.gz'
 
     version('0.17.1', sha256='278d11800c2e0f9bea6314ef718b2368b4046ba24b6c631c14edad5a1d351e49')
     version('0.15.1', sha256='7ad074690ba38313067bf3bbda1258966d38e2037c035d08b9ffe3cce07747a5')
@@ -31,11 +31,6 @@ class PyPyarrow(PythonPackage, CudaPackage):
     depends_on('py-setuptools-scm', type='build', when='@0.15.0:')
     depends_on('py-cython', type='build')
     depends_on('py-cython@0.29:', type='build', when='@0.15.0:')
-    depends_on('py-pytest-runner', type='test', when='@0.17:')
-    depends_on('py-pytest', type='test', when='@0.15.0:')
-    depends_on('py-pandas', type='test', when='@0.15.0:')
-    depends_on('py-hypothesis', type='test', when='@0.15.0:')
-    depends_on('py-pathlib2', type='test', when='@0.15.0: ^python@:3.3.99')
     depends_on('py-numpy@1.14:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-six@1.0.0:', type=('build', 'run'), when='@0.15.0:')
     depends_on('py-futures', type=('build', 'run'), when='@0.15.0:^python@:3.1.99')
@@ -48,6 +43,8 @@ class PyPyarrow(PythonPackage, CudaPackage):
         depends_on('arrow+orc' + v, when='+orc' + v)
 
     phases = ['build_ext', 'install']
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def build_ext_args(self, spec, prefix):
         args = []

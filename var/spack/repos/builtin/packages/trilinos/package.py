@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,7 +36,7 @@ class Trilinos(CMakePackage, CudaPackage):
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
     version('develop', branch='develop')
     version('master', branch='master')
-    version('13.0.1', commit='1ae207392fd36ad5bd24334c8b025c829765161f')  # yet to be tagged
+    version('13.0.1', commit='4796b92fb0644ba8c531dd9953e7a4878b05c62d')  # tag trilinos-release-13-0-1
     version('13.0.0', commit='9fec35276d846a667bc668ff4cbdfd8be0dfea08')  # tag trilinos-release-13-0-0
     version('12.18.1', commit='55a75997332636a28afc9db1aee4ae46fe8d93e7')  # tag trilinos-release-12-8-1
     version('12.14.1', sha256='52a4406cca2241f5eea8e166c2950471dd9478ad6741cbb2a7fc8225814616f0')
@@ -77,6 +77,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Fortran support')
     variant('wrapper', default=False,
             description="Use nvcc-wrapper for CUDA build")
+    variant('cuda_rdc', default=False,
+            description='turn on RDC for CUDA build')
     variant('cxxstd', default='11', values=['11', '14', '17'], multi=False)
     variant('hwloc', default=False,
             description='Enable hwloc')
@@ -269,7 +271,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
     conflicts('+muelu', when='~teuchos')
-    conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
     conflicts('+phalanx', when='~sacado')
@@ -290,7 +291,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+tpetra', when='~teuchos')
     conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
-    conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
     conflicts('+dtk', when='~boost')
@@ -328,6 +328,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+adios2', when='@:12.14.1')
     conflicts('+adios2', when='@xsdk-0.2.0')
     conflicts('+pnetcdf', when='~netcdf')
+    conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
@@ -395,7 +396,6 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
-    conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
@@ -752,6 +752,10 @@ class Trilinos(CMakePackage, CudaPackage):
                 define('Kokkos_ENABLE_CUDA', True),
                 define('Kokkos_ENABLE_CUDA_UVM', True),
                 define('Kokkos_ENABLE_CUDA_LAMBDA', True)])
+            if '+cuda_rdc' in spec:
+                options.append(define(
+                    'Kokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE',
+                    True))
             for iArchCC in spec.variants['cuda_arch'].value:
                 options.append(define(
                     "Kokkos_ARCH_" +

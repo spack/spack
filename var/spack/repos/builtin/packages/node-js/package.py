@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,13 +18,15 @@ class NodeJs(Package):
     list_depth = 1
 
     # Current (latest features)
+    version('15.3.0',  sha256='cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2')
     version('14.13.0', sha256='8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61')
     version('14.10.0', sha256='7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e')
     version('13.8.0',  sha256='815b5e1b18114f35da89e4d98febeaba97555d51ef593bd5175db2b05f2e8be6')
     version('13.5.0',  sha256='4b8078d896a7550d7ed399c1b4ac9043e9f883be404d9b337185c8d8479f2db8')
 
     # LTS (recommended for most users)
-    version('12.18.4', sha256='a802d87e579e46fc52771ed6f2667048320caca867be3276f4c4f1bbb41389c3', preferred=True)
+    version('14.15.1', sha256='a1120472bf55aea745287693a6651e16973e1008c9d6107df350126adf9716fe', preferred=True)
+    version('12.18.4', sha256='a802d87e579e46fc52771ed6f2667048320caca867be3276f4c4f1bbb41389c3')
     version('12.18.3', sha256='6ea85f80e01b007cc9b566b8836513bc5102667d833bad4c1092be60fa60c2d4')
     version('12.16.0', sha256='ae2dfe74485d821d4fef7cf1802acd2322cd994c853a2327c4306952f4453441')
     version('12.14.0', sha256='5c1939867228f3845c808ef84a89c8ee93cc35f857bf7587ecee1b5a6d9da67b')
@@ -55,6 +57,11 @@ class NodeJs(Package):
     depends_on('zlib', when='+zlib')
 
     phases = ['configure', 'build', 'install']
+
+    # https://github.com/spack/spack/issues/19310
+    conflicts('%gcc@:4.8',
+              msg="fails to build with gcc 4.8 "
+                  "(see https://github.com/spack/spack/issues/19310")
 
     def setup_build_environment(self, env):
         # Force use of experimental Python 3 support
@@ -122,7 +129,7 @@ class NodeJs(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make('test')
         make('test-addons')
 

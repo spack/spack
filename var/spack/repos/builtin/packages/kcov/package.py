@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,7 +27,7 @@ class Kcov(CMakePackage):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def test_install(self):
         # The help message exits with an exit code of 1
         kcov = Executable(self.prefix.bin.kcov)
         kcov('-h', ignore_errors=1)

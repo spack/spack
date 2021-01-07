@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyAse(PythonPackage):
     visualizing and analyzing atomistic simulations."""
 
     homepage = "https://wiki.fysik.dtu.dk/ase/"
-    url      = "https://pypi.io/packages/source/a/ase/ase-3.13.0.tar.gz"
+    pypi = "ase/ase-3.13.0.tar.gz"
 
     version('3.18.0',
             sha256='39d45f12def2669605bffc82926acfb13a0d0610e6d82740fa316aafa70f97f9')

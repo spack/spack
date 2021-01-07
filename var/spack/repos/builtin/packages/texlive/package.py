@@ -1,10 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
 import os
 import platform
+import tempfile
 
 
 class Texlive(AutotoolsPackage):
@@ -192,6 +194,11 @@ class Texlive(AutotoolsPackage):
 
     @when('@live')
     def install(self, spec, prefix):
+        # The binary install needs a profile file to be present
+        tmp_profile = tempfile.NamedTemporaryFile()
+        tmp_profile.write("selected_scheme {0}".format(
+            spec.variants['scheme']).encode())
+
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
@@ -202,4 +209,6 @@ class Texlive(AutotoolsPackage):
         scheme = spec.variants['scheme'].value
         perl('./install-tl', '-scheme', scheme,
              '-repository', _repository,
-             '-portable', '-profile', '/dev/null')
+             '-portable', '-profile', tmp_profile.name)
+
+        tmp_profile.close()

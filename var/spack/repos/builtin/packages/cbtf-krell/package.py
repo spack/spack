@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,7 @@ class CbtfKrell(CMakePackage):
             description="Build mpi experiment collector for mpich MPI.")
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
-    variant('build_type', default='None', values=('None'),
+    variant('build_type', default='None', values=('None',),
             description='CMake build type')
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")
@@ -51,7 +51,7 @@ class CbtfKrell(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
 
     # For rpcgen
-    depends_on("rpcsvc-proto", type='build')
+    depends_on("rpcsvc-proto")
 
     # For rpc
     depends_on("libtirpc", type='link')

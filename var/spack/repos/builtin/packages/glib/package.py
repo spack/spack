@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,7 @@ class Glib(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('uuid', when='+libmount')
     depends_on('util-linux', when='+libmount')
     depends_on('iconv')
 
@@ -82,6 +83,10 @@ class Glib(Package):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    @property
+    def libs(self):
+        return find_libraries(['libglib*'], root=self.prefix, recursive=True)
 
     def meson_args(self):
         args = ['-Dgettext=external']
@@ -256,6 +261,8 @@ class Glib(Package):
         if spec.satisfies('@2:2.99'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
-                   spec['gettext'].prefix.lib)
-            myfile = join_path(self.prefix.lib.pkgconfig, 'glib-2.0.pc')
+                   spec['gettext'].libs.directories[0])
+            myfile = join_path(
+                self.spec['glib'].libs.directories[0],
+                'pkgconfig', 'glib-2.0.pc')
             filter_file(pattern, repl, myfile, backup=False)

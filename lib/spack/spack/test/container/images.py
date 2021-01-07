@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,8 @@ def test_build_info(image, spack_version, expected):
     'ubuntu:18.04'
 ])
 def test_package_info(image):
-    update, install, clean = spack.container.images.package_info(image)
+    pkg_manager = spack.container.images.os_package_manager_for(image)
+    update, install, clean = spack.container.images.commands_for(pkg_manager)
     assert update
     assert install
     assert clean

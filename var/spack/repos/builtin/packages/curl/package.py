@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,13 +11,16 @@ class Curl(AutotoolsPackage):
     """cURL is an open source command line tool and library for
     transferring data with URL syntax"""
 
-    homepage = "http://curl.haxx.se"
+    homepage = "https://curl.se/"
     # URL must remain http:// so Spack can bootstrap curl
-    url      = "http://curl.haxx.se/download/curl-7.60.0.tar.bz2"
+    url      = "http://curl.haxx.se/download/curl-7.74.0.tar.bz2"
 
+    version('7.74.0', sha256='0f4d63e6681636539dc88fa8e929f934cd3a840c46e0bf28c73be11e521b77a5')
+    version('7.73.0', sha256='cf34fe0b07b800f1c01a499a6e8b2af548f6d0e044dca4a29d88a4bee146d131')
     version('7.72.0', sha256='ad91970864102a59765e20ce16216efc9d6ad381471f7accceceab7d905703ef')
     version('7.71.0', sha256='600f00ac2481a89548a4141ddf983fd9386165e1960bac91d0a1c81dca5dd341')
     version('7.68.0', sha256='207f54917dd6a2dc733065ccf18d61bb5bebeaceb5df49cd9445483e8623eeb9')
+    version('7.64.0', sha256='d573ba1c2d1cf9d8533fadcce480d778417964e8d04ccddcc76e591d544cf2eb')
     version('7.63.0', sha256='9bab7ed4ecff77020a312d84cc5fb7eb02d58419d218f267477a724a17fd8dd8')
     version('7.60.0', sha256='897dfb2204bd99be328279f88f55b7c61592216b0542fcbe995c60aa92871e9b')
     version('7.59.0', sha256='b5920ffd6a8c95585fb95070e0ced38322790cb335c39d0dab852d12e157b5a0')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class FluxSched(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-sched.git"
 
     version('master', branch='master')
+    version('0.13.0', sha256='ba17fc0451239fe31a1524b6a270741873f59a5057514d2524fd3e9215c47a82')
+    version('0.12.0', sha256='b41ecaebba254abfb5a7995fd9100bd45a59d4ad0a79bdca8b3db02785d97b1d')
     version('0.11.0', sha256='6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336')
     version('0.10.0', sha256='5944927774709b5f52ddf64a0e825d9b0f24c9dea890b5504b87a8576d217cf6')
     version('0.9.0',  sha256='0e1eb408a937c2843bdaaed915d4d7e2ea763b98c31e7b849a96a74758d66a21')
@@ -35,7 +37,7 @@ class FluxSched(AutotoolsPackage):
     depends_on("py-pyyaml", when="@0.7.0:")
     depends_on("libxml2@2.9.1:", when="@0.6.0")
     depends_on("yaml-cpp", when="@0.7.0:")
-    depends_on("libuuid")
+    depends_on("uuid")
     depends_on("pkgconfig")
 
     depends_on("flux-core", type=('build', 'link', 'run'))

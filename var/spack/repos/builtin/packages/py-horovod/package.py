@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,12 +89,6 @@ class PyHorovod(PythonPackage, CudaPackage):
     # There does not appear to be a way to use an external Gloo installation
     depends_on('cmake', type='build', when='tensor_ops=gloo')
 
-    # Test dependencies
-    depends_on('py-mock', type='test')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-forked', type='test')
-    depends_on('py-parameterized', type='test', when='@0.20:')
-
     conflicts('cuda_arch=none', when='+cuda',
               msg='Must specify CUDA compute capabilities of your GPU, see '
               'https://developer.nvidia.com/cuda-gpus')
@@ -104,6 +98,51 @@ class PyHorovod(PythonPackage, CudaPackage):
 
     # https://github.com/horovod/horovod/pull/1835
     patch('fma.patch', when='@0.19.0:0.19.1')
+
+    @property
+    def import_modules(self):
+        modules = [
+            'horovod', 'horovod.runner', 'horovod.runner.util',
+            'horovod.runner.elastic', 'horovod.runner.driver',
+            'horovod.runner.common', 'horovod.runner.common.util',
+            'horovod.runner.common.service', 'horovod.runner.http',
+            'horovod.runner.task', 'horovod.common'
+        ]
+
+        if 'frameworks=tensorflow' in self.spec:
+            modules.append('horovod.tensorflow')
+
+        if 'frameworks=pytorch' in self.spec:
+            modules.extend([
+                'horovod.torch', 'horovod.torch.mpi_lib',
+                'horovod.torch.elastic', 'horovod.torch.mpi_lib_impl'
+            ])
+
+        if 'frameworks=mxnet' in self.spec:
+            modules.append('horovod.mxnet')
+
+        if 'frameworks=keras' in self.spec:
+            modules.extend(['horovod.keras', 'horovod._keras'])
+
+        if 'frameworks=spark' in self.spec:
+            modules.extend([
+                'horovod.spark', 'horovod.spark.driver',
+                'horovod.spark.common', 'horovod.spark.task'
+            ])
+
+        if 'frameworks=ray' in self.spec:
+            modules.append('horovod.ray')
+
+        if 'frameworks=tensorflow,keras' in self.spec:
+            modules.append('horovod.tensorflow.keras')
+
+        if 'frameworks=spark,pytorch' in self.spec:
+            modules.append('horovod.spark.torch')
+
+        if 'frameworks=spark,keras' in self.spec:
+            modules.append('horovod.spark.keras')
+
+        return modules
 
     def setup_build_environment(self, env):
         # https://github.com/horovod/horovod/blob/master/docs/install.rst#environment-variables
@@ -167,8 +206,6 @@ class PyHorovod(PythonPackage, CudaPackage):
             env.set('HOROVOD_CPU_OPERATIONS',
                     self.spec.variants['tensor_ops'].value.upper())
 
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def install_test(self):
-        horovodrun = Executable(self.prefix.bin.horovodrun)
-        horovodrun('--check-build')
+    def test(self):
+        super(PyHorovod, self).test()
+        run_test(self.prefix.bin.horovodrun, '--check-build')

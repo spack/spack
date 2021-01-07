@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -96,7 +96,11 @@ def test_apple_clang_version_detection(
     ('clang version 8.0.0-3 (tags/RELEASE_800/final)\n'
      'Target: aarch64-unknown-linux-gnu\n'
      'Thread model: posix\n'
-     'InstalledDir: /usr/bin\n', '8.0.0')
+     'InstalledDir: /usr/bin\n', '8.0.0'),
+    ('clang version 11.0.0\n'
+     'Target: aarch64-unknown-linux-gnu\n'
+     'Thread model: posix\n'
+     'InstalledDir: /usr/bin\n', '11.0.0')
 ])
 def test_clang_version_detection(version_str, expected_version):
     version = spack.compilers.clang.Clang.extract_version_from_output(
@@ -152,28 +156,18 @@ def test_intel_version_detection(version_str, expected_version):
 
 
 @pytest.mark.parametrize('version_str,expected_version', [
-    (  # ICX
-        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\n'
+    (  # ICX/ICPX
+        'Intel(R) oneAPI DPC++ Compiler 2021.1 (2020.10.0.1113)\n'
         'Target: x86_64-unknown-linux-gnu\n'
         'Thread model: posix\n'
-        'InstalledDir: /soft/restricted/CNDA/sdk/\n'
-        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
-        '2020.8.0.0827'
+        'InstalledDir: /made/up/path',
+        '2021.1'
     ),
-    (  # ICPX
-        'Intel(R) oneAPI DPC++ Compiler Pro 2021.1 (2020.8.0.0827)\n'
-        'Target: x86_64-unknown-linux-gnu\n'
-        'Thread model: posix\n'
-        'InstalledDir: /soft/restricted/CNDA/sdk/\n'
-        '2020.9.15.1/oneapi/compiler/2021.1-beta09/linux/bin',
-        '2020.8.0.0827'
+    (  # IFX
+        'ifx (IFORT) 2021.1 Beta 20201113\n'
+        'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
+        '2021.1'
     )
-    # Detection will fail for ifx because it can't parse it from this.
-    # (  # IFX
-    #     'ifx (IFORT) 2021.1 Beta 20200827\n'
-    #     'Copyright (C) 1985-2020 Intel Corporation. All rights reserved.',
-    #     '2020.8.0.0827'
-    # )
 ])
 def test_oneapi_version_detection(version_str, expected_version):
     version = spack.compilers.oneapi.Oneapi.extract_version_from_output(
@@ -327,6 +321,11 @@ def test_cray_frontend_compiler_detection(
 
 @pytest.mark.parametrize('version_str,expected_version', [
     # This applies to C,C++ and FORTRAN compiler
+    ('AMD clang version 11.0.0 (CLANG: AOCC_2.3.0-Build#85 2020_11_10)'
+     '(based on LLVM Mirror.Version.11.0.0)\n'
+     'Target: x86_64-unknown-linux-gnu\n'
+     'Thread model: posix\n', '2.3.0'
+     ),
     ('AMD clang version 10.0.0 (CLANG: AOCC_2.2.0-Build#93 2020_06_25)'
      '(based on LLVM Mirror.Version.10.0.0)\n'
      'Target: x86_64-unknown-linux-gnu\n'

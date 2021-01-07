@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,7 +51,7 @@ class Adios2(CMakePackage):
     # transport engines
     variant('sst', default=True,
             description='Enable the SST staging engine')
-    variant('dataman', default=True,
+    variant('dataman', default=False,
             description='Enable the DataMan engine for WAN transports')
     variant('dataspaces', default=False,
             description='Enable support for DATASPACES')

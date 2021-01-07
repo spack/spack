@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,6 +33,7 @@ import functools
 import os.path
 import re
 from six import string_types
+from typing import Set, List  # novm
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -103,8 +104,8 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()
-    _directives_to_be_executed = []
+    _directive_names = set()  # type: Set[str]
+    _directives_to_be_executed = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -299,8 +300,18 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # call this patches here for clarity -- we want patch to be a list,
     # but the caller doesn't have to make it one.
-    if patches and dep_spec.virtual:
-        raise DependencyPatchError("Cannot patch a virtual dependency.")
+
+    # Note: we cannot check whether a package is virtual in a directive
+    # because directives are run as part of class instantiation, and specs
+    # instantiate the package class as part of the `virtual` check.
+    # To be technical, specs only instantiate the package class as part of the
+    # virtual check if the provider index hasn't been created yet.
+    # TODO: There could be a cache warming strategy that would allow us to
+    # ensure `Spec.virtual` is a valid thing to call in a directive.
+    # For now, we comment out the following check to allow for virtual packages
+    # with package files.
+    # if patches and dep_spec.virtual:
+    #     raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
     if patches is None:
@@ -382,7 +393,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 
 @directive(('extendees', 'dependencies'))
-def extends(spec, **kwargs):
+def extends(spec, type=('build', 'run'), **kwargs):
     """Same as depends_on, but allows symlinking into dependency's
     prefix tree.
 
@@ -403,7 +414,7 @@ def extends(spec, **kwargs):
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when)
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 

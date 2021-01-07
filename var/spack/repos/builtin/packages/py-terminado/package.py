@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,7 @@
 class PyTerminado(PythonPackage):
     """Terminals served to term.js using Tornado websockets"""
 
-    homepage = "https://pypi.python.org/pypi/terminado"
-    url      = "https://pypi.io/packages/source/t/terminado/terminado-0.8.3.tar.gz"
+    pypi = "terminado/terminado-0.8.3.tar.gz"
 
     version('0.8.3', sha256='4804a774f802306a7d9af7322193c5390f1da0abb429e082a10ef1d46e6fb2c2')
     version('0.8.2', sha256='de08e141f83c3a0798b050ecb097ab6259c3f0331b2f7b7750c9075ced2c20c2')

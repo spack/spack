@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtEventhub(PythonPackage):
     """Microsoft Azure EventHub Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-eventhub/azure-mgmt-eventhub-4.0.0.zip"
+    pypi = "azure-mgmt-eventhub/azure-mgmt-eventhub-4.0.0.zip"
 
     version('4.0.0', sha256='65223196cf132899656c2f9cb71a14c972d99e5ecd815ee050dae1072cb73ae2')
 

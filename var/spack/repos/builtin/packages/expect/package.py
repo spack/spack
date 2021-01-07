@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,9 @@ class Expect(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
+    # https://github.com/spack/spack/issues/19767
+    conflicts('%apple-clang@12:')
+
     force_autoreconf = True
 
     patch('expect_detect_tcl_private_header_os_x_mountain_lion.patch', when='@5.45')
@@ -37,8 +40,8 @@ class Expect(AutotoolsPackage):
             '--enable-threads',
             '--enable-shared',
             '--enable-64bit',
-            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-            '--with-tclinclude={0}'.format(spec['tcl'].prefix.include),
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--with-tclinclude={0}'.format(spec['tcl'].headers.directories[0]),
         ]
 
         return args

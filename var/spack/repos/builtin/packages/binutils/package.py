@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -129,3 +129,29 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             if self.spec.satisfies('@:2.34 %gcc@10:'):
                 flags.append('-fcommon')
         return (flags, None, None)
+
+    def test(self):
+        spec_vers = str(self.spec.version)
+
+        checks = {
+            'ar': spec_vers,
+            'c++filt': spec_vers,
+            'coffdump': spec_vers,
+            'dlltool': spec_vers,
+            'elfedit': spec_vers,
+            'gprof': spec_vers,
+            'ld': spec_vers,
+            'nm': spec_vers,
+            'objdump': spec_vers,
+            'ranlib': spec_vers,
+            'readelf': spec_vers,
+            'size': spec_vers,
+            'strings': spec_vers,
+        }
+
+        for exe in checks:
+            expected = checks[exe]
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, expected)
+            self.run_test(exe, '--version', expected, installed=True,
+                          purpose=reason, skip_missing=True)

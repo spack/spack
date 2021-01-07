@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+import spack.hooks.sbang as sbang
 
 
 class Phist(CMakePackage):
@@ -101,6 +102,8 @@ class Phist(CMakePackage):
 
     patch('update_tpetra_gotypes.patch', when='@:1.8.99')
 
+    patch('sbang.patch', when='+fortran')
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
@@ -131,6 +134,9 @@ class Phist(CMakePackage):
     # older gcc's may produce incorrect SIMD code and fail
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
+
+    def setup_build_environment(self, env):
+        env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     def cmake_args(self):
         spec = self.spec

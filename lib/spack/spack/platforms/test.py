@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,9 +14,9 @@ class Test(Platform):
     if platform.system().lower() == 'darwin':
         binary_formats = ['macho']
 
-    front_end   = 'x86'
-    back_end    = 'x86_64'
-    default     = 'x86_64'
+    front_end = 'x86_64'
+    back_end = 'core2'
+    default = 'core2'
 
     front_os = 'redhat6'
     back_os = 'debian6'

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Lcio(CMakePackage):
     homepage = "http://lcio.desy.de"
     git      = "https://github.com/iLCSoft/LCIO.git"
     url      = "https://github.com/iLCSoft/LCIO/archive/v02-13-03.tar.gz"
+
+    tags = ['hep']
 
     maintainers = ['gaede', 'vvolkl']
 
