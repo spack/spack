@@ -612,7 +612,7 @@ class Configuration(object):
             ret = syaml.syaml_dict(ret)
         return ret
 
-    def shared_spack():
+    def shared_spack(self):
         # Note: this (and _config) assume that a shared spack instance will
         # always define 'shared_install_trees', although it could be that
         # an admin wants to provide a shared instance without installing
