@@ -26,20 +26,11 @@ class PythonPackage(PackageBase):
     * build_ext
     * build_clib
     * build_scripts
-    * clean
     * install
     * install_lib
     * install_headers
     * install_scripts
     * install_data
-    * sdist
-    * register
-    * bdist
-    * bdist_dumb
-    * bdist_rpm
-    * bdist_wininst
-    * upload
-    * check
 
     These are all standard setup.py commands and can be found by running:
 
@@ -221,16 +212,6 @@ class PythonPackage(PackageBase):
         """Arguments to pass to build_scripts."""
         return []
 
-    def clean(self, spec, prefix):
-        """Clean up temporary files from 'build' command."""
-        args = self.clean_args(spec, prefix)
-
-        self.setup_py('clean', *args)
-
-    def clean_args(self, spec, prefix):
-        """Arguments to pass to clean."""
-        return []
-
     def install(self, spec, prefix):
         """Install everything from build directory."""
         args = self.install_args(spec, prefix)
@@ -302,86 +283,6 @@ class PythonPackage(PackageBase):
 
     def install_data_args(self, spec, prefix):
         """Arguments to pass to install_data."""
-        return []
-
-    def sdist(self, spec, prefix):
-        """Create a source distribution (tarball, zip file, etc.)."""
-        args = self.sdist_args(spec, prefix)
-
-        self.setup_py('sdist', *args)
-
-    def sdist_args(self, spec, prefix):
-        """Arguments to pass to sdist."""
-        return []
-
-    def register(self, spec, prefix):
-        """Register the distribution with the Python package index."""
-        args = self.register_args(spec, prefix)
-
-        self.setup_py('register', *args)
-
-    def register_args(self, spec, prefix):
-        """Arguments to pass to register."""
-        return []
-
-    def bdist(self, spec, prefix):
-        """Create a built (binary) distribution."""
-        args = self.bdist_args(spec, prefix)
-
-        self.setup_py('bdist', *args)
-
-    def bdist_args(self, spec, prefix):
-        """Arguments to pass to bdist."""
-        return []
-
-    def bdist_dumb(self, spec, prefix):
-        '''Create a "dumb" built distribution.'''
-        args = self.bdist_dumb_args(spec, prefix)
-
-        self.setup_py('bdist_dumb', *args)
-
-    def bdist_dumb_args(self, spec, prefix):
-        """Arguments to pass to bdist_dumb."""
-        return []
-
-    def bdist_rpm(self, spec, prefix):
-        """Create an RPM distribution."""
-        args = self.bdist_rpm(spec, prefix)
-
-        self.setup_py('bdist_rpm', *args)
-
-    def bdist_rpm_args(self, spec, prefix):
-        """Arguments to pass to bdist_rpm."""
-        return []
-
-    def bdist_wininst(self, spec, prefix):
-        """Create an executable installer for MS Windows."""
-        args = self.bdist_wininst_args(spec, prefix)
-
-        self.setup_py('bdist_wininst', *args)
-
-    def bdist_wininst_args(self, spec, prefix):
-        """Arguments to pass to bdist_wininst."""
-        return []
-
-    def upload(self, spec, prefix):
-        """Upload binary package to PyPI."""
-        args = self.upload_args(spec, prefix)
-
-        self.setup_py('upload', *args)
-
-    def upload_args(self, spec, prefix):
-        """Arguments to pass to upload."""
-        return []
-
-    def check(self, spec, prefix):
-        """Perform some checks on the package."""
-        args = self.check_args(spec, prefix)
-
-        self.setup_py('check', *args)
-
-    def check_args(self, spec, prefix):
-        """Arguments to pass to check."""
         return []
 
     # Testing
