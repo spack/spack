@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import shutil
 
 
 class Cpmd(MakefilePackage):
@@ -16,8 +15,7 @@ class Cpmd(MakefilePackage):
     homepage = "https://www.cpmd.org/wordpress/"
     url = "file://{0}/cpmd-v4.3.tar.gz".format(os.getcwd())
 
-    version(
-        '4.3', sha256='4f31ddf045f1ae5d6f25559d85ddbdab4d7a6200362849df833632976d095df4')
+    version('4.3', sha256='4f31ddf045f1ae5d6f25559d85ddbdab4d7a6200362849df833632976d095df4')
 
     # Patch to ver4624
     patch('cpmd_4624.patch', when='@4.3')
@@ -52,6 +50,10 @@ class Cpmd(MakefilePackage):
         if spec.satisfies('+mpi'):
             filter_file('-D__Linux', '-D__Linux -D__PARALLEL', cp)
 
+        # OMP flag
+        if spec.satisfies('+omp'):
+            filter_file('-fopenmp', self.compiler.openmp_flag, cp)
+
         # lapack
         filter_file(
             'LIBS=.+',
@@ -59,25 +61,20 @@ class Cpmd(MakefilePackage):
             cp
         )
 
-        # LIBS:remove -static
-        if spec.satisfies('%fj') and spec.satisfies('+omp'):
-            filter_file('\'-static \'', '\'-Nlibomp \'', cp)
-        else:
-            filter_file('\'-static \'', '', cp)
-        # Non-gcc
-        # fj
+        # LFLAGS
+        filter_file('\'-static \'', '', cp)
+
+        # Compiler specific
         if spec.satisfies('%fj'):
             filter_file('-ffixed-form', '-Fixed', cp)
-            filter_file(
-                '-ffree-line-length-none -falign-commons',
-                '-Kalign_commons',
-                cp
-            )
+            filter_file('-ffree-line-length-none', '', cp)
+            filter_file('-falign-commons', '-Kalign_commons', cp)
+            if spec.satisfies('+omp'):
+                filter_file('LFLAGS=\$', 'LFLAGS=\'-Nlibomp \'$', cp)
 
         # create Makefile
         bash = which('bash')
         if spec.satisfies('+omp'):
-            filter_file('-fopenmp', self.compiler.openmp_flag, cp)
             bash('./configure.sh', '-omp', cbase)
         else:
             bash('./configure.sh', cbase)
