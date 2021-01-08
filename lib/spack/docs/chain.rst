@@ -11,18 +11,24 @@ Chaining Spack Installations
 
 You can point your Spack installation to another installation to use any
 packages that are installed there. To register the other Spack instance,
-you can add it as an entry to ``upstreams.yaml``:
+you can add it as an entry to ``config.yaml``:
 
 .. code-block:: yaml
 
-  upstreams:
-    spack-instance-1:
-      install_tree: /path/to/other/spack/opt/spack
-    spack-instance-2:
-      install_tree: /path/to/another/spack/opt/spack
+  shared_install_trees:
+    spack-instance-name:
+      root: /path/to/other/spack/opt/spack
+      projections:
+        all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
 
-``install_tree`` must point to the ``opt/spack`` directory inside of the
+
+``root`` must point to the ``opt/spack`` directory inside of the
 Spack base directory.
+
+Once the chained instance is added to the shared_install_trees section,
+running ``spack --init-upstream [spack-instance-name]`` will initialize a
+pointer to the upstream. The upstream will NOT be registered/usable until
+this command is run.
 
 Once the upstream Spack instance has been added, ``spack find`` will
 automatically check the upstream instance when querying installed packages,
@@ -54,14 +60,24 @@ Other details about upstream installations:
    includes the upstream functionality (i.e. if its commit is after March
    27, 2019).
 
+
+--------------------------------
+Targeting Upstream Install Roots
+--------------------------------
+
+An upstream/shared Spack instance can be interacted with via a downstream
+instance of Spack via the ``spack --install-root`` command.
+By passing in the name of an shared Spack instance, you can run any normal
+Spack command and it will treat the shared instance as though it were your
+local instance of Spack.
+
 ---------------------------------------
 Using Multiple Upstream Spack Instances
 ---------------------------------------
 
 A single Spack instance can use multiple upstream Spack installations. Spack
 will search upstream instances in the order you list them in your
-configuration. If your installation refers to instances X and Y, in that order,
-then instance X must list Y as an upstream in its own ``upstreams.yaml``.
+configuration.
 
 -----------------------------------
 Using Modules for Upstream Packages
