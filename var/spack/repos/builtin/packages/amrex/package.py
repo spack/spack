@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Amrex(CMakePackage,CudaPackage):
+class Amrex(CMakePackage, CudaPackage):
     """AMReX is a publicly available software framework designed
     for building massively parallel block- structured adaptive
     mesh refinement (AMR) applications."""
@@ -36,7 +36,6 @@ class Amrex(CMakePackage,CudaPackage):
     version('18.10.1', sha256='e648465c9c3b7ff4c696dfa8b6d079b4f61c80d96c51e27af210951c9367c201')
     version('18.10', sha256='298eba03ef03d617c346079433af1089d38076d6fab2c34476c687740c1f4234')
     version('18.09.1', sha256='a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e')
-
 
     # Config options
     variant('dimensions', default='3',
