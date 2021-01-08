@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Amrex(CMakePackage):
+class Amrex(CMakePackage,CudaPackage):
     """AMReX is a publicly available software framework designed
     for building massively parallel block- structured adaptive
     mesh refinement (AMR) applications."""
@@ -36,6 +36,7 @@ class Amrex(CMakePackage):
     version('18.10.1', sha256='e648465c9c3b7ff4c696dfa8b6d079b4f61c80d96c51e27af210951c9367c201')
     version('18.10', sha256='298eba03ef03d617c346079433af1089d38076d6fab2c34476c687740c1f4234')
     version('18.09.1', sha256='a065ee4d1d98324b6c492ae20ea63ba12a4a4e23432bf5b3fe9788d44aa4398e')
+
 
     # Config options
     variant('dimensions', default='3',
@@ -70,8 +71,6 @@ class Amrex(CMakePackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
-    variant('cuda', default=False,
-            description='Enable CUDA interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -105,6 +104,16 @@ class Amrex(CMakePackage):
               msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
     conflicts('+petsc', when='~linear_solvers',
               msg='AMReX PETSc support needs variant +linear_solvers')
+    conflicts('+cuda', when='@:19.08',
+              msg='AMReX CUDA support needs AMReX newer than version 19.08')
+    conflicts('cuda_arch=10', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=11', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=12', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=13', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=20', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=21', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
@@ -139,8 +148,16 @@ class Amrex(CMakePackage):
             self.define_from_variant('ENABLE_PETSC', 'petsc'),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
         ]
+
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        if '+cuda' in self.spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch == 'none':
+                args.append('-DCUDA_ARCH=Auto')
+            else:
+                args.append('-DCUDA_ARCH={0}'.format(cuda_arch[0]))
 
         return args
 
@@ -167,9 +184,20 @@ class Amrex(CMakePackage):
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
-            self.define_from_variant('AMReX_CUDA', 'cuda'),
         ]
+
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        if '+cuda' in self.spec:
+            args.append('-DAMReX_GPU_BACKEND=CUDA')
+            args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
+            args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
+
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch == 'none':
+                args.append('-DAMReX_CUDA_ARCH=Auto')
+            else:
+                args.append('-DAMReX_CUDA_ARCH={0}'.format(cuda_arch[0]))
 
         return args
