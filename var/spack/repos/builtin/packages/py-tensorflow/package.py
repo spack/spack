@@ -99,6 +99,9 @@ class PyTensorflow(Package, CudaPackage):
 
     extends('python')
     depends_on('python@3:', type=('build', 'run'), when='@2.1:')
+    # python 3.8 support in tensorflow 2.2
+    # see tensorflow issue #33374
+    depends_on('python@:3.7', type=('build', 'run'), when='@:2.2')
 
     # TODO: Older versions of TensorFlow don't list the viable version range,
     # just the minimum version of bazel that will work. The latest version of
