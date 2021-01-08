@@ -277,10 +277,10 @@ def test_upstream_db_construction_from_pointers(
         db_a = spack.database.Database(roots[0], upstream_dbs=[db_b])
         db_a.add(spec['x'], layouts[0])
 
-        # Initialize Upstream Pointer
+        # Initialize upstream pointer
         spack.store.initialize_upstream_pointer_if_unset(roots[0], roots[1])
 
-        # Do Upstream DB construction here
+        # Upstream db construction
         upstream_dbs_from_scratch = (
             spack.store.upstream_dbs_from_pointers(roots[0]))
         db_a_from_scratch = spack.database.Database(
