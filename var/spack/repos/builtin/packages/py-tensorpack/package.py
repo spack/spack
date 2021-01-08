@@ -40,8 +40,16 @@ class PyTensorpack(PythonPackage):
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
-    # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on("py-numpy@1.14:", type=('build', 'run'))
+    depends_on("py-six", type=('build', 'run'))
+    depends_on("py-termcolor@1.1:", type=('build', 'run'))
+    depends_on("py-tabulate@0.7.7:", type=('build', 'run'))
+    depends_on("py-tqdm@4.29.0.1:", type=('build', 'run'))
+    depends_on("py-msgpack@0.5.2:", type=('build', 'run'))
+    depends_on("py-msgpack-numpy@0.4.4.2:", type=('build', 'run'))
+    depends_on("py-pyzmq@16:", type=('build', 'run'))
+    depends_on("py-psutil@5:", type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
