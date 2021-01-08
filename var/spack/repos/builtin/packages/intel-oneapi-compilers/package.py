@@ -71,15 +71,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'bin'))
-        env.prepend_path('CPATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'include'))
-        env.prepend_path('LIBRARY_PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'lib'))
-        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'lib'))
-        env.prepend_path('LD_LIBRARY_PATH',
-                         join_path(self.prefix,
-                                   'compiler', 'latest', 'linux', 'compiler',
-                                   'lib', 'intel64_lin'))
+        env.prepend_path('PATH', self._join_prefix('bin'))
+        env.prepend_path('CPATH', self._join_prefix('include'))
+        env.prepend_path('LIBRARY_PATH', self._join_prefix('lib'))
+        for dir in self._ld_library_path():
+            env.prepend_path('LD_LIBRARY_PATH', self._join_prefix(dir))
