@@ -36,7 +36,8 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
-    'fish': 'set -gx {0} {1};\n'
+    'fish': 'set -gx {0} {1};\n',
+    'bat': 'set "{0}={1}"\n'
 }
 
 
@@ -44,6 +45,7 @@ _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
     'fish': 'set -e {0};\n',
+    'bat': 'set "{0}="\n'
 }
 
 
@@ -83,7 +85,7 @@ def prune_duplicate_paths(paths):
 def get_path(name):
     path = os.environ.get(name, "").strip()
     if path:
-        return path.split(":")
+        return path.split(os.pathsep)
     else:
         return []
 
@@ -96,7 +98,7 @@ def env_flag(name):
 
 
 def path_set(var_name, directories):
-    path_str = ":".join(str(dir) for dir in directories)
+    path_str = os.pathsep.join(str(dir) for dir in directories)
     os.environ[var_name] = path_str
 
 
@@ -104,7 +106,7 @@ def path_put_first(var_name, directories):
     """Puts the provided directories first in the path, adding them
        if they're not already there.
     """
-    path = os.environ.get(var_name, "").split(':')
+    path = os.environ.get(var_name, "").split(os.pathsep)
 
     for dir in directories:
         if dir in path:
@@ -214,7 +216,7 @@ class NameModifier(object):
 
     def __init__(self, name, **kwargs):
         self.name = name
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'separator': self.separator}
 
         self.args.update(kwargs)
@@ -234,7 +236,7 @@ class NameValueModifier(object):
     def __init__(self, name, value, **kwargs):
         self.name = name
         self.value = value
-        self.separator = kwargs.get('separator', ':')
+        self.separator = kwargs.get('separator', os.pathsep)
         self.args = {'name': name, 'value': value, 'separator': self.separator}
         self.args.update(kwargs)
 
@@ -634,8 +636,13 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(
-                        name, cmd_quote(new_env[name]))
+                    if sys.platform != "win32":
+                        cmd = _shell_set_strings[shell].format(
+                            name, cmd_quote(new_env[name]))
+                    else:
+                        cmd = _shell_set_strings[shell].format(
+                            name, new_env[name])
+                    cmds += cmd
         return cmds
 
     @staticmethod
@@ -815,13 +822,13 @@ class EnvironmentModifications(object):
         return env
 
 
-def concatenate_paths(paths, separator=':'):
+def concatenate_paths(paths, separator=os.pathsep):
     """Concatenates an iterable of paths into a string of paths separated by
     separator, defaulting to colon.
 
     Args:
         paths: iterable of paths
-        separator: the separator to use, default ':'
+        separator: the separator to use, default ';' windows, ':' otherwise
 
     Returns:
         string
