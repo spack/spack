@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -154,16 +154,16 @@ class Clang(Compiler):
     @llnl.util.lang.memoized
     def extract_version_from_output(cls, output):
         ver = 'unknown'
-        if 'Apple' in output:
+        if ('Apple' in output) or ('AMD' in output):
             return ver
 
         match = re.search(
             # Normal clang compiler versions are left as-is
-            r'clang version ([^ )]+)-svn[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)-svn[~.\w\d-]*|'
             # Don't include hyphenated patch numbers in the version
             # (see https://github.com/spack/spack/pull/14365 for details)
-            r'clang version ([^ )]+?)-[~.\w\d-]*|'
-            r'clang version ([^ )]+)',
+            r'clang version ([^ )\n]+?)-[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)',
             output
         )
         if match:

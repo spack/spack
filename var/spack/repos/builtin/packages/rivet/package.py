@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Rivet(AutotoolsPackage):
 
     homepage = "https://rivet.hepforge.org/"
     url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.2.tar.bz2"
+
+    tags = ['hep']
 
     version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
     version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1')

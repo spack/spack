@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,10 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-try:
+if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
     from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
+else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
 
@@ -224,7 +224,7 @@ def url_exists(url):
     try:
         read_from_url(url)
         return True
-    except URLError:
+    except (SpackWebError, URLError):
         return False
 
 
@@ -295,15 +295,27 @@ def _iter_s3_prefix(client, url, num_entries=1024):
             break
 
 
-def list_url(url):
+def _iter_local_prefix(path):
+    for root, _, files in os.walk(path):
+        for f in files:
+            yield os.path.relpath(os.path.join(root, f), path)
+
+
+def list_url(url, recursive=False):
     url = url_util.parse(url)
 
     local_path = url_util.local_file_path(url)
     if local_path:
-        return os.listdir(local_path)
+        if recursive:
+            return list(_iter_local_prefix(local_path))
+        return [subpath for subpath in os.listdir(local_path)
+                if os.path.isfile(os.path.join(local_path, subpath))]
 
     if url.scheme == 's3':
         s3 = s3_util.create_s3_session(url)
+        if recursive:
+            return list(_iter_s3_prefix(s3, url))
+
         return list(set(
             key.split('/', 1)[0]
             for key in _iter_s3_prefix(s3, url)))
@@ -542,7 +554,10 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?$'
+        url_regex += r'(\/download)?'
+        # PyPI adds #sha256=... to the end of the URL
+        url_regex += '(#sha256=.*)?'
+        url_regex += '$'
 
         regexes.append(url_regex)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,3 +27,10 @@ class JsonCwx(AutotoolsPackage):
         with working_dir('json-cwx'):
             autogen = Executable("./autogen.sh")
             autogen()
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-Wno-error=deprecated-declarations -Wextra '
+                        '-Wwrite-strings -Wno-unused-parameter -std=gnu99',
+                        '', 'json-cwx/Makefile.am.inc')

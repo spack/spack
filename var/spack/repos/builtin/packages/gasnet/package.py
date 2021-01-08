@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Gasnet(AutotoolsPackage):
     """
     homepage = "https://gasnet.lbl.gov"
     url      = "https://gasnet.lbl.gov/EX/GASNet-2020.3.0.tar.gz"
+
+    maintainers = ['PHHargrove', 'bonachea']
 
     version('2020.3.0', sha256='019eb2d2284856e6fabe6c8c0061c874f10e95fa0265245f227fd3497f1bb274')
     version('2019.9.0', sha256='117f5fdb16e53d0fa8a47a1e28cccab1d8020ed4f6e50163d985dc90226aaa2c')

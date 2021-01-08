@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 
 import inspect
 
-from spack.directives import depends_on, extends
+from spack.directives import extends
 from spack.package import PackageBase, run_after
 
 
@@ -30,8 +30,6 @@ class RPackage(PackageBase):
     build_system_class = 'RPackage'
 
     extends('r')
-
-    depends_on('r', type=('build', 'run'))
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""

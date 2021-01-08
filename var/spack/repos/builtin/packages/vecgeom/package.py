@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,9 +15,12 @@ class Vecgeom(CMakePackage, CudaPackage):
     url = "https://gitlab.cern.ch/VecGeom/VecGeom/-/archive/v1.1.6/VecGeom-v1.1.6.tar.gz"
     git = "https://gitlab.cern.ch/VecGeom/VecGeom.git"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'sethrj']
 
     version('master', branch='master')
+    version('1.1.8', sha256='9c42206d788ec4b791571882f5ea8d2c591c938abe61c21cc5ec37bfea6bf768')
     version('1.1.7', sha256='cc79a0baa783b21ecc399c4e7cca925ca340e6aeb96e3b2cad45c141557519bf')
     version('1.1.6', sha256='c4806a6b67d01b40074b8cc6865d78574a6a1c573be51696f2ecdf98b9cb954a')
     version('1.1.5', sha256='da674f3bbc75c30f56c1a2d251fa8930c899f27fa64b03a36569924030d87b95')

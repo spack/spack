@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,6 +56,7 @@ class Faodel(CMakePackage):
     # FAODEL Github issue #5
     patch('faodel_sbl.patch', when='@1.1811.1 logging=sbl')
     patch('lambda-capture-f0267fc.patch', when='@1.1906.1')
+    patch('ugni-target-redef-b67e856.patch', when='@1.1906.1')
 
     def cmake_args(self):
         spec = self.spec

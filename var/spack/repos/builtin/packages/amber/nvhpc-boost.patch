@@ -1,0 +1,61 @@
+--- a/ambertools_tmpdir/AmberTools/src/ba/ambertools_tmpdir/oost/tools/build/src/engine/build.sh	2020-09-30 14:26:41.136036986 -0700
++++ b/ambertools_tmpdir/AmberTools/src/boost/tools/build/src/engine/build.sh	2020-09-30 14:27:29.634090876 -0700
+@@ -95,7 +95,7 @@
+     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+         BOOST_JAM_TOOLSET=intel-linux
+         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+-    elif test_path pgcc ; then BOOST_JAM_TOOLSET=pgi
++    elif test_path nvc ; then BOOST_JAM_TOOLSET=pgi
+     elif test_path pathcc ; then BOOST_JAM_TOOLSET=pathscale
+     elif test_path como ; then BOOST_JAM_TOOLSET=como
+     elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
+@@ -231,7 +231,7 @@
+     ;;
+ 
+     pgi)
+-    BOOST_JAM_CC=pgcc
++    BOOST_JAM_CC=nvc
+     ;;
+ 
+     sun*)
+--- a/ambertools_tmpdir/AmberTools/src/boost/tools/build/src/tools/pgi.jam	2020-09-30 14:28:09.652483687 -0700
++++ b/ambertools_tmpdir/AmberTools/src/boost/tools/build/src/tools/pgi.jam	2020-09-30 14:28:34.421488935 -0700
+@@ -26,11 +26,11 @@
+ {
+   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
+ 
+-  local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
++  local l_command = [ common.get-invocation-command pgi : nvc++ : $(command) ] ;
+ 
+   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
+     
+-  command_c = $(command_c[1--2]) $(l_command[-1]:B=pgcc) ;
++  command_c = $(command_c[1--2]) $(l_command[-1]:B=nvc) ;
+ 
+   toolset.flags pgi CONFIG_C_COMMAND $(condition) : $(command_c) ;
+ 
+--- a/ambertools_tmpdir/AmberTools/src/boost/tools/build/src/engine/build.jam	2020-09-30 14:40:16.983284833 -0700
++++ b/ambertools_tmpdir/AmberTools/src/boost/tools/build/src/engine/build.jam	2020-09-30 14:40:24.172997290 -0700
+@@ -309,7 +309,7 @@
+     -I$(--python-include) -I$(--extra-include)
+     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+ ## Portland Group Pgi 6.2
+-toolset pgi pgcc : "-o " : -D
++toolset pgi nvc : "-o " : -D
+     :
+     [ opt --release : -s -O3 ]
+     [ opt --debug : -g ]
+--- a/ambertools_tmpdir/AmberTools/src/boost/libs/filesystem/src/operations.cpp	2020-09-30 15:07:31.998097202 -0700
++++ b/ambertools_tmpdir/AmberTools/src/boost/libs/filesystem/src/operations.cpp	2020-09-30 15:07:37.117892885 -0700
+@@ -2087,10 +2087,6 @@
+     return ok;
+   }
+ 
+-#if defined(__PGI) && defined(__USE_FILE_OFFSET64)
+-#define dirent dirent64
+-#endif
+-
+   error_code dir_itr_first(void *& handle, void *& buffer,
+     const char* dir, string& target,
+     fs::file_status &, fs::file_status &)
+

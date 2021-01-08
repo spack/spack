@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,7 +37,11 @@ class Conduit(Package):
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
 
-    version('master', branch='master', submodules=True, preferred=True)
+    version('develop', branch='develop', submodules=True, preferred=True)
+    # note: the main branch in conduit was renamed to develop, this next entry
+    # is to bridge any spack dependencies that are still using the name master
+    version('master', branch='develop', submodules=True)
+    version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')
     version('0.5.1', sha256='68a3696d1ec6d3a4402b44a464d723e6529ec41016f9b44c053676affe516d44')
     version('0.5.0', sha256='7efac668763d02bd0a2c0c1b134d9f5ee27e99008183905bb0512e5502b8b4fe')
     version('0.4.0', sha256='c228e6f0ce5a9c0ffb98e0b3d886f2758ace1a4b40d00f3f118542c0747c1f52')
@@ -217,7 +221,7 @@ class Conduit(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         with working_dir('spack-build'):
             print("Running Conduit Unit Tests...")
             make("test")
@@ -480,9 +484,9 @@ class Conduit(Package):
             # etc make return the spack compiler wrappers
             # which can trip up mpi detection in CMake 3.14
             if spec['mpi'].mpicc == spack_cc:
-                mpicc_path = "cc"
-                mpicxx_path = "CC"
-                mpifc_path = "ftn"
+                mpicc_path = c_compiler
+                mpicxx_path = cpp_compiler
+                mpifc_path = f_compiler
             cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))

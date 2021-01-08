@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,4 +29,4 @@ class RSf(RPackage):
     depends_on('gdal@2.0.1:')
     depends_on('geos@3.4.0:')
     depends_on('proj@4.8.0:5', when='@:0.7-3')
-    depends_on('proj@4.8.0:', when='@0.7-4:')
+    depends_on('proj@4.8.0:6', when='@0.7-4:')

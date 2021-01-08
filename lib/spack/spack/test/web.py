@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -167,3 +167,31 @@ def test_get_header():
     # If there isn't even a fuzzy match, raise KeyError
     with pytest.raises(KeyError):
         spack.util.web.get_header(headers, 'ContentLength')
+
+
+def test_list_url(tmpdir):
+    testpath = str(tmpdir)
+
+    os.mkdir(os.path.join(testpath, 'dir'))
+
+    with open(os.path.join(testpath, 'file-0.txt'), 'w'):
+        pass
+    with open(os.path.join(testpath, 'file-1.txt'), 'w'):
+        pass
+    with open(os.path.join(testpath, 'file-2.txt'), 'w'):
+        pass
+
+    with open(os.path.join(testpath, 'dir', 'another-file.txt'), 'w'):
+        pass
+
+    list_url = lambda recursive: list(sorted(
+        spack.util.web.list_url(testpath, recursive=recursive)))
+
+    assert list_url(False) == ['file-0.txt',
+                               'file-1.txt',
+                               'file-2.txt']
+
+    assert list_url(True) == ['dir/another-file.txt',
+                              'file-0.txt',
+                              'file-1.txt',
+                              'file-2.txt']

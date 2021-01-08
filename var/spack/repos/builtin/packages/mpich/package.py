@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 from spack import *
 import os
 import sys
+import re
 
 
 class Mpich(AutotoolsPackage):
@@ -17,6 +18,10 @@ class Mpich(AutotoolsPackage):
     git      = "https://github.com/pmodels/mpich.git"
     list_url = "http://www.mpich.org/static/downloads/"
     list_depth = 1
+
+    maintainers = ['raffenet', 'yfguo']
+
+    executables = ['^mpichversion$']
 
     version('develop', submodules=True)
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
@@ -82,9 +87,10 @@ spack package at this time.''',
     # Fix using an external hwloc
     # See https://github.com/pmodels/mpich/issues/4038
     # and https://github.com/pmodels/mpich/pull/3540
+    # landed in v3.4b1 v3.4a3
     patch('https://github.com/pmodels/mpich/commit/8a851b317ee57366cd15f4f28842063d8eff4483.patch',
           sha256='eb982de3366d48cbc55eb5e0df43373a45d9f51df208abf0835a72dc6c0b4774',
-          when='@3.3 +hwloc')
+          when='@3.3:3.3.99 +hwloc')
 
     # fix MPI_Barrier segmentation fault
     # see https://lists.mpich.org/pipermail/discuss/2016-May/004764.html
@@ -154,10 +160,13 @@ spack package at this time.''',
     depends_on("autoconf@2.67:", when='@develop', type=("build"))
 
     # building with "+hwloc' also requires regenerating autotools files
-    depends_on('automake@1.15:', when='@3.3 +hwloc', type="build")
-    depends_on('libtool@2.4.4:', when='@3.3 +hwloc', type="build")
-    depends_on("m4", when="@3.3 +hwloc", type="build"),
-    depends_on("autoconf@2.67:", when='@3.3 +hwloc', type="build")
+    depends_on('automake@1.15:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on('libtool@2.4.4:', when='@3.3:3.3.99 +hwloc', type="build")
+    depends_on("m4", when="@3.3:3.3.99 +hwloc", type="build"),
+    depends_on("autoconf@2.67:", when='@3.3:3.3.99 +hwloc', type="build")
+
+    # MPICH's Yaksa submodule requires python to configure
+    depends_on("python@3.0:", when="@develop", type="build")
 
     conflicts('device=ch4', when='@:3.2')
     conflicts('netmod=ofi', when='@:3.1.4')
@@ -175,12 +184,118 @@ spack package at this time.''',
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
 
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)(output=str, error=str)
+        match = re.search(r'MPICH Version:\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        def get_spack_compiler_spec(path):
+            spack_compilers = spack.compilers.find_compilers([path])
+            actual_compiler = None
+            # check if the compiler actually matches the one we want
+            for spack_compiler in spack_compilers:
+                if os.path.dirname(spack_compiler.cc) == path:
+                    actual_compiler = spack_compiler
+                    break
+            return actual_compiler.spec if actual_compiler else None
+
+        def is_enabled(text):
+            if text in set(['t', 'true', 'enabled', 'enable', 'with',
+                            'yes', '1']):
+                return True
+            return False
+
+        def is_disabled(text):
+            if text in set(['f', 'false', 'disabled', 'disable',
+                            'without', 'no', '0']):
+                return True
+            return False
+
+        results = []
+        for exe in exes:
+            variants = ''
+            output = Executable(exe)(output=str, error=str)
+            if re.search(r'--with-hwloc-prefix=embedded', output):
+                variants += '~hwloc'
+
+            if re.search(r'--with-pm=hydra', output):
+                variants += '+hydra'
+            else:
+                variants += '~hydra'
+
+            match = re.search(r'--(\S+)-romio', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+romio'
+            elif match and is_disabled(match.group(1)):
+                variants += '~romio'
+
+            if re.search(r'--with-ibverbs', output):
+                variants += '+verbs'
+            elif re.search(r'--without-ibverbs', output):
+                variants += '~verbs'
+
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+wrapperrpath'
+            match = re.search(r'--enable-wrapper-rpath=(\S+)', output)
+            if match and is_disabled(match.group(1)):
+                variants += '~wrapperrpath'
+
+            if re.search(r'--disable-fortran', output):
+                variants += '~fortran'
+
+            match = re.search(r'--with-slurm=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+slurm'
+
+            if re.search(r'--enable-libxml2', output):
+                variants += '+libxml2'
+            elif re.search(r'--disable-libxml2', output):
+                variants += '~libxml2'
+
+            if re.search(r'--with-thread-package=argobots', output):
+                variants += '+argobots'
+
+            if re.search(r'--with-pmi=no', output):
+                variants += ' pmi=off'
+            elif re.search(r'--with-pmi=simple', output):
+                variants += ' pmi=pmi'
+            elif re.search(r'--with-pmi=pmi2/simple', output):
+                variants += ' pmi=pmi2'
+            elif re.search(r'--with-pmix', output):
+                variants += ' pmi=pmix'
+
+            match = re.search(r'MPICH Device:\s+(\S+)', output)
+            if match:
+                if match.group(1) == 'ch3:nemesis':
+                    variants += ' device=ch3'
+                else:
+                    variants += ' device=' + match.group(1)
+
+            match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
+            if match:
+                variants += ' netmod=' + match.group(1)
+
+            match = re.search(r'MPICH CC:\s+(\S+)', output)
+            compiler_spec = get_spack_compiler_spec(
+                os.path.dirname(match.group(1)))
+            if compiler_spec:
+                variants += '%' + str(compiler_spec)
+            results.append(variants)
+        return results
+
     def setup_build_environment(self, env):
         env.unset('F90')
         env.unset('F90FLAGS')
 
         # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
         if self.spec.satisfies('%gcc@10:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        # Same fix but for macOS - avoids issue #17934
+        if self.spec.satisfies('%apple-clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):
@@ -190,6 +305,10 @@ spack package at this time.''',
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
         external_modules = self.spec.external_modules
         if external_modules and 'cray' in external_modules[0]:
+            # This is intended to support external MPICH instances registered
+            # by Spack on Cray machines prior to a879c87; users defining an
+            # external MPICH entry for Cray should generally refer to the
+            # "cray-mpich" package
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)
@@ -237,7 +356,7 @@ spack package at this time.''',
         """Not needed usually, configure should be already there"""
         # If configure exists nothing needs to be done
         if (os.path.exists(self.configure_abs_path) and
-            not spec.satisfies('@3.3 +hwloc')):
+            not spec.satisfies('@3.3:3.3.99 +hwloc')):
             return
         # Else bootstrap with autotools
         bash = which('bash')

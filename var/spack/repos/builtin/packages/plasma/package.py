@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,11 @@ class Plasma(CMakePackage):
 
     homepage = "https://bitbucket.org/icl/plasma/"
     url = "https://bitbucket.org/icl/plasma/downloads/plasma-18.11.0.tar.gz"
-    hg = "https://luszczek@bitbucket.org/icl/plasma"
+    git = "https://bitbucket.org/icl/plasma"
     maintainers = ['luszczek']
 
-    version("develop", hg=hg)
+    version("develop", git=git)
+    version("20.9.20", sha256="2144a77b739f8dd2f0dbe5b64d94cde0e916f55c4eb170facd168c0db7fc7970")
     version("19.8.1", sha256="3a5db6eabf91aec782b7f27b17a7f6b8ce2c9d8e648c0e9c0ff5d87277ba4d17")
     version("19.8.0", sha256="19a950ade8a7c8d082f372789c9f874274a63217ecff26e33f366402f060f071")
     version("18.11.1", sha256="0581cc8b1188932fd9c29bd258ffe2dc8fb26b1530c5dc3d91f8de369e44edbc")
@@ -41,16 +42,16 @@ class Plasma(CMakePackage):
     depends_on("blas")
     depends_on("lapack")
 
-    conflicts("atlas")  # does not have LAPACKE interface
+    conflicts("^atlas")  # does not have LAPACKE interface
 
     # missing LAPACKE features and/or CBLAS headers
-    conflicts("netlib-lapack@:3.5.999")
+    conflicts("^netlib-lapack@:3.5.999")
 
     # clashes with OpenBLAS declarations and has a problem compiling on its own
-    conflicts("cblas")
+    conflicts("^cblas")
 
-    conflicts("openblas-with-lapack")  # incomplete LAPACK implementation
-    conflicts("veclibfort")
+    conflicts("^openblas-with-lapack")  # incomplete LAPACK implementation
+    conflicts("^veclibfort")
 
     # only GCC 4.9+ and higher have sufficient support for OpenMP 4+ tasks+deps
     conflicts("%gcc@:4.8.99", when='@:17.1')

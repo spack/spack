@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,7 @@ class PyAstropy(PythonPackage):
     Python astronomy packages."""
 
     homepage = 'https://astropy.org/'
-    url = 'https://pypi.io/packages/source/a/astropy/astropy-4.0.1.post1.tar.gz'
-
-    install_time_test_callbacks = ['install_test', 'import_module_test']
+    pypi = 'astropy/astropy-4.0.1.post1.tar.gz'
 
     version('4.0.1.post1', sha256='5c304a6c1845ca426e7bc319412b0363fccb4928cb4ba59298acd1918eec44b5')
     version('3.2.1', sha256='706c0457789c78285e5464a5a336f5f0b058d646d60f4e5f5ba1f7d5bf424b28')
@@ -87,6 +85,8 @@ class PyAstropy(PythonPackage):
 
         return args
 
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import astropy; astropy.test()')

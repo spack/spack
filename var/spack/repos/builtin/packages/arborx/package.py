@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,7 +50,7 @@ class Arborx(CMakePackage):
     # - current version of Trilinos package does not allow disabling Serial
     # - current version of Trilinos package does not allow enabling CUDA
     depends_on('trilinos+kokkos@develop', when='+trilinos')
-    depends_on('trilinos+openmp', when='trilinos+openmp')
+    depends_on('trilinos+openmp', when='+trilinos+openmp')
     conflicts('~serial', when='+trilinos')
     conflicts('+cuda', when='+trilinos')
 

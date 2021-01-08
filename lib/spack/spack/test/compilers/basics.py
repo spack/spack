@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -442,19 +442,45 @@ def test_clang_flags():
                         'clang@3.3')
 
 
+def test_aocc_flags():
+    supported_flag_test("debug_flags",
+                        ['-gcodeview', '-gdwarf-2', '-gdwarf-3',
+                         '-gdwarf-4', '-gdwarf-5', '-gline-tables-only',
+                         '-gmodules', '-gz', '-g'],
+                        'aocc@2.2.0')
+    supported_flag_test("opt_flags",
+                        ['-O0', '-O1', '-O2', '-O3', '-Ofast',
+                         '-Os', '-Oz', '-Og',
+                         '-O', '-O4'],
+                        'aocc@2.2.0')
+    supported_flag_test("openmp_flag", "-fopenmp", "aocc@2.2.0")
+    supported_flag_test("cxx11_flag", "-std=c++11", "aocc@2.2.0")
+    supported_flag_test("cxx14_flag", "-std=c++14", "aocc@2.2.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "aocc@2.2.0")
+    supported_flag_test("c99_flag", "-std=c99", "aocc@2.2.0")
+    supported_flag_test("c11_flag", "-std=c11", "aocc@2.2.0")
+    supported_flag_test("cc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("f77_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("fc_pic_flag", "-fPIC", "aocc@2.2.0")
+    supported_flag_test("version_argument", "--version", "aocc@2.2.0")
+
+
 def test_fj_flags():
     supported_flag_test("openmp_flag", "-Kopenmp", "fj@4.0.0")
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "fj@4.0.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "fj@4.0.0")
     supported_flag_test("c99_flag", "-std=c99", "fj@4.0.0")
     supported_flag_test("c11_flag", "-std=c11", "fj@4.0.0")
     supported_flag_test("cc_pic_flag",  "-KPIC", "fj@4.0.0")
     supported_flag_test("cxx_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("f77_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("fc_pic_flag",  "-KPIC", "fj@4.0.0")
-    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+    supported_flag_test("opt_flags", ['-O0', '-O1', '-O2', '-O3', '-Ofast'],
                         'fj@4.0.0')
+    supported_flag_test("debug_flags", "-g", "fj@4.0.0")
 
 
 def test_gcc_flags():
@@ -516,6 +542,25 @@ def test_intel_flags():
                         'intel@1.0')
 
 
+def test_oneapi_flags():
+    supported_flag_test("openmp_flag", "-qopenmp", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@2020.8.0.0827")
+    supported_flag_test("c99_flag", "-std=c99", "oneapi@2020.8.0.0827")
+    supported_flag_test("c11_flag", "-std=c1x", "oneapi@2020.8.0.0827")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@2020.8.0.0827")
+    supported_flag_test("debug_flags",
+                        ['-debug', '-g', '-g0', '-g1', '-g2', '-g3'],
+                        'oneapi@2020.8.0.0827')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os'],
+                        'oneapi@2020.8.0.0827')
+
+
 def test_nag_flags():
     supported_flag_test("openmp_flag", "-openmp", "nag@1.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "nag@1.0")
@@ -531,6 +576,23 @@ def test_nag_flags():
     supported_flag_test("debug_flags", ['-g', '-gline', '-g90'], 'nag@1.0')
     supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
                         'nag@1.0')
+
+
+def test_nvhpc_flags():
+    supported_flag_test("openmp_flag", "-mp", "nvhpc@20.9")
+    supported_flag_test("cxx11_flag", "--c++11", "nvhpc@20.9")
+    supported_flag_test("cxx14_flag", "--c++14", "nvhpc@20.9")
+    supported_flag_test("cxx17_flag", "--c++17", "nvhpc@20.9")
+    supported_flag_test("c99_flag", "-c99", "nvhpc@20.9")
+    supported_flag_test("c11_flag", "-c11", "nvhpc@20.9")
+    supported_flag_test("cc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("cxx_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("f77_pic_flag", "-fpic", "nvhpc@20.9")
+    supported_flag_test("fc_pic_flag",  "-fpic", "nvhpc@20.9")
+    supported_flag_test("debug_flags", ['-g', '-gopt'], 'nvhpc@20.9')
+    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+                        'nvhpc@20.9')
+    supported_flag_test("stdcxx_libs", ('-c++libs',), 'nvhpc@20.9')
 
 
 def test_pgi_flags():

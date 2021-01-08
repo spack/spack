@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,6 @@ class PyProjectq(PythonPackage):
     homepage = "https://projectq.ch"
     git      = "https://github.com/projectq-framework/projectq.git"
 
-    # Provided python modules
-    import_modules = ['projectq', 'projectq.backends', 'projectq.cengines',
-                      'projectq.libs', 'projectq.meta', 'projectq.ops',
-                      'projectq.setups', 'projectq.types']
-
     # Versions
     version('develop', branch='develop')
     version('0.3.6', commit='fa484fe037a3a1772127bbd00fe4628ddba34611')
@@ -33,7 +28,6 @@ class PyProjectq(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
-    depends_on('py-pytest@3.1.0:', type=('test'))
     depends_on('py-requests', type=('build', 'run'))
     # conflict with pybind11@2.2.0 -> see requirements.txt
     depends_on('py-pybind11@1.7:2.1,2.2.1:', type=('build', 'run'))

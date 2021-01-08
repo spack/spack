@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,18 @@ import llnl.util.tty as tty
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.2.0': {
+        'Linux-aarch64': ('c11dc274660e9b47b0f25ca66861a7406246a7191f1b04d0710515fcac0fa6cd', 'https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda_11.2.0_460.27.04_linux_sbsa.run'),
+        'Linux-x86_64': ('9c50283241ac325d3085289ed9b9c170531369de41165ce271352d4a898cbdce', 'https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda_11.2.0_460.27.04_linux.run'),
+        'Linux-ppc64le': ('adc3267df5dbfdaf51cb4c9b227ba6bfd979a39d9b4136bba0eba6b1dd2a2731', 'https://developer.download.nvidia.com/compute/cuda/11.2.0/local_installers/cuda_11.2.0_460.27.04_linux_ppc64le.run')},
+    '11.1.1': {
+        'Linux-aarch64': ('9ab1dbafba205c06bea8c88e38cdadb3038af19cb56e7b3ba734d3d7a84b8f02', 'https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux_sbsa.run'),
+        'Linux-x86_64': ('3eae6727086024925ebbcef3e9a45ad379d8490768fd00f9c2d8b6fd9cd8dd8f', 'https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux.run'),
+        'Linux-ppc64le': ('023e571fe26ee829c98138dfc305a92279854aac7d184d255fd58c06c6af3c17', 'https://developer.download.nvidia.com/compute/cuda/11.1.1/local_installers/cuda_11.1.1_455.32.00_linux_ppc64le.run')},
+    '11.1.0': {
+        'Linux-aarch64': ('878cbd36c5897468ef28f02da50b2f546af0434a8a89d1c724a4d2013d6aa993', 'https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux_sbsa.run'),
+        'Linux-x86_64': ('858cbab091fde94556a249b9580fadff55a46eafbcb4d4a741d2dcd358ab94a5', 'https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux.run'),
+        'Linux-ppc64le': ('a561e6f7f659bc4100e4713523b0b8aad6b36aa77fac847f6423e7780c750064', 'https://developer.download.nvidia.com/compute/cuda/11.1.0/local_installers/cuda_11.1.0_455.23.05_linux_ppc64le.run')},
     '11.0.2': {
         'Linux-aarch64': ('23851e30f7c47a1baad92891abde0adbc783de5962c7480b9725198ceacda4a0', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux_sbsa.run'),
         'Linux-x86_64': ('48247ada0e3f106051029ae8f70fbd0c238040f58b0880e55026374a959a69c1', 'http://developer.download.nvidia.com/compute/cuda/11.0.2/local_installers/cuda_11.0.2_450.51.05_linux.run'),
@@ -63,6 +75,7 @@ class Cuda(Package):
 
     homepage = "https://developer.nvidia.com/cuda-zone"
 
+    maintainers = ['ax3l', 'Rombur']
     executables = ['^nvcc$']
 
     for ver, packages in _versions.items():
@@ -93,7 +106,7 @@ class Cuda(Package):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('@10.1.243:'):
-            libxml2_home  = self.spec['libxml2'].prefix
+            libxml2_home = self.spec['libxml2'].prefix
             env.set('LIBXML2HOME', libxml2_home)
             env.append_path('LD_LIBRARY_PATH', libxml2_home.lib)
 
@@ -113,9 +126,6 @@ class Cuda(Package):
                             "presence of /tmp/cuda-installer.log "
                             "please remove the file and try again ")
         runfile = glob(join_path(self.stage.source_path, 'cuda*_linux*'))[0]
-        chmod = which('chmod')
-        chmod('+x', runfile)
-        runfile = which(runfile)
 
         # Note: NVIDIA does not officially support many newer versions of
         # compilers.  For example, on CentOS 6, you must use GCC 4.4.7 or
@@ -126,6 +136,7 @@ class Cuda(Package):
 
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [
+            runfile,            # the install script
             '--silent',         # disable interactive prompts
             '--override',       # override compiler version checks
             '--toolkit',        # install CUDA Toolkit
@@ -135,8 +146,8 @@ class Cuda(Package):
         else:
             arguments.append('--verbose')                   # Verbose log file
             arguments.append('--toolkitpath=%s' % prefix)   # Where to install
-
-        runfile(*arguments)
+        install_shell = which('sh')
+        install_shell(*arguments)
         try:
             os.remove('/tmp/cuda-installer.log')
         except OSError:

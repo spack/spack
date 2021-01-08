@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class EcpProxyApps(BundlePackage):
 
     homepage = "https://proxyapps.exascaleproject.org"
 
+    version('4.0')
     version('3.0')
     version('2.1')
     version('2.0')
@@ -27,8 +28,11 @@ class EcpProxyApps(BundlePackage):
     variant('candle', default=False,
             description='Also build CANDLE Benchmarks')
 
+    # Added with release 4.0
+    depends_on('miniamr@1.6.4', when='@4.0:')
+
     # Added with release 3.0
-    depends_on('miniamr@1.4.4', when='@3.0:')
+    depends_on('miniamr@1.4.4', when='@3.0:3.1')
     depends_on('xsbench@19', when='@3.0:')
     depends_on('laghos@3.0', when='@3.0:')
 

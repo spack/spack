@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,39 +29,35 @@ gpg = SpackCommand('gpg')
     ('gpg2', 'gpg (GnuPG) 2.2.19'),  # gpg2 command
 ])
 def test_find_gpg(cmd_name, version, tmpdir, mock_gnupghome, monkeypatch):
+    TEMPLATE = ('#!/bin/sh\n'
+                'echo "{version}"\n')
+
     with tmpdir.as_cwd():
-        with open(cmd_name, 'w') as f:
-            f.write("""\
-#!/bin/sh
-echo "{version}"
-""".format(version=version))
-        fs.set_executable(cmd_name)
+        for fname in (cmd_name, 'gpgconf'):
+            with open(fname, 'w') as f:
+                f.write(TEMPLATE.format(version=version))
+            fs.set_executable(fname)
 
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
     if version == 'undetectable' or version.endswith('1.3.4'):
         with pytest.raises(spack.util.gpg.SpackGPGError):
-            exe = spack.util.gpg.Gpg.gpg()
+            spack.util.gpg.ensure_gpg(reevaluate=True)
     else:
-        exe = spack.util.gpg.Gpg.gpg()
-        assert isinstance(exe, spack.util.executable.Executable)
+        spack.util.gpg.ensure_gpg(reevaluate=True)
+        gpg_exe = spack.util.gpg.get_global_gpg_instance().gpg_exe
+        assert isinstance(gpg_exe, spack.util.executable.Executable)
+        gpgconf_exe = spack.util.gpg.get_global_gpg_instance().gpgconf_exe
+        assert isinstance(gpgconf_exe, spack.util.executable.Executable)
 
 
 def test_no_gpg_in_path(tmpdir, mock_gnupghome, monkeypatch):
     monkeypatch.setitem(os.environ, "PATH", str(tmpdir))
     with pytest.raises(spack.util.gpg.SpackGPGError):
-        spack.util.gpg.Gpg.gpg()
-
-
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
+        spack.util.gpg.ensure_gpg(reevaluate=True)
 
 
 @pytest.mark.maybeslow
-@pytest.mark.skipif(not has_gpg(),
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
                     reason='These tests require gnupg2')
 def test_gpg(tmpdir, mock_gnupghome):
     # Verify a file with an empty keyring.
@@ -103,7 +99,7 @@ def test_gpg(tmpdir, mock_gnupghome):
         '--export', str(keypath),
         'Spack testing 1',
         'spack@googlegroups.com')
-    keyfp = spack.util.gpg.Gpg.signing_keys()[0]
+    keyfp = spack.util.gpg.signing_keys()[0]
 
     # List the keys.
     # TODO: Test the output here.

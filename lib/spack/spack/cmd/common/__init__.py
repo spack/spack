@@ -1,37 +1,53 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import llnl.util.tty as tty
+import llnl.util.tty.color as color
 
 import spack.paths
-from llnl.util import tty
 
 
-shell_init_instructions = [
-    "To initialize spack's shell commands:",
-    "",
-    "    # for bash and zsh",
-    "    . %s/setup-env.sh" % spack.paths.share_path,
-    "",
-    "    # for csh and tcsh",
-    "    setenv SPACK_ROOT %s" % spack.paths.prefix,
-    "    source %s/setup-env.csh" % spack.paths.share_path, ""
-]
+def shell_init_instructions(cmd, equivalent):
+    """Print out instructions for users to initialize shell support.
 
-
-def print_module_placeholder_help():
+    Arguments:
+        cmd (str): the command the user tried to run that requires
+            shell support in order to work
+        equivalent (str): a command they can run instead, without
+            enabling shell support
     """
-    For use by commands to tell user how to activate shell support.
-    """
+
+    shell_specific = "{sh_arg}" in equivalent
+
     msg = [
-        "This command requires spack's shell integration.", ""
-    ] + shell_init_instructions + [
-        "This exposes a 'spack' shell function, which you can use like",
-        "    $ spack load package-foo", "",
-        "Running the Spack executable directly (for example, invoking",
-        "./bin/spack) will bypass the shell function and print this",
-        "placeholder message, even if you have sourced one of the above",
-        "shell integration scripts."
+        "`%s` requires spack's shell support." % cmd,
+        "",
+        "To set up shell support, run the command below for your shell.",
+        "",
+        color.colorize("@*c{For bash/zsh/sh:}"),
+        "  . %s/setup-env.sh" % spack.paths.share_path,
+        "",
+        color.colorize("@*c{For csh/tcsh:}"),
+        "  source %s/setup-env.csh" % spack.paths.share_path,
+        "",
+        color.colorize("@*c{For fish:}"),
+        "  source %s/setup-env.fish" % spack.paths.share_path,
+        "",
+        "Or, if you do not want to use shell support, run " + (
+            "one of these" if shell_specific else "this") + " instead:",
+        "",
     ]
-    tty.msg(*msg)
+
+    if shell_specific:
+        msg += [
+            equivalent.format(sh_arg="--sh  ") + "  # bash/zsh/sh",
+            equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
+            equivalent.format(sh_arg="--fish") + "  # fish",
+        ]
+    else:
+        msg += ["  " + equivalent]
+
+    msg += ['']
+    tty.error(*msg)

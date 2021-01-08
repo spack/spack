@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class R(AutotoolsPackage):
 
     extendable = True
 
+    version('4.0.3', sha256='09983a8a78d5fb6bc45d27b1c55f9ba5265f78fa54a55c13ae691f87c5bb9e0d')
     version('4.0.2', sha256='d3bceab364da0876625e4097808b42512395fdf41292f4915ab1fd257c1bbe75')
     version('4.0.1', sha256='95fe24a4d8d8f8f888460c8f5fe4311cec656e7a1722d233218bc03861bc6f32')
     version('4.0.0', sha256='06beb0291b569978484eb0dcb5d2339665ec745737bdfb4e873e7a5a75492940')
@@ -126,10 +127,8 @@ class R(AutotoolsPackage):
         spec   = self.spec
         prefix = self.prefix
 
-        tcl_config_path = join_path(spec['tcl'].prefix.lib, 'tclConfig.sh')
-        if not os.path.exists(tcl_config_path):
-            tcl_config_path = join_path(spec['tcl'].prefix,
-                                        'lib64', 'tclConfig.sh')
+        tcl_config_path = join_path(
+            spec['tcl'].libs.directories[0], 'tclConfig.sh')
 
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
@@ -142,10 +141,8 @@ class R(AutotoolsPackage):
                                                             'R', 'lib')),
         ]
         if '^tk' in spec:
-            tk_config_path = join_path(spec['tk'].prefix.lib, 'tkConfig.sh')
-            if not os.path.exists(tk_config_path):
-                tk_config_path = join_path(spec['tk'].prefix,
-                                           'lib64', 'tkConfig.sh')
+            tk_config_path = join_path(
+                spec['tk'].libs.directories[0], 'tkConfig.sh')
             config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:

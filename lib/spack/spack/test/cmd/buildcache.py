@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,13 +19,16 @@ buildcache = spack.main.SpackCommand('buildcache')
 install = spack.main.SpackCommand('install')
 env = spack.main.SpackCommand('env')
 add = spack.main.SpackCommand('add')
+gpg = spack.main.SpackCommand('gpg')
+mirror = spack.main.SpackCommand('mirror')
+uninstall = spack.main.SpackCommand('uninstall')
 
 
 @pytest.fixture()
 def mock_get_specs(database, monkeypatch):
     specs = database.query_local()
     monkeypatch.setattr(
-        spack.binary_distribution, 'get_specs', lambda: specs
+        spack.binary_distribution, 'update_cache_and_get_specs', lambda: specs
     )
 
 
@@ -40,7 +43,7 @@ def mock_get_specs_multiarch(database, monkeypatch):
             break
 
     monkeypatch.setattr(
-        spack.binary_distribution, 'get_specs', lambda: specs
+        spack.binary_distribution, 'update_cache_and_get_specs', lambda: specs
     )
 
 
@@ -122,6 +125,10 @@ def test_buildcache_create_fails_on_noargs(tmpdir):
         buildcache('create', '-d', str(tmpdir), '--unsigned')
 
 
+@pytest.mark.skipif(
+    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
+    reason='Test for Clingo are run in a container with root permissions'
+)
 def test_buildcache_create_fail_on_perm_denied(
         install_mockery, mock_fetch, monkeypatch, tmpdir):
     """Ensure that buildcache create fails on permission denied error."""
@@ -133,3 +140,41 @@ def test_buildcache_create_fail_on_perm_denied(
                    '--unsigned', 'trivial-install-test-package')
     assert error.value.errno == errno.EACCES
     tmpdir.chmod(0o700)
+
+
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
+def test_update_key_index(tmpdir, mutable_mock_env_path,
+                          install_mockery, mock_packages, mock_fetch,
+                          mock_stage, mock_gnupghome):
+    """Test the update-index command with the --keys option"""
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    mirror('add', 'test-mirror', mirror_url)
+
+    gpg('create', 'Test Signing Key', 'nobody@nowhere.com')
+
+    s = Spec('libdwarf').concretized()
+
+    # Install a package
+    install(s.name)
+
+    # Put installed package in the buildcache, which, because we're signing
+    # it, should result in the public key getting pushed to the buildcache
+    # as well.
+    buildcache('create', '-a', '-d', mirror_dir.strpath, s.name)
+
+    # Now make sure that when we pass the "--keys" argument to update-index
+    # it causes the index to get update.
+    buildcache('update-index', '--keys', '-d', mirror_dir.strpath)
+
+    key_dir_list = os.listdir(os.path.join(
+        mirror_dir.strpath, 'build_cache', '_pgp'))
+
+    uninstall('-y', s.name)
+    mirror('rm', 'test-mirror')
+
+    assert 'index.json' in key_dir_list

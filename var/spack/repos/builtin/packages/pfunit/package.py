@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,7 @@ class Pfunit(CMakePackage):
               'not support the Fortran 2008 features required by new pFUnit.')
     # See https://github.com/Goddard-Fortran-Ecosystem/pFUnit/pull/179
     conflicts("+shared", when="@4.0.0:")
-    conflicts("use_comm_world", when="~mpi")
+    conflicts("+use_comm_world", when="~mpi")
     conflicts('+mpi', when='@:3.99.99 %gcc@10.0.0:')
     patch("mpi-test.patch", when="@:3.99.99 +use_comm_world")
 

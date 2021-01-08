@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,8 @@ class Miniamr(MakefilePackage):
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('1.6.4', sha256='807d50608b69fb1a61924718964be96c0a2f9fa2e37fdc027bc3f0f116544732')
     version('1.4.4', sha256='b83f438ff351481b4310c46ddf63b9fffc7f29f916a5717377e72919a5b788b6')
     version('1.4.3', sha256='4c3fbc1662ae3e139669fb3844134486a7488a0b6e085c3b24bebcc8d12d3ac6')
     version('1.4.2', sha256='d2347e0e22a8e79aa0dc3316b67dd7c40dded39d82f6e068e6fb8c9f0766566b')
@@ -48,6 +49,9 @@ class Miniamr(MakefilePackage):
         mkdir(prefix.bin)
         mkdir(prefix.docs)
 
-        install('ref/ma.x', prefix.bin)
+        if spec.satisfies('@1.6.4:'):
+            install('ref/miniAMR.x', prefix.bin)
+        else:
+            install('ref/ma.x', prefix.bin)
         # Install Support Documents
         install('ref/README', prefix.docs)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('1.5.1', sha256='b2f9358ce2a9446b9d8fb1998c30913e7199b007aa82e46d0aa05c763331c635')
     version('1.5.0', sha256='de2901d8ae017592c513e0af9cf58de295abc9802e55ece00424cbd8a3801920')
     version('1.4.1', sha256='965dabe44d17480e326d92da4eec56722d98b33943c53d2b0f8f4655cb208023')
     version('1.4.0', sha256='241a1c47fafba751848fac12446e7bf4ad3d342d5eb2fa1ef94dd904acc329ed')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,10 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version('1.9',   sha256='f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57')
 
     depends_on("readline")
-    patch('gdbm_gcc_10.patch', when='%gcc@10:')
+    patch('gdbm.patch', when='%gcc@10:')
+    patch('gdbm.patch', when='%clang@11:')
+    patch('gdbm.patch', when='%cce@11:')
+    patch('gdbm.patch', when='%aocc@2:')
 
     def configure_args(self):
 

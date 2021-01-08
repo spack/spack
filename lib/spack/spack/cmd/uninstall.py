@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -90,9 +90,11 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
             tty.error('{0} matches multiple packages:'.format(spec))
-            print()
-            spack.cmd.display_specs(matching, **display_args)
-            print()
+            sys.stderr.write('\n')
+            spack.cmd.display_specs(matching, output=sys.stderr,
+                                    **display_args)
+            sys.stderr.write('\n')
+            sys.stderr.flush()
             has_errors = True
 
         # No installed package matches the query

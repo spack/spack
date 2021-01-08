@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,7 +74,7 @@ class Vtk(CMakePackage):
 
     # Note: it is recommended to use mesa+llvm, if possible.
     # mesa default is software rendering, llvm makes it faster
-    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('osmesa', when='+osmesa')
 
     # VTK will need Qt5OpenGL, and qt needs '-opengl' for that
     depends_on('qt+opengl', when='+qt')
@@ -265,11 +265,10 @@ class Vtk(CMakePackage):
                     '-DVTK_USE_X:BOOL=ON',
                     '-DVTK_USE_COCOA:BOOL=OFF'])
 
+        compile_flags = []
+
         if spec.satisfies('@:6.1.0'):
-            cmake_args.extend([
-                '-DCMAKE_C_FLAGS=-DGLX_GLXEXT_LEGACY',
-                '-DCMAKE_CXX_FLAGS=-DGLX_GLXEXT_LEGACY'
-            ])
+            compile_flags.append('-DGLX_GLXEXT_LEGACY')
 
             # VTK 6.1.0 (and possibly earlier) does not use
             # NETCDF_CXX_ROOT to detect NetCDF C++ bindings, so
@@ -297,5 +296,17 @@ class Vtk(CMakePackage):
             if '%intel' in spec and spec.version >= Version('8.2'):
                 cmake_args.append(
                     '-DVTK_MODULE_ENABLE_VTK_IOMotionFX:BOOL=OFF')
+
+        # -no-ipo prevents an internal compiler error from multi-file
+        # optimization (https://github.com/spack/spack/issues/20471)
+        if '%intel' in spec:
+            compile_flags.append('-no-ipo')
+
+        if compile_flags:
+            compile_flags = ' '.join(compile_flags)
+            cmake_args.extend([
+                '-DCMAKE_C_FLAGS={0}'.format(compile_flags),
+                '-DCMAKE_CXX_FLAGS={0}'.format(compile_flags)
+            ])
 
         return cmake_args

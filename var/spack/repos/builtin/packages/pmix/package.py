@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -37,6 +37,8 @@ class Pmix(AutotoolsPackage):
     maintainers = ['rhc54']
 
     version('master', branch='master')
+    version('3.2.1',    sha256='7e5db8ada5828cf85c12f70db6bfcf777d13e5c4c73b2206bb5e394d47066a2b')
+    version('3.1.5',    sha256='88934195174455df478b996313095df25b51d0caf5a5cce01b22f0ccdc6c5cf7')
     version('3.1.3',    sha256='118acb9c4e10c4e481406dcffdfa762f314af50db75336bf8460e53b56dc439d')
     version('3.1.2',    sha256='28aed0392d4ca2cdfbdd721e6210c94dadc9830677fea37a0abe9d592c00f9c3')
     version('3.0.2',    sha256='df68f35a3ed9517eeade80b13855cebad8fde2772b36a3f6be87559b6d430670')
@@ -59,6 +61,10 @@ class Pmix(AutotoolsPackage):
             description="allow a PMIx server to request services from "
             "a system-level REST server")
 
+    variant('docs',
+            default=False,
+            description='Build manpages')
+
     depends_on('libevent@2.0.20:2.0.22,2.1.8')
     depends_on('hwloc@1.11.0:1.11.99,2.0.1:', when='@3.0.0:')
     depends_on("m4", type=("build"), when="@master")
@@ -68,6 +74,7 @@ class Pmix(AutotoolsPackage):
     depends_on("perl", type=("build"), when="@master")
     depends_on('curl', when="+restful")
     depends_on('jansson@2.11:', when="+restful")
+    depends_on('pandoc', type='build', when='+docs')
 
     conflicts('@:3.9.9', when='+restful')
 
@@ -92,6 +99,9 @@ class Pmix(AutotoolsPackage):
             config_args.append('--enable-pmi-backward-compatibility')
         else:
             config_args.append('--disable-pmi-backward-compatibility')
+
+        if '~docs' in self.spec:
+            config_args.append('--disable-man-pages')
 
         # libevent support
         config_args.append(

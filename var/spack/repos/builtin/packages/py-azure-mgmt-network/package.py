@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtNetwork(PythonPackage):
     """Microsoft Azure Network Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-network/azure-mgmt-network-11.0.0.zip"
+    pypi = "azure-mgmt-network/azure-mgmt-network-11.0.0.zip"
 
     version('11.0.0', sha256='7fdfc631c660cb173eee88abbb7b8be7742f91b522be6017867f217409cd69bc')
     version('10.2.0', sha256='d50c74cdc1c9be6861ddef9adffd3b05afc5a5092baf0209eea30f4439cba2d9')

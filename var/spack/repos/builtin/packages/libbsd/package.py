@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,17 @@ class Libbsd(AutotoolsPackage):
 
     patch('cdefs.h.patch', when='@0.8.6 %gcc@:4')
     patch('local-elf.h.patch', when='%intel')
+    patch('nvhpc.patch', when='%nvhpc')
 
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts('platform=darwin')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc'):
+            filter_file('-isystem', '-I', 'src/Makefile.in')
+            # This is not a 1 for 1 replacement, requiring nvhpc.patch
+            # to include config.h where needed
+            filter_file('-include ', '-I ', 'src/Makefile.in')
+            filter_file('-Wall -Wextra -Wno-unused-variable '
+                        '-Wno-unused-parameter', '-Wall', 'configure')

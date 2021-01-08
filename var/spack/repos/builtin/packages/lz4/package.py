@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,13 +34,26 @@ class Lz4(MakefilePackage):
             return "{0}/r{1}.tar.gz".format(url, version.joined)
 
     def build(self, spec, prefix):
+        par = True
+        if spec.compiler.name == 'nvhpc':
+            # relocation error when building shared and dynamic libs in
+            # parallel
+            par = False
+
         if sys.platform != "darwin":
-            make('MOREFLAGS=-lrt')  # fixes make error on CentOS6
+            make('MOREFLAGS=-lrt', parallel=par)  # fixes make error on CentOS6
         else:
-            make()
+            make(parallel=par)
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix))
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fvisibility=hidden', '', 'Makefile')
+            filter_file('-fvisibility=hidden', '', 'lib/Makefile')
+            filter_file('-pedantic', '', 'Makefile')
 
     @run_after('install')
     def darwin_fix(self):

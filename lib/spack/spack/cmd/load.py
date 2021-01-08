@@ -1,11 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
-
-import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -62,18 +60,11 @@ def load(parser, args):
              for spec in spack.cmd.parse_specs(args.specs)]
 
     if not args.shell:
-        specs_string = ' '.join(args.specs)
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack load` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack load --sh %s`   # for bash/sh' % specs_string,
-            '    eval `spack load --csh %s`  # for csh/tcsh' % specs_string,
-        ]
-        tty.msg(*msg)
+        specs_str = ' '.join(args.specs) or "SPECS"
+        spack.cmd.common.shell_init_instructions(
+            "spack load",
+            "    eval `spack load {sh_arg}` %s" % specs_str,
+        )
         return 1
 
     with spack.store.db.read_transaction():

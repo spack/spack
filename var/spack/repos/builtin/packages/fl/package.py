@@ -1,9 +1,17 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import platform
+
+_versions = {
+    '0.79.47': {
+        'Linux-x86_64': ('b8a4a74118c1a024313bf912261fbc016a53f2d15adb1226217f2a10a9f7ca9a', 'https://www.flxpert.hu/fl/fl_0.79.47-amd64-linux.tar.gz'),
+        'Linux-aarch64': ('3ff052013daf319927d04ba83b8f90c12575983911faf6c1559437062032b669', 'http://www.flxpert.hu/fl/fl_0.79.47-aarch64-linux.tar.gz')
+    }
+}
 
 
 class Fl(Package):
@@ -13,12 +21,16 @@ class Fl(Package):
     homepage = "https://www.flxpert.hu/fl/"
     url      = "https://www.flxpert.hu/fl/fl_0.79.47-amd64-linux.tar.gz"
 
-    version('0.79.47', sha256='b8a4a74118c1a024313bf912261fbc016a53f2d15adb1226217f2a10a9f7ca9a')
+    for ver, packages in _versions.items():
+        key = "{0}-{1}".format(platform.system(), platform.machine())
+        pkg = packages.get(key)
+        if pkg:
+            version(ver, sha256=pkg[0], url=pkg[1])
 
     def install(self, spec, prefix):
         if (self.spec.satisfies('platform=linux') and
-           self.spec.target.family == 'x86_64'):
+            self.spec.target.family in ['x86_64', 'aarch64']):
             with working_dir('fl_{0}'.format(spec.version)):
                 install_tree('.', prefix)
         else:
-            raise InstallError('fl is built for Linux x86_64 platform only.')
+            raise InstallError('fl requires Linux x86_64 or aarch64 platform.')

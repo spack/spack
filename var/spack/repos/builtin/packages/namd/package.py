@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ from spack import *
 import llnl.util.tty as tty
 
 
-class Namd(MakefilePackage):
+class Namd(MakefilePackage, CudaPackage):
     """NAMDis a parallel molecular dynamics code designed for
     high-performance simulation of large biomolecular systems."""
 
@@ -26,11 +26,17 @@ class Namd(MakefilePackage):
     version('2.13', '9e3323ed856e36e34d5c17a7b0341e38')
     version('2.12', '2a1191909b1ab03bf0205971ad4d8ee9')
 
-    variant('fftw', default='3', values=('none', '2', '3', 'mkl'),
-            description='Enable the use of FFTW/FFTW3/MKL FFT')
+    variant('fftw', default='3', values=('none', '2', '3', 'mkl', 'amdfftw'),
+            description='Enable the use of FFTW/FFTW3/MKL FFT/AMDFFTW')
 
     variant('interface', default='none', values=('none', 'tcl', 'python'),
             description='Enables TCL and/or python interface')
+
+    # init_tcl_pointers() declaration and implementation are inconsistent
+    # "src/colvarproxy_namd.C", line 482: error: inherited member is not
+    # allowed
+    patch('inherited-member-2.13.patch', when='@2.13')
+    patch('inherited-member-2.14.patch', when='@2.14')
 
     depends_on('charmpp@6.10.1:', when="@2.14:")
     depends_on('charmpp@6.8.2', when="@2.13")
@@ -39,12 +45,20 @@ class Namd(MakefilePackage):
     depends_on('fftw@:2.99', when="fftw=2")
     depends_on('fftw@3:', when="fftw=3")
 
+    depends_on('amdfftw', when="fftw=amdfftw")
+
     depends_on('intel-mkl', when="fftw=mkl")
 
     depends_on('tcl', when='interface=tcl')
 
     depends_on('tcl', when='interface=python')
     depends_on('python', when='interface=python')
+
+    # https://www.ks.uiuc.edu/Research/namd/2.12/features.html
+    # https://www.ks.uiuc.edu/Research/namd/2.13/features.html
+    # https://www.ks.uiuc.edu/Research/namd/2.14/features.html
+    depends_on('cuda@6.5.14:7.5.18', when='@2.12 +cuda')
+    depends_on('cuda@8.0.61:', when='@2.13: +cuda')
 
     def _copy_arch_file(self, lib):
         config_filename = 'arch/{0}.{1}'.format(self.arch, lib)
@@ -91,12 +105,16 @@ class Namd(MakefilePackage):
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
                                         -ffast-math -lpthread ' + archopt,
-                        'intel': '-O2 -ip -qopenmp-simd' + archopt}
+                        'intel': '-O2 -ip -qopenmp-simd' + archopt,
+                        'aocc': m64 + '-O3 -ffp-contract=fast -ffast-math \
+                                        -fopenmp ' + archopt}
                 else:
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
                                         -ffast-math ' + archopt,
-                        'intel': '-O2 -ip ' + archopt}
+                        'intel': '-O2 -ip ' + archopt,
+                        'aocc': m64 + '-O3 -ffp-contract=fast \
+                                        -ffast-math ' + archopt}
 
                 optim_opts = optims_opts[self.compiler.name] \
                     if self.compiler.name in optims_opts else ''
@@ -181,6 +199,10 @@ class Namd(MakefilePackage):
             opts.append('--without-fftw')
         elif fftw_version == 'mkl':
             self._append_option(opts, 'mkl')
+        elif fftw_version == 'amdfftw':
+            self._copy_arch_file('fftw3')
+            opts.extend(['--with-fftw3',
+                         '--fftw-prefix', spec['amdfftw'].prefix])
         else:
             _fftw = 'fftw{0}'.format('' if fftw_version == '2' else '3')
 
@@ -199,6 +221,12 @@ class Namd(MakefilePackage):
                 '--without-tcl',
                 '--without-python'
             ])
+
+        if '+cuda' in spec:
+            self._append_option(opts, 'cuda')
+            filter_file('^CUDADIR=.*$',
+                        'CUDADIR={0}'.format(spec['cuda'].prefix),
+                        self.arch + '.cuda')
 
         config = Executable('./config')
 

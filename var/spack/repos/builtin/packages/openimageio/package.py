@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Openimageio(CMakePackage):
     homepage = "http://www.openimageio.org"
     url      = "https://github.com/OpenImageIO/oiio/archive/Release-1.8.15.tar.gz"
 
+    version('2.2.7.0', sha256='857ac83798d6d2bda5d4d11a90618ff19486da2e5a4c4ff022c5976b5746fe8c')
     version('1.8.15', sha256='4d5b4ed3f2daaed69989f53c0f9364dd87c82dc0a09807b5b6e9008e2426e86f')
 
     # Core dependencies
@@ -36,6 +37,8 @@ class Openimageio(CMakePackage):
 
     variant('qt', default=False, description="Build qt viewer")
     depends_on('qt@5.6.0:+opengl', when='+qt')
+
+    conflicts('target=aarch64:', when='@:1.8.15')
 
     def cmake_args(self):
         args = ["-DUSE_FFMPEG={0}".format(

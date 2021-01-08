@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class BlasrLibcpp(Package):
     homepage = "https://github.com/PacificBiosciences/blasr_libcpp"
     url      = "https://github.com/PacificBiosciences/blasr_libcpp/archive/5.3.1.tar.gz"
 
+    maintainers = ['robqiao']
+
     version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156')
 
     depends_on('pbbam')
@@ -23,7 +25,7 @@ class BlasrLibcpp(Package):
     # major version 1.9 and the 1.10.1 version doesn't build correctly.
     # https://github.com/PacificBiosciences/blasr/issues/355
 
-    depends_on('python', type='build')
+    depends_on('python@2.7:2.8', type='build')
 
     phases = ['configure', 'build', 'install']
 
@@ -49,3 +51,11 @@ class BlasrLibcpp(Package):
         env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.hdf)
         env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.alignment)
         env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.pbdata)
+
+    def setup_run_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH',
+                         self.spec['blasr-libcpp'].prefix.pbdata)
+        env.prepend_path('LD_LIBRARY_PATH',
+                         self.spec['blasr-libcpp'].prefix.alignment)
+        env.prepend_path('LD_LIBRARY_PATH',
+                         self.spec['blasr-libcpp'].prefix.hdf)

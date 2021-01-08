@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class ParallelNetcdf(AutotoolsPackage):
     git      = "https://github.com/Parallel-NetCDF/PnetCDF"
     url      = "https://parallel-netcdf.github.io/Release/pnetcdf-1.11.0.tar.gz"
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
+
+    maintainers = ['skosukhin']
 
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
@@ -42,6 +44,7 @@ class ParallelNetcdf(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     variant('shared', default=True, description='Enable shared library')
+    variant('burstbuffer', default=False, description='Enable burst buffer feature')
 
     depends_on('mpi')
 
@@ -52,10 +55,41 @@ class ParallelNetcdf(AutotoolsPackage):
 
     depends_on('perl', type='build')
 
-    conflicts('+shared', when='@:1.9%nag+fortran')
+    # Suport for shared libraries was introduced in version 1.9.0
     conflicts('+shared', when='@:1.8')
+    conflicts('+burstbuffer', when='@:1.10')
 
+    # Before 1.10.0, C utility programs (e.g. ncmpigen) were linked without
+    # explicit specification of the Fortran runtime libraries, which is
+    # required when libpnetcdf.so contains Fortran symbols. Libtool sets the
+    # required linking flags implicitly but only if the Fortran compiler
+    # produces verbose output with the '-v' flag (and, due to a bug in Libtool,
+    # when CXX is not set to 'no'; see macro _LT_LANG_FC_CONFIG in libtool.m4
+    # for more details). The latter is not the case for NAG. Starting 1.10.0,
+    # the required linking flags are explicitly set in the makefiles and
+    # detected using macro AC_FC_LIBRARY_LDFLAGS, which means that we can
+    # override the verbose output flag for Fortran compiler on the command line
+    # (see below).
+    conflicts('+shared', when='@:1.9%nag+fortran')
+
+    # https://github.com/Parallel-NetCDF/PnetCDF/pull/59
     patch('nag_libtool.patch', when='@1.9:1.12.1%nag')
+
+    # We could apply the patch unconditionally. However, it fixes a problem
+    # that manifests itself only when we build shared libraries with Spack on
+    # a Cray system with PGI compiler. Based on the name of the $CC executable,
+    # Libtool "thinks" that it works with PGI compiler directly but on a Cray
+    # system it actually works with the Cray's wrapper. PGI compiler (at least
+    # since the version 15.7) "understands" two formats of the
+    # '--whole-archive' argument. Unluckily, Cray's wrapper "understands" only
+    # one of them but Libtool switches to another one. The following patch
+    # discards the switching.
+    patch('cray_pgi_libtool_release.patch',
+          when='@1.8:999%pgi+shared platform=cray')
+    # Given that the bug manifests itself in rather specific conditions, it is
+    # not reported upstream.
+    patch('cray_pgi_libtool_master.patch',
+          when='@master%pgi+shared platform=cray')
 
     @property
     def libs(self):
@@ -130,5 +164,8 @@ class ParallelNetcdf(AutotoolsPackage):
         if self.spec.satisfies('%nag+fortran+shared'):
             args.extend(['ac_cv_prog_fc_v=-Wl,-v',
                          'ac_cv_prog_f77_v=-Wl,-v'])
+
+        if '+burstbuffer' in self.spec:
+            args.append('--enable-burst-buffering')
 
         return args

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,13 +23,21 @@ class Miniqmc(CMakePackage):
     depends_on('mpi')
     depends_on('lapack')
 
+    # Add missing PGI compiler config
+    patch('pgi-cmake.patch', when='@:0.4 % nvhpc')
+
     def cmake_args(self):
         args = [
             '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
             '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc
         ]
+
+        if self.spec.satisfies('%nvhpc'):
+            args.append('-DLAPACK_LIBRARIES={0}'.format(
+                self.spec['lapack'].libs.joined(';')))
+
         return args
 
     def install(self, spec, prefix):
-        install_tree(join_path('../spack-build', 'bin'), prefix.bin)
-        install_tree(join_path('../spack-build', 'lib'), prefix.lib)
+        install_tree(join_path(self.build_directory, 'bin'), prefix.bin)
+        install_tree(join_path(self.build_directory, 'lib'), prefix.lib)

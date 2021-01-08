@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,7 @@ class Plplot(CMakePackage):
     depends_on('qt', when='+qt')
     depends_on('tcl', when='+tcl')
     depends_on('wxwidgets', when='+wx')
+    depends_on('libsm', type='link')
 
     depends_on('freetype')
     depends_on('gtkplus')
@@ -76,20 +77,22 @@ class Plplot(CMakePackage):
             # as is done for the tclsh executable
             args += [
                 '-DTCL_INCLUDE_PATH={0}/include'.format(
-                    self.spec['tcl'].prefix.include
+                    self.spec['tcl'].headers.directories[0]
                 ),
                 '-DTCL_LIBRARY={0}'.format(
                     LibraryList(find_libraries(
                         'libtcl*',
-                        self.spec['tcl'].prefix.lib,
+                        self.spec['tcl'].prefix,
                         shared=True,
+                        recursive=True,
                     )),
                 ),
                 '-DTCL_STUB_LIBRARY={0}'.format(
                     LibraryList(find_libraries(
                         'libtclstub*',
-                        self.spec['tcl'].prefix.lib,
+                        self.spec['tcl'].prefix,
                         shared=False,
+                        recursive=True,
                     )),
                 )
             ]

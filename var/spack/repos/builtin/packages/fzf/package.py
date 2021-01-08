@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import os
+import re
 import shutil
-
-from spack import *
 
 
 class Fzf(MakefilePackage):
@@ -37,7 +35,9 @@ class Fzf(MakefilePackage):
 
     @classmethod
     def determine_version(cls, exe):
-        return Executable(exe)('--version', output=str, error=str).rstrip()
+        candidate = Executable(exe)('--version', output=str, error=str)
+        match = re.match(r'(^[\d.]+)', candidate)
+        return match.group(1) if match else None
 
     @when('@:0.17.5')
     def patch(self):

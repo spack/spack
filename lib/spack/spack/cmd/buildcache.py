@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -231,6 +231,9 @@ def setup_parser(subparser):
         'update-index', help=buildcache_update_index.__doc__)
     update_index.add_argument(
         '-d', '--mirror-url', default=None, help='Destination mirror url')
+    update_index.add_argument(
+        '-k', '--keys', default=False, action='store_true',
+        help='If provided, key index will be updated as well as package index')
     update_index.set_defaults(func=buildcache_update_index)
 
 
@@ -292,7 +295,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
 
-    specs = bindist.get_specs()
+    specs = bindist.update_cache_and_get_specs()
     if not other_arch:
         arch = spack.architecture.default_arch().to_spec()
         specs = [s for s in specs if s.satisfies(arch)]
@@ -473,7 +476,8 @@ def installtarball(args):
         tty.die("build cache file installation requires" +
                 " at least one package spec argument")
     pkgs = set(args.specs)
-    matches = match_downloaded_specs(pkgs, args.multiple, args.otherarch)
+    matches = match_downloaded_specs(pkgs, args.multiple, args.force,
+                                     args.otherarch)
 
     for match in matches:
         install_tarball(match, args)
@@ -505,7 +509,7 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.get_specs()
+    specs = bindist.update_cache_and_get_specs()
     if not args.allarch:
         arch = spack.architecture.default_arch().to_spec()
         specs = [s for s in specs if s.satisfies(arch)]
@@ -776,6 +780,13 @@ def buildcache_update_index(args):
 
     bindist.generate_package_index(
         url_util.join(outdir, bindist.build_cache_relative_path()))
+
+    if args.keys:
+        keys_url = url_util.join(outdir,
+                                 bindist.build_cache_relative_path(),
+                                 bindist.build_cache_keys_relative_path())
+
+        bindist.generate_key_index(keys_url)
 
 
 def buildcache(parser, args):

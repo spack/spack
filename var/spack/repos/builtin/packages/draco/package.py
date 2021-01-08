@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
+    version('7.8.0',  sha256='f6de794457441f69025619be58810bca432f3e0dd773ea9b9a7977b1dc09530d')
     version('7.7.0',  sha256='eb7fffbcba48e16524f619d261192ead129f968c59f3581f3217b89590812ddf')
     version('7.6.0',  sha256='c2c6b329620d7bcb0f2fc14371f105dfb80a84e7c5adbb34620777034b15c7c9')
     version('7.5.0',  sha256='0bb12b5f5ff60ba3087310c07da42e8d4f481ec4259daaa24ec240815a2e9dec')
@@ -34,26 +35,29 @@ class Draco(CMakePackage):
 
     variant('build_type', default='Release', description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+    variant('caliper',  default=False, description='Enable caliper timers support')
     variant('cuda',     default=False, description='Enable Cuda/GPU support')
-    variant('eospac',   default=True, description='Enable EOSPAC support')
-    variant('lapack',   default=True, description='Enable LAPACK wrapper')
-    variant('libquo',   default=True, description='Enable Quo wrapper')
-    variant('parmetis', default=True, description='Enable Parmetis support')
+    variant('eospac',   default=True,  description='Enable EOSPAC support')
+    variant('lapack',   default=True,  description='Enable LAPACK wrapper')
+    variant('libquo',   default=True,  description='Enable Quo wrapper')
+    variant('parmetis', default=True,  description='Enable Parmetis support')
     variant('qt',       default=False, description='Enable Qt support')
     variant('superlu_dist', default=True, description='Enable SuperLU-DIST support')
 
-    depends_on('gsl')
-    depends_on('mpi@3:',                            type=('build', 'link', 'run'))
-    depends_on('numdiff',                           type='build')
-    depends_on('python@2.7:', when='@:7.6.99',      type=('build', 'run'))
-    depends_on('python@3.5:', when='@7.7.0:',       type=('build', 'run', 'test'))
-    depends_on('random123@1.09',                    type='build')
-
     depends_on('cmake@3.9:',  when='@:6.99',        type='build')
     depends_on('cmake@3.11:', when='@7.0.0:7.1.99', type='build')
-    depends_on('cmake@3.14:', when='@7.2:7.6.99',   type='build')
+    depends_on('cmake@3.14:', when='@7.2.0:7.6.99', type='build')
     depends_on('cmake@3.17:', when='@7.7:',         type='build')
-    depends_on('cuda@10.1:',  when='+cuda')
+    depends_on('gsl')
+    depends_on('mpi@3:',         type=('build', 'link', 'run'))
+    depends_on('numdiff',        type='build')
+    depends_on('random123@1.09', type='build')
+    depends_on('python@2.7:', when='@7.7.0:',       type=('build', 'run'))
+    depends_on('python@3.5:', when='@:7.6.99',      type=('build', 'run', 'test'))
+
+    # Optional dependencies
+    depends_on('caliper',     when='+caliper')
+    depends_on('cuda@11.0:',  when='+cuda')
     depends_on('eospac@6.3:', when='+eospac')
     depends_on('lapack',      when='+lapack')
     depends_on('libquo@1.3.1:', when='@7.4.0:+libquo')
@@ -64,13 +68,14 @@ class Draco(CMakePackage):
     depends_on('superlu-dist@:5.99', when='@:7.6.99+superlu_dist')
 
     conflicts('+cuda', when='@:7.6.99')
+    conflicts('+caliper', when='@:7.7.99')
 
     # Fix python discovery.
     patch('d710.patch', when='@7.1.0^python@3:')
     patch('d710-python2.patch', when='@7.1.0^python@2.7:2.99')
     patch('d730.patch', when='@7.3.0:7.3.99')
     patch('d740.patch', when='@7.4.0:7.4.99')
-    patch('smpi.patch', when='@:7.6.99')
+    patch('d760-cray.patch', when='@7.6.0')
     patch('d770-nocuda.patch', when='@7.7.0')
 
     def url_for_version(self, version):
@@ -81,10 +86,9 @@ class Draco(CMakePackage):
         options = []
         options.extend([
             '-Wno-dev',
-            '-DBUILD_TESTING={0}'.format('ON' if self.run_tests else 'OFF')
+            '-DBUILD_TESTING={0}'.format('ON' if self.run_tests else 'OFF'),
+            '-DUSE_CUDA={0}'.format('ON' if '+cuda' in self.spec else 'OFF')
         ])
-        if '~cuda' in self.spec:
-            options.extend(['-DUSE_CUDA=OFF'])
         return options
 
     def check(self):

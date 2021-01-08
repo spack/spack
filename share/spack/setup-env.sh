@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,7 +45,8 @@ if [ -n "${_sp_initializing:-}" ]; then
 fi
 export _sp_initializing=true
 
-spack() {
+
+_spack_shell_wrapper() {
     # Store LD_LIBRARY_PATH variables from spack shell function
     # This is necessary because MacOS System Integrity Protection clears
     # variables that affect dyld on process start.
@@ -243,11 +244,6 @@ _spack_determine_shell() {
 _sp_shell=$(_spack_determine_shell)
 
 
-# Export spack function so it is available in subshells (only works with bash)
-if [ "$_sp_shell" = bash ]; then
-    export -f spack
-fi
-
 alias spacktivate="spack env activate"
 
 #
@@ -315,6 +311,21 @@ if ! _spack_fn_exists use && ! _spack_fn_exists module; then
 	need_module="yes"
 fi;
 
+# Define the spack shell function with some informative no-ops, so when users
+# run `which spack`, they see the path to spack and where the function is from.
+eval "spack() {
+    : this is a shell function from: $_sp_share_dir/setup-env.sh
+    : the real spack script is here: $_sp_prefix/bin/spack
+    _spack_shell_wrapper \"\$@\"
+    return \$?
+}"
+
+# Export spack function so it is available in subshells (only works with bash)
+if [ "$_sp_shell" = bash ]; then
+    export -f spack
+    export -f _spack_shell_wrapper
+fi
+
 #
 # make available environment-modules
 #
@@ -360,7 +371,7 @@ _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
 
 # Add programmable tab completion for Bash
 #
-if [ "$_sp_shell" = bash ]; then
+if test "$_sp_shell" = bash || test -n "${ZSH_VERSION:-}"; then
     source $_sp_share_dir/spack-completion.bash
 fi
 

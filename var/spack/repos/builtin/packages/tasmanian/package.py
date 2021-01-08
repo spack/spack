@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Tasmanian(CMakePackage):
 
     version('develop', branch='master')
 
+    version('7.3', sha256='5bd1dd89cc5c84506f6900b6569b17e50becd73eb31ec85cfa11d6f1f912c4fa')
     version('7.1', sha256='9c24a591506a478745b802f1fa5c557da7bc80b12d8070855de6bc7aaca7547a')
     version('7.0', sha256='4094ba4ee2f1831c575d00368c8471d3038f813398be2e500739cef5c7c4a47b')  # use for xsdk-0.5.0
     version('6.0', sha256='ceab842e9fbce2f2de971ba6226967caaf1627b3e5d10799c3bd2e7c3285ba8b')  # use for xsdk-0.4.0
@@ -90,7 +91,8 @@ class Tasmanian(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        if '+xsdkflags' in spec:
+        # 7.1 is the last version to use xSDK legacy build options
+        if '+xsdkflags' in spec and spec.satisfies('@:7.1'):
             args = [
                 '-DUSE_XSDK_DEFAULTS:BOOL=ON',
                 '-DXSDK_ENABLE_PYTHON:BOOL={0}'.format(
@@ -109,20 +111,14 @@ class Tasmanian(CMakePackage):
                     'ON' if '+fortran' in spec else 'OFF'), ]
         else:
             args = [
-                '-DTasmanian_ENABLE_OPENMP:BOOL={0}'.format(
-                    'ON' if '+openmp' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_BLAS:BOOL={0}'.format(
-                    'ON' if '+blas' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_PYTHON:BOOL={0}'.format(
-                    'ON' if '+python' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_MPI:BOOL={0}'.format(
-                    'ON' if '+mpi' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_CUDA:BOOL={0}'.format(
-                    'ON' if '+cuda' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_MAGMA:BOOL={0}'.format(
-                    'ON' if '+magma' in spec else 'OFF'),
-                '-DTasmanian_ENABLE_FORTRAN:BOOL={0}'.format(
-                    'ON' if '+fortran' in spec else 'OFF'), ]
+                self.define_from_variant('Tasmanian_ENABLE_OPENMP', 'openmp'),
+                self.define_from_variant('Tasmanian_ENABLE_BLAS', 'blas'),
+                self.define_from_variant('Tasmanian_ENABLE_PYTHON', 'python'),
+                self.define_from_variant('Tasmanian_ENABLE_MPI', 'mpi'),
+                self.define_from_variant('Tasmanian_ENABLE_CUDA', 'cuda'),
+                self.define_from_variant('Tasmanian_ENABLE_MAGMA', 'magma'),
+                self.define_from_variant('Tasmanian_ENABLE_FORTRAN',
+                                         'fortran'), ]
 
         if spec.satisfies('+python'):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(

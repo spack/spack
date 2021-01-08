@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Strumpack(CMakePackage, CudaPackage):
     maintainers = ['pghysels']
 
     version('master', branch='master')
+    version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
     version('4.0.0', sha256='a3629f1f139865c74916f8f69318f53af6319e7f8ec54e85c16466fd7d256938')
     version('3.3.0', sha256='499fd3b58656b4b6495496920e5372895861ebf15328be8a7a9354e06c734bc7')
     version('3.2.0', sha256='34d93e1b2a3b8908ef89804b7e08c5a884cbbc0b2c9f139061627c0d2de282c1')
@@ -93,7 +94,11 @@ class Strumpack(CMakePackage, CudaPackage):
             '-DSTRUMPACK_COUNT_FLOPS=%s' % on_off('+count_flops'),
             '-DSTRUMPACK_TASK_TIMERS=%s' % on_off('+task_timers'),
             '-DSTRUMPACK_DEV_TESTING=%s' % on_off('+build_dev_tests'),
-            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests')
+            '-DSTRUMPACK_BUILD_TESTS=%s' % on_off('+build_tests'),
+            '-DTPL_BLAS_LIBRARIES=%s' % spec['blas'].libs.joined(";"),
+            '-DTPL_LAPACK_LIBRARIES=%s' % spec['lapack'].libs.joined(";"),
+            '-DTPL_SCALAPACK_LIBRARIES=%s' % spec['scalapack'].
+            libs.joined(";"),
         ]
 
         if spec.satisfies('@:3.9.999'):

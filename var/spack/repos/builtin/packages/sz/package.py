@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,12 +9,21 @@ from spack import *
 class Sz(CMakePackage):
     """Error-bounded Lossy Compressor for HPC Data"""
 
-    homepage = "https://collab.cels.anl.gov/display/ESR/SZ"
-    url      = "https://github.com/disheng222/SZ/archive/v2.1.8.0.tar.gz"
-    git      = "https://github.com/disheng222/sz"
+    homepage = "https://szcompressor.org"
+    url      = "https://github.com/szcompressor/SZ/archive/v2.1.10.tar.gz"
+    git      = "https://github.com/szcompressor/sz"
     maintainers = ['disheng222', 'robertu94']
 
-    version('develop', branch='master')
+    def url_for_version(self, version):
+        """provide url to ensure that download counting via github releases
+        works accurately"""
+        url = "https://github.com/szcompressor/SZ/releases/download/v{0}/SZ-{0}.tar.gz"
+        return url.format(version)
+
+    version('master', branch='master')
+    version('2.1.11', sha256='85b8ef99344a3317ba9ee63ca4b9d99a51d1832d4d8880e01c7c56b3a69cacc9')
+    version('2.1.10', sha256='3aba7619bdb5412218f162696f946c9d3a3df5acf128ddc685b21e45c11f6ae3',
+            url="https://github.com/szcompressor/SZ/releases/download/v2.1.10/sz-2.1.10.tar.gz")
     version('2.1.9', sha256='491724ff1c0eaaab5e1a7a28e36aba6da9dcbeddb29d8d21a6d1388383d4891e')
     version('2.1.8.3', sha256='be94f3c8ab03d6849c59a98e0ebf80816a6b8d07a1d762a4b285498acb2f3871')
     version('2.1.8.1', sha256='a27c9c9da16c9c4232c54813ba79178945f47609043f11501d49a171e47d3f46')
@@ -40,6 +49,7 @@ class Sz(CMakePackage):
     variant('random_access', default=False, description="build the random access compression mode")
     variant('fortran', default=False, description='Enable fortran compilation')
     variant('shared', default=True, description="build shared versions of the libraries")
+    variant('stats', default=False, description="build profiling statistics for compression")
 
     # Part of latest sources don't support -O3 optimization
     # with Fujitsu compiler.
@@ -122,4 +132,9 @@ class Sz(CMakePackage):
             args.append("-DBUILD_SHARED_LIBS=ON")
         else:
             args.append("-DBUILD_SHARED_LIBS=OFF")
+
+        if "+stats" in self.spec:
+            args.append("-DBUILD_STATS=ON")
+        else:
+            args.append("-DBUILD_STATS=OFF")
         return args

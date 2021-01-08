@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -91,6 +91,19 @@ class Amber(Package, CudaPackage):
         patch(patch_url_str.format(ver, num),
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
+    # Patch to add ppc64le in config.guess
+    patch('ppc64le.patch', when='@18.20')
+
+    # Patch to add aarch64 in config.guess
+    patch('aarch64.patch', when='@18.20')
+
+    # Workaround to modify the AmberTools script when using the NVIDIA
+    # compilers
+    patch('nvhpc.patch', when='@18.20 %nvhpc')
+
+    # Workaround to use NVIDIA compilers to build the bundled Boost
+    patch('nvhpc-boost.patch', when='@18.20 %nvhpc')
+
     variant('mpi', description='Build MPI executables',
             default=True)
     variant('openmp', description='Use OpenMP pragmas to parallelize',
@@ -101,6 +114,7 @@ class Amber(Package, CudaPackage):
             default=False)
 
     depends_on('zlib')
+    depends_on('bzip2')
     depends_on('flex', type='build')
     depends_on('bison', type='build')
     depends_on('netcdf-fortran')
@@ -125,6 +139,12 @@ class Amber(Package, CudaPackage):
     def setup_build_environment(self, env):
         amber_src = self.stage.source_path
         env.set('AMBERHOME', amber_src)
+
+        # The bundled Boost does not detect the bzip2 package, but
+        # will silently fall back to a system install (if available).
+        # Force it to use the bzip2 package.
+        env.prepend_path('CPATH', self.spec['bzip2'].prefix.include)
+
         # CUDA
         if self.spec.satisfies('+cuda'):
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
@@ -146,6 +166,8 @@ class Amber(Package, CudaPackage):
             compiler = 'intel'
         elif self.spec.satisfies('%pgi'):
             compiler = 'pgi'
+        elif self.spec.satisfies('%nvhpc'):
+            compiler = 'pgi'
         elif self.spec.satisfies('%clang'):
             compiler = 'clang'
         else:
@@ -165,6 +187,10 @@ class Amber(Package, CudaPackage):
             update(*(['--update']))
         else:
             base_args += ['--no-updates']
+
+        # Non-x86 architecture
+        if self.spec.target.family != 'x86_64':
+            base_args += ['-nosse']
 
         # Single core
         conf(*(base_args + [compiler]))

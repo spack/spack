@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,10 @@ from spack import *
 
 
 class Sollve(CMakePackage):
-    """The SOLLVE Project aims at scaling OpenMP by leveraging LLVM for exascale
-       performance and portability of applications.  This package provides a
-       collection of Clang/LLVM compilers and an OpenMP runtime library.
+    """The SOLLVE Project aims at scaling OpenMP by leveraging LLVM for
+       exascale performance and portability of applications.  This package
+       provides a collection of Clang/LLVM compilers and an OpenMP runtime
+       library.
     """
 
     homepage = 'https://www.bnl.gov/compsci/projects/SOLLVE/'
@@ -136,6 +137,8 @@ class Sollve(CMakePackage):
 
     conflicts('%gcc@:5.0.999')
     conflicts('+omp_tsan')
+
+    patch('disable_unused_lock.patch', when='@1.0a2', working_dir='projects/openmp')
 
     @run_before('cmake')
     def check_darwin_lldb_codesign_requirement(self):

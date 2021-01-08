@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,4 +22,4 @@ class RRgeos(RPackage):
 
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-sp@1.1-0:', type=('build', 'run'))
-    depends_on('geos@3.2.0:')
+    depends_on('geos@3.2.0:3.8.0')

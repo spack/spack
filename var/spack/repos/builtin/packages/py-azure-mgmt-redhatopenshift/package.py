@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyAzureMgmtRedhatopenshift(PythonPackage):
     """
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-redhatopenshift/azure-mgmt-redhatopenshift-0.1.0.zip"
+    pypi = "azure-mgmt-redhatopenshift/azure-mgmt-redhatopenshift-0.1.0.zip"
 
     version('0.1.0', sha256='565afbc63f5283f37c76135174f2ca20dd417da3e24b3fb1e132c4a0e2a2c5bc')
 

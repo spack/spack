@@ -1,9 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class BerkeleyDb(AutotoolsPackage):
@@ -29,7 +27,9 @@ class BerkeleyDb(AutotoolsPackage):
             filter_file(r'gsg_db_server', '', 'dist/Makefile.in')
 
     def configure_args(self):
-        return [
+        spec = self.spec
+
+        config_args = [
             '--disable-static',
             '--enable-cxx',
             '--enable-dbm',
@@ -40,3 +40,23 @@ class BerkeleyDb(AutotoolsPackage):
             # depends on Berkey DB, creating a circular dependency
             '--with-repmgr-ssl=no',
         ]
+
+        # The default glibc provided by CentOS 7 and Red Hat 8 does not provide
+        # proper atomic support when using the NVIDIA compilers
+        if (spec.satisfies('%nvhpc')
+                and (spec.satisfies('os=centos7') or spec.satisfies('os=rhel8'))):
+            config_args.append('--disable-atomicsupport')
+
+        return config_args
+
+    def test(self):
+        """Perform smoke tests on the installed package binaries."""
+        exes = [
+            'db_checkpoint', 'db_deadlock', 'db_dump', 'db_load',
+            'db_printlog', 'db_stat', 'db_upgrade', 'db_verify'
+        ]
+        for exe in exes:
+            reason = 'test version of {0} is {1}'.format(exe,
+                                                         self.spec.version)
+            self.run_test(exe, ['-V'], [self.spec.version.string],
+                          installed=True, purpose=reason, skip_missing=True)

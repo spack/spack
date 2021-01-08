@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Blaspp(CMakePackage, CudaPackage):
@@ -11,83 +12,42 @@ class Blaspp(CMakePackage, CudaPackage):
        Innovative Computing Laboratory at the University of Tennessee,
        Knoxville."""
 
-    homepage = "https://bitbucket.org/icl/blaspp"
-    git      = "https://bitbucket.org/icl/blaspp"
+    homepage = 'https://bitbucket.org/icl/blaspp'
+    git = homepage
+    url = 'https://bitbucket.org/icl/blaspp/downloads/blaspp-2020.09.00.tar.gz'
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
-    version('develop', commit='6293d96')
+    version('master', branch='master')
+    version('2020.10.02', sha256='36e45bb5a8793ba5d7bc7c34fc263f91f92b0946634682937041221a6bf1a150')
+    version('2020.10.01', sha256='1a05dbc46caf797d59a7c189216b876fdb1b2ff3e2eb48f1e6ca4b2756c59153')
+    version('2020.10.00', sha256='ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795')
 
-    variant('gfort',
-            default=False,
-            description=('Use GNU Fortran interface. '
-                         'Default is Intel interface. (MKL)'))
-    variant('ilp64',
-            default=False,
-            description=('Use 64bit integer interface. '
-                         'Default is 32bit. (MKL & ESSL)'))
-    variant('openmp',
-            default=False,
-            description=('Use OpenMP threaded backend. '
-                         'Default is sequential. (MKL & ESSL)'))
+    variant('openmp', default=True, description='Use OpenMP internally.')
+    variant('cuda',   default=True, description='Build with CUDA')
+    variant('shared', default=True, description='Build shared libraries')
 
+    depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
-    # 1) The CMake options exposed by `blaspp` allow for a value called `auto`.
-    #    The value is not needed here as the choice of dependency in the spec
-    #    determines the appropriate flags.
-    #
-    # 2) BLASFinder.cmake handles most options. For `auto`, it searches all
-    #    blas libraries listed in `def_lib_list`.
-    #
-    # 3) ?? Custom blas library can be supplied via `BLAS_LIBRARIES`.
-    #
+    # This will attempt to use a supported version of OpenBLAS
+    depends_on('openblas@:0.3.5', when='^openblas')
+    # In some cases, the spack concretizer will fail to use a supported
+    # version of OpenBLAS.  In this case, present an error message.
+    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >=0.3.6')
+
     def cmake_args(self):
         spec = self.spec
-        args = ['-DBLASPP_BUILD_TESTS:BOOL={0}'.format(
-            'ON' if self.run_tests else 'OFF')]
+        return [
+            '-Dbuild_tests=%s'       % self.run_tests,
+            '-Duse_openmp=%s'        % ('+openmp' in spec),
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
+            '-Duse_cuda=%s'          % ('+cuda' in spec),
+            '-DBLAS_LIBRARIES=%s'    % spec['blas'].libs.joined(';')
+        ]
 
-        if '+gfort' in spec:
-            args.append('-DBLAS_LIBRARY_MKL="GNU gfortran conventions"')
+    def check(self):
+        # If the tester fails to build, ensure that the check() fails.
+        if os.path.isfile(join_path(self.build_directory, 'test', 'tester')):
+            make('check')
         else:
-            args.append('-DBLAS_LIBRARY_MKL="Intel ifort conventions"')
-
-        if '+ilp64' in spec:
-            args.append('-DBLAS_LIBRARY_INTEGER="int64_t (ILP64)"')
-        else:
-            args.append('-DBLAS_LIBRARY_INTEGER="int (LP64)"')
-
-        if '+openmp' in spec:
-            args.append(['-DUSE_OPENMP=ON',
-                         '-DBLAS_LIBRARY_THREADING="threaded"'])
-        else:
-            args.append('-DBLAS_LIBRARY_THREADING="sequential"')
-
-        # `blaspp` has an implicit CUDA detection mechanism. This disables it
-        # in cases where it may backfire. One such case is when `cuda` is
-        # external and marked with `buildable=false`. `blaspp`'s CMake CUDA
-        # detection mechanism finds CUDA but doesn't set certain paths properly
-        # which leads to a build issues [1].
-        #
-        # [1]: https://bitbucket.org/icl/blaspp/issues/6/compile-error-due-to-implicit-cuda
-        if '~cuda' in spec:
-            args.append('-DCMAKE_CUDA_COMPILER=')
-
-        # Missing:
-        #
-        # - acml  : BLAS_LIBRARY="AMD ACML"
-        #           BLAS_LIBRARY_THREADING= threaded/sequential
-        #
-        # - apple : BLAS_LIBRARY="Apple Accelerate" (veclibfort ???)
-        #
-        if '^mkl' in spec:
-            args.append('-DBLAS_LIBRARY="Intel MKL"')
-        elif '^essl' in spec:
-            args.append('-DBLAS_LIBRARY="IBM ESSL"')
-        elif '^openblas' in spec:
-            args.append('-DBLAS_LIBRARY="OpenBLAS"')
-        elif '^cray-libsci' in spec:
-            args.append('-DBLAS_LIBRARY="Cray LibSci"')
-        else:  # e.g. netlib-lapack
-            args.append('-DBLAS_LIBRARY="generic"')
-
-        return args
+            raise Exception('The tester was not built!')

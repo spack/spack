@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class ShinyServer(CMakePackage):
     version('1.5.3.838', sha256='6fd1b12cd1cbe5c64cacbec4accefe955353f9c675e5feff809c0e911a382141')
 
     depends_on('python@:2.8')  # docs say: "Really.  3.x will not work"
-    depends_on('cmake@2.8.10:')
+    depends_on('cmake@2.8.10:', type='build')
     depends_on('git')
     depends_on('r+X')
     depends_on('openssl')

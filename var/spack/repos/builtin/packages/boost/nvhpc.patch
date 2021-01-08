@@ -1,0 +1,45 @@
+--- a/tools/build/src/engine/build.sh	2020-08-25 08:44:18.873304084 -0700
++++ b/tools/build/src/engine/build.sh	2020-08-25 08:44:34.215370891 -0700
+@@ -89,7 +89,7 @@
+             kylix) ( ${CXX:=bc++} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+             mipspro) ( ${CXX:=CC} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+             pathscale) ( ${CXX:=pathCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+-            pgi) ( ${CXX:=pgc++} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
++            pgi) ( ${CXX:=nvc++} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+             sun*) ( ${CXX:=CC} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+             clang*) ( ${CXX:=clang++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+             tru64cxx) ( ${CXX:=cc} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+@@ -140,7 +140,7 @@
+     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh && test_cxx11 intel-linux ; then
+         B2_TOOLSET=intel-linux
+         B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+-    elif test_path pgc++ && test_cxx11 pgi ; then B2_TOOLSET=pgi
++    elif test_path nvc++ && test_cxx11 pgi ; then B2_TOOLSET=pgi
+     elif test_path pathCC && test_cxx11 pathscale ; then B2_TOOLSET=pathscale
+     elif test_path como && test_cxx11 como ; then B2_TOOLSET=como
+     elif test_path KCC && test_cxx11 kcc ; then B2_TOOLSET=kcc
+@@ -345,7 +345,7 @@
+     ;;
+ 
+     pgi)
+-        CXX=${CXX:=pgc++}
++        CXX=${CXX:=nvc++}
+         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+         B2_CXX="${CXX} -std=c++11"
+         B2_CXXFLAGS_RELEASE="-fast -s"
+--- a/tools/build/src/tools/pgi.jam	2020-08-25 08:45:01.015487600 -0700
++++ b/tools/build/src/tools/pgi.jam	2020-08-25 08:45:16.462554871 -0700
+@@ -26,11 +26,11 @@
+ {
+   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
+ 
+-  local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
++  local l_command = [ common.get-invocation-command pgi : nvc++ : $(command) ] ;
+ 
+   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
+     
+-  command_c = $(command_c[1--2]) $(l_command[-1]:B=pgcc) ;
++  command_c = $(command_c[1--2]) $(l_command[-1]:B=nvc) ;
+ 
+   toolset.flags pgi CONFIG_C_COMMAND $(condition) : $(command_c) ;
+ 

@@ -16,16 +16,16 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install Python Packages
       run: |
         pip install --upgrade pip
         pip install --upgrade vermin
     - name: Minimum Version (Spack's Core)
-      run: vermin --backport argparse -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
     - name: Minimum Version (Repositories)
-      run: vermin --backport argparse -t=2.6- -t=3.5- -v var/spack/repos
-  flake8:
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v var/spack/repos
+  style:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -33,25 +33,25 @@ jobs:
         fetch-depth: 0
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install Python packages
       run: |
-        pip install --upgrade pip six setuptools flake8
+        pip install --upgrade pip six setuptools flake8 mypy black
     - name: Setup git configuration
       run: |
         # Need this for the git tests to succeed.
         git --version
         . .github/workflows/setup_git.sh
-    - name: Run flake8 tests
+    - name: Run style tests
       run: |
-          share/spack/qa/run-flake8-tests
+          share/spack/qa/run-style-tests
   documentation:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
     - name: Install System packages
       run: |
         sudo apt-get -y update

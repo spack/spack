@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,11 +21,11 @@ class Cryptsetup(AutotoolsPackage):
     version('2.2.2', sha256='2af0ec9551ab9c870074cae9d3f68d82cab004f4095fa89db0e4413713424a46')
     version('2.2.1', sha256='94e79a31ed38bdb0acd9af7ccca1605a2ac62ca850ed640202876b1ee11c1c61')
 
-    depends_on('libuuid', type=('build', 'link'))
+    depends_on('uuid', type=('build', 'link'))
     depends_on('lvm2', type=('build', 'link'))
     depends_on('popt', type=('build', 'link'))
     depends_on('json-c', type=('build', 'link'))
-    depends_on('util-linux~libuuid', type=('build', 'link'))
+    depends_on('util-linux', type=('build', 'link'))
     depends_on('gettext', type=('build', 'link'))
 
     depends_on('pkgconfig', type='build')
@@ -35,6 +35,7 @@ class Cryptsetup(AutotoolsPackage):
     depends_on('m4',       type='build')
 
     depends_on('automake@:1.16.1', when='@2.2.1', type='build')
+    depends_on('openssl')
 
     # Upstream includes support for discovering the location of the libintl
     # library but is missing the bit in the Makefile.ac that includes it in
@@ -49,7 +50,8 @@ class Cryptsetup(AutotoolsPackage):
 
     def configure_args(self):
         args = [
-            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix)
+            'systemd_tmpfilesdir={0}/tmpfiles.d'.format(self.prefix),
+            '--with-crypto_backend=openssl',
         ]
         return args
 

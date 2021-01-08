@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,7 +52,7 @@ class RDevtools(RPackage):
     depends_on('r-roxygen2@6.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-roxygen2@7.1.0:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-rstudioapi@0.7.0:', type=('build', 'run'))
-    depends_on('r-rstudioapi@0.11.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.11:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-rversions@2.0.1:', when='@2.3.0:', type=('build', 'run'))
     depends_on('r-sessioninfo@1.1.1:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-testthat@2.1.1:', when='@2.0.0:', type=('build', 'run'))

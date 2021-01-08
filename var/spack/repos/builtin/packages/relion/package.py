@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -48,7 +48,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('libtiff')
 
     depends_on('cuda', when='+cuda')
-    depends_on('cuda@9:10.99', when='@3: +cuda')
+    depends_on('cuda@9:', when='@3: +cuda')
 
     def cmake_args(self):
 
@@ -76,3 +76,8 @@ class Relion(CMakePackage, CudaPackage):
             args += ['-DMKLFFT=ON', '-DFORCE_OWN_TBB=ON', '-DALTCPU=ON']
 
         return args
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-std=c99', '-c99', 'src/apps/CMakeLists.txt')

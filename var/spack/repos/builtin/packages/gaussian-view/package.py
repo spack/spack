@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 # ----------------------------------------------------------------------------
 
 from spack import *
+import llnl.util.tty as tty
 import os
 
 
@@ -13,29 +14,84 @@ class GaussianView(Package):
     Gaussian. It aids in the creation of Gaussian input files, enables the
     user to run Gaussian calculations from a graphical interface without the
     need for using a command line instruction, and helps in the interpretation
-    of Gaussian output"""
+    of Gaussian output.
+
+    Needs post-install steps to make it run!
+    See package installation logs for details."""
 
     homepage = "https://gaussian.com/gaussview6/"
     manual_download = True
 
-    version('6016',
+    maintainers = ['antoniokaust', 'dev-zero']
+
+    version('6.1.6',
+            sha256='c9824fd0372c27425b53de350f3a83b27de75ca694219b3ef18cd7d92937db6c',
+            extension='tbz')
+
+    version('6.0.16',
             '5dd6a8df8c81763e43a308b3a18d2d3b825d3597e9628dcf43e563d1867b9638',
             extension='tbz')
 
-    depends_on('gaussian@16-B.01', type='run')
+    variant(
+        'gaussian-src',
+        default=False,
+        description='Use gaussian-src instead of gaussian (prebuilt binary)'
+    )
+
+    depends_on('gaussian@16-B.01', type='run', when='@:6.0.99')
+    depends_on('gaussian@16-C.01', type='run', when='~gaussian-src@6.1:')
+    depends_on('gaussian-src@16-C.01', type='run', when='+gaussian-src@6.1:')
+
+    conflicts('+gaussian-src', when='@:6.0.99')
 
     def url_for_version(self, version):
-        return "file://{0}/gv-{1}-Linux-x86_64.tbz".format(os.getcwd(),
-                                                           version)
+        return "file://{0}/gv{1}-linux-x86_64.tbz".format(
+            os.getcwd(),
+            version.up_to(2).joined)
 
     def install(self, spec, prefix):
-        install_tree(os.getcwd(), self.prefix)
+        install_tree('.', prefix)
 
+    @run_after('install')
+    def caveats(self):
+        perm_script = 'spack_perms_fix.sh'
+        perm_script_path = join_path(self.spec.prefix.bin, perm_script)
+        with open(perm_script_path, 'w') as f:
+            env = spack.tengine.make_environment(dirs=self.package_dir)
+            t = env.get_template(perm_script + '.j2')
+            f.write(t.render({'prefix': self.spec.prefix}))
+        chmod = which('chmod')
+        chmod('0555', perm_script_path)
+
+        tty.warn("""
+For a working GaussianView installation, all executable files can only be accessible by
+the owner and the group but not the world.
+
+We've installed a script that will make the necessary changes;
+read through it and then execute it:
+
+    {0}
+
+If you have to give others access, please customize the group membership of the package
+files as documented here:
+
+    https://spack.readthedocs.io/en/latest/build_settings.html#package-permissions"""
+                 .format(perm_script_path))
+
+    @when('@:6.0.99')
     def setup_run_environment(self, env):
         env.set('GV_DIR', self.prefix)
-        env.prepend_path('PATH', self.prefix)
+
         env.set('GV_LIB_PATH', self.prefix.lib)
+        env.set('ALLOWINDIRECT', '1')
+        env.prepend_path('PATH', self.prefix)
         env.prepend_path('GV_LIB_PATH', self.prefix.lib.MesaGL)
         env.prepend_path('LD_LIBRARY_PATH', self.prefix.lib.MesaGL)
-        env.set('ALLOWINDIRECT', '1')
         env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
+
+    @when('@6.1:')
+    def setup_run_environment(self, env):
+        env.set('GV_DIR', self.prefix)
+
+        # the wrappers in gv/exec setup everything just nicely
+        env.prepend_path('PATH', join_path(self.prefix, 'exec'))

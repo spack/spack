@@ -1,9 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
 import re
 import pytest
 
@@ -126,7 +124,7 @@ class TestLmod(object):
         assert len([x for x in content if 'unsetenv("BAR")' in x]) == 1
 
         content = modulefile_content(
-            'libdwarf %clang platform=test target=x86'
+            'libdwarf platform=test target=core2'
         )
 
         assert len(
@@ -229,7 +227,7 @@ class TestLmod(object):
         content = modulefile_content('override-module-templates')
         assert 'Override even better!' in content
 
-        content = modulefile_content('mpileaks arch=x86-linux')
+        content = modulefile_content('mpileaks target=x86_64')
         assert 'Override even better!' in content
 
     @pytest.mark.usefixtures('config')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,6 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("py-cffi", type=("run"))
     depends_on("py-numpy", type=("run"))
 
-    import_modules = ['dolfinx']
     phases = ['build_ext', 'build', 'install']
 
     build_directory = 'python'

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -49,7 +49,7 @@ class Spfft(CMakePackage, CudaPackage):
     depends_on('hip', when='+rocm')
     depends_on('hsakmt-roct', when='+rocm', type='link')
     depends_on('hsa-rocr-dev', when='+rocm', type='link')
-    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
 
     depends_on('cuda@:10', when='@:0.9.11 +cuda')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,19 +17,17 @@ class Veloc(CMakePackage):
     tags = ['ecp']
 
     version('master', branch='master')
-    version('1.1',    sha256='2bbdacf3e0ce4e7c9e360874d8d85b405525bdc7bd992bdb1f1ba49218072160', preferred=True)
+    version('1.4',    sha256='d5d12aedb9e97f079c4428aaa486bfa4e31fe1db547e103c52e76c8ec906d0a8')
+    version('1.1',    sha256='2bbdacf3e0ce4e7c9e360874d8d85b405525bdc7bd992bdb1f1ba49218072160')
     version('1.0',    sha256='d594b73d6549a61fce8e67b8984a17cebc3e766fc520ed1636ae3683cdde77cb')
     version('1.0rc1', sha256='81686ca0994a22475911d38d21c7c74b64ffef4ca872fd01f76d155c5124b0bc')
 
-    depends_on('boost~atomic~chrono~clanglibcpp~date_time~debug~exception'
-               '~filesystem~graph~icu~iostreams~locale~log~math~mpi'
-               '~multithreaded~numpy~program_options~python~random~regex'
-               '~serialization~shared~signals~singlethreaded~system'
-               '~taggedlayout~test~thread~timer~versionedlayout~wave')
+    depends_on('boost')
     depends_on('libpthread-stubs')
     depends_on('mpi')
     depends_on('er')
     depends_on('axl')
+    depends_on('openssl')  # Relies on the OpenSSL crypto library for checksums
     depends_on('pdsh', when='@master')
     depends_on('cmake@3.9:', type='build')
 

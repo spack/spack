@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -45,43 +45,47 @@ class Mfem(Package):
     # other version.
     version('develop', branch='master')
 
+    version('4.2.0',
+            '4352a225b55948d2e73a5ee88cece0e88bdbe7ba6726a23d68b2736d3221a86d',
+            url='https://bit.ly/mfem-4-2', extension='tar.gz',
+            preferred=True)
+
     version('4.1.0',
             '4c83fdcf083f8e2f5b37200a755db843cdb858811e25a8486ad36b2cbec0e11d',
-            url='https://bit.ly/mfem-4-1', extension='.tar.gz',
-            preferred=True)
+            url='https://bit.ly/mfem-4-1', extension='tar.gz')
 
     # Tagged development version used by xSDK
     version('4.0.1-xsdk', commit='c55c80d17b82d80de04b849dd526e17044f8c99a')
 
     version('4.0.0',
             'df5bdac798ea84a263979f6fbf79de9013e1c55562f95f98644c3edcacfbc727',
-            url='https://bit.ly/mfem-4-0', extension='.tar.gz')
+            url='https://bit.ly/mfem-4-0', extension='tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.4.1-laghos-v2.0', tag='laghos-v2.0')
 
     version('3.4.0',
             sha256='4e73e4fe0482636de3c5dc983cd395839a83cb16f6f509bd88b053e8b3858e05',
-            url='https://bit.ly/mfem-3-4', extension='.tar.gz')
+            url='https://bit.ly/mfem-3-4', extension='tar.gz')
 
     version('3.3.2',
             sha256='b70fa3c5080b9ec514fc05f4a04ff74322b99ac4ecd6d99c229f0ed5188fc0ce',
-            url='https://goo.gl/Kd7Jk8', extension='.tar.gz')
+            url='https://goo.gl/Kd7Jk8', extension='tar.gz')
 
     # Tagged development version used by the laghos package:
     version('3.3.1-laghos-v1.0', tag='laghos-v1.0')
 
     version('3.3',
             sha256='b17bd452593aada93dc0fee748fcfbbf4f04ce3e7d77fdd0341cc9103bcacd0b',
-            url='http://goo.gl/Vrpsns', extension='.tar.gz')
+            url='http://goo.gl/Vrpsns', extension='tar.gz')
 
     version('3.2',
             sha256='2938c3deed4ec4f7fd5b5f5cfe656845282e86e2dcd477d292390058b7b94340',
-            url='http://goo.gl/Y9T75B', extension='.tar.gz')
+            url='http://goo.gl/Y9T75B', extension='tar.gz')
 
     version('3.1',
             sha256='841ea5cf58de6fae4de0f553b0e01ebaab9cd9c67fa821e8a715666ecf18fc57',
-            url='http://goo.gl/xrScXn', extension='.tar.gz')
+            url='http://goo.gl/xrScXn', extension='tar.gz')
 
     variant('static', default=True,
             description='Build static library')
@@ -101,6 +105,7 @@ class Mfem(Package):
     variant('raja', default=False, description='Enable RAJA backend')
     variant('libceed', default=False, description='Enable libCEED backend')
     variant('umpire', default=False, description='Enable Umpire support')
+    variant('amgx', default=False, description='Enable NVIDIA AmgX solver support')
 
     variant('threadsafe', default=False,
             description=('Enable thread safe features.'
@@ -170,6 +175,8 @@ class Mfem(Package):
     conflicts('+raja', when='mfem@:3.99.99')
     conflicts('+libceed', when='mfem@:4.0.99')
     conflicts('+umpire', when='mfem@:4.0.99')
+    conflicts('+amgx', when='mfem@:4.1.99')
+    conflicts('+amgx', when='~cuda')
 
     conflicts('+superlu-dist', when='~mpi')
     conflicts('+strumpack', when='~mpi')
@@ -193,6 +200,8 @@ class Mfem(Package):
     depends_on('sundials@2.7.0:+mpi+hypre', when='@3.3.2:+sundials+mpi')
     depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
+    depends_on('sundials@5.4.0:+cuda', when='@4.2.0:+sundials+cuda')
+    depends_on('pumi@2.2.3', when='@4.2.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
     depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
@@ -221,21 +230,31 @@ class Mfem(Package):
     conflicts('+superlu-dist',
               when='mfem@:4.0.99 ^hypre@2.16.0: ^superlu-dist@6:')
     # The STRUMPACK v3 interface in MFEM seems to be broken as of MFEM v4.1
-    # when using hypre version >= 2.16.0:
-    conflicts('+strumpack', when='mfem@4.0.0: ^hypre@2.16.0:')
+    # when using hypre version >= 2.16.0.
+    # This issue is resolved in v4.2.
+    conflicts('+strumpack', when='mfem@4.0.0:4.1.99 ^hypre@2.16.0:')
 
-    depends_on('occa@1.0.8:', when='+occa')
+    depends_on('occa@1.0.8:', when='@:4.1.99+occa')
+    depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
 
     depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     depends_on('raja+cuda', when='+raja+cuda')
 
-    depends_on('libceed@0.6:', when='+libceed')
+    depends_on('libceed@0.6:', when='@:4.1.99+libceed')
+    depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
 
     depends_on('umpire@2.0.0:', when='+umpire')
     depends_on('umpire+cuda', when='+umpire+cuda')
+
+    depends_on('amgx', when='+amgx')
+    # MPI is enabled by default
+    depends_on('amgx~mpi', when='+amgx~mpi')
+    for sm_ in CudaPackage.cuda_arch_values:
+        depends_on('amgx cuda_arch={0}'.format(sm_),
+                   when='+amgx cuda_arch=sm_{0}'.format(sm_))
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
@@ -354,6 +373,7 @@ class Mfem(Package):
             'MFEM_USE_CUDA=%s' % yes_no('+cuda'),
             'MFEM_USE_OCCA=%s' % yes_no('+occa'),
             'MFEM_USE_RAJA=%s' % yes_no('+raja'),
+            'MFEM_USE_AMGX=%s' % yes_no('+amgx'),
             'MFEM_USE_CEED=%s' % yes_no('+libceed'),
             'MFEM_USE_UMPIRE=%s' % yes_no('+umpire')]
 
@@ -474,10 +494,13 @@ class Mfem(Package):
                 ld_flags_from_library_list(spec[sun_spec].libs)]
 
         if '+petsc' in spec:
-            options += [
-                'PETSC_OPT=%s' % spec['petsc'].headers.cpp_flags,
-                'PETSC_LIB=%s' %
-                ld_flags_from_library_list(spec['petsc'].libs)]
+            petsc = spec['petsc']
+            if '+shared' in petsc:
+                options += [
+                    'PETSC_OPT=%s' % petsc.headers.cpp_flags,
+                    'PETSC_LIB=%s' % ld_flags_from_library_list(petsc.libs)]
+            else:
+                options += ['PETSC_DIR=%s' % petsc.prefix]
 
         if '+pumi' in spec:
             pumi_libs = ['pumi', 'crv', 'ma', 'mds', 'apf', 'pcu', 'gmi',
@@ -556,6 +579,15 @@ class Mfem(Package):
                         'RAJA_LIB=%s' %
                         ld_flags_from_dirs([spec['raja'].prefix.lib],
                                            ['RAJA'])]
+
+        if '+amgx' in spec:
+            amgx = spec['amgx']
+            if '+shared' in amgx:
+                options += ['AMGX_OPT=-I%s' % amgx.prefix.include,
+                            'AMGX_LIB=%s' %
+                            ld_flags_from_library_list(amgx.libs)]
+            else:
+                options += ['AMGX_DIR=%s' % amgx.prefix]
 
         if '+libceed' in spec:
             options += ['CEED_OPT=-I%s' % spec['libceed'].prefix.include,
@@ -665,6 +697,15 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    # The files referenced in this patch method do not exist in stable
+    # versions earlier than 4.1.
+    @when('@4.1:')
+    def patch(self):
+        # Remove the byte order mark since it messes with some compilers
+        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
+        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
+        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
+
     @property
     def suitesparse_components(self):
         """Return the SuiteSparse components needed by MFEM."""
@@ -676,9 +717,14 @@ class Mfem(Package):
     @property
     def sundials_components(self):
         """Return the SUNDIALS components needed by MFEM."""
-        sun_comps = 'arkode,cvode,nvecserial,kinsol'
+        sun_comps = 'arkode,cvodes,nvecserial,kinsol'
         if '+mpi' in self.spec:
-            sun_comps += ',nvecparhyp,nvecparallel'
+            if self.spec.satisfies('@4.2:'):
+                sun_comps += ',nvecparallel,nvecmpiplusx'
+            else:
+                sun_comps += ',nvecparhyp,nvecparallel'
+        if '+cuda' in self.spec:
+            sun_comps += ',nveccuda'
         return sun_comps
 
     @property

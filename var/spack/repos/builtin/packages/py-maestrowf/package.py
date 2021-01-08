@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyMaestrowf(PythonPackage):
        simulation studies."""
 
     homepage = "https://github.com/LLNL/maestrowf/"
-    url      = "https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.8.tar.gz"
+    pypi = "maestrowf/maestrowf-1.1.8.tar.gz"
     git      = "https://github.com/LLNL/maestrowf/"
 
     maintainers = ['FrankD412']
@@ -26,6 +26,7 @@ class PyMaestrowf(PythonPackage):
     # pypi releases
     version('1.1.8', sha256='fa8f8eb8dd3adfb9646d7b0dfd498a00423d2131adbc8dbc8016c4159b2ec1d5', preferred=True)
     version('1.1.7', sha256='ff1b6696f30254b105fcadd297ad437c0c666ebc70124b231a713b89f47f4e94')
+    version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0', url="https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.7.dev0.tar.gz")
     version('1.1.6', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')
     version('1.1.4', sha256='6603b93494e8e9d939a4ab40ecdfe7923a85960a8a8bddea4734e230d8144016')
     version('1.1.3', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')

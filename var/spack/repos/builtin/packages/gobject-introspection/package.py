@@ -1,10 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.paths import spack_root
+import spack.hooks.sbang as sbang
 
 
 class GobjectIntrospection(Package):
@@ -57,11 +57,19 @@ class GobjectIntrospection(Package):
         url = 'http://ftp.gnome.org/pub/gnome/sources/gobject-introspection/{0}/gobject-introspection-{1}.tar.xz'
         return url.format(version.up_to(2), version)
 
+    def setup_run_environment(self, env):
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+        env.prepend_path("GI_TYPELIB_PATH",
+                         join_path(self.prefix.lib, 'girepository-1.0'))
 
     def install(self, spec, prefix):
         configure("--prefix=%s" % prefix)
@@ -72,7 +80,7 @@ class GobjectIntrospection(Package):
         make("install")
 
     def setup_build_environment(self, env):
-        env.set('SPACK_SBANG', "%s/bin/sbang" % spack_root)
+        env.set('SPACK_SBANG', sbang.sbang_install_path())
 
     @property
     def parallel(self):

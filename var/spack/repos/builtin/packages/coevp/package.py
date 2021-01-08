@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,6 +60,13 @@ class Coevp(MakefilePackage):
         targets.append('LAPACK=%s' % self.spec['lapack'].libs.ld_flags)
 
         return targets
+
+    def edit(self, spec, prefix):
+        # libquadmath is only available x86_64 and powerle
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
+        if self.spec.target.family not in ['x86_64', 'ppc64le']:
+            comps = join_path('LULESH', 'Makefile')
+            filter_file('-lquadmath', '', comps)
 
     def install(self, spec, prefix):
         mkdir(prefix.bin)

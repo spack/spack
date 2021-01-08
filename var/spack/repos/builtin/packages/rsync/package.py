@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class Rsync(AutotoolsPackage):
     depends_on('xxhash', when='@3.2:')
     depends_on('zstd', when='@3.2:')
     depends_on('lz4', when='@3.2:')
+
+    conflicts('%nvhpc')
 
     def configure_args(self):
         return ['--with-included-zlib=no']

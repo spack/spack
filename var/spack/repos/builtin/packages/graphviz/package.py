@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -77,6 +77,7 @@ class Graphviz(AutotoolsPackage):
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
           when='@:2.40%intel')
     patch('ps2pdf.patch')
+    patch('implicit.patch', level=0, when='@:2.44.0')
 
     if not MACOS_VERSION:
         conflicts('+quartz',
@@ -117,6 +118,9 @@ class Graphviz(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
+    # required to build docs
+    depends_on('groff', type='build')
+    depends_on('ghostscript', type='build')
 
     parallel = False
 

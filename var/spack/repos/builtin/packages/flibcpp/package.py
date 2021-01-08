@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class Flibcpp(CMakePackage):
     git = "https://github.com/swig-fortran/flibcpp.git"
     url = "https://github.com/swig-fortran/flibcpp/archive/v0.3.1.tar.gz"
 
-    version('master', branch='master')
+    version('0.5.2', sha256='b9b4eb6431d5b56a54c37f658df7455eafd3d204a5534903b127e0c8a1c9b827')
     version('0.5.1', sha256='76db24ce7893f19ab97ea7260c39490ae1bd1e08a4cc5111ad7e70525a916993')
     version('0.5.0', sha256='94204198304ba4187815431859e5958479fa651a6f06f460b099badbf50f16b2')
     version('0.4.1', sha256='5c9a11af391fcfc95dd11b95338cff19ed8104df66d42b00ae54f6cde4da5bdf')
@@ -28,7 +28,7 @@ class Flibcpp(CMakePackage):
     variant('fstd', default='03', values=('none', '03', '08', '15', '18'),
             multi=False, description='Build with this Fortran standard')
 
-    depends_on('swig@fortran', type='build', when="+swig")
+    depends_on('swig@4.0.2-fortran', type='build', when="+swig")
     depends_on('py-sphinx', type='build', when="+doc")
 
     @run_before('cmake')
@@ -44,6 +44,6 @@ class Flibcpp(CMakePackage):
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('FLIBCPP_BUILD_DOCS', 'doc'),
             self.define_from_variant('FLIBCPP_FORTRAN_STD', 'fstd'),
-            self.define('BUILD_TESTING', bool(self.run_tests)),
+            self.define('FLIBCPP_BUILD_TESTS', bool(self.run_tests)),
             self.define('FLIBCPP_BUILD_EXAMPLES', bool(self.run_tests)),
         ]

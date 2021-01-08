@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,8 @@ class Lcals(MakefilePackage):
             arch = 'MIC'
         elif arch == 'x86_64' or arch == 'x86_32':
             arch = 'x86'
+        elif arch == 'aarch64':
+            arch = 'aarch64'
         else:
             raise InstallError('unknown architecture.')
 
@@ -71,6 +73,10 @@ class Lcals(MakefilePackage):
             elif microarch == 'avx' and arch == 'x86':
                 cxxflags += '-DLCALS_PLATFORM_X86_AVX -DLCALS_COMPILER_GNU '
                 cxx_compile += '-Ofast -mavx -finline-functions'
+                ' -finline-limit=10000 -std=c++11'
+            elif arch == 'aarch64':
+                cxxflags += '-DLCALS_COMPILER_GNU '
+                cxx_compile += '-Ofast -finline-functions'
                 ' -finline-limit=10000 -std=c++11'
             cxxflags += self.compiler.openmp_flag
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242')
+    version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9')
     version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46')
     version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
     version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe')
@@ -86,7 +88,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     @property
     def libs(self):
-        return find_libraries(['libssl', 'libcrypto'], root=self.prefix.lib)
+        return find_libraries(
+            ['libssl', 'libcrypto'], root=self.prefix, recursive=True)
 
     def handle_fetch_error(self, error):
         tty.warn("Fetching OpenSSL failed. This may indicate that OpenSSL has "
@@ -111,6 +114,11 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if 'clang' in self.compiler.cc and \
            'aarch64' in spack.architecture.sys_type():
             options.append('no-asm')
+
+        # The default glibc provided by CentOS 7 does not provide proper
+        # atomic support when using the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc os=centos7'):
+            options.append('-D__STDC_NO_ATOMICS__')
 
         config = Executable('./config')
         config('--prefix=%s' % prefix,

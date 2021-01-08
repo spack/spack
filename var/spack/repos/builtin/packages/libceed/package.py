@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,8 @@ class Libceed(Package):
 
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
-    version('develop', branch='master')
+    version('develop', branch='main')
+    version('0.7', tag='v0.7')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
     version('0.5', tag='v0.5')
     version('0.4', tag='v0.4')
@@ -23,16 +24,21 @@ class Libceed(Package):
 
     variant('occa', default=True, description='Enable OCCA backends')
     variant('cuda', default=False, description='Enable CUDA support')
+    variant('hip', default=False, description='Enable HIP support')
     variant('debug', default=False, description='Enable debug build')
     variant('libxsmm', default=False, description='Enable LIBXSMM backend')
     variant('magma', default=False, description='Enable MAGMA backend')
 
     conflicts('+libxsmm', when='@:0.2')
     conflicts('+magma', when='@:0.5')
+    conflicts('+hip', when='@:0.6')
 
     depends_on('cuda', when='+cuda')
+    depends_on('hip@3.8.0', when='@0.7:0.7.99+hip')
+    depends_on('hip@3.8.0:', when='@0.8:+hip')
 
     depends_on('occa@develop', when='@develop+occa')
+    depends_on('occa@1.1.0', when='@0.7:+occa')
     depends_on('occa@1.0.8:', when='@0.4+occa')
     depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2+occa')
     depends_on('occa+cuda', when='+occa+cuda')
@@ -98,6 +104,9 @@ class Libceed(Package):
             else:
                 # Disable CUDA auto-detection:
                 makeopts += ['CUDA_DIR=/disable-cuda']
+
+            if '+hip' in spec:
+                makeopts += ['HIP_DIR=%s' % spec['hip'].prefix]
 
             if '+libxsmm' in spec:
                 makeopts += ['XSMM_DIR=%s' % spec['libxsmm'].prefix]

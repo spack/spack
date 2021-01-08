@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -75,6 +75,9 @@ class Elpa(AutotoolsPackage, CudaPackage):
         for feature in simd_features:
             msg = '--enable-{0}' if feature in spec.target else '--disable-{0}'
             options.append(msg.format(feature))
+
+        if spec.target.family == 'aarch64':
+            options.append('--disable-sse-assembly')
 
         # If no features are found, enable the generic ones
         if not any(f in spec.target for f in simd_features):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Hepmc3(CMakePackage):
     homepage = "https://cern.ch/hepmc"
     url      = "https://gitlab.cern.ch/hepmc/HepMC3/-/archive/3.2.1/HepMC3-3.2.1.tar.gz"
     git      = "https://gitlab.cern.ch/hepmc/HepMC3.git"
+
+    tags = ['hep']
 
     maintainers = ['vvolkl']
 

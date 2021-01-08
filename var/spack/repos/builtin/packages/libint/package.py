@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -78,10 +78,10 @@ class Libint(AutotoolsPackage):
     @property
     def optflags(self):
         flags = '-O2'
-        # Optimizations for the Intel compiler, suggested by CP2K
-        # See ../libxc/package.py for rationale and doc.
-        if '%intel' in self.spec:
-            flags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
+
+        # microarchitecture-specific optimization flags should be controlled
+        # by Spack, otherwise we may end up with contradictory or invalid flags
+        # see https://github.com/spack/spack/issues/17794
 
         return flags
 
@@ -99,18 +99,16 @@ class Libint(AutotoolsPackage):
 
         config_args = ['--enable-shared']
 
-        optflags = self.optflags
-
         # Optimization flag names have changed in libint 2
         if self.version < Version('2.0.0'):
             config_args.extend([
-                '--with-cc-optflags={0}'.format(optflags),
-                '--with-cxx-optflags={0}'.format(optflags)
+                '--with-cc-optflags={0}'.format(self.optflags),
+                '--with-cxx-optflags={0}'.format(self.optflags)
             ])
         else:
             config_args.extend([
-                '--with-cxx-optflags={0}'.format(optflags),
-                '--with-cxxgen-optflags={0}'.format(optflags)
+                '--with-cxx-optflags={0}'.format(self.optflags),
+                '--with-cxxgen-optflags={0}'.format(self.optflags)
             ])
 
         # Options required by CP2K, removed in libint 2
@@ -195,3 +193,10 @@ class Libint(AutotoolsPackage):
             configure(*options)
             make()
             make('install')
+
+    def patch(self):
+        # Use Fortran compiler to link the Fortran example, not the C++
+        # compiler
+        if '+fortran' in self.spec:
+            filter_file('$(CXX) $(CXXFLAGS)', '$(FC) $(FCFLAGS)',
+                        'export/fortran/Makefile', string=True)

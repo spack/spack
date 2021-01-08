@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Slate(Package):
+class Slate(CMakePackage):
     """The Software for Linear Algebra Targeting Exascale (SLATE) project is
     to provide fundamental dense linear algebra capabilities to the US
     Department of Energy and to the high-performance computing (HPC) community
@@ -17,42 +17,40 @@ class Slate(Package):
 
     homepage = "https://icl.utk.edu/slate/"
     git      = "https://bitbucket.org/icl/slate"
+    url      = 'https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz'
     maintainers = ['G-Ragghianti', 'mgates3']
 
-    version('develop', submodules=True)
+    version('master', branch='master')
+    version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 
     variant('cuda',   default=True, description='Build with CUDA support.')
     variant('mpi',    default=True, description='Build with MPI support.')
     variant('openmp', default=True, description='Build with OpenMP support.')
+    variant('shared', default=True, description='Build shared library')
 
-    depends_on('cuda@9:10', when='+cuda')
-    depends_on('intel-mkl')
+    depends_on('cuda', when='+cuda')
     depends_on('mpi', when='+mpi')
+    depends_on('blas')
+    depends_on('blaspp ~cuda', when='~cuda')
+    depends_on('blaspp +cuda', when='+cuda')
+    depends_on('lapackpp')
+    depends_on('lapackpp@2020.10.02:', when='@2020.10.00')
+    depends_on('lapackpp@master', when='@master')
+    depends_on('scalapack')
 
-    conflicts('%gcc@:5')
+    cpp_17_msg = 'Requires C++17 compiler support'
+    conflicts('%gcc@:5', msg=cpp_17_msg)
+    conflicts('%xl', msg=cpp_17_msg)
+    conflicts('%xl_r', msg=cpp_17_msg)
+    conflicts('%intel@19:', msg='Does not currently build with icpc >= 2019')
 
-    def setup_build_environment(self, env):
-        if('+cuda' in self.spec):
-            env.prepend_path('CPATH', self.spec['cuda'].prefix.include)
-        env.prepend_path('CPATH', self.spec['intel-mkl'].prefix.mkl.include)
-
-    def install(self, spec, prefix):
-        f_cuda = "1" if spec.variants['cuda'].value else "0"
-        f_mpi = "1" if spec.variants['mpi'].value else "0"
-        f_openmp = "1" if spec.variants['openmp'].value else "0"
-
-        comp_cxx = comp_for = ''
-        if '+mpi' in spec:
-            comp_cxx = 'mpicxx'
-            comp_for = 'mpif90'
-
-        make('mpi=' + f_mpi, 'mkl=1', 'cuda=' + f_cuda, 'openmp=' + f_openmp,
-             'CXX=' + comp_cxx, 'FC=' + comp_for)
-        install_tree('lib', prefix.lib)
-        install_tree('test', prefix.test)
-        mkdirp(prefix.include)
-        install('include/slate/slate.hh', prefix.include)
-        install('lapack_api/lapack_slate.hh',
-                prefix.include + "/slate_lapack_api.hh")
-        install('scalapack_api/scalapack_slate.hh',
-                prefix.include + "/slate_scalapack_api.hh")
+    def cmake_args(self):
+        spec = self.spec
+        return [
+            '-Dbuild_tests=%s'       % self.run_tests,
+            '-Duse_openmp=%s'        % ('+openmp' in spec),
+            '-DBUILD_SHARED_LIBS=%s' % ('+shared' in spec),
+            '-Duse_cuda=%s'          % ('+cuda' in spec),
+            '-Duse_mpi=%s'           % ('+mpi' in spec),
+            '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
+        ]

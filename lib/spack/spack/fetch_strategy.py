@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import os.path
 import re
 import shutil
 import sys
+from typing import Optional, List  # novm
 
 import llnl.util.tty as tty
 import six
@@ -42,7 +43,7 @@ import spack.util.web as web_util
 from llnl.util.filesystem import (
     working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 from spack.util.compression import decompressor_for, extension
-from spack.util.executable import which
+from spack.util.executable import which, CommandNotFoundError
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
 
@@ -92,11 +93,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None
+    url_attr = None  # type: Optional[str]
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
-    optional_attrs = []  # optional attributes in version() args.
+    # optional attributes in version() args.
+    optional_attrs = []  # type: List[str]
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -214,13 +216,16 @@ class BundleFetchStrategy(FetchStrategy):
         """BundlePackages don't have a mirror id."""
 
 
-@pattern.composite(interface=FetchStrategy)
-class FetchStrategyComposite(object):
+class FetchStrategyComposite(pattern.Composite):
     """Composite for a FetchStrategy object.
-
-    Implements the GoF composite pattern.
     """
     matches = FetchStrategy.matches
+
+    def __init__(self):
+        super(FetchStrategyComposite, self).__init__([
+            'fetch', 'check', 'expand', 'reset', 'archive', 'cachable',
+            'mirror_id'
+        ])
 
     def source_id(self):
         component_ids = tuple(i.source_id() for i in self)
@@ -267,7 +272,10 @@ class URLFetchStrategy(FetchStrategy):
     @property
     def curl(self):
         if not self._curl:
-            self._curl = which('curl', required=True)
+            try:
+                self._curl = which('curl', required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
         return self._curl
 
     def source_id(self):
@@ -414,7 +422,7 @@ class URLFetchStrategy(FetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
         return partial_file, save_file
 
-    @property
+    @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""

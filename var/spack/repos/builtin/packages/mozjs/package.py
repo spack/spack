@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,7 +34,7 @@ class Mozjs(AutotoolsPackage):
     patch('perl-bug.patch')
     # Note: According to https://github.com/apache/couchdb-pkg/tree/master/js/rpm/SOURCES
     #       There is some patch for mozjs@1.8.5 to fix compile issue.
-    #       Patches required to fix the issue:https://bugzilla.mozilla.org/show_bug.cgi?id=638056   
+    #       Patches required to fix the issue:https://bugzilla.mozilla.org/show_bug.cgi?id=638056
     patch('Bug-638056-Avoid-The-cacheFlush-support-is-missing-o.patch',
           sha256='b1c869a65f5ebc10741d4631cc2e1e166c6ed53035cfa56bede55a4c19b7b118', when='@1.8.5')
     patch('fix-811665.patch',

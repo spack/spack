@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -15,6 +17,8 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     homepage = "http://tukaani.org/xz/"
     sourceforge_mirror_path = "lzmautils/files/xz-5.2.5.tar.bz2"
     list_url = "http://tukaani.org/xz/old.html"
+
+    executables = [r'^xz$']
 
     version('5.2.5', sha256='5117f930900b341493827d63aa910ff5e011e0b994197c3b71c08a20228a42df')
     version('5.2.4', sha256='3313fd2a95f43d88e44264e6b015e7d03053e681860b0d5d3f9baca79c57b7bf')
@@ -33,3 +37,9 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     @property
     def libs(self):
         return find_libraries(['liblzma'], root=self.prefix, recursive=True)
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'xz \(XZ Utils\) (\S+)', output)
+        return match.group(1) if match else None

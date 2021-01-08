@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,10 +15,12 @@ class KokkosKernels(CMakePackage, CudaPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
+    version('3.2.00', sha256="8ac20ee28ae7813ce1bda461918800ad57fdbac2af86ef5d1ba74e83e10956de")
     version('3.1.00', sha256="27fea241ae92f41bd5b070b1a590ba3a56a06aca750207a98bea2f64a4a40c89")
     version('3.0.00', sha256="e4b832aed3f8e785de24298f312af71217a26067aea2de51531e8c1e597ef0e6")
 
     depends_on("kokkos")
+    depends_on("kokkos@master", when="@master")
     depends_on("kokkos@develop", when="@develop")
     depends_on("cmake@3.10:", type='build')
 

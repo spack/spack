@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
     version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
     version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
     version('1.8.15', commit='dc89ac01407c24142698c1374610f2cee1fbf200')

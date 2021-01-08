@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -185,17 +185,53 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-def test_env_install_same_spec_twice(install_mockery, mock_fetch, capfd):
+def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
     e = ev.read('test')
-    with capfd.disabled():
-        with e:
-            # The first installation outputs the package prefix
-            install('cmake-client')
-            # The second installation attempt will also update the view
-            out = install('cmake-client')
-            assert 'Updating view at' in out
+    with e:
+        # The first installation outputs the package prefix, updates the view
+        out = install('cmake-client')
+        assert 'Updating view at' in out
+
+        # The second installation reports all packages already installed
+        out = install('cmake-client')
+        assert 'already installed' in out
+
+
+def test_env_install_two_specs_same_dep(
+        install_mockery, mock_fetch, tmpdir, capsys):
+    """Test installation of two packages that share a dependency with no
+    connection and the second specifying the dependency as a 'build'
+    dependency.
+    """
+    path = tmpdir.join('spack.yaml')
+
+    with tmpdir.as_cwd():
+        with open(str(path), 'w') as f:
+            f.write("""\
+env:
+  specs:
+  - a
+  - depb
+""")
+
+        env('create', 'test', 'spack.yaml')
+
+    with ev.read('test'):
+        with capsys.disabled():
+            out = install()
+
+    # Ensure both packages reach install phase processing and are installed
+    out = str(out)
+    assert 'depb: Executing phase:' in out
+    assert 'a: Executing phase:' in out
+
+    depb = spack.repo.path.get_pkg_class('depb')
+    assert depb.installed, 'Expected depb to be installed'
+
+    a = spack.repo.path.get_pkg_class('a')
+    assert a.installed, 'Expected a to be installed'
 
 
 def test_remove_after_concretize():
@@ -432,8 +468,9 @@ env:
 
 
 @pytest.mark.usefixtures('config')
-def test_env_view_external_prefix(tmpdir_factory, mutable_database,
-                                  mock_packages):
+def test_env_view_external_prefix(
+        tmpdir_factory, mutable_database, mock_packages
+):
     fake_prefix = tmpdir_factory.mktemp('a-prefix')
     fake_bin = fake_prefix.join('bin')
     fake_bin.ensure(dir=True)
@@ -449,7 +486,7 @@ env:
 packages:
   a:
     externals:
-    - spec: a
+    - spec: a@2.0
       prefix: {a_prefix}
     buildable: false
 """.format(a_prefix=str(fake_prefix)))
@@ -1185,7 +1222,7 @@ def test_env_activate_view_fails(
         tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
     out = env('activate', 'test')
-    assert "To initialize spack's shell commands:" in out
+    assert "To set up shell support" in out
 
 
 def test_stack_yaml_definitions(tmpdir):
@@ -1405,6 +1442,11 @@ env:
 
 
 def test_stack_concretize_extraneous_deps(tmpdir, config, mock_packages):
+    # FIXME: The new concretizer doesn't handle yet soft
+    # FIXME: constraints for stacks
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.skip('Clingo concretizer does not support soft constraints')
+
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -2094,7 +2136,8 @@ def test_cant_install_single_spec_when_concretizing_together():
     e.concretization = 'together'
 
     with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-        e.install('zlib')
+        e.concretize_and_add('zlib')
+        e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():
@@ -2117,6 +2160,40 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.mark.regression('20526')
+def test_env_write_only_non_default_nested(tmpdir):
+    # setup an environment file
+    # the environment includes configuration because nested configs proved the
+    # most difficult to avoid writing.
+    filename = 'spack.yaml'
+    filepath = str(tmpdir.join(filename))
+    contents = """\
+env:
+  specs:
+  - matrix:
+    - [mpileaks]
+  packages:
+    mpileaks:
+      compiler: [gcc]
+  view: true
+"""
+
+    # create environment with some structure
+    with open(filepath, 'w') as f:
+        f.write(contents)
+    env('create', 'test', filepath)
+
+    # concretize
+    with ev.read('test') as e:
+        concretize()
+        e.write()
+
+        with open(e.manifest_path, 'r') as f:
+            manifest = f.read()
+
+    assert manifest == contents
 
 
 @pytest.fixture

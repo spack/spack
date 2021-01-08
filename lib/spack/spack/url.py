@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ from six import StringIO
 from six.moves.urllib.parse import urlsplit, urlunsplit
 
 import llnl.util.tty as tty
-from llnl.util.tty.color import colorize
+from llnl.util.tty.color import cescape, colorize
 
 import spack.error
 import spack.util.compression as comp
@@ -56,7 +56,11 @@ def find_list_urls(url):
     GitLab     https://gitlab.\*/<repo>/<name>/tags
     BitBucket  https://bitbucket.org/<repo>/<name>/downloads/?tab=tags
     CRAN       https://\*.r-project.org/src/contrib/Archive/<name>
+    PyPI       https://pypi.org/simple/<name>/
     =========  =======================================================
+
+    Note: this function is called by `spack versions`, `spack checksum`,
+    and `spack create`, but not by `spack fetch` or `spack install`.
 
     Parameters:
         url (str): The download URL for the package
@@ -91,6 +95,16 @@ def find_list_urls(url):
         # e.g. https://cloud.r-project.org/src/contrib/rgl_0.98.1.tar.gz
         (r'(.*\.r-project\.org/src/contrib)/([^_]+)',
          lambda m: m.group(1) + '/Archive/' + m.group(2)),
+
+        # PyPI
+        # e.g. https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://www.pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.io/packages/py2.py3/o/opencensus-context/opencensus_context-0.1.1-py2.py3-none-any.whl
+        (r'(?:pypi|pythonhosted)[^/]+/packages/[^/]+/./([^/]+)',
+         lambda m: 'https://pypi.org/simple/' + m.group(1) + '/'),
     ]
 
     list_urls = set([os.path.dirname(url)])
@@ -898,6 +912,9 @@ def color_url(path, **kwargs):
         errors (bool): Append parse errors at end of string.
         subs (bool): Color substitutions as well as parsed name/version.
     """
+    # Allow URLs containing @ and }
+    path = cescape(path)
+
     errors = kwargs.get('errors', False)
     subs   = kwargs.get('subs', False)
 

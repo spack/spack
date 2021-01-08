@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,9 +44,9 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
         "{name}-{version}-{hash}"))
 
     # Test hash_length parameter works correctly
-    layout_10 = YamlDirectoryLayout(str(tmpdir), hash_len=10)
+    layout_10 = YamlDirectoryLayout(str(tmpdir), hash_length=10)
     path_10 = layout_10.relative_path_for_spec(spec)
-    layout_7 = YamlDirectoryLayout(str(tmpdir), hash_len=7)
+    layout_7 = YamlDirectoryLayout(str(tmpdir), hash_length=7)
     path_7 = layout_7.relative_path_for_spec(spec)
 
     assert(len(path_default) - len(path_10) == 22)
@@ -54,32 +54,34 @@ def test_yaml_directory_layout_parameters(tmpdir, config):
 
     # Test path_scheme
     arch, compiler, package7 = path_7.split('/')
-    scheme_package7 = "{name}-{version}-{hash:7}"
+    projections_package7 = {'all': "{name}-{version}-{hash:7}"}
     layout_package7 = YamlDirectoryLayout(str(tmpdir),
-                                          path_scheme=scheme_package7)
+                                          projections=projections_package7)
     path_package7 = layout_package7.relative_path_for_spec(spec)
 
     assert(package7 == path_package7)
 
-    # Test separation of architecture
-    arch_scheme_package = "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"   # NOQA: ignore=E501
-    layout_arch_package = YamlDirectoryLayout(str(tmpdir),
-                                              path_scheme=arch_scheme_package)
-    arch_path_package = layout_arch_package.relative_path_for_spec(spec)
-    assert(arch_path_package == spec.format(arch_scheme_package))
+    # Test separation of architecture or namespace
+    spec2 = Spec('libelf').concretized()
 
-    # Test separation of namespace
-    ns_scheme_package = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
-    layout_ns_package = YamlDirectoryLayout(str(tmpdir),
-                                            path_scheme=ns_scheme_package)
-    ns_path_package = layout_ns_package.relative_path_for_spec(spec)
-    assert(ns_path_package == spec.format(ns_scheme_package))
+    arch_scheme = "{architecture.platform}/{architecture.target}/{architecture.os}/{name}/{version}/{hash:7}"   # NOQA: ignore=E501
+    ns_scheme = "${ARCHITECTURE}/${NAMESPACE}/${PACKAGE}-${VERSION}-${HASH:7}"   # NOQA: ignore=E501
+    arch_ns_scheme_projections = {'all': arch_scheme,
+                                  'python': ns_scheme}
+    layout_arch_ns = YamlDirectoryLayout(
+        str(tmpdir), projections=arch_ns_scheme_projections)
+
+    arch_path_spec2 = layout_arch_ns.relative_path_for_spec(spec2)
+    assert(arch_path_spec2 == spec2.format(arch_scheme))
+
+    ns_path_spec = layout_arch_ns.relative_path_for_spec(spec)
+    assert(ns_path_spec == spec.format(ns_scheme))
 
     # Ensure conflicting parameters caught
     with pytest.raises(InvalidDirectoryLayoutParametersError):
         YamlDirectoryLayout(str(tmpdir),
-                            hash_len=20,
-                            path_scheme=scheme_package7)
+                            hash_length=20,
+                            projections=projections_package7)
 
 
 def test_read_and_write_spec(layout_and_dir, config, mock_packages):

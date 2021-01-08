@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,8 +16,9 @@ class Vasp(MakefilePackage):
     """
 
     homepage = "http://vasp.at"
-    url      = "file://{0}/vasp.5.4.4.tar.gz".format(os.getcwd())
+    url      = "file://{0}/vasp.5.4.4.pl2.tgz".format(os.getcwd())
 
+    version('5.4.4.pl2', sha256='98f75fd75399a23d76d060a6155f4416b340a1704f256a00146f89024035bc8e')
     version('5.4.4', sha256='5bd2449462386f01e575f9adf629c08cb03a13142806ffb6a71309ca4431cfb3')
 
     resource(name='vaspsol',
@@ -42,6 +43,7 @@ class Vasp(MakefilePackage):
     depends_on('mpi', type=('build', 'link', 'run'))
     depends_on('netlib-scalapack', when='+scalapack')
     depends_on('cuda', when='+cuda')
+    depends_on('qd', when='%nvhpc')
 
     conflicts('%gcc@:8', msg='GFortran before 9.x does not support all features needed to build VASP')
     conflicts('+vaspsol', when='+cuda', msg='+vaspsol only available for CPU')
@@ -52,6 +54,16 @@ class Vasp(MakefilePackage):
 
         if '%gcc' in spec:
             make_include = join_path('arch', 'makefile.include.linux_gnu')
+        elif '%nvhpc' in spec:
+            make_include = join_path('arch', 'makefile.include.linux_pgi')
+            filter_file('pgcc', spack_cc, make_include)
+            filter_file('pgc++', spack_cxx, make_include, string=True)
+            filter_file('pgfortran', spack_fc, make_include)
+            filter_file('/opt/pgi/qd-2.3.17/install/include',
+                        spec['qd'].prefix.include, make_include)
+            filter_file('/opt/pgi/qd-2.3.17/install/lib',
+                        spec['qd'].prefix.lib, make_include)
+            filter_file('^SCALAPACK[ ]{0,}=.*$', 'SCALAPACK ?=', make_include)
         else:
             make_include = join_path('arch',
                                      'makefile.include.linux_' +
@@ -92,10 +104,15 @@ class Vasp(MakefilePackage):
     def setup_build_environment(self, spack_env):
         spec = self.spec
 
-        cpp_options = ['-DHOST=\\"LinuxGNU\\"', '-DMPI -DMPI_BLOCK=8000',
+        cpp_options = ['-DMPI -DMPI_BLOCK=8000',
                        '-Duse_collective', '-DCACHE_SIZE=4000',
                        '-Davoidalloc', '-Duse_bse_te',
                        '-Dtbdyn', '-Duse_shmem']
+        if '%nvhpc' in self.spec:
+            cpp_options.extend(['-DHOST=\\"LinuxPGI\\"', '-DPGI16',
+                                '-Dqd_emulate'])
+        else:
+            cpp_options.append('-DHOST=\\"LinuxGNU\\"')
 
         cflags = ['-fPIC', '-DADD_']
 
