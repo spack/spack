@@ -1,0 +1,17 @@
+@ECHO OFF
+pushd %~dp0
+set spackinstdir=%CD%
+popd
+
+set PATH=%spackinstdir%\scripts\;%spackinstdir%\@PYTHON_DIR@\;%PATH%
+
+"%spackinstdir%\@PYTHON_DIR@\python.exe" "%spackinstdir%\scripts\haspywin.py"
+set SPACK_ROOT=%CD%\@SPACK_DIR@\
+
+
+@echo **********************************************************************
+@echo ** Spack Package Manager
+@echo ** ^(c^) 2021 Lawrence Livermore National Laboratories
+@echo **********************************************************************
+
+%comspec% /k
