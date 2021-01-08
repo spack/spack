@@ -56,8 +56,6 @@ class Hdf5(CMakePackage):
             description='Builds a debug version of the library')
     variant('shared', default=True,
             description='Builds a shared version of the library')
-    variant('static', default=True,
-            description='Builds a static version of the library')
 
     variant('hl', default=False, description='Enable the high-level library')
     variant('cxx', default=False, description='Enable C++ support')
@@ -65,7 +63,7 @@ class Hdf5(CMakePackage):
     variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
-
+    variant('tools', default=False, description='Enable build tools')
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
     variant('zlib', default=True, description='Enable zlib support')
@@ -79,19 +77,21 @@ class Hdf5(CMakePackage):
     conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
     conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
-    depends_on('cmake@3.12.4:', type='build')
+    depends_on('cmake@3.12:', type='build')
 
     depends_on('mpi', when='+mpi')
-    depends_on('java', type=('build', 'run'), when='+java+shared')
+    depends_on('java', type=('build', 'run'), when='+java')
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
-    depends_on('szip', when='+szip')
+    depends_on('libaec', when='+szip')
     depends_on('zlib@1.2.5:', when='+zlib')
 
     # The Java wrappers and associated libhdf5_java library
     # were first available in 1.10
-    conflicts('languages=java', when='@1.8')
+    conflicts('+java', when='@:1.9')
+    # The Java wrappers cannot be built without shared libs.
+    conflicts('+java', when='~shared')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
@@ -136,7 +136,7 @@ class Hdf5(CMakePackage):
 
     # Disable MPI C++ interface when C++ is disabled, otherwise downstream
     # libraries fail to link; see https://github.com/spack/spack/issues/12586
-    patch('h5public-skip-mpicxx.patch', when='@1.8.10:1.8.21,1.10.0:1.10.5+mpi~cxx',
+    patch('h5public-skip-mpicxx.patch', when='@1.8.10:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
 
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
@@ -230,6 +230,7 @@ class Hdf5(CMakePackage):
             libraries, root=self.prefix, shared=shared, recursive=True
         )
 
+    @run_before('cmake')
     def fortran_check(self):
         if '+fortran' in self.spec and not self.compiler.fc:
             msg = 'cannot build a Fortran variant without a Fortran compiler'
@@ -241,18 +242,15 @@ class Hdf5(CMakePackage):
             raise RuntimeError(msg)
 
     def cmake_args(self):
-        args = [
-            '-DBUILD_SHARED_LIBS={0}'.format(
-                'ON' if '+shared' in self.spec else 'OFF')
-        ]
+        spec = self.spec
+        args = [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        args.append('-DALLOW_UNSUPPORTED=ON')
+        args.append(self.define('ALLOW_UNSUPPORTED', True))
 
-        spec = self.spec
         if '+zlib' in spec:
             args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON')
             args.append(
@@ -264,6 +262,20 @@ class Hdf5(CMakePackage):
         else:
             args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF')
 
+        if '+szip' in spec:
+            args.append(self.define_from_variant(
+                        'HDF5_ENABLE_SZIP_SUPPORT', 'szip'))
+            args.append('-DUSE_LIBAEC:BOOL=ON')
+            args.append('-DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON')
+            args.append(
+                '-DSZIP_INCLUDE_DIR:PATH={0}'.format(
+                    spec['libaec'].prefix.include))
+            args.append(
+                '-DSZIP_DIR:PATH={0}'.format(
+                    spec['libaec'].prefix.lib))
+           
+        args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
+
         if '+mpi' in spec:
             args.append('-DHDF5_ENABLE_PARALLEL=ON')
             args.append('-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc))
@@ -273,7 +285,7 @@ class Hdf5(CMakePackage):
         else:
             args.append('-DHDF5_ENABLE_PARALLEL=OFF')
 
-        if '+static' in spec:
+        if '~shared' in spec:
             args.append('-DONLY_SHARED_LIBS=OFF')
         else:
             args.append('-DONLY_SHARED_LIBS=ON')
@@ -288,10 +300,7 @@ class Hdf5(CMakePackage):
         else:
             args.append('-DHDF5_ENABLE_THREADSAFE=OFF')
 
-        if '+hl' in spec:
-            args.append('-DHDF5_BUILD_HL_LIB=ON')
-        else:
-            args.append('-DHDF5_BUILD_HL_LIB=OFF')
+        args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
 
         if '+cxx' in spec:
             args.append('-DHDF5_BUILD_CPP_LIB=ON')
@@ -313,19 +322,19 @@ class Hdf5(CMakePackage):
         else:
             args.append('-DHDF5_BUILD_TOOLS=OFF')
 
-        if '+tests' in spec:
+        if self.run_tests:
             args.append('-DBUILD_TESTING=ON')
         else:
             args.append('-DBUILD_TESTING=OFF')
 
-        if 'apiversion' in spec:
+        if spec.variants['api'].value != 'none':
             args.append(
                 '-DDEFAULT_API_VERSION={0}'.format(
-                    spec.variants['apiversion'].value))
+                    spec.variants['api'].value))
 
         return args
 
-    @run_after('configure')
+    @run_after('cmake')
     def patch_libtool(self):
         """AOCC support for HDF5"""
         if '%aocc' in self.spec:
