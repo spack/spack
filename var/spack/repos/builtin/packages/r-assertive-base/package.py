@@ -12,7 +12,7 @@ class RAssertiveBase(RPackage):
     testing features in their own packages. End-users will usually want to use
     assertive directly."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://cloud.r-project.org/package=assertive.base"
     url      = "https://cloud.r-project.org/src/contrib/assertive.base_0.0-7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.base"
 
