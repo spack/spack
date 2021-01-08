@@ -28,7 +28,7 @@ class PyProglog(PythonPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://files.pythonhosted.org/packages/fe/ab/4cb19b578e1364c0b2d6efd6521a8b4b4e5c4ae6528041d31a2a951dd991/proglog-0.1.9.tar.gz"
+    url      = "https://pypi.io/packages/source/p/proglog/proglog-0.1.9.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
