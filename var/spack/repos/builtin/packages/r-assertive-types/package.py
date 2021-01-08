@@ -11,7 +11,7 @@ class RAssertiveTypes(RPackage):
 
     homepage = "https://cloud.r-project.org/package=assertive.types"
     url      = "https://cloud.r-project.org/src/contrib/assertive.types_0.0-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertive.types"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.types"
 
     version('0.0-3', sha256='ab6db2eb926e7bc885f2043fab679330aa336d07755375282d89bf9f9d0cb87f')
 
