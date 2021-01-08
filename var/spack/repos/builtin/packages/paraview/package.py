@@ -373,4 +373,9 @@ class Paraview(CMakePackage, CudaPackage):
         if '%intel' in spec and spec.version >= Version('5.6'):
             cmake_args.append('-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF')
 
+        if '%intel' in spec:
+            cmake_args.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS:STRING=-shared-intel'
+            ])
+
         return cmake_args
