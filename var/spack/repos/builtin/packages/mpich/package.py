@@ -301,10 +301,23 @@ spack package at this time.''',
     def setup_run_environment(self, env):
         # Because MPI implementations provide compilers, they have to add to
         # their run environments the code to make the compilers available.
-        env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
-        env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
-        env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
-        env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        external_modules = self.spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            # This is intended to support external MPICH instances registered
+            # by Spack on Cray machines prior to a879c87; users defining an
+            # external MPICH entry for Cray should generally refer to the
+            # "cray-mpich" package
+            env.set('MPICC', spack_cc)
+            env.set('MPICXX', spack_cxx)
+            env.set('MPIF77', spack_fc)
+            env.set('MPIF90', spack_fc)
+        else:
+            env.set('MPICC', join_path(self.prefix.bin, 'mpicc'))
+            env.set('MPICXX', join_path(self.prefix.bin, 'mpic++'))
+            env.set('MPIF77', join_path(self.prefix.bin, 'mpif77'))
+            env.set('MPIF90', join_path(self.prefix.bin, 'mpif90'))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
@@ -318,12 +331,21 @@ spack package at this time.''',
     def setup_dependent_package(self, module, dependent_spec):
         spec = self.spec
 
-        spec.mpicc = join_path(self.prefix.bin, 'mpicc')
-        spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
+        # For Cray MPIs, the regular compiler wrappers *are* the MPI wrappers.
+        # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
+        external_modules = spec.external_modules
+        if external_modules and 'cray' in external_modules[0]:
+            spec.mpicc = spack_cc
+            spec.mpicxx = spack_cxx
+            spec.mpifc = spack_fc
+            spec.mpif77 = spack_f77
+        else:
+            spec.mpicc = join_path(self.prefix.bin, 'mpicc')
+            spec.mpicxx = join_path(self.prefix.bin, 'mpic++')
 
-        if '+fortran' in spec:
-            spec.mpifc = join_path(self.prefix.bin, 'mpif90')
-            spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
+            if '+fortran' in spec:
+                spec.mpifc = join_path(self.prefix.bin, 'mpif90')
+                spec.mpif77 = join_path(self.prefix.bin, 'mpif77')
 
         spec.mpicxx_shared_libs = [
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),

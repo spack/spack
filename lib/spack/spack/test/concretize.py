@@ -688,13 +688,14 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7', 'core2'),
-        ('mpileaks%gcc@4.8', 'haswell'),
-        ('mpileaks%gcc@5.3.0', 'broadwell'),
-        ('mpileaks%apple-clang@5.1.0', 'x86_64')
+        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
+        ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
+        ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
     ])
-    @pytest.mark.regression('13361')
+    @pytest.mark.regression('13361', '20537')
     def test_adjusting_default_target_based_on_compiler(
             self, spec, best_achievable, current_host, mock_targets
     ):

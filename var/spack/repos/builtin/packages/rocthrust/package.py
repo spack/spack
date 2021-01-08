@@ -13,10 +13,11 @@ class Rocthrust(CMakePackage):
        library works on HIP/ROCm platforms"""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocThrust"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-3.10.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocThrust/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='120c87316f44ce8e8975e57c9b9bf1246b1ffc00879d31d744289ba9438a976c')
     version('3.10.0', sha256='31bea6cd19a0ffa15e4ab50ecde2402ea5aaa182149cfab98242357e41f1805b')
     version('3.9.0', sha256='65f5e74d72c5aaee90459468d693b212af7d56e31098ee8237b18d1b4d620eb0')
     version('3.8.0', sha256='39350aeb8bfbcd09e387717b2a05c7e3a19e0fa85ff4284b967bb8fae12f9013')
@@ -29,7 +30,7 @@ class Rocthrust(CMakePackage):
     depends_on('cmake@3:', type='build')
     depends_on('numactl', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)

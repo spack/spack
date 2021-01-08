@@ -19,6 +19,6 @@ class Xkill(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxmu')
 
-    depends_on('xproto@7.0.22:', type='build')
+    depends_on('xproto@7.0.22:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

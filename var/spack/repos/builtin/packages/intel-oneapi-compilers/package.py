@@ -10,7 +10,7 @@ from os import path
 from spack import *
 
 
-releases = {'2021.1':
+releases = {'2021.1.0':
             {'irc_id': '17427', 'build': '2684'}}
 
 
@@ -25,7 +25,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/dpc-compiler.html'
 
-    version('2021.1', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
+    version('2021.1.0', sha256='666b1002de3eab4b6f3770c42bcf708743ac74efeba4c05b0834095ef27a11b9', expand=False)
 
     depends_on('patchelf', type='build')
 
@@ -60,3 +60,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'bin'))
+        env.prepend_path('CPATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'include'))
+        env.prepend_path('LIBRARY_PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'lib'))
+        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
+                         'compiler', 'latest', 'linux', 'lib'))

@@ -136,6 +136,15 @@ class NetcdfFortran(AutotoolsPackage):
 
         return config_args
 
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for NETCDF-F"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\${wl}-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
+
     @when('@:4.4.5')
     def check(self):
         with working_dir(self.build_directory):

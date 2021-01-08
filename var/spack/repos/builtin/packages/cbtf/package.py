@@ -35,7 +35,7 @@ class Cbtf(CMakePackage):
     depends_on("cmake@3.0.2:", type='build')
 
     # for rpcgen
-    depends_on("rpcsvc-proto", type='build')
+    depends_on("rpcsvc-proto")
 
     # for rpc
     depends_on("libtirpc", type='link')

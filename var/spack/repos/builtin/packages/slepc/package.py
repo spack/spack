@@ -125,6 +125,10 @@ class Slepc(Package):
 
         make('install', parallel=False)
 
+    def setup_run_environment(self, env):
+        # set SLEPC_DIR in the module file
+        env.set('SLEPC_DIR', self.prefix)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package
         env.set('SLEPC_DIR', self.prefix)

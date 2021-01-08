@@ -160,7 +160,7 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('py-m2r', type='build', when='+docs')
 
     depends_on('cereal')
-    depends_on('catch2', type='test')
+    depends_on('catch2', type=('build', 'test'))
     depends_on('clara')
 
     depends_on('llvm-openmp', when='%apple-clang')
