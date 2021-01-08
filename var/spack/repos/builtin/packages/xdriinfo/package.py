@@ -22,6 +22,6 @@ class Xdriinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxfixes')
     depends_on('pcre')
 
-    depends_on('glproto', type='build')
+    depends_on('glproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -65,7 +65,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
 
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')

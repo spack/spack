@@ -21,6 +21,6 @@ class Xmh(AutotoolsPackage, XorgPackage):
     depends_on('libxt')
     depends_on('libx11')
 
-    depends_on('xbitmaps@1.1.0:', type='build')
+    depends_on('xbitmaps@1.1.0:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

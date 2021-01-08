@@ -16,8 +16,8 @@ class Xfwp(AutotoolsPackage, XorgPackage):
 
     depends_on('libice')
 
-    depends_on('xproto', type='build')
-    depends_on('xproxymanagementprotocol', type='build')
+    depends_on('xproto')
+    depends_on('xproxymanagementprotocol')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 

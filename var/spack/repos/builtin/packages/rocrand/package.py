@@ -12,10 +12,11 @@ class Rocrand(CMakePackage):
        pseudo-random and quasi-random numbers."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/rocRAND"
-    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-3.10.0.tar.gz"
+    url      = "https://github.com/ROCmSoftwarePlatform/rocRAND/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='1cafdbfa15cde635bd424d2a858dc5cc94d668f9a211ff39606ee01ed1715f41')
     version('3.10.0', sha256='f55e2b49b4dfd887e46eea049f3359ae03c60bae366ffc979667d364205bc99c')
     version('3.9.0', sha256='a500a3a83be36b6c91aa062dc6eef1f9fc1d9ee62422d541cc279513d98efa91')
     version('3.8.0', sha256='79eb84d41363a46ed9bb18d9757cf6a419d2f48bb6a71b8e4db616a5007a6560')
@@ -25,7 +26,7 @@ class Rocrand(CMakePackage):
     depends_on('cmake@3.5.1:', type='build')
     depends_on('numactl', when='@3.7.0:')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
