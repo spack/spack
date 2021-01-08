@@ -54,6 +54,8 @@ class R(AutotoolsPackage):
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
             description='Enable X11 support (call configure --with-x)')
+    variant('libpng', default=False,
+            description='Enable PNG support')    
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
     variant('rmath', default=False,
@@ -62,6 +64,7 @@ class R(AutotoolsPackage):
     # Virtual dependencies
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
+    depends_on('libpng', when='+libpng')
 
     # Concrete dependencies.
     depends_on('readline')
@@ -167,6 +170,9 @@ class R(AutotoolsPackage):
 
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
+
+        if '+libpng' in spec:
+            config_args.append('--with-libpng')
 
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != 'gcc':
