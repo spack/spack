@@ -21,7 +21,7 @@ import spack.config
 from spack.util.executable import which_string
 
 #: editors to try if VISUAL and EDITOR are not set
-_default_editors = ['vim', 'vi', 'emacs', 'nano']
+_default_editors = ['vim', 'vi', 'emacs', 'nano', 'notepad']
 
 
 def _find_exe_from_env_var(var):
