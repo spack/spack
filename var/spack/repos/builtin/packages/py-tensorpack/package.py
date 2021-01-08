@@ -50,7 +50,7 @@ class PyTensorpack(PythonPackage):
     depends_on("py-msgpack-numpy@0.4.4.2:", type=('build', 'run'))
     depends_on("py-pyzmq@16:", type=('build', 'run'))
     depends_on("py-psutil@5:", type=('build', 'run'))
-    depends_on('py-tensorflow@1.5:1.999', type=('build', 'run'))
+    #depends_on('py-tensorflow@1.5:1.999', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
