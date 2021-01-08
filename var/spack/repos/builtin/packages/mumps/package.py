@@ -55,7 +55,8 @@ class Mumps(Package):
     patch('gfortran8.patch', when='@5.1.2')
     # The following patches src/Makefile to fix some dependency
     # issues in lib[cdsz]mumps.so
-    patch('mumps.src-makefile.patch', when='+shared')
+    patch('mumps.src-makefile.5.2.patch', when='@5.2.0 +shared')
+    patch('mumps.src-makefile.5.3.patch', when='@5.3.0: +shared')
 
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
