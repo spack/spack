@@ -1,5 +1,5 @@
 upstreams:
-  global:
+  test-1:
     install_tree: $spack/opt/spack
     modules:
       tcl:    $spack/share/spack/modules
