@@ -21,10 +21,16 @@ config:
       root: $spack/opt/spack
       projections:
         all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+      permissions:
+        read: world
+        write: user
     user:
       root: ~/.spack/opt/spack
       projections:
         all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
+      permissions:
+        read: world
+        write: user
     # install trees can include an optional padded length (int or boolean)
     # default is False (do not pad)
     # if padded_length is True, Spack will pad as close to the system max path

@@ -51,6 +51,23 @@ properties = {
                                     {'type': 'integer', 'minimum': 0},
                                     {'type': 'boolean'}]}},
                                 spack.schema.projections.properties,
+                                {'permissions': {
+                                    'type': 'object',
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'read': {
+                                            'type':  'string',
+                                            'enum': ['user', 'group', 'world'],
+                                        },
+                                        'write': {
+                                            'type':  'string',
+                                            'enum': ['user', 'group', 'world'],
+                                        },
+                                        'group': {
+                                            'type':  'string',
+                                        },
+                                    }
+                                }},
                             ),
                         },
                     },
@@ -70,6 +87,23 @@ properties = {
                                     {'type': 'integer', 'minimum': 0},
                                     {'type': 'boolean'}]}},
                                 spack.schema.projections.properties,
+                                {'permissions': {
+                                    'type': 'object',
+                                    'additionalProperties': False,
+                                    'properties': {
+                                        'read': {
+                                            'type':  'string',
+                                            'enum': ['user', 'group', 'world'],
+                                        },
+                                        'write': {
+                                            'type':  'string',
+                                            'enum': ['user', 'group', 'world'],
+                                        },
+                                        'group': {
+                                            'type':  'string',
+                                        },
+                                    }
+                                }},
                             ),
                         },
                     },

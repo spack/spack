@@ -12,7 +12,7 @@ An install tree, or "build store" consists of two parts:
      are laid out.
 
 The store contains all the install prefixes for packages installed by
-Spack.  The simplest store could just contain prefixes named by DAG hash,
+Spack. The simplest store could just contain prefixes named by DAG hash,
 but we use a fancier directory layout to make browsing the store and
 debugging easier.
 
@@ -26,6 +26,7 @@ configuration.
 import os
 import re
 import six
+import stat as st
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -69,10 +70,14 @@ def parse_install_tree(config_dict):
 
     # config:
     #   install_tree:
-    #     root: /path/to/root
-    #     padding: 128
-    #     projections:
-    #       all: '{name}-{version}'
+    #     install_tree_name:
+    #       root: /path/to/root
+    #       padding: 128
+    #       projections:
+    #         all: '{name}-{version}'
+    #       permissions:
+    #         read: world
+    #         write: user
 
     # Dictionaries of all install trees
     install_trees = spack.config.get('config:install_trees')
@@ -115,6 +120,9 @@ def parse_install_tree(config_dict):
 
         projections = {'all': all_projection}
     else:
+        # Sets install tree permissions
+        set_install_tree_permissions(install_tree)
+
         unpadded_root = install_tree.get('root', default_install_tree_root)
         unpadded_root = spack.util.path.canonicalize_path(unpadded_root)
 
@@ -170,15 +178,87 @@ def parse_install_tree(config_dict):
     return (root, unpadded_root, projections)
 
 
+def set_install_tree_permissions(install_tree):
+    """Sets the permissions configured for the install tree.
+    If install_root already exists then permissions are not set.
+
+    Arguments:
+    install_tree       - install tree dictionary with install
+                         tree information
+    """
+    root = install_tree.get('root')
+    permissions = install_tree.get('permissions', {})
+
+    if os.path.exists(spack.util.path.canonicalize_path(root)):
+        tty.debug('Install root already exists, skipping setting permissions')
+        return
+    else:
+        os.mkdir(spack.util.path.canonicalize_path(root))
+
+    # Get read permissions level
+    if permissions.get('read'):
+        readable = permissions.get('read')
+    else:
+        readable = 'world'
+
+    # Get write permissions level
+    if permissions.get('write'):
+        writable = permissions.get('write')
+    else:
+        writable = 'user'
+
+    # Get group (if specified)
+    if permissions.get('group'):
+        group = permissions.get('group')
+    else:
+        group = None
+
+    perms = st.S_IRWXU
+    if readable in ('world', 'group'):  # world includes group
+        perms |= st.S_IRGRP | st.S_IXGRP
+    if readable == 'world':
+        perms |= st.S_IROTH | st.S_IXOTH
+
+    if writable in ('world', 'group'):
+        if readable == 'user':
+            tty.die('Writable permissions may not be more' +
+                    ' permissive than readable permissions.\n')
+        perms |= st.S_IWGRP
+    if writable == 'world':
+        if readable != 'world':
+            tty.die('Writable permissions may not be more' +
+                    ' permissive than readable permissions.\n')
+        perms |= st.S_IWOTH
+
+    # Preserve higher-order bits of file permissions
+    perms |= os.st(root).st_mode & (st.S_ISUID | st.S_ISGID | st.S_ISVTX)
+
+    # Do not let users create world/group writable suid binaries
+    if perms & st.S_ISUID:
+        if perms & st.S_IWOTH:
+            tty.die("Attempting to set suid with world writable")
+        if perms & st.S_IWGRP:
+            tty.die("Attempting to set suid with group writable")
+    # Or world writable sgid binaries
+    if perms & st.S_ISGID:
+        if perms & st.S_IWOTH:
+            tty.die("Attempting to set sgid with world writable")
+
+    fs.chmod_x(root, perms)
+
+    if group:
+        fs.chgrp(root, group)
+
+
 class Store(object):
     """A store is a path full of installed Spack packages.
 
     Stores consist of packages installed according to a
     ``DirectoryLayout``, along with an index, or _database_ of their
-    contents.  The directory layout controls what paths look like and how
-    Spack ensures that each uniqe spec gets its own unique directory (or
-    not, though we don't recommend that). The database is a signle file
-    that caches metadata for the entire Spack installation.  It prevents
+    contents. The directory layout controls what paths look like and how
+    Spack ensures that each unique spec gets its own unique directory (or
+    not, though we don't recommend that). The database is a single file
+    that caches metadata for the entire Spack installation. It prevents
     us from having to spider the install tree to figure out what's there.
 
     Args:
