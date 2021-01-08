@@ -269,6 +269,11 @@ local.properties
 # CDT-specific (C/C++ Development Tooling)
 .cproject
 
+# VSCode files
+.vs
+.vscode
+.devcontainer
+
 # CDT- autotools
 .autotools
 
