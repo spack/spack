@@ -1,25 +1,8 @@
-From e6334e5542440111d299e8d4f1dd8b436a6447dc Mon Sep 17 00:00:00 2001
-From: =?UTF-8?q?Alexandru=20S=C4=83vulescu?= <alexandru.savulescu@epfl.ch>
-Date: Mon, 30 Nov 2020 16:06:52 +0100
-Subject: [PATCH] nrnversion fails when not in git (#831)
-
-More useful build error message with building from archive file.
-
-nrnversion details are unknown when no git metadata.
-
-This reverts commit c777da1ba5c72f36ef815b18ab71b018c82ff095.
----
- CONTRIBUTING.md                   |  2 +-
- cmake/ExternalProjectHelper.cmake | 15 ++++++++++++++-
- git2nrnversion_h.sh               |  9 ++++-----
- src/nrniv/CMakeLists.txt          |  3 ++-
- 4 files changed, 21 insertions(+), 8 deletions(-)
-
 diff --git a/CONTRIBUTING.md b/CONTRIBUTING.md
-index 04dac980..9ab399c8 100644
+index 391d4daa..20b8b571 100644
 --- a/CONTRIBUTING.md
 +++ b/CONTRIBUTING.md
-@@ -100,7 +100,7 @@ Currently we have enabled CMake code formatting using [cmake-format](https://git
+@@ -98,7 +98,7 @@ Currently we have enabled CMake code formatting using [cmake-format](https://git
  * Make sure to install cmake-format utility with Python version you are using:
  
  ```
@@ -86,11 +69,65 @@ index d62b7410..4d8e4015 100755
 +        echo "#define GIT_DESCRIBE \"${PROJECT_VERSION}.dev0\""
  fi
  
+diff --git a/src/ivoc/ivocvect.cpp b/src/ivoc/ivocvect.cpp
+index 4884614a..4da9e17e 100644
+--- a/src/ivoc/ivocvect.cpp
++++ b/src/ivoc/ivocvect.cpp
+@@ -67,7 +67,26 @@ extern "C" {
+ #define FRead(arg1,arg2,arg3,arg4) if (fread(arg1,arg2,arg3,arg4) != arg3) {}
+ #endif
+ 
+-static double dmaxint_;
++/**
++ * As all parameters are passed from hoc as double, we need
++ * to calculate max integer that can fit into double variable.
++ *
++ * With IEEE 64-bit double has 52 bits of mantissa, so it's 2^53.
++ * calculating it with approach `while (dbl + 1 != dbl) dbl++;`
++ * has issues with SSE and other 32 bits platform. So we are using
++ * direct value here.
++ *
++ * The maximum mantissa 0xFFFFFFFFFFFFF which is 52 bits all 1.
++ * In Python it's:
++ *
++ *  >>> (2.**53).hex()
++ *   '0x1.0000000000000p+53'
++ *  >>> (2.**53)
++ *   9007199254740992.0
++ *
++ * See https://stackoverflow.com/questions/1848700/biggest-integer-that-can-be-stored-in-a-double
++ */
++static double dmaxint_ = 9007199254740992;
+ 
+ // Definitions allow machine independent write and read
+ // note that must include BYTEHEADER at head of routine
+@@ -3776,20 +3795,7 @@ static void steer_x(void* v) {
+ }
+ 
+ void Vector_reg() {
+-	dmaxint_ = 1073741824.;
+-	for(;;) {
+-		if (dmaxint_*2. == double(int(dmaxint_*2.))) {
+-			dmaxint_ *= 2.;
+-		}else{
+-			if (dmaxint_*2. - 1. == double(int(dmaxint_*2. - 1.))) {
+-				dmaxint_ = 2.*dmaxint_ - 1.;
+-			}
+-			break;
+-		}
+-	}		
+-	//printf("dmaxint=%30.20g   %d\n", dmaxint_, (long)dmaxint_);
+-        class2oc("Vector", v_cons, v_destruct, v_members, NULL, v_retobj_members,
+-        	v_retstr_members);
++	class2oc("Vector", v_cons, v_destruct, v_members, NULL, v_retobj_members, v_retstr_members);
+ 	svec_ = hoc_lookup("Vector");
+ 	// now make the x variable an actual double
+ 	Symbol* sv = hoc_lookup("Vector");
 diff --git a/src/nrniv/CMakeLists.txt b/src/nrniv/CMakeLists.txt
-index ccd28e35..aaaf53b4 100644
+index 30024d6e..26f76a98 100644
 --- a/src/nrniv/CMakeLists.txt
 +++ b/src/nrniv/CMakeLists.txt
-@@ -140,7 +140,8 @@ set(NRN_INCLUDE_DIRS
+@@ -139,7 +139,8 @@ set(NRN_INCLUDE_DIRS
  # is different from the contents of nrnversion.h
  # ~~~
  add_custom_target(
@@ -100,6 +137,3 @@ index ccd28e35..aaaf53b4 100644
    COMMAND ${CMAKE_COMMAND} -E copy_if_different nrnversion.h.tmp ${NRN_NRNOC_SRC_DIR}/nrnversion.h
    DEPENDS ${PROJECT_SOURCE_DIR}/git2nrnversion_h.sh)
  
--- 
-2.29.2
-

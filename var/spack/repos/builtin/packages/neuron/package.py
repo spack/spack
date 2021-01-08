@@ -45,7 +45,7 @@ class Neuron(CMakePackage):
 
     conflicts("+rx3d",        when="~python")
 
-    patch("patch-v782-git-cmake.patch", when="@7.8.2")
+    patch("patch-v782-git-cmake-avx512.patch", when="@7.8.2")
 
     def cmake_args(self):
         spec = self.spec
