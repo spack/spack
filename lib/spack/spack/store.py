@@ -91,7 +91,6 @@ def parse_install_tree(config_dict):
         elif shared_install_trees and (install_root in shared_install_trees):
             install_tree = shared_install_trees[install_root]
         else:
-            # TODO: provide the user an option to create a new install tree
             tty.die("Specified install tree does not exist: {0}"
                     .format(install_root))
     elif shared_install_trees:
@@ -183,8 +182,8 @@ def set_install_tree_permissions(install_tree):
     If install_root already exists then permissions are not set.
 
     Arguments:
-    install_tree       - install tree dictionary with install
-                         tree information
+        install_tree (dict): install tree dictionary with install
+            tree information
     """
     root = install_tree.get('root')
     permissions = install_tree.get('permissions', {})
