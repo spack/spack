@@ -54,6 +54,18 @@ def setup_parser(subparser):
         '--dependencies', action='store_true', default=False,
         help="(Experimental) disable DAG scheduling; use "
              ' "plain" dependencies.')
+    prune_group = generate.add_mutually_exclusive_group()
+    prune_group.add_argument(
+        '--prune-dag', action='store_true', dest='prune_dag',
+        default=True, help="""Do not generate jobs for specs already up to
+date on the mirror""")
+    prune_group.add_argument(
+        '--no-prune-dag', action='store_false', dest='prune_dag',
+        default=True, help="""Generate jobs for specs already up to date
+on the mirror.  Useful when relying on artifacts buildcache, generated
+jobs just copy target speck buildcache files from remote mirror into a
+local directory.
+""")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
@@ -75,6 +87,7 @@ def ci_generate(args):
     copy_yaml_to = args.copy_to
     run_optimizer = args.optimize
     use_dependencies = args.dependencies
+    prune_dag = args.prune_dag
 
     if not output_file:
         output_file = os.path.abspath(".gitlab-ci.yml")
@@ -86,8 +99,8 @@ def ci_generate(args):
 
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
-        env, True, output_file, run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies)
+        env, True, output_file, prune_dag=prune_dag,
+        run_optimizer=run_optimizer, use_dependencies=use_dependencies)
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)

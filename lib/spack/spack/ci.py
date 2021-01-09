@@ -491,14 +491,14 @@ def pkg_name_from_spec_label(spec_label):
 
 
 def format_job_needs(phase_name, strip_compilers, dep_jobs,
-                     osname, build_group, stage_spec_dict,
+                     osname, build_group, prune_dag, stage_spec_dict,
                      enable_artifacts_buildcache):
     needs_list = []
     for dep_job in dep_jobs:
         dep_spec_key = '{0}/{1}'.format(dep_job.name, dep_job.dag_hash(7))
         dep_spec_info = stage_spec_dict[dep_spec_key]
 
-        if dep_spec_info['needs_rebuild']:
+        if not prune_dag or dep_spec_info['needs_rebuild']:
             needs_list.append({
                 'job': get_job_name(phase_name,
                                     strip_compilers,
@@ -529,7 +529,7 @@ def remove_pr_mirror():
     cfg.set('mirrors', mirrors, scope=cfg_scope)
 
 
-def generate_gitlab_ci_yaml(env, print_summary, output_file,
+def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                             run_optimizer=False, use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
@@ -543,9 +543,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
 
     gitlab_ci = yaml_root['gitlab-ci']
 
-    final_job_config = None
-    if 'final-stage-rebuild-index' in gitlab_ci:
-        final_job_config = gitlab_ci['final-stage-rebuild-index']
+    enable_rebuild_index = False
+    if 'rebuild-index' in gitlab_ci:
+        enable_rebuild_index = gitlab_ci['rebuild-index']
 
     build_group = None
     enable_cdash_reporting = False
@@ -655,7 +655,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
             stage_id += 1
 
             for spec_label in stage_jobs:
-                if not spec_labels[spec_label]['needs_rebuild']:
+                spec_needs_rebuild = spec_labels[spec_label]['needs_rebuild']
+                if prune_dag and not spec_needs_rebuild:
                     continue
 
                 root_spec = spec_labels[spec_label]['rootSpec']
@@ -720,6 +721,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
                     'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline),
+                    'SPACK_SPEC_NEEDS_REBUILD': spec_needs_rebuild,
                 }
 
                 job_dependencies = []
@@ -742,8 +744,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                 dep_jobs.append(dep_root[dep_pkg])
 
                     job_dependencies.extend(
-                        format_job_needs(phase_name, strip_compilers, dep_jobs,
-                                         osname, build_group, spec_labels,
+                        format_job_needs(phase_name, strip_compilers,
+                                         dep_jobs, osname, build_group,
+                                         prune_dag, spec_labels,
                                          enable_artifacts_buildcache))
 
                 # This next section helps gitlab make sure the right
@@ -786,6 +789,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
                                                  dep_jobs,
                                                  str(bs_arch),
                                                  build_group,
+                                                 prune_dag,
                                                  bs_specs,
                                                  enable_artifacts_buildcache))
                         else:
@@ -883,19 +887,24 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
+    nonbuild_job_config = None
+    if 'nonbuild-job-attributes' in gitlab_ci:
+        nonbuild_job_config = gitlab_ci['nonbuild-job-attributes']
+
+    attrib_list = ['image', 'tags', 'variables']
+
     if job_id > 0:
-        if final_job_config and not is_pr_pipeline:
+        if enable_rebuild_index and not is_pr_pipeline:
             # Add an extra, final job to regenerate the index
             final_stage = 'stage-rebuild-index'
             final_job = {
                 'stage': final_stage,
                 'script': 'spack buildcache update-index --keys -d {0}'.format(
                     mirror_urls[0]),
-                'tags': final_job_config['tags'],
                 'when': 'always'
             }
-            if 'image' in final_job_config:
-                final_job['image'] = final_job_config['image']
+            if nonbuild_job_config:
+                copy_attributes(attrib_list, nonbuild_job_config, final_job)
             if before_script:
                 final_job['before_script'] = before_script
             if after_script:
@@ -947,31 +956,16 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     else:
         # No jobs were generated
         tty.debug('No specs to rebuild, generating no-op job')
-        noop_runner_attribs = {}
-        attrib_list = ['image', 'tags', 'variables']
-        if 'noop-pipeline-job-attributes' in gitlab_ci:
-            copy_attributes(attrib_list,
-                            gitlab_ci['noop-pipeline-job-attributes'],
-                            noop_runner_attribs)
-        elif ('tags' in gitlab_ci and
-                ('image' in gitlab_ci or 'variables' in gitlab_ci)):
-            copy_attributes(attrib_list,
-                            gitlab_ci,
-                            noop_runner_attribs)
-        else:
-            copy_attributes(attrib_list,
-                            gitlab_ci['mappings'][0]['runner-attributes'],
-                            noop_runner_attribs)
-
         noop_job = {
             'script': [
                 'echo "Nothing to do"',
             ]
         }
 
-        copy_attributes(['image', 'variables', 'tags'],
-                        noop_runner_attribs,
-                        noop_job)
+        if nonbuild_job_config:
+            copy_attributes(['image', 'variables', 'tags'],
+                            nonbuild_job_config,
+                            noop_job)
 
         sorted_output = {'noop': noop_job}
 

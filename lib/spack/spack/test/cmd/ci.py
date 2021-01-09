@@ -140,9 +140,10 @@ spack:
           tags:
             - donotcare
           image: donotcare
-    final-stage-rebuild-index:
+    nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
+    rebuild-index: true
   cdash:
     build-group: Not important
     url: https://my.fake.cdash
@@ -558,9 +559,10 @@ spack:
         runner-attributes:
           tags:
             - donotcare
-    final-stage-rebuild-index:
+    nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
+    rebuild-index: true
 """)
 
     with tmpdir.as_cwd():
@@ -717,6 +719,20 @@ spack:
    - $packages
  mirrors:
    test-mirror: {0}
+ gitlab-ci:
+   enable-artifacts-buildcache: True
+   mappings:
+     - match:
+         - patchelf
+       runner-attributes:
+         tags:
+           - donotcare
+         image: donotcare
+   rebuild-index: True
+   nonbuild-job-attributes:
+     tags:
+       - nonbuildtag
+     image: basicimage
 """.format(mirror_url)
 
     print('spack.yaml:\n{0}\n'.format(spack_yaml_contents))
@@ -743,6 +759,57 @@ spack:
                 env, concrete_spec, yaml_path, mirror_url, '42', True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
+
+            # Now test the --prune-dag (default) option of spack ci generate
+            mirror_cmd('add', 'test-ci', mirror_url)
+
+            outputfile_pruned = str(tmpdir.join('pruned_pipeline.yml'))
+            ci_cmd('generate', '--output-file', outputfile_pruned)
+
+            with open(outputfile_pruned) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+                assert('noop' in yaml_contents)
+                # Make sure there are no other spec jobs and no rebuild-index
+                assert(len(yaml_contents.keys()) == 1)
+                the_elt = yaml_contents['noop']
+                assert('tags' in the_elt)
+                assert('nonbuildtag' in the_elt['tags'])
+                assert('image' in the_elt)
+                assert(the_elt['image'] == 'basicimage')
+
+            outputfile_not_pruned = str(tmpdir.join('unpruned_pipeline.yml'))
+            ci_cmd('generate', '--no-prune-dag', '--output-file',
+                   outputfile_not_pruned)
+
+            # Test the --no-prune-dag option of spack ci generate
+            with open(outputfile_not_pruned) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+
+                found_spec_job = False
+                found_rebuild_index = False
+
+                for ci_key in yaml_contents.keys():
+                    if '(specs) patchelf' in ci_key:
+                        the_elt = yaml_contents[ci_key]
+                        assert('variables' in the_elt)
+                        job_vars = the_elt['variables']
+                        assert('SPACK_SPEC_NEEDS_REBUILD' in job_vars)
+                        assert(job_vars['SPACK_SPEC_NEEDS_REBUILD'] is False)
+                        found_spec_job = True
+                    elif ci_key == 'rebuild-index':
+                        the_elt = yaml_contents['rebuild-index']
+                        assert('tags' in the_elt)
+                        assert('nonbuildtag' in the_elt['tags'])
+                        assert('image' in the_elt)
+                        assert(the_elt['image'] == 'basicimage')
+                        found_rebuild_index = True
+
+                assert(found_spec_job)
+                assert(found_rebuild_index)
+
+            mirror_cmd('rm', 'test-ci')
 
             # Test generating buildcache index while we have bin mirror
             buildcache_cmd('update-index', '--mirror-url', mirror_url)
@@ -844,9 +911,10 @@ spack:
             - custom main step
           after_script:
             - custom post step one
-    final-stage-rebuild-index:
+    nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
+    rebuild-index: true
 """)
 
     with tmpdir.as_cwd():

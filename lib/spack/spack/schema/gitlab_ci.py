@@ -130,8 +130,11 @@ properties = {
                     'type': 'boolean',
                     'default': False,
                 },
-                'final-stage-rebuild-index': runner_selector_schema,
-                'noop-pipeline-job-attributes': runner_selector_schema,
+                'rebuild-index': {
+                    'type': 'boolean',
+                    'default': False,
+                },
+                'nonbuild-job-attributes': runner_selector_schema,
             }
         ),
     },

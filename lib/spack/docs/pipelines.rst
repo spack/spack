@@ -122,9 +122,26 @@ pipeline jobs.
 Concretizes the specs in the active environment, stages them (as described in
 :ref:`staging_algorithm`), and writes the resulting ``.gitlab-ci.yml`` to disk.
 
-This sub-command takes two arguments, but the most useful is ``--output-file``,
-which should be an absolute path (including file name) to the generated
-pipeline, if the default (``./.gitlab-ci.yml``) is not desired.
+Using ``--prune-dag`` or ``--no-prune-dag`` configures whether or not jobs are
+generated for specs that are already up to date on the mirror.   If enabling
+DAG pruning using ``--prune-dag``, more information may be required in your
+``spack.yaml`` file, see the :ref:`noop_jobs` section below regarding
+``nonbuild-job-attribs``.
+
+The ``--optimize`` argument is experimental and runs the generated pipeline
+document through a series of optimization passes designed to reduce the size
+of the generated file.
+
+The ``--dependencies`` is also experimental and disables what in Gitlab is
+referred to as DAG scheduling, internally using the ``dependencies`` keyword
+rather than ``needs`` to list dependency jobs.  The drawback of using this option
+is that before any job can begin, all jobs in previous stages must first
+complete.  The benefit is that Gitlab allows more dependencies to be listed
+when using ``dependencies`` instead of ``needs``.
+
+The optional ``--output-file`` argument should be an absolute path (including
+file name) to the generated pipeline, and if not given, the default is
+``./.gitlab-ci.yml``.
 
 .. _cmd-spack-ci-rebuild:
 
@@ -223,20 +240,61 @@ takes a boolean and determines whether the pipeline uses artifacts to store and
 pass along the buildcaches from one stage to the next (the default if you don't
 provide this option is ``False``).
 
-The
-``final-stage-rebuild-index`` section controls whether an extra job is added to the
-end of your pipeline (in a stage by itself) which will regenerate the mirror's
-buildcache index.  Under normal operation, each pipeline job that rebuilds a package
-will re-generate the mirror's buildcache index after the buildcache entry for that
-job has been created and pushed to the mirror.  Since jobs in the same stage can run in
-parallel, there is the possibility that at the end of some stage, the index may not
-reflect all the binaries in the buildcache.  Adding the ``final-stage-rebuild-index``
-section ensures that at the end of the pipeline, the index will be in sync with the
-binaries on the mirror.  If the mirror lives in an S3 bucket, this job will need to
-run on a machine with the Python ``boto3`` module installed, and consequently the
-``final-stage-rebuild-index`` needs to specify a list of ``tags`` to pick a runner
-satisfying that condition.  It can also take an ``image`` key so Docker executor type
-runners can pick the right image for the index regeneration job.
+The optional (default is ``False``) ``rebuild-index`` section controls whether an
+extra job is added to the end of your pipeline (in the final stage by itself)
+which will regenerate the mirror's buildcache index.  By default, while a
+pipeline job may rebuild a package, create a buildcache entry, and push it to
+the mirror, it does not automatically re-generate the mirror's buildcache index
+afterward.  Because the index is not needed by the default rebuild jobs in the
+pipeline, not updating the index at the end of each job avoids possible race
+conditions between simultaneous jobs, and it avoids the computational
+expense of regenerating the index.  This potentially saves minutes per job,
+depending on the number of binary packages in the mirror.  As a result, the
+default is that the mirror's buildcache index may not correctly reflect the
+mirror's contents at the end of a pipeline.  Setting ``rebuild-index`` to
+``True`` schedules a job at the end of the pipeline to update the binary
+package index on the mirror.  Rougly, we generate the following job to rebuild
+the buildcache index:
+
+.. code-block:: yaml
+
+   noop:
+      stage: final_stage,
+      script: spack buildcache update-index --keys -d <mirror-url>
+      tags: [<tag1>, <tag2>, ..., <tagn>]
+      image:
+        name: <image-name>
+        entrypoint: [<cmd1>, <cmd2>, ..., <cmdm>]
+      when: always
+
+If you enable the ``rebuild-index`` option, you may also need to supply the
+runner attributes used to run the job (``tags`` and either ``image`` or
+``variables``).  You can use ``nonbuild-job-attributes`` to specify these
+values just as you would directly to Gitlab (and as shown in the example
+above).  If you enable ``rebuild-index`` and do not provide
+``nonbuild-job-attributes``, then ``tags``, ``image``, and ``variables`` will
+be omitted from the ``rebuild-index`` job.  Consequently, it may never run
+unless your system has runners that can pick up untagged jobs and run them
+without a Docker image or runner variables.
+
+Note that if you leave ``rebuild-index`` disabled, you can easily edit your
+``.gitlab-ci.yml`` to add a job that rebuilds the buildcache index and does
+whatever else you want, and you can have it run after the
+``spack ci``-generated pipeline.
+
+.. _noop_jobs:
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Note about "no-op" jobs
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``nonbuild-job-attributes`` mentioned above are optional, though they are
+likely necessary when DAG pruning is enabled.  If no jobs in an environment
+need to be rebuilt during a given pipeline run (meaning all are already up
+to date on the mirror), a single succesful job (a NO-OP) is still generated
+to avoid an empty pipeline.  If you need, you can provide ``tags`` and
+``image`` or ``variables`` for the  NO-OP job via the
+``nonbuild-job-attributes`` configuration section.
 
 The optional ``cdash`` section provides information that will be used by the
 ``spack ci generate`` command (invoked by ``spack ci start``) for reporting
