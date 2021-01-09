@@ -107,12 +107,17 @@ config:
   # If set to true, Spack will attempt to build any compiler on the spec
   # that is not already available. If set to False, Spack will only use
   # compilers already configured in compilers.yaml
-  install_missing_compilers: False
+  install_missing_compilers: false
 
 
   # If set to true, Spack will always check checksums after downloading
   # archives. If false, Spack skips the checksum step.
   checksum: true
+
+
+  # If set to true, Spack will fetch deprecated versions without warning.
+  # If false, Spack will raise an error when trying to install a deprecated version.
+  deprecated: false
 
 
   # If set to true, `spack install` and friends will NOT clean
