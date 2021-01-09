@@ -303,7 +303,8 @@ def test_upstream_db_construction_from_config(
         tmpdir_factory, test_store, gen_mock_layout):
     """
     Ensures that an upstream database can be constructed
-    from deprecated upstreams.yaml format.
+    from deprecated upstreams.yaml format. Assumes that
+    the upstreams are in use for each possible install tree.
     """
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
