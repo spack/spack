@@ -27,8 +27,6 @@ class PyPyyaml(PythonPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('libyaml', when='+libyaml')
 
-    phases = ['build_ext', 'install']
-
     @property
     def import_modules(self):
         modules = ['yaml']
@@ -48,19 +46,3 @@ class PyPyyaml(PythonPackage):
             args.insert(0, '--without-libyaml')
 
         super(PyPyyaml, self).setup_py(*args, **kwargs)
-
-    def build_ext_args(self, spec, prefix):
-        args = []
-
-        if '+libyaml' in spec:
-            args.extend([
-                spec['libyaml'].libs.search_flags,
-                spec['libyaml'].headers.include_flags,
-            ])
-
-        return args
-
-    # Tests need to be re-added since `phases` was overridden
-    run_after('install')(
-        PythonPackage._run_default_install_time_test_callbacks)
-    run_after('install')(PythonPackage.sanity_check_prefix)

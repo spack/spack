@@ -134,7 +134,7 @@ class PyNumpy(PythonPackage):
                 flags.append(self.compiler.c99_flag)
         return (flags, None, None)
 
-    @run_before('build')
+    @run_before('build_py')
     def set_blas_lapack(self):
         # https://numpy.org/devdocs/user/building.html
         # https://github.com/numpy/numpy/blob/master/site.cfg.example

@@ -42,7 +42,7 @@ class PyStatsmodels(PythonPackage):
 
     depends_on('py-pytest', type='test')
 
-    @run_after('build')
+    @run_after('build_scripts')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         dirs = glob.glob("build/lib*")  # There can be only one...

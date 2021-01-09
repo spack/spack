@@ -32,7 +32,7 @@ class PyPydmd(PythonPackage):
     # https://github.com/mathLab/PyDMD/pull/133
     patch('isuue-133.patch', when='@0.3')
 
-    @run_after('build')
+    @run_after('build_scripts')
     def build_docs(self):
         if '+docs' in self.spec:
             with working_dir('docs'):
@@ -43,7 +43,7 @@ class PyPydmd(PythonPackage):
         if '+docs' in self.spec:
             install_tree('docs', self.prefix.docs)
 
-    @run_after('build')
+    @run_after('build_scripts')
     @on_package_attributes(run_tests=True)
     def build_test(self):
         python('test.py')

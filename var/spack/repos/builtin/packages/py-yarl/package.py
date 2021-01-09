@@ -18,7 +18,7 @@ class PyYarl(PythonPackage):
     depends_on('py-multidict@4.0:', type=('build', 'run'))
     depends_on('py-idna@2.0:', type=('build', 'run'))
 
-    @run_before('build')
+    @run_before('build_py')
     def fix_cython(self):
         cython = self.spec['py-cython'].command
         cython('-3',

@@ -48,7 +48,7 @@ class PyPyside2(PythonPackage):
             args.append('--build-tests')
         return args
 
-    @run_after('build')
+    @run_after('build_scripts')
     def build_docs(self):
         if '+doc' in self.spec:
             make('apidoc')

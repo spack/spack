@@ -7,7 +7,9 @@ import os
 import shutil
 
 from spack.directives import extends
+from spack.error import NoHeadersError, NoLibrariesError
 from spack.package import PackageBase, run_after
+from spack.util.environment import filter_system_paths
 
 from llnl.util.filesystem import (working_dir, get_filetype, filter_file,
                                   path_contains_subdirectory, same_path, find)
@@ -47,8 +49,15 @@ class PythonPackage(PackageBase):
 
        $ python setup.py --help-commands
 
-    By default, only the 'build' and 'install' phases are run, but if you
-    need to run more phases, simply modify your ``phases`` list like so:
+    By default, only the following phases are run:
+
+    * build_py
+    * build_ext
+    * build_clib
+    * build_scripts
+    * install
+
+    If you need to run more phases, simply modify your ``phases`` list like so:
 
     .. code-block:: python
 
@@ -61,8 +70,7 @@ class PythonPackage(PackageBase):
        $ python -s setup.py --no-user-cfg <phase>
 
     Each phase also has a <phase_args> function that can pass arguments to
-    this call. All of these functions are empty except for the ``install_args``
-    function, which passes ``--prefix=/path/to/installation/directory``.
+    this call.
 
     If you need to run a phase which is not a standard setup.py command,
     you'll need to define a function for it like so:
@@ -75,8 +83,10 @@ class PythonPackage(PackageBase):
     #: Package name, version, and extension on PyPI
     pypi = None
 
-    # Default phases
-    phases = ['build', 'install']
+    #: Default phases
+    phases = [
+        'build_py', 'build_ext', 'build_clib', 'build_scripts', 'install'
+    ]
 
     # To be used in UI queries that require to know which
     # build-system class we are using
@@ -199,7 +209,47 @@ class PythonPackage(PackageBase):
 
     def build_ext_args(self, spec, prefix):
         """Arguments to pass to build_ext."""
-        return []
+
+        # Specify number of parallel build jobs
+        jobs = inspect.getmodule(self).make_jobs
+        args = ['--parallel={0}'.format(jobs)]
+
+        library_dirs = []
+        include_dirs = []
+        for dep in spec.dependencies(deptype='link'):
+            query = spec[dep.name]
+            try:
+                library_dirs.extend(query.libs.directories)
+            except NoLibrariesError:
+                pass
+            try:
+                include_dirs.extend(query.headers.directories)
+            except NoHeadersError:
+                pass
+
+        # Filter out system paths: ['/', '/usr', '/usr/local']
+        # These paths can be introduced into the build when an external package
+        # is added as a dependency. The problem with these paths is that they
+        # contain hundreds of other packages installed in the same directory.
+        # If these paths come first, they can overshadow Spack installations.
+        library_dirs = filter_system_paths(library_dirs)
+        include_dirs = filter_system_paths(include_dirs)
+
+        # RPATH link dependencies. Python packages build with the compiler
+        # used to install Python. Unfortunately, we have to filter the
+        # Spack compiler wrappers out after installation, so Python builds
+        # its modules with the regular compilers. I haven't yet found a way
+        # to override the compiler, so we explicitly set --rpath instead.
+        if include_dirs:
+            args.append('--include-dirs={0}'.format(':'.join(include_dirs)))
+
+        if library_dirs:
+            args.extend([
+                '--library-dirs={0}'.format(':'.join(library_dirs)),
+                '--rpath={0}'.format(':'.join(library_dirs)),
+            ])
+
+        return args
 
     def build_clib(self, spec, prefix):
         """Build C/C++ libraries used by Python extensions."""
