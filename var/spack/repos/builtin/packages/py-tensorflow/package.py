@@ -209,7 +209,8 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-typing-extensions@3.7.4:3.7.999', type=('build', 'run'), when='@2.4.0:')
     if sys.byteorder == 'little':
         # Only builds correctly on little-endian machines
-        depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:')
+        depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:2.3')
+        depends_on('py-grpcio@1.32.0:1.32.999', type=('build', 'run'), when='@2.4:')
 
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
