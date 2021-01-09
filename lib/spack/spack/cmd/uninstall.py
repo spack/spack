@@ -247,10 +247,6 @@ def do_uninstall(env, specs, force):
         for item in ready:
             item.do_uninstall(force=force)
 
-    # write any changes made to the active environment
-    if env:
-        env.write()
-
 
 def get_uninstall_list(args, specs, env):
     # Gets the list of installed specs that match the ones give via cli
