@@ -81,8 +81,7 @@ def test_install_to_different_install_tree(
         pkg.remove_prefix()
         raise
 
-    # Restore old store
-    spack.store.store = real_store
+    # Reset install_root setting
     spack.store.install_root = None
 
 
