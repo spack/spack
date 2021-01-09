@@ -197,7 +197,8 @@ def set_install_tree_permissions(install_tree):
         # Ensures path is writeable (fails in some tests)
         if not os.access(root, os.W_OK):
             return
-    except:
+    except Exception:
+        tty.debug('Invalid path, skipping setting permissions')
         return
 
     if os.path.exists(spack.util.path.canonicalize_path(root)):
