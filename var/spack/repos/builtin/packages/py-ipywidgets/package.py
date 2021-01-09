@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,5 +30,3 @@ class PyIpywidgets(PythonPackage):
                when='@7.4.2')
     depends_on('py-widgetsnbextension@3.5.0:3.5.999', type=('build', 'run'),
                when='@7.5.1')
-    depends_on('py-mock', type='test', when='^python@2.7:2.8')
-    depends_on('py-nose', type='test')

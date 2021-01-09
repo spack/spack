@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -80,3 +80,18 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
             args.append('--without-gnutls')
 
         return args
+
+    def _test_check_versions(self):
+        """Perform version checks on installed package binaries."""
+        checks = ['ctags', 'ebrowse', 'emacs', 'emacsclient', 'etags']
+
+        for exe in checks:
+            expected = str(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, expected)
+            self.run_test(exe, ['--version'], expected, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()

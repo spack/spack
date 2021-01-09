@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -671,3 +671,12 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Qd(AutotoolsPackage):
 
     homepage = "https://bitbucket.org/njet/qd-library/src/master/"
     git      = "https://bitbucket.org/njet/qd-library.git"
+
+    tags = ['hep']
 
     version('2.3.13', commit='a57dde9')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 
 from spack import *
 import os
+import shutil
 import sys
 
 
@@ -55,23 +56,30 @@ class VtkM(CMakePackage, CudaPackage):
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
     variant("hip", default=False, description="build hip support")
 
-    # it doesn't look like spack has a amd gpu abstraction
+    # it doesn't look like spack has an amd gpu abstraction
+    # Going to have to restrict our set to ones that Kokkos supports
     amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
+        'gfx900', 'gfx906', 'gfx908'
     )
-    variant('amdgpu_target', default='none', multi=True, values=amdgpu_targets)
+    kokkos_amd_gpu_map = {
+        'gfx900': 'vega900',
+        'gfx906': 'vega906',
+        'gfx908': 'vega908'
+    }
+
+    variant('amdgpu_target', default='none', multi=True, values=('none',) + amdgpu_targets)
     conflicts("+hip", when="amdgpu_target=none")
 
-    depends_on("cmake@3.12:", type="build")         # CMake >= 3.12
-    depends_on("cmake@3.18:", when="+hip")          # CMake >= 3.18
+    depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
+    depends_on("cmake@3.18:", when="+hip", type="build")  # CMake >= 3.18
 
     depends_on('cuda@10.2.0:', when='+cuda')
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
-    depends_on("kokkos@3.1:+hip", when="+hip")
+    for kokkos_value in kokkos_amd_gpu_map:
+        depends_on("kokkos@develop +hip amd_gpu_arch=%s" % kokkos_amd_gpu_map[kokkos_value], when="amdgpu_target=%s" % kokkos_value)
+
     depends_on("rocm-cmake@3.7:", when="+hip")
     depends_on("hip@3.7:", when="+hip")
 
@@ -160,6 +168,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # hip support
             if "+hip" in spec:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
                 options.append("-DVTKm_ENABLE_HIP:BOOL=ON")
 
                 archs = ",".join(self.spec.variants['amdgpu_target'].value)
@@ -187,3 +196,171 @@ class VtkM(CMakePackage, CudaPackage):
                 options.append("-DVTKm_ENABLE_TBB:BOOL=OFF")
 
             return options
+
+    def smoke_test(self):
+        print("Checking VTK-m installation...")
+        spec = self.spec
+        checkdir = "spack-check"
+        with working_dir(checkdir, create=True):
+            source = r"""
+#include <vtkm/cont/Algorithm.h>
+#include <vtkm/cont/ArrayHandle.h>
+#include <vtkm/cont/Initialize.h>
+
+#include <iostream>
+#include <vector>
+
+struct NoArgKernel {
+    VTKM_EXEC void operator()(vtkm::Id) const {}
+
+    void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer &errorMessage) {
+      this->ErrorMessage = errorMessage;
+    }
+
+    vtkm::exec::internal::ErrorMessageBuffer ErrorMessage;
+};
+
+template <typename PortalType> struct FillArrayKernel {
+    using ValueType = typename PortalType::ValueType;
+
+    FillArrayKernel(const PortalType &array, ValueType fill)
+        : Array(array), FillValue(fill) {}
+
+    VTKM_EXEC void operator()(vtkm::Id index) const {
+      this->Array.Set(index, this->FillValue);
+    }
+    void SetErrorMessageBuffer(
+        const vtkm::exec::internal::ErrorMessageBuffer &) {
+    }
+
+    PortalType Array;
+    ValueType FillValue;
+};
+
+
+int main() {
+    vtkm::cont::Initialize();
+
+    constexpr vtkm::Id size = 1000000;
+#if defined(VTKM_ENABLE_KOKKOS)
+    constexpr vtkm::cont::DeviceAdapterTagKokkos desired_device;
+#elif defined(VTKM_ENABLE_CUDA)
+    constexpr vtkm::cont::DeviceAdapterTagCuda desired_device;
+#elif defined(VTKM_ENABLE_TBB)
+    constexpr vtkm::cont::DeviceAdapterTagTBB desired_device;
+#elif defined(VTKM_ENABLE_OPENMP)
+    constexpr vtkm::cont::DeviceAdapterTagOpenMP desired_device;
+#else
+    #error "No VTK-m Device Adapter enabled"
+#endif
+
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing No Argument Kernel" << std::endl;
+    vtkm::cont::Algorithm::Schedule(desired_device, NoArgKernel(), size);
+
+    vtkm::cont::ArrayHandle<vtkm::Id> handle;
+    {
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing Kernel + ArrayHandle PrepareForOutput" << std::endl;
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForOutput(size, desired_device, token);
+    vtkm::cont::Algorithm::Schedule(desired_device,
+        FillArrayKernel<decltype(portal)>{portal, 1}, size);
+    }
+
+    {
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Testing Kernel + ArrayHandle PrepareForInPlace" << std::endl;
+    vtkm::cont::Token token;
+    auto portal = handle.PrepareForInPlace(desired_device, token);
+    vtkm::cont::Algorithm::Schedule(desired_device,
+        FillArrayKernel<decltype(portal)>{portal, 2}, size);
+    }
+
+    std::cout << "-------------------------------------------\n";
+    std::cout << "Ran tests on: " << desired_device.GetName() << std::endl;
+
+    return 0;
+}
+"""
+
+            cmakelists = r"""
+##============================================================================
+##  Copyright (c) Kitware, Inc.
+##  All rights reserved.
+##  See LICENSE.txt for details.
+##
+##  This software is distributed WITHOUT ANY WARRANTY; without even
+##  the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+##  PURPOSE.  See the above copyright notice for more information.
+##============================================================================
+cmake_minimum_required(VERSION 3.12...3.18 FATAL_ERROR)
+project(VTKmSmokeTest CXX)
+
+#Find the VTK-m package
+find_package(VTKm REQUIRED QUIET)
+
+add_executable(VTKmSmokeTest main.cxx)
+target_link_libraries(VTKmSmokeTest PRIVATE vtkm_cont)
+vtkm_add_target_information(VTKmSmokeTest
+                            DROP_UNUSED_SYMBOLS MODIFY_CUDA_FLAGS
+                            DEVICE_SOURCES main.cxx)
+"""
+
+            with open("main.cxx", 'w') as f:
+                f.write(source)
+            with open("CMakeLists.txt", 'w') as f:
+                f.write(cmakelists)
+            builddir = "build"
+            with working_dir(builddir, create=True):
+                cmake = Executable(spec['cmake'].prefix.bin + "/cmake")
+                cmakefiledir = spec['vtk-m'].prefix.lib + "/cmake"
+                cmakefiledir = cmakefiledir + "/" + os.listdir(cmakefiledir)[0]
+                cmake(*(["..", "-DVTKm_DIR=" + cmakefiledir]))
+                cmake(*(["--build", "."]))
+                try:
+                    test = Executable('./VTKmSmokeTest')
+                    output = test(output=str)
+                except ProcessError:
+                    output = ""
+                print(output)
+                if "+hip" in spec:
+                    expected_device = 'Kokkos'
+                elif "+cuda" in spec:
+                    expected_device = 'Cuda'
+                elif "+tbb" in spec:
+                    expected_device = 'TBB'
+                elif "+openmp" in spec:
+                    expected_device = 'OpenMP'
+                expected = """\
+-------------------------------------------
+Testing No Argument Kernel
+-------------------------------------------
+Testing Kernel + ArrayHandle PrepareForOutput
+-------------------------------------------
+Testing Kernel + ArrayHandle PrepareForInPlace
+-------------------------------------------
+Ran tests on: """ + expected_device + "\n"
+                success = output == expected
+                if success:
+                    print("Test success")
+                if not success:
+                    print("Produced output does not match expected output.")
+                    print("Expected output:")
+                    print('-' * 80)
+                    print(expected)
+                    print('-' * 80)
+                    print("Produced output:")
+                    print('-' * 80)
+                    print(output)
+                    print('-' * 80)
+                    raise RuntimeError("VTK-m install check failed")
+        shutil.rmtree(checkdir)
+
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        spec = self.spec
+        if "@master" in spec:
+            self.smoke_test()

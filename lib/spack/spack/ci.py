@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -597,6 +597,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file,
     max_length_needs = 0
     max_needs_job = ''
 
+    before_script, after_script = None, None
     for phase in phases:
         phase_name = phase['name']
         strip_compilers = phase['strip-compilers']

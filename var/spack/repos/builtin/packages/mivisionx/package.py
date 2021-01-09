@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('3.10.0', sha256='8a67fae77a05ef60a501e64a572a7bd2ccb9243518b1414112ccd1d1f78d08c8')
+    version('3.9.0', sha256='892812cc6e6977ed8cd4b69c63f4c17be43b83c78eeafd9549236c17f6eaa2af')
     version('3.8.0', sha256='4e177a9b5dcae671d6ea9f0686cf5f73fcd1e3feb3c50425c8c6d43ac5d77feb')
     version('3.7.0', sha256='3ce13c6449739c653139fc121411d94eaa9d764d3d339c4c78fab4b8aa199965')
     version('1.7', sha256='ff77142fd4d4a93136fd0ac17348861f10e8f5d5f656fa9dacee08d8fcd2b1d8')
@@ -38,12 +40,12 @@ class Mivisionx(CMakePackage):
 
     depends_on('ffmpeg@4.1.1', type='build')
     depends_on('protobuf@3.5.0', type='build')
-    depends_on('opencv@3.4.6', type='build')
+    depends_on('opencv@3.4.6 +calib3d+core+features2d+highgui+imgproc+video+videoio+videostab', type='build')
     depends_on('rocm-opencl@3.5.0', type='build', when='@1.7')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
     depends_on('miopen-opencl@3.5.0', type=('build', 'run', 'link'), when='@1.7')
     depends_on('miopengemm@1.1.6', type=('build', 'run', 'link'), when='@1.7')
-    for ver in ['3.7.0', '3.8.0']:
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0']:
         depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('miopengemm@' + ver, type=('build', 'run', 'link'), when='@' + ver)

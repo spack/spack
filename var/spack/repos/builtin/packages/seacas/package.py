@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2021-01-06', sha256='b233502a7dc3e5ab69466054cf358eb033e593b8679c6721bf630b03999bd7e5')
     version('2020-08-13', sha256='e5eaf203eb2dbfb33c61ccde26deea459d058aaea79b0847e2f4bdb0cef1ddcb')
     version('2020-05-12', sha256='7fc6915f60568b36e052ba07a77d691c99abe42eaba6ae8a6dc74bb33490ed60')
     version('2020-03-16', sha256='2eb404f3dcb17c3e7eacf66978372830d40ef3722788207741fcd48417807af6')

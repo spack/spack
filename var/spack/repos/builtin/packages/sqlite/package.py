@@ -1,9 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 from spack import architecture
 
 
@@ -14,6 +13,7 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.34.0', sha256='bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee')
     version('3.33.0', sha256='106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15')
     version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
     version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
@@ -129,3 +129,41 @@ class Sqlite(AutotoolsPackage):
             cc(self.compiler.cc_pic_flag, '-lm', '-shared',
                 'extension-functions.c', '-o', libraryname)
             install(libraryname, self.prefix.lib)
+
+    def _test_example(self):
+        """Ensure a sequence of commands on example db are successful."""
+
+        test_data_dir = self.test_suite.current_test_data_dir
+        db_filename = test_data_dir.join('packages.db')
+        exe = 'sqlite3'
+
+        # Ensure the database only contains one table
+        expected = 'packages'
+        reason = 'test: ensuring only table is "{0}"'.format(expected)
+        self.run_test(exe, [db_filename, '.tables'], expected, installed=True,
+                      purpose=reason, skip_missing=False)
+
+        # Ensure the database dump matches expectations, where special
+        # characters are replaced with spaces in the expected and actual
+        # output to avoid pattern errors.
+        reason = 'test: checking dump output'
+        expected = get_escaped_text_output(test_data_dir.join('dump.out'))
+        self.run_test(exe, [db_filename, '.dump'], expected, installed=True,
+                      purpose=reason, skip_missing=False)
+
+    def _test_version(self):
+        """Perform version check on the installed package."""
+        exe = 'sqlite3'
+        vers_str = str(self.spec.version)
+
+        reason = 'test: ensuring version of {0} is {1}'.format(exe, vers_str)
+        self.run_test(exe, '-version', vers_str, installed=True,
+                      purpose=reason, skip_missing=False)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Perform a simple version check
+        self._test_version()
+
+        # Run a sequence of operations
+        self._test_example()

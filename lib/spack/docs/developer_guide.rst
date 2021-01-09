@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -363,11 +363,12 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^
-``spack test``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+``spack unit-test``
+^^^^^^^^^^^^^^^^^^^
 
-See the :ref:`contributor guide section <cmd-spack-test>` on ``spack test``.
+See the :ref:`contributor guide section <cmd-spack-unit-test>` on
+``spack unit-test``.
 
 .. _cmd-spack-python:
 
@@ -395,20 +396,42 @@ other Spack modules:
    True
    >>>
 
-You can also run a single command:
+If you prefer using an IPython interpreter, given that IPython is installed
+you can specify the interpreter with ``-i``:
+
+.. code-block:: console
+
+   $ spack python -i ipython
+   Python 3.8.3 (default, May 19 2020, 18:47:26) 
+   Type 'copyright', 'credits' or 'license' for more information
+   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
+
+
+   Spack version 0.16.0
+   Python 3.8.3, Linux x86_64
+
+   In [1]:
+
+
+With either interpreter you can run a single command:
 
 .. code-block:: console
 
    $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Fedora', '25', 'Workstation Edition')
+   ('Ubuntu', '18.04', 'Bionic Beaver')
+
+   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
+   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
 
 or a file:
 
 .. code-block:: console
 
    $ spack python ~/test_fetching.py
+   $ spack python -i ipython ~/test_fetching.py
 
-just like you would with the normal ``python`` command.
+just like you would with the normal ``python`` command. 
+
 
 .. _cmd-spack-url:
 

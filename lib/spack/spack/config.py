@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -38,6 +38,7 @@ import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
+from typing import List  # novm
 
 import ruamel.yaml as yaml
 from ruamel.yaml.error import MarkedYAMLError
@@ -109,6 +110,7 @@ config_defaults = {
         'dirty': False,
         'build_jobs': min(16, multiprocessing.cpu_count()),
         'build_stage': '$tempdir/spack-stage',
+        'concretizer': 'original',
     }
 }
 
@@ -597,9 +599,6 @@ class Configuration(object):
             changed = _update_in_memory(data, section)
             if changed:
                 self.format_updates[section].append(scope)
-                msg = ('OUTDATED CONFIGURATION FILE '
-                       '[section={0}, scope={1}, dir={2}]')
-                tty.debug(msg.format(section, scope.name, scope.path))
 
             merged_section = merge_yaml(merged_section, data)
 
@@ -737,7 +736,7 @@ def override(path_or_scope, value=None):
 
 #: configuration scopes added on the command line
 #: set by ``spack.main.main()``.
-command_line_scopes = []
+command_line_scopes = []  # type: List[str]
 
 
 def _add_platform_scope(cfg, scope_type, name, path):

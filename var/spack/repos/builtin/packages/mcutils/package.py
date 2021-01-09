@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Mcutils(MakefilePackage):
 
     homepage = "https://bitbucket.org/andybuckley/mcutils"
     url      = "https://bitbucket.org/andybuckley/mcutils/get/mcutils-1.3.4.tar.gz"
+
+    tags = ['hep']
 
     version('1.3.4', sha256='0bf9795cc248871ab2b663d2eef647311eacaea4982997950096de68747e65a3')
     version('1.3.3', sha256='bfb2f0e0e6de358928436f309f3f1b084d3d652073c440f262de878332116ecb')

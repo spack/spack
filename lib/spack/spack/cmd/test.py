@@ -1,169 +1,385 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
-from __future__ import division
-
-import collections
-import sys
-import re
+import os
 import argparse
-import pytest
-from six import StringIO
+import textwrap
+import fnmatch
+import re
+import shutil
 
-import llnl.util.tty.color as color
-from llnl.util.filesystem import working_dir
-from llnl.util.tty.colify import colify
+import llnl.util.tty as tty
 
-import spack.paths
+import spack.install_test
+import spack.environment as ev
+import spack.cmd
+import spack.cmd.common.arguments as arguments
+import spack.report
+import spack.package
 
-description = "run spack's unit tests (wrapper around pytest)"
-section = "developer"
+description = "run spack's tests for an install"
+section = "admin"
 level = "long"
 
 
+def first_line(docstring):
+    """Return the first line of the docstring."""
+    return docstring.split('\n')[0]
+
+
 def setup_parser(subparser):
-    subparser.add_argument(
-        '-H', '--pytest-help', action='store_true', default=False,
-        help="show full pytest help, with advanced options")
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='test_command')
 
-    # extra spack arguments to list tests
-    list_group = subparser.add_argument_group("listing tests")
-    list_mutex = list_group.add_mutually_exclusive_group()
-    list_mutex.add_argument(
-        '-l', '--list', action='store_const', default=None,
-        dest='list', const='list', help="list test filenames")
-    list_mutex.add_argument(
-        '-L', '--list-long', action='store_const', default=None,
-        dest='list', const='long', help="list all test functions")
-    list_mutex.add_argument(
-        '-N', '--list-names', action='store_const', default=None,
-        dest='list', const='names', help="list full names of all tests")
+    # Run
+    run_parser = sp.add_parser('run', description=test_run.__doc__,
+                               help=first_line(test_run.__doc__))
 
-    # use tests for extension
-    subparser.add_argument(
-        '--extension', default=None,
-        help="run test for a given spack extension")
+    alias_help_msg = "Provide an alias for this test-suite"
+    alias_help_msg += " for subsequent access."
+    run_parser.add_argument('--alias', help=alias_help_msg)
 
-    # spell out some common pytest arguments, so they'll show up in help
-    pytest_group = subparser.add_argument_group(
-        "common pytest arguments (spack test --pytest-help for more details)")
-    pytest_group.add_argument(
-        "-s", action='append_const', dest='parsed_args', const='-s',
-        help="print output while tests run (disable capture)")
-    pytest_group.add_argument(
-        "-k", action='store', metavar="EXPRESSION", dest='expression',
-        help="filter tests by keyword (can also use w/list options)")
-    pytest_group.add_argument(
-        "--showlocals", action='append_const', dest='parsed_args',
-        const='--showlocals', help="show local variable values in tracebacks")
+    run_parser.add_argument(
+        '--fail-fast', action='store_true',
+        help="Stop tests for each package after the first failure."
+    )
+    run_parser.add_argument(
+        '--fail-first', action='store_true',
+        help="Stop after the first failed package."
+    )
+    run_parser.add_argument(
+        '--keep-stage',
+        action='store_true',
+        help='Keep testing directory for debugging'
+    )
+    run_parser.add_argument(
+        '--log-format',
+        default=None,
+        choices=spack.report.valid_formats,
+        help="format to be used for log files"
+    )
+    run_parser.add_argument(
+        '--log-file',
+        default=None,
+        help="filename for the log file. if not passed a default will be used"
+    )
+    arguments.add_cdash_args(run_parser, False)
+    run_parser.add_argument(
+        '--help-cdash',
+        action='store_true',
+        help="Show usage instructions for CDash reporting"
+    )
 
-    # remainder is just passed to pytest
-    subparser.add_argument(
-        'pytest_args', nargs=argparse.REMAINDER, help="arguments for pytest")
+    cd_group = run_parser.add_mutually_exclusive_group()
+    arguments.add_common_arguments(cd_group, ['clean', 'dirty'])
 
+    arguments.add_common_arguments(run_parser, ['installed_specs'])
 
-def do_list(args, extra_args):
-    """Print a lists of tests than what pytest offers."""
-    # Run test collection and get the tree out.
-    old_output = sys.stdout
-    try:
-        sys.stdout = output = StringIO()
-        pytest.main(['--collect-only'] + extra_args)
-    finally:
-        sys.stdout = old_output
+    # List
+    sp.add_parser('list', description=test_list.__doc__,
+                  help=first_line(test_list.__doc__))
 
-    lines = output.getvalue().split('\n')
-    tests = collections.defaultdict(lambda: set())
-    prefix = []
+    # Find
+    find_parser = sp.add_parser('find', description=test_find.__doc__,
+                                help=first_line(test_find.__doc__))
+    find_parser.add_argument(
+        'filter', nargs=argparse.REMAINDER,
+        help='optional case-insensitive glob patterns to filter results.')
 
-    # collect tests into sections
-    for line in lines:
-        match = re.match(r"(\s*)<([^ ]*) '([^']*)'", line)
-        if not match:
-            continue
-        indent, nodetype, name = match.groups()
+    # Status
+    status_parser = sp.add_parser('status', description=test_status.__doc__,
+                                  help=first_line(test_status.__doc__))
+    status_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites for which to print status")
 
-        # strip parametrized tests
-        if "[" in name:
-            name = name[:name.index("[")]
+    # Results
+    results_parser = sp.add_parser('results', description=test_results.__doc__,
+                                   help=first_line(test_results.__doc__))
+    results_parser.add_argument(
+        '-l', '--logs', action='store_true',
+        help="print the test log for each matching package")
+    results_parser.add_argument(
+        '-f', '--failed', action='store_true',
+        help="only show results for failed tests of matching packages")
+    results_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        metavar='[name(s)] [-- installed_specs]...',
+        help="suite names and installed package constraints")
+    results_parser.epilog = 'Test results will be filtered by space-' \
+        'separated suite name(s) and installed\nspecs when provided.  '\
+        'If names are provided, then only results for those test\nsuites '\
+        'will be shown.  If installed specs are provided, then ony results'\
+        '\nmatching those specs will be shown.'
 
-        depth = len(indent) // 2
-
-        if nodetype.endswith("Function"):
-            key = tuple(prefix)
-            tests[key].add(name)
-        else:
-            prefix = prefix[:depth]
-            prefix.append(name)
-
-    def colorize(c, prefix):
-        if isinstance(prefix, tuple):
-            return "::".join(
-                color.colorize("@%s{%s}" % (c, p))
-                for p in prefix if p != "()"
-            )
-        return color.colorize("@%s{%s}" % (c, prefix))
-
-    if args.list == "list":
-        files = set(prefix[0] for prefix in tests)
-        color_files = [colorize("B", file) for file in sorted(files)]
-        colify(color_files)
-
-    elif args.list == "long":
-        for prefix, functions in sorted(tests.items()):
-            path = colorize("*B", prefix) + "::"
-            functions = [colorize("c", f) for f in sorted(functions)]
-            color.cprint(path)
-            colify(functions, indent=4)
-            print()
-
-    else:  # args.list == "names"
-        all_functions = [
-            colorize("*B", prefix) + "::" + colorize("c", f)
-            for prefix, functions in sorted(tests.items())
-            for f in sorted(functions)
-        ]
-        colify(all_functions)
+    # Remove
+    remove_parser = sp.add_parser('remove', description=test_remove.__doc__,
+                                  help=first_line(test_remove.__doc__))
+    arguments.add_common_arguments(remove_parser, ['yes_to_all'])
+    remove_parser.add_argument(
+        'names', nargs=argparse.REMAINDER,
+        help="Test suites to remove from test stage")
 
 
-def add_back_pytest_args(args, unknown_args):
-    """Add parsed pytest args, unknown args, and remainder together.
+def test_run(args):
+    """Run tests for the specified installed packages.
 
-    We add some basic pytest arguments to the Spack parser to ensure that
-    they show up in the short help, so we have to reassemble things here.
+    If no specs are listed, run tests for all packages in the current
+    environment or all installed packages if there is no active environment.
     """
-    result = args.parsed_args or []
-    result += unknown_args or []
-    result += args.pytest_args or []
-    if args.expression:
-        result += ["-k", args.expression]
-    return result
+    # cdash help option
+    if args.help_cdash:
+        parser = argparse.ArgumentParser(
+            formatter_class=argparse.RawDescriptionHelpFormatter,
+            epilog=textwrap.dedent('''\
+environment variables:
+  SPACK_CDASH_AUTH_TOKEN
+                        authentication token to present to CDash
+                        '''))
+        arguments.add_cdash_args(parser, True)
+        parser.print_help()
+        return
+
+    # set config option for fail-fast
+    if args.fail_fast:
+        spack.config.set('config:fail_fast', True, scope='command_line')
+
+    # Get specs to test
+    env = ev.get_env(args, 'test')
+    hashes = env.all_hashes() if env else None
+
+    specs = spack.cmd.parse_specs(args.specs) if args.specs else [None]
+    specs_to_test = []
+    for spec in specs:
+        matching = spack.store.db.query_local(spec, hashes=hashes)
+        if spec and not matching:
+            tty.warn("No installed packages match spec %s" % spec)
+        specs_to_test.extend(matching)
+
+    # test_stage_dir
+    test_suite = spack.install_test.TestSuite(specs_to_test, args.alias)
+    test_suite.ensure_stage()
+    tty.msg("Spack test %s" % test_suite.name)
+
+    # Set up reporter
+    setattr(args, 'package', [s.format() for s in test_suite.specs])
+    reporter = spack.report.collect_info(
+        spack.package.PackageBase, 'do_test', args.log_format, args)
+    if not reporter.filename:
+        if args.log_file:
+            if os.path.isabs(args.log_file):
+                log_file = args.log_file
+            else:
+                log_dir = os.getcwd()
+                log_file = os.path.join(log_dir, args.log_file)
+        else:
+            log_file = os.path.join(
+                os.getcwd(),
+                'test-%s' % test_suite.name)
+        reporter.filename = log_file
+    reporter.specs = specs_to_test
+
+    with reporter('test', test_suite.stage):
+        test_suite(remove_directory=not args.keep_stage,
+                   dirty=args.dirty,
+                   fail_first=args.fail_first)
 
 
-def test(parser, args, unknown_args):
-    if args.pytest_help:
-        # make the pytest.main help output more accurate
-        sys.argv[0] = 'spack test'
-        return pytest.main(['-h'])
+def has_test_method(pkg):
+    return pkg.test.__func__ != spack.package.PackageBase.test
 
-    # add back any parsed pytest args we need to pass to pytest
-    pytest_args = add_back_pytest_args(args, unknown_args)
 
-    # The default is to test the core of Spack. If the option `--extension`
-    # has been used, then test that extension.
-    pytest_root = spack.paths.spack_root
-    if args.extension:
-        target = args.extension
-        extensions = spack.config.get('config:extensions')
-        pytest_root = spack.extensions.path_for_extension(target, *extensions)
+def test_list(args):
+    """List all installed packages with available tests."""
+    # TODO: This can be extended to have all of the output formatting options
+    # from `spack find`.
+    env = ev.get_env(args, 'test')
+    hashes = env.all_hashes() if env else None
 
-    # pytest.ini lives in the root of the spack repository.
-    with working_dir(pytest_root):
-        if args.list:
-            do_list(args, pytest_args)
+    specs = spack.store.db.query(hashes=hashes)
+    specs = list(filter(lambda s: has_test_method(s.package), specs))
+
+    spack.cmd.display_specs(specs, long=True)
+
+
+def test_find(args):  # TODO: merge with status (noargs)
+    """Find tests that are running or have available results.
+
+    Displays aliases for tests that have them, otherwise test suite content
+    hashes."""
+    test_suites = spack.install_test.get_all_test_suites()
+
+    # Filter tests by filter argument
+    if args.filter:
+        def create_filter(f):
+            raw = fnmatch.translate('f' if '*' in f or '?' in f
+                                    else '*' + f + '*')
+            return re.compile(raw, flags=re.IGNORECASE)
+        filters = [create_filter(f) for f in args.filter]
+
+        def match(t, f):
+            return f.match(t)
+        test_suites = [t for t in test_suites
+                       if any(match(t.alias, f) for f in filters) and
+                       os.path.isdir(t.stage)]
+
+    names = [t.name for t in test_suites]
+
+    if names:
+        # TODO: Make these specify results vs active
+        msg = "Spack test results available for the following tests:\n"
+        msg += "        %s\n" % ' '.join(names)
+        msg += "    Run `spack test remove` to remove all tests"
+        tty.msg(msg)
+    else:
+        msg = "No test results match the query\n"
+        msg += "        Tests may have been removed using `spack test remove`"
+        tty.msg(msg)
+
+
+def test_status(args):
+    """Get the current status for the specified Spack test suite(s)."""
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
+    else:
+        test_suites = spack.install_test.get_all_test_suites()
+        if not test_suites:
+            tty.msg("No test suites with status to report")
+
+    for test_suite in test_suites:
+        # TODO: Make this handle capability tests too
+        # TODO: Make this handle tests running in another process
+        tty.msg("Test suite %s completed" % test_suite.name)
+
+
+def _report_suite_results(test_suite, args, constraints):
+    """Report the relevant test suite results."""
+
+    # TODO: Make this handle capability tests too
+    # The results file may turn out to be a placeholder for future work
+
+    if constraints:
+        # TBD: Should I be refactoring or re-using ConstraintAction?
+        qspecs = spack.cmd.parse_specs(constraints)
+        specs = {}
+        for spec in qspecs:
+            for s in spack.store.db.query(spec, installed=True):
+                specs[s.dag_hash()] = s
+        specs = sorted(specs.values())
+        test_specs = dict((test_suite.test_pkg_id(s), s) for s in
+                          test_suite.specs if s in specs)
+    else:
+        test_specs = dict((test_suite.test_pkg_id(s), s) for s in
+                          test_suite.specs)
+
+    if not test_specs:
+        return
+
+    if os.path.exists(test_suite.results_file):
+        results_desc = 'Failing results' if args.failed else 'Results'
+        matching = ", spec matching '{0}'".format(' '.join(constraints)) \
+            if constraints else ''
+        tty.msg("{0} for test suite '{1}'{2}:"
+                .format(results_desc, test_suite.name, matching))
+
+        results = {}
+        with open(test_suite.results_file, 'r') as f:
+            for line in f:
+                pkg_id, status = line.split()
+                results[pkg_id] = status
+
+        for pkg_id in test_specs:
+            if pkg_id in results:
+                status = results[pkg_id]
+                if args.failed and status != 'FAILED':
+                    continue
+
+                msg = "  {0} {1}".format(pkg_id, status)
+                if args.logs:
+                    spec = test_specs[pkg_id]
+                    log_file = test_suite.log_file_for_spec(spec)
+                    if os.path.isfile(log_file):
+                        with open(log_file, 'r') as f:
+                            msg += '\n{0}'.format(''.join(f.readlines()))
+                tty.msg(msg)
+    else:
+        msg = "Test %s has no results.\n" % test_suite.name
+        msg += "        Check if it is running with "
+        msg += "`spack test status %s`" % test_suite.name
+        tty.msg(msg)
+
+
+def test_results(args):
+    """Get the results from Spack test suite(s) (default all)."""
+    if args.names:
+        try:
+            sep_index = args.names.index('--')
+            names = args.names[:sep_index]
+            constraints = args.names[sep_index + 1:]
+        except ValueError:
+            names = args.names
+            constraints = None
+    else:
+        names, constraints = None, None
+
+    if names:
+        test_suites = [spack.install_test.get_test_suite(name) for name
+                       in names]
+        test_suites = list(filter(lambda ts: ts is not None, test_suites))
+        if not test_suites:
+            tty.msg('No test suite(s) found in test stage: {0}'
+                    .format(', '.join(names)))
+    else:
+        test_suites = spack.install_test.get_all_test_suites()
+        if not test_suites:
+            tty.msg("No test suites with results to report")
+
+    for test_suite in test_suites:
+        _report_suite_results(test_suite, args, constraints)
+
+
+def test_remove(args):
+    """Remove results from Spack test suite(s) (default all).
+
+    If no test suite is listed, remove results for all suites.
+
+    Removed tests can no longer be accessed for results or status, and will not
+    appear in `spack test list` results."""
+    if args.names:
+        test_suites = []
+        for name in args.names:
+            test_suite = spack.install_test.get_test_suite(name)
+            if test_suite:
+                test_suites.append(test_suite)
+            else:
+                tty.msg("No test suite %s found in test stage" % name)
+    else:
+        test_suites = spack.install_test.get_all_test_suites()
+
+    if not test_suites:
+        tty.msg("No test suites to remove")
+        return
+
+    if not args.yes_to_all:
+        msg = 'The following test suites will be removed:\n\n'
+        msg += '    ' + '   '.join(test.name for test in test_suites) + '\n'
+        tty.msg(msg)
+        answer = tty.get_yes_or_no('Do you want to proceed?', default=False)
+        if not answer:
+            tty.msg('Aborting removal of test suites')
             return
 
-        return pytest.main(pytest_args)
+    for test_suite in test_suites:
+        shutil.rmtree(test_suite.stage)
+
+
+def test(parser, args):
+    globals()['test_%s' % args.test_command](args)

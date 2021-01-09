@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,15 @@ class Catch2(CMakePackage):
     maintainers = ["ax3l", "AndrewGaspar"]
 
     # In-Development
-    version('master', branch='master')
+    version('develop', branch='devel')
 
     # Releases
+    version('3.0.0-preview3', sha256='06a4f903858f21c553e988f8b76c9c6915d1f95f95512d6a58c421e02a2c4975')
+    version('2.13.3',         sha256='fedc5b008f7eb574f45098e7c7138211c543f0f8ad04792090e790511697a877', preferred=True)
+    version('2.13.2',         sha256='5e39d9199f4f174dc3c8896fb4cf0a2ce9b9c358ae759b87fade6d615ca2d27e')
+    version('2.13.1',         sha256='36bcc9e6190923961be11e589d747e606515de95f10779e29853cfeae560bd6c')
+    version('2.13.0',         sha256='4e6608d3fb0247e2aa988735bae2064381b0ec712f47beb766dd761838a546b6')
+    version('2.12.4',         sha256='5436725bbc6ee131a0bc9545bef31f0adabbb21fbc39fb6f1b2a42c12e4f8107')
     version('2.12.3', sha256='78425e7055cea5bad1ff8db7ea0d6dfc0722ece156be1ccf3597c15e674e6943')
     version('2.12.1', sha256='e5635c082282ea518a8dd7ee89796c8026af8ea9068cd7402fb1615deacd91c3')
     version('2.12.0', sha256='6606b754363d3a4521bfecf717dc1972c50dca282bd428dfb1370ec8b9c26918')

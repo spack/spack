@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,11 +33,17 @@ class Alps(CMakePackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
-    # build fails with gcc@7:
-    conflicts('%gcc@7:')
+    # fix for gcc@7:
+    patch('alps_newgcc.patch', when='%gcc@7:')
 
     # remove a problematic build variable
     patch('mpi.patch')
+
+    # include climits to use INT_MAX
+    patch('alps_climit.patch')
+
+    # ctest tries to test '/usr/bin/time'
+    patch('alps_cmake_time.patch')
 
     extends('python')
 

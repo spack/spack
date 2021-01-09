@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class Nccl(MakefilePackage, CudaPackage):
 
     maintainers = ['adamjstewart']
 
+    version('2.8.3-1', sha256='3ae89ddb2956fff081e406a94ff54ae5e52359f5d645ce977c7eba09b3b782e6')
     version('2.7.8-1', sha256='fa2bec307270f30fcf6280a85f24ea8801e0ce3b3027937c7325260a890b07e0')
     version('2.7.6-1', sha256='60dd9b1743c2db6c05f60959edf98a4477f218115ef910d7ec2662f2fb5cf626')
     version('2.7.5-1', sha256='26a8dec6fa0a776eb71205d618d58e26d372621719788a23b33db6fdce4426bf')

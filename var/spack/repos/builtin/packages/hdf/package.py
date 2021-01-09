@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import os
 
 
 class Hdf(AutotoolsPackage):
@@ -151,3 +152,67 @@ class Hdf(AutotoolsPackage):
     def check(self):
         with working_dir(self.build_directory):
             make('check', parallel=False)
+
+    extra_install_tests = 'hdf/util/testfiles'
+
+    @run_after('install')
+    def setup_build_tests(self):
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    def _test_check_versions(self):
+        """Perform version checks on selected installed package binaries."""
+        spec_vers_str = 'Version {0}'.format(self.spec.version.up_to(2))
+
+        exes = ['hdfimport', 'hrepack', 'ncdump', 'ncgen']
+        for exe in exes:
+            reason = 'test: ensuring version of {0} is {1}' \
+                .format(exe, spec_vers_str)
+            self.run_test(exe, ['-V'], spec_vers_str, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def _test_gif_converters(self):
+        """This test performs an image conversion sequence and diff."""
+        work_dir = '.'
+        storm_fn = os.path.join(self.install_test_root,
+                                self.extra_install_tests, 'storm110.hdf')
+        gif_fn = 'storm110.gif'
+        new_hdf_fn = 'storm110gif.hdf'
+
+        # Convert a test HDF file to a gif
+        self.run_test('hdf2gif', [storm_fn, gif_fn], '', installed=True,
+                      purpose="test: hdf-to-gif", work_dir=work_dir)
+
+        # Convert the gif to an HDF file
+        self.run_test('gif2hdf', [gif_fn, new_hdf_fn], '', installed=True,
+                      purpose="test: gif-to-hdf", work_dir=work_dir)
+
+        # Compare the original and new HDF files
+        self.run_test('hdiff', [new_hdf_fn, storm_fn], '', installed=True,
+                      purpose="test: compare orig to new hdf",
+                      work_dir=work_dir)
+
+    def _test_list(self):
+        """This test compares low-level HDF file information to expected."""
+        storm_fn = os.path.join(self.install_test_root,
+                                self.extra_install_tests, 'storm110.hdf')
+        test_data_dir = self.test_suite.current_test_data_dir
+        work_dir = '.'
+
+        reason = 'test: checking hdfls output'
+        details_file = os.path.join(test_data_dir, 'storm110.out')
+        expected = get_escaped_text_output(details_file)
+        self.run_test('hdfls', [storm_fn], expected, installed=True,
+                      purpose=reason, skip_missing=True, work_dir=work_dir)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on subset of known binaries that respond
+        self._test_check_versions()
+
+        # Run gif converter sequence test
+        self._test_gif_converters()
+
+        # Run hdfls output
+        self._test_list()

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 import pytest
 import stat
 
+import spack.config
 import spack.package_prefs
 import spack.repo
 import spack.util.spack_yaml as syaml
@@ -70,19 +71,27 @@ def assert_variant_values(spec, **variants):
 
 @pytest.mark.usefixtures('concretize_scope', 'mock_packages')
 class TestConcretizePreferences(object):
-    def test_preferred_variants(self):
-        """Test preferred variants are applied correctly
-        """
-        update_packages('mpileaks', 'variants', '~debug~opt+shared+static')
-        assert_variant_values(
-            'mpileaks', debug=False, opt=False, shared=True, static=True
-        )
-        update_packages(
-            'mpileaks', 'variants', ['+debug', '+opt', '~shared', '-static']
-        )
-        assert_variant_values(
-            'mpileaks', debug=True, opt=True, shared=False, static=False
-        )
+    @pytest.mark.parametrize('package_name,variant_value,expected_results', [
+        ('mpileaks', '~debug~opt+shared+static',
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Check that using a list of variants instead of a single string works
+        ('mpileaks', ['~debug', '~opt', '+shared', '+static'],
+         {'debug': False, 'opt': False, 'shared': True, 'static': True}),
+        # Use different values for the variants and check them again
+        ('mpileaks', ['+debug', '+opt', '~shared', '-static'],
+         {'debug': True, 'opt': True, 'shared': False, 'static': False}),
+        # Check a multivalued variant with multiple values set
+        ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
+         {'foo': ('bar', 'baz'), 'fee': 'bar'}),
+        ('singlevalue-variant', ['fum=why'],
+         {'fum': 'why'})
+    ])
+    def test_preferred_variants(
+            self, package_name, variant_value, expected_results
+    ):
+        """Test preferred variants are applied correctly"""
+        update_packages(package_name, 'variants', variant_value)
+        assert_variant_values(package_name, **expected_results)
 
     def test_preferred_variants_from_wildcard(self):
         """
@@ -109,12 +118,16 @@ class TestConcretizePreferences(object):
         # Try the last available compiler
         compiler = str(compiler_list[-1])
         update_packages('mpileaks', 'compiler', [compiler])
-        spec = concretize('mpileaks os=redhat6 target=x86')
+        spec = concretize('mpileaks os=redhat6')
         assert spec.compiler == spack.spec.CompilerSpec(compiler)
 
     def test_preferred_target(self, mutable_mock_repo):
-        """Test preferred compilers are applied correctly
-        """
+        """Test preferred targets are applied correctly"""
+        # FIXME: This test was a false negative, since the default and
+        # FIXME: the preferred target were the same
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known bug in the original concretizer')
+
         spec = concretize('mpich')
         default = str(spec.target)
         preferred = str(spec.target.family)
@@ -124,13 +137,13 @@ class TestConcretizePreferences(object):
         assert str(spec.target) == preferred
 
         spec = concretize('mpileaks')
-        assert str(spec['mpileaks'].target) == default
+        assert str(spec['mpileaks'].target) == preferred
         assert str(spec['mpich'].target) == preferred
 
-        update_packages('mpileaks', 'target', [preferred])
+        update_packages('mpileaks', 'target', [default])
         spec = concretize('mpileaks')
-        assert str(spec['mpich'].target) == preferred
-        assert str(spec['mpich'].target) == preferred
+        assert str(spec['mpich'].target) == default
+        assert str(spec['mpich'].target) == default
 
     def test_preferred_versions(self):
         """Test preferred package versions are applied correctly
@@ -360,3 +373,13 @@ mpi:
         spec = Spec('callpath')
         with pytest.raises(ConfigError):
             spack.package_prefs.get_package_permissions(spec)
+
+    @pytest.mark.regression('20040')
+    def test_variant_not_flipped_to_pull_externals(self):
+        """Test that a package doesn't prefer pulling in an
+        external to using the default value of a variant.
+        """
+        s = Spec('vdefault-or-external-root').concretized()
+
+        assert '~external' in s['vdefault-or-external']
+        assert 'externaltool' not in s

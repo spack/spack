@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class G4tendl(Package):
     """Geant4 data for incident particles [optional]"""
     homepage = "http://geant4.web.cern.ch"
     url = "http://geant4-data.web.cern.ch/geant4-data/datasets/G4TENDL.1.3.tar.gz"
+
+    tags = ['hep']
 
     maintainers = ['drbenmorgan']
 

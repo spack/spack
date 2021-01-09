@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,6 @@ import os
 from llnl.util.lang import memoized
 
 import spack.spec
-from spack.build_environment import dso_suffix
 from spack.spec import CompilerSpec
 from spack.util.executable import Executable, ProcessError
 from spack.compilers.clang import Clang
@@ -30,6 +29,7 @@ class ABI(object):
     def _gcc_get_libstdcxx_version(self, version):
         """Returns gcc ABI compatibility info by getting the library version of
            a compiler's libstdc++ or libgcc_s"""
+        from spack.build_environment import dso_suffix
         spec = CompilerSpec("gcc", version)
         compilers = spack.compilers.compilers_for_spec(spec)
         if not compilers:

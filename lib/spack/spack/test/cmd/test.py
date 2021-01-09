@@ -1,95 +1,183 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import argparse
+import os
+
+import pytest
+
+import spack.config
+import spack.package
+import spack.cmd.install
 from spack.main import SpackCommand
 
+install = SpackCommand('install')
 spack_test = SpackCommand('test')
-cmd_test_py = 'lib/spack/spack/test/cmd/test.py'
 
 
-def test_list():
-    output = spack_test('--list')
-    assert "test.py" in output
-    assert "spec_semantics.py" in output
-    assert "test_list" not in output
+def test_test_package_not_installed(
+        tmpdir, mock_packages, mock_archive, mock_fetch, config,
+        install_mockery_mutable_config, mock_test_stage):
+
+    output = spack_test('run', 'libdwarf')
+
+    assert "No installed packages match spec libdwarf" in output
 
 
-def test_list_with_pytest_arg():
-    output = spack_test('--list', cmd_test_py)
-    assert output.strip() == cmd_test_py
+@pytest.mark.parametrize('arguments,expected', [
+    (['run'], spack.config.get('config:dirty')),  # default from config file
+    (['run', '--clean'], False),
+    (['run', '--dirty'], True),
+])
+def test_test_dirty_flag(arguments, expected):
+    parser = argparse.ArgumentParser()
+    spack.cmd.test.setup_parser(parser)
+    args = parser.parse_args(arguments)
+    assert args.dirty == expected
 
 
-def test_list_with_keywords():
-    output = spack_test('--list', '-k', 'cmd/test.py')
-    assert output.strip() == cmd_test_py
+def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
+                     install_mockery_mutable_config):
+    """Ensure output printed from pkgs is captured by output redirection."""
+    install('printing-package')
+    spack_test('run', 'printing-package')
+
+    stage_files = os.listdir(mock_test_stage)
+    assert len(stage_files) == 1
+
+    # Grab test stage directory contents
+    testdir = os.path.join(mock_test_stage, stage_files[0])
+    testdir_files = os.listdir(testdir)
+
+    # Grab the output from the test log
+    testlog = list(filter(lambda x: x.endswith('out.txt') and
+                          x != 'results.txt', testdir_files))
+    outfile = os.path.join(testdir, testlog[0])
+    with open(outfile, 'r') as f:
+        output = f.read()
+    assert "BEFORE TEST" in output
+    assert "true: expect command status in [" in output
+    assert "AFTER TEST" in output
+    assert "FAILED" not in output
 
 
-def test_list_long(capsys):
-    with capsys.disabled():
-        output = spack_test('--list-long')
-    assert "test.py::\n" in output
-    assert "test_list" in output
-    assert "test_list_with_pytest_arg" in output
-    assert "test_list_with_keywords" in output
-    assert "test_list_long" in output
-    assert "test_list_long_with_pytest_arg" in output
-    assert "test_list_names" in output
-    assert "test_list_names_with_pytest_arg" in output
+def test_test_output_on_error(
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
+    capfd, mock_test_stage
+):
+    install('test-error')
+    # capfd interferes with Spack's capturing
+    with capfd.disabled():
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
-    assert "spec_dag.py::\n" in output
-    assert 'test_installed_deps' in output
-    assert 'test_test_deptype' in output
+    assert "TestFailure" in out
+    assert "Command exited with status 1" in out
 
 
-def test_list_long_with_pytest_arg(capsys):
-    with capsys.disabled():
-        output = spack_test('--list-long', cmd_test_py)
-    assert "test.py::\n" in output
-    assert "test_list" in output
-    assert "test_list_with_pytest_arg" in output
-    assert "test_list_with_keywords" in output
-    assert "test_list_long" in output
-    assert "test_list_long_with_pytest_arg" in output
-    assert "test_list_names" in output
-    assert "test_list_names_with_pytest_arg" in output
+def test_test_output_on_failure(
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
+    capfd, mock_test_stage
+):
+    install('test-fail')
+    with capfd.disabled():
+        out = spack_test('run', 'test-fail', fail_on_error=False)
 
-    assert "spec_dag.py::\n" not in output
-    assert 'test_installed_deps' not in output
-    assert 'test_test_deptype' not in output
+    assert "Expected 'not in the output' to match output of `true`" in out
+    assert "TestFailure" in out
 
 
-def test_list_names():
-    output = spack_test('--list-names')
-    assert "test.py::test_list\n" in output
-    assert "test.py::test_list_with_pytest_arg\n" in output
-    assert "test.py::test_list_with_keywords\n" in output
-    assert "test.py::test_list_long\n" in output
-    assert "test.py::test_list_long_with_pytest_arg\n" in output
-    assert "test.py::test_list_names\n" in output
-    assert "test.py::test_list_names_with_pytest_arg\n" in output
+def test_show_log_on_error(
+    mock_packages, mock_archive, mock_fetch,
+    install_mockery_mutable_config, capfd, mock_test_stage
+):
+    """Make sure spack prints location of test log on failure."""
+    install('test-error')
+    with capfd.disabled():
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
-    assert "spec_dag.py::test_installed_deps\n" in output
-    assert 'spec_dag.py::test_test_deptype\n' in output
-
-
-def test_list_names_with_pytest_arg():
-    output = spack_test('--list-names', cmd_test_py)
-    assert "test.py::test_list\n" in output
-    assert "test.py::test_list_with_pytest_arg\n" in output
-    assert "test.py::test_list_with_keywords\n" in output
-    assert "test.py::test_list_long\n" in output
-    assert "test.py::test_list_long_with_pytest_arg\n" in output
-    assert "test.py::test_list_names\n" in output
-    assert "test.py::test_list_names_with_pytest_arg\n" in output
-
-    assert "spec_dag.py::test_installed_deps\n" not in output
-    assert 'spec_dag.py::test_test_deptype\n' not in output
+    assert 'See test log' in out
+    assert mock_test_stage in out
 
 
-def test_pytest_help():
-    output = spack_test('--pytest-help')
-    assert "-k EXPRESSION" in output
-    assert "pytest-warnings:" in output
-    assert "--collect-only" in output
+@pytest.mark.usefixtures(
+    'mock_packages', 'mock_archive', 'mock_fetch',
+    'install_mockery_mutable_config'
+)
+@pytest.mark.parametrize('pkg_name,msgs', [
+    ('test-error', ['FAILED: Command exited', 'TestFailure']),
+    ('test-fail', ['FAILED: Expected', 'TestFailure'])
+])
+def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
+    install(pkg_name)
+    with tmpdir.as_cwd():
+        spack_test('run',
+                   '--log-format=junit', '--log-file=test.xml',
+                   pkg_name)
+
+    files = tmpdir.listdir()
+    filename = tmpdir.join('test.xml')
+    assert filename in files
+
+    content = filename.open().read()
+
+    # Count failures and errors correctly
+    assert 'tests="1"' in content
+    assert 'failures="1"' in content
+    assert 'errors="0"' in content
+
+    # We want to have both stdout and stderr
+    assert '<system-out>' in content
+    for msg in msgs:
+        assert msg in content
+
+
+def test_cdash_output_test_error(
+        tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
+        mock_archive, mock_test_stage, capfd):
+    install('test-error')
+    with tmpdir.as_cwd():
+        spack_test('run',
+                   '--log-format=cdash',
+                   '--log-file=cdash_reports',
+                   'test-error')
+        report_dir = tmpdir.join('cdash_reports')
+        print(tmpdir.listdir())
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('test-error_Test.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert 'FAILED: Command exited with status 1' in content
+
+
+def test_cdash_upload_clean_test(
+        tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
+        mock_archive, mock_test_stage):
+    install('printing-package')
+    with tmpdir.as_cwd():
+        spack_test('run',
+                   '--log-file=cdash_reports',
+                   '--log-format=cdash',
+                   'printing-package')
+        report_dir = tmpdir.join('cdash_reports')
+        assert report_dir in tmpdir.listdir()
+        report_file = report_dir.join('printing-package_Test.xml')
+        assert report_file in report_dir.listdir()
+        content = report_file.open().read()
+        assert '</Test>' in content
+        assert '<Text>' not in content
+
+
+def test_test_help_does_not_show_cdash_options(mock_test_stage, capsys):
+    """Make sure `spack test --help` does not describe CDash arguments"""
+    with pytest.raises(SystemExit):
+        spack_test('run', '--help')
+        captured = capsys.readouterr()
+        assert 'CDash URL' not in captured.out
+
+
+def test_test_help_cdash(mock_test_stage):
+    """Make sure `spack test --help-cdash` describes CDash arguments"""
+    out = spack_test('run', '--help-cdash')
+    assert 'CDash URL' in out

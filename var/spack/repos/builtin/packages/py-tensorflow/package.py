@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import tempfile
 
 
 class PyTensorflow(Package, CudaPackage):
@@ -14,7 +15,6 @@ class PyTensorflow(Package, CudaPackage):
     url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
     maintainers = ['adamjstewart', 'aweits']
-    import_modules = ['tensorflow']
 
     version('2.3.1',  sha256='ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac')
     version('2.3.0',  sha256='2595a5c401521f20a2734c4e5d54120996f8391f00bb62a57267d930bce95350')
@@ -190,9 +190,6 @@ class PyTensorflow(Package, CudaPackage):
         # Only builds correctly on little-endian machines
         depends_on('py-grpcio@1.8.6:', type=('build', 'run'), when='@1.8:')
 
-    # Listed under TEST_PACKAGES in tensorflow/tools/pip_package/setup.py
-    depends_on('py-scipy@0.15.1:', type='test')
-
     # TODO: add packages for some of these dependencies
     depends_on('mkl', when='+mkl')
     depends_on('curl', when='+gcp')
@@ -275,6 +272,9 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
     phases = ['configure', 'build', 'install']
+
+    import_modules = PythonPackage.import_modules
+    test = PythonPackage.test
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
@@ -523,8 +523,7 @@ class PyTensorflow(Package, CudaPackage):
         #       ])
         #       to not be nfs. This is only valid for Linux and we'd like to
         #       stay at least also OSX compatible
-        tmp_path = '/tmp/spack/tf'
-        mkdirp(tmp_path)
+        tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
         env.set('TEST_TMPDIR', tmp_path)
 
         env.set('TF_SYSTEM_LIBS', 'com_google_protobuf')
@@ -743,15 +742,10 @@ class PyTensorflow(Package, CudaPackage):
         build_pip_package('--src', buildpath)
 
     def install(self, spec, prefix):
+        tmp_path = env['TEST_TMPDIR']
         buildpath = join_path(self.stage.source_path, 'spack-build')
         with working_dir(buildpath):
 
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
-
-    @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        with working_dir('spack-test', create=True):
-            for module in self.import_modules:
-                python('-c', 'import {0}'.format(module))
+        remove_linked_tree(tmp_path)

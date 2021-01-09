@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,8 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'chgrp',
+    'chmod_x',
     'copy',
     'install',
     'copy_tree',
@@ -52,6 +54,7 @@ __all__ = [
     'partition_path',
     'prefixes',
     'remove_dead_links',
+    'remove_directory_contents',
     'remove_if_dead_link',
     'remove_linked_tree',
     'set_executable',
@@ -1806,3 +1809,13 @@ def md5sum(file):
     with open(file, "rb") as f:
         md5.update(f.read())
     return md5.digest()
+
+
+def remove_directory_contents(dir):
+    """Remove all contents of a directory."""
+    if os.path.exists(dir):
+        for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
+            if os.path.isfile(entry) or os.path.islink(entry):
+                os.unlink(entry)
+            else:
+                shutil.rmtree(entry)

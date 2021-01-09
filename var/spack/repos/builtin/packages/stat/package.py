@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Stat(AutotoolsPackage):
     homepage = "http://paradyn.org/STAT/STAT.html"
     url      = "https://github.com/LLNL/STAT/archive/v2.0.0.tar.gz"
     git      = "https://github.com/llnl/stat.git"
+    maintainers = ['lee218llnl']
 
     version('develop', branch='develop')
     version('4.0.2', sha256='9ece10dde8e1579c9db469ac8d2391b26e59498c0947dbb271c2d01d7ef0a65d',
@@ -39,16 +40,18 @@ class Stat(AutotoolsPackage):
     depends_on('dyninst', when='~dysect')
     depends_on('dyninst@:9.99', when='@:4.0.1')
     depends_on('dyninst@8.2.1+stat_dysect', when='+dysect')
-    depends_on('fast-global-file-status', when='+fgfs')
+    # we depend on fgfs@master to avoid seg faults with fgfs 1.1
+    depends_on('fast-global-file-status@master', when='+fgfs')
     depends_on('graphlib@2.0.0', when='@2.0.0:2.2.0')
     depends_on('graphlib@3.0.0', when='@3:')
     depends_on('graphviz', type=('build', 'link', 'run'))
-    depends_on('launchmon')
+    # we depend on mpa@master for bug fixes since launchmon 1.0.2
+    depends_on('launchmon@master')
     depends_on('mrnet')
     depends_on('python@:2.8', when='@:4.0.0')
     depends_on('py-pygtk', type=('build', 'run'), when='@:4.0.0')
     depends_on('py-enum34', type=('run'), when='@:4.0.0')
-    depends_on('py-xdot', when='@4.0.1:')
+    depends_on('py-xdot@1.0', when='@4.0.1:')
     depends_on('swig')
     depends_on('mpi', when='+examples')
     depends_on('boost')

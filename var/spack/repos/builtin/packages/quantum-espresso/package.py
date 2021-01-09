@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,20 @@ class QuantumEspresso(Package):
     version('5.4',   sha256='e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335')
     version('5.3',   sha256='3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048')
 
+    resource(name='environ',
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.1',
+             when='@6.3:6.4.99 +environ',
+             destination='.'
+             )
+
+    resource(name='environ',
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.0',
+             when='@6.2.1:6.2.99 +environ',
+             destination='.'
+             )
+
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
     variant('scalapack', default=True, description='Enables scalapack support')
@@ -57,6 +71,11 @@ class QuantumEspresso(Package):
     # https://github.com/QMCPACK/qmcpack/tree/develop/external_codes/quantum_espresso
     variant('qmcpack', default=False,
             description='Build QE-to-QMCPACK wave function converter')
+
+    variant('environ', default=False,
+            description='Enables support for introducing environment effects '
+            'into atomistic first-principles simulations.'
+            'See http://quantum-environ.org/about.html')
 
     # Dependencies
     depends_on('blas')
@@ -178,6 +197,9 @@ class QuantumEspresso(Package):
     # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
     conflicts('@5.3:', when='%gcc@8 target=a64fx',
               msg='Internal compiler error with gcc8 and a64fx')
+
+    conflicts('@6.5:', when='+environ',
+              msg='6.4.x is the latest QE series supported by Environ')
 
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
@@ -372,6 +394,19 @@ class QuantumEspresso(Package):
             make('all', 'epw')
         else:
             make('all')
+
+        if '+environ' in spec:
+            addsonpatch = Executable('./install/addsonpatch.sh')
+            environpatch = Executable('./Environ/patches/environpatch.sh')
+            makedeps = Executable('./install/makedeps.sh')
+
+            addsonpatch('Environ', 'Environ/src', 'Modules', '-patch')
+
+            environpatch('-patch')
+
+            makedeps()
+
+            make('pw')
 
         if 'platform=darwin' in spec:
             mkdirp(prefix.bin)

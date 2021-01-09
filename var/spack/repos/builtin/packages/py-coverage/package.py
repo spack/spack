@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyCoverage(PythonPackage):
     """ Testing coverage checker for python """
 
     homepage = "http://nedbatchelder.com/code/coverage/"
-    url      = "https://pypi.io/packages/source/c/coverage/coverage-4.5.4.tar.gz"
+    pypi = "coverage/coverage-4.5.4.tar.gz"
 
     version('5.3', sha256='280baa8ec489c4f542f8940f9c4c2181f0306a8ee1a54eceba071a449fb870a0')
     version('4.5.4', sha256='e07d9f1a23e9e93ab5c62902833bf3e4b1f65502927379148b6622686223125c')
