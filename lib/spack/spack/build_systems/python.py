@@ -189,7 +189,16 @@ class PythonPackage(PackageBase):
 
     def build_args(self, spec, prefix):
         """Arguments to pass to build."""
-        return []
+
+        # Specify number of parallel build jobs.
+        # This feature was introduced in Python 3.5:
+        # https://docs.python.org/3/whatsnew/3.5.html#distutils
+        args = []
+        if spec.satisfies('^python@3.5:'):
+            jobs = inspect.getmodule(self).make_jobs
+            args.append('--parallel={0}'.format(jobs))
+
+        return args
 
     def build_py(self, spec, prefix):
         '''"Build" pure Python modules (copy to build directory).'''
@@ -210,9 +219,13 @@ class PythonPackage(PackageBase):
     def build_ext_args(self, spec, prefix):
         """Arguments to pass to build_ext."""
 
-        # Specify number of parallel build jobs
-        jobs = inspect.getmodule(self).make_jobs
-        args = ['--parallel={0}'.format(jobs)]
+        # Specify number of parallel build jobs.
+        # This feature was introduced in Python 3.5:
+        # https://docs.python.org/3/whatsnew/3.5.html#distutils
+        args = []
+        if spec.satisfies('^python@3.5:'):
+            jobs = inspect.getmodule(self).make_jobs
+            args.append('--parallel={0}'.format(jobs))
 
         library_dirs = []
         include_dirs = []
