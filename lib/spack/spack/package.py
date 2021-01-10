@@ -1331,7 +1331,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                                  self.spec.format('{name}{@version}'), ck_msg)
 
         deprecated = spack.config.get('config:deprecated')
-        if deprecated and self.versions.get(
+        if not deprecated and self.versions.get(
                 self.version, {}).get('deprecated', False):
             tty.warn("{0} is deprecated and may be removed in a future Spack "
                      "release.".format(
