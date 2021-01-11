@@ -12,6 +12,36 @@ import six
 from llnl.util.lang import union_dicts
 import spack.schema.projections
 
+install_tree = {
+    'install_tree': {
+        'type': 'object',
+        'properties': union_dicts(
+            {'root': {'type': 'string'}},
+            {'padded_length': {'oneOf': [
+                {'type': 'integer', 'minimum': 0},
+                {'type': 'boolean'}]}},
+            spack.schema.projections.properties,
+            {'permissions': {
+                'type': 'object',
+                'additionalProperties': False,
+                'properties': {
+                    'read': {
+                        'type':  'string',
+                        'enum': ['user', 'group', 'world'],
+                    },
+                    'write': {
+                        'type':  'string',
+                        'enum': ['user', 'group', 'world'],
+                    },
+                    'group': {
+                        'type':  'string',
+                    },
+                }
+            }},
+        ),
+    }
+}
+
 #: Properties for inclusion in other schemas
 properties = {
     'config': {
@@ -43,33 +73,7 @@ properties = {
                 'additionalProperties': False,
                 'patternProperties': {
                     r'\w[\w-]*': {
-                        'install_tree': {
-                            'type': 'object',
-                            'properties': union_dicts(
-                                {'root': {'type': 'string'}},
-                                {'padded_length': {'oneOf': [
-                                    {'type': 'integer', 'minimum': 0},
-                                    {'type': 'boolean'}]}},
-                                spack.schema.projections.properties,
-                                {'permissions': {
-                                    'type': 'object',
-                                    'additionalProperties': False,
-                                    'properties': {
-                                        'read': {
-                                            'type':  'string',
-                                            'enum': ['user', 'group', 'world'],
-                                        },
-                                        'write': {
-                                            'type':  'string',
-                                            'enum': ['user', 'group', 'world'],
-                                        },
-                                        'group': {
-                                            'type':  'string',
-                                        },
-                                    }
-                                }},
-                            ),
-                        },
+                        'install_tree': install_tree
                     },
                 },
             },
@@ -79,33 +83,7 @@ properties = {
                 'additionalProperties': False,
                 'patternProperties': {
                     r'\w[\w-]*': {
-                        'install_tree': {
-                            'type': 'object',
-                            'properties': union_dicts(
-                                {'root': {'type': 'string'}},
-                                {'padded_length': {'oneOf': [
-                                    {'type': 'integer', 'minimum': 0},
-                                    {'type': 'boolean'}]}},
-                                spack.schema.projections.properties,
-                                {'permissions': {
-                                    'type': 'object',
-                                    'additionalProperties': False,
-                                    'properties': {
-                                        'read': {
-                                            'type':  'string',
-                                            'enum': ['user', 'group', 'world'],
-                                        },
-                                        'write': {
-                                            'type':  'string',
-                                            'enum': ['user', 'group', 'world'],
-                                        },
-                                        'group': {
-                                            'type':  'string',
-                                        },
-                                    }
-                                }},
-                            ),
-                        },
+                        'install_tree': install_tree
                     },
                 },
             },
