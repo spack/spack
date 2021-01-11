@@ -10,7 +10,7 @@ class PyPacificaNamespace(PythonPackage):
     """Python Pacifica Namespace Library"""
 
     homepage = "https://github.com/pacifica/pacifica-namespace/"
-    url      = "https://pypi.io/packages/source/p/pacifica-namespace/pacifica-namespace-0.0.2.tar.gz"
+    pypi     = "pacifica-namespace/pacifica-namespace-0.0.2.tar.gz"
 
     version('0.0.2', sha256='a8f59aea1203a1557f7f57887b61e92f8450c74a8522798c5ddecf8fffb0b224')
 
