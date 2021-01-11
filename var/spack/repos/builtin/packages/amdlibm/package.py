@@ -22,10 +22,7 @@ class Amdlibm(SConsPackage):
     maintainers = ["amd-toolchain-support"]
 
     # Download and build from latest source
-    version("master", branch="master")
-
-    variant("debug", default=False,
-            description="Building with debug")
+    version("spack-09-2020")
     variant("verbose", default=False,
             description="Building with verbosity")
 
