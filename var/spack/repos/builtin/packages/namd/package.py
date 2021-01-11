@@ -226,7 +226,7 @@ class Namd(MakefilePackage, CudaPackage):
             self._append_option(opts, 'cuda')
             filter_file('^CUDADIR=.*$',
                         'CUDADIR={0}'.format(spec['cuda'].prefix),
-                        self.arch + '.cuda')
+                        join_path('arch', self.arch + '.cuda'))
 
         config = Executable('./config')
 
