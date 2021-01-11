@@ -111,7 +111,7 @@ class Namd(MakefilePackage, CudaPackage):
                 else:
                     optims_opts = {
                         'gcc': m64 + '-O3 -fexpensive-optimizations \
-                                        -ffast-math ' + archopt,
+                                        -ffast-math -lpthread ' + archopt,
                         'intel': '-O2 -ip ' + archopt,
                         'aocc': m64 + '-O3 -ffp-contract=fast \
                                         -ffast-math ' + archopt}
