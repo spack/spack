@@ -21,11 +21,6 @@ class Dbcsr(CMakePackage, CudaPackage):
     variant('shared', default=True,  description='Build shared library')
     variant('smm', default='libxsmm', values=('libxsmm', 'blas'),
             description='Library for small matrix multiplications')
-    variant('cuda_arch',
-            description='CUDA architecture',
-            default='none',
-            values=('none', '35', '37', '60', '70'),
-            multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
                          ' different GPU models. Enable this when building'
@@ -41,7 +36,15 @@ class Dbcsr(CMakePackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
 
-    conflicts('+cuda', when='cuda_arch=none')
+    # we only support specific cuda_archs for which we have parameter files
+    # for optimal kernels
+    dbcsr_cuda_archs = ('none', '35', '37', '60', '70')
+
+    for arch in CudaPackage.cuda_arch_values:
+        if arch not in dbcsr_cuda_archs:
+            conflicts('+cuda', when='cuda_arch={0}'.format(arch),
+                      msg='dbcsr only supports cuda_arch {0}'.format(
+                          dbcsr_cuda_archs))
 
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
@@ -70,7 +73,7 @@ class Dbcsr(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in self.spec:
-            cuda_arch = self.spec.variants['cuda_arch'].value
+            cuda_arch = self.spec.variants['cuda_arch'].value[0]
 
             gpuver = {
                 '35': 'K40',
