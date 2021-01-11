@@ -12,13 +12,9 @@ class PyDeeptools(PythonPackage):
 
     homepage = "https://pypi.io/packages/source/d/deepTools"
     # The test suite and associated test data is missing in the pypi tarball.
-    url      = "https://github.com/deeptools/deepTools/archive/3.3.0.tar.gz"
+    url      = "https://files.pythonhosted.org/packages/f6/f3/789edda975fcca4736fab2007d82cab2e86739901c88bb0528db5c338d1f/deepTools-3.5.0.tar.gz"
 
-    version('3.5.0', sha256='0c5f414c137a2d33879dc80d65062d7af0f695eaa86661c3320108ebc4d64775')
-    version('3.3.0', sha256='a7aaf79fe939ca307fe6ec5e156750389fdfa4324bf0dd6bf5f53d5fda109358')
-    version('3.2.1', sha256='dbee7676951a9fdb1b88956fe4a3294c99950ef193ea1e9edfba1ca500bd6a75')
-    version('2.5.2', sha256='16d0cfed29af37eb3c4cedd9da89b4952591dc1a7cd8ec71fcba87c89c62bf79')
-
+    version('3.5.0', sha256='1a14a29e60be13eac11bd204dab9aef73cd72fe56a94c587333f21087584c0d8')
     depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.9.0:', type=('build', 'run'))
