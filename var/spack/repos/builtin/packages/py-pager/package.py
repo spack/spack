@@ -13,4 +13,3 @@ class PyPager(PythonPackage):
     homepage = "http://bitbucket.org/techtonik/python-pager"
 
     version('3.3', sha256='18aa45ec877dca732e599531c7b3b0b22ed6a4445febdf1bdf7da2761cca340d')
-
