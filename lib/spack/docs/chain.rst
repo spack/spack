@@ -22,9 +22,6 @@ you can add it as an entry to ``config.yaml``:
         all: "${ARCHITECTURE}/${COMPILERNAME}-${COMPILERVER}/${PACKAGE}-${VERSION}-${HASH}"
 
 
-``root`` must point to the ``opt/spack`` directory inside of the
-Spack base directory.
-
 Once the chained instance is added to the shared_install_trees section,
 running ``spack --init-upstream [spack-instance-name]`` will initialize a
 pointer to the upstream. The upstream will NOT be registered/usable until
@@ -60,24 +57,32 @@ Other details about upstream installations:
    includes the upstream functionality (i.e. if its commit is after March
    27, 2019).
 
+--------------------------
+Choosing installation tree
+--------------------------
 
---------------------------------
-Targeting Upstream Install Roots
---------------------------------
+Users can choose which installation tree Spack will interact with using the
+``--install-root`` option. This is an option provided to Spack rather than a
+subcommand (e.g. ``spack --install-root foo`` install rather than
+``spack install --install-root``).
+You can select a shared install tree in this manner as well.
+Spack has the following default behavior if no install tree is selected:
 
-An upstream/shared Spack instance can be interacted with via a downstream
-instance of Spack via the ``spack --install-root`` command.
-By passing in the name of an shared Spack instance, you can run any normal
-Spack command and it will treat the shared instance as though it were your
-local instance of Spack.
+* If a shared install tree is available, Spack will place an install
+  tree in ``~`` and use that
+* If no shared install tree is available, Spack will place the install tree in the Spack prefix
+  (this matches how Spack has behaved for the last several years)
 
 ---------------------------------------
 Using Multiple Upstream Spack Instances
 ---------------------------------------
 
-A single Spack instance can use multiple upstream Spack installations. Spack
-will search upstream instances in the order you list them in your
-configuration.
+A single Spack instance can use multiple upstream Spack installations.
+Upstream instances are now chained using pointer files that recursively
+link one upstream Spack instance to another.
+If a Spack upstream points to another Spack instance that also has its own
+upstream, the furthest downstream Spack instance will be able to recursively treat
+both upstream Spack instances as its own upstream.
 
 -----------------------------------
 Using Modules for Upstream Packages
