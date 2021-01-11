@@ -4233,43 +4233,87 @@ class Spec(object):
         assert other.concrete
         assert other.name in self
 
-        if transitive:
-            other_deps = []
-            for other_dep in other.traverse(order='pre'):
-                other_deps.append(other_dep)
-        else:
-            other_deps = [other]
+        # Multiple unique specs with the same name will collide, so the
+        # _dependents of these specs should not be trusted.
+        self_nodes = dict((s.name, s.copy(deps=False)) \
+            for s in self.traverse())
+        other_nodes = dict((s.name, s.copy(deps=False)) \
+            for s in other.traverse())
 
-        target_direct_deps = []
-        for other_dep in self.dependencies(deptype=('link', 'run')):
-            target_direct_deps.append(other_dep.name)
+        names = other_nodes.copy()
+        names = names.update(self_nodes)
+        print(names)
+        
+        for name in names:
+            self_node = self_nodes.get(name)
+            other_node = other_nodes.get(name)
 
-        for target_dep in self.traverse(order='pre'):
-            for other_dep in other_deps:
-                if target_dep.name == other_dep.name:
-                    target_dep.build_spec = target_dep.copy()
-                    other_dep.build_spec = other_dep.copy()
+            if not other_node:
+                # hook everything up like self[name]
+                pass
 
-                    if other_dep.name in target_direct_deps:  # root case
-                        del self._dependencies[target_dep.name]
-                        if self.name in other._dependents.keys():
-                            del other._dependents[self.name]
-                        self._add_dependency(other_dep,
-                                             deptypes=('link', 'run'))
-                    else:  # down in the DAG
-                        target_dependents = target_dep.dependents()
-                        target_dependencies = target_dep.dependencies()
-                        for dependency in target_dependencies:
-                            if dependency.name in \
-                                other_dep._dependencies.keys():
-                                del other_dep._dependencies[dependency.name]
-                            other_dep._add_dependency(dependency,
-                                                      deptypes=('link', 'run'))
-                        for dependent in target_dependents:
-                            if dependent.name in other._dependents.keys():
-                                del other._dependents[dependent.name]
-                            dependent._add_dependency(other_dep,
-                                                      deptypes=('link', 'run'))
+            if not self_node:
+                pass
+
+                # hook everything up like other[name]
+
+            # look at self.edges and other.edges
+            # foreach edge: if edge exists in self[name], hook up like self
+            #               else hook up like  other[name]
+
+        # hook up the build specs
+        # find other.name in the new spec:
+        #    self_nodes[self.name] is the root
+        #    self_nodes[self.name][other.name] is new spliced spec
+        # make a copy of self for the build spec
+        # for all ancestors of spliced spec:
+        #    ancestor.build_spec = copy_of_self[ancestor.name]
+
+        # if transitive:
+        #     other_deps = []
+        #     for other_dep in other.traverse(order='pre', root=True):
+        #         other_deps.append(other_dep)
+        # else:
+        #     other_deps = [other]
+
+        # target_direct_deps = []
+        # for direct_dep in self.dependencies(deptype=('link', 'run')):
+        #     target_direct_deps.append(direct_dep.name)
+
+        # for target_dep in self.traverse(order='pre'):
+        #     for other_dep in other_deps:
+        #         if target_dep.name == other_dep.name:
+        #             target_dep.build_spec = target_dep.copy()
+        #             if not transitive: 
+        #                 other_dep.build_spec = other_dep.copy()
+
+
+        #             if other_dep.name in target_direct_deps:  # root case
+        #                 # Use appropriate method instead; save old edge to 
+        #                 # preserve properties.
+        #                 old_dep = self._dependencies[target_dep.name].pop()
+        #                 if self.name in other._dependents.keys():
+        #                     del other._dependents[self.name]
+        #                 self._add_dependency(other_dep,
+        #                                      deptypes=('link', 'run'))
+
+        #             else:  # down in the DAG
+        #                 # Traverse other, not target here.
+        #                 target_dependents = target_dep.dependents()
+        #                 target_dependencies = target_dep.dependencies()
+        #                 for dependency in target_dependencies:
+        #                     if dependency.name in \
+        #                         other_dep._dependencies.keys():
+        #                         del other_dep._dependencies[dependency.name]
+        #                     other_dep._add_dependency(dependency,
+        #                                               deptypes=('link', 'run'))
+        #                 for dependent in target_dependents:
+        #                     if dependent.name in other._dependents.keys():
+        #                         del other._dependents[dependent.name]
+        #                     dependent._add_dependency(other_dep,
+        #                                               deptypes=('link', 'run'))
+        
+        # Need to clear out all cached hashes.
         return
 
 

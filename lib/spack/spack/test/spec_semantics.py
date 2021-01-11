@@ -990,12 +990,17 @@ class TestSpecSematics(object):
         # concretization candidate for mpileaks.
         # TODO: Test that this fails appropriately when one of the specs is not
         # concrete.
-        spec = Spec('mpileaks')
-        dep = Spec('mpich')
+        # Set these two specs to have different targets.
+        spec = Spec('splice-t')
+        dep = Spec('splice-h')
         spec.concretize()
         dep.concretize()
         spec.splice(dep, True)
+        # Traverse the spec and assert that the targets are correct.
         assert spec.concrete
+        # Also test being able to splice in different provider for a virtual
+        # Example: mvapich for mpich.
+        # May also want to resolve virtuals.
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
