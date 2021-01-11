@@ -23,6 +23,12 @@ class Speexdsp(AutotoolsPackage):
 
     patch('mkl.patch')
 
+    def patch(self):
+        filter_file('libspeexdsp_la_LIBADD = $(LIBM)',
+                    'libspeexdsp_la_LIBADD = $(LIBM) $(FFT_LIBS)',
+                    'libspeexdsp/Makefile.am',
+                    string=True)
+
     def autoreconf(self, spec, prefix):
         autoreconf('--install', '--verbose', '--force')
 

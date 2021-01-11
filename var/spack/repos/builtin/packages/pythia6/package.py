@@ -144,6 +144,11 @@ class Pythia6(CMakePackage):
                     r'\1{0}'.format(self.spec.variants['nmxhep'].value),
                     'pyhepc.f')
 
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%gcc@10:'):
+            env.append_flags('CFLAGS', '-fcommon')
+            env.append_flags('FFLAGS', '-fcommon')
+
     def cmake_args(self):
         args = ['-DPYTHIA6_VERSION={0}'.format(self.version.dotted)]
         return args

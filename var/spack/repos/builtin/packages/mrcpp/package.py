@@ -55,5 +55,6 @@ class Mrcpp(CMakePackage):
             "-DENABLE_OPENMP={0}".format("ON" if "+openmp" in
                                          self.spec else "OFF"),
             "-DENABLE_MPI={0}".format("ON" if "+mpi" in self.spec else "OFF"),
+            "-DENABLE_TESTS=OFF",
         ]
         return args
