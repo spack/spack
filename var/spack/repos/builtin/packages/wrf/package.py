@@ -261,8 +261,8 @@ class Wrf(Package):
                         ofh.write(line)
 
         if self.spec.satisfies("@4.2 %aocc"):
-            # In version 4.2 the file to be patched is called 
-            # configure.defaults, while in earlier versions 
+            # In version 4.2 the file to be patched is called
+            # configure.defaults, while in earlier versions
             # it's configure_new.defaults
             rename(
                 "./arch/configure.defaults",
