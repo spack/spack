@@ -3,10 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
-
 from spack import *
+import os
 
 
 class Amdlibm(SConsPackage):
@@ -21,8 +19,15 @@ class Amdlibm(SConsPackage):
     git = "https://github.com/amd/aocl-libm-ose.git"
     maintainers = ["amd-toolchain-support"]
 
-    # Download and build from specific branch
-    version("spack-09-2020")
+    # If a user who doesn't specify a version
+    # amdlibm installed for commit ID:4033e02
+    # of master branch.
+    # To install amdlibm from latest master branch:
+    # spack install amdlibm ^amdlibm@master
+    version("master", branch="master")
+    version("20201104",
+            commit="4033e022da428125747e118ccd6fdd9cee21c470",
+            preferred=True)
 
     variant("verbose", default=False,
             description="Building with verbosity")
