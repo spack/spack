@@ -3,7 +3,7 @@ config:
     spack-root:
       root: $spack/opt/spack
     user:
-      root: $spack/opt/spack
+      root: ~/.spack/opt/spack
   template_dirs:
   - $spack/share/spack/templates
   - $spack/lib/spack/spack/test/data/templates
