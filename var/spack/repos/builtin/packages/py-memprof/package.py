@@ -16,6 +16,6 @@ class PyMemprof(PythonPackage):
     version('0.3.6', sha256='6d94727423224b3ccdde26164ed7ead78d9fbefbfa41c0a30e919c8f6ebc0910')
 
     depends_on('py-setuptools', type='build')
-    depends_on('py-cython',     type=('build', 'run'))
+    depends_on('py-cython',     type='build')
     depends_on('py-argparse',   type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
