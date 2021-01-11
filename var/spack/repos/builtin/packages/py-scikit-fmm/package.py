@@ -18,6 +18,5 @@ class PyScikitFmm(PythonPackage):
     version('master', branch='master')
     version('2019.1.30', sha256='eb64b6d8e30b8df8f8636d5fc4fd7ca6a9b05938ccd62518c80c1d9e823069dd')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-numpy@1.0.2:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
