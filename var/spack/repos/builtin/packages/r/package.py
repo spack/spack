@@ -171,8 +171,7 @@ class R(AutotoolsPackage):
         if '+memory_profiling' in spec:
             config_args.append('--enable-memory-profiling')
 
-        if '+libpng' in spec:
-            config_args.append('--with-libpng')
+        config_args += self.with_or_without('libpng')
 
         # Set FPICFLAGS for compilers except 'gcc'.
         if self.compiler.name != 'gcc':
