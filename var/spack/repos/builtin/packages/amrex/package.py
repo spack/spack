@@ -121,13 +121,12 @@ class Amrex(CMakePackage, CudaPackage):
             url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
         return url.format(version.dotted)
 
-
     def get_cuda_arch_string(values):
         if 'none' in values:
             return('Auto')
         else:
             # Use format x.y instead of CudaPackage xy format
-            vf = tuple(float(x)/10.0 for x in values)
+            vf = tuple(float(x) / 10.0 for x in values)
             return(';'.join(str(x) for x in vf))
 
     #
@@ -162,10 +161,9 @@ class Amrex(CMakePackage, CudaPackage):
 
         if '+cuda' in self.spec:
             cuda_arch = spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH='+get_cuda_arch_string(cuda_arch))
+            args.append('-DCUDA_ARCH=' + get_cuda_arch_string(cuda_arch))
 
         return args
-
 
     #
     # For versions > 20.11
@@ -200,6 +198,6 @@ class Amrex(CMakePackage, CudaPackage):
             args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
             args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
             cuda_arch = spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH='+get_cuda_arch_string(cuda_arch))
+            args.append('-DCUDA_ARCH=' + get_cuda_arch_string(cuda_arch))
 
         return args
