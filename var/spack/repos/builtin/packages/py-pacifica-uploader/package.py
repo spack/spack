@@ -16,5 +16,5 @@ class PyPacificaUploader(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build')
-    depends_on('py-requests', type='run')
+    depends_on('py-requests', type=('build', 'run'))
     depends_on('python@3:', type=('build', 'run'))
