@@ -420,11 +420,6 @@ def make_argument_parser(**kwargs):
         '--print-shell-vars', action='store',
         help="print info needed by setup-env.[c]sh")
     parser.add_argument(
-        '-u', '--upstream', dest='upstream',
-        action='store', default=None,
-        help='target specified upstream'
-    )
-    parser.add_argument(
         '-g', '--global', action='store_true',
         default=False, dest='global_upstream',
         help='target global upstream'
@@ -483,13 +478,10 @@ def setup_main_options(args):
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 
-    # If install-root, upstream, or global command specified
+    # If install-root or global command specified
     # Target different install root here.
     if args.install_root:
         spack.store.install_root = args.install_root
-    elif args.upstream:
-        # Install Package to Global Upstream for multi-user use
-        spack.store.install_root = args.upstream
     elif args.global_upstream:
         spack.store.install_root = 'default'
 
