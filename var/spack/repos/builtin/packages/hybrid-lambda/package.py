@@ -9,8 +9,8 @@ from spack import *
 class HybridLambda(AutotoolsPackage):
     """Hybrid-Lambda is a software package that can simulate gene trees
        within a rooted species network or a rooted species tree under the
-       coalescent process. 
-       
+       coalescent process.
+
        The main feature of this program is that users can
        choose to use the standard Kingman coalescent process, which produces
        bifurcating genealogies, or two other Lambda coalescent processes,
