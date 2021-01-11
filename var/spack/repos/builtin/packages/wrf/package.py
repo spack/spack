@@ -261,6 +261,9 @@ class Wrf(Package):
                         ofh.write(line)
 
         if self.spec.satisfies("@4.2 %aocc"):
+            """
+            change in naming of configure.defaults is related to WRF version
+            """
             rename(
                 "./arch/configure.defaults",
                 "./arch/configure.defaults.bak",
