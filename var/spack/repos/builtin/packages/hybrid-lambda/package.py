@@ -21,7 +21,7 @@ class HybridLambda(AutotoolsPackage):
     homepage = "https://github.com/hybridLambda/hybrid-Lambda"
     git      = "https://github.com/hybridLambda/hybrid-Lambda.git"
 
-    version('dev', submodules=True)
+    version('develop', submodules=True)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
