@@ -30,11 +30,3 @@ class PyDeeptools(PythonPackage):
     depends_on('py-py2bit@0.2.0:', type=('build', 'run'))
     depends_on('py-plotly@2.0.0:', type=('build', 'run'))
     depends_on('py-deeptoolsintervals@0.1.8:', type=('build', 'run'))
-
-    def patch(self):
-        # Add nosetest hook for "python setup.py test" argument.
-        filter_file(r'^setup\(',
-                    r'''setup(
-    tests_require='nose',
-    test_suite='nose.collector',''',
-                    'setup.py')
