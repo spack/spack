@@ -30,14 +30,10 @@ class HybridLambda(AutotoolsPackage):
     depends_on('boost')
     depends_on('cppunit', type='test')
 
-    def autoreconf(self, spec, prefix):
-        autoreconf('--install', '--verbose', '--force')
+    build_directory = 'src'
 
-    def build(self, spec, prefix):
+    @run_after('configure')
+    def change_install_option_in_makefile(self):
         with working_dir('src'):
-            make
-
-    def install(self, spec, prefix):
-        filter_file(r'INSTALL = /bin/install -c',
-                    'INSTALL = /bin/install -C', 'Makefile')
-        make('install')
+            filter_file(r'INSTALL = /bin/install -c',
+                        'INSTALL = /bin/install -C', 'Makefile')
