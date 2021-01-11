@@ -21,8 +21,9 @@ class Amdlibm(SConsPackage):
     git = "https://github.com/amd/aocl-libm-ose.git"
     maintainers = ["amd-toolchain-support"]
 
-    # Download and build from latest source
+    # Download and build from specific branch
     version("spack-09-2020")
+
     variant("verbose", default=False,
             description="Building with verbosity")
 
