@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,11 +12,15 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     homepage = "http://www.openucx.org"
     url      = "https://github.com/openucx/ucx/releases/download/v1.3.1/ucx-1.3.1.tar.gz"
+    git      = "https://github.com/openucx/ucx.git"
 
     maintainers = ['hppritcha']
 
+    # Development
+    version('1.9-dev', branch='v1.9.x')
+
     # Current
-    version('1.9.0', sha256='a7a2c8841dc0d5444088a4373dc9b9cc68dbffcd917c1eba92ca8ed8e5e635fb')
+    version('1.9.0', sha256='a7a2c8841dc0d5444088a4373dc9b9cc68dbffcd917c1eba92ca8ed8e5e635fb', preferred=True)
     version('1.8.1', sha256='a48820cb8d0761b5ccf3e7ba03a7c8c1dde6276017657178829e07ffc35b556a')
     version('1.8.0', sha256='e400f7aa5354971c8f5ac6b881dc2846143851df868088c37d432c076445628d')
     version('1.7.0', sha256='6ab81ee187bfd554fe7e549da93a11bfac420df87d99ee61ffab7bb19bdd3371')
@@ -62,13 +66,18 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('java@8', when='+java')
     depends_on('maven', when='+java')
-    depends_on('gdrcopy@1.3', when='+gdrcopy')
+    depends_on('gdrcopy', when='@1.7:+gdrcopy')
+    depends_on('gdrcopy@1.3', when='@:1.6+gdrcopy')
     conflicts('+gdrcopy', when='~cuda',
               msg='gdrcopy currently requires cuda support')
     depends_on('xpmem', when='+xpmem')
     depends_on('knem', when='+knem')
 
     configure_abs_path = 'contrib/configure-release'
+
+    @when('@1.9-dev')
+    def autoreconf(self, spec, prefix):
+        Executable('./autogen.sh')()
 
     def configure_args(self):
         spec = self.spec

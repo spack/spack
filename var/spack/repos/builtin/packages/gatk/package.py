@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,46 @@ class Gatk(Package):
     url = "https://github.com/broadinstitute/gatk/releases/download/4.1.0.0/gatk-4.1.0.0.zip"
     list_url = "https://github.com/broadinstitute/gatk/releases"
 
+    version(
+        "4.1.8.1",
+        sha256="42e6de5059232df1ad5785c68c39a53dc1b54afe7bb086d0129f4dc95fb182bc",
+    )
+    version(
+        "4.1.8.0",
+        sha256="3ce1c2a15c44d0cfc9b2c26111f4518c215a5f9314072b4eb61f07ab5d01eef6",
+    )
+    version(
+        "4.1.7.0",
+        sha256="1ed6f7c3194563a16c53b66e64d1b16d3f5e919d057d9e60f0ae6570eb0882e3",
+    )
+    version(
+        "4.1.6.0",
+        sha256="1a8a0256693c0e1fb83d87b6da4bad4a182bfc2a762394650b627a882694c306",
+    )
+    version(
+        "4.1.5.0",
+        sha256="6fc152c2cae0cc54c7c4cfdfd865a64f7054a820f7d02ca2549511af1dd9882b",
+    )
+    version(
+        "4.1.4.1",
+        sha256="21ae694cfc8b7447381ad5ce62ed4af22e53a228b12495bdcca7df0c73b09cea",
+    )
+    version(
+        "4.1.4.0",
+        sha256="ae54a2b938f704e15ea03d1822b4ce80d9a02108dc3a2b482d80b93edae3d492",
+    )
+    version(
+        "4.1.3.0",
+        sha256="56fd4f03b15a8a01eaa4629f62e3ab15e4d4b957c787efd2d5629b2658c3df0a",
+    )
+    version(
+        "4.1.2.0",
+        sha256="ffc5f9b3d4b35772ee5dac3060b59dc657f30e830745160671d84d732c30dc65",
+    )
+    version(
+        "4.1.1.0",
+        sha256="0d997aaf5c633643c07f0e5f74d0e20364a0f1304b04355bc6e073c65fab6554",
+    )
     version(
         "4.1.0.0",
         sha256="148aa061328d922a570d0120d88f27e61e5da877f542206f4d77f2d788b7d21d",

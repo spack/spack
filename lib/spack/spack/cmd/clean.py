@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,11 @@ import shutil
 import llnl.util.tty as tty
 
 import spack.caches
-import spack.cmd
+import spack.cmd.test
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.stage
+import spack.config
 from spack.paths import lib_path, var_path
 
 

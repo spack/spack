@@ -1,8 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -30,8 +31,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Enable extra warnings and force tests to be enabled.')
     variant('half', default=False,
             description='Enable FP16 support on the CPU.')
-    variant('legacy', default=False,
-            description='Enable the legacy DistConv code branch.')
+    variant('distconv', default=False,
+            description='Support distributed convolutions: spatial, channel, '
+            'filter.')
     variant('nvshmem', default=False,
             description='Builds with support for NVSHMEM')
     variant('openmp', default=False,
@@ -67,8 +69,15 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('catch2', type='test')
 
-    depends_on('aluminum', when='+al ~cuda')
+    # Specify the correct version of Aluminum
+    depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
+    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+
+    # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
@@ -97,14 +106,19 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Legacy builds require cuda
     conflicts('~cuda', when='+legacy')
 
+    conflicts('+distconv', when='+half')
+    conflicts('+rocm', when='+half')
+
     depends_on('half', when='+half')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
 
     depends_on('py-breathe', type='build', when='+docs')
     depends_on('doxygen', type='build', when='+docs')
+
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
@@ -127,7 +141,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
-            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+legacy' in spec),
+            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+distconv' in spec),
             '-DH2_ENABLE_OPENMP=%s' % ('+openmp' in spec),
             '-DH2_ENABLE_FP16=%s' % ('+half' in spec),
             '-DH2_ENABLE_HIP_ROCM=%s' % ('+rocm' in spec),
@@ -146,4 +160,35 @@ class Dihydrogen(CMakePackage, CudaPackage):
                         ' '.join(self.cuda_flags(cuda_arch))
                     ))
 
+        if '+cuda' in spec or '+legacy' in spec:
+            args.append('-DcuDNN_DIR={0}'.format(
+                spec['cudnn'].prefix))
+
+        if spec.satisfies('^cuda@:10.99'):
+            if '+cuda' in spec or '+legacy' in spec:
+                args.append('-DCUB_DIR={0}'.format(
+                    spec['cub'].prefix))
+
+        # Add support for OpenMP with external (Brew) clang
+        if spec.satisfies('%clang +openmp platform=darwin'):
+            clang = self.compiler.cc
+            clang_bin = os.path.dirname(clang)
+            clang_root = os.path.dirname(clang_bin)
+            args.extend([
+                '-DOpenMP_CXX_FLAGS=-fopenmp=libomp',
+                '-DOpenMP_CXX_LIB_NAMES=libomp',
+                '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
+                    clang_root)])
+
         return args
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%apple-clang +openmp'):
+            env.append_flags(
+                'CPPFLAGS', self.compiler.openmp_flag)
+            env.append_flags(
+                'CFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
+            env.append_flags(
+                'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)

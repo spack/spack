@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,12 @@ class RocmGdb(AutotoolsPackage):
         based on GDB, the GNU source-level debugger."""
 
     homepage = "https://github.com/ROCm-Developer-Tools/ROCgdb/"
-    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-3.7.0.tar.gz"
+    url      = "https://github.com/ROCm-Developer-Tools/ROCgdb/archive/rocm-3.10.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('3.10.0', sha256='05455cb47dd42404ee8bba047def6a6846a7e877e7a7db8dcffc7100d5ba16f0')
+    version('3.9.0', sha256='0765c96439c0efa145418d210d865b9faed463466d7522274959cc4476a37097')
     version('3.8.0', sha256='a7c11dc30c952587c616bf7769bad603c3bf80522afc8b73ccda5b78d27bed41')
     version('3.7.0', sha256='7a29ef584fd7b6c66bb03aaf8ec2f5a8c758370672a28a4d0d95066e5f6fbdc1')
     version('3.5.0', sha256='cf36d956e84c7a5711b71f281a44b0a9708e13e941d8fca0247d01567e7ee7d1')
@@ -30,7 +32,7 @@ class RocmGdb(AutotoolsPackage):
     depends_on('zlib', type='link')
     depends_on('babeltrace@1.2.4', type='link')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 

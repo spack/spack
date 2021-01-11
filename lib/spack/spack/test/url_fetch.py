@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ from spack.spec import Spec
 from spack.stage import Stage
 from spack.version import ver
 import spack.util.crypto as crypto
+import spack.util.executable
 
 
 @pytest.fixture(params=list(crypto.hashes.keys()))
@@ -225,3 +226,29 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected):
     pkg = pkg_factory(url, urls, fetch_options={'timeout': 60})
     f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
     assert f.extra_options == {'timeout': 60}
+
+
+@pytest.mark.regression('19673')
+def test_missing_curl(tmpdir, monkeypatch):
+    """Ensure a fetch involving missing curl package reports the error."""
+    err_fmt = 'No such command {0}'
+
+    def _which(*args, **kwargs):
+        err_msg = err_fmt.format(args[0])
+        raise spack.util.executable.CommandNotFoundError(err_msg)
+
+    # Patching the 'which' symbol imported by fetch_strategy works
+    # since it is too late in import processing to patch the defining
+    # (spack.util.executable) module's symbol.
+    monkeypatch.setattr(fs, 'which', _which)
+
+    testpath = str(tmpdir)
+    url = 'http://github.com/spack/spack'
+    fetcher = fs.URLFetchStrategy(url=url)
+    assert fetcher is not None
+
+    with pytest.raises(TypeError, match='object is not callable'):
+        with Stage(fetcher, path=testpath) as stage:
+            out = stage.fetch()
+
+        assert err_fmt.format('curl') in out

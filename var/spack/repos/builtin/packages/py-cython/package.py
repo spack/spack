@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,16 +9,7 @@ from spack import *
 class PyCython(PythonPackage):
     """The Cython compiler for writing C extensions for the Python language."""
 
-    homepage = "https://pypi.python.org/pypi/cython"
-    url      = "https://pypi.io/packages/source/c/cython/Cython-0.29.21.tar.gz"
-
-    import_modules = [
-        'cython', 'Cython', 'Cython.Build', 'Cython.Compiler',
-        'Cython.Runtime', 'Cython.Distutils', 'Cython.Debugger',
-        'Cython.Debugger.Tests', 'Cython.Plex', 'Cython.Tests',
-        'Cython.Build.Tests', 'Cython.Compiler.Tests', 'Cython.Utility',
-        'Cython.Tempita', 'pyximport',
-    ]
+    pypi = "cython/Cython-0.29.21.tar.gz"
 
     version('0.29.21', sha256='e57acb89bd55943c8d8bf813763d20b9099cc7165c0f16b707631a7654be9cad')
     version('0.29.16', sha256='232755284f942cbb3b43a06cd85974ef3c970a021aef19b5243c03ee2b08fa05')
@@ -37,8 +28,8 @@ class PyCython(PythonPackage):
     version('0.23.4',  sha256='fec42fecee35d6cc02887f1eef4e4952c97402ed2800bfe41bbd9ed1a0730d8e')
     version('0.21.2',  sha256='b01af23102143515e6138a4d5e185c2cfa588e0df61c0827de4257bac3393679')
 
-    depends_on('python@2.6:2.8,3.3:', when='@0.23:', type=('build', 'run'))
-    depends_on('python@:2', when='@:0.22', type=('build', 'run'))
+    depends_on('python@2.6:2.8,3.3:', when='@0.23:', type=('build', 'link', 'run'))
+    depends_on('python@:2', when='@:0.22', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('gdb@7.2:', type='test')
 
@@ -47,6 +38,8 @@ class PyCython(PythonPackage):
         """Returns the Cython command"""
         return Executable(self.prefix.bin.cython)
 
-    def test(self):
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
         # Warning: full suite of unit tests takes a very long time
         python('runtests.py', '-j', str(make_jobs))

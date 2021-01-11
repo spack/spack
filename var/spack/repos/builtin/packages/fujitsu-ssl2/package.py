@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,36 +42,41 @@ class FujitsuSsl2(Package):
     @property
     def blas_libs(self):
         spec = self.spec
-        sharedlibslist = ["libfj90i", "libfj90f", "libfjsrcinfo", "libfj90rt"]
-        staticlibslist = []
+        libslist = []
+        if spec.target == "a64fx":  # Build with SVE support
+            if "+parallel" in spec:  # parallel
+                libslist.append("libfjlapackexsve.so")
+            else:
+                libslist.append("libfjlapacksve.so")
+        else:
+            if "+parallel" in spec:  # parallel
+                libslist.append("libfjlapackex.so")
+            else:
+                libslist.append("libfjlapack.so")
+
+        libslist.append("libfj90rt2.a")
 
         if spec.target == "a64fx":  # Build with SVE support
-            sharedlibslist += ["libfjlapacksve"]
-
             if "+parallel" in spec:  # parallel
-                staticlibslist = ["libssl2mtexsve"]
-
-            staticlibslist += ["libssl2mtsve", "libfj90rt2", "libfj90fmt_sve"]
-
-        else:  # Build with NEON support
-            sharedlibslist += ["libfjlapack"]
-
+                libslist.append("libssl2mtexsve.a")
+            libslist.append("libssl2mtsve.a")
+        else:
             if "+parallel" in spec:  # parallel
-                staticlibslist = ["libssl2mtex"]
+                libslist.append("libssl2mtex.a")
+            libslist.append("libssl2mt.a")
 
-            staticlibslist += [
-                "libssl2mt",
-                "libfj90rt2",
-                "libfj90fmt"
-            ]
+        libslist.append("libfj90i.so")
 
-        sharedlibs = find_libraries(
-            sharedlibslist, self.prefix.lib64, shared=True, recursive=False
-        )
-        staticlibs = find_libraries(
-            staticlibslist, self.prefix.lib64, shared=False, recursive=False
-        )
-        libs = sharedlibs + staticlibs
+        if spec.target == "a64fx":  # Build with SVE support
+            libslist.append("libfj90fmt_sve.a")
+        else:
+            libslist.append("libfj90fmt.a")
+
+        libslist.extend(["libfj90f.a", "libfjsrcinfo.a", "libfj90rt.so"])
+
+        libspath = find(self.prefix.lib64, libslist, recursive=False)
+        libs = LibraryList(libspath)
+
         return libs
 
     @property
@@ -81,53 +86,56 @@ class FujitsuSsl2(Package):
     @property
     def scalapack_libs(self):
         spec = self.spec
-        sharedlibslist = [
-            "libmpi_usempi_ignore_tkr",
-            "libmpi_mpifh",
-            "libfj90i",
-            "libfj90f",
-            "libfjsrcinfo",
-            "libfj90rt",
-        ]
-        staticlibslist = []
+        libslist = []
+        if spec.target == "a64fx":  # Build with SVE support
+            libslist.append("libfjscalapacksve.so")
+            if "+parallel" in spec:  # parallel
+                libslist.append("libfjlapackexsve.so")
+            else:
+                libslist.append("libfjlapacksve.so")
+            libslist.append("libscalapacksve.a")
+
+        else:
+            libslist.append("libfjscalapack.so")
+            if "+parallel" in spec:  # parallel
+                libslist.append("libfjlapackex.so")
+            else:
+                libslist.append("libfjlapack.so")
+            libslist.append("libscalapack.a")
+
+        libslist.extend(
+            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so", "libfj90rt2.a"]
+        )
 
         if spec.target == "a64fx":  # Build with SVE support
-            sharedlibslist += ["libfjscalapacksve", "libfjlapacksve"]
-
             if "+parallel" in spec:  # parallel
-                staticlibslist = ["libssl2mtexsve"]
-
-            staticlibslist += [
-                "libscalapacksve",
-                "libssl2mtsve",
-                "libfj90rt2",
-                "libfj90fmt_sve",
-            ]
-
-        else:  # Build with NEON support
-            sharedlibslist += ["libfjscalapack", "libfjlapack"]
-
+                libslist.append("libssl2mtexsve.a")
+            libslist.append("libssl2mtsve.a")
+        else:
             if "+parallel" in spec:  # parallel
-                staticlibslist = ["libssl2mtex"]
+                libslist.append("libssl2mtex.a")
+            libslist.append("libssl2mt.a")
 
-            staticlibslist += [
-                "libscalapack",
-                "libssl2mt",
-                "libfj90rt2",
-                "libfj90fmt"
-            ]
+        libslist.append("libfj90i.so")
 
-        sharedlibs = find_libraries(
-            sharedlibslist, self.prefix.lib64, shared=True, recursive=False
-        )
-        staticlibs = find_libraries(
-            staticlibslist, self.prefix.lib64, shared=False, recursive=False
-        )
-        libs = sharedlibs + staticlibs
+        if spec.target == "a64fx":  # Build with SVE support
+            libslist.append("libfj90fmt_sve.a")
+        else:
+            libslist.append("libfj90fmt.a")
+
+        libslist.extend(["libfj90f.a", "libfjsrcinfo.a", "libfj90rt.so"])
+
+        libspath = find(self.prefix.lib64, libslist, recursive=False)
+        libs = LibraryList(libspath)
+
         return libs
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        self.setup_run_environment(env)
-        env.append_flags("fcc_ENV", "-lm -lrt -lpthread -lelf -lz -ldl")
-        env.append_flags("FCC_ENV", "-lm -lrt -lpthread -lelf -lz -ldl")
+        path = self.prefix.include
+        env.append_flags(
+            "fcc_ENV", "-lm -lrt -lpthread -lelf -lz -ldl -idirafter " + path
+        )
+        env.append_flags(
+            "FCC_ENV", "-lm -lrt -lpthread -lelf -lz -ldl -idirafter " + path
+        )
         env.append_flags("FORT90C", "-lm -lrt -lpthread -lelf -lz -ldl")

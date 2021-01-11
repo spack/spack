@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,10 +13,12 @@ class Mrcpp(CMakePackage):
     error control in numerical computations."""
 
     homepage = "https://mrcpp.readthedocs.io/en/latest/"
-    url = "https://github.com/MRChemSoft/mrcpp/archive/v1.3.5.tar.gz"
+    url = "https://github.com/MRChemSoft/mrcpp/archive/v1.3.6.tar.gz"
 
     maintainers = ["robertodr", "stigrj", "ilfreddy"]
 
+    version('1.3.6',
+            sha256='2502e71f086a8bb5ea635d0c6b86e7ff60220a45583e96a08b3cfe7c9db4cecf')
     version('1.3.5',
             sha256='3072cf60db6fa1e621bc6e6dfb6d35f9367a44d9d312a4b8c455894769140aed')
     version('1.3.4',
@@ -53,5 +55,6 @@ class Mrcpp(CMakePackage):
             "-DENABLE_OPENMP={0}".format("ON" if "+openmp" in
                                          self.spec else "OFF"),
             "-DENABLE_MPI={0}".format("ON" if "+mpi" in self.spec else "OFF"),
+            "-DENABLE_TESTS=OFF",
         ]
         return args

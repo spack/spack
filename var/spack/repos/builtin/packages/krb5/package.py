@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Krb5(AutotoolsPackage):
@@ -23,19 +23,46 @@ class Krb5(AutotoolsPackage):
     version('1.16.2', sha256='9f721e1fe593c219174740c71de514c7228a97d23eb7be7597b2ae14e487f027')
     version('1.16.1', sha256='214ffe394e3ad0c730564074ec44f1da119159d94281bbec541dc29168d21117')
 
-    def url_for_version(self, version):
-        url = 'https://kerberos.org/dist/krb5/{0}/krb5-{1}.tar.gz'
-        return url.format(version.up_to(2), version)
-
     depends_on('bison', type='build')
     depends_on('openssl')
+
+    variant(
+        'shared', default=True,
+        description='install shared libraries if True, static if false'
+    )
+    patch('mit-krb5-1.17-static-libs.patch', level=0)
 
     configure_directory = 'src'
     build_directory = 'src'
 
+    executables = ['^krb5-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Kerberos 5 release\s+(\S+)', output)
+        return match.group(1) if match else None
+
+    def url_for_version(self, version):
+        url = 'https://kerberos.org/dist/krb5/{0}/krb5-{1}.tar.gz'
+        return url.format(version.up_to(2), version)
+
+    def patch(self):
+        # https://github.com/Homebrew/homebrew-core/blob/master/Formula/krb5.rb
+        # https://krbdev.mit.edu/rt/Ticket/Display.html?id=8928
+        filter_file(
+            'void foo1() __attribute__((constructor));',
+            '#include <unistd.h>\nvoid foo1() __attribute__((constructor));',
+            join_path(self.configure_directory, 'configure'),
+            string=True)
+
     def configure_args(self):
-        args = ['--disable-debug',
-                '--disable-dependency-tracking',
-                '--disable-silent-rules',
-                '--without-system-verto']
+        args = ['--without-system-verto']
+
+        if '~shared' in self.spec:
+            args.append('--enable-static')
+            args.append('--disable-shared')
+        else:
+            args.append('--disable-static')
+
         return args

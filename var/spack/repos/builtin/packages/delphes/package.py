@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,12 @@ class Delphes(CMakePackage):
     git = "https://github.com/delphes/delphes.git"
     url = "http://cp3.irmp.ucl.ac.be/downloads/Delphes-3.4.2.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan', 'vvolkl', 'selvaggi']
 
     version('master', branch='master')
-    version('3.4.3pre05', tag='3.4.3pre05')
-    version('3.4.3pre04', tag='3.4.3pre04')
+    version('3.4.3pre06', tag='3.4.3pre06')
     version('3.4.2', sha256='d46a7c5474de650befdb89377115feee31f1743107ceb3d8da699be9d48c097b', preferred=True)
     version('3.4.1', sha256='4b5a2aeac326643f45b6d45c39ba2302e323eeb86d8cb58843c6e73949b1208a')
     version('3.4.0', sha256='c0f9500663a0c3a5c1eddcee598a67b5bcfc9318303195c6cacc0590b4023fa1')

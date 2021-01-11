@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -471,14 +471,16 @@ def test_fj_flags():
     supported_flag_test("cxx98_flag", "-std=c++98", "fj@4.0.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "fj@4.0.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "fj@4.0.0")
+    supported_flag_test("cxx17_flag", "-std=c++17", "fj@4.0.0")
     supported_flag_test("c99_flag", "-std=c99", "fj@4.0.0")
     supported_flag_test("c11_flag", "-std=c11", "fj@4.0.0")
     supported_flag_test("cc_pic_flag",  "-KPIC", "fj@4.0.0")
     supported_flag_test("cxx_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("f77_pic_flag", "-KPIC", "fj@4.0.0")
     supported_flag_test("fc_pic_flag",  "-KPIC", "fj@4.0.0")
-    supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
+    supported_flag_test("opt_flags", ['-O0', '-O1', '-O2', '-O3', '-Ofast'],
                         'fj@4.0.0')
+    supported_flag_test("debug_flags", "-g", "fj@4.0.0")
 
 
 def test_gcc_flags():
@@ -538,6 +540,25 @@ def test_intel_flags():
     supported_flag_test("opt_flags",
                         ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os'],
                         'intel@1.0')
+
+
+def test_oneapi_flags():
+    supported_flag_test("openmp_flag", "-qopenmp", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx11_flag", "-std=c++11", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx14_flag", "-std=c++14", "oneapi@2020.8.0.0827")
+    supported_flag_test("c99_flag", "-std=c99", "oneapi@2020.8.0.0827")
+    supported_flag_test("c11_flag", "-std=c1x", "oneapi@2020.8.0.0827")
+    supported_flag_test("cc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("cxx_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("f77_pic_flag", "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("fc_pic_flag",  "-fPIC", "oneapi@2020.8.0.0827")
+    supported_flag_test("stdcxx_libs", ("-cxxlib",), "oneapi@2020.8.0.0827")
+    supported_flag_test("debug_flags",
+                        ['-debug', '-g', '-g0', '-g1', '-g2', '-g3'],
+                        'oneapi@2020.8.0.0827')
+    supported_flag_test("opt_flags",
+                        ['-O', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os'],
+                        'oneapi@2020.8.0.0827')
 
 
 def test_nag_flags():

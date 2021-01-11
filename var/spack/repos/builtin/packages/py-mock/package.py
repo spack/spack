@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyMock(PythonPackage):
     they have been used."""
 
     homepage = "https://github.com/testing-cabal/mock"
-    url      = "https://pypi.io/packages/source/m/mock/mock-3.0.5.tar.gz"
+    pypi = "mock/mock-3.0.5.tar.gz"
 
     version('3.0.5', sha256='83657d894c90d5681d62155c82bda9c1187827525880eda8ff5df4ec813437c3')
     version('2.0.0', sha256='b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba')
@@ -23,5 +23,3 @@ class PyMock(PythonPackage):
     depends_on('py-six@1.7:', type=('build', 'run'))
     depends_on('py-six@1.9:', type=('build', 'run'), when='@2.0.0:')
     depends_on('py-funcsigs@1:', type=('build', 'run'), when='^python@:3.2')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-cov', type='test')

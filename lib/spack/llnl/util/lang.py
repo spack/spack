@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -568,6 +568,12 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
+        # When unpickling Singleton objects, the 'instance' attribute may be
+        # requested but not yet set. The final 'getattr' line here requires
+        # 'instance'/'_instance' to be defined or it will enter an infinite
+        # loop, so protect against that here.
+        if name in ['_instance', 'instance']:
+            raise AttributeError()
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -596,6 +602,8 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
         return getattr(self.ref_function(), name)
 
     def __getitem__(self, name):
@@ -663,3 +671,12 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

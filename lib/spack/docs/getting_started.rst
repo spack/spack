@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,50 +44,50 @@ Getting Spack is easy.  You can clone it from the `github repository
 
 This will create a directory called ``spack``.
 
-^^^^^^^^^^^^^^^^^^^^^^^^
-Add Spack to the Shell
-^^^^^^^^^^^^^^^^^^^^^^^^
+.. _shell-support:
 
-We'll assume that the full path to your downloaded Spack directory is
-in the ``SPACK_ROOT`` environment variable.  Add ``$SPACK_ROOT/bin``
-to your path and you're ready to go:
+^^^^^^^^^^^^^
+Shell support
+^^^^^^^^^^^^^
 
-.. code-block:: console
-
-   # For bash/zsh users
-   $ export SPACK_ROOT=/path/to/spack
-   $ export PATH=$SPACK_ROOT/bin:$PATH
-
-   # For tsch/csh users
-   $ setenv SPACK_ROOT /path/to/spack
-   $ setenv PATH $SPACK_ROOT/bin:$PATH
-
-   # For fish users
-   $ set -x SPACK_ROOT /path/to/spack
-   $ set -U fish_user_paths /path/to/spack $fish_user_paths
+Once you have cloned Spack, we recommend sourcing the appropriate script
+for your shell:
 
 .. code-block:: console
 
-   $ spack install libelf
+   # For bash/zsh/sh
+   $ . spack/share/spack/setup-env.sh
 
-For a richer experience, use Spack's shell support:
+   # For tcsh/csh
+   $ source spack/share/spack/setup-env.csh
 
-.. code-block:: console
+   # For fish
+   $ . spack/share/spack/setup-env.fish
 
-   # Note you must set SPACK_ROOT
+That's it! You're ready to use Spack.
 
-   # For bash/zsh users
-   $ . $SPACK_ROOT/share/spack/setup-env.sh
+Sourcing these files will put the ``spack`` command in your ``PATH``, set
+up your ``MODULEPATH`` to use Spack's packages, and add other useful
+shell integration for :ref:`certain commands <packaging-shell-support>`,
+:ref:`environments <environments>`, and :ref:`modules <modules>`. For
+``bash``, it also sets up tab completion.
 
-   # For tcsh/csh users
-   $ source $SPACK_ROOT/share/spack/setup-env.csh
+If you do not want to use Spack's shell support, you can always just run
+the ``spack`` command directly from ``spack/bin/spack``.
 
-   # For fish users
-   $ source $SPACK_ROOT/share/spack/setup-env.fish
 
-This automatically adds Spack to your ``PATH`` and allows the ``spack``
-command to be used to execute spack :ref:`commands <shell-support>` and
-:ref:`useful packaging commands <packaging-shell-support>`.
+^^^^^^^^^^^^^^^^^^
+Check Installation
+^^^^^^^^^^^^^^^^^^
+
+With Spack installed, you should be able to run some basic Spack
+commands.  For example:
+
+.. command-output:: spack spec netcdf-c
+
+In theory, Spack doesn't need any additional installation; just
+download and run!  But in real life, additional steps are usually
+required before Spack can work in a practical sense.  Read on...
 
 ^^^^^^^^^^^^^^^^^
 Clean Environment
@@ -102,17 +102,6 @@ Therefore, it is recommended that Spack users run with a *clean
 environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
-
-
-^^^^^^^^^^^^^^^^^^
-Check Installation
-^^^^^^^^^^^^^^^^^^
-
-With Spack installed, you should be able to run some basic Spack
-commands.  For example:
-
-.. command-output:: spack spec netcdf-c
-
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
@@ -130,15 +119,6 @@ This will install a new spack script in ``/my/favorite/prefix/bin``,
 which you can use just like you would the regular spack script.  Each
 copy of spack installs packages into its own ``$PREFIX/opt``
 directory.
-
-
-^^^^^^^^^^
-Next Steps
-^^^^^^^^^^
-
-In theory, Spack doesn't need any additional installation; just
-download and run!  But in real life, additional steps are usually
-required before Spack can work in a practical sense.  Read on...
 
 
 .. _compiler-config:

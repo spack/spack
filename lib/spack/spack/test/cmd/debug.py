@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@ import os
 import os.path
 
 import spack.architecture as architecture
+import spack.config
 from spack.main import SpackCommand, get_version
 from spack.util.executable import which
 
@@ -53,3 +54,4 @@ def test_report():
     assert get_version() in out
     assert platform.python_version() in out
     assert str(arch) in out
+    assert spack.config.get('config:concretizer') in out

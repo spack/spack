@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,6 @@ class Manta(CMakePackage):
     version('1.3.1', sha256='9ba943623088e552a4b45bccea48125a0553905f4cc7ea86a9de567e155a5888')
     version('1.3.0', sha256='3db4b5475c33e3aeeb5435969c74364af9d2d77dd3bcf8dc70bf44a851e450dd')
 
-    depends_on('boost@1.58.0:', type='build')
     depends_on('cmake@2.8.12:', type='build')
     depends_on('python@2.7.0:2.7.999', type=('build', 'run'))
     depends_on('zlib')

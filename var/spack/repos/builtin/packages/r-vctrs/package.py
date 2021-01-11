@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,10 @@ class RVctrs(RPackage):
     function interfaces."""
 
     homepage = "https://github.com/r-lib/vctrs"
-    url      = "https://cloud.r-project.org/src/contrib/vctrs_0.2.0.tar.gz"
+    url      = "https://github.com/r-lib/vctrs/archive/v0.3.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/vctrs"
 
+    version('0.3.5', sha256='798dd19809ab99267456ebf488e7aa4e3c03f7f307f5e0abde01dc7ba1cf53ce')
     version('0.2.0', sha256='5bce8f228182ecaa51230d00ad8a018de9cf2579703e82244e0931fe31f20016')
 
     depends_on('r@3.2:', type=('build', 'run'))
@@ -23,5 +24,5 @@ class RVctrs(RPackage):
     depends_on('r-ellipsis@0.2.0:', type=('build', 'run'))
     depends_on('r-digest', type=('build', 'run'))
     depends_on('r-glue', type=('build', 'run'))
-    depends_on('r-rlang@0.4.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.7:', type=('build', 'run'))
     depends_on('r-zeallot', type=('build', 'run'))

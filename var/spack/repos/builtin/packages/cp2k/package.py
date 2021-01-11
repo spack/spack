@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,6 +47,10 @@ class Cp2k(MakefilePackage, CudaPackage):
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
     variant('cosma', default=False, description='Use COSMA for p?gemm')
+    variant('libvori', default=False,
+            description=('Enable support for Voronoi integration'
+                         ' and BQB compression'))
+    variant('spglib', default=False, description='Enable support for spglib')
 
     # override cuda_arch from CudaPackage since we only support one arch
     # at a time and only specific ones for which we have parameter files
@@ -70,7 +74,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     variant('lmax',
             description='Maximum supported angular momentum (HFX and others)',
             default='5',
-            values=map(str, HFX_LMAX_RANGE),
+            values=tuple(map(str, HFX_LMAX_RANGE)),
             multi=False)
 
     depends_on('python', type='build')
@@ -129,6 +133,9 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
+    depends_on('libvori@201217:', when='@8:+libvori', type='build')
+    depends_on('spglib', when='+spglib')
+
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
@@ -136,6 +143,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('~mpi', '+cosma')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
     conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
+
+    conflicts('+libvori', '@:7.999')  # libvori support was introduced in 8+
 
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
@@ -193,7 +202,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             fftw_header_dir = fftw.headers.directories[0] + '/fftw'
         elif '^intel-parallel-studio+mkl' in spec:
             fftw = spec['intel-parallel-studio']
-            fftw_header_dir = fftw.headers.directories[0] + '/fftw'
+            fftw_header_dir = '<NOTFOUND>'
+            for incdir in [join_path(f, 'fftw')
+                           for f in fftw.headers.directories]:
+                if os.path.exists(incdir):
+                    fftw_header_dir = incdir
+                    break
 
         optimization_flags = {
             'gcc': [
@@ -473,6 +487,19 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += pkgconf('--cflags-only-I', 'libxsmmf',
                                output=str).split()
             libs += pkgconf('--libs', 'libxsmmf', output=str).split()
+
+        if '+libvori' in spec:
+            cppflags += ['-D__LIBVORI']
+            libvori = spec['libvori'].libs
+            ldflags += [libvori.search_flags]
+            libs += libvori
+            libs += ['-lstdc++']
+
+        if '+spglib' in spec:
+            cppflags += ['-D__SPGLIB']
+            spglib = spec['spglib'].libs
+            ldflags += [spglib.search_flags]
+            libs += spglib
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)

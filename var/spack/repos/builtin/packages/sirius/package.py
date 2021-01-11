@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,7 +57,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))

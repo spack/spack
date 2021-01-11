@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.13', sha256='79197543b17cc314b7e43f7a33148c308b0807cd6381ee77f77e15acf3e6459e')
+    version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
+    version('0.3.11', sha256='bc4617971179e037ae4e8ebcd837e46db88422f7b365325bd7aba31d1921a673')
     version('0.3.10', sha256='0484d275f87e9b8641ff2eecaa9df2830cbe276ac79ad80494822721de6e1693')
     version('0.3.9', sha256='17d4677264dfbc4433e97076220adc79b050e4f8a083ea3f853a53af253bc380')
     version('0.3.8', sha256='8f86ade36f0dbed9ac90eb62575137388359d97d8f93093b38abe166ad7ef3a8')
@@ -106,8 +109,14 @@ class Openblas(MakefilePackage):
           when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
-    patch('openblas_fujitsu.patch', when='%fj')
-    patch('openblas_fujitsu2.patch', when='@0.3.10 %fj')
+    # See https://github.com/xianyi/OpenBLAS/pull/3010
+    # UPD: the patch has been merged starting version 0.3.13
+    patch('openblas_fujitsu.patch', when='@:0.3.10 %fj')
+    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11:0.3.12 %fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10:0.3.12 %fj')
+
+    # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
+    conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
@@ -260,9 +269,18 @@ class Openblas(MakefilePackage):
         if '+consistent_fpcsr' in self.spec:
             make_defs += ['CONSISTENT_FPCSR=1']
 
+        # Flang/f18 does not provide ETIME as an intrinsic
+        if self.spec.satisfies('%clang'):
+            make_defs.append('TIMER=INT_CPU_TIME')
+
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs.append('NO_AVX2=1')
+
+        # Newer versions of openblas will try to find ranlib in the compiler's
+        # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
+        if self.spec.satisfies('@0.3.13:'):
+            make_defs.append('RANLIB=ranlib')
 
         return make_defs
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class XkeyboardConfig(AutotoolsPackage, XorgPackage):
     depends_on('libxslt', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('intltool@0.30:', type='build')
-    depends_on('xproto@7.0.20:', type='build')
+    depends_on('xproto@7.0.20:')
 
     # TODO: missing dependencies
     # xgettext

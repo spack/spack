@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,9 @@ from __future__ import print_function
 import platform
 import os.path
 import tempfile
+
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -27,7 +30,6 @@ from functools_backport import reverse_order
 from contextlib import contextmanager
 
 import llnl.util.lang
-import llnl.util.cpu as cpu
 
 import spack.repo
 import spack.abi
@@ -251,8 +253,7 @@ class Concretizer(object):
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
 
-        if spec.architecture.platform and \
-                (spec.architecture.os and spec.architecture.target):
+        if spec.architecture.concrete:
             return False
 
         # Get platform of nearest spec with a platform, including spec
@@ -292,22 +293,58 @@ class Concretizer(object):
 
         # Get the nearest spec with relevant platform and a target
         # Generally, same algorithm as finding os
+        curr_target = None
         if spec.architecture.target:
+            curr_target = spec.architecture.target
+        if spec.architecture.target and spec.architecture.target_concrete:
             new_target = spec.architecture.target
         else:
             new_target_spec = find_spec(
                 spec, lambda x: (x.architecture and
                                  x.architecture.platform == str(new_plat) and
-                                 x.architecture.target)
+                                 x.architecture.target and
+                                 x.architecture.target != curr_target)
             )
             if new_target_spec:
-                new_target = new_target_spec.architecture.target
+                if curr_target:
+                    # constrain one target by the other
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, new_target_spec.architecture.target))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, curr_target))
+                    curr_target_arch.constrain(new_target_arch)
+                    new_target = curr_target_arch.target
+                else:
+                    new_target = new_target_spec.architecture.target
             else:
                 # To get default platform, consider package prefs
                 if PackagePrefs.has_preferred_targets(spec.name):
                     new_target = self.target_from_package_preferences(spec)
                 else:
                     new_target = new_plat.target('default_target')
+                if curr_target:
+                    # convert to ArchSpec to compare satisfaction
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(new_target)))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(curr_target)))
+
+                    if not new_target_arch.satisfies(curr_target_arch):
+                        # new_target is an incorrect guess based on preferences
+                        # and/or default
+                        valid_target_ranges = str(curr_target).split(',')
+                        for target_range in valid_target_ranges:
+                            t_min, t_sep, t_max = target_range.partition(':')
+                            if not t_sep:
+                                new_target = t_min
+                                break
+                            elif t_max:
+                                new_target = t_max
+                                break
+                            elif t_min:
+                                # TODO: something better than picking first
+                                new_target = t_min
+                                break
 
         # Construct new architecture, compute whether spec changed
         arch_spec = (str(new_plat), str(new_os), str(new_target))
@@ -325,7 +362,7 @@ class Concretizer(object):
         """
         target_prefs = PackagePrefs(spec.name, 'target')
         target_specs = [spack.spec.Spec('target=%s' % tname)
-                        for tname in cpu.targets]
+                        for tname in archspec.cpu.TARGETS]
 
         def tspec_filter(s):
             # Filter target specs by whether the architecture
@@ -333,7 +370,7 @@ class Concretizer(object):
             # we only consider x86_64 targets when on an
             # x86_64 machine, etc. This may need to change to
             # enable setting cross compiling as a default
-            target = cpu.targets[str(s.architecture.target)]
+            target = archspec.cpu.TARGETS[str(s.architecture.target)]
             arch_family_name = target.family.name
             return arch_family_name == platform.machine()
 
@@ -382,7 +419,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -480,7 +517,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -541,10 +578,14 @@ class Concretizer(object):
             True if spec was modified, False otherwise
         """
         # To minimize the impact on performance this function will attempt
-        # to adjust the target only at the very first call. It will just
-        # return False on subsequent calls. The way this is achieved is by
-        # initializing a generator and making this function return the next
-        # answer.
+        # to adjust the target only at the very first call once necessary
+        # information is set. It will just return False on subsequent calls.
+        # The way this is achieved is by initializing a generator and making
+        # this function return the next answer.
+        if not (spec.architecture and spec.architecture.concrete):
+            # Not ready, but keep going because we have work to do later
+            return True
+
         def _make_only_one_call(spec):
             yield self._adjust_target(spec)
             while True:
@@ -569,7 +610,7 @@ class Concretizer(object):
         Returns:
             True if any modification happened, False otherwise
         """
-        import llnl.util.cpu
+        import archspec.cpu
 
         # Try to adjust the target only if it is the default
         # target for this platform
@@ -582,21 +623,22 @@ class Concretizer(object):
         if PackagePrefs.has_preferred_targets(spec.name):
             default_target = self.target_from_package_preferences(spec)
 
-        if current_target != default_target or \
-            (self.abstract_spec.architecture is not None and
-             self.abstract_spec.architecture.target is not None):
+        if current_target != default_target or (
+                self.abstract_spec and
+                self.abstract_spec.architecture and
+                self.abstract_spec.architecture.concrete):
             return False
 
         try:
             current_target.optimization_flags(spec.compiler)
-        except llnl.util.cpu.UnsupportedMicroarchitecture:
+        except archspec.cpu.UnsupportedMicroarchitecture:
             microarchitecture = current_target.microarchitecture
             for ancestor in microarchitecture.ancestors:
                 candidate = None
                 try:
                     candidate = spack.architecture.Target(ancestor)
                     candidate.optimization_flags(spec.compiler)
-                except llnl.util.cpu.UnsupportedMicroarchitecture:
+                except archspec.cpu.UnsupportedMicroarchitecture:
                     continue
 
                 if candidate is not None:
@@ -784,10 +826,10 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
             % (spec.name, str(archs)))
 
 
-class NoBuildError(spack.error.SpackError):
+class NoBuildError(spack.error.SpecError):
     """Raised when a package is configured with the buildable option False, but
-       no satisfactory external versions can be found"""
-
+    no satisfactory external versions can be found
+    """
     def __init__(self, spec):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")

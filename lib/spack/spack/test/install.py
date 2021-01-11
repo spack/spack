@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ from spack.package import (_spack_build_envfile, _spack_build_logfile,
                            _spack_configure_argsfile)
 
 
+def find_nothing(*args):
+    raise spack.repo.UnknownPackageError(
+        'Repo package access is disabled for test')
+
+
 def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
@@ -27,10 +32,6 @@ def test_install_and_uninstall(install_mockery, mock_fetch, monkeypatch):
 
     # Get the package
     pkg = spec.package
-
-    def find_nothing(*args):
-        raise spack.repo.UnknownPackageError(
-            'Repo package access is disabled for test')
 
     try:
         pkg.do_install()
@@ -83,23 +84,25 @@ class MockStage(object):
         self.wrapped_stage.create()
 
     def __getattr__(self, attr):
+        if attr == 'wrapped_stage':
+            # This attribute may not be defined at some point during unpickling
+            raise AttributeError()
         return getattr(self.wrapped_stage, attr)
 
 
 def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
     spec = Spec('canfail').concretized()
     pkg = spack.repo.get(spec)
-    remove_prefix = spack.package.Package.remove_prefix
     instance_rm_prefix = pkg.remove_prefix
 
     try:
         pkg.succeed = False
-        spack.package.Package.remove_prefix = mock_remove_prefix
+        pkg.remove_prefix = mock_remove_prefix
         with pytest.raises(MockInstallError):
             pkg.do_install()
         assert os.path.isdir(pkg.prefix)
         rm_prefix_checker = RemovePrefixChecker(instance_rm_prefix)
-        spack.package.Package.remove_prefix = rm_prefix_checker.remove_prefix
+        pkg.remove_prefix = rm_prefix_checker.remove_prefix
 
         # must clear failure markings for the package before re-installing it
         spack.store.db.clear_failure(spec, True)
@@ -113,7 +116,7 @@ def test_partial_install_delete_prefix_and_stage(install_mockery, mock_fetch):
         assert pkg.installed
 
     finally:
-        spack.package.Package.remove_prefix = remove_prefix
+        pkg.remove_prefix = instance_rm_prefix
 
 
 def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
@@ -181,7 +184,8 @@ def test_flatten_deps(
 
 
 def test_installed_upstream_external(
-        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout):
+        tmpdir_factory, install_mockery, mock_fetch, gen_mock_layout,
+        monkeypatch):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -194,29 +198,26 @@ def test_installed_upstream_external(
     dependency.concretize()
     prepared_db.add(dependency, upstream_layout)
 
-    try:
-        original_db = spack.store.db
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        spack.store.db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        dependent = spack.spec.Spec('externaltest')
-        dependent.concretize()
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    db_for_test = spack.database.Database(
+        downstream_db_root, upstream_dbs=[prepared_db])
+    monkeypatch.setattr(spack.store, 'db', db_for_test)
+    dependent = spack.spec.Spec('externaltest')
+    dependent.concretize()
 
-        new_dependency = dependent['externaltool']
-        assert new_dependency.external
-        assert new_dependency.prefix == '/path/to/external_tool'
+    new_dependency = dependent['externaltool']
+    assert new_dependency.external
+    assert new_dependency.prefix == '/path/to/external_tool'
 
-        dependent.package.do_install()
+    dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
-    finally:
-        spack.store.db = original_db
+    assert not os.path.exists(new_dependency.prefix)
+    assert os.path.exists(dependent.prefix)
 
 
 def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
-                            gen_mock_layout):
+                            gen_mock_layout, monkeypatch):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -229,26 +230,23 @@ def test_installed_upstream(tmpdir_factory, install_mockery, mock_fetch,
     dependency.concretize()
     prepared_db.add(dependency, upstream_layout)
 
-    try:
-        original_db = spack.store.db
-        downstream_db_root = str(
-            tmpdir_factory.mktemp('mock_downstream_db_root'))
-        spack.store.db = spack.database.Database(
-            downstream_db_root, upstream_dbs=[prepared_db])
-        dependent = spack.spec.Spec('dependent-install')
-        dependent.concretize()
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    db_for_test = spack.database.Database(
+        downstream_db_root, upstream_dbs=[prepared_db])
+    monkeypatch.setattr(spack.store, 'db', db_for_test)
+    dependent = spack.spec.Spec('dependent-install')
+    dependent.concretize()
 
-        new_dependency = dependent['dependency-install']
-        assert new_dependency.package.installed_upstream
-        assert (new_dependency.prefix ==
-                upstream_layout.path_for_spec(dependency))
+    new_dependency = dependent['dependency-install']
+    assert new_dependency.package.installed_upstream
+    assert (new_dependency.prefix ==
+            upstream_layout.path_for_spec(dependency))
 
-        dependent.package.do_install()
+    dependent.package.do_install()
 
-        assert not os.path.exists(new_dependency.prefix)
-        assert os.path.exists(dependent.prefix)
-    finally:
-        spack.store.db = original_db
+    assert not os.path.exists(new_dependency.prefix)
+    assert os.path.exists(dependent.prefix)
 
 
 @pytest.mark.disable_clean_stage_check
@@ -509,7 +507,7 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec('trivial-install-test-package')
 
-    with pytest.raises(ValueError, match="only install concrete packages"):
+    with pytest.raises(ValueError, match='must have a concrete spec'):
         spec.package.do_install()
 
     with pytest.raises(ValueError, match="only patch concrete packages"):

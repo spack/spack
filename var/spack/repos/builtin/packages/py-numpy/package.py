@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,20 +16,15 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.19.2.zip"
+    pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
-    install_time_test_callbacks = ['install_test', 'import_module_test']
-
-    import_modules = [
-        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
-        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
-        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
-        'numpy.distutils.command', 'numpy.distutils.fcompiler'
-    ]
 
     version('master', branch='master')
+    version('1.19.5', sha256='a76f502430dd98d7546e1ea2250a7360c065a5fdea52b2dffe8ae7180909b6f4')
+    version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
+    version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')
     version('1.19.2', sha256='0d310730e1e793527065ad7dde736197b705d0e4c9999775f212b03c44a8484c')
     version('1.19.1', sha256='b8456987b637232602ceb4d663cb34106f7eb780e247d51a260b84760fd8f491')
     version('1.19.0', sha256='76766cc80d6128750075378d3bb7812cf146415bd29b588616f72c943c00d598')
@@ -101,6 +96,12 @@ class PyNumpy(PythonPackage):
     # Allows you to specify order of BLAS/LAPACK preference
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
+
+    # Add Fujitsu Fortran compiler
+    patch('add_fj_compiler.patch', when='@1.19.3:%fj')
+    patch('add_fj_compiler2.patch', when='@1.19.0:1.19.2%fj')
+    patch('add_fj_compiler3.patch', when='@1.14.0:1.18.5%fj')
+    patch('add_fj_compiler4.patch', when='@:1.13.3%fj')
 
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
@@ -298,21 +299,8 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
-        # `setup.py test` is not supported.  Use one of the following
-        # instead:
-        #
-        # - `python runtests.py`              (to build and test)
-        # - `python runtests.py --no-build`   (to test installed numpy)
-        # - `>>> numpy.test()`           (run tests for installed numpy
-        #                                 from within an interpreter)
-        pass
-
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def install_test(self):
-        # Change directories due to the following error:
-        #
-        # ImportError: Error importing numpy: you should not try to import
-        #       numpy from its source directory; please exit the numpy
-        #       source tree, and relaunch your python interpreter from there.
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

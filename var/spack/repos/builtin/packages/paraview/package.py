@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,8 +19,9 @@ class Paraview(CMakePackage, CudaPackage):
 
     maintainers = ['chuckatkins', 'danlipsa']
 
-    version('develop', branch='master', submodules=True)
-    version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
+    version('master', branch='master', submodules=True)
+    version('5.9.0-RC3', sha256='3487ee36cc2ff2a0fe4037a8d341f8c0a09f035f256f4e1f85e2f8356fd9da0a')
+    version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034', preferred=True)
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
     version('5.6.2', sha256='1f3710b77c58a46891808dbe23dc59a1259d9c6b7bb123aaaeaa6ddf2be882ea')
@@ -50,6 +51,10 @@ class Paraview(CMakePackage, CudaPackage):
             description='Builds a shared version of the library')
     variant('kits', default=True,
             description='Use module kits')
+    variant('cuda_arch', default='native', multi=False,
+            values=('native', 'fermi', 'kepler', 'maxwell',
+                    'pascal', 'volta', 'turing', 'all', 'none'),
+            description='CUDA architecture')
 
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -95,7 +100,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('qt~opengl', when='@5.3.0:+qt~opengl2')
     depends_on('qt@:4', when='@:5.2.0+qt')
 
-    depends_on('mesa+osmesa', when='+osmesa')
+    depends_on('osmesa', when='+osmesa')
     depends_on('gl@3.2:', when='+opengl2')
     depends_on('gl@1.2:', when='~opengl2')
     depends_on('libxt', when='~osmesa platform=linux')
@@ -157,7 +162,10 @@ class Paraview(CMakePackage, CudaPackage):
     @property
     def paraview_subdir(self):
         """The paraview subdirectory name as paraview-major.minor"""
-        return 'paraview-{0}'.format(self.spec.version.up_to(2))
+        if self.spec.version == Version('master'):
+            return 'paraview-5.9'
+        else:
+            return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
@@ -165,8 +173,13 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             lib_dir = self.prefix.lib
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
     def setup_run_environment(self, env):
         # paraview 5.5 and later
@@ -179,8 +192,13 @@ class Paraview(CMakePackage, CudaPackage):
             lib_dir = self.prefix.lib
 
         env.set('ParaView_DIR', self.prefix)
-        env.set('PARAVIEW_VTK_DIR',
-                join_path(lib_dir, 'cmake', self.paraview_subdir))
+
+        if self.spec.version <= Version('5.7.0'):
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir))
+        else:
+            env.set('PARAVIEW_VTK_DIR',
+                    join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
         if self.spec.version <= Version('5.4.1'):
             lib_dir = join_path(lib_dir, self.paraview_subdir)
@@ -320,6 +338,9 @@ class Paraview(CMakePackage, CudaPackage):
         else:
             cmake_args.append('-DVTKm_ENABLE_CUDA:BOOL=%s' %
                               variant_bool('+cuda'))
+        if spec.satisfies('+cuda') and not spec.satisfies('cuda_arch=native'):
+            cmake_args.append('-DVTKm_CUDA_Architecture=%s' %
+                              spec.variants['cuda_arch'].value)
 
         if 'darwin' in spec.architecture:
             cmake_args.extend([

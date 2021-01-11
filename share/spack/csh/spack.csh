@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,8 +57,12 @@ endif
 # Set up args -- we want a subcommand and a spec.
 set _sp_subcommand=""
 set _sp_spec=""
-[ $#_sp_args -gt 0 ] && set _sp_subcommand = ($_sp_args[1])
-[ $#_sp_args -gt 1 ] && set _sp_spec = ($_sp_args[2-])
+if ($#_sp_args > 0) then
+    set _sp_subcommand = ($_sp_args[1])
+endif
+if ($#_sp_args > 1) then
+    set _sp_spec = ($_sp_args[2-])
+endif
 
 # Run subcommand
 switch ($_sp_subcommand)
@@ -66,7 +70,9 @@ case cd:
     shift _sp_args  # get rid of 'cd'
 
     set _sp_arg=""
-    [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
+    if ($#_sp_args > 0) then
+        set _sp_arg = ($_sp_args[1])
+    endif
     shift _sp_args
 
     if ( "$_sp_arg" == "-h" || "$_sp_args" == "--help" ) then
@@ -79,7 +85,9 @@ case env:
     shift _sp_args  # get rid of 'env'
 
     set _sp_arg=""
-    [ $#_sp_args -gt 0 ] && set _sp_arg = ($_sp_args[1])
+    if ($#_sp_args > 0) then
+        set _sp_arg = ($_sp_args[1])
+    endif
 
     if ( "$_sp_arg" == "-h" || "$_sp_arg" == "--help" ) then
         \spack env -h
@@ -87,7 +95,9 @@ case env:
         switch ($_sp_arg)
             case activate:
                 set _sp_env_arg=""
-                [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
+                if ($#_sp_args > 1) then
+                    set _sp_env_arg = ($_sp_args[2])
+                endif
 
                 # Space needed here to differentiate between `-h`
                 # argument and environments with "-h" in the name.
@@ -106,7 +116,9 @@ case env:
                 breaksw
             case deactivate:
                 set _sp_env_arg=""
-                [ $#_sp_args -gt 1 ] && set _sp_env_arg = ($_sp_args[2])
+                if ($#_sp_args > 1) then
+                    set _sp_env_arg = ($_sp_args[2])
+                endif
 
                 # Space needed here to differentiate between `--sh`
                 # argument and environments with "--sh" in the name.

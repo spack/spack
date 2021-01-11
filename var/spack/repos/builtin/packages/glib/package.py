@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Glib(Package):
     homepage = "https://developer.gnome.org/glib/"
     url      = "https://ftp.gnome.org/pub/gnome/sources/glib/2.53/glib-2.53.1.tar.xz"
 
+    version('2.66.2', sha256='ec390bed4e8dd0f89e918f385e8d4cfd7470b1ef7c1ce93ec5c4fc6e3c6a17c4')
+    version('2.64.6', sha256='c36ee07a70164c71f046016fe6aaacd6368333c42590bc0cba47c344ffb853f1')
     version('2.64.5', sha256='9cbd5bd2715ead1c28d53c46f7b7b6ff6166f5887b772c1a9e3bf2910cfecc11')
     version('2.64.4', sha256='f7e0b325b272281f0462e0f7fff25a833820cac19911ff677251daf6d87bce50')
     version('2.64.3', sha256='fe9cbc97925d14c804935f067a3ad77ef55c0bbe9befe68962318f5a767ceb22')
@@ -58,6 +60,7 @@ class Glib(Package):
     depends_on('perl', type=('build', 'run'))
     depends_on('python', type=('build', 'run'), when='@2.53.4:')
     depends_on('pcre+utf', when='@2.48:')
+    depends_on('uuid', when='+libmount')
     depends_on('util-linux', when='+libmount')
     depends_on('iconv')
 
@@ -73,12 +76,17 @@ class Glib(Package):
 
     # glib prefers the libc version of gettext, which breaks the build if the
     # external version is also found.
-    patch('meson-gettext.patch', when='@2.58.0:')
+    patch('meson-gettext.patch', when='@2.58:2.64')
+    patch('meson-gettext-2.66.patch', when='@2.66:')
 
     def url_for_version(self, version):
         """Handle glib's version-based custom URLs."""
         url = 'http://ftp.gnome.org/pub/gnome/sources/glib'
         return url + '/%s/glib-%s.tar.xz' % (version.up_to(2), version)
+
+    @property
+    def libs(self):
+        return find_libraries(['libglib*'], root=self.prefix, recursive=True)
 
     def meson_args(self):
         args = ['-Dgettext=external']
@@ -171,11 +179,6 @@ class Glib(Package):
         args.append('GTKDOC_REBASE={0}'.format(true))
         return args
 
-    def setup_build_environment(self, env):
-        if self.spec.satisfies('platform=darwin'):
-            # https://github.com/pybind/pybind11/issues/595
-            env.set('STRIP', 'strip -x')
-
     @when('@:2.57.99')
     def install(self, spec, prefix):
         configure('--prefix={0}'.format(prefix), *self.configure_args())
@@ -258,6 +261,8 @@ class Glib(Package):
         if spec.satisfies('@2:2.99'):
             pattern = 'Libs:'
             repl = 'Libs: -L{0} -Wl,-rpath={0} '.format(
-                   spec['gettext'].prefix.lib)
-            myfile = join_path(self.prefix.lib.pkgconfig, 'glib-2.0.pc')
+                   spec['gettext'].libs.directories[0])
+            myfile = join_path(
+                self.spec['glib'].libs.directories[0],
+                'pkgconfig', 'glib-2.0.pc')
             filter_file(pattern, repl, myfile, backup=False)

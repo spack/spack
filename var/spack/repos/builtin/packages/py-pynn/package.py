@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPynn(PythonPackage):
     """
 
     homepage = "http://neuralensemble.org/PyNN/"
-    url      = "https://pypi.io/packages/source/P/PyNN/PyNN-0.8.3.tar.gz"
+    pypi = "PyNN/PyNN-0.8.3.tar.gz"
     git      = "https://github.com/NeuralEnsemble/PyNN.git"
 
     version('0.9.1', sha256='bbc60fea3235427191feb2daa0e2fa07eb1c3946104c068ac8a2a0501263b0b1')
@@ -30,5 +30,3 @@ class PyPynn(PythonPackage):
 
     depends_on('py-neo@0.3:0.4.1',      type=('build', 'run'), when="@:0.8.3")
     depends_on('py-neo@0.5.0:',         type=('build', 'run'), when="@0.9.0:")
-
-    depends_on('py-mock@1.0:', type='test')

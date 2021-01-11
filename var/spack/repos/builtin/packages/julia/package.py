@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -164,6 +164,8 @@ class Julia(Package):
                 ]
             else:
                 target_str = str(spec.target).replace('_', '-')
+                if target_str == "zen2":
+                    target_str = "znver2"
                 options += [
                     'JULIA_CPU_TARGET={0}'.format(target_str)
                 ]

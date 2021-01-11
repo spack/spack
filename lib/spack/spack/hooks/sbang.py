@@ -1,21 +1,50 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import filecmp
 import os
 import stat
 import re
 import sys
 
 import llnl.util.tty as tty
+import llnl.util.filesystem as fs
 
-import spack.paths
 import spack.modules
+import spack.paths
+import spack.store
 
-# Character limit for shebang line.  Using Linux's 127 characters
-# here, as it is the shortest I could find on a modern OS.
-shebang_limit = 127
+#: OS-imposed character limit for shebang line: 127 for Linux; 511 for Mac.
+#: Different Linux distributions have different limits, but 127 is the
+#: smallest among all modern versions.
+if sys.platform == 'darwin':
+    shebang_limit = 511
+else:
+    shebang_limit = 127
+
+
+def sbang_install_path():
+    """Location sbang should be installed within Spack's ``install_tree``."""
+    sbang_root = str(spack.store.unpadded_root)
+    install_path = os.path.join(sbang_root, "bin", "sbang")
+    if len(install_path) > shebang_limit:
+        raise SbangPathError(
+            'Install tree root is too long. Spack cannot patch shebang lines.')
+    return install_path
+
+
+def sbang_shebang_line():
+    """Full shebang line that should be prepended to files to use sbang.
+
+    The line returned does not have a final newline (caller should add it
+    if needed).
+
+    This should be the only place in Spack that knows about what
+    interpreter we use for ``sbang``.
+    """
+    return '#!/bin/sh %s' % sbang_install_path()
 
 
 def shebang_too_long(path):
@@ -42,7 +71,7 @@ def filter_shebang(path):
             original = original.decode('UTF-8')
 
     # This line will be prepended to file
-    new_sbang_line = '#!/bin/bash %s/bin/sbang\n' % spack.paths.prefix
+    new_sbang_line = '%s\n' % sbang_shebang_line()
 
     # Skip files that are already using sbang.
     if original.startswith(new_sbang_line):
@@ -54,6 +83,10 @@ def filter_shebang(path):
     # Use --! instead of #! on second line for lua.
     if re.search(r'^#!(/[^/\n]*)*lua\b', original):
         original = re.sub(r'^#', '--', original)
+
+    # Use <?php #! instead of #! on second line for php.
+    if re.search(r'^#!(/[^/\n]*)*php\b', original):
+        original = re.sub(r'^#', '<?php #', original) + ' ?>'
 
     # Use //! instead of #! on second line for node.js.
     if re.search(r'^#!(/[^/\n]*)*node\b', original):
@@ -102,6 +135,26 @@ def filter_shebangs_in_directory(directory, filenames=None):
             filter_shebang(path)
 
 
+def install_sbang():
+    """Ensure that ``sbang`` is installed in the root of Spack's install_tree.
+
+    This is the shortest known publicly accessible path, and installing
+    ``sbang`` here ensures that users can access the script and that
+    ``sbang`` itself is in a short path.
+    """
+    # copy in a new version of sbang if it differs from what's in spack
+    sbang_path = sbang_install_path()
+    if os.path.exists(sbang_path) and filecmp.cmp(
+            spack.paths.sbang_script, sbang_path):
+        return
+
+    # make $install_tree/bin and copy in a new version of sbang if needed
+    sbang_bin_dir = os.path.dirname(sbang_path)
+    fs.mkdirp(sbang_bin_dir)
+    fs.install(spack.paths.sbang_script, sbang_path)
+    fs.set_install_permissions(sbang_bin_dir)
+
+
 def post_install(spec):
     """This hook edits scripts so that they call /bin/bash
     $spack_prefix/bin/sbang instead of something longer than the
@@ -111,5 +164,11 @@ def post_install(spec):
         tty.debug('SKIP: shebang filtering [external package]')
         return
 
+    install_sbang()
+
     for directory, _, filenames in os.walk(spec.prefix):
         filter_shebangs_in_directory(directory, filenames)
+
+
+class SbangPathError(spack.error.SpackError):
+    """Raised when the install tree root is too long for sbang to work."""

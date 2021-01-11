@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -396,6 +396,11 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 def test_foreground_background_output(
         test_fn, capfd, termios_on_or_off, tmpdir):
     """Tests hitting 'v' toggles output, and that force_echo works."""
+    if (sys.version_info >= (3, 8) and sys.platform == 'darwin'
+        and termios_on_or_off == no_termios):
+
+        return
+
     shell = PseudoShell(test_fn, synchronized_logger)
     log_path = str(tmpdir.join("log.txt"))
 

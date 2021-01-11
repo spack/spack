@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Dire(Package):
     git      = "http://gitlab.com/dire/direforpythia"
     list_url = "http://dire.gitlab.io/Downloads.html"
 
+    tags = ['hep']
+
     maintainer = ['mdiefent']
 
     version('2.004', sha256='8cc1213b58fec744fdaa50834560a14b141de99efb2c3e3d3d47f3d6d84b179f')
@@ -24,7 +26,7 @@ class Dire(Package):
     depends_on('boost')
     depends_on('lhapdf')
     depends_on('hepmc')
-    depends_on('pythia8@8226:')
+    depends_on('pythia8@8226:8244')
 
     def install(self, spec, prefix):
         configure_args = ['--prefix={0}'.format(prefix)]

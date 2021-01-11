@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -326,14 +326,15 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     # get results
     output = config('get', 'packages')
 
+    # added config comes before prior config
     expected = """packages:
   all:
-    compiler: [gcc]
     version:
     - 1.0.0
+    compiler: [gcc]
 """
 
-    assert output == expected
+    assert expected == output
 
 
 def test_config_add_invalid_file_fails(tmpdir):

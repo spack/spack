@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,7 @@ class Ghostscript(AutotoolsPackage):
     version('9.18', sha256='5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b')
 
     depends_on('pkgconfig', type='build')
+    depends_on('krb5', type='link')
 
     depends_on('freetype@2.4.2:')
     depends_on('jpeg')
@@ -33,7 +34,7 @@ class Ghostscript(AutotoolsPackage):
     depends_on('libxext')
     depends_on('gtkplus')
 
-    patch('nogoto.patch', when='%fj')
+    patch('nogoto.patch', when='%fj@:4.1.0')
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"

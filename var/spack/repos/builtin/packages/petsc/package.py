@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Petsc(Package):
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.14.1', sha256='0b4681165a9af96594c794b97ac6993452ec902726679f6b50bb450f89d230ed')
     version('3.14.0', sha256='a8f9caba03e0d57d8452c08505cf96be5f6949adaa266e819382162c03ddb9c5')
     version('3.13.6', sha256='67ca2cf3040d08fdc51d27f660ea3157732b24c2f47aae1b19d63f62a39842c2')
     version('3.13.5', sha256='10fc542dab961c8b17db35ad3a208cb184c237fc84e183817e38e6c7ab4b8732')
@@ -159,10 +160,9 @@ class Petsc(Package):
     # the patch is an adaptation of the original commit to 3.7.5
     patch('macos-clang-8.1.0.diff', when='@3.7.5%apple-clang@8.1.0:')
     patch('pkg-config-3.7.6-3.8.4.diff', when='@3.7.6:3.8.4')
-
     patch('xcode_stub_out_of_sync.patch', when='@:3.10.4')
-
     patch('xlf_fix-dup-petscfecreate.patch', when='@3.11.0')
+    patch('disable-DEPRECATED_ENUM.diff', when='@3.14.1 +cuda')
 
     depends_on('diffutils', type='build')
 
@@ -224,8 +224,8 @@ class Petsc(Package):
     depends_on('superlu-dist@5.4:5.4.99+int64', when='@3.10:3.10.2+superlu-dist+mpi+int64')
     depends_on('superlu-dist@6.1:6.1.99~int64', when='@3.10.3:3.12.99+superlu-dist+mpi~int64')
     depends_on('superlu-dist@6.1:6.1.99+int64', when='@3.10.3:3.12.99+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@6.1:6.3.0~int64', when='@3.13.0:3.13.99+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@6.1:6.3.0+int64', when='@3.13.0:3.13.99+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@6.1:~int64', when='@3.13.0:+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
     depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')

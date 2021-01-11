@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Pythia8(AutotoolsPackage):
 
     homepage = "http://home.thep.lu.se/Pythia/"
     url      = "http://home.thep.lu.se/~torbjorn/pythia8/pythia8244.tgz"
+
+    tags = ['hep']
 
     maintainers = ['ChristianTackeGSI']
 

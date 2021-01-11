@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,13 +20,14 @@ class Tix(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ['--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-                       '--with-tk={0}'.format(spec['tk'].prefix.lib),
-                       '--exec-prefix={0}'.format(spec.prefix)]
-        return config_args
+        args = [
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--with-tk={0}'.format(spec['tk'].libs.directories[0]),
+            '--exec-prefix={0}'.format(self.prefix),
+        ]
+        return args
 
-    def install(self, spec, prefix):
-        make('install')
-        with working_dir(self.prefix.lib):
-            symlink('Tix{0}/libTix{0}.{1}'.format(self.version, dso_suffix),
-                    'libtix.{0}'.format(dso_suffix))
+    @property
+    def libs(self):
+        return find_libraries(['libTix{0}'.format(self.version)],
+                              root=self.prefix, recursive=True)

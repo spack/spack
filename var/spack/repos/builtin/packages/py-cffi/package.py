@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,7 @@ class PyCffi(PythonPackage):
     """Foreign Function Interface for Python calling C code"""
 
     homepage = "https://cffi.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/c/cffi/cffi-1.13.0.tar.gz"
-
-    import_modules = ['cffi']
+    pypi = "cffi/cffi-1.13.0.tar.gz"
 
     version('1.14.3', sha256='f92f789e4f9241cd262ad7a555ca2c648a98178a953af117ef7fad46aa1d5591')
     version('1.13.0', sha256='8fe230f612c18af1df6f348d02d682fe2c28ca0a6c3856c99599cdacae7cf226')
@@ -27,8 +25,6 @@ class PyCffi(PythonPackage):
     depends_on('py-pycparser', type=('build', 'run'))
     depends_on('py-pycparser@2.19:', when='^python@:2.6', type=('build', 'run'))
     depends_on('libffi')
-    depends_on('py-py', type='test')
-    depends_on('py-pytest', type='test')
 
     def setup_build_environment(self, env):
         # This sets the compiler (and flags) that distutils will use

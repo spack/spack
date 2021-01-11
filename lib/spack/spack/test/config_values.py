@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,12 @@ def test_set_install_hash_length_upper_case(mock_packages, mutable_config,
     mutable_config.set('config:install_hash_length', 5)
     mutable_config.set(
         'config:install_tree',
-        {'root': str(tmpdir),
-         'projections': {'all': '{name}-{HASH}'}}
+        {
+            'root': str(tmpdir),
+            'projections': {
+                'all': '{name}-{HASH}'
+            }
+        }
     )
     monkeypatch.setattr(spack.store, 'store', spack.store._store())
 

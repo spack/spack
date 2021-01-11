@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,16 +11,18 @@ import itertools
 import multiprocessing.pool
 import os
 import six
+from typing import Dict  # novm
 
 import llnl.util.lang
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-import llnl.util.cpu as cpu
+import archspec.cpu
 
 import spack.paths
 import spack.error
 import spack.spec
 import spack.config
+import spack.compiler
 import spack.architecture
 import spack.util.imp as simp
 from spack.util.environment import get_path
@@ -36,7 +38,7 @@ _cache_config_file = []
 # TODO: Caches at module level make it difficult to mock configurations in
 # TODO: unit tests. It might be worth reworking their implementation.
 #: cache of compilers constructed from config data, keyed by config entry id.
-_compiler_cache = {}
+_compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
     'clang': 'llvm+clang'
@@ -405,7 +407,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         target = items.get('target', None)
 
         try:
-            current_target = llnl.util.cpu.targets[str(arch_spec.target)]
+            current_target = archspec.cpu.TARGETS[str(arch_spec.target)]
             family = str(current_target.family)
         except KeyError:
             # TODO: Check if this exception handling makes sense, or if we
@@ -417,7 +419,7 @@ def get_compilers(config, cspec=None, arch_spec=None):
         if arch_spec and target and (target != family and target != 'any'):
             # If the family of the target is the family we are seeking,
             # there's an error in the underlying configuration
-            if llnl.util.cpu.targets[target].family == family:
+            if archspec.cpu.TARGETS[target].family == family:
                 msg = ('the "target" field in compilers.yaml accepts only '
                        'target families [replace "{0}" with "{1}"'
                        ' in "{2}" specification]')
@@ -664,7 +666,7 @@ def make_compiler_list(detected_versions):
         compiler_cls = spack.compilers.class_for_compiler_name(compiler_name)
         spec = spack.spec.CompilerSpec(compiler_cls.name, version)
         paths = [paths.get(x, None) for x in ('cc', 'cxx', 'f77', 'fc')]
-        target = cpu.host()
+        target = archspec.cpu.host()
         compiler = compiler_cls(
             spec, operating_system, str(target.family), paths
         )

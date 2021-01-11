@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,9 @@ class Libevent(AutotoolsPackage):
     url      = "https://github.com/libevent/libevent/releases/download/release-2.1.8-stable/libevent-2.1.8-stable.tar.gz"
     list_url = "http://libevent.org/old-releases.html"
 
+    version('2.1.12', sha256='92e6de1be9ec176428fd2367677e61ceffc2ee1cb119035037a27d346b0403bb')
+    version('2.1.11', sha256='a65bac6202ea8c5609fd5c7e480e6d25de467ea1917c08290c521752f147283d')
+    version('2.1.10', sha256='e864af41a336bb11dab1a23f32993afe963c1f69618bd9292b89ecf6904845b0')
     version('2.1.8',  sha256='965cc5a8bb46ce4199a47e9b2c9e1cae3b137e8356ffdad6d94d3b9069b71dc2')
     version('2.0.22', sha256='71c2c49f0adadacfdbe6332a372c38cf9c8b7895bb73dabeaa53cdcc1d4e1fa3')
     version('2.0.21', sha256='22a530a8a5ba1cb9c080cba033206b17dacd21437762155c6d30ee6469f574f5')

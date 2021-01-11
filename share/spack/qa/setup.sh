@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,9 +28,14 @@ if [[ "$COVERAGE" == "true" ]]; then
 
     # bash coverage depends on some other factors
     mkdir -p coverage
-    cc_script="$SPACK_ROOT/lib/spack/env/cc"
     bashcov=$(realpath ${QA_DIR}/bashcov)
-    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$cc_script"
+
+    # instrument scripts requiring shell coverage
+    sed -i~ "s@#\!/bin/bash@#\!${bashcov}@" "$SPACK_ROOT/lib/spack/env/cc"
+    if [ "$(uname -o)" != "Darwin" ]; then
+        # On darwin, #! interpreters must be binaries, so no sbang for bashcov
+        sed -i~ "s@#\!/bin/sh@#\!${bashcov}@"   "$SPACK_ROOT/bin/sbang"
+    fi
 fi
 
 #
@@ -60,6 +65,10 @@ check_dependencies() {
                 flake8)
                     spack_package=py-flake8
                     pip_package=flake8
+                    ;;
+                mypy)
+                    spack_package=py-mypy
+                    pip_package=mypy
                     ;;
                 dot)
                     spack_package=graphviz

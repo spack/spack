@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyDocker(PythonPackage):
     """A Python library for the Docker Engine API."""
 
     homepage = "https://github.com/docker/docker-py"
-    url      = "https://pypi.io/packages/source/d/docker/docker-4.2.1.tar.gz"
+    pypi = "docker/docker-4.2.1.tar.gz"
 
     version('4.2.1', sha256='380a20d38fbfaa872e96ee4d0d23ad9beb0f9ed57ff1c30653cbeb0c9c0964f2')
 

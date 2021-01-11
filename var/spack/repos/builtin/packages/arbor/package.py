@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Arbor(CMakePackage):
     homepage = "https://github.com/arbor-sim/arbor/"
     url      = "https://github.com/arbor-sim/arbor/archive/v0.2.tar.gz"
 
+    version('0.4', sha256='7d9fc6b3262954cc5dc1751215fbb9f2cdb7010e829a2be43022f90da2d8d2e3')
     version('0.2', sha256='43c9181c03be5f3c9820b2b50592d7b41344f37e1200980119ad347eb7bcf4eb')
 
     variant('vectorize', default=False,
@@ -44,6 +45,8 @@ class Arbor(CMakePackage):
 
     # when building documentation, this could be an optional dependency
     depends_on('py-sphinx', type='build')
+
+    conflicts('@:0.2', when='target=aarch64:')
 
     def patch(self):
         filter_file(

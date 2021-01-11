@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,7 +119,11 @@ spack:
     - old-gcc-pkgs:
       - archive-files
       - callpath
-      - hypre@0.2.15
+      # specify ^openblas-with-lapack to ensure that builtin.mock repo flake8
+      # package (which can also provide lapack) is not chosen, as it violates
+      # a package-level check which requires exactly one fetch strategy (this
+      # is apparently not an issue for other tests that use it).
+      - hypre@0.2.15 ^openblas-with-lapack
   specs:
     - matrix:
       - [$old-gcc-pkgs]
@@ -131,7 +135,7 @@ spack:
         compiler-agnostic: true
     mappings:
       - match:
-          - arch=test-debian6-x86_64
+          - arch=test-debian6-core2
         runner-attributes:
           tags:
             - donotcare
@@ -191,6 +195,7 @@ spack:
   definitions:
     - bootstrap:
       - gcc@3.0
+      - gcc@2.0
   specs:
     - dyninst%gcc@3.0
   mirrors:
@@ -728,9 +733,9 @@ spack:
 
             install_cmd('--keep-stage', yaml_path)
 
-            # env, spec, yaml_path, mirror_url, build_id
+            # env, spec, yaml_path, mirror_url, build_id, sign_binaries
             ci.push_mirror_contents(
-                env, concrete_spec, yaml_path, mirror_url, '42')
+                env, concrete_spec, yaml_path, mirror_url, '42', True)
 
             buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
 

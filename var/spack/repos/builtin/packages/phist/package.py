@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+import spack.hooks.sbang as sbang
 
 
 class Phist(CMakePackage):
@@ -20,12 +21,14 @@ class Phist(CMakePackage):
 
     homepage = "https://bitbucket.org/essex/phist/"
     url      = "https://bitbucket.org/essex/phist/get/phist-1.4.3.tar.gz"
-    git      = "https://bitbucket.org/essex/phist/phist.git"
+    git      = "https://bitbucket.org/essex/phist.git"
 
     maintainers = ['jthies']
 
     version('develop', branch='devel')
     version('master', branch='master')
+    version('1.9.3', sha256='3ab7157e9f535a4c8537846cb11b516271ef13f82d0f8ebb7f96626fb9ab86cf')
+    version('1.9.2', sha256='289678fa7172708f5d32d6bd924c8fdfe72b413bba5bbb8ce6373c85c5ec5ae5')
     version('1.9.1', sha256='6e6411115ec48afe605b4f2179e9bc45d60f15459428f474f3f32b80d2830f1f')
     version('1.9.0', sha256='990d3308fc0083ed0f9f565d00c649ee70c3df74d44cbe5f19dfe05263d06559')
     version('1.8.0', sha256='ee42946bce187e126452053b5f5c200b57b6e40ee3f5bcf0751f3ced585adeb0')
@@ -99,6 +102,8 @@ class Phist(CMakePackage):
 
     patch('update_tpetra_gotypes.patch', when='@:1.8.99')
 
+    patch('sbang.patch', when='+fortran')
+
     # ###################### Dependencies ##########################
 
     depends_on('cmake@3.8:', type='build')
@@ -130,6 +135,9 @@ class Phist(CMakePackage):
     # to compile some OpenMP statements
     conflicts('%gcc@:4.9.1')
 
+    def setup_build_environment(self, env):
+        env.set('SPACK_SBANG', sbang.sbang_install_path())
+
     def cmake_args(self):
         spec = self.spec
 
@@ -140,7 +148,8 @@ class Phist(CMakePackage):
                         find_system_libraries(['libm'])).joined(';')
         lapacke_include_dir = spec['lapack:c'].headers.directories[0]
 
-        args = ['-DPHIST_KERNEL_LIB=%s' % kernel_lib,
+        args = ['-DPHIST_USE_CCACHE=OFF',
+                '-DPHIST_KERNEL_LIB=%s' % kernel_lib,
                 '-DPHIST_OUTLEV=%s' % outlev,
                 '-DTPL_LAPACKE_LIBRARIES=%s' % lapacke_libs,
                 '-DTPL_LAPACKE_INCLUDE_DIRS=%s' % lapacke_include_dir,

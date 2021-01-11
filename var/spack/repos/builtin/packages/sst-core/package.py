@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,9 +18,10 @@ class SstCore(AutotoolsPackage):
 
     maintainers = ['jjwilke']
 
+    version('10.1.0', sha256="e464213a81c7b3ccec994fdba2b56992b52fb9a6db089ef7c3445b54306d4b87")
     version('10.0.0', sha256="64cf93a46dfab011fba49244bf0e0efe25ef928c6fbde1d49003220d0eb7735a")
-    version('9.1.0', sha256="cfeda39bb2ce9f32032480427517df62e852c0b3713797255e3b838075f3614d")
-    version('develop',   branch='devel')
+    version('9.1.0',  sha256="cfeda39bb2ce9f32032480427517df62e852c0b3713797255e3b838075f3614d")
+    version('develop', branch='devel')
     version('master',  branch='master')
 
     variant("pdes_mpi", default=True,
@@ -44,6 +45,7 @@ class SstCore(AutotoolsPackage):
     depends_on('automake@1.11.1:', type='build', when='@master:')
     depends_on('libtool@1.2.4:', type='build', when='@master:')
     depends_on('m4', type='build', when='@master:')
+    depends_on('gettext')
 
     # force out-of-source builds
     build_directory = 'spack-build'

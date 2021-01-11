@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -230,7 +230,7 @@ def _update_pkg_config(scope, pkg_to_entries, not_buildable):
 
     pkgs_cfg = spack.config.get('packages', scope=scope)
 
-    spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
+    pkgs_cfg = spack.config.merge_yaml(pkgs_cfg, pkg_to_cfg)
     spack.config.set('packages', pkgs_cfg, scope=scope)
 
     return all_new_specs

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,11 +16,12 @@ class Likwid(Package):
     See https://github.com/RRZE-HPC/likwid/wiki/TutorialLikwidPerf#feature-limitations
     for information."""
 
-    homepage = "https://github.com/RRZE-HPC/likwid"
+    homepage = "https://hpc.fau.de/research/tools/likwid/"
     url      = "https://github.com/RRZE-HPC/likwid/archive/v5.0.0.tar.gz"
     git      = "https://github.com/RRZE-HPC/likwid.git"
     maintainers = ['TomTheBear']
 
+    version('5.1.0', sha256='5a180702a1656c6315b861a85031ab4cb090424aec42cbbb326b849e29f55571')
     version('5.0.2', sha256='0a1c8984e4b43ea8b99d09456ef05035eb934594af1669432117585c638a2da4')
     version('5.0.1', sha256='3757b0cb66e8af0116f9288c7f90543acbd8e2af8f72f77aef447ca2b3e76453')
     version('5.0.0', sha256='26623f5a1a5fec19d798f0114774a5293d1c93a148538b9591a13e50930fa41e')
@@ -34,14 +35,17 @@ class Likwid(Package):
     patch('https://github.com/RRZE-HPC/likwid/commit/d2d0ef333b5e0997d7c80fc6ac1a473b5e47d084.patch', sha256='636cbf40669261fdb36379d67253be2b731cfa7b6d610d232767d72fbdf08bc0', when='@4.3.4')
     patch('https://github.com/RRZE-HPC/likwid/files/5341379/likwid-lua5.1.patch.txt', sha256='bc56253c1e3436b5ba7bf4c5533d0391206900c8663c008f771a16376975e416', when='@5.0.2^lua@5.1')
     variant('fortran', default=True, description='with fortran interface')
+    variant('cuda', default=False, description='with Nvidia GPU profiling support')
 
     # NOTE: There is no way to use an externally provided hwloc with Likwid.
     # The reason is that the internal hwloc is patched to contain extra
     # functionality and functions are prefixed with "likwid_".
+    # Note: extra functionality was included in upstream hwloc
 
     depends_on('lua', when='@:4')
     depends_on('lua@5.2:', when='@5:5.0.1')
     depends_on('lua', when='@5.0.2:')
+    depends_on('cuda', when='@5: +cuda')
 
     # TODO: check
     # depends_on('gnuplot', type='run')
@@ -54,6 +58,13 @@ class Likwid(Package):
         # Allow the scripts to find Spack's perl
         filter_file('^#!/usr/bin/perl -w', '#!/usr/bin/env perl', *files)
         filter_file('^#!/usr/bin/perl', '#!/usr/bin/env perl', *files)
+
+    def setup_run_environment(self, env):
+        if "+cuda" in self.spec:
+            libs = find_libraries('libcupti', root=self.spec['cuda'].prefix,
+                                  shared=True, recursive=True)
+            for lib in libs.directories:
+                env.append_path('LD_LIBRARY_PATH', lib)
 
     @run_before('install')
     def filter_sbang(self):
@@ -106,13 +117,33 @@ class Likwid(Package):
                         'FORTRAN_INTERFACE = true',
                         'config.mk')
             if self.compiler.name == 'gcc':
-                filter_file('ifort', 'gfortran',
-                            join_path('make', 'include_GCC.mk'))
-                filter_file('-module', '-I', join_path('make',
-                                                       'include_GCC.mk'))
+                makepath = join_path('make', 'include_GCC.mk')
+                filter_file('ifort', 'gfortran', makepath)
+                filter_file('-module', '-I',  makepath)
         else:
             filter_file('^FORTRAN_INTERFACE .*',
                         'FORTRAN_INTERFACE = false',
+                        'config.mk')
+
+        if "+cuda" in self.spec:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = true',
+                        'config.mk')
+            filter_file('^BUILDAPPDAEMON.*',
+                        'BUILDAPPDAEMON = true',
+                        'config.mk')
+            cudainc = spec['cuda'].prefix.include
+            filter_file('^CUDAINCLUDE.*',
+                        'CUDAINCLUDE = {0}'.format(cudainc),
+                        'config.mk')
+            cuptihead = HeaderList(find(spec['cuda'].prefix, 'cupti.h',
+                                        recursive=True))
+            filter_file('^CUPTIINCLUDE.*',
+                        'CUPTIINCLUDE = {0}'.format(cuptihead.directories[0]),
+                        'config.mk')
+        else:
+            filter_file('^NVIDIA_INTERFACE.*',
+                        'NVIDIA_INTERFACE = false',
                         'config.mk')
 
         if spec.satisfies('^lua'):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,9 @@ properties = {
                         'type': 'object',
                         'properties': union_dicts(
                             {'root': {'type': 'string'}},
+                            {'padded_length': {'oneOf': [
+                                {'type': 'integer', 'minimum': 0},
+                                {'type': 'boolean'}]}},
                             spack.schema.projections.properties,
                         ),
                     },
@@ -42,6 +45,7 @@ properties = {
                     {'type': 'array',
                      'items': {'type': 'string'}}],
             },
+            'test_stage': {'type': 'string'},
             'extensions': {
                 'type': 'array',
                 'items': {'type': 'string'}
@@ -60,9 +64,9 @@ properties = {
                 },
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
-                    'message': 'specifying a "{property}" module root has no '
-                               'effect [support for {property} module files'
-                               ' has been dropped]',
+                    'message': 'specifying a "dotkit" module root has no '
+                               'effect [support for "dotkit" has been '
+                               'dropped in v0.13.0]',
                     'error': False
                 },
             },
@@ -79,6 +83,10 @@ properties = {
             'build_language': {'type': 'string'},
             'build_jobs': {'type': 'integer', 'minimum': 1},
             'ccache': {'type': 'boolean'},
+            'concretizer': {
+                'type': 'string',
+                'enum': ['original', 'clingo']
+            },
             'db_lock_timeout': {'type': 'integer', 'minimum': 1},
             'package_lock_timeout': {
                 'anyOf': [
@@ -87,6 +95,7 @@ properties = {
                 ],
             },
             'allow_sgid': {'type': 'boolean'},
+            'binary_index_root': {'type': 'string'},
         },
     },
 }

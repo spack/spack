@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,27 @@
 import inspect
 import collections
 import functools
+
+
+class Delegate(object):
+    def __init__(self, name, container):
+        self.name = name
+        self.container = container
+
+    def __call__(self, *args, **kwargs):
+        return [getattr(item, self.name)(*args, **kwargs)
+                for item in self.container]
+
+
+class Composite(list):
+    def __init__(self, fns_to_delegate):
+        self.fns_to_delegate = fns_to_delegate
+
+    def __getattr__(self, name):
+        if name != 'fns_to_delegate' and name in self.fns_to_delegate:
+            return Delegate(name, self)
+        else:
+            return self.__getattribute__(name)
 
 
 def composite(interface=None, method_list=None, container=list):

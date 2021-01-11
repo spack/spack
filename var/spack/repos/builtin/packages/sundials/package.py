@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,9 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
+    version('5.6.0', sha256='95e4201912e150f29c6f6f7625de763385e2073dae7f929c4a544561ea29915d')
+    version('5.5.0', sha256='2a755e89aab96d2ff096a4e30bf00bb162e80be20e9e99f424dccfb249098237')
     version('5.4.0', sha256='04d8a2ebe02cdaeef5a9e22ff7e3146bb563d8400f65772b6c7af80001413ffa')
     version('5.3.0', sha256='88dff7e11a366853d8afd5de05bf197a8129a804d9d4461fb64297f1ef89bca7')
     version('5.2.0', sha256='95f058acce5bd66e654de65acdbb1c9f44c90cf1b4e28f8d933cdb4415ebba3e')
@@ -180,7 +183,8 @@ class Sundials(CMakePackage):
     depends_on('suite-sparse',        when='+klu')
     depends_on('petsc +mpi',          when='+petsc')
     depends_on('hypre +mpi',          when='+hypre')
-    depends_on('superlu-dist@6.1.1:', when='+superlu-dist')
+    depends_on('superlu-dist@6.1.1:', when='@:5.4.0 +superlu-dist')
+    depends_on('superlu-dist@6.3.0:', when='@5.5.0: +superlu-dist')
     depends_on('trilinos+tpetra',     when='+trilinos')
 
     # Require that external libraries built with the same precision
@@ -204,6 +208,7 @@ class Sundials(CMakePackage):
     # remove OpenMP header file and function from hypre vector test code
     patch('test_nvector_parhyp.patch', when='@2.7.0:3.0.0')
     patch('FindPackageMultipass.cmake.patch', when='@5.0.0')
+    patch('5.5.0-xsdk-patches.patch', when='@5.5.0')
 
     # ==========================================================================
     # SUNDIALS Settings
@@ -238,8 +243,10 @@ class Sundials(CMakePackage):
         # index type (v3.0.0 or later)
         if spec.satisfies('@3.0.0:'):
             if '+int64' in spec:
+                args.extend(['-DSUNDIALS_INDEX_SIZE=64'])
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int64_t'])
             else:
+                args.extend(['-DSUNDIALS_INDEX_SIZE=32'])
                 args.extend(['-DSUNDIALS_INDEX_TYPE=int32_t'])
 
         # Fortran interface
@@ -364,13 +371,15 @@ class Sundials(CMakePackage):
         # Building with SuperLU_DIST
         if '+superlu-dist' in spec:
             args.extend([
+                '-DOPENMP_ENABLE=%s'
+                % on_off('^superlu-dist+openmp'),
                 '-DSUPERLUDIST_ENABLE=ON',
                 '-DSUPERLUDIST_INCLUDE_DIR=%s'
                 % spec['superlu-dist'].prefix.include,
                 '-DSUPERLUDIST_LIBRARY_DIR=%s'
                 % spec['superlu-dist'].prefix.lib,
                 '-DSUPERLUDIST_LIBRARIES=%s'
-                % spec['blas'].libs,
+                % spec['blas'].libs.joined(';'),
                 '-DSUPERLUDIST_OpenMP=%s'
                 % on_off('^superlu-dist+openmp')
             ])

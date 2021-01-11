@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,7 +22,7 @@
 
 # This is an array of environment variables that need to be set before
 # the script runs. They are set by routines in spack.build_environment
-# as part of spack.package.Package.do_install().
+# as part of the package installation process.
 parameters=(
     SPACK_ENV_PATH
     SPACK_DEBUG_LOG_DIR
@@ -107,25 +107,25 @@ case "$command" in
     cpp)
         mode=cpp
         ;;
-    cc|c89|c99|gcc|clang|armclang|icc|pgcc|nvc|xlc|xlc_r|fcc)
+    cc|c89|c99|gcc|clang|armclang|icc|icx|pgcc|nvc|xlc|xlc_r|fcc)
         command="$SPACK_CC"
         language="C"
         comp="CC"
         lang_flags=C
         ;;
-    c++|CC|g++|clang++|armclang++|icpc|pgc++|nvc++|xlc++|xlc++_r|FCC)
+    c++|CC|g++|clang++|armclang++|icpc|icpx|pgc++|nvc++|xlc++|xlc++_r|FCC)
         command="$SPACK_CXX"
         language="C++"
         comp="CXX"
         lang_flags=CXX
         ;;
-    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
+    ftn|f90|fc|f95|gfortran|flang|armflang|ifort|ifx|pgfortran|nvfortran|xlf90|xlf90_r|nagfor|frt)
         command="$SPACK_FC"
         language="Fortran 90"
         comp="FC"
         lang_flags=F
         ;;
-    f77|xlf|xlf_r|pgf77|frt|flang)
+    f77|xlf|xlf_r|pgf77)
         command="$SPACK_F77"
         language="Fortran 77"
         comp="F77"
@@ -320,9 +320,13 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rp="${arg#-rpath=}"
+            elif [[ "$arg" = --rpath=* ]]; then
+                rp="${arg#--rpath=}"
             elif [[ "$arg" = -rpath,* ]]; then
                 rp="${arg#-rpath,}"
-            elif [[ "$arg" = -rpath ]]; then
+            elif [[ "$arg" = --rpath,* ]]; then
+                rp="${arg#--rpath,}"
+            elif [[ "$arg" =~ ^-?-rpath$ ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Wl,* ]]; then
                     die "-Wl,-rpath was not followed by -Wl,*"
@@ -339,7 +343,9 @@ while [ -n "$1" ]; do
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if [[ "$arg" = -rpath=* ]]; then
                 rp="${arg#-rpath=}"
-            elif [[ "$arg" = -rpath ]]; then
+            elif [[ "$arg" = --rpath=* ]]; then
+                rp="${arg#--rpath=}"
+            elif [[ "$arg" = -rpath  ]] || [[ "$arg" = --rpath ]]; then
                 shift; arg="$1"
                 if [[ "$arg" != -Xlinker,* ]]; then
                     die "-Xlinker,-rpath was not followed by -Xlinker,*"
@@ -434,7 +440,7 @@ then
         ld)
             flags=("${flags[@]}" -headerpad_max_install_names) ;;
         ccld)
-            flags=("${flags[@]}" -Wl,-headerpad_max_install_names) ;;
+            flags=("${flags[@]}" "-Wl,-headerpad_max_install_names") ;;
     esac
 fi
 
@@ -512,12 +518,12 @@ for dir in "${system_libdirs[@]}";   do args+=("-L$dir"); done
 # RPATHs arguments
 case "$mode" in
     ccld)
-        if [ ! -z "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
+        if [ -n "$dtags_to_add" ] ; then args+=("$linker_arg$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("$rpath$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("$rpath$dir"); done
         ;;
     ld)
-        if [ ! -z "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
+        if [ -n "$dtags_to_add" ] ; then args+=("$dtags_to_add") ; fi
         for dir in "${rpaths[@]}";        do args+=("-rpath" "$dir"); done
         for dir in "${system_rpaths[@]}"; do args+=("-rpath" "$dir"); done
         ;;

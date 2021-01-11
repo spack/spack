@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,18 @@ class PyIpython(PythonPackage):
     """IPython provides a rich toolkit to help you make the most out of using
     Python interactively."""
 
-    homepage = "https://pypi.python.org/pypi/ipython"
-    url      = "https://pypi.io/packages/source/i/ipython/ipython-7.18.1.tar.gz"
+    pypi = "ipython/ipython-7.18.1.tar.gz"
+
+    # IPython.kernel is deprecated and fails to import
+    import_modules = [
+        'IPython', 'IPython.core', 'IPython.core.tests', 'IPython.core.magics',
+        'IPython.sphinxext', 'IPython.terminal',
+        'IPython.terminal.pt_inputhooks', 'IPython.terminal.tests',
+        'IPython.utils', 'IPython.utils.tests', 'IPython.extensions',
+        'IPython.extensions.tests', 'IPython.testing', 'IPython.testing.tests',
+        'IPython.testing.plugin', 'IPython.lib', 'IPython.lib.tests',
+        'IPython.external', 'IPython.external.decorators'
+    ]
 
     version('7.18.1', sha256='a331e78086001931de9424940699691ad49dfb457cea31f5471eae7b78222d5e')
     version('7.5.0',  sha256='e840810029224b56cd0d9e7719dc3b39cf84d577f8ac686547c8ba7a06eeab26')
@@ -41,9 +51,3 @@ class PyIpython(PythonPackage):
     depends_on('py-backports-shutil-get-terminal-size', type=('build', 'run'), when="^python@:3.2")
     depends_on('py-pathlib2', type=('build', 'run'), when="^python@:3.3")
     depends_on('py-simplegeneric@0.8:', type=('build', 'run'), when='@:7.0.0')
-    depends_on('py-nose@0.10.1:', type='test')
-    depends_on('py-requests', type='test')
-    depends_on('py-testpath', type='test')
-    depends_on('py-nbformat', type='test')
-    depends_on('py-ipykernel', type='test')
-    depends_on('py-numpy@1.14:', type='test')

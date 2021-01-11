@@ -1,8 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import llnl.util.cpu
 
 
 class Gromacs(CMakePackage):
@@ -77,6 +76,10 @@ class Gromacs(CMakePackage):
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
             description='Enables an external LAPACK library')
+    variant('blas', default=False,
+            description='Enables an external BLAS library')
+    variant('cycle_subcounters', default=False,
+            description='Enables cycle subcounters')
 
     depends_on('mpi', when='+mpi')
     # define matching plumed versions
@@ -90,17 +93,16 @@ class Gromacs(CMakePackage):
     depends_on('plumed@2.5.0:2.5.9~mpi', when='@2018.6+plumed~mpi')
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
-    depends_on('fftw-api@3', when='~cuda')
-    depends_on('mkl', when='fft=mkl')
+    depends_on('fftw-api@3')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
     depends_on('lapack', when='+lapack')
+    depends_on('blas', when='+blas')
 
-    # TODO: openmpi constraint; remove when concretizer is fixed
-    depends_on('hwloc@:1.999', when='+hwloc')
+    depends_on('hwloc', when='+hwloc')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
@@ -152,32 +154,40 @@ class Gromacs(CMakePackage):
         if '+lapack' in self.spec:
             options.append('-DGMX_EXTERNAL_LAPACK:BOOL=ON')
             if self.spec['lapack'].libs:
-                options.append('-DLAPACK_LIBRARIES={0}'.format(
+                options.append('-DGMX_LAPACK_USER={0}'.format(
                     self.spec['lapack'].libs.joined(';')))
         else:
             options.append('-DGMX_EXTERNAL_LAPACK:BOOL=OFF')
 
+        if '+blas' in self.spec:
+            options.append('-DGMX_EXTERNAL_BLAS:BOOL=ON')
+            if self.spec['blas'].libs:
+                options.append('-DGMX_BLAS_USER={0}'.format(
+                    self.spec['blas'].libs.joined(';')))
+        else:
+            options.append('-DGMX_EXTERNAL_BLAS:BOOL=OFF')
+
         # Activate SIMD based on properties of the target
         target = self.spec.target
-        if target >= llnl.util.cpu.targets['zen2']:
+        if target >= 'zen2':
             # AMD Family 17h (EPYC Rome)
             options.append('-DGMX_SIMD=AVX2_256')
-        elif target >= llnl.util.cpu.targets['zen']:
+        elif target >= 'zen':
             # AMD Family 17h (EPYC Naples)
             options.append('-DGMX_SIMD=AVX2_128')
-        elif target >= llnl.util.cpu.targets['bulldozer']:
+        elif target >= 'bulldozer':
             # AMD Family 15h
             options.append('-DGMX_SIMD=AVX_128_FMA')
         elif 'vsx' in target:
             # IBM Power 7 and beyond
             options.append('-DGMX_SIMD=IBM_VSX')
-        elif target.family == llnl.util.cpu.targets['aarch64']:
+        elif target.family == 'aarch64':
             # ARMv8
             if self.spec.satisfies('%nvhpc'):
                 options.append('-DGMX_SIMD=None')
             else:
                 options.append('-DGMX_SIMD=ARM_NEON_ASIMD')
-        elif target == llnl.util.cpu.targets['mic_knl']:
+        elif target == 'mic_knl':
             # Intel KNL
             options.append('-DGMX_SIMD=AVX_512_KNL')
         elif target.vendor == 'GenuineIntel':
@@ -225,6 +235,11 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
 
+        if '+cycle_subcounters' in self.spec:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
+        else:
+            options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=OFF')
+
         if '^mkl' in self.spec:
             # fftw-api@3 is provided by intel-mkl or intel-parllel-studio
             # we use the mkl interface of gromacs
@@ -238,5 +253,13 @@ class Gromacs(CMakePackage):
         else:
             # we rely on the fftw-api@3
             options.append('-DGMX_FFT_LIBRARY=fftw3')
+            if '^amdfftw' in self.spec:
+                options.append('-DGMX_FFT_LIBRARY=fftw3')
+                options.append(
+                    '-DFFTWF_INCLUDE_DIRS={0}'.
+                    format(self.spec['amdfftw'].headers.directories[0])
+                )
+                options.append('-DFFTWF_LIBRARIES={0}'.
+                               format(self.spec['amdfftw'].libs.joined(';')))
 
         return options

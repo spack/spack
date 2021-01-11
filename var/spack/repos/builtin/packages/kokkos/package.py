@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -72,17 +72,18 @@ class Kokkos(CMakePackage, CudaPackage):
         'tests': [False, 'Build for tests'],
     }
 
-    amd_gpu_arches = [
-        'fiji',
-        'gfx901',
+    amd_gpu_arches = (
         'vega900',
         'vega906',
-    ]
-    variant("amd_gpu_arch", default='none', values=amd_gpu_arches,
+        'vega908',
+    )
+    variant("amd_gpu_arch", default='none', values=('none',) + amd_gpu_arches,
             description="AMD GPU architecture")
     conflicts("+hip", when="amd_gpu_arch=none")
 
     spack_micro_arch_map = {
+        "graviton": "",
+        "graviton2": "",
         "aarch64": "",
         "arm": "",
         "ppc": "",
@@ -176,7 +177,7 @@ class Kokkos(CMakePackage, CudaPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20

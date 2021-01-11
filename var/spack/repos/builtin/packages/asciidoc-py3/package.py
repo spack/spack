@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,3 +23,5 @@ class AsciidocPy3(AutotoolsPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('libxml2',     type=('build', 'run'))
     depends_on('libxslt',     type=('build', 'run'))
+    depends_on('docbook-xml', type=('build', 'run'))
+    depends_on('docbook-xsl', type=('build', 'run'))

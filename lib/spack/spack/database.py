@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ import six
 import socket
 import sys
 import time
+from typing import Dict  # novm
+
 try:
     import uuid
     _use_uuid = True
@@ -209,7 +211,7 @@ class InstallRecord(object):
 
         for field_name in include_fields:
             if field_name == 'spec':
-                rec_dict.update({'spec': self.spec.to_node_dict()})
+                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
             elif field_name == 'deprecated_for' and self.deprecated_for:
                 rec_dict.update({'deprecated_for': self.deprecated_for})
             else:
@@ -289,10 +291,10 @@ _query_docstring = """
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
-    _prefix_locks = {}
+    _prefix_locks = {}  # type: Dict[str, lk.Lock]
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}
+    _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
                  is_upstream=False, enable_transaction_locking=True,
@@ -1112,6 +1114,7 @@ class Database(object):
             # the original hash of concrete specs.
             new_spec._mark_concrete()
             new_spec._hash = key
+            new_spec._full_hash = spec._full_hash
 
         else:
             # If it is already there, mark it as installed and update
@@ -1463,6 +1466,8 @@ class Database(object):
 
         return results
 
+    if _query.__doc__ is None:
+        _query.__doc__ = ""
     _query.__doc__ += _query_docstring
 
     def query_local(self, *args, **kwargs):
@@ -1470,6 +1475,8 @@ class Database(object):
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
+    if query_local.__doc__ is None:
+        query_local.__doc__ = ""
     query_local.__doc__ += _query_docstring
 
     def query(self, *args, **kwargs):
@@ -1488,6 +1495,8 @@ class Database(object):
 
         return sorted(results)
 
+    if query.__doc__ is None:
+        query.__doc__ = ""
     query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):
@@ -1530,6 +1539,24 @@ class Database(object):
                       if key not in needed and rec.installed]
 
         return unused
+
+    def update_explicit(self, spec, explicit):
+        """
+        Update the spec's explicit state in the database.
+
+        Args:
+            spec (Spec): the spec whose install record is being updated
+            explicit (bool): ``True`` if the package was requested explicitly
+                by the user, ``False`` if it was pulled in as a dependency of
+                an explicit package.
+        """
+        rec = self.get_record(spec)
+        if explicit != rec.explicit:
+            with self.write_transaction():
+                message = '{s.name}@{s.version} : marking the package {0}'
+                status = 'explicit' if explicit else 'implicit'
+                tty.debug(message.format(status, s=spec))
+                rec.explicit = explicit
 
 
 class UpstreamDatabaseLockingError(SpackError):
