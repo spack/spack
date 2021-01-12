@@ -31,7 +31,7 @@
 #        extra_rpaths: []
 #
 #    It is advisable to replace /rocm/ in the paths above with /rocm-version/
-#    to ensure reproducible results.
+#    and introduce spec version numbers to ensure reproducible results.
 #
 # 2. hip and its dependencies are currently NOT picked up by spack
 #    automatically, and should therefore be added to packages.yaml by hand:
@@ -67,7 +67,7 @@
 #      buildable: false
 #
 #    It is advisable to replace /rocm/ in the paths above with /rocm-version/
-#    to ensure reproducible results.
+#    and introduce spec version numbers to ensure reproducible results.
 #
 # 3. In part 2, DO NOT list the path to hsa as /opt/rocm/hsa ! You want spack
 #    to find hsa in /opt/rocm/include/hsa/hsa.h . The directory of
