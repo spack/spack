@@ -42,7 +42,6 @@ import llnl.util.filesystem as fs
 default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
 
 install_root = None
-active_upstream = None
 init_upstream = None
 
 
@@ -285,8 +284,7 @@ class Store(object):
     """
     def __init__(
             self, root, unpadded_root=None,
-            projections=None, hash_length=None, active_upstream=None
-    ):
+            projections=None, hash_length=None):
         self.root = root
         self.unpadded_root = unpadded_root or root
         upstream_dbs = upstream_dbs_from_pointers(root)
@@ -295,7 +293,6 @@ class Store(object):
             root, upstream_dbs=upstream_dbs)
         self.layout = spack.directory_layout.YamlDirectoryLayout(
             root, projections=projections, hash_length=hash_length)
-        self.active_upstream = active_upstream
 
     def reindex(self):
         """Convenience function to reindex the store DB with its own layout."""
