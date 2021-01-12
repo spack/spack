@@ -16,6 +16,8 @@ class PyAnuga(PythonPackage):
 
     version('2.1', sha256='0e56c4a7d55570d7b2c36fa9b53ee4e7b85f62be0b4c03ad8ab5f51464321d2f')
 
+    variant('mpi', default=True, description='Install anuga_parallel')
+
     # At present AnuGA has only been run and tested using python 2.x.
     # We recommend python 2.7.
     depends_on('python@2.6:2.8', type=('build', 'run'))
@@ -24,6 +26,7 @@ class PyAnuga(PythonPackage):
     depends_on('py-netcdf4', type=('build', 'run'))
     depends_on('py-matplotlib@:2', type=('build', 'run'))
     depends_on('gdal@:3.2+python', type=('build', 'run'))
+    depends_on('py-pypar', when='+mpi', type=('build', 'run'))
 
     # https://github.com/GeoscienceAustralia/anuga_core/issues/247
     conflicts('%apple-clang@12:')
