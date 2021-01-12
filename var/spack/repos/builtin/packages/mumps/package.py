@@ -80,6 +80,8 @@ class Mumps(Package):
         orderings = ['-Dpord']
         # All of the lib[cdsz]mumps.* libs depend on mumps_common
         extra_libs4mumps = ['-L$(topdir)/lib', '-lmumps_common']
+        # and mumps_common depends on pord
+        extra_libs4mumps += ['-L$(topdir)/PORD/lib', '-lpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             makefile_conf.extend([
