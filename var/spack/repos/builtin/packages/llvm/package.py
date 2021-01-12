@@ -492,7 +492,7 @@ class Llvm(CMakePackage, CudaPackage):
 
             for line in gcc_output.splitlines():
                 if line.startswith("install:"):
-                    # Get path and strip any whitespace 
+                    # Get path and strip any whitespace
                     # (causes oddity with ancestor)
                     gcc_prefix = line.split(":")[1].strip()
                     gcc_prefix = ancestor(gcc_prefix, 4)
