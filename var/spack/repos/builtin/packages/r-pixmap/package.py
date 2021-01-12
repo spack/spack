@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPixmap(RPackage):
-    """Bitmap Images (“Pixel Maps”)
+    """Bitmap Images ("Pixel Maps")
 
     Functions for import, export, plotting and other manipulations of bitmapped
     images."""
