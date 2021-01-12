@@ -93,6 +93,9 @@ dependency_conditions_hold(ID, Parent, Dependency) :-
   attr(Name, Arg1, Arg2)       : required_dependency_condition(ID, Name, Arg1, Arg2);
   attr(Name, Arg1, Arg2, Arg3) : required_dependency_condition(ID, Name, Arg1, Arg2, Arg3);
   dependency_condition(ID, Parent, Dependency);
+  % There must be at least a dependency type declared,
+  % otherwise the dependency doesn't hold
+  dependency_type(ID, _);
   node(Parent);
   not external(Parent).
 
