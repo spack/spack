@@ -52,6 +52,7 @@ import spack.util.spack_yaml as syaml
 
 install_root = None
 
+
 #: config section for this file
 def configuration():
     return spack.config.get('modules', {})
@@ -243,6 +244,7 @@ def get_roots_dict():
         tty.die('module_roots config options is unset')
 
     return roots
+
 
 def root_path(name):
     """Returns the root folder for module file installation.
