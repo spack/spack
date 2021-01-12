@@ -39,7 +39,7 @@ class PyTorchvision(PythonPackage):
     # https://github.com/pytorch/vision#installation
     depends_on('python@3.6:', when='@0.7:', type=('build', 'run'))
     depends_on('python@3.5:', when='@0.6.0:0.6.999', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:3.8', when='@0.5.0:0.5.999', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:3.8', when='@0.5.0', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:3.7', when='@:0.4', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
@@ -54,7 +54,7 @@ class PyTorchvision(PythonPackage):
     depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.1', when='@0.6.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.0', when='@0.6.0', type=('build', 'link', 'run'))
-    depends_on('py-torch@1.4.0:1.4.999', when='@0.5.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.4.1', when='@0.5.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.1', when='@0.4.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.0', when='@0.4.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.2.0', when='@0.4.0', type=('build', 'link', 'run'))
