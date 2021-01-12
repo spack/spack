@@ -198,8 +198,6 @@ class Hypre(Package):
                               purpose=reason, skip_missing=True, work_dir='.')
 
                 make("distclean")
-        else:
-            raise RuntimeError("MPI is required to run HYPRE smoke test")
 
     @property
     def headers(self):
