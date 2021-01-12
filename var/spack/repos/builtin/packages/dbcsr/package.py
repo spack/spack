@@ -40,13 +40,14 @@ class Dbcsr(CMakePackage, CudaPackage):
     # for optimal kernels. Note that we don't override the cuda_archs property
     # from the parent class, since the parent class defines constraints for all
     # versions. Instead just mark all unsupported cuda archs as conflicting.
-    dbcsr_cuda_archs = ('none', '35', '37', '60', '70')
+    dbcsr_cuda_archs = ('35', '37', '60', '70')
+    cuda_msg = 'dbcsr only supports cuda_arch {0}'.format(dbcsr_cuda_archs)
 
     for arch in CudaPackage.cuda_arch_values:
         if arch not in dbcsr_cuda_archs:
-            conflicts('+cuda', when='cuda_arch={0}'.format(arch),
-                      msg='dbcsr only supports cuda_arch {0}'.format(
-                          dbcsr_cuda_archs))
+            conflicts('+cuda', when='cuda_arch={0}'.format(arch), msg=cuda_msg)
+
+    conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
