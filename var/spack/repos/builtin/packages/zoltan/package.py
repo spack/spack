@@ -22,7 +22,7 @@ class Zoltan(AutotoolsPackage):
     homepage = "http://www.cs.sandia.gov/zoltan"
     url      = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
 
-    version('3.83', sha256='d0d78fdeab7a385c87d3666b8a8dc748994ff04d3fd846872a4845e12d79c1bb')
+    version('3.83', sha256='17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c')
 
     patch('notparallel.patch', when='@3.8')
 
