@@ -70,6 +70,8 @@ class Amrex(CMakePackage, CudaPackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
+    variant('sycl', default=False, 
+            description='Build with OneAPI')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -81,6 +83,7 @@ class Amrex(CMakePackage, CudaPackage):
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
+    depends_on('intel-oneapi-compilers', when='+sycl')
     conflicts('%apple-clang')
     conflicts('%clang')
 
@@ -113,6 +116,8 @@ class Amrex(CMakePackage, CudaPackage):
     conflicts('cuda_arch=21', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('+sycl', when='@:20.11', 
+              msg='AMReX SYCL support needs AMReX newer than 20.11')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
@@ -198,5 +203,9 @@ class Amrex(CMakePackage, CudaPackage):
                 args.append('-DAMReX_CUDA_ARCH=Auto')
             else:
                 args.append('-DAMReX_CUDA_ARCH={0}'.format(cuda_arch[0]))
+    
+        if '+sycl' in self.spec:
+            args.append('-DAMReX_GPU_BACKEND=SYCL')
+            args.append('-DCMAKE_CXX_COMPILER=dpcpp')
 
         return args
