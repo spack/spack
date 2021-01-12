@@ -157,7 +157,6 @@ class Gromacs(CMakePackage):
             else:
                 options.append('-DGMX_GPU:BOOL=OFF')
 
-
         if '+cuda' in self.spec:
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
                            self.spec['cuda'].prefix)
