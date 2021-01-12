@@ -6,7 +6,7 @@ config:
         tcl: {1}
         lmod: {2}
     user:
-      root: $spack/opt/spack
+      root: ~/.spack/opt/spack
       module_roots:
         tcl: {1}
         lmod: {2}

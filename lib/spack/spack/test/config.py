@@ -30,21 +30,39 @@ import spack.util.path as spack_path
 config_low = {
     'config': {
         'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'}},
-        'build_stage': ['path1', 'path2', 'path3']}}
+            'spack-root1': {
+                'root': 'install_tree_path1'},
+            'spack-root2': {
+                'root': 'install_tree_path2',
+                'permissions': {
+                    'read': 'world',
+                    'write': 'user'
+                }
+            }
+        },
+        'build_stage': ['path1', 'path2', 'path3']
+    }
+}
 
 config_override_all = {
     'config:': {
-        'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'}}}}
+        'install_trees:': {
+            'spack-root2': {
+                'root': 'install_tree_path2'},
+            'spack-root3': {
+                'root': 'install_tree_path3'}
+        }
+    }
+}
 
 config_override_key = {
     'config': {
         'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'}}}}
+            'spack-root1': {
+                'root': 'install_tree_path4'}
+        }
+    }
+}
 
 config_merge_list = {
     'config': {
@@ -528,9 +546,10 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
     write_config_file('config', config_override_all, 'high')
     assert spack.config.get('config') == {
         'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'
-            }
+            'spack-root2': {
+                'root': 'install_tree_path2'},
+            'spack-root3': {
+                'root': 'install_tree_path3'}
         }
     }
 
@@ -538,40 +557,31 @@ def test_read_config_override_all(mock_low_high_config, write_config_file):
 def test_read_config_override_key(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_key, 'high')
-    assert spack.config.get('config') == {
-        'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'
+    assert spack.config.get('config')['install_trees'] == {
+        'spack-root1': {
+            'root': 'install_tree_path4'},
+        'spack-root2': {
+            'root': 'install_tree_path2',
+            'permissions': {
+                'read': 'world',
+                'write': 'user'
             }
-        },
-        'build_stage': ['path1', 'path2', 'path3']
+        }
     }
 
 
 def test_read_config_merge_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_merge_list, 'high')
-    assert spack.config.get('config') == {
-        'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'
-            }
-        },
-        'build_stage': ['patha', 'pathb', 'path1', 'path2', 'path3']
-    }
+    assert spack.config.get('config')['build_stage'] == [
+        'patha', 'pathb', 'path1', 'path2', 'path3']
 
 
 def test_read_config_override_list(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
     write_config_file('config', config_override_list, 'high')
-    assert spack.config.get('config') == {
-        'install_trees': {
-            'spack-root': {
-                'root': 'install_tree_path'
-            }
-        },
-        'build_stage': config_override_list['config']['build_stage:']
-    }
+    assert spack.config.get('config')['build_stage'] == (
+        config_override_list['config']['build_stage:'])
 
 
 def test_ordereddict_merge_order():
@@ -613,7 +623,8 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     write_config_file('config', config_low, 'low')
 
     before = mock_low_high_config.get('config')
-    assert before['install_trees']['spack-root']['root'] == 'install_tree_path'
+    assert before['install_trees']['spack-root1']['root'] == (
+        'install_tree_path1')
 
     # add an internal configuration scope
     scope = spack.config.InternalConfigScope('command_line')
@@ -622,12 +633,16 @@ def test_internal_config_update(mock_low_high_config, write_config_file):
     mock_low_high_config.push_scope(scope)
 
     command_config = mock_low_high_config.get('config', scope='command_line')
-    command_config['install_tree'] = {'root': 'foo/bar'}
+    command_config['install_trees'] = {
+        'spack-root1': {
+            'root': 'foo/bar'
+        }
+    }
 
     mock_low_high_config.set('config', command_config, scope='command_line')
 
     after = mock_low_high_config.get('config')
-    assert after['install_tree']['root'] == 'foo/bar'
+    assert after['install_trees']['spack-root1']['root'] == 'foo/bar'
 
 
 def test_internal_config_filename(mock_low_high_config, write_config_file):
@@ -851,7 +866,7 @@ config:
     spack.config._add_command_line_scopes(mutable_config, [str(tmpdir)])
 
 
-def test_nested_override():
+def test_nested_override(config):
     """Ensure proper scope naming of nested overrides."""
     base_name = spack.config.overrides_base_name
 
@@ -874,7 +889,7 @@ def test_nested_override():
         _check_scopes(1, [True])
 
 
-def test_alternate_override(monkeypatch):
+def test_alternate_override(config, monkeypatch):
     """Ensure proper scope naming of override when conflict present."""
     base_name = spack.config.overrides_base_name
 
