@@ -16,6 +16,7 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
     gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
 
+#   version('1.18.1', sha256='49c4ef5665022700e6b87338a64d98139f22cc6f376b4002625ea4da362eb7c1')
     version('1.18.1', sha256='86e613527e5dba544e73208f42b78b7c022d4fa5a6d5498bf18c8d6f745b91dc')
     version('1.14.1', sha256='cdceff00ffe014495bed3aed71c7910aa88bf29379f795abc0f46d4ee5f8bc5f')
     version('1.13',  sha256='9d252cbd7d793f7b12bcceaddda98d257c14f4d1890d851c386c37207000a253')
@@ -26,7 +27,9 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version('1.9',   sha256='f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57')
 
     depends_on("readline")
-    patch('gdbm_gcc_10.patch', when='%gcc@10:')
+#   patch('gdbm_gcc_10.patch', when='%gcc@10:')
+#   patch('gdbm_gcc_10.patch', when='%cce@11')
+    patch('gdbm_gcc_10.patch')
 
     def configure_args(self):
 

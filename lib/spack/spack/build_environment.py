@@ -65,6 +65,7 @@ from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, get_path_from_module, module
 from spack.util.log_parse import parse_log_events, make_log_context
 
+import os
 
 #
 # This can be set by the user to globally disable parallel builds.
@@ -241,7 +242,12 @@ def set_compiler_environment_variables(pkg, env):
         env.set('SPACK_DTAGS_TO_ADD', compiler.enable_new_dtags)
 
     # Set the target parameters that the compiler will add
-    isa_arg = spec.architecture.target.optimization_flags(compiler)
+    # Don't set on cray platform because the targeting module handles this
+    #isa_arg = spec.architecture.target.optimization_flags(compiler)
+    if spec.satisfies('platform=cray'):
+        isa_arg = ''
+    else:
+        isa_arg = spec.architecture.target.optimization_flags(compiler)
     env.set('SPACK_TARGET_ARGS', isa_arg)
 
     # Trap spack-tracked compiler flags as appropriate.
@@ -743,10 +749,17 @@ def setup_package(pkg, dirty):
                 load_module("cce")
             load_module(mod)
 
-        # kludge to handle cray libsci being automatically loaded by PrgEnv
+        # kludge to handle dependencies being automatically loaded by PrgEnv
         # modules on cray platform. Module unload does no damage when
-        # unnecessary
-        module('unload', 'cray-libsci')
+        # unnecessary. These modules can be re-added by the appropriate
+        # external packages configuration
+        for mod in ('cray-libsci','cray-mpich','cray-mvapich2','cray-mvapich2_nogpu'):
+            if not any(mod in cmod for cmod in pkg.compiler.modules):
+                 module('unload', mod)
+#       module('unload', 'cray-libsci')
+#       module('unload', 'cray-mpich')
+#       module('unload', 'cray-mvapich2')
+#       module('unload', 'cray-mvapich2_nogpu')
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
@@ -822,6 +835,7 @@ def fork(pkg, function, dirty, fake):
     passes it to the parent wrapped in a ChildError.  The parent is
     expected to handle (or re-raise) the ChildError.
     """
+
 
     def child_process(child_pipe, input_stream):
         # We are in the child process. Python sets sys.stdin to

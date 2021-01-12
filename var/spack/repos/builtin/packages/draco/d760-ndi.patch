@@ -1,0 +1,53 @@
+diff --git a/config/FindNDI.cmake b/config/FindNDI.cmake
+index e345be65..3f0a5335 100644
+--- a/config/FindNDI.cmake
++++ b/config/FindNDI.cmake
+@@ -77,21 +77,15 @@ endif()
+ find_path( NDI_INCLUDE_DIR
+   NAMES ndi.h
+   HINTS ${NDI_ROOT_DIR}/include/ndi
+-  #PATH_SUFFIXES Release Debug
++  PATH_SUFFIXES ndi
+   )
+ 
+-# if (APPLE)
+-#     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a;.dylib")
+-# endif()
+-
+ set( NDI_LIBRARY_NAME ndipic ndi)
+ 
+ find_library(NDI_LIBRARY
+   NAMES ${NDI_LIBRARY_NAME}
+   PATHS ${NDI_ROOT_DIR}/lib
+-  #PATH_SUFFIXES Release Debug
+   )
+-
+ # Do we also have debug versions?
+ find_library( NDI_LIBRARY_DEBUG
+   NAMES ${NDI_LIBRARY_NAME}
+diff --git a/src/cdi_ndi/CMakeLists.txt b/src/cdi_ndi/CMakeLists.txt
+index 506804d2..e7cc5bbe 100644
+--- a/src/cdi_ndi/CMakeLists.txt
++++ b/src/cdi_ndi/CMakeLists.txt
+@@ -7,15 +7,18 @@
+ cmake_minimum_required(VERSION 3.9.0)
+ project( cdi_ndi CXX )
+ 
++# No ndi in the Docker image used by Travis CI.
+ if( NDI_FOUND AND NOT DEFINED ENV{TRAVIS} )
+ 
+ if( NOT DEFINED NDI_ROOT_DIR AND DEFINED $ENV{NDI_ROOT_DIR})
+   set(NDI_ROOT_DIR $ENV{NDI_ROOT_DIR})
+ endif()
++
+ if( NOT DEFINED NDI_ROOT_DIR )
+-  message(FATAL_ERROR "NDI_ROOT_DIR not set. cdi_ndi requires the variable \
+-          NDI_ROOT_DIR to be set in the environment or with the -DNDI_ROOT_DIR \
+-          flag if the ndi library is found.")
++  # if not set in the environment (by modulefile?), set NDI_ROOT_DIR to the
++  # prefix_path for NDI
++  get_filename_component(NDI_ROOT_DIR "${NDI_LIBRARY}" DIRECTORY)
++  get_filename_component(NDI_ROOT_DIR "${NDI_LIBRARY}" DIRECTORY CACHE)
+ endif()
+ 
+ # ---------------------------------------------------------------------------- #

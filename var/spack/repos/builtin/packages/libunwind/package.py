@@ -19,6 +19,7 @@ class Libunwind(AutotoolsPackage):
     version('1.5-head', branch='v1.5-stable')
     version('1.5-rc1', sha256='3e0cbc6dee326592097ef06e97cf76ef597987eddd0df8bea49b0594e587627a')
     version('1.4-head', branch='v1.4-stable')
+#   version('1.4.0',   sha256='a244d876fe71808172230e6553d2aec0aa7781bed0ec2ba561a9f89edabb90c4', preferred=True)
     version('1.4.0',   sha256='df59c931bd4d7ebfd83ee481c943edf015138089b8e50abed8d9c57ba9338435', preferred=True)
     version('1.4-rc1', sha256='1928459139f048f9b4aca4bb5010540cb7718d44220835a2980b85429007fa9f')
     version('1.3.1', sha256='43997a3939b6ccdf2f669b50fdb8a4d3205374728c2923ddc2354c65260214f8')

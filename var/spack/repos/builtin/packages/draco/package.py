@@ -18,7 +18,10 @@ class Draco(CMakePackage):
     maintainers = ['KineticTheory']
 
     version('develop', branch='develop')
-    version('7.6.0',  sha256='c2c6b329620d7bcb0f2fc14371f105dfb80a84e7c5adbb34620777034b15c7c9')
+#   version('7.7.0',  sha256='3dde08d879303bfd2e2eb64f472d4800c424baad55bdb5b67f952c2fc428ccbb')
+    version('7.7.0',  sha256='f6de794457441f69025619be58810bca432f3e0dd773ea9b9a7977b1dc09530d')
+    version('7.6.0',  sha256='624a0f5038c1431e5949b8c1aa242eb27f64b8248479cea180091807d82a333b')
+#   version('7.6.0',  sha256='c2c6b329620d7bcb0f2fc14371f105dfb80a84e7c5adbb34620777034b15c7c9')
     version('7.5.0',  sha256='0bb12b5f5ff60ba3087310c07da42e8d4f481ec4259daaa24ec240815a2e9dec')
     version('7.4.0',  sha256='61da2c3feace0e92c5410c9e9e613708fdf8954b1367cdc62c415329b0ddab6e')
     version('7.3.0',  sha256='dc47ef6c1e04769ea177a10fc6ddf506f3e1e8d36eb5d49f4bc38cc509e24f10')

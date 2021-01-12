@@ -136,6 +136,13 @@ class Paraview(CMakePackage, CudaPackage):
         """The paraview subdirectory name as paraview-major.minor"""
         return 'paraview-{0}'.format(self.spec.version.up_to(2))
 
+    def setup_build_environment(self, env):
+        if 'lapack' in self.spec:
+            lapack_spec = self.spec['lapack']
+            if lapack_spec.name == 'cray-libsci':
+                env.prepend_path('LD_LIBRARY_PATH', ':'.join(lapack_spec.libs.directories))
+
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         if os.path.isdir(self.prefix.lib64):
             lib_dir = self.prefix.lib64

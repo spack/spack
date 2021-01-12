@@ -20,8 +20,11 @@ class Zoltan(AutotoolsPackage):
     """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
-    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
+    url      = "https://github.com/sandialabs/Zoltan/raw/main/zoltan_distrib_v3.83.tar.gz"
+#   url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
 
+#   version('3.83', sha256='6680eb0d927e377c65177e20758407e42970f9a5036c73d7bd5121150edc0406')
+#   version('3.83', sha256='061f312a36a22fd83ffc1a2878f128c2af46d25a6f56c27f96fc4a20f8c1ce80')
     version('3.83', sha256='d0d78fdeab7a385c87d3666b8a8dc748994ff04d3fd846872a4845e12d79c1bb')
     version('3.8', sha256='5bdd46548fb9c73b225bbcf3d206c558c318cb292f0b19645e536315d14aafb7')
     version('3.6', sha256='d2cb41e5fb72ca564b24bc5f21d82d9f7992f2c977bc82b243a01a8a8ee4eb9c')

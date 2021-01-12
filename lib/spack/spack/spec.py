@@ -2301,7 +2301,10 @@ class Spec(object):
 
         # Check if we can produce an optimized binary (will throw if
         # there are declared inconsistencies)
-        self.architecture.target.optimization_flags(self.compiler)
+        # No need on cray systems because of the targeting modules
+        # self.architecture.target.optimization_flags(self.compiler)
+        if not self.satisfies('platform=cray'):
+            self.architecture.target.optimization_flags(self.compiler)
 
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.

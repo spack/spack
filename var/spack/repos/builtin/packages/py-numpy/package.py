@@ -45,7 +45,8 @@ class PyNumpy(PythonPackage):
     version('1.17.0', sha256='951fefe2fb73f84c620bec4e001e80a80ddaa1b84dce244ded7f1e0cbe0ed34a')
     version('1.16.6', sha256='e5cf3fdf13401885e8eea8170624ec96225e2174eb0c611c6f26dd33b489e3ff')
     version('1.16.5', sha256='8bb452d94e964b312205b0de1238dd7209da452343653ab214b5d681780e7a0c')
-    version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
+    version('1.16.4', sha256='14f84c255eb7d84d9b7b9cbf31169fc137a0c05598deecfc6e857c296a6b467f')
+#   version('1.16.4', sha256='7242be12a58fec245ee9734e625964b97cf7e3f2f7d016603f9e56660ce479c7')
     version('1.16.3', sha256='78a6f89da87eeb48014ec652a65c4ffde370c036d780a995edaeb121d3625621')
     version('1.16.2', sha256='6c692e3879dde0b67a9dc78f9bfb6f61c666b4562fd8619632d7043fb5b691b0')
     version('1.16.1', sha256='31d3fe5b673e99d33d70cfee2ea8fe8dccd60f265c3ed990873a88647e3dd288')
@@ -231,6 +232,12 @@ class PyNumpy(PythonPackage):
                     f.write('libraries = {0}\n'.format(blas_lib_names))
                     write_library_dirs(f, blas_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(blas_header_dirs))
+                if spec.satisfies('+lapack'):
+                    f.write('[lapack]\n')
+                    f.write('libraries = {0}\n'.format(lapack_lib_names))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+            if '^cray-libsci' in spec:
                 if spec.satisfies('+lapack'):
                     f.write('[lapack]\n')
                     f.write('libraries = {0}\n'.format(lapack_lib_names))

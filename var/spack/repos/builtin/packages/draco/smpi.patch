@@ -1,0 +1,12 @@
+The LANL Darwin platform calls the IBM Spectrum modules "smpi".
+diff -up config/setupMPI.cmake.smpi config/setupMPI.cmake
+--- a/config/setupMPI.cmake.smpi	2020-05-28 11:54:17.851957957 -0600
++++ b/config/setupMPI.cmake	2020-05-28 11:55:35.018332601 -0600
+@@ -46,6 +46,7 @@ function( setMPIflavorVer )
+   elseif( "${MPIEXEC_EXECUTABLE}" MATCHES "mvapich2")
+     set( MPI_FLAVOR "mvapich2" )
+   elseif( "${MPIEXEC_EXECUTABLE}" MATCHES "spectrum-mpi" OR
++      "${MPIEXEC_EXECUTABLE}" MATCHES "smpi" OR
+       "${MPIEXEC_EXECUTABLE}" MATCHES "jsrun" )
+     set( MPI_FLAVOR "spectrum")
+   endif()
