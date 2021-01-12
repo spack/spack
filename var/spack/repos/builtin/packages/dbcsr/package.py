@@ -52,13 +52,17 @@ class Dbcsr(CMakePackage, CudaPackage):
     depends_on('ninja@1.10:', type='build')
 
     def cmake_args(self):
+        spec = self.spec
+
+        if len(spec.variants['cuda_arch'].value) > 1:
+            raise InstallError("dbcsr supports only one cuda_arch at a time")
+
         if ('+openmp' in self.spec
             and '^openblas' in self.spec
             and '^openblas threads=openmp' not in self.spec):
             raise InstallError(
                 '^openblas threads=openmp required for dbcsr+openmp')
 
-        spec = self.spec
         args = [
             '-DUSE_SMM=%s' % ('libxsmm' if 'smm=libxsmm' in spec else 'blas'),
             '-DUSE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),

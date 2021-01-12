@@ -585,6 +585,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ]
 
     def build(self, spec, prefix):
+        if len(spec.variants['cuda_arch'].value) > 1:
+            raise InstallError("cp2k supports only one cuda_arch at a time")
+
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
         with spack.util.environment.set_env(PWD=self.build_directory):
