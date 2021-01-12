@@ -205,6 +205,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc))
             args.append('-DAMReX_GPU_BACKEND=HIP')
             targets = self.spec.variants['amdgpu_target'].value
-            args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets)
+            args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets))
 
         return args
