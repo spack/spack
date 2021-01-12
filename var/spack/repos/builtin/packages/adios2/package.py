@@ -11,12 +11,13 @@ class Adios2(CMakePackage):
     developed in the Exascale Computing Program"""
 
     homepage = "https://csmd.ornl.gov/software/adios2"
-    url = "https://github.com/ornladios/ADIOS2/archive/v2.6.0.tar.gz"
+    url = "https://github.com/ornladios/ADIOS2/archive/v2.7.0.tar.gz"
     git = "https://github.com/ornladios/ADIOS2.git"
 
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
     version('master', branch='master')
+    version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
     version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
