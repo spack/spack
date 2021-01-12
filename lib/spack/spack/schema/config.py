@@ -12,6 +12,25 @@ import six
 from llnl.util.lang import union_dicts
 import spack.schema.projections
 
+module_roots = {
+    'module_roots': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'tcl': {'type': 'string'},
+            'lmod': {'type': 'string'},
+            'dotkit': {'type': 'string'},
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'specifying a "dotkit" module root has no '
+                       'effect [support for "dotkit" has been '
+                       'dropped in v0.13.0]',
+            'error': False
+        },
+    },
+}
+
 install_tree = {
     'install_tree': {
         'type': 'object',
@@ -21,6 +40,7 @@ install_tree = {
                 {'type': 'integer', 'minimum': 0},
                 {'type': 'boolean'}]}},
             spack.schema.projections.properties,
+            module_roots,
             {'permissions': {
                 'type': 'object',
                 'additionalProperties': False,

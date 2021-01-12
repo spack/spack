@@ -32,6 +32,7 @@ import spack.architecture
 import spack.config
 import spack.cmd
 import spack.environment as ev
+import spack.modules
 import spack.paths
 import spack.repo
 import spack.store
@@ -482,8 +483,10 @@ def setup_main_options(args):
     # Target different install root here.
     if args.install_root:
         spack.store.install_root = args.install_root
+        spack.modules.common.install_root = args.install_root
     elif args.global_upstream:
-        spack.store.install_root = 'default'
+        spack.store.install_root = 'spack-root'
+        spack.modules.common.install_root = args.install_root
 
     if args.init_upstream:
         spack.store.init_upstream = args.init_upstream
@@ -657,7 +660,7 @@ def print_setup_info(*info):
         'tcl': list(),
         'lmod': list()
     }
-    module_roots = spack.config.get('config:module_roots')
+    module_roots = spack.modules.common.get_roots_dict()
     module_roots = dict(
         (k, v) for k, v in module_roots.items() if k in module_to_roots
     )
