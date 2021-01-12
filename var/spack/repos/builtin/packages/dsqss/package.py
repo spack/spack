@@ -37,10 +37,8 @@ class Dsqss(CMakePackage):
                 force_remove(mfile)
 
     def cmake_args(self):
-        args = []
-        if self.spec.satisfies('+mpi'):
-            args.append('-DENABLE_MPI=ON')
-        else:
-            args.append('-DENABLE_MPI=OFF')
+        args = [
+            self.define_from_variant('ENABLE_MPI', 'mpi')
+        ]
 
         return args
