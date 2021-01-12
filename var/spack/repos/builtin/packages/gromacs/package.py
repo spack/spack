@@ -61,7 +61,7 @@ class Gromacs(CMakePackage):
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencl', default=False, description='Enable OpenCL support')
-    #variant('sycl', default=False, description='Enable SYCL support') #TODO
+    variant('sycl', default=False, description='Enable SYCL support')
     variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
@@ -101,7 +101,7 @@ class Gromacs(CMakePackage):
     depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
-    #depends_on('sycl', when='+sycl') # TODO
+    depends_on('sycl', when='+sycl')
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
