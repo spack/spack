@@ -12,9 +12,9 @@ class PyFilterpy(PythonPackage):
     in Python."""
 
     homepage = "https://github.com/rlabbe/filterpy/"
-    url      = "https://github.com/rlabbe/filterpy/archive/1.4.5.tar.gz"
+    url = "https://pypi.io/packages/source/f/filterpy/filterpy-1.4.5.zip"
 
-    version('1.4.5', sha256='fc371ad800ca5a5ff8b8352894a09c353b794ccc8b813c03d5187df451ccef3a')
+    version('1.4.5', sha256='4f2a4d39e4ea601b9ab42b2db08b5918a9538c168cff1c6895ae26646f3d73b1')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
