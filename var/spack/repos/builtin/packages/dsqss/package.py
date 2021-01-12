@@ -30,6 +30,9 @@ class Dsqss(CMakePackage):
 
     extends('python')
 
+    # Built-in tests are stored as JSON files.
+    # The archive contains "resource fork" files such as "._dimer_1.json".
+    # In Linux, the test system tried to test "._dimer_1.json" and failed.
     @run_before('cmake')
     def rm_macos(self):
         if sys.platform != 'darwin':
