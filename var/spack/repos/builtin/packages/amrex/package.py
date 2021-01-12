@@ -121,7 +121,7 @@ class Amrex(CMakePackage, CudaPackage):
             url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
         return url.format(version.dotted)
 
-    def get_cuda_arch_string(values):
+    def get_cuda_arch_string(self, values):
         if 'none' in values:
             return('Auto')
         else:
@@ -160,8 +160,8 @@ class Amrex(CMakePackage, CudaPackage):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
 
         if '+cuda' in self.spec:
-            cuda_arch = spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH=' + get_cuda_arch_string(cuda_arch))
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
 
@@ -197,7 +197,7 @@ class Amrex(CMakePackage, CudaPackage):
             args.append('-DAMReX_GPU_BACKEND=CUDA')
             args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
             args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
-            cuda_arch = spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH=' + get_cuda_arch_string(cuda_arch))
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
