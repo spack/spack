@@ -679,6 +679,7 @@ def star(func):
         return func(*args)
     return _wrapper
 
+
 class Devnull(object):
     """Null stream with less overhead than ``os.devnull``.
 
