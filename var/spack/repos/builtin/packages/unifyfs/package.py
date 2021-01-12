@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,11 +20,13 @@ class Unifyfs(AutotoolsPackage):
     maintainers = ['CamStan']
 
     version('develop', branch='dev')
+    version('0.9.1', sha256='2498a859cfa4961356fdf5c4c17e3afc3de7e034ad013b8c7145a622ef6199a0')
     version('0.9.0', sha256='e6c73e22ef1c23f3141646aa17058b69c1c4e526886771f8fe982da924265b0f')
 
     variant('auto-mount', default='True', description='Enable automatic mount/unmount in MPI_Init/Finalize')
     variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
     variant('fortran', default='False', description='Build with gfortran support')
+    variant('mdhim', default='False', description='Enable MDHIM build options')
     variant('pmi', default='False', description='Enable PMI2 build options')
     variant('pmix', default='False', description='Enable PMIx build options')
     variant('spath', default='True', description='Use spath library to normalize relative paths')
@@ -36,18 +38,21 @@ class Unifyfs(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     # Required dependencies
-    depends_on('flatcc', when='@:0.9.0')
-    depends_on('gotcha@0.0.2', when='@:0.9.0')
     depends_on('gotcha@1.0.3:', when='@0.9.1:')
-    depends_on('leveldb')
-    depends_on('margo')
-    depends_on('mercury+bmi+sm')
+    depends_on('margo@0.4.3')
+    depends_on('mercury@1.0.1+bmi+sm')
     depends_on('mpi')
     depends_on('openssl')
 
     # Optional dependencies
     depends_on('hdf5', when='+hdf5')
+    depends_on('leveldb', when='@0.9.1:+mdhim')
     depends_on('spath', when='@0.9.1:+spath')
+
+    # Required dependencies for older versions
+    depends_on('flatcc', when='@:0.9.0')
+    depends_on('gotcha@0.0.2', when='@:0.9.0')
+    depends_on('leveldb', when='@:0.9.0')
 
     conflicts('^mercury~bmi')
     conflicts('^mercury~sm')
@@ -93,6 +98,9 @@ class Unifyfs(AutotoolsPackage):
 
         if '+fortran' in spec:
             args.append('--enable-fortran')
+
+        if '+mdhim' in spec:
+            args.append('--enable-mdhim')
 
         if '+pmi' in spec:
             args.append('--enable-pmi')

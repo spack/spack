@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,12 @@ class PyH5py(PythonPackage):
     HDF5 library from Python."""
 
     homepage = "http://www.h5py.org/"
-    url      = "https://pypi.io/packages/source/h/h5py/h5py-2.10.0.tar.gz"
+    pypi     = "h5py/h5py-3.1.0.tar.gz"
     git      = "https://github.com/h5py/h5py.git"
 
-    import_modules = ['h5py', 'h5py._hl']
-
     version('master', branch='master')
+    version('3.1.0', sha256='1e2516f190652beedcb8c7acfa1c6fa92d99b42331cbef5e5c7ec2d65b0fc3c2')
+    version('3.0.0', sha256='7d3803be1b530c68c2955faba726dc0f591079b68941a0c0269b5384a42ab519')
     version('2.10.0', sha256='84412798925dc870ffd7107f045d7659e60f5d46d1c70c700375248bf6bf512d')
     version('2.9.0', sha256='9d41ca62daf36d6b6515ab8765e4c8c4388ee18e2a665701fef2b41563821002')
     version('2.8.0', sha256='e626c65a8587921ebc7fb8d31a49addfdd0b9a9aa96315ea484c09803337b955')
@@ -28,18 +28,23 @@ class PyH5py(PythonPackage):
 
     variant('mpi', default=True, description='Build with MPI support')
 
+    # Python versions
+    depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:')
+
     # Build dependencies
-    depends_on('py-cython@0.23:', type='build')
+    depends_on('py-cython@0.23:', type='build', when='@:2.99')
+    depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:')
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
 
     # Build and runtime dependencies
     depends_on('py-cached-property@1.5:', type=('build', 'run'))
     depends_on('py-numpy@1.7:', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@:2.99')
 
     # Link dependencies
-    depends_on('hdf5@1.8.4:+hl')
+    depends_on('hdf5@1.8.4:1.11+hl', when='@:2.99')
+    depends_on('hdf5@1.8.4:+hl', when='@3.0.0:')
 
     # MPI dependencies
     depends_on('hdf5+mpi', when='+mpi')
@@ -48,10 +53,19 @@ class PyH5py(PythonPackage):
 
     phases = ['configure', 'install']
 
+    def setup_build_environment(self, env):
+        if '+mpi' in self.spec:
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('HDF5_MPI', 'ON')
+            env.set('HDF5_DIR', self.spec['hdf5'].prefix)
+
+    @when('@3.0.0:')
+    def configure(self, spec, prefix):
+        pass
+
+    @when('@:2.99')
     def configure(self, spec, prefix):
         self.setup_py('configure', '--hdf5={0}'.format(spec['hdf5'].prefix),
                       '--hdf5-version={0}'.format(spec['hdf5'].version))
-
         if '+mpi' in spec:
-            env['CC'] = spec['mpi'].mpicc
             self.setup_py('configure', '--mpi')

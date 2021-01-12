@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyTensorboardPluginWit(Package):
        datapoint values. All this and more, in a visual way
        that requires minimal code."""
 
-    homepage = "https://pypi.python.org/project/tensorboard-plugin-wit"
+    homepage = "https://pypi.org/project/tensorboard-plugin-wit/"
     url      = "https://github.com/PAIR-code/what-if-tool/archive/v1.7.0.tar.gz"
     git      = "https://github.com/pair-code/what-if-tool.git"
 
@@ -53,6 +53,12 @@ class PyTensorboardPluginWit(Package):
         filter_file(r'virtualenv venv',
                     '',
                     'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('unset PYTHON_HOME',
+                    'export PYTHONPATH="{0}"'.format(env['PYTHONPATH']),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
+        filter_file('python setup.py',
+                    '{0} setup.py'.format(spec['python'].command.path),
+                    'tensorboard_plugin_wit/pip_package/build_pip_package.sh')
 
     def build(self, spec, prefix):
         tmp_path = env['TEST_TMPDIR']
@@ -60,6 +66,8 @@ class PyTensorboardPluginWit(Package):
               '--nosystem_rc',
               '--output_user_root=' + tmp_path,
               'run',
+              # watch https://github.com/bazelbuild/bazel/issues/7254
+              '--define=EXECUTOR=remote',
               '--verbose_failures',
               '--subcommands=pretty_print',
               'tensorboard_plugin_wit/pip_package:build_pip_package')

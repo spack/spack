@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ class PyPillowBase(PythonPackage):
     """Base class for Pillow and its fork Pillow-SIMD."""
 
     maintainers = ['adamjstewart']
-    import_modules = ['PIL']
 
     provides('pil')
 
@@ -36,9 +35,6 @@ class PyPillowBase(PythonPackage):
     depends_on('python@2.6:2.8,3.2:3.5', when='@2:3',         type=('build', 'run'))
     depends_on('python@2.4:2.7',         when='@:1',          type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest', type='test')
-    depends_on('py-pytest-runner', type='test')
-    depends_on('imagemagick', type='test')
 
     # Optional dependencies
     depends_on('zlib', when='+zlib')
@@ -98,8 +94,6 @@ class PyPillowBase(PythonPackage):
         env.set('MAX_CONCURRENCY', str(make_jobs))
 
     # Tests need to be re-added since `phases` was overridden
-    run_after('build_ext')(
-        PythonPackage._run_default_build_time_test_callbacks)
     run_after('install')(
         PythonPackage._run_default_install_time_test_callbacks)
     run_after('install')(PythonPackage.sanity_check_prefix)
@@ -112,7 +106,7 @@ class PyPillow(PyPillowBase):
     capabilities."""
 
     homepage = "https://python-pillow.org/"
-    url      = "https://pypi.io/packages/source/P/Pillow/Pillow-7.2.0.tar.gz"
+    pypi = "Pillow/Pillow-7.2.0.tar.gz"
 
     version('8.0.0', sha256='59304c67d12394815331eda95ec892bf54ad95e0aa7bc1ccd8e0a4a5a25d4bf3')
     version('7.2.0', sha256='97f9e7953a77d5a70f49b9a48da7776dc51e9b738151b22dacf101641594a626')

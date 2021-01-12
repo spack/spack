@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyLlvmlite(PythonPackage):
     """A lightweight LLVM python binding for writing JIT compilers"""
 
     homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
-    url = "https://pypi.io/packages/source/l/llvmlite/llvmlite-0.23.0.tar.gz"
+    pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
 
     version('0.34.0', sha256='f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63')
     version('0.33.0', sha256='9c8aae96f7fba10d9ac864b443d1e8c7ee4765c31569a2b201b3d0b67d8fc596')

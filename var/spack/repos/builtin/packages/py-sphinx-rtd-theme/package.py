@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,17 +9,17 @@ from spack import *
 class PySphinxRtdTheme(PythonPackage):
     """ReadTheDocs.org theme for Sphinx."""
 
-    homepage = "https://github.com/rtfd/sphinx_rtd_theme/"
-    url      = "https://github.com/readthedocs/sphinx_rtd_theme/archive/0.5.0.tar.gz"
+    homepage = "https://github.com/readthedocs/sphinx_rtd_theme"
+    pypi = "sphinx-rtd-theme/sphinx_rtd_theme-0.5.1.tar.gz"
 
-    import_modules = ['sphinx_rtd_theme']
-
-    version('0.5.0',        sha256='f5c77e9026e2bd0b3d2530f9f8a6681808b216ba70195fe56e7ad89f641ac447')
-    version('0.4.3',        sha256='3412195caad06e4537ad741596d57706c3ed29073d1e0e6b46f25e344d0f393b')
-    version('0.2.5b1',      sha256='31924cdaa5232d1d573423ebebeb1e8f02c8b3cd8cd0662b8a91f3b12efbc12e')
-    version('0.1.10-alpha', sha256='a4c120c0d5c87a2541da9d5e48d3c43b96ea7d7867eacbd5dbf125cdeaa0b4f0')
+    version('0.5.1', sha256='eda689eda0c7301a80cf122dad28b1861e5605cbf455558f3775e1e8200e83a5')
+    version('0.5.0', sha256='22c795ba2832a169ca301cd0a083f7a434e09c538c70beb42782c073651b707d')
+    version('0.4.3', sha256='728607e34d60456d736cc7991fd236afb828b21b82f956c5ea75f94c8414040a')
 
     depends_on('py-setuptools', type='build')
-    depends_on('npm', when='@0.5.0:', type='build')
     depends_on('py-sphinx', when='@0.4.1:', type=('build', 'run'))
-    depends_on('py-pytest', when='@0.5.0:', type='test')
+
+    def setup_build_environment(self, env):
+        # Hack to prevent usage of npm in 0.5+
+        # https://github.com/readthedocs/sphinx_rtd_theme/issues/1014
+        env.set('CI', True)

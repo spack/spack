@@ -1,0 +1,312 @@
+diff -ru spack-src.org/src/common/structures.f90 spack-src/src/common/structures.f90
+--- spack-src.org/src/common/structures.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/common/structures.f90	2020-12-23 09:15:16.693976332 +0900
+@@ -26,6 +26,8 @@
+ #ifdef USE_LIBXC
+ #if XC_MAJOR_VERSION <= 4 
+     use xc_f90_types_m
++#else
++    use iso_c_binding
+ #endif
+     use xc_f90_lib_m
+ #endif
+diff -ru spack-src.org/src/xc/builtin_pbe.f90 spack-src/src/xc/builtin_pbe.f90
+--- spack-src.org/src/xc/builtin_pbe.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/builtin_pbe.f90	2020-12-23 09:15:16.701976046 +0900
+@@ -14,17 +14,34 @@
+ !  limitations under the License.
+ !
+ !-----------------------------------------------------------------------------------------
++#include "config.h"
++#ifdef USE_LIBXC
++#include "xc_version.h"
++#endif
+ module builtin_pbe
+   use salmon_math, only: erfc_salmon
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++  use iso_c_binding
++#endif
++#endif
+   implicit none
+-  
++ 
+   real(8),parameter :: Pi=3.141592653589793d0
+   
+ contains
+   
+   subroutine exc_cor_pbe(nl, rho, grho_s, exc, eexc, vexc, nd, ifdx, ifdy, ifdz, nabx, naby, nabz)
+     implicit none
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++    integer(c_size_t), intent(in) :: nl
++#else
++    integer, intent(in) :: nl
++#endif
++#else
+     integer, intent(in) :: nl
++#endif
+     real(8), intent(in) :: rho(nl), grho_s(nl, 3)
+     real(8), intent(out) :: exc(nl), eexc(nl), vexc(nl)
+     integer, intent(in) :: nd
+diff -ru spack-src.org/src/xc/builtin_pz.f90 spack-src/src/xc/builtin_pz.f90
+--- spack-src.org/src/xc/builtin_pz.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/builtin_pz.f90	2020-12-23 09:15:16.709975759 +0900
+@@ -14,15 +14,28 @@
+ !  limitations under the License.
+ !
+ !-----------------------------------------------------------------------------------------
++#include "config.h"
++#ifdef USE_LIBXC
++#include "xc_version.h"
++#endif
++
+ module builtin_pz
++#if XC_MAJOR_VERSION >= 5
++  use iso_c_binding
++#endif
+   implicit none
++
+   
+ contains
+   
+   
+   subroutine exc_cor_pz(nl, rho_s, exc, eexc, vexc)
+     implicit none
++#if XC_MAJOR_VERSION >= 5
++    integer(c_size_t), intent(in) :: nl
++#else
+     integer, intent(in) :: nl
++#endif
+     real(8), intent(in) :: rho_s(nl)
+     real(8), intent(out) :: exc(nl), eexc(nl), vexc(nl)
+     integer :: i
+diff -ru spack-src.org/src/xc/builtin_pz_sp.f90 spack-src/src/xc/builtin_pz_sp.f90
+--- spack-src.org/src/xc/builtin_pz_sp.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/builtin_pz_sp.f90	2020-12-23 09:15:16.717975473 +0900
+@@ -14,7 +14,16 @@
+ !  limitations under the License.
+ !
+ !-----------------------------------------------------------------------------------------
++#include "config.h"
++#ifdef USE_LIBXC
++#include "xc_version.h"
++#endif
+ module builtin_pz_sp
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++  use iso_c_binding
++#endif
++#endif
+   implicit none
+   
+ contains
+@@ -22,7 +31,15 @@
+   
+   subroutine exc_cor_pz_sp(nl, rho_s, exc, eexc, vexc_s)
+     implicit none
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++    integer(c_size_t), intent(in) :: nl
++#else
+     integer, intent(in) :: nl
++#endif
++#else
++    integer, intent(in) :: nl
++#endif
+     real(8), intent(in) :: rho_s(nl,2)
+     real(8), intent(out) :: exc(nl), eexc(nl), vexc_s(nl,2)
+     integer :: i
+diff -ru spack-src.org/src/xc/builtin_pzm.f90 spack-src/src/xc/builtin_pzm.f90
+--- spack-src.org/src/xc/builtin_pzm.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/builtin_pzm.f90	2020-12-23 09:15:16.722975294 +0900
+@@ -14,14 +14,31 @@
+ !  limitations under the License.
+ !
+ !-----------------------------------------------------------------------------------------
++#include "config.h"
++#ifdef USE_LIBXC
++#include "xc_version.h"
++#endif
+ module builtin_pzm
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++  use iso_c_binding
++#endif
++#endif
+   implicit none
+   
+ contains
+   
+   subroutine exc_cor_pzm(nl, rho_s, exc, eexc, vexc)
+     implicit none
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION >= 5
++    integer(c_size_t), intent(in) :: nl
++#else
+     integer, intent(in) :: nl
++#endif
++#else
++    integer, intent(in) :: nl
++#endif
+     real(8), intent(in) :: rho_s(nl)
+     real(8), intent(out) :: exc(nl), eexc(nl), vexc(nl)
+     integer :: i
+diff -ru spack-src.org/src/xc/builtin_tbmbj.f90 spack-src/src/xc/builtin_tbmbj.f90
+--- spack-src.org/src/xc/builtin_tbmbj.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/builtin_tbmbj.f90	2020-12-23 09:15:16.725975186 +0900
+@@ -14,7 +14,15 @@
+ !  limitations under the License.
+ !
+ !-----------------------------------------------------------------------------------------
++#include "config.h"
++#ifdef USE_LIBXC
++#include "xc_version.h"
++#endif
++
+ module builtin_tbmbj
++#if XC_MAJOR_VERSION >= 5
++  use iso_c_binding
++#endif
+   use salmon_math, only: erfc_salmon
+   implicit none
+   
+@@ -27,7 +35,12 @@
+   subroutine exc_cor_tbmbj(nl, rho, rho_s,  grho_s, lrho_s, tau_s, j_s, cval, eexc, vexc)
+   !subroutine exc_cor_tbmbj(nl, rho, rho_s,  grho_s, lrho_s, tau_s, j_s, cval, eexc, vexc, Hxyz, aLxyz)
+     implicit none
++
++#if XC_MAJOR_VERSION >= 5
++    integer(c_size_t), intent(in) :: nl
++#else
+     integer, intent(in) :: nl
++#endif
+     real(8), intent(in) :: rho(nl), rho_s(nl)
+     real(8), intent(in) :: grho_s(nl, 3), lrho_s(nl), tau_s(nl), j_s(nl, 3)
+     real(8), intent(in) :: cval
+diff -ru spack-src.org/src/xc/salmon_xc.f90 spack-src/src/xc/salmon_xc.f90
+--- spack-src.org/src/xc/salmon_xc.f90	2020-07-21 12:08:53.000000000 +0900
++++ spack-src/src/xc/salmon_xc.f90	2020-12-23 09:29:58.603384238 +0900
+@@ -32,6 +32,8 @@
+ #ifdef USE_LIBXC
+ #if XC_MAJOR_VERSION <= 4 
+   use xc_f90_types_m
++#else
++  use iso_c_binding
+ #endif
+   use xc_f90_lib_m
+ #endif
+@@ -631,7 +633,15 @@
+     ! real(8), intent(in), optional :: aLxyz
+     !===============================================================
+ 
++#ifdef USE_LIBXC
++#if XC_MAJOR_VERSION <= 4 
++    integer :: nx, ny, nz, nl
++#else
++    integer(c_size_t) :: nx, ny, nz, nl
++#endif
++#else
+     integer :: nx, ny, nz, nl
++#endif
+ 
+     ! Detect size of 3-dimensional grid
+     if (xc%ispin == 0) then
+@@ -699,9 +709,9 @@
+       real(8) :: vexc_sp_1d(nl,2)
+ 
+       if (xc%ispin == 0) then
+-        rho_s_1d = reshape(rho, (/nl/)) * 0.5
++        rho_s_1d = reshape(rho, (/int(nl)/)) * 0.5
+       else if (xc%ispin == 1) then
+-        rho_s_sp_1d = reshape(rho_s, (/nl,2/))
++        rho_s_sp_1d = reshape(rho_s, (/int(nl),2/))
+       end if
+ 
+ #ifndef SALMON_DEBUG_NEGLECT_NLCC
+@@ -723,20 +733,20 @@
+ 
+       if (xc%ispin == 0) then
+         if (present(vxc)) then
+-           vxc = vxc + reshape(vexc_1d, (/nx, ny, nz/))
++           vxc = vxc + reshape(vexc_1d, (/int(nx), int(ny), int(nz)/))
+         endif
+       else if(xc%ispin == 1) then
+         if (present(vxc_s)) then
+-           vxc_s = vxc_s + reshape(vexc_sp_1d, (/nx, ny, nz,2/))
++           vxc_s = vxc_s + reshape(vexc_sp_1d, (/int(nx), int(ny), int(nz),2/))
+         endif
+       end if
+ 
+       if (present(exc)) then
+-         exc = exc + reshape(exc_1d, (/nx, ny, nz/))
++         exc = exc + reshape(exc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       if (present(eexc)) then
+-         eexc = eexc + reshape(eexc_1d, (/nx, ny, nz/))
++         eexc = eexc + reshape(eexc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       return
+@@ -786,22 +796,22 @@
+       real(8) :: eexc_1d(nl)
+       real(8) :: vexc_1d(nl)
+ 
+-      rho_1d = reshape(rho, (/nl/))
+-      grho_s_1d = reshape(grho(:, :, :, :), (/nl, 3/)) * 0.5
++      rho_1d = reshape(rho, (/int(nl)/))
++      grho_s_1d = reshape(grho(:, :, :, :), (/int(nl), 3/)) * 0.5
+ 
+       call exc_cor_pbe(nl, rho_1d, grho_s_1d, exc_1d, eexc_1d, vexc_1d, &
+       & nd, ifdx, ifdy, ifdz, nabx, naby, nabz)
+ 
+       if (present(vxc)) then
+-         vxc = vxc + reshape(vexc_1d, (/nx, ny, nz/))
++         vxc = vxc + reshape(vexc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       if (present(exc)) then
+-         exc = exc + reshape(exc_1d, (/nx, ny, nz/))
++         exc = exc + reshape(exc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       if (present(eexc)) then
+-         eexc = eexc + reshape(eexc_1d, (/nx, ny, nz/))
++         eexc = eexc + reshape(eexc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       return
+@@ -828,25 +838,25 @@
+       endif
+ #endif
+ 
+-      grho_s_1d = reshape(grho(:, :, :, :), (/nl, 3/)) * 0.5
+-      rlrho_s_1d = reshape(rlrho(:, :, :), (/nl/)) * 0.5
+-      tau_s_1d = reshape(tau(:, :, :), (/nl/)) * 0.5
+-      j_s_1d = reshape(rj(:, :, :, :), (/nl, 3/)) * 0.5
++      grho_s_1d = reshape(grho(:, :, :, :), (/int(nl), 3/)) * 0.5
++      rlrho_s_1d = reshape(rlrho(:, :, :), (/int(nl)/)) * 0.5
++      tau_s_1d = reshape(tau(:, :, :), (/int(nl)/)) * 0.5
++      j_s_1d = reshape(rj(:, :, :, :), (/int(nl), 3/)) * 0.5
+ 
+       !call exc_cor_tbmbj(nl, rho_1d, rho_s_1d,  grho_s_1d, rlrho_s_1d, tau_s_1d, j_s_1d, xc%cval, eexc_1d, vexc_1d, Hxyz, aLxyz)
+       call exc_cor_tbmbj(nl, rho_1d, rho_s_1d,  grho_s_1d, rlrho_s_1d, tau_s_1d, j_s_1d, xc%cval, eexc_1d, vexc_1d)
+ 
+       if (present(vxc)) then
+-        vxc = vxc + reshape(vexc_1d, (/nx, ny, nz/))
++        vxc = vxc + reshape(vexc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       if (present(exc)) then
+         ! NOTE: Take care for "zero-division error"
+-        exc = exc + reshape(eexc_1d, (/nx, ny, nz/)) / rho
++        exc = exc + reshape(eexc_1d, (/int(nx), int(ny), int(nz)/)) / rho
+       endif
+ 
+       if (present(eexc)) then
+-        eexc = eexc + reshape(eexc_1d, (/nx, ny, nz/))
++        eexc = eexc + reshape(eexc_1d, (/int(nx), int(ny), int(nz)/))
+       endif
+ 
+       return

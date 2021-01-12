@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -697,6 +697,9 @@ class Mfem(Package):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    # The files referenced in this patch method do not exist in stable
+    # versions earlier than 4.1.
+    @when('@4.1:')
     def patch(self):
         # Remove the byte order mark since it messes with some compilers
         filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
@@ -720,6 +723,8 @@ class Mfem(Package):
                 sun_comps += ',nvecparallel,nvecmpiplusx'
             else:
                 sun_comps += ',nvecparhyp,nvecparallel'
+        if '+cuda' in self.spec:
+            sun_comps += ',nveccuda'
         return sun_comps
 
     @property

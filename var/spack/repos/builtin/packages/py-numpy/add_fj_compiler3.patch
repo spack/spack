@@ -1,7 +1,7 @@
 diff -urN spack-src.org/numpy/distutils/fcompiler/fj.py spack-src/numpy/distutils/fcompiler/fj.py
 --- spack-src.org/numpy/distutils/fcompiler/fj.py	1970-01-01 09:00:00.000000000 +0900
 +++ spack-src/numpy/distutils/fcompiler/fj.py	2020-11-16 18:30:06.698641953 +0900
-@@ -0,0 +1,38 @@
+@@ -0,0 +1,40 @@
 +from numpy.distutils.fcompiler import FCompiler
 +
 +compilers = ['FJFCompiler']
@@ -34,6 +34,8 @@ diff -urN spack-src.org/numpy/distutils/fcompiler/fj.py spack-src/numpy/distutil
 +        return ['-g']
 +    def runtime_library_dir_option(self, dir):
 +        return '-Wl,-rpath=%s' %dir
++    def get_libraries(self):
++        return ['fj90f', 'fj90i', 'fjsrcinfo']
 +
 +if __name__ == '__main__':
 +    from distutils import log

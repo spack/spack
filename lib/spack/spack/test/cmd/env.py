@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -2160,6 +2160,40 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.mark.regression('20526')
+def test_env_write_only_non_default_nested(tmpdir):
+    # setup an environment file
+    # the environment includes configuration because nested configs proved the
+    # most difficult to avoid writing.
+    filename = 'spack.yaml'
+    filepath = str(tmpdir.join(filename))
+    contents = """\
+env:
+  specs:
+  - matrix:
+    - [mpileaks]
+  packages:
+    mpileaks:
+      compiler: [gcc]
+  view: true
+"""
+
+    # create environment with some structure
+    with open(filepath, 'w') as f:
+        f.write(contents)
+    env('create', 'test', filepath)
+
+    # concretize
+    with ev.read('test') as e:
+        concretize()
+        e.write()
+
+        with open(e.manifest_path, 'r') as f:
+            manifest = f.read()
+
+    assert manifest == contents
 
 
 @pytest.fixture

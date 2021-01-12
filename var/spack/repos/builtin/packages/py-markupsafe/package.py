@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,7 @@ class PyMarkupsafe(PythonPackage):
     Mako templating engine, the Pylons web framework and many more."""
 
     homepage = "http://www.pocoo.org/projects/markupsafe/"
-    url      = "https://pypi.io/packages/source/M/MarkupSafe/MarkupSafe-1.1.1.tar.gz"
-
-    import_modules = ['markupsafe']
+    pypi = "MarkupSafe/MarkupSafe-1.1.1.tar.gz"
 
     version('1.1.1', sha256='29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b')
     version('1.0',   sha256='a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665')
