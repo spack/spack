@@ -1090,3 +1090,11 @@ class TestConcretize(object):
         ).concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('20784')
+    def test_concretization_of_test_dependencies(self):
+        # With clingo we emit dependency_conditions regardless of the type
+        # of the dependency. We need to ensure that there's at least one
+        # dependency type declared to infer that the dependency holds.
+        s = Spec('test-dep-with-imposed-conditions').concretized()
+        assert 'c' not in s
