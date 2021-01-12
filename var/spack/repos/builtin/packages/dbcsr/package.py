@@ -36,8 +36,10 @@ class Dbcsr(CMakePackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
 
-    # we only support specific cuda_archs for which we have parameter files
-    # for optimal kernels
+    # We only support specific cuda_archs for which we have parameter files
+    # for optimal kernels. Note that we don't override the cuda_archs property
+    # from the parent class, since the parent class defines constraints for all
+    # versions. Instead just mark all unsupported cuda archs as conflicting.
     dbcsr_cuda_archs = ('none', '35', '37', '60', '70')
 
     for arch in CudaPackage.cuda_arch_values:
