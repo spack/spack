@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Adios2(CMakePackage):
@@ -210,14 +211,41 @@ class Adios2(CMakePackage):
 
         return args
 
+    @property
+    def libs(self):
+        spec = self.spec
+        libs_to_seek = set()
+
+        if spec.satisfies('@2.6:'):
+            libs_to_seek.add('libadios2_core')
+            libs_to_seek.add('libadios2_c')
+            libs_to_seek.add('libadios2_cxx11')
+            if '+fortran' in spec:
+                libs_to_seek.add('libadios2_fortran')
+
+            if '+mpi' in spec:
+                libs_to_seek.add('libadios2_core_mpi')
+                libs_to_seek.add('libadios2_c_mpi')
+                libs_to_seek.add('libadios2_cxx11_mpi')
+                if '+fortran' in spec:
+                    libs_to_seek.add('libadios2_fortran_mpi')
+
+            if (self.spec.satisfies('@2.7: +shared+hdf5') and
+                    self.spec['hdf5'].satisfies('@1.12:')):
+                libs_to_seek.add('libadios2_h5vol')
+
+        else:
+            libs_to_seek.add('libadios2')
+            if '+fortran' in spec:
+                libs_to_seek.add('libadios2_fortran')
+
+        return find_libraries(list(libs_to_seek), root=self.spec.prefix,
+                              shared=('+shared' in spec), recursive=True)
+
     def setup_run_environment(self, env):
-        # Make sure the libadiso2_h5vol.so plugin in the search path for hdf5
-        # plugins.  Note that we're not actually testing if the vol lib is
-        # found and just assuming it is.  If libadiso2_h5vol.so does not exist
-        # it's certainly an error regardless.  By not guarding with an "if vol"
-        # we help ensure that it doesn't silently break.
-        if (self.spec.satisfies('@2.7: +shared+hdf5') and
-                self.spec['hdf5'].satisfies('@1.12:')):
-            vol = find_libraries('libadios2_h5vol', root=self.spec.prefix,
-                                 recursive=True)
-            env.prepend_path('HDF5_PLUGIN_PATH', vol.directories[0])
+        try:
+            all_libs = self.libs
+            idx = all_libs.basenames.index('libadios2_h5vol.so')
+            env.prepend_path('HDF5_PLUGIN_PATH', os.path.dirname(all_libs[idx]))
+        except ValueError:
+            pass
