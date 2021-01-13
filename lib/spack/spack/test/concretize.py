@@ -1044,7 +1044,7 @@ class TestConcretize(object):
         s = Spec('dep-with-variants-if-develop-root').concretized()
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
 
-    @pytest.mark.regression('20244')
+    @pytest.mark.regression('20244,20736')
     @pytest.mark.parametrize('spec_str,is_external,expected', [
         # These are all externals, and 0_8 is a version not in package.py
         ('externaltool@1.0', True, '@1.0'),
@@ -1056,6 +1056,10 @@ class TestConcretize(object):
         ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
         ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
         ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+        # This uses an external version that meets the condition for
+        # having an additional dependency, but the dependency shouldn't
+        # appear in the answer set
+        ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
@@ -1086,3 +1090,11 @@ class TestConcretize(object):
         ).concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('20784')
+    def test_concretization_of_test_dependencies(self):
+        # With clingo we emit dependency_conditions regardless of the type
+        # of the dependency. We need to ensure that there's at least one
+        # dependency type declared to infer that the dependency holds.
+        s = Spec('test-dep-with-imposed-conditions').concretized()
+        assert 'c' not in s
