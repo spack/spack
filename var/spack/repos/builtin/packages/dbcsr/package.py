@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Dbcsr(CMakePackage, CudaPackage):
+class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     """Distributed Block Compressed Sparse Row matrix library."""
 
     homepage = "https://github.com/cp2k/dbcsr"
@@ -36,10 +36,12 @@ class Dbcsr(CMakePackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
 
-    # We only support specific cuda_archs for which we have parameter files
-    # for optimal kernels. Note that we don't override the cuda_archs property
-    # from the parent class, since the parent class defines constraints for all
-    # versions. Instead just mark all unsupported cuda archs as conflicting.
+    depends_on('hipblas', when='+rocm')
+
+    # We only support specific gpu archs for which we have parameter files
+    # for optimal kernels. Note that we don't override the parent class arch
+    # properties, since the parent class defines constraints for different archs
+    # Instead just mark all unsupported cuda archs as conflicting.
     dbcsr_cuda_archs = ('35', '37', '60', '70')
     cuda_msg = 'dbcsr only supports cuda_arch {0}'.format(dbcsr_cuda_archs)
 
@@ -48,6 +50,20 @@ class Dbcsr(CMakePackage, CudaPackage):
             conflicts('+cuda', when='cuda_arch={0}'.format(arch), msg=cuda_msg)
 
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
+
+    dbcsr_amdgpu_targets = ('gfx906')
+    amd_msg = 'DBCSR only supports amdgpu_target {0}'.format(dbcsr_amdgpu_targets)
+
+    for arch in ROCmPackage.amdgpu_targets:
+        if arch not in dbcsr_amdgpu_targets:
+            conflicts('+rocm', when='amdgpu_target={0}'.format(arch), msg=amd_msg)
+
+    conflicts('+cuda', when='+rocm', msg="CUDA and ROCm are mutually exclusive")
+    conflicts('+rocm', when='@:2.0', msg="ROCm support is available in DBCSR v2.1 and later")
+
+    # Require openmp threading for OpenBLAS by making other options conflict
+    conflicts('^openblas threads=pthreads', when='+openmp')
+    conflicts('^openblas threads=none', when='+openmp')
 
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
@@ -58,28 +74,26 @@ class Dbcsr(CMakePackage, CudaPackage):
         if len(spec.variants['cuda_arch'].value) > 1:
             raise InstallError("dbcsr supports only one cuda_arch at a time")
 
-        if ('+openmp' in self.spec
-            and '^openblas' in self.spec
-            and '^openblas threads=openmp' not in self.spec):
-            raise InstallError(
-                '^openblas threads=openmp required for dbcsr+openmp')
+        if len(spec.variants['amdgpu_target'].value) > 1:
+            raise InstallError("DBCSR supports only one amdgpu_arch at a time")
 
         args = [
             '-DUSE_SMM=%s' % ('libxsmm' if 'smm=libxsmm' in spec else 'blas'),
-            '-DUSE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
-            '-DUSE_OPENMP=%s' % (
-                'ON' if '+openmp' in spec else 'OFF'),
+            self.define_from_variant('USE_MPI', 'mpi'),
+            self.define_from_variant('USE_OPENMP', 'openmp'),
             # C API needs MPI
-            '-DWITH_C_API=%s' % ('ON' if '+mpi' in spec else 'OFF'),
+            self.define_from_variant('WITH_C_API', 'mpi'),
             '-DBLAS_FOUND=true',
             '-DBLAS_LIBRARIES=%s' % (spec['blas'].libs.joined(';')),
             '-DLAPACK_FOUND=true',
             '-DLAPACK_LIBRARIES=%s' % (spec['lapack'].libs.joined(';')),
             '-DWITH_EXAMPLES=ON',
-            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('USE_HIP', 'rocm'),
+            self.define_from_variant('USE_CUDA', 'cuda'),
         ]
 
-        if '+cuda' in self.spec:
+        if self.spec.satisfies('+cuda'):
             cuda_arch = self.spec.variants['cuda_arch'].value[0]
 
             gpuver = {
@@ -94,6 +108,15 @@ class Dbcsr(CMakePackage, CudaPackage):
                 gpuver = 'K20X'
 
             args += ['-DWITH_GPU=%s' % gpuver]
+
+        if self.spec.satisfies('+rocm'):
+            amd_arch = self.spec.variants['amdgpu_target'].value[0]
+
+            gpuver = {
+                'gfx906': 'Mi50'
+            }[amd_arch]
+
+            args += ['-DWITH_GPU={0}'.format(gpuver)]
 
         return args
 
