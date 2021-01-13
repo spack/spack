@@ -52,14 +52,6 @@ class Cp2k(MakefilePackage, CudaPackage):
                          ' and BQB compression'))
     variant('spglib', default=False, description='Enable support for spglib')
 
-    # override cuda_arch from CudaPackage since we only support one arch
-    # at a time and only specific ones for which we have parameter files
-    # for optimal kernels
-    variant('cuda_arch',
-            description='CUDA architecture',
-            default='none',
-            values=('none', '35', '37', '60', '70'),
-            multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
                          ' different GPU models. Enable this when building'
@@ -168,6 +160,19 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('^openblas threads=pthreads', when='+openmp')
 
     conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
+
+    # We only support specific cuda_archs for which we have parameter files
+    # for optimal kernels. Note that we don't override the cuda_archs property
+    # from the parent class, since the parent class defines constraints for all
+    # versions. Instead just mark all unsupported cuda archs as conflicting.
+    dbcsr_cuda_archs = ('35', '37', '60', '70')
+    cuda_msg = 'cp2k only supports cuda_arch {0}'.format(dbcsr_cuda_archs)
+
+    for arch in CudaPackage.cuda_arch_values:
+        if arch not in dbcsr_cuda_archs:
+            conflicts('+cuda', when='cuda_arch={0}'.format(arch), msg=cuda_msg)
+
+    conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     @property
     def makefile_architecture(self):
@@ -448,7 +453,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 cppflags += ['-D__PW_CUDA']
                 libs += ['-lcufft', '-lcublas']
 
-            cuda_arch = spec.variants['cuda_arch'].value
+            cuda_arch = spec.variants['cuda_arch'].value[0]
             if cuda_arch:
                 gpuver = {
                     '35': 'K40',
@@ -581,6 +586,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ]
 
     def build(self, spec, prefix):
+        if len(spec.variants['cuda_arch'].value) > 1:
+            raise InstallError("cp2k supports only one cuda_arch at a time")
+
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
         with spack.util.environment.set_env(PWD=self.build_directory):

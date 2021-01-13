@@ -21,11 +21,6 @@ class Dbcsr(CMakePackage, CudaPackage):
     variant('shared', default=True,  description='Build shared library')
     variant('smm', default='libxsmm', values=('libxsmm', 'blas'),
             description='Library for small matrix multiplications')
-    variant('cuda_arch',
-            description='CUDA architecture',
-            default='none',
-            values=('none', '35', '37', '60', '70'),
-            multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
                          ' different GPU models. Enable this when building'
@@ -41,19 +36,34 @@ class Dbcsr(CMakePackage, CudaPackage):
     depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
 
-    conflicts('+cuda', when='cuda_arch=none')
+    # We only support specific cuda_archs for which we have parameter files
+    # for optimal kernels. Note that we don't override the cuda_archs property
+    # from the parent class, since the parent class defines constraints for all
+    # versions. Instead just mark all unsupported cuda archs as conflicting.
+    dbcsr_cuda_archs = ('35', '37', '60', '70')
+    cuda_msg = 'dbcsr only supports cuda_arch {0}'.format(dbcsr_cuda_archs)
+
+    for arch in CudaPackage.cuda_arch_values:
+        if arch not in dbcsr_cuda_archs:
+            conflicts('+cuda', when='cuda_arch={0}'.format(arch), msg=cuda_msg)
+
+    conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
 
     def cmake_args(self):
+        spec = self.spec
+
+        if len(spec.variants['cuda_arch'].value) > 1:
+            raise InstallError("dbcsr supports only one cuda_arch at a time")
+
         if ('+openmp' in self.spec
             and '^openblas' in self.spec
             and '^openblas threads=openmp' not in self.spec):
             raise InstallError(
                 '^openblas threads=openmp required for dbcsr+openmp')
 
-        spec = self.spec
         args = [
             '-DUSE_SMM=%s' % ('libxsmm' if 'smm=libxsmm' in spec else 'blas'),
             '-DUSE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
@@ -70,7 +80,7 @@ class Dbcsr(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in self.spec:
-            cuda_arch = self.spec.variants['cuda_arch'].value
+            cuda_arch = self.spec.variants['cuda_arch'].value[0]
 
             gpuver = {
                 '35': 'K40',
