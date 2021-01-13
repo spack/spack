@@ -16,7 +16,7 @@ class PyIniconfig(PythonPackage):
     * tested against Python2.4 across to Python3.2, Jython, PyPy
     * maintains order of sections and entries
     * supports multi-line values with or without line-continuations
-    * supports “#” comments everywhere
+    * supports '#' comments everywhere
     * raises errors with proper line-numbers
     * no bells and whistles like automatic substitutions
     * iniconfig raises an Error if two sections have the same name.
