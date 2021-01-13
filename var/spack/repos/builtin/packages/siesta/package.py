@@ -45,6 +45,8 @@ class Siesta(Package):
                           # Intel's mpiifort is not found
                           'MPIFC=%s' % spec['mpi'].mpifc
                           ]
+        if self.spec.satisfies('%gcc'):
+            configure_args.append('FCFLAGS=-ffree-line-length-0')
         for d in ['Obj', 'Obj_trans']:
             with working_dir(d, create=True):
                 sh('../Src/configure', *configure_args)
