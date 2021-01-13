@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Solr(Package):
     url      = "https://archive.apache.org/dist/lucene/solr/7.7.3/solr-7.7.3.tgz"
     list_url = "https://archive.apache.org/dist/lucene/solr"
     list_depth = 1
+
+    depends_on('java', type='run')
 
     version('8.6.0', sha256='4519ccdb531619df770f1065db6adcedc052c7aa94b42806d541966550956aa5')
     version('8.5.2', sha256='c457d6c7243241cad141e1df34c6f669d58a6c60e537f4217d032616dd066dcf')

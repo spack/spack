@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,6 +124,10 @@ class Slepc(Package):
             make('test', parallel=False)
 
         make('install', parallel=False)
+
+    def setup_run_environment(self, env):
+        # set SLEPC_DIR in the module file
+        env.set('SLEPC_DIR', self.prefix)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package

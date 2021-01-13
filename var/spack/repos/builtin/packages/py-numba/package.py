@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyNumba(PythonPackage):
     """NumPy aware dynamic Python compiler using LLVM"""
 
     homepage = "https://numba.pydata.org/"
-    url      = "https://pypi.io/packages/source/n/numba/numba-0.35.0.tar.gz"
+    pypi = "numba/numba-0.35.0.tar.gz"
 
     version('0.50.1', sha256='89e81b51b880f9b18c82b7095beaccc6856fcf84ba29c4f0ced42e4e5748a3a7')
     version('0.48.0', sha256='9d21bc77e67006b5723052840c88cc59248e079a907cc68f1a1a264e1eaba017')

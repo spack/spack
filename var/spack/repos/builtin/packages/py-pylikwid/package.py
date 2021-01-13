@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyPylikwid(PythonPackage):
        prefetchers."""
 
     homepage = "https://github.com/RRZE-HPC/pylikwid"
-    url = "https://pypi.io/packages/source/p/pylikwid/pylikwid-0.4.0.tar.gz"
+    pypi = "pylikwid/pylikwid-0.4.0.tar.gz"
     git = "https://github.com/RRZE-HPC/pylikwid.git"
 
     maintainers = ['TomTheBear']

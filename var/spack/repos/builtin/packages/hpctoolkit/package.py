@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,6 +55,10 @@ class Hpctoolkit(AutotoolsPackage):
     variant('cuda', default=False,
             description='Support CUDA on NVIDIA GPUs (2020.03.01 or later).')
 
+    variant('rocm', default=False,
+            description='Support ROCM on AMD GPUs (develop branch only, '
+            'requires ROCM as external packages.')
+
     boost_libs = (
         '+atomic +chrono +date_time +filesystem +system +thread +timer'
         ' +graph +regex +shared +multithreaded visibility=global'
@@ -83,6 +87,10 @@ class Hpctoolkit(AutotoolsPackage):
     depends_on('papi', when='+papi')
     depends_on('libpfm4', when='~papi')
     depends_on('mpi', when='+mpi')
+
+    depends_on('hip', when='@develop+rocm')
+    depends_on('rocm-dbgapi', when='@develop+rocm')
+    depends_on('roctracer-dev', when='@develop+rocm')
 
     conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
@@ -125,6 +133,13 @@ class Hpctoolkit(AutotoolsPackage):
             args.append('--with-papi=%s' % spec['papi'].prefix)
         else:
             args.append('--with-perfmon=%s' % spec['libpfm4'].prefix)
+
+        if spec.satisfies('@develop+rocm'):
+            args.extend([
+                '--with-rocm-hip=%s'    % spec['hip'].prefix,
+                '--with-rocm-dbgapi=%s' % spec['rocm-dbgapi'].prefix,
+                '--with-rocm-tracer=%s' % spec['roctracer-dev'].prefix,
+            ])
 
         # MPI options for hpcprof-mpi.
         if '+cray' in spec:

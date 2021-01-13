@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -318,7 +318,7 @@ def _skip_if_missing_executables(request):
 # FIXME: The lines below should better be added to a fixture with
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
-spack.architecture.real_platform = spack.architecture.platform
+spack.architecture.real_platform = spack.architecture.platform  # type: ignore
 
 
 def test_platform():
@@ -469,9 +469,8 @@ def mock_uarch_configuration(mock_uarch_json):
         with open(mock_uarch_json) as f:
             return json.load(f)
 
-    targets_json = archspec.cpu.schema.LazyDictionary(load_json)
-    targets = archspec.cpu.microarchitecture.LazyDictionary(
-        archspec.cpu.microarchitecture._known_microarchitectures)
+    targets_json = load_json()
+    targets = archspec.cpu.microarchitecture._known_microarchitectures()
 
     yield targets_json, targets
 
@@ -1238,7 +1237,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}
+    versions = {}  # type: ignore
 
 
 @pytest.fixture

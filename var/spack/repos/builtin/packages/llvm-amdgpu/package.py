@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,10 +12,11 @@ class LlvmAmdgpu(CMakePackage):
        optimizers, and run-time environments."""
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-3.10.0.tar.gz"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69')
     version('3.10.0', sha256='8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370')
     version('3.9.0', sha256='1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1')
     version('3.8.0', sha256='93a28464a4d0c1c9f4ba55e473e5d1cde4c5c0e6d087ec8a0a3aef1f5f5208e8')
@@ -24,12 +25,15 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
+    variant('openmp', default=True, description='Enable OpenMP')
+
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
     depends_on('python', type='build')
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
+    depends_on('libelf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
@@ -42,8 +46,18 @@ class LlvmAmdgpu(CMakePackage):
     install_targets = ['clang-tidy', 'install']
 
     def cmake_args(self):
+        llvm_projects = [
+            'clang',
+            'lld',
+            'clang-tools-extra',
+            'compiler-rt'
+        ]
+
+        if '+openmp' in self.spec:
+            llvm_projects.append('openmp')
+
         args = [
-            '-DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra;compiler-rt',
+            '-DLLVM_ENABLE_PROJECTS={0}'.format(';'.join(llvm_projects)),
             '-DLLVM_ENABLE_ASSERTIONS=1'
         ]
 

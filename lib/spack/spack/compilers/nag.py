@@ -1,17 +1,19 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from typing import List  # novm
 
 import spack.compiler
 
 
 class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = []
+    cc_names = []  # type: List[str]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []
+    cxx_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ['nagfor']

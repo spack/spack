@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PySetproctitle(PythonPackage):
     displayed by system tools such as ps and top)."""
 
     homepage = "https://github.com/dvarrazzo/py-setproctitle"
-    url      = "https://pypi.io/packages/source/s/setproctitle/setproctitle-1.1.10.tar.gz"
+    pypi = "setproctitle/setproctitle-1.1.10.tar.gz"
 
     version('1.1.10', sha256='6283b7a58477dd8478fbb9e76defb37968ee4ba47b05ec1c053cb39638bd7398')
 

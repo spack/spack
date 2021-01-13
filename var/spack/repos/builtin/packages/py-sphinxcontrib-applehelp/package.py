@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,11 @@ class PySphinxcontribApplehelp(PythonPackage):
     help books."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-applehelp/sphinxcontrib-applehelp-1.0.1.tar.gz"
+    pypi = "sphinxcontrib-applehelp/sphinxcontrib-applehelp-1.0.1.tar.gz"
+
+    # Sphinx requires sphinxcontrib-applehelp at build-time, but
+    # sphinxcontrib-applehelp requires sphinx at run-time
+    import_modules = []
 
     version('1.0.1', sha256='edaa0ab2b2bc74403149cb0209d6775c96de797dfd5b5e2a71981309efab3897')
 

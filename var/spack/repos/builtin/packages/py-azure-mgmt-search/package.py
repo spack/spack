@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtSearch(PythonPackage):
     """Microsoft Azure Search Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-search/azure-mgmt-search-2.1.0.zip"
+    pypi = "azure-mgmt-search/azure-mgmt-search-2.1.0.zip"
 
     version('2.1.0', sha256='92a40a1a7a9e3a82b6fa302042799e8d5a67d3996c20835af72afc14f1610501')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,8 @@ class Libzmq(AutotoolsPackage):
     url      = "https://github.com/zeromq/libzmq/releases/download/v4.3.2/zeromq-4.3.2.tar.gz"
     git      = "https://github.com/zeromq/libzmq.git"
 
-    version('develop', branch='master')
+    version('master', branch='master')
+    version('4.3.3', sha256='9d9285db37ae942ed0780c016da87060497877af45094ff9e1a1ca736e3875a2')
     version('4.3.2', sha256='ebd7b5c830d6428956b67a0454a7f8cbed1de74b3b01e5c33c5378e22740f763')
     version('4.3.1', sha256='bcbabe1e2c7d0eec4ed612e10b94b112dd5f06fcefa994a0c79a45d835cd21eb')
     version('4.3.0', sha256='8e9c3af6dc5a8540b356697081303be392ade3f014615028b3c896d0148397fd')
@@ -36,6 +37,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
+
+    depends_on('libbsd', type='link', when='@4.3.3:')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -578,10 +578,14 @@ class Concretizer(object):
             True if spec was modified, False otherwise
         """
         # To minimize the impact on performance this function will attempt
-        # to adjust the target only at the very first call. It will just
-        # return False on subsequent calls. The way this is achieved is by
-        # initializing a generator and making this function return the next
-        # answer.
+        # to adjust the target only at the very first call once necessary
+        # information is set. It will just return False on subsequent calls.
+        # The way this is achieved is by initializing a generator and making
+        # this function return the next answer.
+        if not (spec.architecture and spec.architecture.concrete):
+            # Not ready, but keep going because we have work to do later
+            return True
+
         def _make_only_one_call(spec):
             yield self._adjust_target(spec)
             while True:
@@ -619,9 +623,10 @@ class Concretizer(object):
         if PackagePrefs.has_preferred_targets(spec.name):
             default_target = self.target_from_package_preferences(spec)
 
-        if current_target != default_target or \
-            (self.abstract_spec.architecture is not None and
-             self.abstract_spec.architecture.target is not None):
+        if current_target != default_target or (
+                self.abstract_spec and
+                self.abstract_spec.architecture and
+                self.abstract_spec.architecture.concrete):
             return False
 
         try:

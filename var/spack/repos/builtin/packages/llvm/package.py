@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,11 +28,13 @@ class Llvm(CMakePackage, CudaPackage):
 
     # fmt: off
     version('master', branch='master')
+    version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
     version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
     version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
     version('10.0.0', sha256='b81c96d2f8f40dc61b14a167513d87c0d813aae0251e06e11ae8a4384ca15451')
     version('9.0.1', sha256='be7b034641a5fda51ffca7f5d840b1a768737779f75f7c4fd18fe2d37820289a')
     version('9.0.0', sha256='7807fac25330e24e9955ca46cd855dd34bbc9cc4fdba8322366206654d1036f2')
+    version('8.0.1', sha256='5b18f6111c7aee7c0933c355877d4abcfe6cb40c1a64178f28821849c725c841')
     version('8.0.0', sha256='d81238b4a69e93e29f74ce56f8107cbfcf0c7d7b40510b7879e98cc031e25167')
     version('7.1.0', sha256='71c93979f20e01f1a1cc839a247945f556fa5e63abf2084e8468b238080fd839')
     version('7.0.1', sha256='f17a6cd401e8fd8f811fbfbb36dcb4f455f898c9d03af4044807ad005df9f3c0')
@@ -225,6 +227,10 @@ class Llvm(CMakePackage, CudaPackage):
     # merged in llvm-11.0.0_rc2
     patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
 
+    # https://github.com/spack/spack/issues/19908
+    # merged in llvm main prior to 12.0.0
+    patch("llvm_python_path.patch", when="@11.0.0")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
@@ -365,15 +371,23 @@ class Llvm(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
+        python = spec['python']
         cmake_args = [
             "-DLLVM_REQUIRES_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_RTTI:BOOL=ON",
             "-DLLVM_ENABLE_EH:BOOL=ON",
             "-DCLANG_DEFAULT_OPENMP_RUNTIME:STRING=libomp",
-            "-DPYTHON_EXECUTABLE:PATH={0}".format(spec["python"].command.path),
+            "-DPYTHON_EXECUTABLE:PATH={0}".format(python.command.path),
             "-DLIBOMP_USE_HWLOC:BOOL=ON",
             "-DLIBOMP_HWLOC_INSTALL_DIR={0}".format(spec["hwloc"].prefix),
         ]
+
+        if python.version >= Version("3.0.0"):
+            cmake_args.append("-DPython3_EXECUTABLE={0}".format(
+                              python.command.path))
+        else:
+            cmake_args.append("-DPython2_EXECUTABLE={0}".format(
+                              python.command.path))
 
         projects = []
 
@@ -431,8 +445,6 @@ class Llvm(CMakePackage, CudaPackage):
         if "+libcxx" in spec:
             projects.append("libcxx")
             projects.append("libcxxabi")
-            if spec.satisfies("@3.9.0:"):
-                cmake_args.append("-DCLANG_DEFAULT_CXX_STDLIB=libc++")
         if "+mlir" in spec:
             projects.append("mlir")
         if "+internal_unwind" in spec:

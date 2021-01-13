@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyAtropos(PythonPackage):
     reads. It is a fork of the venerable Cutadapt read trimmer."""
 
     homepage = "https://atropos.readthedocs.io"
-    url      = "https://pypi.io/packages/source/a/atropos/atropos-1.1.22.tar.gz"
+    pypi = "atropos/atropos-1.1.22.tar.gz"
     git      = "https://github.com/jdidion/atropos.git"
 
     version('1.1.22', sha256='05e40cb9337421479c692e1154b962fbf811d7939b72c197a024929b7ae88b78')

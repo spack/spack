@@ -49,6 +49,7 @@ packages:
       unwind: [libunwind]
       yacc: [bison, byacc]
       flame: [libflame, amdlibflame]
+      uuid: [util-linux-uuid, libuuid]
     permissions:
       read: world
       write: user

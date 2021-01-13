@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -688,13 +688,14 @@ class TestConcretize(object):
         with pytest.raises(spack.error.SpackError):
             Spec(spec).concretized()
 
+    # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7', 'core2'),
-        ('mpileaks%gcc@4.8', 'haswell'),
-        ('mpileaks%gcc@5.3.0', 'broadwell'),
-        ('mpileaks%apple-clang@5.1.0', 'x86_64')
+        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
+        ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
+        ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
     ])
-    @pytest.mark.regression('13361')
+    @pytest.mark.regression('13361', '20537')
     def test_adjusting_default_target_based_on_compiler(
             self, spec, best_achievable, current_host, mock_targets
     ):
@@ -1043,7 +1044,7 @@ class TestConcretize(object):
         s = Spec('dep-with-variants-if-develop-root').concretized()
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
 
-    @pytest.mark.regression('20244')
+    @pytest.mark.regression('20244,20736')
     @pytest.mark.parametrize('spec_str,is_external,expected', [
         # These are all externals, and 0_8 is a version not in package.py
         ('externaltool@1.0', True, '@1.0'),
@@ -1055,6 +1056,10 @@ class TestConcretize(object):
         ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
         ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
         ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+        # This uses an external version that meets the condition for
+        # having an additional dependency, but the dependency shouldn't
+        # appear in the answer set
+        ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
@@ -1085,3 +1090,11 @@ class TestConcretize(object):
         ).concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('20784')
+    def test_concretization_of_test_dependencies(self):
+        # With clingo we emit dependency_conditions regardless of the type
+        # of the dependency. We need to ensure that there's at least one
+        # dependency type declared to infer that the dependency holds.
+        s = Spec('test-dep-with-imposed-conditions').concretized()
+        assert 'c' not in s

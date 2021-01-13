@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,8 +119,6 @@ so ``PerlPackage`` contains:
 .. code-block:: python
 
    extends('perl')
-
-   depends_on('perl', type=('build', 'run'))
 
 
 If your package requires a specific version of Perl, you should

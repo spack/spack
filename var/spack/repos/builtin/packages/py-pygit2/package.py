@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPygit2(PythonPackage):
     """
 
     homepage = "http://www.pygit2.org/"
-    url      = "https://pypi.io/packages/source/p/pygit2/pygit2-0.24.1.tar.gz"
+    pypi = "pygit2/pygit2-0.24.1.tar.gz"
 
     version('0.24.1', sha256='4d1d0196b38d6012faf0a7c45e235c208315672b6035da504566c605ba494064')
 

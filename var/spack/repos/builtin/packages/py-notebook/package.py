@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyNotebook(PythonPackage):
     """Jupyter Interactive Notebook"""
 
     homepage = "https://github.com/jupyter/notebook"
-    url      = "https://pypi.io/packages/source/n/notebook/notebook-6.1.4.tar.gz"
+    pypi = "notebook/notebook-6.1.4.tar.gz"
 
     version('6.1.4', sha256='687d01f963ea20360c0b904ee7a37c3d8cda553858c8d6e33fd0afd13e89de32')
     version('6.0.3', sha256='47a9092975c9e7965ada00b9a20f0cf637d001db60d241d479f53c0be117ad48')

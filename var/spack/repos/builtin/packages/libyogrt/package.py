@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,12 +34,10 @@ class Libyogrt(AutotoolsPackage):
     variant('scheduler', default='system',
             description="Select scheduler integration",
             values=['system', 'slurm'], multi=False)
-    depends_on('slurm', when='scheduler=slurm')
-
-    conflicts('scheduler=lsf', when='@:1.22')
-
     variant('static', default='False',
             description="build static library")
+
+    depends_on('slurm', when='scheduler=slurm')
 
     def url_for_version(self, version):
         if version < Version(1.21):
