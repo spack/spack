@@ -33,7 +33,7 @@ class Cpmd(MakefilePackage):
     def edit(self, spec, prefix):
         # patch configure file
         cbase = 'LINUX-GFORTRAN'
-        cp = join_path('configure', cbase)
+        cp = FileFilter(join_path('configure', cbase))
         # Compilers
         if spec.satisfies('+mpi'):
             fc = spec["mpi"].mpifc
@@ -42,35 +42,34 @@ class Cpmd(MakefilePackage):
             fc = spack_fc
             cc = spack_cc
 
-        filter_file('FC=.+', 'FC=\'{0}\''.format(fc), cp)
-        filter_file('CC=.+', 'CC=\'{0}\''.format(cc), cp)
-        filter_file('LD=.+', 'LD=\'{0}\''.format(fc), cp)
+        cp.filter('FC=.+', 'FC=\'{0}\''.format(fc))
+        cp.filter('CC=.+', 'CC=\'{0}\''.format(cc))
+        cp.filter('LD=.+', 'LD=\'{0}\''.format(fc))
 
         # MPI flag
         if spec.satisfies('+mpi'):
-            filter_file('-D__Linux', '-D__Linux -D__PARALLEL', cp)
+            cp.filter('-D__Linux', '-D__Linux -D__PARALLEL')
 
         # OMP flag
         if spec.satisfies('+omp'):
-            filter_file('-fopenmp', self.compiler.openmp_flag, cp)
+            cp.filter('-fopenmp', self.compiler.openmp_flag)
 
         # lapack
-        filter_file(
+        cp.filter(
             'LIBS=.+',
-            'LIBS=\'{0}\''.format(spec['lapack'].libs.ld_flags),
-            cp
+            'LIBS=\'{0}\''.format(spec['lapack'].libs.ld_flags)
         )
 
         # LFLAGS
-        filter_file('\'-static \'', '', cp)
+        cp.filter('\'-static \'', '')
 
         # Compiler specific
         if spec.satisfies('%fj'):
-            filter_file('-ffixed-form', '-Fixed', cp)
-            filter_file('-ffree-line-length-none', '', cp)
-            filter_file('-falign-commons', '-Kalign_commons', cp)
+            cp.filter('-ffixed-form', '-Fixed')
+            cp.filter('-ffree-line-length-none', '')
+            cp.filter('-falign-commons', '-Kalign_commons')
             if spec.satisfies('+omp'):
-                filter_file('LFLAGS=\$', 'LFLAGS=\'-Nlibomp \'$', cp)
+                cp.filter('LFLAGS=\$', 'LFLAGS=\'-Nlibomp \'$')
 
         # create Makefile
         bash = which('bash')
@@ -84,8 +83,18 @@ class Cpmd(MakefilePackage):
     def test_h2o(self):
         tpath = join_path(os.path.dirname(__file__), "test")
         tfile = join_path(tpath, '1-h2o-pbc-geoopt.inp')
-        cpmdexe = Executable(join_path('bin', 'cpmd.x'))
-        cpmdexe(tfile, tpath)
+        if self.spec.satisfies('+mpi'):
+            mpirun = os.getenv('MPIRUN')
+            if mpirun is None:
+                mpirun = 'mpirun'
+            mpipath = os.path.join(self.spec['mpi'].prefix.bin, mpirun)
+            if not os.path.exists(mpipath):
+                raise InstallError('mpirun not found; define MPIRUN env.')
+            mpiexec = Executable(mpipath)
+            mpiexec('-n', '2', join_path('bin', 'cpmd.x'), tfile, tpath)
+        else:
+            cpmdexe = Executable(join_path('bin', 'cpmd.x'))
+            cpmdexe(tfile, tpath)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
