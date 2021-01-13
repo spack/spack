@@ -36,7 +36,7 @@ class IntelXed(Package):
             description='Compile with position independent code.')
 
     # The current mfile uses python3 by name.
-    depends_on('python+pythoncmd@3.4:', type='build')
+    depends_on('python@3.4:', type='build')
 
     conflicts('target=ppc64:', msg='intel-xed only runs on x86')
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
