@@ -116,7 +116,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
                 'gfx906': 'Mi50'
             }[amd_arch]
 
-            args.append('-DWITH_GPU={0}'.format(gpuver))
+            args += ['-DWITH_GPU={0}'.format(gpuver)]
 
         return args
 
