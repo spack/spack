@@ -332,11 +332,12 @@ class PyclingoDriver(object):
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
-        solve_result = self.control.solve(
-            assumptions=self.assumptions,
-            on_model=on_model,
-            on_core=cores.append
-        )
+        solve_kwargs = {"assumptions": self.assumptions,
+                        "on_model": on_model,
+                        "on_core": cores.append}
+        if clingo_cffi:
+            solve_kwargs["on_unsat"] = cores.append
+        solve_result = self.control.solve(**solve_kwargs)
         timer.phase("solve")
 
         # once done, construct the solve result
