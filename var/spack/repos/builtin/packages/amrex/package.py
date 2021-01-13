@@ -127,7 +127,7 @@ class Amrex(CMakePackage, CudaPackage):
         else:
             # Use format x.y instead of CudaPackage xy format
             vf = tuple(float(x) / 10.0 for x in values)
-            return(';'.join(str(x) for x in vf))
+            return ';'.join(str(x) for x in vf)
 
     #
     # For versions <= 20.11
