@@ -52,7 +52,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     dbcsr_amdgpu_targets = ('gfx906')
-    amd_msg = 'dbcsr only supports cuda_arch {0}'.format(dbcsr_amdgpu_targets)
+    amd_msg = 'DBCSR only supports amdgpu_target {0}'.format(dbcsr_amdgpu_targets)
 
     for arch in ROCmPackage.amdgpu_targets:
         if arch not in dbcsr_amdgpu_targets:
