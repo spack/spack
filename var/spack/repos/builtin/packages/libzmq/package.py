@@ -38,6 +38,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
 
+    depends_on('libbsd', type='link', when='@4.3.3:')
+
     conflicts('%gcc@8:', when='@:4.2.2')
 
     def url_for_version(self, version):
