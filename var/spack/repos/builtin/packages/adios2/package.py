@@ -17,6 +17,7 @@ class Adios2(CMakePackage):
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
     version('master', branch='master')
+    version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
     version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
     version('2.4.0', sha256='50ecea04b1e41c88835b4b3fd4e7bf0a0a2a3129855c9cc4ba6cf6a1575106e2')
@@ -208,3 +209,15 @@ class Adios2(CMakePackage):
                         % spec['python'].command.path)
 
         return args
+
+    def setup_run_environment(self, env):
+        # Make sure the libadiso2_h5vol.so plugin in the search path for hdf5
+        # plugins.  Note that we're not actually testing if the vol lib is
+        # found and just assuming it is.  If libadiso2_h5vol.so does not exist
+        # it's certainly an error regardless.  By not guarding with an "if vol"
+        # we help ensure that it doesn't silently break.
+        if (self.spec.satisfies('@2.7: +shared+hdf5') and
+                self.spec['hdf5'].satisfies('@1.12:')):
+            vol = find_libraries('libadios2_h5vol', root=self.spec.prefix,
+                                 recursive=True)
+            env.prepend_path('HDF5_PLUGIN_PATH', vol.directories[0])
