@@ -74,7 +74,7 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             raise InstallError("dbcsr supports only one cuda_arch at a time")
 
         if len(spec.variants['amdgpu_target'].value) > 1:
-            raise InstallError("dbcsr supports only one amdgpu_arch at a time")
+            raise InstallError("DBCSR supports only one amdgpu_arch at a time")
 
         args = [
             '-DCMAKE_VERBOSE_MAKEFILE=ON',
