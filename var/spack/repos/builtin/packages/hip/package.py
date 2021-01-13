@@ -51,6 +51,9 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2141
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@:3.9.0')
 
+    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
+    patch('0003-Improve-compilation-without-git-repo.patch', when='@4.0.0:')
+
     def get_rocm_prefix_info(self):
         # External packages in Spack do not currently contain dependency
         # information. External installations of hip therefore must compute
