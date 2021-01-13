@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,11 @@ class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://pytest.org/"
-    pypi = "pytest/pytest-5.2.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/pytest/pytest-5.2.1.tar.gz"
 
+    import_modules = ['pytest']
+
+    version('6.1.1', sha256='8f593023c1a0f916110285b6efd7f99db07d59546e3d8c36fc60e2ab05d3be92')
     version('5.3.4', sha256='1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600')
     version('5.2.1', sha256='ca563435f4941d0cb34767301c27bc65c510cb82e90b9ecf9cb52dc2c63caaa0')
     version('5.1.1', sha256='c3d5020755f70c82eceda3feaf556af9a341334414a8eca521a18f463bcead88')
@@ -37,7 +40,8 @@ class PyPytest(PythonPackage):
     depends_on('py-setuptools@30.3:', when='@3.9.0:3.9.1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', when='@3.1:', type='build')
-    depends_on('py-py@1.5.0:', when='@3.3:', type=('build', 'run'))
+    depends_on('py-py@1.8.2:', when='@:6.0.0', type=('build', 'run'))
+    depends_on('py-py@1.5.0:', when='@3.3:6.0', type=('build', 'run'))
     depends_on('py-py@1.4.33:', when='@3.1.2:3.2.3,3.2.5:3.2.999', type=('build', 'run'))
     depends_on('py-py@1.4.33:1.4.999', when='@3.2.4', type=('build', 'run'))
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
@@ -62,3 +66,5 @@ class PyPytest(PythonPackage):
     depends_on('py-importlib-metadata@0.12:', when='@4.6:5.0', type=('build', 'run'))
     depends_on('py-importlib-metadata@0.12:', when='@5.1: ^python@:3.7', type=('build', 'run'))
     depends_on('py-wcwidth', when='@4.5:', type=('build', 'run'))
+    depends_on('py-iniconfig', when='@5.0:', type=('build', 'run'))
+    depends_on('py-toml', when='@5.0:', type=('build', 'run'))
