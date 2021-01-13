@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import glob
 
 
 class Cpmd(MakefilePackage):
@@ -14,11 +15,9 @@ class Cpmd(MakefilePackage):
 
     homepage = "https://www.cpmd.org/wordpress/"
     url = "file://{0}/cpmd-v4.3.tar.gz".format(os.getcwd())
+    basedir = os.getcwd()
 
     version('4.3', sha256='4f31ddf045f1ae5d6f25559d85ddbdab4d7a6200362849df833632976d095df4')
-
-    # Patch to ver4624
-    patch('cpmd_4624.patch', when='@4.3')
 
     variant('omp', description='Enables the use of OMP instructions',
             default=False)
@@ -31,6 +30,12 @@ class Cpmd(MakefilePackage):
     conflicts('^openblas threads=pthreads', when='+omp')
 
     def edit(self, spec, prefix):
+        # Apply patch files
+        patches = sorted(glob.glob(join_path(self.basedir, 'patch.to.*')))
+        patchexe = which("patch", required=True)
+        for pf in patches:
+            patchexe('-s', '-p', '0', '-i', pf, "-d", '.')
+
         # patch configure file
         cbase = 'LINUX-GFORTRAN'
         cp = FileFilter(join_path('configure', cbase))
