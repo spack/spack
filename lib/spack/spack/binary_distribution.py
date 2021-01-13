@@ -1183,8 +1183,8 @@ def relocate_package(spec, allow_root):
         # relocate the install prefixes in binary files including dependencies
         relocate.relocate_text_bin(files_to_relocate, prefix_to_prefix_bin)
 
-# If we are installing back to the same location
-# relocate the sbang location if the spack directory changed
+    # If we are installing back to the same location
+    # relocate the sbang location if the spack directory changed
     else:
         if old_spack_prefix != new_spack_prefix:
             relocate.relocate_text(text_names, prefix_to_prefix_text)
