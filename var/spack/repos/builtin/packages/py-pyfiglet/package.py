@@ -12,7 +12,7 @@ class PyPyfiglet(PythonPackage):
         art font."""
 
     homepage = "https://github.com/pwaller/pyfiglet"
-    url      = "https://pypi.io/packages/source/p/pyfiglet/pyfiglet-0.7.tar.gz"
+   pypi = "pyfiglet/pyfiglet-0.7.tar.gz"
 
     version('0.8.post1', sha256='c6c2321755d09267b438ec7b936825a4910fec696292139e664ca8670e103639')
     version('0.8.post0', sha256='2994451ea67c77cd97f81f52087ccae6921d78d9402920995419893a979b5ace')
