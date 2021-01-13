@@ -78,7 +78,6 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             raise InstallError("DBCSR supports only one amdgpu_arch at a time")
 
         args = [
-            '-DCMAKE_VERBOSE_MAKEFILE=ON',
             '-DUSE_SMM=%s' % ('libxsmm' if 'smm=libxsmm' in spec else 'blas'),
             self.define_from_variant('USE_MPI', 'mpi'),
             self.define_from_variant('USE_OPENMP', 'openmp'),
