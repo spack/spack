@@ -861,6 +861,7 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
         tp.terminate()
         tp.join()
 
+
 def is_relocatable(spec):
     """Returns True if an installed spec is relocatable.
 
