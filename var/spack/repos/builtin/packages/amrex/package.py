@@ -123,7 +123,7 @@ class Amrex(CMakePackage, CudaPackage):
 
     def get_cuda_arch_string(self, values):
         if 'none' in values:
-            return('Auto')
+            return 'Auto'
         else:
             # Use format x.y instead of CudaPackage xy format
             vf = tuple(float(x) / 10.0 for x in values)
