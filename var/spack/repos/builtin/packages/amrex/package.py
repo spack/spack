@@ -8,7 +8,7 @@ from spack import *
 
 class Amrex(CMakePackage, CudaPackage):
     """AMReX is a publicly available software framework designed
-    for building massively parallel block- structured adaptive
+    for building massively parallel block-structured adaptive
     mesh refinement (AMR) applications."""
 
     homepage = "https://amrex-codes.github.io/amrex/"
@@ -61,7 +61,7 @@ class Amrex(CMakePackage, CudaPackage):
             description='Build particle classes')
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Debug', 'Release'))
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
@@ -152,8 +152,8 @@ class Amrex(CMakePackage, CudaPackage):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
 
         if '+cuda' in self.spec:
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch == 'none':
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch[0] == 'none':
                 args.append('-DCUDA_ARCH=Auto')
             else:
                 args.append('-DCUDA_ARCH={0}'.format(cuda_arch[0]))
@@ -193,8 +193,8 @@ class Amrex(CMakePackage, CudaPackage):
             args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
             args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
 
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch == 'none':
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch[0] == 'none':
                 args.append('-DAMReX_CUDA_ARCH=Auto')
             else:
                 args.append('-DAMReX_CUDA_ARCH={0}'.format(cuda_arch[0]))
