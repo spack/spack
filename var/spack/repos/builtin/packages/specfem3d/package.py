@@ -29,6 +29,16 @@ class Specfem3d(AutotoolsPackage):
     depends_on('cuda', when='+cuda')
     depends_on('opencl', when='+opencl')
 
+    # When building with the gcc compiler,'Werror' is added to FFLAGS.
+    # In the case of using the gcc compilerand the default simulation
+    # settings, there is the process which always causes
+    # array out-of-bounds reference error, and this is processed as
+    # error instead of warning.
+    # So, temporarily set the gcc compiler as a conflict.
+    # This issue is queried in the following:
+    # https://github.com/geodynamics/specfem3d_globe/issues/717
+    conflicts('@:7.0.2', when='%gcc')
+
     def configure_args(self):
         args = []
 
