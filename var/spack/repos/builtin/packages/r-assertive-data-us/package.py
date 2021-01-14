@@ -9,9 +9,9 @@ from spack import *
 class RAssertiveDataUs(RPackage):
     """assertive.data.us: Assertions to Check Properties of Strings"""
 
-    homepage = "https://cran.r-project.org/package=assertive.data.us"
+    homepage = "https://cloud.r-project.org/package=assertive.data.us"
     url      = "https://cloud.r-project.org/src/contrib/assertive.data.us_0.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertive.data.us"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.data.us"
 
     version('0.0-2', sha256='180e64dfe6339d25dd27d7fe9e77619ef697ef6e5bb6a3cf4fb732a681bdfaad')
 
