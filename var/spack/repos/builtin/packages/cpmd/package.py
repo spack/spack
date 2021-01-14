@@ -31,13 +31,13 @@ class Cpmd(MakefilePackage):
     conflicts('^openblas threads=none', when='+omp')
     conflicts('^openblas threads=pthreads', when='+omp')
 
-    def edit(self, spec, prefix):
-        # Apply patch files
-        patches = sorted(glob.glob(join_path(self.basedir, 'patch.to.*')))
-        patchexe = which("patch", required=True)
-        for pf in patches:
-            patchexe('-s', '-p', '0', '-i', pf, "-d", '.')
+    patch('file://{0}/patch.to.4612'.format(basedir), level = 0, when='@4.3')
+    patch('file://{0}/patch.to.4615'.format(basedir), level = 0, when='@4.3')
+    patch('file://{0}/patch.to.4616'.format(basedir), level = 0, when='@4.3')
+    patch('file://{0}/patch.to.4621'.format(basedir), level = 0, when='@4.3')
+    patch('file://{0}/patch.to.4624'.format(basedir), level = 0, when='@4.3')
 
+    def edit(self, spec, prefix):
         # patch configure file
         cbase = 'LINUX-GFORTRAN'
         cp = FileFilter(join_path('configure', cbase))
@@ -75,8 +75,6 @@ class Cpmd(MakefilePackage):
             cp.filter('-ffixed-form', '-Fixed')
             cp.filter('-ffree-line-length-none', '')
             cp.filter('-falign-commons', '-Kalign_commons')
-            if spec.satisfies('+omp'):
-                cp.filter('LFLAGS=\$', 'LFLAGS=\'-Nlibomp \'$')
 
         # create Makefile
         bash = which('bash')
