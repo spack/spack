@@ -58,7 +58,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         # Copy installed compiler instead of running the installer
         # from shutil import copytree
         # copytree('/opt/intel/oneapi/compiler', join_path(prefix, 'compiler'),
-                 symlinks=True)
+        #         symlinks=True)
 
         rpath = ':'.join(self._ld_library_path())
         patch_dirs = ['compiler/lib/intel64_lin',
@@ -76,3 +76,6 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         env.prepend_path('LIBRARY_PATH', self._join_prefix('lib'))
         for dir in self._ld_library_path():
             env.prepend_path('LD_LIBRARY_PATH', self._join_prefix(dir))
+        env.set('CC', 'icx')
+        env.set('CXX', 'icpx')
+        env.set('FC', 'ifx')
