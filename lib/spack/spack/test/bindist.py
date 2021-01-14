@@ -82,11 +82,12 @@ def mirror_directory_rel(session_mirror_rel):
 
 
 @pytest.fixture(scope='function')
-def fake_mirror(tmpdir):
+def function_mirror(tmpdir):
     mirror_dir = str(tmpdir.join('mirror'))
-    mirror_cmd('add', '--scope', 'site', 'test-mirror', mirror_dir)
+    mirror_cmd('add', '--scope', 'site', 'test-mirror-func',
+               'file://%s' % mirror_dir)
     yield mirror_dir
-    mirror_cmd('rm', '--scope=site', 'test-mirror')
+    mirror_cmd('rm', '--scope=site', 'test-mirror-func')
 
 
 @pytest.fixture(scope='session')
@@ -682,25 +683,27 @@ def test_generate_indices_exception(monkeypatch, capfd):
     assert expect in err
 
 
-@pytest.mark.requires_executables(*args)
-@pytest.mark.disable_clean_stage_check
-@pytest.mark.maybeslow
-@pytest.mark.nomockstage
-@pytest.mark.usefixtures('mutable_config', 'mock_fetch')
-def test_update_sbang(tmpdir, install_mockery, fake_mirror):
+@pytest.mark.usefixtures('mock_fetch')
+def test_update_sbang(tmpdir, install_mockery, function_mirror):
     """
     Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
 
+    # Save the original store and layout before we touch ANYTHING.
+    real_store = spack.store.store
+    real_layout = spack.store.layout
+
+    # Concretize a package with some old-fashioned sbang lines.
     sspec = Spec('old-sbang')
     sspec.concretize()
 
-    mirror_dir = fake_mirror
+    # Need a fake mirror with *function* scope.
+    mirror_dir = function_mirror
 
     # Assumes all commands will concretize sspec the same way.
-    install_cmd(sspec.name)
+    install_cmd('--no-cache', sspec.name)
 
     # Create a buildcache with the installed spec.
     buildcache_cmd('create', '-u', '-a', '-d', mirror_dir,
@@ -712,41 +715,42 @@ def test_update_sbang(tmpdir, install_mockery, fake_mirror):
     # Uninstall the original package.
     uninstall_cmd('-y', '/%s' % sspec.dag_hash())
 
-    # New install tree locations
-    spack.config.set('config:install_tree:root', str(tmpdir.join('newtree')))
+    try:
+        # New install tree locations...
+        # Too fine-grained to do be done in a fixture
+        spack.store.store = spack.store.Store(str(tmpdir.join('newtree')))
+        spack.store.layout = YamlDirectoryLayout(str(tmpdir.join('newtree')),
+                                                 path_scheme=ndef_install_path_scheme)  # noqa: E501
 
-    # Blow away caches
-    sspec._prefix = None
+        # Install package from buildcache
+        buildcache_cmd('install', '-a', '-u', '-f', sspec.name)
 
-    spack.store.store = spack.store._store()
-    spack.store.root = spack.store.store.root
-    spack.store.unpadded_root = spack.store.store.unpadded_root
-    spack.store.db = spack.store.store.db
-    spack.store.layout = spack.store.store.layout
+        # Continue blowing away caches
+        bindist.clear_spec_cache()
+        spack.stage.purge()
 
-    # Install package from buildcache
-    buildcache_cmd('install', '-a', '-u', '-f', sspec.name)
-
-    # Continue blowing away caches
-    bindist.clear_spec_cache()
-    spack.stage.purge()
-
-    # test that the sbang was updated by the move
-    sbang_style_1_expected = '''{0}
+        # test that the sbang was updated by the move
+        sbang_style_1_expected = '''{0}
 #!/usr/bin/env python
 
 {1}
         '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
-    sbang_style_2_expected = '''{0}
+        sbang_style_2_expected = '''{0}
 #!/usr/bin/env python
 
 {1}
         '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
 
-    installed_script_style_1_path = sspec.prefix.bin.join('sbang-style-1.sh')
-    assert sbang_style_1_expected == \
-        open(str(installed_script_style_1_path)).read()
+        installed_script_style_1_path = sspec.prefix.bin.join('sbang-style-1.sh')
+        assert sbang_style_1_expected == \
+            open(str(installed_script_style_1_path)).read()
 
-    installed_script_style_2_path = sspec.prefix.bin.join('sbang-style-2.sh')
-    assert sbang_style_2_expected == \
-        open(str(installed_script_style_2_path)).read()
+        installed_script_style_2_path = sspec.prefix.bin.join('sbang-style-2.sh')
+        assert sbang_style_2_expected == \
+            open(str(installed_script_style_2_path)).read()
+
+        uninstall_cmd('-y', '/%s' % sspec.dag_hash())
+
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
