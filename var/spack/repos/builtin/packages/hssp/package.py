@@ -18,7 +18,7 @@ class Hssp(AutotoolsPackage):
     homepage = "https://github.com/cmbi/hssp"
     url      = "https://github.com/cmbi/hssp/archive/3.0.10.tar.gz"
 
-    version('3.0.10', sha256='b475d6fa62098df0e54c8dbdaa0b32de93bf5a393335f73f9b5a7e95f3090d2a')
+    version('3.0.10', sha256='9b2cba9c498e65fd48730f0fc86ca2b480bf12903a2c131521023f3a161fe870')
     version('3.0.9',  sha256='42a9a93c48d22478212dcaf6ceb3feb64443e4cb2e8cccdd402b47a595d16658')
     version('3.0.8',  sha256='45e316ff2c700f09971027f9e813cf3139d36ab5951d337948fafab53e00d821')
     version('3.0.7',  sha256='eb6c3276eeb1261c55568ebfae301033904fe619d84b380313dbf137a2b06cd1')
