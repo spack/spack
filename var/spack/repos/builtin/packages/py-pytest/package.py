@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,7 @@ class PyPytest(PythonPackage):
     """pytest: simple powerful testing with Python."""
 
     homepage = "http://pytest.org/"
-    url      = "https://pypi.io/packages/source/p/pytest/pytest-5.2.1.tar.gz"
-
-    import_modules = ['pytest']
+    pypi      = "pytest/pytest-5.2.1.tar.gz"
 
     version('6.1.1', sha256='8f593023c1a0f916110285b6efd7f99db07d59546e3d8c36fc60e2ab05d3be92')
     version('5.3.4', sha256='1d122e8be54d1a709e56f82e2d85dcba3018313d64647f38a91aec88c239b600')
