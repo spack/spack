@@ -48,16 +48,17 @@ class PyH5py(PythonPackage):
 
     # MPI dependencies
     depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 
     phases = ['configure', 'install']
 
     def setup_build_environment(self, env):
+        env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         if '+mpi' in self.spec:
             env.set('CC', self.spec['mpi'].mpicc)
             env.set('HDF5_MPI', 'ON')
-            env.set('HDF5_DIR', self.spec['hdf5'].prefix)
 
     @when('@3.0.0:')
     def configure(self, spec, prefix):
