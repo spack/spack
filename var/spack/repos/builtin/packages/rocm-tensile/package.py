@@ -36,34 +36,19 @@ class RocmTensile(CMakePackage):
         # used in Tensile
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver + '+openmp', type='build', when='@' + ver)
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
     depends_on('boost@1.58.0', type=('build', 'link'))
-    depends_on('llvm-openmp', type='build')
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.
     patch('0001-fix-compile-error.patch', when='@3.7.0:3.8.0')
-
-    def patch(self):
-        if '@3.9.0:' in self.spec:
-            kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
-            match = '/usr/lib/x86_64-linux-gnu/libomp.so'
-            substitute = '${OPENMP_LIBRARY}'
-            files = [
-                'Tensile/Source/CMakeLists.txt',
-                'Tensile/Source/client/CMakeLists.txt',
-                'HostLibraryTests/CMakeLists.txt'
-            ]
-            filter_file(match, substitute, *files, **kwargs)
+    patch('0002-require-openmp-when-tensile-use-openmp-is-on.patch', when='@3.9.0:')
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
-        if '@3.9.0:' in self.spec:
-            lib_dir = self.spec['llvm-openmp'].prefix.lib
-            env.prepend_path('LIBRARY_PATH', lib_dir)
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
@@ -77,8 +62,6 @@ class RocmTensile(CMakePackage):
             '-DBoost_USE_STATIC_LIBS=off',
             '-DCMAKE_CXX_FLAGS:String=-I{0}'.format(boost_incl),
             '-DTENSILE_USE_OPENMP=ON',
-            '-DOPENMP_LIBRARY={0}/libomp.so'.format(
-                self.spec['llvm-openmp'].prefix.lib),
             '-DBUILD_WITH_TENSILE_HOST={0}'.format(
                 'ON' if '@3.7.0:' in self.spec else 'OFF'
             )
