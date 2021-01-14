@@ -162,7 +162,7 @@ class Vasp(MakefilePackage):
         if '+cuda' in self.spec:
             make('gpu', 'gpu_ncl')
         else:
-            make()
+            make('std', 'gam', 'ncl')
 
     def install(self, spec, prefix):
         install_tree('bin/', prefix.bin)
