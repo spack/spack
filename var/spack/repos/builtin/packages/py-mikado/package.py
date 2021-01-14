@@ -16,7 +16,7 @@ class PyMikado(PythonPackage):
 
     version('1.2.4', sha256='c0485dba3b7c285599809e058c83f33b5efa9522d20d9f980423410604207f61')
 
-    depends_on('py-wheel@0.28.0:', type=('build', 'run'))
+    depends_on('py-wheel@0.28.0:', type='build')
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-jsonschema', type=('build', 'run'))
     depends_on('py-cython@0.25:', type='build')
@@ -33,8 +33,8 @@ class PyMikado(PythonPackage):
     depends_on('py-python-magic', type=('build', 'run'))
     depends_on('py-drmaa', type=('build', 'run'))
     depends_on('snakemake', type=('build', 'run'))
-    depends_on('py-docutils@0.13.2:', type=('build', 'run'))
-    depends_on('py-tabulate', type=('build', 'run'))
+    depends_on('py-docutils@:0.13.0,0.13.2:', type=('build', 'run'))
     depends_on('py-ujson', type=('build', 'run'))
     depends_on('py-simplejson', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'))
+    depends_on('python@3.4:', type=('build', 'run'))
+    depends_on('py-typing', when='^python@:3.4', type=('build', 'run'))
