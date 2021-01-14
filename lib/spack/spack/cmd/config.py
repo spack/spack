@@ -12,6 +12,7 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import spack.config
 import spack.cmd.common.arguments
+import spack.cmd.common.deployment as deployment
 import spack.schema.env
 import spack.environment as ev
 import spack.schema.packages
@@ -157,6 +158,8 @@ def config_edit(args):
     With no arguments and an active environment, edit the spack.yaml for
     the active environment.
     """
+    deployment.die_if_deployment('config edit')
+
     scope, section = _get_scope_and_section(args)
     if not scope and not section:
         tty.die('`spack config edit` requires a section argument '
@@ -181,6 +184,8 @@ def config_add(args):
     """Add the given configuration to the specified config scope
 
     This is a stateful operation that edits the config files."""
+    deployment.die_if_deployment('config add')
+
     if not (args.file or args.path):
         tty.error("No changes requested. Specify a file or value.")
         setup_parser.add_parser.print_help()
@@ -259,6 +264,8 @@ def config_remove(args):
     """Remove the given configuration from the specified config scope
 
     This is a stateful operation that edits the config files."""
+    deployment.die_if_deployment('config remove')
+
     scope, _ = _get_scope_and_section(args)
 
     path, _, value = args.path.rpartition(':')
