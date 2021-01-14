@@ -395,10 +395,13 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
-def test_relocate_text_bin_raise_if_new_prefix_is_longer():
+def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
     short_prefix = b'/short'
     long_prefix = b'/much/longer'
+    fpath = str(tmpdir.join('fakebin'))
+    with open(fpath, 'w') as f:
+        f.write('/short')
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
         spack.relocate.relocate_text_bin(
-            ['item'], {short_prefix: long_prefix}
+            [fpath], {short_prefix: long_prefix}
         )
