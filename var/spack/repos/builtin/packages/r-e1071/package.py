@@ -7,7 +7,8 @@ from spack import *
 
 
 class RE1071(RPackage):
-    """Misc Functions of the Department of Statistics, Probability Theory Group (Formerly: E1071), TU Wien
+    """Misc Functions of the Department of Statistics, Probability Theory Group
+    (Formerly: E1071), TU Wien
 
     Functions for latent class analysis, short time Fourier transform, fuzzy
     clustering, support vector machines, shortest path computation, bagged
