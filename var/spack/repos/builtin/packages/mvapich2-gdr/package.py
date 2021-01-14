@@ -6,7 +6,6 @@
 import os.path
 import sys
 
-
 class Mvapich2Gdr(AutotoolsPackage):
     """MVAPICH2-GDR is an optimized version of the MVAPICH2 MPI library for
     GPU-enabled HPC and Deep Learning Applications. MVAPICH2-GDR is not
@@ -17,10 +16,12 @@ class Mvapich2Gdr(AutotoolsPackage):
     """
 
     homepage = 'http://mvapich.cse.ohio-state.edu'
-    url      = 'http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.4.tar.gz'
+    # This link isn't real
+    url      = 'file:///home/reifsteck.8/spack_mirror/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
     maintainers = ['nithintsk', 'harisubramoni']
 
+    version('2.3.5', sha256='6586d0e061794f99b9ab0c60e88ff32ed1427927d12472c6696dd910975f7aae')
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
     version('2.3.3', sha256='9b7b5dd235dbf85099fba3b6f1ccb49bb755923efed66ddc335921f44cb1b8a8')
 
@@ -71,11 +72,36 @@ class Mvapich2Gdr(AutotoolsPackage):
         default=False
     )
 
+    variant(
+        'cuda',
+        description='Enable/Disable support for cuda',
+        default=True
+    )
+
+    variant(
+        'rocm',
+        description='Enable/Disable support for ROCM',
+        default=False
+    )
+    conflicts('+rocm', when='@:2.3.4', msg='MVAPICH2-GDR only supports ROCm in version >= 2.3.5')
+    conflicts('+cuda +rocm', msg='MVAPICH2-GDR can only be built with either CUDA or ROCm')
+    conflicts('~cuda ~rocm', msg='MVAPICH2-GDR must be built with either CUDA or ROCm')
+    # conflicts('-cuda -rocm')
+
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
     depends_on('libxml2@2.9.10')
     depends_on('cuda@9.2.88:10.2.89')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
+
+    #ROCm dependencies
+    rocm_variant = '+rocm'
+    rocm_ver = '3.9.0'
+    # depends_on('llvm-amdgpu@' + rocm_ver, when=rocm_variant)
+    # depends_on('rocm-device-libs@' + rocm_ver, when=rocm_variant)
+    # depends_on('rocminfo@' + rocm_ver, when=rocm_variant)
+    # depends_on('hsa-rocr-dev@' + rocm_ver, when=rocm_variant)
+    depends_on('hip@' + rocm_ver, when=rocm_variant)
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
@@ -108,6 +134,14 @@ class Mvapich2Gdr(AutotoolsPackage):
         if '+openacc' in spec:
             opts.append('--enable-openacc')
 
+        if '+cuda' in spec:
+            opts.append('--enable-cuda')
+            opts.append('--with-cuda={0}'.format(spec['cuda'].prefix))
+
+        if '+rocm' in spec:
+            opts.append('--enable-hip=basic')
+            opts.append('--enable-rocm')
+
         # See: http://slurm.schedmd.com/mpi_guide.html#mvapich2
         if 'process_managers=slurm' in spec:
             opts.append('--with-pm=slurm')
@@ -124,12 +158,7 @@ class Mvapich2Gdr(AutotoolsPackage):
                 '--with-pm=hydra',
                 '--with-pbs=/opt/pbs'
             ])
-            if '~mcast' in spec:
-                opts.append('--disable-mcast')
-            if '+core_direct' in spec:
-                opts.append('--with-core-direct')
-            if '+openacc' in spec:
-                opts.append('--enable-openacc')
+           
 
         elif 'process_managers=jsrun' in spec:
             opts.append([
@@ -184,8 +213,7 @@ class Mvapich2Gdr(AutotoolsPackage):
         ]
 
     def configure_args(self):
-        args = ['--enable-cuda',
-                '--disable-hybrid',
+        args = ['--disable-hybrid',
                 '--with-ch3-rank-bits=32',
                 '--disable-gl',
                 '--without-hydra-ckpointlib',
