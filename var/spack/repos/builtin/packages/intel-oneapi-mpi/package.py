@@ -73,8 +73,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self._join_prefix('bin'))
         env.prepend_path('CPATH', self._join_prefix('include'))
-#        env.prepend_path('LIBRARY_PATH', self._join_prefix('lib'))
         for dir in self._library_path():
             env.prepend_path('LIBRARY_PATH', self._join_prefix(dir))
         for dir in self._ld_library_path():
             env.prepend_path('LD_LIBRARY_PATH', self._join_prefix(dir))
+        env.set('I_MPI_CC', 'icx')
+        env.set('I_MPI_CXX', 'icpx')
+        env.set('I_MPI_FC', 'ifx')
