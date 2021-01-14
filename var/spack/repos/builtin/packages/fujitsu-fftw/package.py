@@ -29,10 +29,10 @@ class FujitsuFftw(FftwBase):
     Example : spack install fujitsufftw precision=float
     """
 
-    _name = 'fujitsufftw'
+    _name = 'fujitsu-fftw'
     homepage = "https://github.com/fujitsu/fftw3"
 
-    version('master', git='https://github.com/fujitsu/fftw3.git')
+    version('fj_master', git='https://github.com/fujitsu/fftw3.git')
 
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('openmp', default=True, description="Enable OpenMP support")
