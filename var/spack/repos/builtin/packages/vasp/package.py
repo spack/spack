@@ -18,6 +18,7 @@ class Vasp(MakefilePackage):
     homepage = "http://vasp.at"
     url      = "file://{0}/vasp.5.4.4.pl2.tgz".format(os.getcwd())
 
+    version('6.1.1', sha256='e37a4dfad09d3ad0410833bcd55af6b599179a085299026992c2d8e319bf6927')
     version('5.4.4.pl2', sha256='98f75fd75399a23d76d060a6155f4416b340a1704f256a00146f89024035bc8e')
     version('5.4.4', sha256='5bd2449462386f01e575f9adf629c08cb03a13142806ffb6a71309ca4431cfb3')
 
@@ -116,6 +117,8 @@ class Vasp(MakefilePackage):
                                 '-Dqd_emulate'])
         else:
             cpp_options.append('-DHOST=\\"LinuxGNU\\"')
+        if self.spec.satisfies('@6:'):
+            cpp_options.append('-Dvasp6')
 
         cflags = ['-fPIC', '-DADD_']
         fflags = []
@@ -147,7 +150,7 @@ class Vasp(MakefilePackage):
         if '+vaspsol' in spec:
             cpp_options.append('-Dsol_compat')
 
-        if self.spec.satisfies('%gcc@10:'):
+        if spec.satisfies('%gcc@10:'):
             fflags.append('-fallow-argument-mismatch')
 
         # Finally
