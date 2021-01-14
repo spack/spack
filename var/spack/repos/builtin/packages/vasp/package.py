@@ -76,6 +76,9 @@ class Vasp(MakefilePackage):
         filter_file('^CPP_OPTIONS[ ]{0,}=[ ]{0,}',
                     'CPP_OPTIONS ?= ',
                     'makefile.include')
+        filter_file('^FFLAGS[ ]{0,}=[ ]{0,}',
+                    'FFLAGS ?= ',
+                    'makefile.include')
 
         filter_file('^LIBDIR[ ]{0,}=.*$', '', 'makefile.include')
         filter_file('^BLAS[ ]{0,}=.*$', 'BLAS ?=', 'makefile.include')
@@ -115,6 +118,9 @@ class Vasp(MakefilePackage):
             cpp_options.append('-DHOST=\\"LinuxGNU\\"')
 
         cflags = ['-fPIC', '-DADD_']
+        fflags = []
+        if '%gcc' in spec or '%intel' in spec:
+            fflags.append('-w')
 
         spack_env.set('BLAS', spec['blas'].libs.ld_flags)
         spack_env.set('LAPACK', spec['lapack'].libs.ld_flags)
@@ -141,9 +147,13 @@ class Vasp(MakefilePackage):
         if '+vaspsol' in spec:
             cpp_options.append('-Dsol_compat')
 
+        if self.spec.satisfies('%gcc@10:'):
+            fflags.append('-fallow-argument-mismatch')
+
         # Finally
         spack_env.set('CPP_OPTIONS', ' '.join(cpp_options))
         spack_env.set('CFLAGS', ' '.join(cflags))
+        spack_env.set('FFLAGS', ' '.join(fflags))
 
     def build(self, spec, prefix):
         if '+cuda' in self.spec:
