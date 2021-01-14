@@ -21,7 +21,7 @@ class Mesa18(AutotoolsPackage):
     # whatever version of LLVM you're using.
     git      = "https://gitlab.freedesktop.org/mesa/mesa.git"
 
-    version('18.3.6', tag='mesa-18.3.6', preferred=True)
+    version('18.3.6', tag='mesa-18.3.6', preferred=True, deprecated=True)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
