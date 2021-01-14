@@ -30,6 +30,8 @@
 #        environment: {}
 #        extra_rpaths: []
 #
+#    It is advisable to replace /rocm/ in the paths above with /rocm-version/
+#    and introduce spec version numbers to ensure reproducible results.
 #
 # 2. hip and its dependencies are currently NOT picked up by spack
 #    automatically, and should therefore be added to packages.yaml by hand:
@@ -37,7 +39,7 @@
 #    in packages.yaml:
 #    hip:
 #      externals:
-#      - spec: hip@3.8.20371-d1886b0b
+#      - spec: hip
 #        prefix: /opt/rocm/hip
 #        extra_attributes:
 #          compilers:
@@ -63,6 +65,9 @@
 #            c: /opt/rocm/llvm/bin/clang++
 #            cxx: /opt/rocm/llvm/bin/clang++
 #      buildable: false
+#
+#    It is advisable to replace /rocm/ in the paths above with /rocm-version/
+#    and introduce spec version numbers to ensure reproducible results.
 #
 # 3. In part 2, DO NOT list the path to hsa as /opt/rocm/hsa ! You want spack
 #    to find hsa in /opt/rocm/include/hsa/hsa.h . The directory of
