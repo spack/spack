@@ -7,11 +7,11 @@ from spack import *
 
 
 class PyHatchet(PythonPackage):
-    """Hatchet is an analysis tool for structured tree or graph performance data
-    using an indexed Pandas dataframe."""
+    """Hatchet is a performance tool for analyzing hierarchical performance data
+    using a graph-indexed Pandas dataframe."""
 
-    homepage = "https://github.com/LLNL/hatchet"
-    url      = "https://github.com/LLNL/hatchet/archive/v1.3.0.tar.gz"
+    homepage = "https://github.com/hatchet/hatchet"
+    url      = "https://github.com/hatchet/hatchet/archive/v1.0.0.tar.gz"
 
     maintainers = ["slabasan", "bhatele", "tgamblin"]
 
