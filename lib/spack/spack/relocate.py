@@ -489,9 +489,13 @@ def _replace_prefix_bin(filename, byte_prefixes):
         f.seek(0)
         for orig_bytes, new_bytes in byte_prefixes.items():
             original_data_len = len(data)
-            # Skip this padding hassle if not found
+            # Skip this hassle if not found
             if orig_bytes not in data:
                 continue
+            # We only care about this problem if we are about to replace
+            length_compatible = len(new_bytes) <= len(orig_bytes)
+            if not length_compatible:
+                raise BinaryTextReplaceError(orig_bytes, new_bytes)
             pad_length = len(orig_bytes) - len(new_bytes)
             padding = os.sep * pad_length
             padding = padding.encode('utf-8')
@@ -832,9 +836,6 @@ def relocate_text_bin(binaries, prefixes, concurrency=32):
     byte_prefixes = OrderedDict({})
 
     for orig_prefix, new_prefix in prefixes.items():
-        length_compatible = len(new_prefix) <= len(orig_prefix)
-        if not length_compatible and len(binaries) > 0:
-            raise BinaryTextReplaceError(orig_prefix, new_prefix)
         if orig_prefix != new_prefix:
             if isinstance(orig_prefix, bytes):
                 orig_bytes = orig_prefix
