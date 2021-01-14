@@ -30,14 +30,14 @@ class Specfem3dGlobe(AutotoolsPackage):
     depends_on('opencl', when='+opencl')
 
     # When building with the gcc compiler,'Werror' is added to FFLAGS.
-    # In the case of using the gcc compilerand the default simulation
+    # In the case of using the gcc compiler and the default simulation
     # settings, there is the process which always causes
-    # array out-of-bounds reference error, and this is processed as
-    # error instead of warning.
-    # So, temporarily set the gcc compiler as a conflict.
-    # This issue is queried in the following:
+    # array out-of-bounds reference error.
+    # This issue will be fixed in version 8.0.0,
+    # so, remove '-Werror' when building with gcc compiler
+    # in versions up to 7.0.2 of specfem3d-globe.
     # https://github.com/geodynamics/specfem3d_globe/issues/717
-    conflicts('@:7.0.2', when='%gcc')
+    patch('gcc_rm_werror.patch', when='@:7.0.2%gcc')
 
     def configure_args(self):
         args = []
