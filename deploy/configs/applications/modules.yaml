@@ -52,6 +52,7 @@ modules:
       - psp-validation
       - py-basalt
       - py-bbp-analysis-framework
+      - py-bbp-workflow
       - py-bglibpy
       - py-bluepy
       - py-bluepymm

@@ -43,6 +43,7 @@ spack:
     - psp-validation
     - py-basalt@0.2.9
     - py-bbp-analysis-framework
+    - py-bbp-workflow
     - py-bglibpy%gcc ^neuron%intel
     - py-bluepy
     - py-bluepyefe
