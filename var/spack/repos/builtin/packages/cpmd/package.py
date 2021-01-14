@@ -11,11 +11,13 @@ import glob
 class Cpmd(MakefilePackage):
     """The CPMD code is a parallelized plane wave / pseudopotential
     implementation of Density Functional Theory, particularly
-    designed for ab-initio molecular dynamics."""
+    designed for ab-initio molecular dynamics.
+    Move to new directory, dowonload CPMD main archive and patch.to.XXXXs
+    manually, and run Spack"""
 
     homepage = "https://www.cpmd.org/wordpress/"
-    url = "file://{0}/cpmd-v4.3.tar.gz".format(os.getcwd())
     basedir = os.getcwd()
+    url = "file://{0}/cpmd-v4.3.tar.gz".format(basedir)
 
     version('4.3', sha256='4f31ddf045f1ae5d6f25559d85ddbdab4d7a6200362849df833632976d095df4')
 
