@@ -113,7 +113,9 @@ class Tau(Package):
     #     filter_file(r' -M', r' -Q', 'tools/src/tau_cc.sh')
     #     filter_file(r' -M', r' -Q', 'tools/src/tau_cxx.sh')
 
-    # filter_compiler_wrappers('tau_cc.sh', 'Makefile.tau', relative_root='bin')
+    # filter_compiler_wrappers('tau_cc.sh',
+    #                          'Makefile.tau',
+    #                          relative_root='bin')
 
     # ADIOS2, SQLite only available from 2.29.1 on
     conflicts('+adios2', when='@:2.29.1')
@@ -148,11 +150,13 @@ class Tau(Package):
             if spec.satisfies('%intel'):
                 compiler_options.append('-fortran=intel')
             elif spec.satisfies('%pgi'):
-                # @bbp we don't have pgfortran but fc is set to gfortran in packages.yaml
-                # to compiler mpi libraries
+                # @bbp we don't have pgfortran but fc is set to gfortran
+                # in packages.yaml to compiler mpi libraries
                 pass
             else:
-                compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
+                compiler_options.append(
+                    '-fortran=%s' % self.compiler.fc_names[0]
+                )
         ##########
 
         # on bg-q we dont need compiler names. We also have to set fortran
@@ -348,11 +352,11 @@ class Tau(Package):
                             self.compiler.cxx, self.prefix.lib +
                             "/" + makefile, backup=False, string=True)
 
-    def setup_run_environment(self, env):
+    def get_makefiles(self):
         pattern = join_path(self.prefix.lib, 'Makefile.*')
         return glob.glob(pattern)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         files = self.get_makefiles()
 
         # This function is called both at install time to set up

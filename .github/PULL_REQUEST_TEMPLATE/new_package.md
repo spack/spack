@@ -8,7 +8,8 @@ about: Deploy a new package as a module on BB5
 
 For software developped by BBP:
 
-* [ ] `package@version` has been added into `deploy/packages/bbp-packages.yaml`
+* [ ] `package` (or `package@version` it it should not be automatically
+      updated) has been added into `deploy/environments/applications.yaml`
 * [ ] `package` has been whitelisted in `deploy/configs/applications/modules.yaml`
 
 Otherwise, adjust the mentioned directories accordingly.

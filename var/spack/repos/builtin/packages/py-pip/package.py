@@ -30,6 +30,5 @@ class PyPip(PythonPackage):
     # However, pip requires setuptools during runtime as well.
     depends_on('py-setuptools', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.prepend_path('PATH', self.spec.prefix.bin)
-
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec.prefix.bin)

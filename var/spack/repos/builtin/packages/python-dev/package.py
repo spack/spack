@@ -4,8 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
-import platform
+
 
 class PythonDev(BundlePackage):
     """Meta package to bundle python packages for development"""
@@ -42,7 +41,7 @@ class PythonDev(BundlePackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         deps = ['py-virtualenv', 'py-wheel', 'py-cython', 'py-pyspark']
         for dep in deps:
-            run_env.prepend_path('PATH', self.spec[dep].prefix.bin)
+            env.prepend_path('PATH', self.spec[dep].prefix.bin)

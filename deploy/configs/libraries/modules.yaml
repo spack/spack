@@ -53,6 +53,7 @@ modules:
       'omega-h+gmsh': '{name}/{version}-gmsh'
     all:
       autoload: 'all'
+      load_only_generated: true
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'

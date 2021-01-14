@@ -89,6 +89,7 @@ modules:
       +common: '{name}/{version}-commonmods'
     all:
       autoload: 'all'
+      load_only_generated: true
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'

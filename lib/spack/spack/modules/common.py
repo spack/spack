@@ -417,6 +417,13 @@ class BaseConfiguration(object):
         return projections
 
     @property
+    def load_only_generated(self):
+        """Returns if only generated module files should be loaded as
+        dependencies.
+        """
+        return self.conf.get('load_only_generated', False)
+
+    @property
     def template(self):
         """Returns the name of the template to use for the module file
         or None if not specified in the configuration.
@@ -718,6 +725,7 @@ class BaseContext(tengine.Context):
     def _create_module_list_of(self, what):
         mod = self.conf.module
         kind = mod.__name__.rsplit('.', 1)[-1]
+        validate = self.conf.load_only_generated
         index = dict()
 
         def _load_indices(s):
@@ -729,7 +737,7 @@ class BaseContext(tengine.Context):
                 index.update(ups.get(kind, {}))
 
         def _valid(spec):
-            if spec.external:
+            if spec.external or not validate:
                 return True
             _load_indices(spec)
             if (

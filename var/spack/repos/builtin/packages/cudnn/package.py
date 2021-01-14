@@ -267,5 +267,5 @@ class Cudnn(Package):
                and not os.path.isdir(prefix.include):
                 symlink(target_include, prefix.include)
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
-        spack_env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.lib64)
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('LD_LIBRARY_PATH', self.spec.prefix.lib64)

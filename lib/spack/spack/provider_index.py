@@ -75,7 +75,13 @@ class _IndexBase(object):
                     result.update(spec_set)
 
         # Return providers in order. Defensively copy.
-        return sorted(s.copy() for s in result)
+        try:
+            return sorted(s.copy() for s in result)
+        except TypeError:
+            for res in result:
+                print(res._cmp_key())
+                print(res.copy()._cmp_key())
+            raise
 
     def __contains__(self, name):
         return name in self.providers

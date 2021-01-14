@@ -26,5 +26,5 @@ class Mod2c(CMakePackage):
             options.append('-DCMAKE_BUILD_WITH_INSTALL_RPATH=1')
         return options
 
-    def setup_environment(self, spack_env, run_env):
-        run_env.set('MODLUNIT', join_path(self.prefix, 'share/nrnunits.lib'))
+    def setup_run_environment(self, env):
+        env.set('MODLUNIT', join_path(self.prefix, 'share/nrnunits.lib'))

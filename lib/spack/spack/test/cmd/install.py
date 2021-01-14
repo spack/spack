@@ -399,9 +399,12 @@ def test_junit_output_with_errors(
     content = filename.open().read()
 
     # Count failures and errors correctly: libdwarf _and_ libelf
-    assert 'tests="2"' in content
+    #
+    # BlueBrain: we don't even attempt to build when a dependency fails, so
+    # we observe only one test/error here, rather than two.
+    assert 'tests="1"' in content
     assert 'failures="0"' in content
-    assert 'errors="2"' in content
+    assert 'errors="1"' in content
 
     # We want to have both stdout and stderr
     assert '<system-out>' in content

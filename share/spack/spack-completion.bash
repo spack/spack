@@ -320,7 +320,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env export extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -440,7 +440,7 @@ _spack_buildcache_update_index() {
 _spack_cd() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env --latest"
     else
         _all_packages
     fi
@@ -719,7 +719,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs --test --overwrite -y --yes-to-all -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -815,7 +815,7 @@ _spack_env_st() {
 _spack_env_loads() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
+        SPACK_COMPREPLY="-h --help -m --module-type --input-only -p --prefix -x --exclude --latest -r --dependencies"
     else
         _environments
     fi
@@ -845,6 +845,15 @@ _spack_env_revert() {
         SPACK_COMPREPLY="-h --help -y --yes-to-all"
     else
         _environments
+    fi
+}
+
+_spack_export() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help -f --format -d --dependencies -m --module --scope -v --variants -t --tags --exclude --explicit"
+    else
+        _installed_packages
     fi
 }
 
@@ -1064,7 +1073,7 @@ _spack_load() {
 _spack_location() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env --latest"
     else
         _all_packages
     fi
@@ -1176,7 +1185,7 @@ _spack_module_lmod() {
 _spack_module_lmod_refresh() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --delete-tree --upstream-modules -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --delete-tree --upstream-modules --latest --start-date --end-date -y --yes-to-all"
     else
         _installed_packages
     fi
@@ -1185,7 +1194,7 @@ _spack_module_lmod_refresh() {
 _spack_module_lmod_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --full-path -r --dependencies"
+        SPACK_COMPREPLY="-h --help --full-path --latest -r --dependencies"
     else
         _installed_packages
     fi
@@ -1203,7 +1212,7 @@ _spack_module_lmod_rm() {
 _spack_module_lmod_loads() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude -r --dependencies"
+        SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude --latest -r --dependencies"
     else
         _installed_packages
     fi
@@ -1230,7 +1239,7 @@ _spack_module_tcl() {
 _spack_module_tcl_refresh() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --delete-tree --upstream-modules -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --delete-tree --upstream-modules --latest --start-date --end-date -y --yes-to-all"
     else
         _installed_packages
     fi
@@ -1239,7 +1248,7 @@ _spack_module_tcl_refresh() {
 _spack_module_tcl_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --full-path -r --dependencies"
+        SPACK_COMPREPLY="-h --help --full-path --latest -r --dependencies"
     else
         _installed_packages
     fi
@@ -1257,7 +1266,7 @@ _spack_module_tcl_rm() {
 _spack_module_tcl_loads() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude -r --dependencies"
+        SPACK_COMPREPLY="-h --help --input-only -p --prefix -x --exclude --latest -r --dependencies"
     else
         _installed_packages
     fi
@@ -1467,7 +1476,7 @@ _spack_restage() {
 _spack_setup() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -i --ignore-dependencies -n --no-checksum -v --verbose --clean --dirty"
+        SPACK_COMPREPLY="-h --help -i --ignore-dependencies -n --no-checksum -v --verbose --shebang --clean --dirty"
     else
         _all_packages
     fi
