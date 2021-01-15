@@ -5,7 +5,7 @@
 from spack import *
 
 
-class Kokkos(CMakePackage, CudaPackage):
+class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     """Kokkos implements a programming model in C++ for writing performance
     portable applications targeting all major HPC platforms."""
 
@@ -247,13 +247,12 @@ class Kokkos(CMakePackage, CudaPackage):
             if var in self.spec:
                 options.append("-D%s_DIR=%s" % (tpl, spec[tpl].prefix))
 
-        # we do not need the compiler wrapper from Spack
-        # set the compiler explicitly (may be Spack wrapper or nvcc-wrapper)
-        try:
+        if '+rocm' in self.spec:
+            options.append('-DCMAKE_CXX_COMPILER=%s' %
+                           self.spec['hip'].hipcc)
+        elif '+wrapper' in self.spec:
             options.append("-DCMAKE_CXX_COMPILER=%s" %
                            self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-        except Exception:
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spack_cxx)
 
         # Set the C++ standard to use
         options.append("-DKokkos_CXX_STANDARD=%s" %
