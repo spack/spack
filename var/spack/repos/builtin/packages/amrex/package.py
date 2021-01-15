@@ -59,9 +59,6 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Build data services')
     variant('particles',  default=False,
             description='Build particle classes')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
