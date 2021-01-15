@@ -196,6 +196,8 @@ class Git(AutotoolsPackage):
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
+    variant('svn', default=False,
+            description='Provide SVN Perl dependency in run environment')
 
     depends_on('curl')
     depends_on('expat')
@@ -214,6 +216,7 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
+    depends_on('perl-alien-svn', type='run', when='+svn')
 
     @classmethod
     def determine_version(cls, exe):
