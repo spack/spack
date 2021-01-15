@@ -33,7 +33,11 @@ class Hipblas(CMakePackage):
     def cmake_args(self):
         args = [
             '-DBUILD_CLIENTS_SAMPLES=OFF',
-            '-DBUILD_CLIENTS_TESTS=OFF'
+            '-DBUILD_CLIENTS_TESTS=OFF',
+            # hipblas actually prefers CUDA over AMD GPUs when you have it
+            # installed... got to force it to not find a system CUDA install.
+            # tested on 4.0.0
+            '-DUSE_CUDA=OFF'
         ]
         return args
 
