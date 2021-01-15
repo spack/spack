@@ -114,6 +114,10 @@ class Hip(CMakePackage):
         env.set('ROCMINFO_PATH', rocm_prefixes['rocminfo'])
         env.set('DEVICE_LIB_PATH', rocm_prefixes['device_lib_path'])
         env.set('HIP_PATH', rocm_prefixes['rocm-path'])
+        # this guy is used in comgr, see the following file:
+        # https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
+        # it's necessary on runtime when using hiprtcCreateProgram and such
+        env.set('LLVM_PATH', rocm_prefixes['llvm-amdgpu'])
         env.set('HIPCC_COMPILE_FLAGS_APPEND',
                 '--rocm-path={0}'.format(rocm_prefixes['device_lib_path']))
 
