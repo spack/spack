@@ -16,7 +16,7 @@ class ProcessInProcess(Package):
 
     # PiP version 1 is obsolete
     version('2', branch='pip-2', preferred=True)
-    version('3', branch='pip-3') # experimental
+    version('3', branch='pip-3')  # experimental
 
     conflicts('%gcc@:3', when='os=centos7')
     conflicts('%gcc@5:', when='os=centos7')
