@@ -23,7 +23,7 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
-    version('2021.rc1', sha256='baab9f9c7a659f0777f0ff06866e88685a4b06d22c0f431f5688a9a559f0a1e1')
+    version('2021-rc1', sha256='baab9f9c7a659f0777f0ff06866e88685a4b06d22c0f431f5688a9a559f0a1e1')
     version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
     version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
     version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
@@ -142,12 +142,12 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_HWLOC:BOOL=OFF')
 
-        if version >= Version('2021'):
+        if self.version >= Version('2021'):
             if '+cuda' in self.spec:
                 options.append('-DGMX_GPU:STRING=CUDA')
-            if '+opencl' in self.spec:
+            elif '+opencl' in self.spec:
                 options.append('-DGMX_GPU:STRING=OpenCL')
-            if '+sycl' in self.spec:
+            elif '+sycl' in self.spec:
                 options.append('-DGMX_GPU:STRING=SYCL')
             else:
                 options.append('-DGMX_GPU:STRING=OFF')
