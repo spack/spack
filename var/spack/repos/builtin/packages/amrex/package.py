@@ -114,7 +114,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('cuda_arch=21', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
     conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
-    conflicts('+rocm', when='@:20.11', msg='AMReX Hypre support needs AMReX newer than version 20.11')
+    conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
+    conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
