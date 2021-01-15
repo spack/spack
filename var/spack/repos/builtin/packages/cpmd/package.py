@@ -83,20 +83,19 @@ class Cpmd(MakefilePackage):
         else:
             bash('./configure.sh', cbase)
 
+    def install(self, spec, prefix):
+        install_tree('.', prefix)
+
     def test(self):
         test_dir = self.test_suite.current_test_data_dir
         test_file = join_path(test_dir, '1-h2o-pbc-geoopt.inp')
         opts = []
         if self.spec.satisfies('+mpi'):
-            exe_name = os.path.join(self.spec['mpi'].prefix.bin, 'mpirun')
-            opts.append('-n')
-            opts.append('2')
+            exe_name = join_path(self.spec['mpi'].prefix.bin, 'mpirun')
+            opts.extend(['-n', '2'])
             opts.append(join_path(self.prefix.bin, 'cpmd.x'))
         else:
             exe_name = 'cpmd.x'
         opts.append(test_file)
         opts.append(test_dir)
         self.run_test(exe_name, options=opts)
-
-    def install(self, spec, prefix):
-        install_tree('.', prefix)
