@@ -20,7 +20,8 @@ class Openexr(AutotoolsPackage):
     variant('debug', default=False,
             description='Builds a debug version of the libraries')
 
-    #Added version constraint to cmake in accordance with https://github.com/AcademySoftwareFoundation/openexr/blob/master/INSTALL.md#prerequisites
+    #Added version constraint to cmake in accordance with:
+    #https://github.com/AcademySoftwareFoundation/openexr/blob/master/INSTALL.md
     depends_on('cmake@3.12.0:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('ilmbase')
