@@ -719,7 +719,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
                     'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline),
-                    'SPACK_SPEC_NEEDS_REBUILD': spec_needs_rebuild,
+                    'SPACK_SPEC_NEEDS_REBUILD': str(spec_needs_rebuild),
                 }
 
                 job_dependencies = []

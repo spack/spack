@@ -796,7 +796,7 @@ spack:
                         assert('variables' in the_elt)
                         job_vars = the_elt['variables']
                         assert('SPACK_SPEC_NEEDS_REBUILD' in job_vars)
-                        assert(job_vars['SPACK_SPEC_NEEDS_REBUILD'] is False)
+                        assert(job_vars['SPACK_SPEC_NEEDS_REBUILD'] == 'False')
                         found_spec_job = True
 
                 assert(found_spec_job)
