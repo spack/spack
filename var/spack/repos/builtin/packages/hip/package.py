@@ -52,7 +52,12 @@ class Hip(CMakePackage):
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@:3.9.0')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
-    patch('0003-Improve-compilation-without-git-repo.patch', when='@4.0.0:')
+    patch('0003-Improve-compilation-without-git-repo.3.9.0.patch', when='@3.9.0')
+    patch('0003-Improve-compilation-without-git-repo.4.0.0.patch', when='@4.0.0:')
+
+    # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
+    patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.9.0.patch', when='@3.9.0')
+    patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.4.0.0.patch', when='@4.0.0:')
 
     def get_rocm_prefix_info(self):
         # External packages in Spack do not currently contain dependency
