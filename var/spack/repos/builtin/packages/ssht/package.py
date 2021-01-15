@@ -28,7 +28,3 @@ class Ssht(CMakePackage):
     # version('1.2b1', commit='7378ce8853897cbd1b08adebf7ec088c1e40f860')
 
     depends_on('fftw @3.0.0:')
-
-    def cmake_args(self):
-        args = ["-DCMAKE_BUILD_TYPE=RelWithDebInfo"]
-        return args
