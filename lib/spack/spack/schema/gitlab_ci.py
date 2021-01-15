@@ -65,7 +65,10 @@ runner_selector_schema = {
     'type': 'object',
     'additionalProperties': False,
     'required': ['tags'],
-    'properties': runner_attributes_schema_items,
+    'properties': union_dicts(
+        runner_attributes_schema_items,
+        customizable_job_schema_items
+    ),
 }
 
 #: Properties for inclusion in other schemas
@@ -114,23 +117,11 @@ properties = {
                                     'type': 'string',
                                 },
                             },
-                            'runner-attributes': {
-                                'type': 'object',
-                                'additionalProperties': True,
-                                'required': ['tags'],
-                                'properties': union_dicts(
-                                    runner_attributes_schema_items,
-                                    customizable_job_schema_items
-                                ),
-                            },
+                            'runner-attributes': runner_selector_schema,
                         },
                     },
                 },
                 'enable-artifacts-buildcache': {
-                    'type': 'boolean',
-                    'default': False,
-                },
-                'rebuild-index': {
                     'type': 'boolean',
                     'default': False,
                 },

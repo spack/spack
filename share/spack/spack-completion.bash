@@ -473,7 +473,7 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild"
+        SPACK_COMPREPLY="generate rebuild rebuild-index"
     fi
 }
 
@@ -482,6 +482,10 @@ _spack_ci_generate() {
 }
 
 _spack_ci_rebuild() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_ci_rebuild_index() {
     SPACK_COMPREPLY="-h --help"
 }
 

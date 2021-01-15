@@ -143,7 +143,6 @@ spack:
     nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
-    rebuild-index: true
   cdash:
     build-group: Not important
     url: https://my.fake.cdash
@@ -167,9 +166,8 @@ spack:
                     assert('cmake' in ci_key)
             assert(found_spec)
             assert('stages' in yaml_contents)
-            assert(len(yaml_contents['stages']) == 6)
+            assert(len(yaml_contents['stages']) == 5)
             assert(yaml_contents['stages'][0] == 'stage-0')
-            assert(yaml_contents['stages'][5] == 'stage-rebuild-index')
 
 
 def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
@@ -562,7 +560,6 @@ spack:
     nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
-    rebuild-index: true
 """)
 
     with tmpdir.as_cwd():
@@ -582,7 +579,12 @@ spack:
             print(contents)
             yaml_contents = syaml.load(contents)
 
-            assert('rebuild-index' not in yaml_contents)
+            for ci_key in yaml_contents.keys():
+                if ci_key.startswith('(specs) '):
+                    job_object = yaml_contents[ci_key]
+                    job_vars = job_object['variables']
+                    assert('SPACK_IS_PR_PIPELINE' in job_vars)
+                    assert(job_vars['SPACK_IS_PR_PIPELINE'] == 'True')
 
 
 def test_ci_generate_with_external_pkg(tmpdir, mutable_mock_env_path,
@@ -728,7 +730,6 @@ spack:
          tags:
            - donotcare
          image: donotcare
-   rebuild-index: True
    nonbuild-job-attributes:
      tags:
        - nonbuildtag
@@ -770,7 +771,7 @@ spack:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
                 assert('noop' in yaml_contents)
-                # Make sure there are no other spec jobs and no rebuild-index
+                # Make sure there are no other spec jobs
                 assert(len(yaml_contents.keys()) == 1)
                 the_elt = yaml_contents['noop']
                 assert('tags' in the_elt)
@@ -788,7 +789,6 @@ spack:
                 yaml_contents = syaml.load(contents)
 
                 found_spec_job = False
-                found_rebuild_index = False
 
                 for ci_key in yaml_contents.keys():
                     if '(specs) patchelf' in ci_key:
@@ -798,16 +798,8 @@ spack:
                         assert('SPACK_SPEC_NEEDS_REBUILD' in job_vars)
                         assert(job_vars['SPACK_SPEC_NEEDS_REBUILD'] is False)
                         found_spec_job = True
-                    elif ci_key == 'rebuild-index':
-                        the_elt = yaml_contents['rebuild-index']
-                        assert('tags' in the_elt)
-                        assert('nonbuildtag' in the_elt['tags'])
-                        assert('image' in the_elt)
-                        assert(the_elt['image'] == 'basicimage')
-                        found_rebuild_index = True
 
                 assert(found_spec_job)
-                assert(found_rebuild_index)
 
             mirror_cmd('rm', 'test-ci')
 
@@ -914,7 +906,6 @@ spack:
     nonbuild-job-attributes:
       image: donotcare
       tags: [donotcare]
-    rebuild-index: true
 """)
 
     with tmpdir.as_cwd():
@@ -1000,3 +991,52 @@ spack:
                     assert(the_elt['script'][0] == 'main step')
                     assert(len(the_elt['after_script']) == 1)
                     assert(the_elt['after_script'][0] == 'post step one')
+
+
+def test_ci_generate_with_workarounds(tmpdir, mutable_mock_env_path,
+                                      env_deactivate, install_mockery,
+                                      mock_packages, monkeypatch):
+    """Make sure the post-processing cli workarounds do what they should"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - callpath%gcc@3.0
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    mappings:
+      - match: ['%gcc@3.0']
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+    enable-artifacts-buildcache: true
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            monkeypatch.setattr(
+                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+            ci_cmd('generate', '--output-file', outputfile, '--optimize',
+                   '--dependencies')
+
+            with open(outputfile) as f:
+                contents = f.read()
+                yaml_contents = syaml.load(contents)
+
+                found_one = False
+
+                for ci_key in yaml_contents.keys():
+                    if ci_key.startswith('(specs) '):
+                        found_one = True
+                        job_obj = yaml_contents[ci_key]
+                        assert('needs' not in job_obj)
+                        assert('dependencies' in job_obj)
+                        assert('SPACK_ROOT_SPEC' not in job_obj['variables'])
+
+                assert(found_one is True)

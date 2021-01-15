@@ -73,6 +73,11 @@ local directory.
     rebuild = subparsers.add_parser('rebuild', help=ci_rebuild.__doc__)
     rebuild.set_defaults(func=ci_rebuild)
 
+    # Rebuild the buildcache index associated with the mirror in the
+    # active, gitlab-enabled environment.
+    index = subparsers.add_parser('rebuild-index', help=ci_reindex.__doc__)
+    index.set_defaults(func=ci_reindex)
+
 
 def ci_generate(args):
     """Generate jobs file from a spack environment file containing CI info.
@@ -419,6 +424,23 @@ def ci_rebuild(args):
                 spack_ci.relate_cdash_builds(
                     spec_map, cdash_base_url, cdash_build_id, cdash_project,
                     artifact_mirror_url or pr_mirror_url or remote_mirror_url)
+
+
+def ci_reindex(parser, args):
+    """Rebuild the buildcache index associated with the mirror in the
+       active, gitlab-enabled environment. """
+    env = ev.get_env(args, 'ci rebuild-index', required=True)
+    yaml_root = ev.config_dict(env.yaml)
+
+    if 'mirrors' in yaml_root:
+        ci_mirrors = yaml_root['mirrors']
+        mirror_urls = [url for url in ci_mirrors.values()]
+        remote_mirror_url = mirror_urls[0]
+
+    if not remote_mirror_url:
+        tty.die('spack ci rebuild requires an env containing a mirror')
+
+    buildcache.update_index(remote_mirror_url, update_keys=True)
 
 
 def ci(parser, args):

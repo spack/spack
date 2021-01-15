@@ -543,10 +543,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
     gitlab_ci = yaml_root['gitlab-ci']
 
-    enable_rebuild_index = False
-    if 'rebuild-index' in gitlab_ci:
-        enable_rebuild_index = gitlab_ci['rebuild-index']
-
     build_group = None
     enable_cdash_reporting = False
     cdash_auth_token = None
@@ -575,6 +571,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
     ci_mirrors = yaml_root['mirrors']
     mirror_urls = [url for url in ci_mirrors.values()]
+    if not mirror_urls[0]:
+        tty.die('spack ci generate requires an env containing a mirror')
 
     enable_artifacts_buildcache = False
     if 'enable-artifacts-buildcache' in gitlab_ci:
@@ -891,27 +889,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
     if 'nonbuild-job-attributes' in gitlab_ci:
         nonbuild_job_config = gitlab_ci['nonbuild-job-attributes']
 
-    attrib_list = ['image', 'tags', 'variables']
-
     if job_id > 0:
-        if enable_rebuild_index and not is_pr_pipeline:
-            # Add an extra, final job to regenerate the index
-            final_stage = 'stage-rebuild-index'
-            final_job = {
-                'stage': final_stage,
-                'script': 'spack buildcache update-index --keys -d {0}'.format(
-                    mirror_urls[0]),
-                'when': 'always'
-            }
-            if nonbuild_job_config:
-                copy_attributes(attrib_list, nonbuild_job_config, final_job)
-            if before_script:
-                final_job['before_script'] = before_script
-            if after_script:
-                final_job['after_script'] = after_script
-            output_object['rebuild-index'] = final_job
-            stage_names.append(final_stage)
-
         output_object['stages'] = stage_names
 
         # Capture the version of spack used to generate the pipeline, transform it
@@ -950,22 +928,29 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
         if use_dependencies:
             import spack.ci_needs_workaround as cinw
             sorted_output = cinw.needs_to_dependencies(sorted_output)
-
-        # with open(output_file, 'w') as outf:
-        #     outf.write(syaml.dump_config(sorted_output, default_flow_style=True))
     else:
         # No jobs were generated
         tty.debug('No specs to rebuild, generating no-op job')
-        noop_job = {
-            'script': [
-                'echo "Nothing to do"',
-            ]
-        }
+        noop_job = {}
 
         if nonbuild_job_config:
-            copy_attributes(['image', 'variables', 'tags'],
+            default_attrs = [
+                'image',
+                'tags',
+                'variables',
+                'before_script',
+                'script',
+                'after_script',
+            ]
+
+            copy_attributes(default_attrs,
                             nonbuild_job_config,
                             noop_job)
+
+        if 'script' not in noop_job:
+            noop_job['script'] = [
+                'echo "Nothing to do"',
+            ]
 
         sorted_output = {'noop': noop_job}
 

@@ -240,62 +240,6 @@ takes a boolean and determines whether the pipeline uses artifacts to store and
 pass along the buildcaches from one stage to the next (the default if you don't
 provide this option is ``False``).
 
-The optional (default is ``False``) ``rebuild-index`` section controls whether an
-extra job is added to the end of your pipeline (in the final stage by itself)
-which will regenerate the mirror's buildcache index.  By default, while a
-pipeline job may rebuild a package, create a buildcache entry, and push it to
-the mirror, it does not automatically re-generate the mirror's buildcache index
-afterward.  Because the index is not needed by the default rebuild jobs in the
-pipeline, not updating the index at the end of each job avoids possible race
-conditions between simultaneous jobs, and it avoids the computational
-expense of regenerating the index.  This potentially saves minutes per job,
-depending on the number of binary packages in the mirror.  As a result, the
-default is that the mirror's buildcache index may not correctly reflect the
-mirror's contents at the end of a pipeline.  Setting ``rebuild-index`` to
-``True`` schedules a job at the end of the pipeline to update the binary
-package index on the mirror.  Rougly, we generate the following job to rebuild
-the buildcache index:
-
-.. code-block:: yaml
-
-   noop:
-      stage: final_stage,
-      script: spack buildcache update-index --keys -d <mirror-url>
-      tags: [<tag1>, <tag2>, ..., <tagn>]
-      image:
-        name: <image-name>
-        entrypoint: [<cmd1>, <cmd2>, ..., <cmdm>]
-      when: always
-
-If you enable the ``rebuild-index`` option, you may also need to supply the
-runner attributes used to run the job (``tags`` and either ``image`` or
-``variables``).  You can use ``nonbuild-job-attributes`` to specify these
-values just as you would directly to Gitlab (and as shown in the example
-above).  If you enable ``rebuild-index`` and do not provide
-``nonbuild-job-attributes``, then ``tags``, ``image``, and ``variables`` will
-be omitted from the ``rebuild-index`` job.  Consequently, it may never run
-unless your system has runners that can pick up untagged jobs and run them
-without a Docker image or runner variables.
-
-Note that if you leave ``rebuild-index`` disabled, you can easily edit your
-``.gitlab-ci.yml`` to add a job that rebuilds the buildcache index and does
-whatever else you want, and you can have it run after the
-``spack ci``-generated pipeline.
-
-.. _noop_jobs:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-Note about "no-op" jobs
-^^^^^^^^^^^^^^^^^^^^^^^
-
-The ``nonbuild-job-attributes`` mentioned above are optional, though they are
-likely necessary when DAG pruning is enabled.  If no jobs in an environment
-need to be rebuilt during a given pipeline run (meaning all are already up
-to date on the mirror), a single succesful job (a NO-OP) is still generated
-to avoid an empty pipeline.  If you need, you can provide ``tags`` and
-``image`` or ``variables`` for the  NO-OP job via the
-``nonbuild-job-attributes`` configuration section.
-
 The optional ``cdash`` section provides information that will be used by the
 ``spack ci generate`` command (invoked by ``spack ci start``) for reporting
 to CDash.  All the jobs generated from this environment will belong to a
@@ -308,6 +252,112 @@ Take a look at the
 `schema <https://github.com/spack/spack/blob/develop/lib/spack/spack/schema/gitlab_ci.py>`_
 for the gitlab-ci section of the spack environment file, to see precisely what
 syntax is allowed there.
+
+.. _rebuild_index:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note about rebuilding buildcache index
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, while a pipeline job may rebuild a package, create a buildcache
+entry, and push it to the mirror, it does not automatically re-generate the
+mirror's buildcache index afterward.  Because the index is not needed by the
+default rebuild jobs in the pipeline, not updating the index at the end of
+each job avoids possible race conditions between simultaneous jobs, and it
+avoids the computational expense of regenerating the index.  This potentially
+saves minutes per job, depending on the number of binary packages in the
+mirror.  As a result, the default is that the mirror's buildcache index may
+not correctly reflect the mirror's contents at the end of a pipeline.
+
+To make sure the buildcache index is up to date at the end of your pipeline,
+you can add a job to your ``.gitlab-ci.yml``.  Following is the example
+provided above, updated to include a job at the end to rebuild the buildcache
+index:
+
+   .. code-block:: yaml
+
+      stages: [generate, build, index]
+
+      generate-pipeline:
+        stage: generate
+        tags:
+          - <custom-tag>
+        script:
+          - spack env activate --without-view .
+          - spack ci generate
+            --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+        artifacts:
+          paths:
+            - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
+
+      build-jobs:
+        stage: build
+        trigger:
+          include:
+            - artifact: "jobs_scratch_dir/pipeline.yml"
+              job: generate-pipeline
+          strategy: depend
+
+      rebuild-index:
+        stage: index
+        tags: [<custom-tag>]
+        script:
+          - spack env activate --without-view .
+          - spack ci rebuild-index
+
+The command ``spack ci rebuild-index`` used in the ``rebuild-index`` job is
+a convenience so you don't have to re-type the mirror url from your
+``spack.yaml`` file.  It is equivalent to running
+``spack buildcache update-index --keys -d <mirror-url>``.  The
+``spack ci rebuild-index`` command requires your environment to be active, as
+demonstrated above, so you can also just run the
+``spack buildcache update-index ...`` command if you prefer.
+
+.. _noop_jobs:
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Note about "no-op" jobs
+^^^^^^^^^^^^^^^^^^^^^^^
+
+If no specs in an environment need to be rebuilt during a given pipeline run
+(meaning all are already up to date on the mirror), a single succesful job
+(a NO-OP) is still generated to avoid an empty pipeline (which GitLab
+considers to be an error).  An optional ``nonbuild-job-attributes`` section
+can be added to your ``spack.yaml`` where you can provide ``tags`` and
+``image`` or ``variables`` for the generated NO-OP job.  This section also
+supports providing ``before_script``, ``script``, and ``after_script``, in
+case you want to take some custom actions in the case of any empty pipeline.
+
+Following is an example of this section added to a ``spack.yaml``:
+
+.. code-block:: yaml
+
+   spack:
+     specs:
+       - openmpi
+     mirrors:
+       cloud_gitlab: https://mirror.spack.io
+     gitlab-ci:
+       mappings:
+         - match:
+             - os=centos8
+           runner-attributes:
+             tags:
+               - custom
+               - tag
+             image: spack/centos7
+       nonbuild-job-attributes:
+         tags: ['custom', 'tag']
+         image:
+           name: 'some.image.registry/custom-image:latest'
+           entrypoint: ['/bin/bash']
+         script:
+           - echo "Custom message in a custom script"
+
+The example above illustrates how you can provide the attributes used to run
+the NO-OP job in the case of an empty pipeline.  The only field for the NO-OP
+job that might be generated for you is ``script``, but that will only happen
+if you do not provide one yourself.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Assignment of specs to runners
