@@ -29,7 +29,7 @@ class Blaspp(CMakePackage, CudaPackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
-    # BLASpp tests require multithreading support for versions of openblas greater than 0.3.5  
+    # BLASpp tests will fail when using openblas > 0.3.5 without multithreading support
     conflicts('^openblas@0.3.6: threads=none', msg='BLASpp requires openblas multithreading support')
 
     def cmake_args(self):
