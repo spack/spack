@@ -317,8 +317,11 @@ configure_compilers() {
         log "...using gcc ${BASE_GCC_VERSION} from ${GCC_DIR}"
         if [[ ${spec} = *"intel"* ]]; then
             # update intel modules to use newer gcc in .cfg files
-            install_dir=$(spack location --install-dir ${sha})
-            for f in $(find ${install_dir} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
+            INTEL_DIR=$(spack location --install-dir ${sha})
+            if [[ "${INTEL_DIR}" != "${SPACK_INSTALL_PREFIX}"* ]]; then
+                log "...installation does not match install prefix, skipping modification of files"
+            fi
+            for f in $(find ${INTEL_DIR} -name "icc.cfg" -o -name "icpc.cfg" -o -name "ifort.cfg"); do
                 if ! grep -q "${GCC_DIR}" $f; then
                     echo "-gcc-name=${GCC_DIR}/bin/gcc" >> ${f}
                     echo "-Xlinker -rpath=${GCC_DIR}/lib" >> ${f}
@@ -329,12 +332,22 @@ configure_compilers() {
         elif [[ ${line} = *"pgi"* || ${line} = *"nvhpc"* ]]; then
             #update pgi modules for network installation
             PGI_DIR=$(dirname $(which makelocalrc))
-            makelocalrc ${PGI_DIR} -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
+            PGI_TMPDIR=$(mktemp -d -p .)
+            makelocalrc ${PGI_DIR} -d "${PGI_TMPDIR}" -gcc ${GCC_DIR}/bin/gcc -gpp ${GCC_DIR}/bin/g++ -g77 ${GCC_DIR}/bin/gfortran -x -net
             #configure pgi network license
-            template=$(find $PGI_DIR -name localrc* ! -iname "*.bak" | tail -n 1)
-            for node in bbpv1 bbpv2 bbptadm tds03 tds04 r2i3n0 r2i3n1 r2i3n2 r2i3n3 r2i3n4 r2i3n5 r2i3n6 ldir01u01 ldir01u05 ldir01u09 ldir01u13; do
+            template=$(ls -rt "${PGI_TMPDIR}"/localrc* | tail -n 1)
+            echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${template}"
+            log "NVIDIA localrc template"
+            cat "${template}"
+            gpu_nodes=$(sinfo -h -N -o %n\ %f|awk '/volta/ {if (!c[$1]) {print $1}; c[$1]=1}')
+            jenkins_nodes=$(squeue -h -o %N\ %j -u bbprelman|awk '/ BB5-[0-9]+$/ {print $1}')
+            if [[ "${PGI_DIR}" != "${SPACK_INSTALL_PREFIX}"* ]]; then
+                log "...installation does not match install prefix, skipping modification of files"
+            fi
+            for node in bbpv1 bbpv2 bbptadm tds03 tds04 ${gpu_nodes} ${jenkins_nodes}; do
                 cp $template $PGI_DIR/localrc.$node || true
             done
+            rm -rf "${PGI_TMPDIR}"
         fi
         cmd=${cmd/load/unload}
         echo "${cmd}"
