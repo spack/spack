@@ -1022,8 +1022,7 @@ spack:
         with ev.read('test'):
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            ci_cmd('generate', '--output-file', outputfile, '--optimize',
-                   '--dependencies')
+            ci_cmd('generate', '--output-file', outputfile, '--dependencies')
 
             with open(outputfile) as f:
                 contents = f.read()
@@ -1037,6 +1036,5 @@ spack:
                         job_obj = yaml_contents[ci_key]
                         assert('needs' not in job_obj)
                         assert('dependencies' in job_obj)
-                        assert('SPACK_ROOT_SPEC' not in job_obj['variables'])
 
                 assert(found_one is True)
