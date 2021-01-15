@@ -18,6 +18,7 @@ class Pvm(MakefilePackage):
     version('3.4.6', sha256='482665e9bc975d826bcdacf1df1d42e43deda9585a2c430fd3b7b7ed08eada44')
 
     depends_on('m4', type='build')
+    depends_on('libtirpc', type='link')
 
     parallel = False
 
@@ -31,6 +32,14 @@ class Pvm(MakefilePackage):
         # Before building PVM, you must set the environment
         # variable "PVM_ROOT" to the path where PVM resides
         env['PVM_ROOT'] = self.stage.source_path
+
+    def setup_build_environment(self, spack_env):
+        tirpc = self.spec['libtirpc'].prefix
+        spack_env.prepend_path(
+            'SPACK_INCLUDE_DIRS',
+            join_path(tirpc, 'include', 'tirpc'),
+        )
+        spack_env.set('SPACK_LDLIBS', '-ltirpc')
 
     def install(self, spec, prefix):
         pvm_arch = self.pvm_arch
