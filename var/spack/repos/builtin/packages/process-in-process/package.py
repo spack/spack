@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -134,7 +134,7 @@ class ProcessInProcess(Package):
              destination='PiP-Testsuite')
 
     def install(self, spec, prefix):
-        "Install Process-in-Process inclduing PiP-glibc, PiP-gdb"
+        "Install Process-in-Process including PiP-glibc, PiP-gdb"
 
         # checking os and arch
         arch   = self.spec.architecture
