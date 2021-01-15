@@ -140,16 +140,6 @@ class Hip(CMakePackage):
             'INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/include"',
             'hip-config.cmake.in', string=True)
 
-    def flag_handler(self, name, flags):
-        if name == 'cxxflags' and '@3.7.0:' in self.spec:
-            incl = self.spec['hip-rocclr'].prefix.include
-            flags.append('-I {0}/compiler/lib/include'.format(incl))
-            flags.append('-I {0}/elf'.format(incl))
-
-        return (flags, None, None)
-
-    @run_before('install')
-    def filter_sbang(self):
         perl = self.spec['perl'].command
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
 
@@ -162,8 +152,6 @@ class Hip(CMakePackage):
             ]
             filter_file(match, substitute, *files, **kwargs)
 
-    @run_before('install')
-    def filter_numactl(self):
         if '@3.7.0:' in self.spec:
             numactl = self.spec['numactl'].prefix.lib
             kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
@@ -172,6 +160,14 @@ class Hip(CMakePackage):
                 match = ' -lnuma'
                 substitute = " -L{numactl} -lnuma".format(numactl=numactl)
                 filter_file(match, substitute, 'hipcc', **kwargs)
+
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags' and '@3.7.0:' in self.spec:
+            incl = self.spec['hip-rocclr'].prefix.include
+            flags.append('-I {0}/compiler/lib/include'.format(incl))
+            flags.append('-I {0}/elf'.format(incl))
+
+        return (flags, None, None)
 
     def cmake_args(self):
         args = [
