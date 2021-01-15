@@ -31,8 +31,8 @@ class ProcessInProcess(Package):
     depends_on('texinfo', type='build')
 
     # resources for PiP version 2
-    ## PiP-glibc resource
-    ### for rhel/centos 7
+    #  PiP-glibc resource
+    #   for rhel/centos 7
     resource(name='PiP-glibc',
              git='https://github.com/RIKEN-SysSoft/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
@@ -43,7 +43,7 @@ class ProcessInProcess(Package):
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@2 os=rhel7')
-    ### for rhel/centos 8
+    #   for rhel/centos 8
     resource(name='PiP-glibc',
              git='https://github.com/RIKEN-SysSoft/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
@@ -55,8 +55,8 @@ class ProcessInProcess(Package):
              destination='PiP-glibc',
              when='@2 os=rhel8')
 
-    ## PiP-gdb resource
-    ### for rhel/centos 7
+    #  PiP-gdb resource
+    #   for rhel/centos 7
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
@@ -67,7 +67,7 @@ class ProcessInProcess(Package):
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@2 os=rhel7')
-    ### for rhel/centos 8
+    #   for rhel/centos 8
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
@@ -80,8 +80,8 @@ class ProcessInProcess(Package):
              when='@2 os=rhel8')
 
     # resources for PiP version 3
-    ## PiP-glibc resource
-    ### for rhel/centos 7
+    #  PiP-glibc resource
+    #   for rhel/centos 7
     resource(name='PiP-glibc',
              git='https://github.com/RIKEN-SysSoft/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
@@ -92,7 +92,7 @@ class ProcessInProcess(Package):
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@3 os=rhel7')
-    ### for rhel/centos 8
+    #   for rhel/centos 8
     resource(name='PiP-glibc',
              git='https://github.com/RIKEN-SysSoft/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
@@ -104,8 +104,8 @@ class ProcessInProcess(Package):
              destination='PiP-glibc',
              when='@3 os=rhel8')
 
-    ## PiP-gdb resource
-    ### for rhel/centos 7
+    #  PiP-gdb resource
+    #   for rhel/centos 7
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
@@ -116,7 +116,7 @@ class ProcessInProcess(Package):
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@3 os=rhel7')
-    ### for rhel/centos 8
+    #   for rhel/centos 8
     resource(name='PiP-gdb',
              git='https://github.com/RIKEN-SysSoft/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
