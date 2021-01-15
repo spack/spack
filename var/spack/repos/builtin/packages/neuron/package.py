@@ -8,6 +8,7 @@ from spack import *
 
 class Neuron(CMakePackage):
     """NEURON is a simulation environment for single and networks of neurons.
+
     NEURON is a simulation environment for modeling individual and networks of
     neurons. NEURON models individual neurons via the use of sections that are
     automatically subdivided into individual compartments, instead of
