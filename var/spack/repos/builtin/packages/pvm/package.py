@@ -26,7 +26,7 @@ class Pvm(MakefilePackage):
     def pvm_arch(self):
         """Returns the appropriate PVM_ARCH."""
         process = subprocess.Popen(['lib/pvmgetarch'], stdout=subprocess.PIPE)
-        return process.communicate()[0].strip()
+        return process.communicate()[0].strip().decode()
 
     def edit(self, spec, prefix):
         # Before building PVM, you must set the environment
