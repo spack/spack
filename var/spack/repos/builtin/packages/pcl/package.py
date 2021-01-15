@@ -19,10 +19,3 @@ class Pcl(CMakePackage):
     depends_on('eigen@3.1:')
     depends_on('flann@1.7:')
     depends_on('boost@1.55:+filesystem+date_time+iostreams+system')
-
-    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-        args = []
-        return args
