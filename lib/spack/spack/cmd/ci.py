@@ -426,7 +426,7 @@ def ci_rebuild(args):
                     artifact_mirror_url or pr_mirror_url or remote_mirror_url)
 
 
-def ci_reindex(parser, args):
+def ci_reindex(args):
     """Rebuild the buildcache index associated with the mirror in the
        active, gitlab-enabled environment. """
     env = ev.get_env(args, 'ci rebuild-index', required=True)

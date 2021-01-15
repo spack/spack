@@ -736,10 +736,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                         # purposes, so we only get the direct dependencies.
                         dep_jobs = []
                         for dep_label in dependencies[spec_label]:
-                            if spec_labels[dep_label]['needs_rebuild']:
-                                dep_pkg = pkg_name_from_spec_label(dep_label)
-                                dep_root = spec_labels[dep_label]['rootSpec']
-                                dep_jobs.append(dep_root[dep_pkg])
+                            dep_pkg = pkg_name_from_spec_label(dep_label)
+                            dep_root = spec_labels[dep_label]['rootSpec']
+                            dep_jobs.append(dep_root[dep_pkg])
 
                     job_dependencies.extend(
                         format_job_needs(phase_name, strip_compilers,

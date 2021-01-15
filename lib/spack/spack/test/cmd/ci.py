@@ -1038,3 +1038,55 @@ spack:
                         assert('dependencies' in job_obj)
 
                 assert(found_one is True)
+
+
+@pytest.mark.disable_clean_stage_check
+def test_ci_rebuild_index(tmpdir, mutable_mock_env_path, env_deactivate,
+                          install_mockery, mock_packages, mock_fetch,
+                          mock_stage):
+    working_dir = tmpdir.join('working_dir')
+
+    mirror_dir = working_dir.join('mirror')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    spack_yaml_contents = """
+spack:
+ specs:
+   - callpath
+ mirrors:
+   test-mirror: {0}
+ gitlab-ci:
+   mappings:
+     - match:
+         - patchelf
+       runner-attributes:
+         tags:
+           - donotcare
+         image: donotcare
+""".format(mirror_url)
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write(spack_yaml_contents)
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        with ev.read('test'):
+            spec_map = ci.get_concrete_specs(
+                'callpath', 'callpath', '', 'FIND_ANY')
+            concrete_spec = spec_map['callpath']
+            spec_yaml = concrete_spec.to_yaml(hash=ht.build_hash)
+            yaml_path = str(tmpdir.join('spec.yaml'))
+            with open(yaml_path, 'w') as ypfd:
+                ypfd.write(spec_yaml)
+
+            install_cmd('--keep-stage', '-f', yaml_path)
+            buildcache_cmd('create', '-u', '-a', '-f', '--mirror-url',
+                           mirror_url, 'callpath')
+            ci_cmd('rebuild-index')
+
+            buildcache_path = os.path.join(mirror_dir.strpath, 'build_cache')
+            index_path = os.path.join(buildcache_path, 'index.json')
+            with open(index_path) as idx_fd:
+                index_object = json.load(idx_fd)
+                validate(index_object, db_idx_schema)
