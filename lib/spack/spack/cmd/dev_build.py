@@ -19,7 +19,9 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['jobs', 'test', 'overwrite', 'yes_to_all'])
+    arguments.add_common_arguments(
+        subparser,
+        ['jobs', 'test', 'overwrite', 'yes_to_all'])
     subparser.add_argument(
         '-d', '--source-path', dest='source_path', default=None,
         help="path to source directory. defaults to the current directory")
@@ -82,7 +84,7 @@ def dev_build(self, args):
     spec.concretize()
     package = spack.repo.get(spec)
 
-    if package.installed:
+    if package.installed and not args.overwrite:
         tty.error("Already installed in %s" % package.prefix)
         tty.msg("Uninstall or try adding a version suffix for this dev build.")
         sys.exit(1)
@@ -100,6 +102,7 @@ def dev_build(self, args):
     package.do_install(
         tests=tests,
         make_jobs=args.jobs,
+        overwrite=[spec.dag_hash()] if args.overwrite else [],
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
