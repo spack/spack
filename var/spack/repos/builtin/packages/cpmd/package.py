@@ -83,23 +83,20 @@ class Cpmd(MakefilePackage):
         else:
             bash('./configure.sh', cbase)
 
-    @run_after('build')
-    @on_package_attributes(run_tests=True)
-    def test_h2o(self):
-        tpath = join_path(os.path.dirname(__file__), "test")
-        tfile = join_path(tpath, '1-h2o-pbc-geoopt.inp')
+    def test(self):
+        test_dir = self.test_suite.current_test_data_dir
+        test_file = join_path(test_dir, '1-h2o-pbc-geoopt.inp')
+        opts = []
         if self.spec.satisfies('+mpi'):
-            mpirun = os.getenv('MPIRUN')
-            if mpirun is None:
-                mpirun = 'mpirun'
-            mpipath = os.path.join(self.spec['mpi'].prefix.bin, mpirun)
-            if not os.path.exists(mpipath):
-                raise InstallError('mpirun not found; define MPIRUN env.')
-            mpiexec = Executable(mpipath)
-            mpiexec('-n', '2', join_path('bin', 'cpmd.x'), tfile, tpath)
+            exe_name = os.path.join(self.spec['mpi'].prefix.bin, 'mpirun')
+            opts.append('-n')
+            opts.append('2')
+            opts.append(join_path(self.prefix.bin, 'cpmd.x'))
         else:
-            cpmdexe = Executable(join_path('bin', 'cpmd.x'))
-            cpmdexe(tfile, tpath)
+            exe_name = 'cpmd.x'
+        opts.append(test_file)
+        opts.append(test_dir)
+        self.run_test(exe_name, options=opts)
 
     def install(self, spec, prefix):
         install_tree('.', prefix)
