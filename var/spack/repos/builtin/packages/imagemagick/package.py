@@ -21,6 +21,7 @@ class Imagemagick(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('pango')
     depends_on('libtool', type='build')
+    depends_on('libtool', when='@7.0.8:', type=('build', 'link'))
     depends_on('libpng')
     depends_on('freetype')
     depends_on('fontconfig')
