@@ -38,7 +38,8 @@ class Libzmq(AutotoolsPackage):
     depends_on('libtool', type='build', when='@develop')
     depends_on('pkgconfig', type='build')
 
-    depends_on('libbsd', type='link', when='@4.3.3:')
+    depends_on('libbsd', type='link', when='@4.3.3: platform=linux')
+    depends_on('libbsd', type='link', when='@4.3.3: platform=cray')
 
     conflicts('%gcc@8:', when='@:4.2.2')
 
