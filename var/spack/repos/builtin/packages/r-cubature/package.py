@@ -24,4 +24,4 @@ class RCubature(RPackage):
     version('1.1-2', sha256='0a05469bdc85d6bd8165a42a3fc5c35a06700d279e4e8b3cf4669df19edffeed')
 
     depends_on('r-rcpp', when='@2.0.3:', type=('build', 'run'))
-    depends_on('gmake', type=('build', 'run'))
+    depends_on('gmake', type='build')
