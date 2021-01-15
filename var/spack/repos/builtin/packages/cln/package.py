@@ -38,6 +38,7 @@ class Cln(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('gmp@4.1:', when='+gmp')
+    depends_on('texinfo', type='build')
 
     # Dependencies required to define macro AC_LIB_LINKFLAGS_FROM_LIBS
     depends_on('gettext',  type='build')
