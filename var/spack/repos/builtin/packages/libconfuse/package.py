@@ -21,3 +21,7 @@ class Libconfuse(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('gettext',  type='build')
     depends_on('flex',     type='build')
+
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')
