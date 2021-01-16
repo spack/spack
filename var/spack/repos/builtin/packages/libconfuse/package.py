@@ -19,3 +19,5 @@ class Libconfuse(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
+    depends_on('gettext',  type='build')
+    depends_on('flex',     type='build')
