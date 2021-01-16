@@ -12,7 +12,8 @@ class Libidn2(AutotoolsPackage):
     names."""
 
     homepage = "https://gitlab.com/libidn/libidn2"
-    url      = "https://ftp.gnu.org/gnu/libidn/libidn2-2.0.5.tar.gz"
+    # URL must remain http:// so Spack can bootstrap curl
+    url      = "http://ftp.gnu.org/gnu/libidn/libidn2-2.0.5.tar.gz"
 
     version('2.3.0',  sha256='e1cb1db3d2e249a6a3eb6f0946777c2e892d5c5dc7bd91c74394fc3a01cab8b5')
     version('2.1.1a', sha256='57666bcf6ecf54230d7bac95c392379561954b57a673903aed4d3336b3048b72')
