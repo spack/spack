@@ -22,7 +22,8 @@ class Metis(Package):
     #
 
     homepage = "https://github.com/scivision/METIS/"
-    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+    #url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+    url      = "https://github.com/scivision/METIS/blob/master/archive/metis-5.1.0.tar.gz?raw=true"
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
     # For v4.0.3, use the original metis website since this version is not
