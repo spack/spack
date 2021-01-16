@@ -7,7 +7,8 @@ from spack import *
 
 
 class RForeign(RPackage):
-    """Read Data Stored by 'Minitab', 'S', 'SAS', 'SPSS', 'Stata', 'Systat', 'Weka', 'dBase', ...
+    """Read Data Stored by 'Minitab', 'S', 'SAS', 'SPSS', 'Stata', 'Systat',
+    'Weka', 'dBase', ...
 
     Reading and writing data stored by some versions of 'Epi Info', 'Minitab',
     'S', 'SAS', 'SPSS', 'Stata', 'Systat', 'Weka', and for reading and writing
