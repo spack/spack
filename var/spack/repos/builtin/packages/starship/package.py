@@ -18,7 +18,7 @@ class Starship(CargoPackage):
     maintainers = ["AndrewGaspar"]
 
     version('master', branch='master')
-    version('0.46.0', sha256='f23463b5e409a0ecd6209afb0a0eb216e4462319d44f93b6d962b0aa8b0e4055')
+    version('0.48.0', sha256='3e66f2b31672b475e916215d69734550a3c144138d99cfbbbfcde065ec5e4215')
 
     # Change the defaults for prefer_dynamic and lto to reflect that starship
     # cannot build with prefer_dynamic at this time, and prefers to be built
