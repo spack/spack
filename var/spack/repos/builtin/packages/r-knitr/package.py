@@ -35,5 +35,5 @@ class RKnitr(RPackage):
     depends_on('r-yaml@2.1.19:', type=('build', 'run'))
     depends_on('r-xfun', when='@1.23:', type=('build', 'run'))
     depends_on('r-xfun@0.15:', when='@1.30:', type=('build', 'run'))
-    depends_on('r-digest@:1.17', when='@:1.24', type=('build', 'run'))
-    depends_on('r-formatr@:1.14', when='@:1.24', type=('build', 'run'))
+    depends_on('r-digest', when='@:1.17', type=('build', 'run'))
+    depends_on('r-formatr', when='@:1.14', type=('build', 'run'))
