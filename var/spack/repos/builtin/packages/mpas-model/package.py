@@ -16,15 +16,13 @@ class MpasModel(MakefilePackage):
     homepage = "https://mpas-dev.github.io/"
     url = "https://github.com/MPAS-Dev/MPAS-Model/archive/v7.0.tar.gz"
 
+
     version('7.0', sha256='f898ce257e66cff9e29320458870570e55721d16cb000de7f2cc27de7fdef14f')
     version('6.3', sha256='e7f1d9ebfeb6ada37d42a286aaedb2e69335cbc857049dc5c5544bb51e7a8db8')
     version('6.2', sha256='2a81825a62a468bf5c56ef9d9677aa2eb88acf78d4f996cb49a7db98b94a6b16')
 
-    variant('pnetcdf', default=True, description='use parallel netcdf')
-
     depends_on('mpi')
-    depends_on('parallelio +pnetcdf', when='+pnetcdf')
-    depends_on('parallelio ~pnetcdf', when='~pnetcdf')
+    depends_on('parallelio')
 
     patch('makefile.patch', when='@7.0')
 
@@ -44,7 +42,7 @@ class MpasModel(MakefilePackage):
                 '-fdefault-double-8',
             ])
             cppflags.append('-DUNDERSCORE')
-        if satisfies('%fj'):
+        elif satisfies('%fj'):
             fflags.extend([
                 '-Free',
                 '-Fwide',
@@ -65,15 +63,13 @@ class MpasModel(MakefilePackage):
             'NETCDF={0}'.format(spec['netcdf-c'].prefix),
             'NETCDFF={0}'.format(spec['netcdf-fortran'].prefix)
         ]
-        if satisfies('+pnetcdf'):
+        if satisfies('^parallelio+pnetcdf'):
             targets.append(
-                'PNETCDF={0}'.format(spec['parallel-netcdf'].prefix)
-            )
+                    'PNETCDF={0}'.format(spec['parallel-netcdf'].prefix))
         targets.extend([
             'USE_PIO2=true', 'CPP_FLAGS=-D_MPI', 'OPENMP=true',
             'CORE={0}'.format(model), action
         ])
-        tty.debug(targets)
         return targets
 
     def build(self, spec, prefix):
