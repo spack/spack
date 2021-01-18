@@ -41,7 +41,7 @@ class Hipblas(CMakePackage):
         if self.spec.satisfies('@:3.9.0'):
             args.append('-DTRY_CUDA=OFF')
 
-        if self.spec.satisfies('@3.10.0:'):
+        else:
             args.append('-DUSE_CUDA=OFF')
 
         return args
