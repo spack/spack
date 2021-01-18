@@ -17,6 +17,7 @@ class Spfft(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('1.0.0', sha256='bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee')
     version('0.9.13', sha256='5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef')
     version('0.9.12', sha256='1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc')
     version('0.9.11', sha256='36542a60378e8672654188dee006975ef9e10f502791459ff7ebf4b38451cb9b')
@@ -71,11 +72,17 @@ class Spfft(CMakePackage, CudaPackage):
             args += [
                 '-DSPFFT_GPU_BACKEND=ROCM',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)
             ]
         if spec.satisfies('+fortran'):
             args += ["-DSPFFT_FORTAN=On"]
         if spec.satisfies('+static'):
             args += ["-DSPFFT_STATIC=On"]
+
+        if 'fftw' in spec:
+            args += ["-DSPFFT_FFTW_LIB=FFTW"]
+        elif 'intel-mkl' in spec:
+            args += ["-DSPFFT_FFTW_LIB=MKL"]
 
         return args
