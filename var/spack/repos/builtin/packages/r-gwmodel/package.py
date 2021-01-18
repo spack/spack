@@ -42,4 +42,4 @@ class RGwmodel(RPackage):
     depends_on('r-spdep', type=('build', 'run'))
     depends_on('r-fnn', when='@2.1-1:', type=('build', 'run'))
     depends_on('r-rcpparmadillo', type=('build', 'run'))
-    depends_on('gmake',type='build')
+    depends_on('gmake', type='build')
