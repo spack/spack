@@ -874,7 +874,7 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
 
-        if self.spec in dependent_spec.dependencies(deptype='link'):
+        if dependent_spec.package.extends(self.spec):
             # We want to make sure that the extensions are compiled and linked
             # with Spack wrapper. Paths to the executables that are used for
             # these operations are normally taken from sysconfigdata file,
