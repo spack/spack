@@ -17,7 +17,8 @@ class PyPycairo(PythonPackage):
     version('1.18.1', sha256='70172e58b6bad7572a3518c26729b074acdde15e6fee6cbab6d3528ad552b786')
     version('1.17.1', sha256='0f0a35ec923d87bc495f6753b1e540fd046d95db56a35250c44089fbce03b698')
 
-    depends_on('cairo@1.13.1: +pdf')
+    depends_on('cairo@1.15.10: +pdf', when='@1.20.0:')
+    depends_on('cairo@1.13.1: +pdf', when='@:1.18.1')
     depends_on('pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('python@2.7:2.8,3.3:', when='@:1.17.1',  type=('build', 'run'))
