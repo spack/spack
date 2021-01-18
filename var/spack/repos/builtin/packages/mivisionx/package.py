@@ -23,6 +23,7 @@ class Mivisionx(CMakePackage):
         url = "https://github.com/GPUOpen-ProfessionalCompute-Libraries/MIVisionX/archive/rocm-{0}.tar.gz"
         return url.format(version)
 
+    version('4.0.0', sha256='e09d4890b729740ded056b3974daea84c8eb1fc93714c52bf89f853c2eef1fb5')
     version('3.10.0', sha256='8a67fae77a05ef60a501e64a572a7bd2ccb9243518b1414112ccd1d1f78d08c8')
     version('3.9.0', sha256='892812cc6e6977ed8cd4b69c63f4c17be43b83c78eeafd9549236c17f6eaa2af')
     version('3.8.0', sha256='4e177a9b5dcae671d6ea9f0686cf5f73fcd1e3feb3c50425c8c6d43ac5d77feb')
@@ -31,25 +32,38 @@ class Mivisionx(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
+    resource(name='opencv',
+             url='https://github.com/opencv/opencv/archive/3.4.6.tar.gz',
+             sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d',
+             expand=True,
+             destination='',
+             placement='opencv',
+             when='@4.0.0:')
+
     def flag_handler(self, name, flags):
         spec = self.spec
         protobuf = spec['protobuf'].prefix.include
+        opencv_incl = join_path(self.stage.source_path,
+                                'opencv/modules/highgui/include')
         if name == 'cxxflags':
             flags.append('-I{0}'.format(protobuf))
+            flags.append('-I{0}'.format(opencv_incl))
         return (flags, None, None)
 
     depends_on('ffmpeg@4.1.1', type='build')
     depends_on('protobuf@3.5.0', type='build')
-    depends_on('opencv@3.4.6 +calib3d+core+features2d+highgui+imgproc+video+videoio+videostab', type='build')
+    depends_on('opencv@3.4.6 +calib3d+core+features2d+highgui+imgcodecs+imgproc+video+videoio+videostab+flann', type='build')
     depends_on('rocm-opencl@3.5.0', type='build', when='@1.7')
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
     depends_on('miopen-opencl@3.5.0', type=('build', 'run', 'link'), when='@1.7')
     depends_on('miopengemm@1.1.6', type=('build', 'run', 'link'), when='@1.7')
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('miopengemm@' + ver, type=('build', 'run', 'link'), when='@' + ver)
         depends_on('miopen-opencl@' + ver, type='link', when='@' + ver)
+        if ver in ['4.0.0']:
+            depends_on('openssl', type=('build', 'link'))
 
     def cmake_args(self):
         spec = self.spec
