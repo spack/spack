@@ -5,6 +5,7 @@
 
 
 import glob
+import subprocess
 
 from spack import *
 
@@ -80,3 +81,11 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('I_MPI_CC', 'icx')
         env.set('I_MPI_CXX', 'icpx')
         env.set('I_MPI_FC', 'ifx')
+#FTW        env.set('I_MPI_SUBSTITUTE_INSTALLDIR', self.prefix)
+        mpiicc = join_path(prefix, 'mpi', 'latest', 'bin', 'mpiicc' ) 
+        rpath_prefix = join_path(prefix, 'mpi', 'latest' ) 
+        print("FTW: mpiicc = ", mpiicc)
+        print("FTW: rpath_prefix = ", rpath_prefix)
+        env.set('I_MPI_ROOT', rpath_prefix)
+#        subprocess.call(['sed', '-ie', 's#I_MPI_SUBSTITUTE_INSTALLDIR#' + rpath_prefix + '#g', mpiicc])
+
