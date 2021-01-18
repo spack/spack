@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import llnl.util.tty as tty
 
 
 class MpasModel(MakefilePackage):
@@ -64,7 +63,8 @@ class MpasModel(MakefilePackage):
         ]
         if satisfies('^parallelio+pnetcdf'):
             targets.append(
-                    'PNETCDF={0}'.format(spec['parallel-netcdf'].prefix))
+                'PNETCDF={0}'.format(spec['parallel-netcdf'].prefix)
+            )
         targets.extend([
             'USE_PIO2=true', 'CPP_FLAGS=-D_MPI', 'OPENMP=true',
             'CORE={0}'.format(model), action
