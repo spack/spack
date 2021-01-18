@@ -12,11 +12,12 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-workflow'
     git      = 'ssh://bbpcode.epfl.ch/nse/bbp-workflow'
 
-    version('2.0.6', tag='bbp-workflow-v2.0.6')
+    version('2.1.0', tag='bbp-workflow-v2.1.0')
 
     depends_on('py-setuptools', type=('build'))
 
     depends_on('py-luigi', type='run')
+    depends_on('py-luigi-tools', type='run')
     depends_on('py-entity-management', type='run')
     depends_on('py-requests-unixsocket', type='run')
     depends_on('py-sh', type='run')
@@ -29,3 +30,8 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-bluepy', type='run')
     depends_on('py-bluepy-configfile', type='run')
     depends_on('py-simwriter', type='run')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.spec['py-distributed'].prefix.bin)
+        env.prepend_path('PATH', self.spec['py-notebook'].prefix.bin)
+        env.prepend_path('PATH', self.spec['py-luigi'].prefix.bin)

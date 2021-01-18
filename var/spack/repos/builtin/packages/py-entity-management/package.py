@@ -12,19 +12,12 @@ class PyEntityManagement(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/entity-management'
     git      = 'ssh://bbpcode.epfl.ch/nse/entity-management'
 
-    version('1.2.8', tag='entity-management-v1.2.8')
-    version('1.2.2', tag='entity-management-v1.2.2')
-    version('1.1.3', tag='entity-management-v1.1.3')
-    version('1.1.1', tag='entity-management-v1.1.1')
-    version('1.1.0', tag='entity-management-v1.1.0')
-    version('1.0.20', tag='entity-management-v1.0.20')
-    version('1.0.18', tag='entity-management-v1.0.18')
+    version('1.2.10', tag='entity-management-v1.2.10')
 
     depends_on('py-setuptools', type=('build'))
 
     depends_on('py-requests', type='run')
-    depends_on('py-attrs@:19', type='run')
-    depends_on('py-six', type='run')
+    depends_on('py-attrs', type='run')
     depends_on('py-dateutil', type='run')
     depends_on('py-sparqlwrapper', type='run')
     depends_on('py-rdflib-jsonld', type='run')
