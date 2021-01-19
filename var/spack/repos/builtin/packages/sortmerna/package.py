@@ -24,7 +24,7 @@ class Sortmerna(CMakePackage):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        with working_dir(join_path('spack-build', 'src', 'indexdb')):
+        with working_dir(join_path(self.build_directory, 'src', 'indexdb')):
             install('indexdb', prefix.bin)
-        with working_dir(join_path('spack-build', 'src', 'sortmerna')):
+        with working_dir(join_path(self.build_directory, 'src', 'sortmerna')):
             install('sortmerna', prefix.bin)
