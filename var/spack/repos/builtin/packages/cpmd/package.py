@@ -63,7 +63,7 @@ class Cpmd(MakefilePackage):
         # lapack
         cp.filter(
             'LIBS=.+',
-            'LIBS=\'{0}\''.format(spec['lapack'].libs.ld_flags)
+            "LIBS='{0}'".format(spec['lapack'].libs.ld_flags)
         )
 
         # LFLAGS
