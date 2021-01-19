@@ -17,8 +17,8 @@ class RGrbase(RPackage):
     testing for conditional independence. 'gRbase' illustrates how hierarchical
     log-linear models may be implemented and describes concept of graphical
     meta data.  The facilities of the package are documented in the book by
-    Højsgaard, Edwards and Lauritzen (2012, <doi:10.1007/978-1-4614-2299-0>)
-    and in the paper by  Dethlefsen and Højsgaard, (2005,
+    Hojsgaard, Edwards and Lauritzen (2012, <doi:10.1007/978-1-4614-2299-0>)
+    and in the paper by  Dethlefsen and Hojsgaard, (2005,
     <doi:10.18637/jss.v014.i17>).  Please see 'citation("gRbase")' for citation
     details.  NOTICE  'gRbase' requires that the packages graph, 'Rgraphviz'
     and 'RBGL' are installed from 'bioconductor'; for installation instructions
