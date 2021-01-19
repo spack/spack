@@ -16,12 +16,12 @@ class Relion(CMakePackage, CudaPackage):
     git      = "https://github.com/3dem/relion.git"
     url      = "https://github.com/3dem/relion/archive/3.1.0.zip"
 
-    version('3.1.1', sha256='63e9b77e1ba9ec239375020ad6ff631424d1a5803cba5c608c09fd44d20b1618', preferred=True)
+    version('3.1.1', sha256='63e9b77e1ba9ec239375020ad6ff631424d1a5803cba5c608c09fd44d20b1618')
     version('3.1.0', sha256='8a7e751fa6ebcdf9f36046499b3d88e170c4da86d5ff9ad1914b5f3d178867a8')
 
     # 3.0.8 latest release in 3.0 branch
-    version('3.0.8', tag='3.0.8')
-    version('3.0.7', tag='3.0.7')
+    version('3.0.8', sha256='18cdd58e3a612d32413eb37e473fe8fbf06262d2ed72e42da20356f459260973')
+    version('3.0.7', sha256='a6d37248fc4d0bfc18f4badb7986dc1b6d6849baa2128b0b4dade13cb6991a99')
 
     # relion master contains development code
     # contains 3.0 branch code
@@ -50,8 +50,8 @@ class Relion(CMakePackage, CudaPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('cuda@9:', when='@3: +cuda')
-    depends_on('intel-tbb', when='~cuda')
-    depends_on('intel-mkl', when='~cuda +mklfft')
+    depends_on('tbb', when='~cuda')
+    depends_on('mkl', when='~cuda +mklfft')
 
     def cmake_args(self):
 
