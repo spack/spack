@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import glob
 import subprocess
 
 from spack import *
@@ -75,9 +74,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.prepend_path('PATH', self._join_prefix('bin'))
         env.prepend_path('CPATH', self._join_prefix('include'))
         for dir in self._library_path():
-            env.prepend_path('LIBRARY_PATH', self._join_prefix(dir))
+            env.prepend_path('LIBRARY_PATH', dir)
         for dir in self._ld_library_path():
-            env.prepend_path('LD_LIBRARY_PATH', self._join_prefix(dir))
+            env.prepend_path('LD_LIBRARY_PATH', dir)
         env.set('I_MPI_CC', 'icx')
         env.set('I_MPI_CXX', 'icpx')
         env.set('I_MPI_FC', 'ifx')
