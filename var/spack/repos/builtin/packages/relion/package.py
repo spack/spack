@@ -39,17 +39,19 @@ class Relion(CMakePackage, CudaPackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'Profiling', 'Benchmarking'))
+    variant('mklfft', default=True, description='Use MKL rather than FFTW for FFT')
+    variant('allow_ctf_in_sagd', default=True, description='Allow CTF-modulation in SAGD, as specified in Claim 1 of patent US10,282,513B2')
 
     depends_on('mpi')
     depends_on('cmake@3:', type='build')
-    depends_on('fftw precision=float,double')
+    depends_on('fftw precision=float,double', when='~mklfft')
     depends_on('fltk', when='+gui')
     depends_on('libtiff')
 
     depends_on('cuda', when='+cuda')
     depends_on('cuda@9:', when='@3: +cuda')
-    depends_on('intel-tbb', when='@3: ~cuda')
-    depends_on('intel-mkl', when='@3: ~cuda')
+    depends_on('intel-tbb', when='~cuda')
+    depends_on('intel-mkl', when='~cuda +mklfft')
 
     def cmake_args(self):
 
@@ -61,6 +63,7 @@ class Relion(CMakePackage, CudaPackage):
             '-DGUI=%s' % ('+gui' in self.spec),
             '-DDoublePrec_CPU=%s' % ('+double' in self.spec),
             '-DDoublePrec_GPU=%s' % ('+double-gpu' in self.spec),
+            '-DALLOW_CTF_IN_SAGD=%s' % ('+allow_ctf_in_sagd' in self.spec),
         ]
 
         if '+cuda' in self.spec:
@@ -74,7 +77,7 @@ class Relion(CMakePackage, CudaPackage):
         # these new values were added in relion 3
         # do not seem to cause problems with < 3
         else:
-            args += ['-DMKLFFT=ON', '-DALTCPU=ON']
+            args += ['-DMKLFFT=%s' % ('+mklfft' in self.spec), '-DALTCPU=ON']
 
         return args
 
