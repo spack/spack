@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import glob
 
 
 class Cpmd(MakefilePackage):
@@ -31,11 +30,11 @@ class Cpmd(MakefilePackage):
     conflicts('^openblas threads=none', when='+omp')
     conflicts('^openblas threads=pthreads', when='+omp')
 
-    patch('file://{0}/patch.to.4612'.format(basedir), sha256='3b7d91e04c40418ad958069234ec7253fbf6c4be361a1d5cfd804774eeb44915', level = 0, when='@4.3')
-    patch('file://{0}/patch.to.4615'.format(basedir), sha256='5ec5790fb6ca64632bcc1b0f5b8f3423c54455766a0979ff4136624bbe8d49eb', level = 0, when='@4.3')
-    patch('file://{0}/patch.to.4616'.format(basedir), sha256='ac0bc215c4259f55da4dc59803fe636f797e241f8a01974e05730c9778ad44c4', level = 0, when='@4.3')
-    patch('file://{0}/patch.to.4621'.format(basedir), sha256='2d2bc7e37246032fc354f51da7dbdb5a219dd228867399931b0e94da1265d5ca',level = 0, when='@4.3')
-    patch('file://{0}/patch.to.4624'.format(basedir), sha256='0a19687528264bf91c9f50ffdc0b920a8511eecf5259b667c8c29350f9dabc53',level = 0, when='@4.3')
+    patch('file://{0}/patch.to.4612'.format(basedir), sha256='3b7d91e04c40418ad958069234ec7253fbf6c4be361a1d5cfd804774eeb44915', level=0, when='@4.3')
+    patch('file://{0}/patch.to.4615'.format(basedir), sha256='5ec5790fb6ca64632bcc1b0f5b8f3423c54455766a0979ff4136624bbe8d49eb', level=0, when='@4.3')
+    patch('file://{0}/patch.to.4616'.format(basedir), sha256='ac0bc215c4259f55da4dc59803fe636f797e241f8a01974e05730c9778ad44c4', level=0, when='@4.3')
+    patch('file://{0}/patch.to.4621'.format(basedir), sha256='2d2bc7e37246032fc354f51da7dbdb5a219dd228867399931b0e94da1265d5ca', level=0, when='@4.3')
+    patch('file://{0}/patch.to.4624'.format(basedir), sha256='0a19687528264bf91c9f50ffdc0b920a8511eecf5259b667c8c29350f9dabc53', level=0, when='@4.3')
 
     def edit(self, spec, prefix):
         # patch configure file
