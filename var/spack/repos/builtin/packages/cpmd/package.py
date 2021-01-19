@@ -11,7 +11,7 @@ class Cpmd(MakefilePackage):
     """The CPMD code is a parallelized plane wave / pseudopotential
     implementation of Density Functional Theory, particularly
     designed for ab-initio molecular dynamics.
-    Move to new directory, dowonload CPMD main archive and patch.to.XXXXs
+    Move to new directory, download CPMD main archive and patch.to.XXXXs
     manually, and run Spack"""
 
     homepage = "https://www.cpmd.org/wordpress/"
