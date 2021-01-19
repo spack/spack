@@ -925,6 +925,26 @@ class TestConcretize(object):
         assert s.external
         assert s.satisfies(expected)
 
+    @pytest.mark.regression('20976')
+    def test_compiler_in_nonbuildable_external_package(self):
+        packages_yaml = {
+            'external-common-openssl': {
+                'externals': [
+                    {'spec': 'external-common-openssl@1.1.1i%gcc', 'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        s = Spec("external-common-python %clang").concretized()
+        for d in s.dependencies():
+            if d.name == 'external-common-openssl':
+                compiler = 'gcc'
+            else:
+                compiler = 'clang'
+            assert s.satisfies('^' + d.name + '%' + compiler)
+
     def test_external_packages_have_consistent_hash(self):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('This tests needs the ASP-based concretizer')
