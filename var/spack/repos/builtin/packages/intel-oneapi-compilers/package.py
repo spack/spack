@@ -75,7 +75,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         env.prepend_path('CPATH', self._join_prefix('include'))
         env.prepend_path('LIBRARY_PATH', self._join_prefix('lib'))
         for dir in self._ld_library_path():
-            env.prepend_path('LD_LIBRARY_PATH', self._join_prefix(dir))
+            env.prepend_path('LD_LIBRARY_PATH', dir)
         env.set('CC', 'icx')
         env.set('CXX', 'icpx')
         env.set('FC', 'ifx')
