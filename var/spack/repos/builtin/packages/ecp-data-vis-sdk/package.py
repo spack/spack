@@ -95,8 +95,8 @@ class EcpDataVisSdk(BundlePackage):
     depends_on('ascent+shared+mpi+fortran+openmp+python+vtkh+dray', when='+ascent')
     depends_on('catalyst', when='+catalyst')
 
-    depends_on('py-cinema-lib', when='+cienma')
-    depends_on('py-cinemasci', when='+cienma')
+    depends_on('py-cinema-lib', when='+cinema')
+    depends_on('py-cinemasci', when='+cinema')
 
     variants2deps('paraview+shared+mpi+python3+kits', '+paraview', ['hdf5'])
     # +adios2 is not yet enabled in the paraview package
