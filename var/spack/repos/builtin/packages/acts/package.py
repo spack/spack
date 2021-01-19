@@ -37,6 +37,7 @@ class Acts(CMakePackage, CudaPackage):
 
     # Supported Acts versions
     version('master', branch='master')
+    version('4.01.0', commit='c383bf434ef69939b47e840e0eac0ba632e6af9f')
     version('4.00.0', commit='ed64b4b88d366b63adc4a8d1afe5bc97aa5751eb')
     version('3.00.0', commit='e20260fccb469f4253519d3f0ddb3191b7046db3')
     version('2.00.0', commit='8708eae2b2ccdf57ab7b451cfbba413daa1fc43c')
@@ -114,19 +115,19 @@ class Acts(CMakePackage, CudaPackage):
     # Build dependencies
     # FIXME: Use spack's autodiff package once there is one
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4:')
-    depends_on('cmake @3.11:', type='build')
-    depends_on('dd4hep @1.10:', when='+dd4hep')
-    depends_on('dd4hep @1.10: +geant4', when='+dd4hep +geant4')
-    depends_on('eigen @3.2.9:', type='build')
+    depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
+    depends_on('cmake @3.14:', type='build')
+    depends_on('dd4hep @1.11:', when='+dd4hep')
+    depends_on('dd4hep @1.11: +geant4', when='+dd4hep +geant4')
+    depends_on('eigen @3.3.7:', type='build')
     depends_on('geant4', when='+geant4')
-    depends_on('hepmc3@3.1:', when='+hepmc3')
-    depends_on('heppdt', when='+hepmc3')
-    depends_on('intel-tbb', when='+examples')
+    depends_on('hepmc3 @3.2.1:', when='+hepmc3')
+    depends_on('heppdt', when='+hepmc3 @:4.0')
+    depends_on('intel-tbb @2020.1:', when='+examples')
     depends_on('nlohmann-json @3.2.0:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
-    depends_on('root @6.10: cxxstd=17', when='+tgeo @0.8.1:')
+    depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
 
     # Some variant combinations do not make sense
     conflicts('+autodiff', when='@:1.01')

@@ -417,8 +417,8 @@ class Python(AutotoolsPackage):
             config_args.append('--disable-toolbox-glue')
 
         if spec.satisfies('%intel', strict=True) and \
-                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
-            config_args.append('--with-icc')
+                spec.satisfies('@2.7.12:2.8,3.5.2:3.7', strict=True):
+            config_args.append('--with-icc={0}'.format(spack_cc))
 
         if '+debug' in spec:
             config_args.append('--with-pydebug')
