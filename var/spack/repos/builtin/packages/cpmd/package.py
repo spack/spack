@@ -90,7 +90,7 @@ class Cpmd(MakefilePackage):
         test_file = join_path(test_dir, '1-h2o-pbc-geoopt.inp')
         opts = []
         if self.spec.satisfies('+mpi'):
-            exe_name = join_path(self.spec['mpi'].prefix.bin, 'mpirun')
+            exe_name = self.spec['mpi'].prefix.bin.mpirun
             opts.extend(['-n', '2'])
             opts.append(join_path(self.prefix.bin, 'cpmd.x'))
         else:
