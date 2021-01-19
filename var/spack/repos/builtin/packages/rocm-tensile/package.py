@@ -39,7 +39,7 @@ class RocmTensile(CMakePackage):
         depends_on('llvm-amdgpu@' + ver + '+openmp', type='build', when='@' + ver)
     # This is the default library format since 3.7.0
     depends_on('msgpack-c@3:', when='@3.7:')
-    depends_on('boost@1.58.0', type=('build', 'link'))
+    depends_on('boost', type=('build', 'link'))
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
