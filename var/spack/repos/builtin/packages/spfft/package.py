@@ -56,17 +56,18 @@ class Spfft(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        if spec.satisfies('+openmp'):
-            args += ["-DSPFFT_OMP=On"]
-        if spec.satisfies('+mpi'):
-            args += ["-DSPFFT_MPI=On"]
-        if spec.satisfies('+single_precision'):
-            args += ["-DSPFFT_SINGLE_PRECISION=On"]
-        if spec.satisfies('+gpu_direct'):
-            args += ["-DSPFFT_GPU_DIRECT=On"]
+        args = [
+            self.define_from_variant('SPFFT_OMP', 'openmp'),
+            self.define_from_variant('SPFFT_MPI', 'mpi'),
+            self.define_from_variant('SPFFT_SINGLE_PRECISION', 'single_precision'),
+            self.define_from_variant('SPFFT_GPU_DIRECT', 'gpu_direct'),
+            self.define_from_variant('SPFFT_FORTAN', 'fortran'),
+            self.define_from_variant('SPFFT_STATIC', 'static')
+        ]
+
         if spec.satisfies('+cuda'):
             args += ["-DSPFFT_GPU_BACKEND=CUDA"]
+
         if spec.satisfies('+rocm'):
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
             args += [
@@ -75,10 +76,6 @@ class Spfft(CMakePackage, CudaPackage):
                 '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs),
                 '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)
             ]
-        if spec.satisfies('+fortran'):
-            args += ["-DSPFFT_FORTAN=On"]
-        if spec.satisfies('+static'):
-            args += ["-DSPFFT_STATIC=On"]
 
         if 'fftw' in spec:
             args += ["-DSPFFT_FFTW_LIB=FFTW"]
