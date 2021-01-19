@@ -202,8 +202,8 @@ def format_root_spec(spec, main_phase, strip_compiler):
         #     spec.name, spec.version, spec.compiler, spec.architecture)
 
 
-def spec_deps_key_label(s):
-    return s.dag_hash(), "%s/%s" % (s.name, s.dag_hash(7))
+def spec_deps_key(s):
+    return '{0}/{1}'.format(s.name, s.dag_hash(7))
 
 
 def _add_dependency(spec_label, dep_label, deps):
@@ -390,7 +390,7 @@ def compute_spec_deps(spec_list):
         # root_spec = get_spec_string(spec)
         root_spec = spec
 
-        rkey, rlabel = spec_deps_key_label(spec)
+        rkey = spec_deps_key(spec)
 
         for s in spec.traverse(deptype=all):
             if s.external:
@@ -400,22 +400,22 @@ def compute_spec_deps(spec_list):
             up_to_date_mirrors = bindist.get_mirrors_for_spec(
                 spec=s, full_hash_match=True)
 
-            skey, slabel = spec_deps_key_label(s)
-            spec_labels[slabel] = {
+            skey = spec_deps_key(s)
+            spec_labels[skey] = {
                 'spec': get_spec_string(s),
                 'root': root_spec,
                 'needs_rebuild': not up_to_date_mirrors,
             }
 
-            append_dep(rlabel, slabel)
+            append_dep(rkey, skey)
 
             for d in s.dependencies(deptype=all):
-                dkey, dlabel = spec_deps_key_label(d)
+                dkey = spec_deps_key(d)
                 if d.external:
                     tty.msg('Will not stage external dep: {0}'.format(d))
                     continue
 
-                append_dep(slabel, dlabel)
+                append_dep(skey, dkey)
 
     for spec_label, spec_holder in spec_labels.items():
         specs.append({
@@ -495,7 +495,7 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
                      enable_artifacts_buildcache):
     needs_list = []
     for dep_job in dep_jobs:
-        dep_spec_key = '{0}/{1}'.format(dep_job.name, dep_job.dag_hash(7))
+        dep_spec_key = spec_deps_key(dep_job)
         dep_spec_info = stage_spec_dict[dep_spec_key]
 
         if not prune_dag or dep_spec_info['needs_rebuild']:
@@ -513,8 +513,6 @@ def format_job_needs(phase_name, strip_compilers, dep_jobs,
 def add_pr_mirror(url):
     cfg_scope = cfg.default_modify_scope()
     mirrors = cfg.get('mirrors', scope=cfg_scope)
-    if not mirrors:
-        mirrors = syaml.syaml_dict()
     items = [(n, u) for n, u in mirrors.items()]
     items.insert(0, ('ci_pr_mirror', url))
     cfg.set('mirrors', syaml.syaml_dict(items), scope=cfg_scope)
@@ -523,8 +521,6 @@ def add_pr_mirror(url):
 def remove_pr_mirror():
     cfg_scope = cfg.default_modify_scope()
     mirrors = cfg.get('mirrors', scope=cfg_scope)
-    if not mirrors:
-        mirrors = syaml.syaml_dict()
     mirrors.pop('ci_pr_mirror')
     cfg.set('mirrors', mirrors, scope=cfg_scope)
 
@@ -569,9 +565,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
         pr_mirror_url = url_util.join(SPACK_PR_MIRRORS_ROOT_URL,
                                       spack_pr_branch)
 
-    ci_mirrors = yaml_root['mirrors']
-    mirror_urls = [url for url in ci_mirrors.values()]
-    if not mirror_urls[0]:
+    if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
         tty.die('spack ci generate requires an env containing a mirror')
 
     enable_artifacts_buildcache = False
@@ -622,13 +616,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
         if pr_mirror_url:
             remove_pr_mirror()
 
-    if print_summary:
-        for phase in phases:
-            phase_name = phase['name']
-            tty.msg('Stages for phase "{0}"'.format(phase_name))
-            phase_stages = staged_phases[phase_name]
-            print_staging_summary(*phase_stages)
-
     all_job_names = []
     output_object = {}
     job_id = 0
@@ -653,11 +640,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
             stage_id += 1
 
             for spec_label in stage_jobs:
-                spec_needs_rebuild = spec_labels[spec_label]['needs_rebuild']
-                if prune_dag and not spec_needs_rebuild:
-                    continue
-
-                root_spec = spec_labels[spec_label]['rootSpec']
+                spec_record = spec_labels[spec_label]
+                root_spec = spec_record['rootSpec']
                 pkg_name = pkg_name_from_spec_label(spec_label)
                 release_spec = root_spec[pkg_name]
 
@@ -719,7 +703,6 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                     'SPACK_JOB_SPEC_PKG_NAME': release_spec.name,
                     'SPACK_COMPILER_ACTION': compiler_action,
                     'SPACK_IS_PR_PIPELINE': str(is_pr_pipeline),
-                    'SPACK_SPEC_NEEDS_REBUILD': str(spec_needs_rebuild),
                 }
 
                 job_dependencies = []
@@ -746,6 +729,8 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                                          prune_dag, spec_labels,
                                          enable_artifacts_buildcache))
 
+                rebuild_spec = spec_record['needs_rebuild']
+
                 # This next section helps gitlab make sure the right
                 # bootstrapped compiler exists in the artifacts buildcache by
                 # creating an artificial dependency between this spec and its
@@ -761,11 +746,12 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                     compiler_pkg_spec = compilers.pkg_spec_for_compiler(
                         release_spec.compiler)
                     for bs in bootstrap_specs:
-                        bs_arch = bs['spec'].architecture
+                        c_spec = bs['spec']
+                        bs_arch = c_spec.architecture
                         bs_arch_family = (bs_arch.target
                                                  .microarchitecture
                                                  .family)
-                        if (bs['spec'].satisfies(compiler_pkg_spec) and
+                        if (c_spec.satisfies(compiler_pkg_spec) and
                             bs_arch_family == spec_arch_family):
                             # We found the bootstrap compiler this release spec
                             # should be built with, so for DAG scheduling
@@ -773,13 +759,26 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                             # to the jobs "needs".  But if artifact buildcache
                             # is enabled, we'll have to add all transtive deps
                             # of the compiler as well.
-                            dep_jobs = [bs['spec']]
+
+                            # Here we check whether the bootstrapped compiler
+                            # needs to be rebuilt.  Until compilers are proper
+                            # dependencies, we artificially force the spec to
+                            # be rebuilt if the compiler targeted to build it
+                            # needs to be rebuilt.
+                            bs_specs, _, _ = staged_phases[bs['phase-name']]
+                            c_spec_key = spec_deps_key(c_spec)
+                            rbld_comp = bs_specs[c_spec_key]['needs_rebuild']
+                            rebuild_spec = rebuild_spec or rbld_comp
+                            # Also update record so dependents do not fail to
+                            # add this spec to their "needs"
+                            spec_record['needs_rebuild'] = rebuild_spec
+
+                            dep_jobs = [c_spec]
                             if enable_artifacts_buildcache:
                                 dep_jobs = [
-                                    d for d in bs['spec'].traverse(deptype=all)
+                                    d for d in c_spec.traverse(deptype=all)
                                 ]
 
-                            bs_specs, _, _ = staged_phases[bs['phase-name']]
                             job_dependencies.extend(
                                 format_job_needs(bs['phase-name'],
                                                  bs['strip-compilers'],
@@ -796,8 +795,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                                 'not the compiler required by the spec, or ',
                                 'because the target arch families of the ',
                                 'spec and the compiler did not match'
-                            ]).format(bs['spec'], release_spec)
+                            ]).format(c_spec, release_spec)
                             tty.debug(debug_msg)
+
+                if prune_dag and not rebuild_spec:
+                    continue
+
+                job_vars['SPACK_SPEC_NEEDS_REBUILD'] = str(rebuild_spec)
 
                 if enable_cdash_reporting:
                     cdash_build_name = get_cdash_build_name(
@@ -866,6 +870,13 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
                 output_object[job_name] = job_object
                 job_id += 1
+
+    if print_summary:
+        for phase in phases:
+            phase_name = phase['name']
+            tty.msg('Stages for phase "{0}"'.format(phase_name))
+            phase_stages = staged_phases[phase_name]
+            print_staging_summary(*phase_stages)
 
     tty.debug('{0} build jobs generated in {1} stages'.format(
         job_id, stage_id))

@@ -432,13 +432,12 @@ def ci_reindex(args):
     env = ev.get_env(args, 'ci rebuild-index', required=True)
     yaml_root = ev.config_dict(env.yaml)
 
-    if 'mirrors' in yaml_root:
-        ci_mirrors = yaml_root['mirrors']
-        mirror_urls = [url for url in ci_mirrors.values()]
-        remote_mirror_url = mirror_urls[0]
+    if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
+        tty.die('spack ci rebuild-index requires an env containing a mirror')
 
-    if not remote_mirror_url:
-        tty.die('spack ci rebuild requires an env containing a mirror')
+    ci_mirrors = yaml_root['mirrors']
+    mirror_urls = [url for url in ci_mirrors.values()]
+    remote_mirror_url = mirror_urls[0]
 
     buildcache.update_index(remote_mirror_url, update_keys=True)
 

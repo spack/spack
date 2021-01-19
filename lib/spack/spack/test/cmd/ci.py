@@ -11,6 +11,7 @@ from jsonschema import validate
 
 import spack
 import spack.ci as ci
+import spack.compilers as compilers
 import spack.config
 import spack.environment as ev
 import spack.hash_types as ht
@@ -19,7 +20,7 @@ import spack.paths as spack_paths
 import spack.repo as repo
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
-from spack.spec import Spec
+from spack.spec import Spec, CompilerSpec
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.executable as exe
 import spack.util.spack_yaml as syaml
@@ -31,6 +32,7 @@ env_cmd = spack.main.SpackCommand('env')
 mirror_cmd = spack.main.SpackCommand('mirror')
 gpg_cmd = spack.main.SpackCommand('gpg')
 install_cmd = spack.main.SpackCommand('install')
+uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
 git = exe.which('git', required=True)
 
@@ -77,13 +79,13 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
         spec_a = Spec('a')
         spec_a.concretize()
 
-        spec_a_label = ci.spec_deps_key_label(spec_a)[1]
-        spec_b_label = ci.spec_deps_key_label(spec_a['b'])[1]
-        spec_c_label = ci.spec_deps_key_label(spec_a['c'])[1]
-        spec_d_label = ci.spec_deps_key_label(spec_a['d'])[1]
-        spec_e_label = ci.spec_deps_key_label(spec_a['e'])[1]
-        spec_f_label = ci.spec_deps_key_label(spec_a['f'])[1]
-        spec_g_label = ci.spec_deps_key_label(spec_a['g'])[1]
+        spec_a_label = ci.spec_deps_key(spec_a)
+        spec_b_label = ci.spec_deps_key(spec_a['b'])
+        spec_c_label = ci.spec_deps_key(spec_a['c'])
+        spec_d_label = ci.spec_deps_key(spec_a['d'])
+        spec_e_label = ci.spec_deps_key(spec_a['e'])
+        spec_f_label = ci.spec_deps_key(spec_a['f'])
+        spec_g_label = ci.spec_deps_key(spec_a['g'])
 
         spec_labels, dependencies, stages = ci.stage_spec_jobs([spec_a])
 
@@ -1090,3 +1092,171 @@ spack:
             with open(index_path) as idx_fd:
                 index_object = json.load(idx_fd)
                 validate(index_object, db_idx_schema)
+
+
+def test_ci_generate_bootstrap_prune_dag(
+        install_mockery_mutable_config, mock_packages, mock_fetch,
+        mock_archive, mutable_config, monkeypatch, tmpdir,
+        mutable_mock_env_path, env_deactivate):
+    """Test compiler bootstrapping with DAG pruning.  Specifically, make
+       sure that if we detect the bootstrapped compiler needs to be rebuilt,
+       we ensure the spec we want to build with that compiler is scheduled
+       for rebuild as well."""
+
+    # Create a temp mirror directory for buildcache usage
+    mirror_dir = tmpdir.join('mirror_dir')
+    mirror_url = 'file://{0}'.format(mirror_dir.strpath)
+
+    # Install a compiler, because we want to put it in a buildcache
+    install_cmd('gcc@10.1.0%gcc@4.5.0')
+
+    # Put installed compiler in the buildcache
+    buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
+                   'gcc@10.1.0%gcc@4.5.0')
+
+    # Now uninstall the compiler
+    uninstall_cmd('-y', 'gcc@10.1.0%gcc@4.5.0')
+
+    monkeypatch.setattr(spack.concretize.Concretizer,
+                        'check_for_compiler_existence', False)
+    spack.config.set('config:install_missing_compilers', True)
+    assert CompilerSpec('gcc@10.1.0') not in compilers.all_compiler_specs()
+
+    # Configure the mirror where we put that buildcache w/ the compiler
+    mirror_cmd('add', 'test-mirror', mirror_url)
+
+    install_cmd('--no-check-signature', 'a%gcc@10.1.0')
+
+    # Put spec built with installed compiler in the buildcache
+    buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
+                   'a%gcc@10.1.0')
+
+    # Now uninstall the spec
+    uninstall_cmd('-y', 'a%gcc@10.1.0')
+
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  definitions:
+    - bootstrap:
+      - gcc@10.1.0%gcc@4.5.0
+  specs:
+    - a%gcc@10.1.0
+  mirrors:
+    atestm: {0}
+  gitlab-ci:
+    bootstrap:
+      - name: bootstrap
+        compiler-agnostic: true
+    mappings:
+      - match:
+          - arch=test-debian6-x86_64
+        runner-attributes:
+          tags:
+            - donotcare
+      - match:
+          - arch=test-debian6-core2
+        runner-attributes:
+          tags:
+            - meh
+""".format(mirror_url))
+
+    # Without this monkeypatch, pipeline generation process would think that
+    # nothing in the environment needs rebuilding.  With the monkeypatch, the
+    # process sees the compiler as needing a rebuild, which should then result
+    # in the specs built with that compiler needing a rebuild too.
+    def fake_get_mirrors_for_spec(spec=None, force=False,
+                                  full_hash_match=False,
+                                  mirrors_to_check=None):
+        if spec.name == 'gcc':
+            return []
+        else:
+            return [{
+                'spec': spec,
+                'mirror_url': mirror_url,
+            }]
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            monkeypatch.setattr(
+                ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as of:
+                yaml_contents = of.read()
+                original_yaml_contents = syaml.load(yaml_contents)
+
+            # without the monkeypatch, everything appears up to date and no
+            # rebuild jobs are generated.
+            assert(original_yaml_contents)
+            assert('noop' in original_yaml_contents)
+
+            monkeypatch.setattr(spack.binary_distribution,
+                                'get_mirrors_for_spec',
+                                fake_get_mirrors_for_spec)
+
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as of:
+                yaml_contents = of.read()
+                new_yaml_contents = syaml.load(yaml_contents)
+
+            assert(new_yaml_contents)
+
+            # This 'needs' graph reflects that even though specs 'a' and 'b' do
+            # not otherwise need to be rebuilt (thanks to DAG pruning), they
+            # both end up in the generated pipeline because the compiler they
+            # depend on is bootstrapped, and *does* need to be rebuilt.
+            needs_graph = {
+                '(bootstrap) gcc': [],
+                '(specs) b': [
+                    '(bootstrap) gcc',
+                ],
+                '(specs) a': [
+                    '(bootstrap) gcc',
+                    '(specs) b',
+                ],
+            }
+
+            _validate_needs_graph(new_yaml_contents, needs_graph, False)
+
+
+def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
+                                       env_deactivate, mock_packages):
+    """Make sure we catch if there is not a mirror and report an error"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  gitlab-ci:
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        with ev.read('test'):
+            # Check the 'generate' subcommand
+            output = ci_cmd('generate', '--output-file', outputfile,
+                            output=str, fail_on_error=False)
+            ex = 'spack ci generate requires an env containing a mirror'
+            assert(ex in output)
+
+            # Also check the 'rebuild-index' subcommand
+            output = ci_cmd('rebuild-index', output=str, fail_on_error=False)
+            ex = 'spack ci rebuild-index requires an env containing a mirror'
+            assert(ex in output)
