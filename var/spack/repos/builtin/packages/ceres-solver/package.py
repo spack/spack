@@ -15,11 +15,11 @@ class CeresSolver(CMakePackage):
     """
 
     homepage = "http://ceres-solver.org"
-    url      = "https://github.com/ceres-solver/ceres-solver/archive/2.0.0.tar.gz"
+    url      = "http://ceres-solver.org/ceres-solver-1.12.0.tar.gz"
 
-    version('2.0.0',  sha256='2ab0348e0f65fdf43bebcd325a1c73f7e8999691ee75e2a2981281931c42e9fa')
-    version('1.14.0', sha256='1296330fcf1e09e6c2f926301916f64d4a4c5c0ff12d460a9bc5d4c48411518f')
-    version('1.12.0', sha256='7433c1e0518108bb3e4b9d8a2a481da43cd490e839f234feb828b4a6b2b07a23')
+    version('2.0.0',  sha256='10298a1d75ca884aa0507d1abb0e0f04800a92871cd400d4c361b56a777a7603')
+    version('1.14.0', sha256='4744005fc3b902fed886ea418df70690caa8e2ff6b5a90f3dd88a3d291ef8e8e')
+    version('1.12.0', sha256='745bfed55111e086954126b748eb9efe20e30be5b825c6dec3c525cf20afc895')
 
     variant('suitesparse', default=False, description='Build with SuiteSparse')
     variant('shared', default=True, description='Build shared libraries')
