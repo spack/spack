@@ -33,13 +33,13 @@ class Pvm(MakefilePackage):
         # variable "PVM_ROOT" to the path where PVM resides
         env['PVM_ROOT'] = self.stage.source_path
 
-    def setup_build_environment(self, spack_env):
+    def setup_build_environment(self, env):
         tirpc = self.spec['libtirpc'].prefix
-        spack_env.prepend_path(
+        env.prepend_path(
             'SPACK_INCLUDE_DIRS',
-            join_path(tirpc, 'include', 'tirpc'),
+            tirpc.include.tirpc,
         )
-        spack_env.set('SPACK_LDLIBS', '-ltirpc')
+        env.set('SPACK_LDLIBS', '-ltirpc')
 
     def install(self, spec, prefix):
         pvm_arch = self.pvm_arch
