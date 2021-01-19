@@ -57,13 +57,12 @@ class Mivisionx(CMakePackage):
     depends_on('rocm-cmake@3.5.0', type='build', when='@1.7')
     depends_on('miopen-opencl@3.5.0', type=('build', 'run', 'link'), when='@1.7')
     depends_on('miopengemm@1.1.6', type=('build', 'run', 'link'), when='@1.7')
+    depends_on('openssl', type=('build', 'link'), when='@4.0.0')
     for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-opencl@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('miopengemm@' + ver, type=('build', 'run', 'link'), when='@' + ver)
         depends_on('miopen-opencl@' + ver, type='link', when='@' + ver)
-        if ver in ['4.0.0']:
-            depends_on('openssl', type=('build', 'link'))
 
     def cmake_args(self):
         spec = self.spec
