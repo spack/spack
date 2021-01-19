@@ -67,7 +67,7 @@ class Cpmd(MakefilePackage):
         )
 
         # LFLAGS
-        cp.filter('\'-static \'', '')
+        cp.filter("'-static '", '')
 
         # Compiler specific
         if spec.satisfies('%fj'):
