@@ -48,6 +48,8 @@ class Relion(CMakePackage, CudaPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('cuda@9:', when='@3: +cuda')
+    depends_on('intel-tbb', when='@3: ~cuda')
+    depends_on('intel-mkl', when='@3: ~cuda')
 
     def cmake_args(self):
 
@@ -72,7 +74,7 @@ class Relion(CMakePackage, CudaPackage):
         # these new values were added in relion 3
         # do not seem to cause problems with < 3
         else:
-            args += ['-DMKLFFT=ON', '-DFORCE_OWN_TBB=ON', '-DALTCPU=ON']
+            args += ['-DMKLFFT=ON', '-DALTCPU=ON']
 
         return args
 
