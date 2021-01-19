@@ -20,8 +20,6 @@ class Sortmerna(CMakePackage):
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
-    build_directory = 'spack-build'
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         with working_dir(join_path(self.build_directory, 'src', 'indexdb')):
