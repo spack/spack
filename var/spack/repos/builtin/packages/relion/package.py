@@ -15,13 +15,11 @@ class Relion(CMakePackage, CudaPackage):
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
 
-    # 3.1 is beta but referenced in published papers
-    # prefer stable 3.0 until no longer beta
-    version('3.1_beta', branch='ver3.1')
+    version('3.1.1', tag='3.1.1', preferred=True)
+    version('3.1.0', tag='3.1.0')
 
     # 3.0.8 latest release in 3.0 branch
-    # prefer for now
-    version('3.0.8', tag='3.0.8', preferred=True)
+    version('3.0.8', tag='3.0.8')
     version('3.0.7', tag='3.0.7')
 
     # relion master contains development code
