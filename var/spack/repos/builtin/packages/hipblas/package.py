@@ -35,6 +35,15 @@ class Hipblas(CMakePackage):
             '-DBUILD_CLIENTS_SAMPLES=OFF',
             '-DBUILD_CLIENTS_TESTS=OFF'
         ]
+
+        # hipblas actually prefers CUDA over AMD GPUs when you have it
+        # installed...
+        if self.spec.satisfies('@:3.9.0'):
+            args.append('-DTRY_CUDA=OFF')
+
+        else:
+            args.append('-DUSE_CUDA=OFF')
+
         return args
 
     def setup_build_environment(self, env):
