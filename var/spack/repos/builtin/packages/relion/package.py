@@ -14,9 +14,10 @@ class Relion(CMakePackage, CudaPackage):
 
     homepage = "http://http://www2.mrc-lmb.cam.ac.uk/relion"
     git      = "https://github.com/3dem/relion.git"
+    url      = "https://github.com/3dem/relion/archive/3.1.0.zip"
 
-    version('3.1.1', tag='3.1.1', preferred=True)
-    version('3.1.0', tag='3.1.0')
+    version('3.1.1', sha256='63e9b77e1ba9ec239375020ad6ff631424d1a5803cba5c608c09fd44d20b1618', preferred=True)
+    version('3.1.0', sha256='8a7e751fa6ebcdf9f36046499b3d88e170c4da86d5ff9ad1914b5f3d178867a8')
 
     # 3.0.8 latest release in 3.0 branch
     version('3.0.8', tag='3.0.8')
