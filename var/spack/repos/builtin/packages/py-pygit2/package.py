@@ -14,15 +14,20 @@ class PyPygit2(PythonPackage):
     homepage = "http://www.pygit2.org/"
     pypi = "pygit2/pygit2-0.24.1.tar.gz"
 
+    version('1.4.0', sha256='cbeb38ab1df9b5d8896548a11e63aae8a064763ab5f1eabe4475e6b8a78ee1c8')
+    version('1.3.0', sha256='0be93f6a8d7cbf0cc79ae2f0afb1993fc055fc0018c27e2bd01ba143e51d4452')
     version('0.24.1', sha256='4d1d0196b38d6012faf0a7c45e235c208315672b6035da504566c605ba494064')
 
     extends('python')
     depends_on('py-setuptools', type='build')
     # Version must match with libgit2
     # See: http://www.pygit2.org/install.html
-    depends_on('libgit2@0.24:', when='@0.24:')
+    depends_on('libgit2@1.1:1.1.99', when='@1.4:')
+    depends_on('libgit2@1.0:1.0.99', when='@1.1:1.3.99')
+    depends_on('libgit2@0.28:0.28.99', when='@:1.0.99')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
+    depends_on('py-cached-property', type=('run'))
 
     def setup_build_environment(self, env):
         spec = self.spec
