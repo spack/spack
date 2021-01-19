@@ -29,9 +29,9 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'openmp': [False, 'Whether to build OpenMP backend'],
         'pthread': [False, 'Whether to build Pthread backend'],
         'serial': [True,  'Whether to build serial backend'],
-        'hip': [False, 'Whether to build HIP backend'],
+        'rocm': [False, 'Whether to build HIP backend'],
     }
-    conflicts("+hip", when="@:3.0")
+    conflicts("+rocm", when="@:3.0")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -71,15 +71,6 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'qthread': [False, 'Eenable the QTHREAD library'],
         'tests': [False, 'Build for tests'],
     }
-
-    amd_gpu_arches = (
-        'vega900',
-        'vega906',
-        'vega908',
-    )
-    variant("amd_gpu_arch", default='none', values=('none',) + amd_gpu_arches,
-            description="AMD GPU architecture")
-    conflicts("+hip", when="amd_gpu_arch=none")
 
     spack_micro_arch_map = {
         "graviton": "",
@@ -151,6 +142,12 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
 
+    amdgpu_arch_map = {
+        'gfx900': 'vega900',
+        'gfx906': 'vega906',
+        'gfx908': 'vega908'
+    }
+
     devices_values = list(devices_variants.keys())
     for dev in devices_variants:
         dflt, desc = devices_variants[dev]
@@ -187,8 +184,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     variant('shared', default=True, description='Build shared libraries')
 
     def append_args(self, cmake_prefix, cmake_options, spack_options):
-        for opt in cmake_options:
-            enablestr = "+%s" % opt
+        variant_to_cmake_option = {'rocm': 'hip'}
+        for variant_name in cmake_options:
+            enablestr = "+%s" % variant_name
+            opt = variant_to_cmake_option.get(variant_name, variant_name)
             optuc = opt.upper()
             optname = "Kokkos_%s_%s" % (cmake_prefix, optuc)
             option = None
@@ -226,14 +225,20 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                 if not cuda_arch == "none":
                     kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
                     spack_microarches.append(kokkos_arch_name)
+
         kokkos_microarch_name = self.spack_micro_arch_map[spec.target.name]
         if kokkos_microarch_name:
             spack_microarches.append(kokkos_microarch_name)
 
-        for arch in self.amd_gpu_arches:
-            keyval = "amd_gpu_arch=%s" % arch
-            if keyval in spec:
-                spack_microarches.append(arch)
+        if "+rocm" in spec:
+            for amdgpu_target in spec.variants['amdgpu_target'].value:
+                if amdgpu_target != "none":
+                    if amdgpu_target in self.amdgpu_arch_map:
+                        spack_microarches.append(
+                            self.amdgpu_arch_map[amdgpu_target])
+                    else:
+                        raise SpackError("Unsupported target: {0}".format(
+                            amdgpu_target))
 
         for arch in spack_microarches:
             options.append("-DKokkos_ARCH_%s=ON" % arch.upper())
