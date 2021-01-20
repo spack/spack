@@ -10,7 +10,7 @@ CudaPackage
 -----------
 
 Different from other packages, ``CudaPackage`` does not represent a build system.
-Instead its goal is to simplify and unify usage of ``CUDA`` in other packages.
+Instead its goal is to simplify and unify usage of ``CUDA`` in other packages by providing a ` mixin-class <https://en.wikipedia.org/wiki/Mixin>`__.
 
 You can find source for the package at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/cuda.py>`__.
@@ -35,7 +35,7 @@ This package provides the following variants:
   ``CUDA`` dependencies and compiler conflicts.
 
   GPUs and their compute capability versions are listed at
-  https://en.wikipedia.org/wiki/CUDA#GPUs_supported.
+  https://developer.nvidia.com/cuda-gpus .
 
 ^^^^^^^^^
 Conflicts
@@ -57,8 +57,8 @@ to terminate such build attempts with a suitable message:
 Similarly, if your software does not support all versions of the property,
 you could add ``conflicts`` to your package for those versions.  For example,
 suppose your software does not work with CUDA compute capability versions
-prior to `5.0`.  You can add the following code to display a custom message
-should a user attempt such a build:
+prior to SM 5.0 (``50``).  You can add the following code to display a
+custom message should a user attempt such a build:
 
 .. code-block:: python
 
