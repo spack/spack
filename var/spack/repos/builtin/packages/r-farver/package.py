@@ -7,7 +7,15 @@ from spack import *
 
 
 class RFarver(RPackage):
-    """farver: High Performance Colour Space Manipulation"""
+    """High Performance Colour Space Manipulation
+
+    The encoding of colour can be handled in many different ways, using
+    different colour spaces. As different colour spaces have different uses,
+    efficient conversion between these representations are important. The
+    'farver' package provides a set of functions that gives access to very fast
+    colour space conversion and comparisons implemented in C++, and offers
+    speed improvements over the 'convertColor' function in the 'grDevices'
+    package."""
 
     homepage = "https://github.com/thomasp85/farver"
     url      = "https://cloud.r-project.org/src/contrib/farver_2.0.1.tar.gz"

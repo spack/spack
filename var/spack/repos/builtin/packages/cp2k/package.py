@@ -22,6 +22,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ['dev-zero']
 
+    version('8.1', sha256='7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772')
     version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
     version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
@@ -70,6 +71,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             multi=False)
 
     depends_on('python', type='build')
+    depends_on('python@3:', when='@8:', type='build')
 
     depends_on('blas')
     depends_on('lapack')
@@ -125,7 +127,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    depends_on('libvori@201217:', when='@8:+libvori', type='build')
+    depends_on('libvori@201219:', when='@8:+libvori', type='build')
     depends_on('spglib', when='+spglib')
 
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI

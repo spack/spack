@@ -34,3 +34,5 @@ packages:
     externals:
       - spec: external-buildable-with-variant@1.1.special +baz
         prefix: /usr
+      - spec: external-buildable-with-variant@0.9 +baz
+        prefix: /usr
