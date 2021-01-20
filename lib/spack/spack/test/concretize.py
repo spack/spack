@@ -926,21 +926,30 @@ class TestConcretize(object):
         assert s.satisfies(expected)
 
     @pytest.mark.regression('20976')
-    def test_compiler_in_nonbuildable_external_package(self):
+    @pytest.mark.parametrize('compiler,spec_str,expected', [
+        ('gcc', 'external-common-python %clang',
+         '%clang ^external-common-openssl%gcc ^external-common-gdbm%clang'),
+        ('clang', 'external-common-python',
+         '%clang ^external-common-openssl%clang ^external-common-gdbm%clang')
+    ])
+    def test_compiler_in_nonbuildable_external_package(
+            self, compiler, spec_str, expected
+    ):
         """Check that the compiler of a non-buildable external package does not
-           spread to other dependencies"""
+           spread to other dependencies, unless no other commpiler is specified."""
         packages_yaml = {
             'external-common-openssl': {
                 'externals': [
-                    {'spec': 'external-common-openssl@1.1.1i%gcc', 'prefix': '/usr'}
+                    {'spec': 'external-common-openssl@1.1.1i%' + compiler,
+                     'prefix': '/usr'}
                 ],
                 'buildable': False
             }
         }
         spack.config.set('packages', packages_yaml)
 
-        s = Spec("external-common-python %clang").concretized()
-        assert s.satisfies('^external-common-openssl%gcc ^external-common-gdbm%clang')
+        s = Spec(spec_str).concretized()
+        assert s.satisfies(expected)
         assert 'external-common-perl' not in [d.name for d in s.dependencies()]
 
     def test_external_packages_have_consistent_hash(self):
