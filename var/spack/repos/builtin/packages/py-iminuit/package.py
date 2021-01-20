@@ -17,4 +17,4 @@ class PyIminuit(PythonPackage):
 
     # Required dependencies
     depends_on('py-setuptools', type='build')
-    depends_on('py-numpy', type=('build', 'run'), when='@1.3:')
+    depends_on('py-numpy', type=('build', 'run'), when='@1.11.3:')
