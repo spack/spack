@@ -17,11 +17,11 @@ class Mvapich2Gdr(AutotoolsPackage):
 
     homepage = 'http://mvapich.cse.ohio-state.edu'
     # This link isn't real
-    url      = 'file:///home/reifsteck.8/spack_mirror/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
+    url      = 'file:///home/packager/spack-related/t9nLc716YPXKfDjPCuyWe6lgJ7beg0z03dtXOmvWaqCzJcjbJR/tar-bundles/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
     maintainers = ['nithintsk', 'harisubramoni']
 
-    version('2.3.5', sha256='6586d0e061794f99b9ab0c60e88ff32ed1427927d12472c6696dd910975f7aae')
+    version('2.3.5', sha256='bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4')
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
     version('2.3.3', sha256='9b7b5dd235dbf85099fba3b6f1ccb49bb755923efed66ddc335921f44cb1b8a8')
 
