@@ -24,6 +24,8 @@ class LibcapNg(AutotoolsPackage):
     depends_on('swig',     type='build')
     depends_on('python@2.7:',   type=('build', 'link', 'run'), when='+python')
 
+    variant('python', default=True, description='Enable python')
+
     extends('python', when='+python')
 
     def setup_build_environment(self, env):
@@ -35,9 +37,9 @@ class LibcapNg(AutotoolsPackage):
         spec = self.spec
         if spec.satisfies('+python'):
             if spec.satisfies('^python@3:'):
-                args.extend(['-without-python', '-with-python3'])
+                args.extend(['--without-python', '--with-python3'])
             else:
-                args.extend(['-with-python', '-without-python3'])
+                args.extend(['--with-python', '--without-python3'])
         else:
-            args.extend(['-without-python', '-without-python3'])
+            args.extend(['--without-python', '--without-python3'])
         return args
