@@ -15,9 +15,9 @@ class PyMoviepy(PythonPackage):
     including GIF."""
 
     homepage = "https://zulko.github.io/moviepy/"
-    url      = "https://github.com/Zulko/moviepy/archive/v1.0.3.tar.gz"
+    pypi = "moviepy/moviepy-1.0.3.tar.gz"
 
-    version('1.0.3',      sha256='2bc5f749b614d7d4475096ca8cb59681ad2cf332eeb6fd129e6f8a6e6da5836e')
+    version('1.0.3', sha256='2884e35d1788077db3ff89e763c5ba7bfddbd7ae9108c9bc809e7ba58fa433f5')
 
     depends_on('py-decorator@4.0.2:4.9999', type=('build', 'run'))
     depends_on('py-imageio@2.5:2.9999', when='^python@3.4:', type=('build', 'run'))
