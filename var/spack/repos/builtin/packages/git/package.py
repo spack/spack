@@ -311,7 +311,7 @@ class Git(AutotoolsPackage):
         # Libs from perl-alien-svn and apr-util are required in
         # LD_LIBRARY_PATH
         # TODO: extend to other platforms
-        if "+svn" in self.spec and sys.platform.startswith('linux'):
+        if "+svn platform=linux" in self.spec:
             perl_svn = self.spec['perl-alien-svn']
             env.prepend_path('LD_LIBRARY_PATH', join_path(
                 perl_svn.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
