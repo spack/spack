@@ -251,12 +251,16 @@ class PyclingoDriver(object):
         if not clingo:
             # TODO: Find a way to vendor the concrete spec
             # in a cross-platform way
-            clingo_spec = spack.spec.Spec('clingo@spack+python')
-            with spack.bootstrap.system_python_context():
+            with spack.bootstrap.ensure_bootstrap_configuration():
+                generic_target = archspec.cpu.host().family
+                spec_str = 'clingo-bootstrap@spack+python target={0}'.format(
+                    str(generic_target)
+                )
+                clingo_spec = spack.spec.Spec(spec_str)
                 clingo_spec._old_concretize()
-            spack.bootstrap.make_module_available(
-                'clingo', spec=clingo_spec, install=True)
-            import clingo
+                spack.bootstrap.make_module_available(
+                    'clingo', spec=clingo_spec, install=True)
+                import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
 

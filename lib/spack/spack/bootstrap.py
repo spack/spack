@@ -9,6 +9,10 @@ import sys
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
+import spack.architecture
+import spack.config
+import spack.paths
+import spack.repo
 import spack.spec
 import spack.store
 import spack.user_environment as uenv
@@ -150,3 +154,20 @@ def get_executable(exe, spec=None, install=False):
         return ret
 
     raise Exception  # TODO specify
+
+
+@contextlib.contextmanager
+def ensure_bootstrap_configuration():
+    # Default configuration scopes excluding command
+    # line and builtin
+    config_scopes = [
+        spack.config.ConfigScope(name, path)
+        for name, path in spack.config.configuration_paths
+    ]
+
+    with spack.architecture.use_platform(spack.architecture.real_platform()):
+        with spack.config.use_configuration(*config_scopes):
+            with spack.repo.use_repositories(spack.paths.packages_path):
+                with spack.store.use_store(spack.paths.user_bootstrap_store):
+                    with system_python_context():
+                        yield
