@@ -24,6 +24,8 @@ class Systemtap(AutotoolsPackage):
 
     depends_on('gettext')
     depends_on('elfutils')
+    depends_on('sqlite')
+    depends_on('py-setuptools')
 
     def configure_args(self):
         args = ['LDFLAGS=-lintl']
