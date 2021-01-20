@@ -177,7 +177,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             # Remove incompatible preprocessor flags
             filter_file('-MF ', '',
                         'Configurations/unix-Makefile.tmpl', string=True)
-            filter_file('-MT \$\@ ', '',
+            filter_file(r'-MT \$\@ ', '',
                         'Configurations/unix-Makefile.tmpl', string=True)
 
     def setup_build_environment(self, env):
