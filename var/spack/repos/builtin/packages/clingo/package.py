@@ -24,7 +24,7 @@ class Clingo(CMakePackage):
     maintainers = ["tgamblin"]
 
     version('master', branch='master', submodules=True, preferred=True)
-    version('spack', commit='2ab2e81bcb24f6070b7efce30a754d74ef52ee2d', submodules=True)
+    version('spack', commit='2a025667090d71b2c9dce60fe924feb6bde8f667', submodules=True)
 
     version('5.4.0', sha256='e2de331ee0a6d254193aab5995338a621372517adcf91568092be8ac511c18f3')
     version('5.3.0', sha256='b0d406d2809352caef7fccf69e8864d55e81ee84f4888b0744894977f703f976')
@@ -57,7 +57,7 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        return [
+        args = [
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
             '-DCLINGO_BUILD_PY_SHARED=ON',
@@ -65,3 +65,8 @@ class Clingo(CMakePackage):
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
             '-DCLINGO_BUILD_WITH_LUA=OFF'
         ]
+
+        if '+python' in self.spec:
+            args += self.spec['python'].cmake_hints
+
+        return args

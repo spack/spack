@@ -945,6 +945,7 @@ class Python(AutotoolsPackage):
                                              self.site_packages_dir)
 
         self.spec.home = self.home
+        self.spec.cmake_hints = self.cmake_hints
 
         # Make the site packages directory for extensions
         if dependent_spec.package.is_extension:
@@ -1111,3 +1112,12 @@ class Python(AutotoolsPackage):
         options = ['-c', 'import sys; {0}'.format(print_str)]
         self.run_test(exe, options=options, expected=[self.spec.prefix],
                       installed=True, purpose=reason)
+
+    @property
+    def cmake_hints(self):
+        """Return standard CMake defines to ensure that the
+        current spec is the one found by CMake find_package(Python, ...)
+        """
+        return [
+            '-DPython_EXECUTABLE={0}'.format(str(self.command))
+        ]
