@@ -35,9 +35,9 @@ class LibcapNg(AutotoolsPackage):
         spec = self.spec
         if spec.satisfies('+python'):
             if spec.satisfies('^python@3:'):
-                args.extend([ '-without-python', '-with-python3'])
+                args.extend(['-without-python', '-with-python3'])
             else:
-                args.extend([ '-with-python', '-without-python3'])
+                args.extend(['-with-python', '-without-python3'])
         else:
-            args.extend([ '-without-python', '-without-python3'])
+            args.extend(['-without-python', '-without-python3'])
         return args
