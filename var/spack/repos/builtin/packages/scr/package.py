@@ -52,6 +52,7 @@ class Scr(CMakePackage):
             description="Build SCR with libyogrt for get_time_remaining.")
     depends_on('libyogrt scheduler=slurm', when="+libyogrt resource_manager=SLURM")
     depends_on('libyogrt scheduler=lsf', when="+libyogrt resource_manager=LSF")
+    depends_on('libyogrt', when="+libyogrt")
 
     # MySQL not yet in spack
     # variant('mysql', default=True, decription="MySQL database for logging")
