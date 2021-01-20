@@ -26,6 +26,6 @@ class PyMoviepy(PythonPackage):
     depends_on('py-imageio@2.0:2.4.9999', when='^python@:3.3.9999', type=('build', 'run'))
     depends_on('py-imageio-ffmpeg@0.2.0:', when='^python@3.4:', type=('build', 'run'))
     depends_on('py-tqdm@4.11.2:4.9999', type=('build', 'run'))
-    depends_on('py-numpy@1.17.3:', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-requests@2.8.1:2.99999', type=('build', 'run'))
     depends_on('py-proglog@:1.0.0', type=('build', 'run'))
