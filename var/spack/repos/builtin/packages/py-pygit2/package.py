@@ -24,7 +24,8 @@ class PyPygit2(PythonPackage):
     # Version must match with libgit2
     # See: http://www.pygit2.org/install.html
     depends_on('libgit2@1.1:1.1.99', when='@1.4:')
-    depends_on('libgit2@1.0:1.0.99', when='@1.1:1.3.99')
+    depends_on('libgit2@1.0:1.0.99', when='@1.2:1.3.99')
+    depends_on('libgit2@0.99:1.0.99', when='@1.1:1.1.99')
     depends_on('libgit2@0.28:0.28.99', when='@0.28:1.0.99')
     depends_on('libgit2@0.24:0.27.99', when='@0.24:0.27.99')
     depends_on('python@3.6:', when='@1.4.0:')
