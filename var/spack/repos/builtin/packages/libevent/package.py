@@ -57,3 +57,15 @@ class Libevent(AutotoolsPackage):
             configure_args.append('--disable-openssl')
 
         return configure_args
+
+    def patch(self):
+        if self.spec.satisfies('%nvhpc'):
+            # Remove incompatible compiler flags
+            filter_file(' -Wmissing-declarations', '', 'configure')
+            filter_file(' -Wbad-function-cast', '', 'configure')
+            filter_file(' -Wno-unused-parameter', '', 'configure')
+            filter_file(' -Wmissing-field-initializers', '', 'configure')
+            filter_file(' -Waddress', '', 'configure')
+            filter_file(' -Wnormalized=id', '', 'configure')
+            filter_file(' -Woverride-init', '', 'configure')
+            filter_file(' -Wlogical-op', '', 'configure')
