@@ -927,6 +927,8 @@ class TestConcretize(object):
 
     @pytest.mark.regression('20976')
     def test_compiler_in_nonbuildable_external_package(self):
+        """Check that the compiler of a non-buildable external package does not
+           spread to other dependencies"""
         packages_yaml = {
             'external-common-openssl': {
                 'externals': [
@@ -938,12 +940,8 @@ class TestConcretize(object):
         spack.config.set('packages', packages_yaml)
 
         s = Spec("external-common-python %clang").concretized()
-        for d in s.dependencies():
-            if d.name == 'external-common-openssl':
-                compiler = 'gcc'
-            else:
-                compiler = 'clang'
-            assert s.satisfies('^' + d.name + '%' + compiler)
+        assert s.satisfies('^external-common-openssl%gcc ^external-common-gdbm%clang')
+        assert 'external-common-perl' not in [d.name for d in s.dependencies()]
 
     def test_external_packages_have_consistent_hash(self):
         if spack.config.get('config:concretizer') == 'original':
