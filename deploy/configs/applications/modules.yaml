@@ -61,7 +61,7 @@ modules:
       - py-currentscape
       - py-efel
       - py-entity-management
-      - py-jupyter-notebook
+      - py-notebook
       - py-minis-validation
       - py-morph-tool
       - py-morphio

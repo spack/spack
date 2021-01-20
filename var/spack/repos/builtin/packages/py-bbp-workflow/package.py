@@ -12,7 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-workflow'
     git      = 'ssh://bbpcode.epfl.ch/nse/bbp-workflow'
 
-    version('2.1.0', tag='bbp-workflow-v2.1.0')
+    version('2.1.2', tag='bbp-workflow-v2.1.2')
 
     depends_on('py-setuptools', type=('build'))
 
@@ -26,6 +26,8 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-distributed', type='run')
     depends_on('py-xarray', type='run')
     depends_on('py-notebook', type='run')
+
+    depends_on('py-docutils', type='run')  # rdflib plugins pull this from python-daemon
 
     depends_on('py-bluepy', type='run')
     depends_on('py-bluepy-configfile', type='run')
