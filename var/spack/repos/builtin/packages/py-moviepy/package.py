@@ -27,4 +27,4 @@ class PyMoviepy(PythonPackage):
     depends_on('py-tqdm@4.11.2:4.9999', type=('build', 'run'))
     depends_on('py-numpy@1.17.3:', type=('build', 'run'))
     depends_on('py-requests@2.8.1:2.99999', type=('build', 'run'))
-    depends_on('py-proglog@:1', type=('build', 'run'))
+    depends_on('py-proglog@:1.0.0', type=('build', 'run'))
