@@ -28,6 +28,20 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
                             url_name='mpi_oneapi')
         super(IntelOneapiMpi, self).__init__(spec)
 
+    def setup_dependent_package(self, module, dep_spec):
+        dir = join_path(self.prefix, 'mpi', 'latest', 'bin')
+        self.spec.mpicc  = join_path(dir, 'mpicc')
+        self.spec.mpicxx = join_path(dir, 'mpicxx')
+        self.spec.mpif77 = join_path(dir, 'mpif77')
+        self.spec.mpifc  = join_path(dir, 'mpifc')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.set('MPICH_CC', spack_cc)
+        env.set('MPICH_CXX', spack_cxx)
+        env.set('MPICH_F77', spack_f77)
+        env.set('MPICH_F90', spack_fc)
+        env.set('MPICH_FC', spack_fc)
+
     @property
     def libs(self):
         libs = []
