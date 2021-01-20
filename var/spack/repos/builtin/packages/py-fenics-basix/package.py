@@ -14,7 +14,7 @@ class PyFenicsBasix(PythonPackage):
     git = "https://github.com/FEniCS/basix.git"
     maintainers = ["chrisrichardson", "mscroggs"]
 
-    version("master", branch="main")
+    version("main", branch="main")
 
     depends_on("cmake@3.9:", type="build")
     depends_on("eigen@3.3.7:")
