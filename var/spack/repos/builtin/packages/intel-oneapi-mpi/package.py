@@ -23,6 +23,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     provides('mpi@:3')
 
+    depends_on('patchelf', type='build')
+
     def __init__(self, spec):
         self.component_info(dir_name='mpi',
                             components='intel.oneapi.lin.mpi.devel',
@@ -70,6 +72,15 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         for dir in dirs:
             yield self._join_prefix(dir)
 
+    def install(self, spec, prefix):
+        super(IntelOneapiMpi, self).install(spec, prefix)
+
+        # need to patch libmpi.so so it can always find libfabric
+        libfabric_rpath = self._join_prefix('libfabric/lib')
+        for lib_version in [ 'debug', 'release', 'release_mt', 'debug_mt' ]:
+            file = self._join_prefix('lib/' + lib_version + '/libmpi.so' )
+            subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
+
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self._join_prefix('bin'))
         env.prepend_path('CPATH', self._join_prefix('include'))
@@ -86,5 +97,11 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         print("FTW: mpiicc = ", mpiicc)
         print("FTW: rpath_prefix = ", rpath_prefix)
         env.set('I_MPI_ROOT', rpath_prefix)
+        env.set('FI_PROVIDER_PATH', '/usr/lib64/libfabric')
+        env.prepend_path('FI_PROVIDER_PATH', self._join_prefix('libfabric/lib/prov'))
+# FI_PROVIDER_PATH=/soft/spack/opt/spack/linux-opensuse_leap15-cascadelake/oneapi-2021.1/intel-oneapi-mpi-2021.1.1-yvh3tnaanbpcbpli7dollzw6ibaszye6/mpi/2021.1.1//libfabric/lib/prov:/usr/lib64/libfabric
 #        subprocess.call(['sed', '-ie', 's#I_MPI_SUBSTITUTE_INSTALLDIR#' + rpath_prefix + '#g', mpiicc])
+
+        # need to patch libmpi.so so that it has rpath for libfabric.
+#        subprocess.call(['patchelf', '--set-rpath', rpath, file])
 
