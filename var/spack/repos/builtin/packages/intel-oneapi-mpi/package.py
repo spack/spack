@@ -77,8 +77,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
         # need to patch libmpi.so so it can always find libfabric
         libfabric_rpath = self._join_prefix('libfabric/lib')
-        for lib_version in [ 'debug', 'release', 'release_mt', 'debug_mt' ]:
-            file = self._join_prefix('lib/' + lib_version + '/libmpi.so' )
+        for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
+            file = self._join_prefix('lib/' + lib_version + '/libmpi.so')
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
 
     def setup_run_environment(self, env):
@@ -88,20 +88,13 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
             env.prepend_path('LIBRARY_PATH', dir)
         for dir in self._ld_library_path():
             env.prepend_path('LD_LIBRARY_PATH', dir)
+        # set these so that wrappers know what compilers to use
         env.set('I_MPI_CC', 'icx')
         env.set('I_MPI_CXX', 'icpx')
         env.set('I_MPI_FC', 'ifx')
-#FTW        env.set('I_MPI_SUBSTITUTE_INSTALLDIR', self.prefix)
-        mpiicc = join_path(prefix, 'mpi', 'latest', 'bin', 'mpiicc' ) 
-        rpath_prefix = join_path(prefix, 'mpi', 'latest' ) 
-        print("FTW: mpiicc = ", mpiicc)
-        print("FTW: rpath_prefix = ", rpath_prefix)
-        env.set('I_MPI_ROOT', rpath_prefix)
+        # so wrappers know where MPI lives
+        mpi_root = join_path(prefix, 'mpi', 'latest')
+        env.set('I_MPI_ROOT', mpi_root)
+        # set these so that wrappers can find libfabric providers
         env.set('FI_PROVIDER_PATH', '/usr/lib64/libfabric')
         env.prepend_path('FI_PROVIDER_PATH', self._join_prefix('libfabric/lib/prov'))
-# FI_PROVIDER_PATH=/soft/spack/opt/spack/linux-opensuse_leap15-cascadelake/oneapi-2021.1/intel-oneapi-mpi-2021.1.1-yvh3tnaanbpcbpli7dollzw6ibaszye6/mpi/2021.1.1//libfabric/lib/prov:/usr/lib64/libfabric
-#        subprocess.call(['sed', '-ie', 's#I_MPI_SUBSTITUTE_INSTALLDIR#' + rpath_prefix + '#g', mpiicc])
-
-        # need to patch libmpi.so so that it has rpath for libfabric.
-#        subprocess.call(['patchelf', '--set-rpath', rpath, file])
-
