@@ -599,7 +599,9 @@ def write_buildinfo_file(spec, workdir, rel=False):
                 text_to_relocate.append(rel_path_name)
 
     # Create buildinfo data and write it to disk
+    import spack.hooks.sbang as sbang
     buildinfo = {}
+    buildinfo['sbang_install_path'] = sbang.sbang_install_path()
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['spackprefix'] = spack.paths.prefix
@@ -1085,6 +1087,10 @@ def relocate_package(spec, allow_root):
     new_prefix = str(spec.prefix)
     new_rel_prefix = str(os.path.relpath(new_prefix, new_layout_root))
     new_spack_prefix = str(spack.paths.prefix)
+
+    old_sbang_install_path = None
+    if 'sbang_install_path' in buildinfo:
+        old_sbang_install_path = str(buildinfo['sbang_install_path'])
     old_layout_root = str(buildinfo['buildpath'])
     old_spack_prefix = str(buildinfo.get('spackprefix'))
     old_rel_prefix = buildinfo.get('relative_prefix')
@@ -1111,6 +1117,11 @@ def relocate_package(spec, allow_root):
     # Hence 2 dictionaries are maintained here.
     prefix_to_prefix_text = OrderedDict({})
     prefix_to_prefix_bin = OrderedDict({})
+
+    if old_sbang_install_path:
+        import spack.hooks.sbang as sbang
+        prefix_to_prefix_text[old_sbang_install_path] = sbang.sbang_install_path()
+
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix
     prefix_to_prefix_text[old_layout_root] = new_layout_root
