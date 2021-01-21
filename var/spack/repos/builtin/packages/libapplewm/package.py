@@ -19,8 +19,8 @@ class Libapplewm(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxext')
 
-    depends_on('xextproto', type='build')
-    depends_on('applewmproto@1.4:', type='build')
+    depends_on('xextproto')
+    depends_on('applewmproto@1.4:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 

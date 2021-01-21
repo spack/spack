@@ -73,10 +73,9 @@ class Kokkos(CMakePackage, CudaPackage):
     }
 
     amd_gpu_arches = (
-        'fiji',
-        'gfx901',
         'vega900',
         'vega906',
+        'vega908',
     )
     variant("amd_gpu_arch", default='none', values=('none',) + amd_gpu_arches,
             description="AMD GPU architecture")
@@ -178,7 +177,7 @@ class Kokkos(CMakePackage, CudaPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20

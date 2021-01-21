@@ -16,6 +16,6 @@ class Libfontenc(AutotoolsPackage, XorgPackage):
 
     depends_on('zlib')
 
-    depends_on('xproto', type='build')
+    depends_on('xproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -22,6 +22,6 @@ class Bdftopcf(AutotoolsPackage, XorgPackage):
     depends_on('libxfont')
 
     depends_on('pkgconfig', type='build')
-    depends_on('xproto', type='build')
-    depends_on('fontsproto', type='build')
+    depends_on('xproto')
+    depends_on('fontsproto')
     depends_on('util-macros', type='build')

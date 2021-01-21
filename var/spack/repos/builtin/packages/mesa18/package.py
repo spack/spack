@@ -65,7 +65,7 @@ class Mesa18(AutotoolsPackage):
     depends_on('libx11',  when='+glx')
     depends_on('libxcb',  when='+glx')
     depends_on('libxext', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
 
     # Require at least 1 front-end
     conflicts('~osmesa ~glx')
@@ -185,7 +185,7 @@ class Mesa18(AutotoolsPackage):
         if libs_to_seek:
             return find_libraries(list(libs_to_seek),
                                   root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
+                                  shared=True,
                                   recursive=True)
         return LibraryList()
 
@@ -193,19 +193,19 @@ class Mesa18(AutotoolsPackage):
     def osmesa_libs(self):
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def glx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)
 
     @property
     def gl_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
+                              shared=True,
                               recursive=True)

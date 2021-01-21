@@ -26,11 +26,11 @@ class Libxcb(AutotoolsPackage):
     depends_on('libxdmcp')
 
     # libxcb 1.X requires xcb-proto >= 1.X
-    depends_on('xcb-proto', type='build')
-    depends_on('xcb-proto@1.14:', when='@1.14:1.14.999', type='build')
-    depends_on('xcb-proto@1.13:', when='@1.13:1.13.999', type='build')
-    depends_on('xcb-proto@1.12:', when='@1.12:1.12.999', type='build')
-    depends_on('xcb-proto@1.11:', when='@1.11:1.11.999', type='build')
+    depends_on('xcb-proto')
+    depends_on('xcb-proto@1.14:', when='@1.14:1.14.999')
+    depends_on('xcb-proto@1.13:', when='@1.13:1.13.999')
+    depends_on('xcb-proto@1.12:', when='@1.12:1.12.999')
+    depends_on('xcb-proto@1.11:', when='@1.11:1.11.999')
 
     # TODO: uncomment once build deps can be resolved separately
     # See #7646, #4145, #4063, and #2548 for details

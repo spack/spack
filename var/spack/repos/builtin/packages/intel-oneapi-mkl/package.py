@@ -19,6 +19,12 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     version('2021.1.1', sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c', expand=False)
 
+    provides('fftw-api@3')
+    provides('scalapack')
+    provides('mkl')
+    provides('lapack')
+    provides('blas')
+
     def __init__(self, spec):
         self.component_info(dir_name='mkl',
                             components='intel.oneapi.lin.mkl.devel',

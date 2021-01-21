@@ -19,6 +19,6 @@ class Libxprintutil(AutotoolsPackage, XorgPackage):
     depends_on('libxt')
     depends_on('libxau')
 
-    depends_on('printproto', type='build')
+    depends_on('printproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

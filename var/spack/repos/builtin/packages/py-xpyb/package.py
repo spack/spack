@@ -19,4 +19,4 @@ class PyXpyb(AutotoolsPackage):
 
     depends_on('libxcb@1.5:')
 
-    depends_on('xcb-proto@1.7.1:', type='build')
+    depends_on('xcb-proto@1.7.1:')
