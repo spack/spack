@@ -58,6 +58,9 @@ class Plumed(AutotoolsPackage):
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
+    variant('arrayfire', default='none',
+            values=('none', 'cpu', 'cuda', 'opencl'),
+            description='Activates FireArray support')
 
     # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on('zlib')
@@ -66,6 +69,9 @@ class Plumed(AutotoolsPackage):
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
     depends_on('libmatheval', when='@:2.4.99')
+    depends_on('arrayfire', when='arrayfire=cpu')
+    depends_on('arrayfire+cuda', when='arrayfire=cuda')
+    depends_on('arrayfire+opencl', when='arrayfire=opencl')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
@@ -168,18 +174,31 @@ class Plumed(AutotoolsPackage):
                     'STATIC_LIBS=-mt_mpi'
                 ])
 
+        extra_libs = []
         # Set flags to help find gsl
-        if '+gsl' in self.spec:
-            gsl_libs = self.spec['gsl'].libs
-            blas_libs = self.spec['blas'].libs
-            configure_opts.append('LDFLAGS={0}'.format(
+        if '+gsl' in spec:
+            gsl_libs = spec['gsl'].libs
+            blas_libs = spec['blas'].libs
+            extra_libs.append(
                 (gsl_libs + blas_libs).ld_flags
+            )
+        # Set flags to help with ArrayFire
+        if 'arrayfire=none' not in spec:
+            libaf = 'arrayfire:{0}'.format(spec.variants['arrayfire'].value)
+            extra_libs.append(spec[libaf].libs.search_flags)
+
+        if extra_libs:
+            configure_opts.append('LDFLAGS={0}'.format(
+                ' '.join(extra_libs)
             ))
 
         # Additional arguments
         configure_opts.extend([
             '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
-            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
+            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no'),
+            '--enable-af_cpu={0}'.format('yes' if 'arrayfire=cpu' in spec else 'no'),
+            '--enable-af_cuda={0}'.format('yes' if 'arrayfire=cuda' in spec else 'no'),
+            '--enable-af_ocl={0}'.format('yes' if 'arrayfire=ocl' in spec else 'no')
         ])
 
         # Construct list of optional modules
