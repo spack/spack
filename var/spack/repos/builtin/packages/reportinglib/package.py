@@ -17,6 +17,7 @@ class Reportinglib(CMakePackage):
     git      = "ssh://bbpcode.epfl.ch/sim/reportinglib/bbp"
 
     version('develop', branch='master')
+    version('2.5.5', tag='2.5.5')
     version('2.5.4', tag='2.5.4')
     version('2.5.3', tag='2.5.3')
     version('2.5.2', tag='2.5.2')
