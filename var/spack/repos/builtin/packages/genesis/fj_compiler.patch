@@ -1,0 +1,21 @@
+--- a/configure.ac
++++ b/configure.ac
+@@ -1057,16 +1057,10 @@ if test -z "${LDFLAGS}"; then
+     #LDFLAGS="-march=native -fuse-linker-plugin"
+   
+   elif test x"${FC_ACT}" = x"frtpx"; then
+-    LDFLAGS="-SSL2 -Kparallel -Nfjomplib"
++    LDFLAGS="-Kparallel"
+   
+   elif test x"${FC_ACT}" = x"mpifrtpx"; then
+-    LDFLAGS="-SSL2BLAMP -Kparallel -Nfjomplib"
+-
+-  elif test x"${FC_ACT}" = x"frt"; then
+-    LDFLAGS="-KSPARC64VII,V9FMADD -SSL2"
+-  
+-  elif test x"${FC_ACT}" = x"mpifrt"; then
+-    LDFLAGS="-KSPARC64VII,V9FMADD -SSL2"
++    LDFLAGS="-Kparallel"
+ 
+   fi
+ fi
