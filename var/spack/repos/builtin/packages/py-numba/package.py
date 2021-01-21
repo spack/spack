@@ -29,11 +29,11 @@ class PyNumba(PythonPackage):
     # That's why it was chosen as an upper bound in the following depends_on
     # calls.  If newer versions maintain backwards compatibility, the calls
     # can be updated accordingly.
-    depends_on('py-llvmlite@0.34:0.35', type=('build', 'run'), when='@0.51.1')
-    depends_on('py-llvmlite@0.33:0.34', type=('build', 'run'), when='@0.50.1')
-    depends_on('py-llvmlite@0.31.0:0.32.0', type=('build', 'run'), when='@0.48.0')
-    depends_on('py-llvmlite@0.25:', type=('build', 'run'), when='@0.40.1:')
-    depends_on('py-llvmlite@0.20:0.25', type=('build', 'run'), when='@0.35.1')
+    depends_on('py-llvmlite@0.34.0:0.34.999', type=('build', 'run'), when='@0.51.1')
+    depends_on('py-llvmlite@0.33.0:0.33.999', type=('build', 'run'), when='@0.50.1')
+    depends_on('py-llvmlite@0.31.0:0.31.999', type=('build', 'run'), when='@0.48.0')
+    depends_on('py-llvmlite@0.25.0:',         type=('build', 'run'), when='@0.40.1')
+    depends_on('py-llvmlite@0.20:0.25',       type=('build', 'run'), when='@0.35.1')
 
     depends_on('py-argparse', type=('build', 'run'), when='^python@:2.6')
     depends_on('py-funcsigs', type=('build', 'run'), when='^python@:3.3.99')
