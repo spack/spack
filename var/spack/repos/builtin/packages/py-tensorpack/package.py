@@ -17,7 +17,7 @@ class PyTensorpack(PythonPackage):
     version('0.9.8', sha256='bc6566c12471a0f9c0a79acc3d045595b1943af8e423c5b843986b73bfe5425f')
 
     depends_on('python@3.3:', when='@0.10.1:', type=('build', 'run'))
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools@31:', type='build')
     depends_on("py-numpy@1.14:", type=('build', 'run'))
     depends_on("py-six", type=('build', 'run'))
     depends_on("py-termcolor@1.1:", type=('build', 'run'))
