@@ -11,7 +11,7 @@ class PyBayesianOptimization(PythonPackage):
     optimization with gaussian processes."""
 
     homepage = "https://github.com/fmfn/BayesianOptimization"
-    url = 'https://pypi.io/packages/source/b/bayesian-optimization/bayesian-optimization-1.2.0.tar.gz'
+    pypi = 'bayesian-optimization/bayesian-optimization-1.2.0.tar.gz'
 
     version('1.2.0', sha256='c2fd3af4b6cc24ee1c145295b2a900ffb9b455cad924e8185a8d5784712bc935')
 
