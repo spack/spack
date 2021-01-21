@@ -13,7 +13,8 @@ The ``ROCmPackage`` is not a build system but a helper package. Like ``CudaPacka
 it provides standard variants, dependencies, and conflicts to facilitate building
 packages using GPUs though for AMD in this case.
 
-You can find source for this package at
+You can find the source for this package (and suggestions for setting up your
+``compilers.yaml`` and ``packages.yaml`` files) at
 `<https://github.com/spack/spack/blob/develop/lib/spack/spack/build_systems/rocm.py>`__.
 
 ^^^^^^^^
@@ -75,10 +76,17 @@ class of your package.  For example, you can add it to your
 :ref:`CMakePackage <cmakepackage>`-based package as follows:
 
 .. code-block:: python
-   :emphasize-lines: 1,7-18
+   :emphasize-lines: 1,3-7,14-25
 
     class MyRocmPackage(CMakePackage, ROCmPackage):
         ...
+        # Ensure +rocm and amdgpu_targets are passed to dependencies
+        depends_on('mydeppackage', when='+rocm')
+        for val in ROCmPackage.amdgpu_targets:
+            depends_on('mydeppackage amdgpu_target={0}'.format(val),
+                       when='amdgpu_target={0}'.format(val))
+        ...
+
         def cmake_args(self):
             spec = self.spec
             args = []
@@ -99,9 +107,10 @@ class of your package.  For example, you can add it to your
             return args
         ...
 
-where the build relies on the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and
-``HIP_HIPCC_FLAGS`` macros.  You will need to customize the flags as
-needed for your build.
+assuming only on the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and ``HIP_HIPCC_FLAGS``
+macros are required to be set and the only dependency needing rocm options
+is ``mydeppackage``. You will need to customize the flags as needed for your
+build.
 
 This example also illustrates how to check for the ``rocm`` variant using
 ``self.spec`` and how to retrieve the ``amdgpu_target`` variant's value
