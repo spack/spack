@@ -41,12 +41,10 @@ class Spla(CMakePackage):
     depends_on('hsa-rocr-dev', when='+rocm', type='link')
 
     def cmake_args(self):
-        args = []
-
-        if '+openmp' in self.spec:
-            args += ["-DSPLA_OMP=ON"]
-        else:
-            args += ["-DSPLA_OMP=OFF"]
+        args = [
+            self.define_from_variant('SPLA_OMP', 'openmp'),
+            self.define_from_variant('SPLA_STATIC', 'static')
+        ]
 
         if '+cuda' in self.spec:
             args += ["-DSPLA_GPU_BACKEND=CUDA"]
@@ -54,11 +52,6 @@ class Spla(CMakePackage):
             args += ["-DSPLA_GPU_BACKEND=ROCM"]
         else:
             args += ["-DSPLA_GPU_BACKEND=OFF"]
-
-        if '+static' in self.spec:
-            args += ["-DSPLA_STATIC=ON"]
-        else:
-            args += ["-DSPLA_STATIC=OFF"]
 
         if self.spec['blas'].name == 'openblas':
             args += ["-DSPLA_HOST_BLAS=OPENBLAS"]
