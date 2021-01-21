@@ -362,7 +362,7 @@ class Llvm(CMakePackage, CudaPackage):
     def setup_build_environment(self, env):
         env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
         if self.spec.satisfies('%intel'):
-            env.set('LDFLAGS', "-shared-intel")
+            env.append_flags('LDFLAGS', "-shared-intel")
 
     def setup_run_environment(self, env):
         if "+clang" in self.spec:
