@@ -531,7 +531,7 @@ def listspecs(args):
 
 def getkeys(args):
     """get public keys available on mirrors"""
-    deployment.die_if_deployment('keys')
+    deployment.die_if_deployment('buildcache keys')
     bindist.get_keys(args.install, args.trust, args.force)
 
 

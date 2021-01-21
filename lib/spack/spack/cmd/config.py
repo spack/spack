@@ -297,6 +297,8 @@ def _can_update_config_file(scope_dir, cfg_file):
 
 
 def config_update(args):
+    deployment.die_if_deployment('config update')
+
     # Read the configuration files
     spack.config.config.get_config(args.section, scope=args.scope)
     updates = spack.config.config.format_updates[args.section]
@@ -383,6 +385,8 @@ def _can_revert_update(scope_dir, cfg_file, bkp_file):
 
 
 def config_revert(args):
+    deployment.die_if_deployment('config revert')
+
     scopes = [args.scope] if args.scope else [
         x.name for x in spack.config.config.file_scopes
     ]

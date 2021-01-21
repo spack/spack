@@ -83,7 +83,7 @@ def env_activate_setup_parser(subparser):
 
 
 def env_activate(args):
-    deployment.die_if_deployemtn('env activate')
+    deployment.die_if_deployment('env activate')
 
     env = args.activate_env
     if not args.shell:

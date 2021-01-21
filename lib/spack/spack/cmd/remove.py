@@ -30,7 +30,7 @@ def setup_parser(subparser):
 
 
 def remove(parser, args):
-    deployent.confirm_command_if_deployment('remove')
+    deployment.confirm_command_if_deployment('remove')
 
     env = ev.get_env(args, 'remove', required=True)
 
