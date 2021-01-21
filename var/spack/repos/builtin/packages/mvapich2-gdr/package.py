@@ -21,7 +21,7 @@ class Mvapich2Gdr(AutotoolsPackage):
 
     maintainers = ['nithintsk', 'harisubramoni']
 
-    version('2.3.5', sha256='6586d0e061794f99b9ab0c60e88ff32ed1427927d12472c6696dd910975f7aae')
+    version('2.3.5', sha256='bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4')
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
     version('2.3.3', sha256='9b7b5dd235dbf85099fba3b6f1ccb49bb755923efed66ddc335921f44cb1b8a8')
 
@@ -91,7 +91,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
     depends_on('libxml2@2.9.10')
-    depends_on('cuda@9.2.88:10.2.89')
+    depends_on('cuda@9.2.88:10.2.89', when='+cuda')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
 
     #ROCm dependencies
