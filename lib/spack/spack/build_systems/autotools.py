@@ -175,9 +175,10 @@ class AutotoolsPackage(PackageBase):
         # Copy the good files over the bad ones
         for abs_path in to_be_patched:
             name = os.path.basename(abs_path)
-            m = os.stat(abs_path).st_mode & 0o777 | stat.S_IWUSR
-            os.chmod(abs_path, m)
+            mode = os.stat(abs_path).st_mode
+            os.chmod(abs_path, mode & 0o777 | stat.S_IWUSR)
             fs.copy(substitutes[name], abs_path)
+            os.chmod(abs_path, mode)
 
     @run_before('configure')
     def _set_autotools_environment_variables(self):
