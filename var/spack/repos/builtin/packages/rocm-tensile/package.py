@@ -26,7 +26,9 @@ class RocmTensile(CMakePackage):
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
 
     depends_on('cmake@3:', type='build')
-    depends_on('boost@1.58.0', type=('build', 'run'), when='@3.9.0:')
+    # This is the default library format since 3.7.0
+    depends_on('msgpack-c@3:', when='@3.7:')
+    depends_on('boost', type=('build', 'link'))
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
@@ -37,9 +39,6 @@ class RocmTensile(CMakePackage):
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver + '+openmp', type='build', when='@' + ver)
-    # This is the default library format since 3.7.0
-    depends_on('msgpack-c@3:', when='@3.7:')
-    depends_on('boost', type=('build', 'link'))
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
