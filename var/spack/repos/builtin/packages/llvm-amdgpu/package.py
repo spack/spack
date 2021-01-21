@@ -25,7 +25,7 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    variant('openmp', default=True, description='Enable OpenMP')
+    variant('openmp', default=False, description='Enable OpenMP')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
