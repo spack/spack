@@ -11,7 +11,7 @@ class PyMemprof(PythonPackage):
     variables during the execution of the decorated methods."""
 
     homepage = "http://jmdana.github.io/memprof/"
-    url = "https://pypi.io/packages/source/m/memprof/memprof-0.3.6.tar.gz"
+    pypi = "memprof/memprof-0.3.6.tar.gz"
 
     version('0.3.6', sha256='a8376ce476bf82a5eb465d1a30b8ffc86cc55b0b6de7aa4cdeccb4c99586d967')
 
