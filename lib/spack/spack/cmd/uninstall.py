@@ -355,7 +355,7 @@ def uninstall(parser, args):
         tty.die('uninstall requires at least one package argument.',
                 '  Use `spack uninstall --all` to uninstall ALL packages.')
 
-    deployment_required_args = {'yes_to_all', False}
+    deployment_required_args = {'yes_to_all': False}
     deployment.setup_deployment_args(
         'uninstall', args, deployment_required_args)
 
