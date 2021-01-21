@@ -70,7 +70,7 @@ class Hdf5(CMakePackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compatibility.
-    variant('api', default='none', description='Choose api compatibility', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+    variant('api', default='none', description='Choose api compatibility for earlier version', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
     conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
     conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
@@ -243,24 +243,21 @@ class Hdf5(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
 
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        args.append(self.define('ALLOW_UNSUPPORTED', True))
+        args = [self.define('ALLOW_UNSUPPORTED', True)]
 
-        if '+zlib' in spec:
-            args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=ON')
-            args.append(
-                '-DZLIB_INCLUDE_DIR:PATH={0}'.format(
-                    spec['zlib'].prefix.include))
-            args.append(
-                '-DZLIB_DIR:PATH={0}'.format(
-                    spec['zlib'].prefix.lib))
+        args.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+
+        if '+shared' in spec:
+            args.append('-DONLY_SHARED_LIBS=ON')
         else:
-            args.append('-DHDF5_ENABLE_Z_LIB_SUPPORT:BOOL=OFF')
+            args.append('-DONLY_SHARED_LIBS=OFF')
+
+        args.append(self.define_from_variant('HDF5_ENABLE_Z_LIB_SUPPORT', 'zlib'))
 
         if '+szip' in spec:
             args.append(self.define_from_variant(
@@ -273,54 +270,27 @@ class Hdf5(CMakePackage):
             args.append(
                 '-DSZIP_DIR:PATH={0}'.format(
                     spec['libaec'].prefix.lib))
-           
+            
         args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
 
-        if '+mpi' in spec:
-            args.append('-DHDF5_ENABLE_PARALLEL=ON')
-            args.append('-DCMAKE_C_COMPILER={0}'.format(spec['mpi'].mpicc))
-            args.append('-DCMAKE_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
-            args.append(
-                '-DCMAKE_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
-        else:
-            args.append('-DHDF5_ENABLE_PARALLEL=OFF')
-
-        if '~shared' in spec:
-            args.append('-DONLY_SHARED_LIBS=OFF')
-        else:
-            args.append('-DONLY_SHARED_LIBS=ON')
+        args.append(self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'))
 
         if '+debug' in spec:
             args.append('-DCMAKE_BUILD_TYPE=Debug')
         else:
             args.append('-DCMAKE_BUILD_TYPE=Release')
 
-        if '+threadsafe' in spec:
-            args.append('-DHDF5_ENABLE_THREADSAFE=ON')
-        else:
-            args.append('-DHDF5_ENABLE_THREADSAFE=OFF')
+        args.append(self.define_from_variant('HDF5_ENABLE_THREADSAFE', 'threadsafe'))
 
         args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
 
-        if '+cxx' in spec:
-            args.append('-DHDF5_BUILD_CPP_LIB=ON')
-        else:
-            args.append('-DHDF5_BUILD_CPP_LIB=OFF')
+        args.append(self.define_from_variant('HDF5_BUILD_CPP_LIB', 'cxx'))
 
-        if '+fortran' in spec:
-            args.append('-DHDF5_BUILD_FORTRAN=ON')
-        else:
-            args.append('-DHDF5_BUILD_FORTRAN=OFF')
+        args.append(self.define_from_variant('HDF5_BUILD_FORTRAN', 'fortran'))
 
-        if '+java' in spec:
-            args.append('-DHDF5_BUILD_JAVA=ON')
-        else:
-            args.append('-DHDF5_BUILD_JAVA=OFF')
+        args.append(self.define_from_variant('HDF5_BUILD_JAVA', 'java'))
 
-        if '+tools' in spec:
-            args.append('-DHDF5_BUILD_TOOLS=ON')
-        else:
-            args.append('-DHDF5_BUILD_TOOLS=OFF')
+        args.append(self.define_from_variant('HDF5_BUILD_TOOLS', 'tools'))
 
         if self.run_tests:
             args.append('-DBUILD_TESTING=ON')
