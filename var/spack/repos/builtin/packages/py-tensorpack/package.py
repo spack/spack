@@ -28,13 +28,13 @@ class PyTensorpack(PythonPackage):
 
     # FIXME: Add a proper url for your package's homepage here.
     homepage = "https://www.example.com"
-    url      = "https://github.com/tensorpack/tensorpack/archive/v0.10.1.tar.gz"
+    pypi = "tensorpack/tensorpack-0.10.1.tar.gz"
 
     # FIXME: Add a list of GitHub accounts to
     # notify when the package is updated.
     # maintainers = ['github_user1', 'github_user2']
 
-    version('0.10.1', sha256='8304bdf03ce88ecb08da9ae0b136c572b75695ad2b6cd552489f8a22bfea14c3')
+    version('0.10.1', sha256='ae6af59794459de910725d268061f0c86d78f01948f9fd5d7b11dd9770ad71ef')
 
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
