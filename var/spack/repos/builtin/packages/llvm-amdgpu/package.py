@@ -25,7 +25,7 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    variant('openmp', default=False, description='Enable OpenMP')
+    variant('openmp', default=True, description='Enable OpenMP')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
@@ -33,6 +33,9 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
+    # openmp dependencies
+    depends_on("perl-data-dumper", type=("build"), when='+openmp')
+    depends_on("hwloc", when='+openmp')
     depends_on('libelf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
