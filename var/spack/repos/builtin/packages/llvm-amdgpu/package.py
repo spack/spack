@@ -33,6 +33,9 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
+    # openmp dependencies
+    depends_on("perl-data-dumper", type=("build"), when='+openmp')
+    depends_on("hwloc", when='+openmp')
     depends_on('libelf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
@@ -62,7 +65,16 @@ class LlvmAmdgpu(CMakePackage):
         ]
 
         if self.compiler.name == "gcc":
-            gcc_prefix = ancestor(self.compiler.cc, 2)
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-print-search-dirs', output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    # Get path and strip any whitespace
+                    # (causes oddity with ancestor)
+                    gcc_prefix = line.split(":")[1].strip()
+                    gcc_prefix = ancestor(gcc_prefix, 4)
+                    break
             args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
         return args
