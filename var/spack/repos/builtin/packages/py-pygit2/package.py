@@ -34,7 +34,7 @@ class PyPygit2(PythonPackage):
     depends_on('python@2.7:3.87.99', when='@0.28:0.99.99')
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-cffi', type=('build', 'run'))
-    depends_on('py-cached-property', when='@1.1.0:', type=('run'))
+    depends_on('py-cached-property', when='@1.1.0:', type=('build', 'run'))
 
     def setup_build_environment(self, env):
         spec = self.spec
