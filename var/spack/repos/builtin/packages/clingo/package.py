@@ -57,7 +57,7 @@ class Clingo(CMakePackage):
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        args = [
+        return [
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
             '-DCLINGO_BUILD_PY_SHARED=ON',
@@ -65,8 +65,3 @@ class Clingo(CMakePackage):
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
             '-DCLINGO_BUILD_WITH_LUA=OFF'
         ]
-
-        if '+python' in self.spec:
-            args += self.spec['python'].cmake_hints
-
-        return args
