@@ -12,6 +12,7 @@ class PyPyjwt(PythonPackage):
     homepage = "https://github.com/jpadilla/pyjwt"
     url      = "https://pypi.io/packages/source/P/PyJWT/PyJWT-1.7.1.tar.gz"
 
+    version('2.0.1', sha256='a5c70a06e1f33d81ef25eecd50d50bd30e34de1ca8b2b9fa3fe0daaabcf69bf7')
     version('1.7.1', sha256='8d59a976fb773f3e6a39c85636357c4f0e242707394cadadd9814f5cbaa20e96')
 
     variant('crypto', default=False, description='Build with cryptography support')
