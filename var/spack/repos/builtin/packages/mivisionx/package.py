@@ -32,22 +32,11 @@ class Mivisionx(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
-    resource(name='opencv',
-             url='https://github.com/opencv/opencv/archive/3.4.6.tar.gz',
-             sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d',
-             expand=True,
-             destination='',
-             placement='opencv',
-             when='@4.0.0:')
-
     def flag_handler(self, name, flags):
         spec = self.spec
         protobuf = spec['protobuf'].prefix.include
-        opencv_incl = join_path(self.stage.source_path,
-                                'opencv/modules/highgui/include')
         if name == 'cxxflags':
             flags.append('-I{0}'.format(protobuf))
-            flags.append('-I{0}'.format(opencv_incl))
         return (flags, None, None)
 
     depends_on('ffmpeg@4.1.1', type='build')
