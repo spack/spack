@@ -36,7 +36,8 @@ class Oneapi(Compiler):
         return "-v"
 
     required_libs = ['libirc', 'libifcore', 'libifcoremt', 'libirng',
-                     'libsvml', 'libintlc', 'libimf']
+                     'libsvml', 'libintlc', 'libimf', 'libsycl',
+                     'libOpenCL']
 
     @property
     def debug_flags(self):

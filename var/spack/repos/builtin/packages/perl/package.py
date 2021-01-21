@@ -77,7 +77,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
 
     # Enable builds with the NVIDIA compiler
-    patch('nvhpc.patch', when='%nvhpc')
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
+    conflicts('@5.32.0:', when='%nvhpc',
+              msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not

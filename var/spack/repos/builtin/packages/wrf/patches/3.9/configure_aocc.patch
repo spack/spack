@@ -23,7 +23,7 @@
 +RWORDSIZE       =       $(NATIVE_RWORDSIZE)
 +PROMOTION       =
 +ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR -DWRF_USE_CLM
-+LIBMVEC         =       -mllvm --vector-library=LIBMVEC
++LIBMVEC         =       -mllvm -vector-library=LIBMVEC
 +AMDARCHOPT      =       -march=native
 +AOCCOPT         =       -O3 -m64 -Ofast -ffast-math $(AMDARCHOPT)
 +CFLAGS_LOCAL    =       -w $(AOCCOPT)

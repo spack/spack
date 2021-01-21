@@ -673,6 +673,13 @@ def uniq(sequence):
     return uniq_list
 
 
+def star(func):
+    """Unpacks arguments for use with Multiprocessing mapping functions"""
+    def _wrapper(args):
+        return func(*args)
+    return _wrapper
+
+
 class Devnull(object):
     """Null stream with less overhead than ``os.devnull``.
 
