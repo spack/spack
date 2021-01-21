@@ -147,6 +147,14 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'gfx906': 'vega906',
         'gfx908': 'vega908'
     }
+    amd_support_conflict_msg = (
+        '{0} is not supported; '
+        'Kokkos supports the following AMD GPU targets: '
+        + ', '.join(amdgpu_arch_map.keys()))
+    for arch in ROCmPackage.amdgpu_targets:
+        if arch not in amdgpu_arch_map:
+            conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
+                      msg=amd_support_conflict_msg.format(arch))
 
     devices_values = list(devices_variants.keys())
     for dev in devices_variants:
@@ -237,6 +245,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                         spack_microarches.append(
                             self.amdgpu_arch_map[amdgpu_target])
                     else:
+                        # Note that conflict declarations should prevent
+                        # choosing an unsupported AMD GPU target
                         raise SpackError("Unsupported target: {0}".format(
                             amdgpu_target))
 
