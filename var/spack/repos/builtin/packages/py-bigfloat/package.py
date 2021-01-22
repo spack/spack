@@ -17,3 +17,4 @@ class PyBigfloat(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-six', type=('build', 'run'))
     depends_on('gmp', type=('build', 'run'))
+    depends_on('mpfr', type=('build', 'link'))

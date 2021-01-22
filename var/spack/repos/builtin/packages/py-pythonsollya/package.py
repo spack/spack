@@ -18,16 +18,18 @@ class PyPythonsollya(PythonPackage):
 
     depends_on('py-cython', type='build')
     depends_on('py-setuptools', type='build')
+    depends_on('py-pip', type='build')
     depends_on('libffi', type='build')
-    depends_on('sollya', type=('build', 'run'))
+    depends_on('sollya', type=('build', 'link'))
     depends_on('py-bigfloat', type=('build', 'run'))
     depends_on('mpfi', type=('build', 'link'))
     
-    phases = ['build_ext', 'install'] 
+#    phases = ['build_ext', 'install'] 
 
-    def build_ext(self, spec, prefix):
-        args = ['SOLLYA_DIR=' + self.spec['sollya'].prefix, 
-                'MPFI_DIR=' + self.spec['mpfi'].prefix,
-                'MPFR_DIR=' + self.spec['mpfr'].prefix,
-                'GMP_DIR=' + self.spec['gmp'].prefix
-               ]
+#    def build_ext(self, spec, prefix):
+#        args = ['SOLLYA_DIR=' + self.spec['sollya'].prefix, 
+#                'MPFI_DIR=' + self.spec['mpfi'].prefix,
+#                'MPFR_DIR=' + self.spec['mpfr'].prefix,
+#                'GMP_DIR=' + self.spec['gmp'].prefix
+#               ]
+#        make(' '.join(args))
