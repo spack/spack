@@ -23,7 +23,4 @@ class PyFenicsBasix(PythonPackage):
     depends_on("py-scikit-build", type="build")
     depends_on("py-pybind11", type="build")
 
-
     phases = ['build', 'install']
-
-
