@@ -24,6 +24,7 @@ class RocmTensile(CMakePackage):
     tensile_architecture = ('all', 'gfx803', 'gfx900', 'gfx906', 'gfx908')
 
     variant('tensile_architecture', default='all', values=tensile_architecture, multi=False)
+    variant('openmp', default=True, description='Enable OpenMP')
 
     depends_on('cmake@3:', type='build')
     # This is the default library format since 3.7.0
@@ -38,7 +39,9 @@ class RocmTensile(CMakePackage):
         # used in Tensile
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
         depends_on('rocm-smi-lib@' + ver, type='build', when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver + '+openmp', type='build', when='@' + ver)
+        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver + '+openmp')
+        depends_on('llvm-amdgpu@' + ver + '~openmp', type='build', when='@' + ver + '~openmp')
+    
 
     root_cmakelists_dir = 'Tensile/Source'
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
@@ -51,15 +54,13 @@ class RocmTensile(CMakePackage):
 
     def cmake_args(self):
         arch = self.spec.variants['tensile_architecture'].value
-        boost_incl = self.spec['boost'].prefix.include
         args = [
             '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
             '-DTensile_COMPILER=hipcc',
             '-DTensile_ARCHITECTURE={0}'.format(arch),
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
-            '-DBoost_USE_STATIC_LIBS=off',
-            '-DCMAKE_CXX_FLAGS:String=-I{0}'.format(boost_incl),
+            '-DBoost_USE_STATIC_LIBS=OFF',
             '-DTENSILE_USE_OPENMP=ON',
             '-DBUILD_WITH_TENSILE_HOST={0}'.format(
                 'ON' if '@3.7.0:' in self.spec else 'OFF'
