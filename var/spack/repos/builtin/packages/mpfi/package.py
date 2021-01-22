@@ -26,7 +26,6 @@ class Mpfi(AutotoolsPackage):
     depends_on('gmp',      type=('build', 'link'))
     depends_on('mpfr',     type=('build', 'link'))
 
-
     def configure_args(self):
         args = ['--with-gmp=' + self.spec['gmp'].prefix,
                 '--with-mpfr=' + self.spec['mpfr'].prefix]

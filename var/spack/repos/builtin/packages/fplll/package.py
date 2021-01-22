@@ -7,8 +7,9 @@ from spack import *
 
 
 class Fplll(AutotoolsPackage):
-    """fplll contains implementations of several lattice algorithms. The implementation relies on floating-point 
-       orthogonalization, and LLL is central to the code, hence the name."""
+    """fplll contains implementations of several lattice algorithms.
+       The implementation relies on floating-point orthogonalization,
+       and LLL is central to the code, hence the name."""
 
     homepage = "https://github.com/fplll/fplll"
     url      = "https://github.com/fplll/fplll/releases/download/5.4.0/fplll-5.4.0.tar.gz"

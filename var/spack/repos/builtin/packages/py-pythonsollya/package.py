@@ -1,7 +1,7 @@
 # Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# SPDX-License-Identifier: (Apache-2.0 OR MIT) 
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
 
@@ -23,13 +23,3 @@ class PyPythonsollya(PythonPackage):
     depends_on('sollya', type=('build', 'link'))
     depends_on('py-bigfloat', type=('build', 'run'))
     depends_on('mpfi', type=('build', 'link'))
-    
-#    phases = ['build_ext', 'install'] 
-
-#    def build_ext(self, spec, prefix):
-#        args = ['SOLLYA_DIR=' + self.spec['sollya'].prefix, 
-#                'MPFI_DIR=' + self.spec['mpfi'].prefix,
-#                'MPFR_DIR=' + self.spec['mpfr'].prefix,
-#                'GMP_DIR=' + self.spec['gmp'].prefix
-#               ]
-#        make(' '.join(args))
