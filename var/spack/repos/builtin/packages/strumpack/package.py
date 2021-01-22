@@ -24,7 +24,7 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['pghysels']
 
     version('master', branch='master')
-    version('5.1.0', sha256='9c01e32fe8ee369c931aabc58fa5c9b9ac7520089a9ec01119ac7415009b9a0b')
+    version('5.1.1', sha256='6cf4eaae5beb9bd377f2abce9e4da9fd3e95bf086ae2f04554fad6dd561c28b9')
     version('5.0.0', sha256='bdfd1620ff7158d96055059be04ee49466ebaca8213a2fdab33e2d4571019a49')
     version('4.0.0', sha256='a3629f1f139865c74916f8f69318f53af6319e7f8ec54e85c16466fd7d256938')
     version('3.3.0', sha256='499fd3b58656b4b6495496920e5372895861ebf15328be8a7a9354e06c734bc7')
@@ -128,12 +128,11 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
                             format(' '.join(self.cuda_flags(cuda_archs))))
 
         if '+rocm' in spec:
-            args.append('-DCMAKE_CXX_COMPILER={0}'.
-                        format(self.spec['hip'].hipcc))
-            hip_archs = self.spec.variants['amdgpu_target'].value
-            if 'none' not in hip_archs:
-                archs_str = ",".join(hip_archs)
-                args.append('-DSTRUMPACK_HIP_AMDGPU={0}'.
-                            format(archs_str))
+            args.append(
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
+            rocm_archs = spec.variants['amdgpu_target'].value
+            if 'none' not in rocm_archs:
+                args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.
+                            format(",".join(rocm_archs)))
 
         return args
