@@ -44,7 +44,11 @@ class Squashfs(MakefilePackage):
     depends_on('xz', when='+xz')
     depends_on('zstd', when='+zstd')
 
+    patch('gcc-10.patch', when="%gcc@10:")
+    patch('gcc-10.patch', when="%clang@11:")
+
     def build(self, spec, prefix):
+
         with working_dir('squashfs-tools'):
             default = spec.variants['default_compression'].value
             make(
