@@ -242,11 +242,12 @@ def run_mypy(file_list, args):
         return 1
 
     print_tool_header("mypy")
-    mpy_args = ["--module", "spack", "--module", "llnl"]
-    if any([is_package(f) for f in file_list]):
-        mpy_args.extend(["--package", "builtin.packages"])
+    mpy_args = ["--package", "spack", "--package", "llnl"]
+    # not yet, need other updates to enable this
+    # if any([is_package(f) for f in file_list]):
+    #     mpy_args.extend(["--package", "packages"])
 
-    output = mypy_cmd(fail_on_error=False, output=str)
+    output = mypy_cmd(*mpy_args, fail_on_error=False, output=str)
     returncode = mypy_cmd.returncode
 
     rewrite_and_print_output(output, args)
