@@ -297,8 +297,8 @@ class Llvm(CMakePackage, CudaPackage):
             elif 'clang' in exe:
                 compilers['c'] = exe
             elif 'flang' in exe:
+                variants.append('+flang')
                 compilers['fc'] = exe
-            elif 'flang' in exe:
                 compilers['f77'] = exe
             elif 'ld.lld' in exe:
                 lld_found = True
