@@ -100,9 +100,9 @@ class Dealii(CMakePackage, CudaPackage):
     # FIXME @9.3: enable by default
     variant('simplex', default=False,
             description='Compile with Simplex support')
-    # FIXME @9.3: enable by default
-    variant('taskflow',  default=False,
-            description='Compile with multi-threading via Taskflow')
+    # FIXME @9.3: enable by default, when we know what to do
+    # variant('taskflow',  default=False,
+    #        description='Compile with multi-threading via Taskflow')
     # FIXME @9.3: disable by default
     # (NB: only if tbb is removed in 9.3, as planned!!!)
     variant('threads',  default=True,
@@ -191,7 +191,7 @@ class Dealii(CMakePackage, CudaPackage):
     depends_on('slepc~arpack',     when='+slepc+petsc+mpi+int64')
     depends_on('sundials@:3~pthread', when='@9.0:9.2+sundials')
     depends_on('sundials@5:',      when='@9.3:+sundials')
-    depends_on('taskflow',         when='@9.3:+taskflow')
+    # depends_on('taskflow',         when='@9.3:+taskflow')
     depends_on('trilinos gotype=int', when='+trilinos@12.18.1:')
     # FIXME: next line fixes concretization with trilinos and adol-c
     depends_on('trilinos~exodus~netcdf',    when='@9.0:+adol-c+trilinos')
@@ -267,7 +267,7 @@ class Dealii(CMakePackage, CudaPackage):
                       'via ~{0}'.format(p))
 
     # interfaces added in 9.3.0:
-    for p in ['simplex', 'taskflow']:
+    for p in ['simplex']:  # , 'taskflow']:
         conflicts('+{0}'.format(p), when='@:9.2',
                   msg='The interface to {0} is supported from version 9.3.0 '
                       'onwards. Please explicitly disable this variant '
@@ -487,7 +487,7 @@ class Dealii(CMakePackage, CudaPackage):
         for library in (
                 'gsl', 'hdf5', 'p4est', 'petsc', 'slepc', 'trilinos', 'metis',
                 'sundials', 'nanoflann', 'assimp', 'gmsh', 'muparser',
-                'symengine', 'ginkgo', 'taskflow'):
+                'symengine', 'ginkgo'):  # 'taskflow'):
             options.append(self.define_from_variant(
                 'DEAL_II_WITH_{0}'.format(library.upper()), library
             ))
