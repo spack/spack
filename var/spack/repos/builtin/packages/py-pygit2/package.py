@@ -19,7 +19,6 @@ class PyPygit2(PythonPackage):
     version('0.28.2', sha256='4d8c3fbbf2e5793a9984681a94e6ac2f1bc91a92cbac762dbdfbea296b917f86')
     version('0.24.1', sha256='4d1d0196b38d6012faf0a7c45e235c208315672b6035da504566c605ba494064')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
     # Version must match with libgit2
     # See: http://www.pygit2.org/install.html
