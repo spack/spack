@@ -5,7 +5,6 @@
 
 import llnl.util.lang as lang
 import llnl.util.tty as tty
-import os
 
 
 class Umpire(CMakePackage, CudaPackage, ROCmPackage):
@@ -99,6 +98,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
             options.append('-DENABLE_CUDA=Off')
 
         if '+rocm' in spec:
+            rocm_prefix_info = spec.rocm_prefix_info
             options.extend([
                 '-DENABLE_HIP=ON',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)
@@ -108,7 +108,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 options.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
-                    .format(arch_str, os.getenv('DEVICE_LIB_PATH'))
+                    .format(arch_str, rocm_prefix_info['rocm-device-libs']) 
                 )
         else:
             options.append('-DENABLE_HIP=OFF')

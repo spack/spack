@@ -54,6 +54,7 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
     patch('0003-Improve-compilation-without-git-repo.patch', when='@4.0.0:')
 
+
     def get_rocm_prefix_info(self):
         # External packages in Spack do not currently contain dependency
         # information. External installations of hip therefore must compute
@@ -138,6 +139,8 @@ class Hip(CMakePackage):
 
     def setup_dependent_package(self, module, dependent_spec):
         self.spec.hipcc = join_path(self.prefix.bin, 'hipcc')
+        rocm_prefixes = self.get_rocm_prefix_info()
+        dependent_spec.rocm_prefix_info = rocm_prefixes
 
     def patch(self):
         filter_file(

@@ -93,13 +93,14 @@ class of your package.  For example, you can add it to your
             ...
             if '+rocm' in spec:
                 # Set up the hip macros needed by the build
+                rocm_prefix_info = spec.rocm_prefix_info
                 args.extend([
                     '-DENABLE_HIP=ON',
                     '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix])
                 rocm_archs = spec.variants['amdgpu_target'].value
                 if 'none' not in rocm_archs:
-                    args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                                .format(",".join(rocm_archs)))
+                    args.append('-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
+                                .format(",".join(rocm_archs),rocm_prefix_info['rocm-device-libs']))
             else:
                 # Ensure build with hip is disabled
                 args.append('-DENABLE_HIP=OFF')
@@ -111,6 +112,11 @@ assuming only on the ``ENABLE_HIP``, ``HIP_ROOT_DIR``, and ``HIP_HIPCC_FLAGS``
 macros are required to be set and the only dependency needing rocm options
 is ``mydeppackage``. You will need to customize the flags as needed for your
 build.
+
+The ``rocm_prefix_info`` dictionary has a number entries that can be utilized
+to further customize the flags. In the previous example, the path for
+the device libraries is explicitly set from the value in the dictionary. A 
+complete list of dictionary entries can be found in the ``hip`` package.
 
 This example also illustrates how to check for the ``rocm`` variant using
 ``self.spec`` and how to retrieve the ``amdgpu_target`` variant's value

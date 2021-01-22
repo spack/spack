@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Care(CMakePackage, CudaPackage, ROCmPackage):
@@ -81,6 +80,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
             options.append('-DENABLE_CUDA=OFF')
 
         if '+rocm' in spec:
+            rocm_prefix_info = spec.rocm_prefix_info
             options.extend([
                 '-DENABLE_HIP=ON',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix)])
@@ -90,7 +90,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 options.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
-                    .format(arch_str, os.getenv('DEVICE_LIB_PATH'))
+                    .format(arch_str, rocm_prefix_info['rocm-device-libs'])
                 )
         else:
             options.append('-DENABLE_HIP=OFF')
