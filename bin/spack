@@ -10,9 +10,12 @@
 # Following line is a shell no-op, and starts a multi-line Python comment.
 # See https://stackoverflow.com/a/47886254
 """:"
-# prefer python3, then python, then python2
-for cmd in python3 python python2; do
-   command -v > /dev/null $cmd && exec $cmd $0 "$@"
+# prefer SPACK_PYTHON environment variable, python3, python, then python2
+for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
+    if command -v > /dev/null "$cmd"; then
+        export SPACK_PYTHON="$(command -v "$cmd")"
+        exec "${SPACK_PYTHON}" "$0" "$@"
+    fi
 done
 
 echo "==> Error: spack could not find a python interpreter!" >&2
