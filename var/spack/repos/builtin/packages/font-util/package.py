@@ -72,7 +72,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
                  sha256=f_r[2], destination=f, when='fonts=' + f)
 
-        conflicts('font=font-bh-tff', when='platform=cray')
+        conflicts('fonts=font-bh-tff', when='platform=cray')
         conflicts('font=font-bh-tff', when='arch=linux-rhel7-broadwell')
 
         if f != 'font-bh-tff':
