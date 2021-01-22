@@ -82,7 +82,7 @@ class Raja(CMakePackage, CudaPackage, ROCmPackage):
                 arch_str = ",".join(archs)
                 options.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} --rocm-device-lib-path={1}'
-                    .format(arch_str, rocm_prefix_info['rocm-device-libs']) 
+                    .format(arch_str, rocm_prefix_info['rocm-device-libs'])
                 )
         else:
             options.append('-DENABLE_HIP=OFF')
