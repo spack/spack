@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Fenics2019(CMakePackage):
@@ -21,6 +22,7 @@ class Fenics2019(CMakePackage):
     url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.tar.gz"
     version('2019.1.0.post0', sha256='61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f')
 
+    # dolfin build options
     variant('python',       default=True,
             description='Compile with Dolfin Pyhton interface')
     variant('hdf5',         default=True,  description='Compile with HDF5')
@@ -46,12 +48,14 @@ class Fenics2019(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'MinSizeRel', 'Developer'))
 
+    # apply patch to fix header issue with latest boost library
     patch('header_fix.patch')
 
     extends('python', when='+python')
 
     depends_on('python@3.7.8:', type=('build', 'run'), when='+python')
 
+    # build python components of FEniCS
     depends_on('py-fenics-ffc', type=('build'), when='~python')
     depends_on('py-fenics-ffc', type=('build', 'run'), when='+python')
     depends_on('py-fenics-dijitso', type=('build', 'run'), when='+python')
@@ -62,7 +66,6 @@ class Fenics2019(CMakePackage):
     depends_on('boost+filesystem+program_options+system+iostreams+timer+regex+chrono')
 
     depends_on('mpi', when='+mpi')
-    # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
     depends_on('hdf5+hl', when='+hdf5~petsc')
     depends_on('metis+real64', when='+parmetis')
@@ -81,64 +84,61 @@ class Fenics2019(CMakePackage):
     depends_on('cmake@3.17.3:', type='build')
 
     depends_on('py-setuptools', type='build', when='+python')
+    depends_on('py-pkgconfig', type='run', when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     def cmake_is_on(self, option):
         return 'ON' if option in self.spec else 'OFF'
 
     def cmake_args(self):
-        return [
-            '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(
-                self.cmake_is_on('+doc')),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                self.cmake_is_on('+shared')),
+        spec = self.spec
+
+        opts = [
+            '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(self.cmake_is_on('+doc')),
+            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(self.cmake_is_on('+shared')),
             '-DDOLFIN_SKIP_BUILD_TESTS:BOOL=ON',
-            '-DDOLFIN_ENABLE_OPENMP:BOOL={0}'.format(
-                self.cmake_is_on('+openmp')),
+            '-DDOLFIN_ENABLE_OPENMP:BOOL={0}'.format(self.cmake_is_on('+openmp')),
             '-DDOLFIN_ENABLE_CHOLMOD:BOOL={0}'.format(
                 self.cmake_is_on('suite-sparse')),
-            '-DDOLFIN_ENABLE_HDF5:BOOL={0}'.format(
-                self.cmake_is_on('hdf5')),
-            '-DDOLFIN_ENABLE_MPI:BOOL={0}'.format(
-                self.cmake_is_on('mpi')),
+            '-DDOLFIN_ENABLE_HDF5:BOOL={0}'.format(self.cmake_is_on('hdf5')),
+            '-DDOLFIN_ENABLE_MPI:BOOL={0}'.format(self.cmake_is_on('mpi')),
             '-DDOLFIN_ENABLE_PARMETIS:BOOL={0}'.format(
                 self.cmake_is_on('parmetis')),
-            '-DDOLFIN_ENABLE_PASTIX:BOOL={0}'.format(
-                self.cmake_is_on('pastix')),
-            '-DDOLFIN_ENABLE_PETSC:BOOL={0}'.format(
-                self.cmake_is_on('petsc')),
+            '-DDOLFIN_ENABLE_PASTIX:BOOL={0}'.format(self.cmake_is_on('pastix')),
+            '-DDOLFIN_ENABLE_PETSC:BOOL={0}'.format(self.cmake_is_on('petsc')),
             '-DDOLFIN_ENABLE_PETSC4PY:BOOL={0}'.format(
                 self.cmake_is_on('py-petsc4py')),
-            '-DDOLFIN_ENABLE_PYTHON:BOOL={0}'.format(
-                self.cmake_is_on('python')),
-            '-DDOLFIN_ENABLE_QT:BOOL={0}'.format(
-                self.cmake_is_on('qt')),
-            '-DDOLFIN_ENABLE_SCOTCH:BOOL={0}'.format(
-                self.cmake_is_on('scotch')),
-            '-DDOLFIN_ENABLE_SLEPC:BOOL={0}'.format(
-                self.cmake_is_on('slepc')),
+            '-DDOLFIN_ENABLE_PYTHON:BOOL={0}'.format(self.cmake_is_on('python')),
+            '-DDOLFIN_ENABLE_QT:BOOL={0}'.format(self.cmake_is_on('qt')),
+            '-DDOLFIN_ENABLE_SCOTCH:BOOL={0}'.format(self.cmake_is_on('scotch')),
+            '-DDOLFIN_ENABLE_SLEPC:BOOL={0}'.format(self.cmake_is_on('slepc')),
             '-DDOLFIN_ENABLE_SLEPC4PY:BOOL={0}'.format(
                 self.cmake_is_on('py-slepc4py')),
-            '-DDOLFIN_ENABLE_SPHINX:BOOL={0}'.format(
-                self.cmake_is_on('py-sphinx')),
+            '-DDOLFIN_ENABLE_SPHINX:BOOL={0}'.format(self.cmake_is_on('py-sphinx')),
             '-DDOLFIN_ENABLE_TRILINOS:BOOL={0}'.format(
                 self.cmake_is_on('trilinos')),
             '-DDOLFIN_ENABLE_UMFPACK:BOOL={0}'.format(
                 self.cmake_is_on('suite-sparse')),
-            '-DDOLFIN_ENABLE_VTK:BOOL={0}'.format(
-                self.cmake_is_on('vtk')),
-            '-DDOLFIN_ENABLE_ZLIB:BOOL={0}'.format(
-                self.cmake_is_on('zlib')),
+            '-DDOLFIN_ENABLE_VTK:BOOL={0}'.format(self.cmake_is_on('vtk')),
+            '-DDOLFIN_ENABLE_ZLIB:BOOL={0}'.format(self.cmake_is_on('zlib')),
         ]
+        os.environ['PETSC_DIR'] = spec['petsc'].prefix
+        os.environ['SLEPC_DIR'] = spec['slepc'].prefix
 
-    def setup_environment(self, spack_env, run_env):
-        spack_env.set('DOLFIN_DIR', self.prefix)
+        return opts
 
+    # set environment for bulding python interface
+    def setup_build_environment(self, env):
+        env.set('DOLFIN_DIR', self.prefix)
+
+    def setup_run_environment(self, env):
+        env.set('DOLFIN_DIR', self.prefix)
+
+    # build python interface of dolfin
     @run_after('install')
     def install_python_interface(self):
         if '+python' in self.spec:
             cd('python')
-            python('setup.py', 'install', '--prefix={0}'.format(self.prefix))
             python('setup.py', 'install',
                    '--single-version-externally-managed',
                    '--root=/', '--prefix={0}'.format(self.prefix))
