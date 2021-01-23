@@ -172,3 +172,4 @@ class Superlu(Package):
                  parallel=False)
             self.run_test('./superlu', purpose='Smoke test for superlu',
                           work_dir='.')
+            make('clean')
