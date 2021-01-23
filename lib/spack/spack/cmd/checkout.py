@@ -14,6 +14,7 @@ level = "long"
 
 git = None
 
+
 def setup_parser(subparser):
     subparser.add_argument(
         '-r', '--remote', action='store', default='origin',
