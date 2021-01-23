@@ -22,7 +22,7 @@ def setup_deployment_args(command, args, required):
 
     Arguments:
         command (str): command name
-        args ( ): Argparse arguments
+        args (Namespace): Argparse arguments
         required (dict): Arguments to override and new values
     Returns:
         None
