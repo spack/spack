@@ -1379,7 +1379,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1397,10 +1397,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.debug('Already patched {0}'.format(self.name))
+            tty.msg('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1409,7 +1409,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.debug('Applied patch {0}'.format(patch.path_or_url))
+                tty.msg('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1423,7 +1423,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.debug('Ran patch() for {0}'.format(self.name))
+                tty.msg('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1433,7 +1433,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.debug('No patches needed for {0}'.format(self.name))
+                    tty.msg('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
