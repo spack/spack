@@ -11,7 +11,7 @@ class RPrettyunits(RPackage):
 
     Pretty, human readable formatting of quantities. Time intervals: 1337000 ->
     15d 11h 23m 20s. Vague time intervals: 2674000 -> about a month ago. Bytes:
-        1337 -> 1.34 kB."""
+    1337 -> 1.34 kB."""
 
     homepage = "https://cloud.r-project.org/package=prettyunits"
     url      = "https://cloud.r-project.org/src/contrib/prettyunits_1.0.2.tar.gz"
