@@ -79,7 +79,7 @@ class Hdf5(CMakePackage):
 
     depends_on('cmake@3.12:')
     depends_on('readline')
-    depends_on('gdbm') 
+    depends_on('gdbm')
     depends_on('perl')
 
     depends_on('mpi', when='+mpi')
