@@ -13,6 +13,7 @@ class Assimp(CMakePackage):
     homepage = "https://www.assimp.org"
     url      = "https://github.com/assimp/assimp/archive/v4.0.1.tar.gz"
 
+    version('5.0.1', sha256='11310ec1f2ad2cd46b95ba88faca8f7aaa1efe9aa12605c55e3de2b977b3dbfc')
     version('4.0.1', sha256='60080d8ab4daaab309f65b3cffd99f19eb1af8d05623fff469b9b652818e286e')
 
     variant('shared',  default=True,

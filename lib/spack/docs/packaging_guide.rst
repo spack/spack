@@ -2744,11 +2744,13 @@ The classes that are currently provided by Spack are:
     |                               | built using CMake                |
     +-------------------------------+----------------------------------+
     | :py:class:`.CudaPackage`      | A helper class for packages that |
-    |                               | use CUDA. It is intended to be   |
-    |                               | used in combination with others  |
+    |                               | use CUDA                         |
     +-------------------------------+----------------------------------+
     | :py:class:`.QMakePackage`     | Specialized class for packages   |
     |                               | build using QMake                |
+    +-------------------------------+----------------------------------+
+    | :py:class:`.ROCmPackage`      | A helper class for packages that |
+    |                               | use ROCm                         |
     +-------------------------------+----------------------------------+
     | :py:class:`.SConsPackage`     | Specialized class for packages   |
     |                               | built using SCons                |

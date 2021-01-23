@@ -114,3 +114,7 @@ class Aocc(Compiler):
     @classmethod
     def f77_version(cls, f77):
         return cls.fc_version(f77)
+
+    @property
+    def stdcxx_libs(self):
+        return ('-lstdc++', )

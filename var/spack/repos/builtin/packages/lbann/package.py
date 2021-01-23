@@ -55,6 +55,7 @@ class Lbann(CMakePackage, CudaPackage):
     variant('fft', default=False, description='Support for FFT operations')
     variant('half', default=False,
             description='Builds with support for FP16 precision data types')
+    variant('hwloc', default=True, description='Add support for topology aware algorithms')
     variant('nvprof', default=False, description='Build with region annotations for NVPROF')
     variant('opencv', default=True,
             description='Builds with support for image processing with OpenCV')
@@ -62,8 +63,9 @@ class Lbann(CMakePackage, CudaPackage):
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
-    conflicts('@:0.90,0.102:', when='+fft')
+    conflicts('@0.90:0.101.99', when='+fft')
     conflicts('~cuda', when='+nvprof')
+    conflicts('~hwloc', when='+al')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -117,12 +119,13 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
     depends_on('mpi')
-    depends_on('hwloc@1.11:', when='@:0.90,0.102:')
-    depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99')
+    depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
+    depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99 +hwloc')
+    depends_on('hwloc +cuda +nvml', when='+cuda')
 
     depends_on('half', when='+half')
 
-    depends_on('fftw +openmp +mpi', when='+fft')
+    depends_on('fftw@3.3: +openmp', when='+fft')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
