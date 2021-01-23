@@ -17,7 +17,7 @@ class Hdf5(CMakePackage):
     url      = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-1.10.7/src/hdf5-1.10.7.tar.gz"
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
-    git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
+    git      = "https://github.com/HDFGroup/hdf5.git"
     maintainers = ['lrknox']
 
     test_requires_compiler = True
@@ -77,7 +77,10 @@ class Hdf5(CMakePackage):
     conflicts('api=v110', when='@1.6:1.8.99', msg='v110 is not compatible with this release')
     conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
-    depends_on('cmake@3.12:', type='build')
+    depends_on('cmake@3.12:')
+    depends_on('readline')
+    depends_on('gdbm') 
+    depends_on('perl')
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
@@ -270,7 +273,7 @@ class Hdf5(CMakePackage):
             args.append(
                 '-DSZIP_DIR:PATH={0}'.format(
                     spec['libaec'].prefix.lib))
-            
+
         args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
 
         args.append(self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'))
