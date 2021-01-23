@@ -2,11 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import sys
-
 import llnl.util.tty as tty
-from spack.util.executable import ProcessError, which
+from spack.util.executable import which
+import spack.cmd.common.deployment as deployment
 
 _SPACK_UPSTREAM = 'https://github.com/spack/spack'
 
@@ -60,7 +58,7 @@ def checkout(parser, args):
     deployment.setup_deployment_args('checkout', args,
                                      deployment_required_args)
 
-    remote = args.remote or origin
+    remote = args.remote or 'origin'
     url = args.url
     ref = args.ref
 
