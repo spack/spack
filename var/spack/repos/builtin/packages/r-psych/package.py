@@ -36,5 +36,5 @@ class RPsych(RPackage):
 
     depends_on('r-mnormt', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
-    depends_on('r-foreign', type=('build', 'run'))
     depends_on('r-nlme', type=('build', 'run'))
+    depends_on('r-foreign', when='@:1.8.12', type=('build', 'run'))
