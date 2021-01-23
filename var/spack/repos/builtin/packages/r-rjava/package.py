@@ -21,7 +21,7 @@ class RRjava(RPackage):
     version('0.9-8', sha256='dada5e031414da54eb80b9024d51866c20b92d41d68da65789fe0130bc54bd8a')
 
     depends_on('r@2.5:', type=('build', 'run'))
-    depends_on('java@1.2:')
+    depends_on('java@2:')
     depends_on('gmake', type='build')
 
     # these are not listed as dependencies but are needed
