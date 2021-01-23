@@ -720,6 +720,7 @@ class Mfem(Package):
                               self.examples_data_dir)],
                           [], installed=True, purpose='Smoke test for mfem',
                           skip_missing=False, work_dir='.')
+            make('clean')
 
     # The files referenced in this patch method do not exist in stable
     # versions earlier than 4.1.
