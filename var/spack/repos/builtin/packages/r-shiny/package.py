@@ -37,7 +37,7 @@ class RShiny(RPackage):
     depends_on('r-later@0.7.2:', when='@1.1.0:', type=('build', 'run'))
     depends_on('r-later@1.0.0:', when='@1.5.0:', type=('build', 'run'))
     depends_on('r-promises@1.0.1:', when='@1.1.0:', type=('build', 'run'))
-    depends_on('r-promises@1.1.1:', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-promises@1.1.0:', when='@1.5.0:', type=('build', 'run'))
     depends_on('r-crayon', when='@1.1.0:', type=('build', 'run'))
     depends_on('r-rlang', when='@1.1.0:', type=('build', 'run'))
     depends_on('r-rlang@0.4.0:', when='@1.5.0:', type=('build', 'run'))
