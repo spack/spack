@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyBeancountFava(PythonPackage):
-    """Fava is a web interface for the double-entry bookkeeping software 
+    """Fava is a web interface for the double-entry bookkeeping software
        Beancount with a focus on features and usability."""
 
     homepage = "https://beancount.github.io/fava/"
@@ -30,5 +30,3 @@ class PyBeancountFava(PythonPackage):
     depends_on('py-flask-babel@1.0.0:',  type=('build', 'run'))
     depends_on('py-cheroot',             type=('build', 'run'))
     depends_on('py-beancount@2.1.3:',    type=('build', 'run'))
-    
-
