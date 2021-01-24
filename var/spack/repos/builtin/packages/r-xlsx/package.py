@@ -21,4 +21,4 @@ class RXlsx(RPackage):
 
     depends_on('r-rjava', type=('build', 'run'))
     depends_on('r-xlsxjars', type=('build', 'run'))
-    depends_on('java@1.6:')
+    depends_on('java@6:')
