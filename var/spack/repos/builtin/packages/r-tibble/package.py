@@ -30,7 +30,7 @@ class RTibble(RPackage):
     depends_on('r@3.1.0:', when='@1.3.0:', type=('build', 'run'))
     depends_on('r-cli', when='@1.4.2:', type=('build', 'run'))
     depends_on('r-crayon@1.3.4:', when='@1.4.1:', type=('build', 'run'))
-    depends_on('r-ellipsis', when='@3.0.5:', type=('build', 'run'))
+    depends_on('r-ellipsis@0.2.0:', when='@3.0.5:', type=('build', 'run'))
     depends_on('r-fansi@0.4.0:', when='@2.0.0:', type=('build', 'run'))
     depends_on('r-lifecycle@0.2.0:', when='@3.0.5:', type=('build', 'run'))
     depends_on('r-magrittr', when='@3.0.5:', type=('build', 'run'))
