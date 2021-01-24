@@ -28,6 +28,7 @@ class RManipulatewidget(RPackage):
     version('0.5.0',  sha256='2599e25f78bb0d748705160e1dfe62a673f5bb388ac5f415f3d649d2511737c8')
     version('0.4.0',  sha256='65cc7d28c2b2efc81fda35da019ac6e6058580cf0fdf5e31458cc96386c0c599')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r-shiny@1.0.3:', type=('build', 'run'))
     depends_on('r-miniui', type=('build', 'run'))
     depends_on('r-htmltools', type=('build', 'run'))
