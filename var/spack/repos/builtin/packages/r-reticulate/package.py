@@ -28,4 +28,4 @@ class RReticulate(RPackage):
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-rappdirs', when='@1.15:', type=('build', 'run'))
     depends_on('r-rcpp@0.12.7:', type=('build', 'run', 'link'))
-    depends_on('python@2.7.0:')
+    depends_on('python@2.7.0:', type=('build', 'run'))
