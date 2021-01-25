@@ -44,8 +44,9 @@ class Mxnet(MakefilePackage):
     depends_on('py-numpy@1.16:', type=('build', 'run'), when='@1.6.0 +python')
     extends('python', when='+python')
 
-    patch('makefile.patch', when='@0.10:0.11')
     patch('makefile.opencv.patch', when='@1.6.0')
+    patch('makefile-cudnn-path-1.6.patch', when='@1.6.0')
+    patch('makefile-cuda-stub-1.6.patch', when='@1.6.0')
     patch('parallell_shuffle.patch', when='@1.6.0')
 
     def build(self, spec, prefix):
