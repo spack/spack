@@ -20,6 +20,7 @@ if _platform != "win32":
 else:
     import win32con
     import win32file
+    import win32security
     import pywintypes
 
 __all__ = [
@@ -211,6 +212,7 @@ class Lock(object):
         """
         self.path = path
         self._file = None
+        self._file_mode = ""
         self._reads = 0
         self._writes = 0
 
@@ -233,14 +235,10 @@ class Lock(object):
         self.pid = self.old_pid = None
         self.host = self.old_host = None
 
-        if not spack.config.get('config:locks', True):
-            self.LOCK_EX = None
-            self.LOCK_SH = None
-            self.LOCK_NB = None
-        elif _platform == "win32":
-            self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK
-            self.LOCK_SH = 0
-            self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY
+        if _platform == "win32":
+            self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
+            self.LOCK_SH = 0  # shared lock, default
+            self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
             self.win_overlapped = pywintypes.OVERLAPPED()
         else:
             self.LOCK_EX = fcntl.LOCK_EX
@@ -301,6 +299,9 @@ class Lock(object):
         """
         assert op in self.lock_type
 
+        if _platform == "win32":
+            if self._start != 0 or self._length != 0:
+                raise LockError("Locking ranges not supported on Windows")
         self._log_acquiring('{0} LOCK'.format(self.lock_type[op].upper()))
         timeout = timeout or self.default_timeout
 
@@ -348,9 +349,45 @@ class Lock(object):
         try:
             # Try to get the lock (will raise if not available.)
             if _platform == "win32":
-                hfile = win32file._get_osfhandle((self._file).fileno())
-                win32file.LockFileEx(hfile, self.LOCK_NB, self._start,
-                                     (self._start + self._length), self.win_overlapped)
+                if self._file is None:
+                    self._ensure_parent_directory()
+
+                    secur_att = win32security.SECURITY_ATTRIBUTES()
+                    secur_att.Initialize()
+
+                    if op == self.LOCK_SH:
+                        share_mode = \
+                            win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE
+                    else:
+                        share_mode = 0
+
+                    self._file_mode = 'r+'
+                    access = win32con.GENERIC_READ | win32con.GENERIC_WRITE
+                    if os.path.exists(self.path):
+                        if not os.access(self.path, os.W_OK):
+                            if op == self.LOCK_SH:
+                                # can still lock read-only files if we open 'r'
+                                self._file_mode = 'r'
+                                access = win32con.GENERIC_READ
+                            else:
+                                raise LockROFileError(self.path)
+                    if os.path.exists(self.path):
+                        creationDisposition = win32con.OPEN_EXISTING
+                    else:
+                        creationDisposition = win32con.OPEN_ALWAYS
+                    self._file = win32file.CreateFile(
+                        self.path,  # filename
+                        access,  # access
+                        share_mode,  # mode
+                        secur_att,  # securityAttributes
+                        creationDisposition,  # creationDisposition
+                        win32con.FILE_ATTRIBUTE_NORMAL,  # flagsAndAttributes
+                        0)  # templateFile
+                win32file.LockFileEx(self._file,
+                                     op | self.LOCK_NB,
+                                     0,
+                                     0,
+                                     self.win_overlapped)
             else:
                 fcntl.lockf(self._file, op | self.LOCK_NB,
                             self._length, self._start, os.SEEK_SET)
@@ -373,12 +410,18 @@ class Lock(object):
             # EAGAIN and EACCES == locked by another process (so try again)
             if e.errno not in (errno.EAGAIN, errno.EACCES):
                 raise
+        except pywintypes.error as e:
+            if e.args[0] not in (32, 33):
+                # 33 "The process cannot access the file because another
+                #     process has locked a portion of the file."
+                # 32 "The process cannot access the file because it is being
+                #     used by another process"
+                raise
 
         return False
 
     def _ensure_parent_directory(self):
         parent = os.path.dirname(self.path)
-
         # relative paths to lockfiles in the current directory have no parent
         if not parent:
             return '.'
@@ -386,7 +429,7 @@ class Lock(object):
         try:
             os.makedirs(parent)
         except OSError as e:
-            # makedirs can fail when diretory already exists.
+            # makedirs can fail when directory already exists.
             if not (e.errno == errno.EEXIST and os.path.isdir(parent) or
                     e.errno == errno.EISDIR):
                 raise
@@ -394,6 +437,10 @@ class Lock(object):
 
     def _read_log_debug_data(self):
         """Read PID and host data out of the file if it is there."""
+        if _platform == "win32":
+            # Not implemented for windows
+            return
+
         self.old_pid = self.pid
         self.old_host = self.host
 
@@ -406,6 +453,10 @@ class Lock(object):
 
     def _write_log_debug_data(self):
         """Write PID and host data to the file, recording old values."""
+        if _platform == "win32":
+            # Not implemented for windows
+            return
+
         self.old_pid = self.pid
         self.old_host = self.host
 
@@ -428,9 +479,9 @@ class Lock(object):
         """
 
         if _platform == "win32":
-            hfile = win32file._get_osfhandle((self._file).fileno())
-            win32file.UnlockFileEx(hfile, self._start,
-                                   (self._start + self._length),
+            win32file.UnlockFileEx(self._file,
+                                   0,
+                                   0,
                                    self.win_overlapped)
         else:
             fcntl.lockf(self._file, self.LOCK_UN,
@@ -440,6 +491,7 @@ class Lock(object):
 
         self._file.close()
         self._file = None
+        self._file_mode = ""
         self._reads = 0
         self._writes = 0
 
