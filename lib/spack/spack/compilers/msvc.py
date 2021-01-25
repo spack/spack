@@ -26,8 +26,8 @@ class Msvc(Compiler):
                   'f77': '',
                   'fc': ''}
 
-    @classmethod
-    def verbose_flag(cls):
+    @property
+    def verbose_flag(self):
         return ""
 
     @property

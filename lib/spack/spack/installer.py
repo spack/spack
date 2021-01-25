@@ -56,6 +56,8 @@ from llnl.util.tty.log import log_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
+# from spack.util.debug import ForkablePdb
+
 
 #: Counter to support unique spec sequencing that is used to ensure packages
 #: with the same priority are (initially) processed in the order in which they
@@ -1695,6 +1697,10 @@ def build_process(pkg, kwargs):
                 # everything to log_path
                 with log_output(pkg.log_path, echo, True,
                                 env=unmodified_env) as logger:
+
+                    # Debug this child process from here
+                    # ForkablePdb(logger._saved_stdout,
+                    #             logger._saved_stderr).set_trace()
 
                     for phase_name, phase_attr in zip(
                             pkg.phases, pkg._InstallPhase_phases):
