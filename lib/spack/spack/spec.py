@@ -1564,7 +1564,8 @@ class Spec(object):
             # allow redundant identical dependency specifications
             # depspec equality checks by name, so we need to check components
             # separately to test whether the specs are identical
-            if dspec != self._dependencies[spec.name]:
+            orig = self._dependencies[spec.name]
+            if dspec.spec != orig.spec or dspec.deptypes != orig.deptypes:
                 raise DuplicateDependencyError("Cannot depend on '%s' twice" % spec)
 
         # create an edge and add to parent and child
