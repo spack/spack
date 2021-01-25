@@ -4,8 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from typing import List  # novm
-from spack.compiler import Compiler, UnsupportedCompilerFlag
-from spack.version import ver
+from spack.compiler import Compiler
 
 
 class Msvc(Compiler):
@@ -16,10 +15,10 @@ class Msvc(Compiler):
     cxx_names = ['cl.exe']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = [] # type: List[str]
+    f77_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = [] # type: List[str]
+    fc_names = []  # type: List[str]
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'msvc/cl.exe',

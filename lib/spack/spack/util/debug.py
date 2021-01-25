@@ -35,6 +35,7 @@ def register_interrupt_handler():
     """Print traceback and enter an interpreter on Ctrl-C"""
     signal.signal(signal.SIGINT, debug_handler)
 
+
 # Subclass of the debugger to keep readline working.  See
 # https://stackoverflow.com/questions/4716533/how-to-attach-debugger-to-a-python-subproccess/23654936
 class ForkablePdb(pdb.Pdb):
