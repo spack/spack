@@ -860,43 +860,49 @@ class Python(AutotoolsPackage):
         # modify after the installation (see method filter compilers). The
         # modified file contains paths to the real compilers, not the wrappers.
         # The values in the file, however, can be overridden with environment
-        # variables. The first variable, CC, which is used for compilation, is
-        # set by Spack for the dependent package by default. That is not 100%
-        # correct because the value for CC in the sysconfigdata file often
-        # contains additional compiler flags (e.g. -pthread), which we lose by
-        # simply setting CC to the path to the Spack wrapper. Moreover, the user
-        # might try to build an extension with a compiler that is different from
-        # the one that was used to build Python itself, which might have
-        # unexpected side effects. However, the experience shows that none of
-        # the above is a real issue and we will not try to change the default
-        # behaviour. Given that, we will simply try to modify LDSHARED, the
-        # second variable, which is used for linking, in a consistent manner.
+        # variables. The first variable, CC (CXX), which is used for
+        # compilation, is set by Spack for the dependent package by default.
+        # That is not 100% correct because the value for CC (CXX) in the
+        # sysconfigdata file often contains additional compiler flags (e.g.
+        # -pthread), which we lose by simply setting CC (CXX) to the path to the
+        # Spack wrapper. Moreover, the user might try to build an extension with
+        # a compiler that is different from the one that was used to build
+        # Python itself, which might have unexpected side effects. However, the
+        # experience shows that none of the above is a real issue and we will
+        # not try to change the default behaviour. Given that, we will simply
+        # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
+        # used for linking, in a consistent manner.
 
-        # First, we get the values of CC and LDSHARED from the sysconfigdata:
-        config_cc = self.get_config_var('CC')
-        config_ldshared = self.get_config_var('LDSHARED')
+        for compile_var, link_var in [('CC', 'LDSHARED'),
+                                      ('CXX', 'LDCXXSHARED')]:
+            # First, we get the values from the sysconfigdata:
+            config_compile = self.get_config_var(compile_var)
+            config_link = self.get_config_var(link_var)
 
-        # The dependent environment will have CC set to the following:
-        new_cc = join_path(spack.paths.build_env_path,
-                           dependent_spec.package.compiler.link_paths['cc'])
+            # The dependent environment will have the compilation command set to
+            # the following:
+            new_compile = join_path(
+                spack.paths.build_env_path,
+                dependent_spec.package.compiler.link_paths[compile_var.lower()])
 
-        # Normally, LDSHARED starts with CC:
-        if config_ldshared.startswith(config_cc):
-            new_ldshared = new_cc + config_ldshared[len(config_cc):]
-        else:
-            # with a few exceptions when CC is either not mentioned in LDSHARED
-            # at all (ld is used directly instead, which should be fine since
-            # the first ld in the PATH is the Spack wrapper) or somewhere in the
-            # middle surrounded with spaces:
-            new_ldshared = config_ldshared.replace(" {0} ".format(config_cc),
-                                                   " {0} ".format(new_cc))
+            # Normally, the link command starts with the compilation command:
+            if config_link.startswith(config_compile):
+                new_link = new_compile + config_link[len(config_compile):]
+            else:
+                # with a few exceptions when the compilation command is either
+                # not mentioned in the link command at all (ld is used directly
+                # instead, which should be fine since the first ld in the PATH
+                # is the Spack wrapper) or somewhere in the middle surrounded
+                # with spaces:
+                new_link = config_link.replace(" {0} ".format(config_compile),
+                                               " {0} ".format(new_compile))
 
-        # There is logic in the sysconfig module that is sensitive to the fact
-        # that LDSHARED is set in the environment, therefore we export the
-        # variable only if the new value is different from what we got from the
-        # sysconfigdata file:
-        if config_ldshared != new_ldshared:
-            env.set('LDSHARED', new_ldshared)
+            # There is logic in the sysconfig module that is sensitive to the
+            # fact that LDSHARED is set in the environment, therefore we export
+            # the variable only if the new value is different from what we got
+            # from the sysconfigdata file:
+            if config_link != new_link:
+                env.set(link_var, new_link)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
         python_paths = []
