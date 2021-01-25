@@ -91,7 +91,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
     depends_on('libxml2@2.9.10')
-    depends_on('cuda@9.2.88:10.2.89', when='+cuda')
+    depends_on('cuda@9.2.88:11.1.1', when='+cuda')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
 
     #ROCm dependencies
