@@ -208,7 +208,8 @@ class Petsc(Package):
     depends_on('zlib', when='+hdf5')
     depends_on('zlib', when='+libpng')
     depends_on('zlib', when='+p4est')
-    depends_on('parmetis', when='+metis+mpi')
+    depends_on('parmetis+int64', when='+metis+mpi+int64')
+    depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
