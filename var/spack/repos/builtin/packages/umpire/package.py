@@ -74,6 +74,10 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+numa', when='@:0.3.2')
     conflicts('~c', when='+fortran', msg='Fortran API requires C API')
 
+    # device allocator exports device code, which requires static libs
+    # currently only available for cuda.
+    conflicts('+shared', when='+cuda')
+
     def cmake_args(self):
         spec = self.spec
 
