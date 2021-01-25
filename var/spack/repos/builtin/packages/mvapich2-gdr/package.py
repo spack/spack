@@ -18,7 +18,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     homepage = 'http://mvapich.cse.ohio-state.edu'
     url      = 'file:///home/packager/spack-related/tar-bundles/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
-    maintainers = ['nithintsk', 'harisubramoni']
+    maintainers = ['apreifsteck', 'nithintsk', 'harisubramoni']
 
     version('2.3.5', sha256='bcfe8197875405af0ddbf6462e585efc21668108bec9b481fe53616ad36a98b4')
     version('2.3.4', sha256='ed78101e6bb807e979213006ee5f20ff466369b01f96b6d1cf0c471baf7e35aa')
