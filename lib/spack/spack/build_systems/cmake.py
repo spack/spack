@@ -359,8 +359,6 @@ class CMakePackage(PackageBase):
         options = self.std_cmake_args
         options += self.cmake_args()
         options.append(os.path.abspath(self.root_cmakelists_dir))
-        print(inspect.getmodule(self))
-        print(type(inspect.getmodule(self).cmake))
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).cmake(*options)
 
