@@ -16,7 +16,6 @@ class Mvapich2Gdr(AutotoolsPackage):
     """
 
     homepage = 'http://mvapich.cse.ohio-state.edu'
-    # This link isn't real
     url      = 'file:///home/packager/spack-related/tar-bundles/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
     maintainers = ['nithintsk', 'harisubramoni']
@@ -86,7 +85,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     conflicts('+rocm', when='@:2.3.4', msg='MVAPICH2-GDR only supports ROCm in version >= 2.3.5')
     conflicts('+cuda +rocm', msg='MVAPICH2-GDR can only be built with either CUDA or ROCm')
     conflicts('~cuda ~rocm', msg='MVAPICH2-GDR must be built with either CUDA or ROCm')
-    # conflicts('-cuda -rocm')
+    
 
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
@@ -97,10 +96,6 @@ class Mvapich2Gdr(AutotoolsPackage):
     #ROCm dependencies
     rocm_variant = '+rocm'
     rocm_ver = '3.9.0'
-    # depends_on('llvm-amdgpu@' + rocm_ver, when=rocm_variant)
-    # depends_on('rocm-device-libs@' + rocm_ver, when=rocm_variant)
-    # depends_on('rocminfo@' + rocm_ver, when=rocm_variant)
-    # depends_on('hsa-rocr-dev@' + rocm_ver, when=rocm_variant)
     depends_on('hip@' + rocm_ver, when=rocm_variant)
 
     filter_compiler_wrappers(
