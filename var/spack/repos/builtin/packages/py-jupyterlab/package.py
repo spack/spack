@@ -25,3 +25,6 @@ class PyJupyterlab(PythonPackage):
     depends_on('py-requests', type='test')
     depends_on('py-wheel', type='test')
     depends_on('py-virtualenv', type='test')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('JUPYTERLAB_DIR', self.prefix.share.jupyter.lab)
