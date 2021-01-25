@@ -26,8 +26,8 @@ class Nvshmem(MakefilePackage, CudaPackage):
 
     def url_for_version(self, version):
         ver_str = '{0}'.format(version)
-        ver = re.sub('\.', '', ver_str)
-        url_fmt = "https://developer.nvidia.com/nvshmem-src-{0}/"
+        ver = re.sub('[.]', '', ver_str)
+        url_fmt = "https://developer.nvidia.com/nvshmem-src-{0}"
         return url_fmt.format(ver)
 
     depends_on('mpi')
@@ -40,7 +40,7 @@ class Nvshmem(MakefilePackage, CudaPackage):
             'NVSHMEM_MPI_SUPPORT', '1')
         env.append_flags(
             'NVSHMEM_USE_GDRCOPY', '1')
-     
+
         if self.spec.satisfies('^spectrum-mpi') or self.spec.satisfies('^openmpi'):
             env.append_flags(
                 'NVSHMEM_MPI_IS_OMPI', '1')
