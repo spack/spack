@@ -53,12 +53,12 @@ spack:
     - py-currentscape
     - py-efel
     - py-entity-management
-    - py-jupyter-notebook@4.2.3
     - py-minis-validation
     - py-morphio
     - py-morphology-repair-workflow
     - py-morph-tool
     - py-neurodamus
+    - py-notebook
     - py-pytouchreader
     - py-simwriter
     - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc

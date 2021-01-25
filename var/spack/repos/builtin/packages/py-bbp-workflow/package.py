@@ -22,7 +22,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-requests-unixsocket', type='run')
     depends_on('py-sh', type='run')
     depends_on('py-matplotlib', type='run')
-    depends_on('py-dask', type='run')
+    depends_on('py-dask+diagnostics', type='run')
     depends_on('py-distributed', type='run')
     depends_on('py-xarray', type='run')
     depends_on('py-notebook', type='run')
