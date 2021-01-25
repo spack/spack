@@ -15,10 +15,10 @@ class Msvc(Compiler):
     cxx_names = ['cl.exe']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
+    f77_names = [] # type: List[str]
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
+    fc_names = [] # type: List[str]
 
     # Named wrapper links within build_env_path
     link_paths = {'cc': 'msvc/cl.exe',
