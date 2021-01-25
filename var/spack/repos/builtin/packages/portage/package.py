@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,16 +14,25 @@ class Portage(CMakePackage):
     """
     homepage = "http://portage.lanl.gov/"
     git      = "https://github.com/laristra/portage.git"
+    url      = "https://github.com/laristra/portage/releases/download/3.0.0/portage-3.0.0.tar.gz"
 
+
+    maintainers = ['raovgarimella']
+    
     # tarballs don't have submodules, so use git tags
-    version('develop', branch='master', submodules=True)
-    version('1.2.2', tag='v1.2.2', submodules=True)
-    version('1.1.1', tag='v1.1.1', submodules=True)
-    version('1.1.0', tag='v1.1.0', submodules=True)
+    version('3.0.0', sha256='7a5a21ffbc35fa54a5136d937cfda6f836c7496ff2b5adf54deb4107501333da')
+    version('2.2.3', tag='v2.2.3', sha256='031eaf58d8c640eadaee07e375b75308e282d6877730794e145c043d0270378d')
+    version('2.2.0', tag='v2.2.0', sha256='07603b67d2c75cab2e37b59baf886be9519a1d8dca4a471e522d269d343bccf8', submodules=True)
+    version('1.2.2', tag='v1.2.2', sha256='48b789447a3726dabaf9e57478b8e810e93b8426a5616840b47ccf813eb183e0', submodules=True)
+    version('1.1.1', tag='v1.1.1', sha256='79986c5155db03c7d1d716dbfd0444c32952646b80d7dc7f0ef940dbdd644ebd', submodules=True)
+    version('1.1.0', tag='v1.1.0', sha256='340a20b26e475b6b3344f4c4dcef6e5bd17cfdc7b82ee32edf9e529f1c0b12b0', submodules=True)
+    version('master', branch='master', submodules=True)
+
+
 
     # fabs() needs math.h for gcc-7, got fixed in
     # versions above 1.2.2
-    patch('gcc-7.patch', when='@:1.2.2 %gcc@7:')
+    patch('gcc-7.patch', when='@1.1.0:1.2.2 %gcc@7:')
     # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
     # fixed in version above 1.2.2
     patch('p_lapacke_config.patch', when='@1.2.2')
@@ -31,35 +40,69 @@ class Portage(CMakePackage):
     # fixed in version above 1.2.2
     patch('rel-with-deb-info.patch', when='@1.2.2')
 
-    # intel/19.0.4 got an ICE (internal compiler error) compiling pairs.cc
-    patch('p_intel_ice.patch', when='@1.2.2')
-
     variant('mpi', default=True, description='Support MPI')
+    variant('tangram', default=False, description='Use Tangram interface reconstruction package')
+    variant('jali', default=False, description='Include support for Jali mesh framework')
+    variant('flecsisp', default=False, description='Include support for FleCSI mesh framework')
+    variant('thrust', default=False, description='Enable on-node parallelism using NVidia Thrust library')
+    variant('kokkos', default=False, description='Enable on-node or device parallelism with Kokkos')
+    variant('openmp', default=False, description="Enable on-node parallelism using OpenMP")
+    variant('cuda', default=False, description="Enable GPU parallelism using CUDA")
 
-    depends_on("cmake@3.1:", type='build')
+    depends_on("cmake@3.13:", type='build')
+
     depends_on('mpi', when='+mpi')
-    depends_on('lapack')
-    depends_on('boost')
+    
+    depends_on('tangram', when='+tangram')
+    depends_on('tangram+mpi', when='+tangram+mpi')
+    depends_on('tangram+jali', when='+tangram+jali')
+    depends_on('tangram+flecsisp', when='+tangram+flecsisp')
+    depends_on('tangram+thrust', when='+tangram+thrust')
+    depends_on('tangram+kokkos', when='+tangram+kokkos')
+    depends_on('tangram+cuda', when='+tangram+cuda')
 
+    depends_on('wonton')
+    depends_on('wonton+mpi', when='+mpi')
+    depends_on('wonton+jali', when='+jali')
+    depends_on('wonton+flecsisp', when='+flecsisp')
+    depends_on('wonton+thrust', when='+thrust')
+    depends_on('wonton+kokkos', when='+kokkos')
+    depends_on('wonton+openmp', when='+openmp')
+    depends_on('wonton+cuda', when='+cuda')
+
+    # Jali needs MPI
+    conflicts('+jali ~mpi')
+
+    # Thrust with CUDA does not work as yet
+    conflicts('+thrust +cuda')
+    
+    # Don't enable Kokkos and Thrust simultaneously
+    conflicts('+thrust +kokkos')
+     
     def cmake_args(self):
-        options = ['-DENABLE_UNIT_TESTS=ON', '-DENABLE_APP_TESTS=ON']
-
+        options = []
+        
         if '+mpi' in self.spec:
-            options.extend([
-                '-DENABLE_MPI=ON',
-                '-DENABLE_MPI_CXX_BINDINGS=ON',
-                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-            ])
-        else:
-            options.append('-DENABLE_MPI=OFF')
+            options.append('-DPORTAGE_ENABLE_MPI=ON')
 
-        options.append('-DBLA_VENDOR=' + self.spec['blas'].name.upper())
-        options.append('-DBLAS_LIBRARIES=' + self.spec['blas'].libs.joined())
-        options.append('-DLAPACK_LIBRARIES=' +
-                       self.spec['lapack'].libs.joined())
+        if '+thrust' in self.spec:
+            options.append('-DPORTAGE_ENABLE_THRUST=ON')
 
-        options.append("-DLAPACKE_LIBRARY=" +
-                       self.spec["lapack:c"].libs.joined(";"))
+        if '+kokkos' in self.spec:
+            options.append('-DPORTAGE_ENABLE_Kokkos=ON')
+
+        if '+jali' in self.spec:
+            options.append('-DPORTAGE_ENABLE_Jali=ON')
+
+        if '+flecsi' in self.spec:
+            options.append('-DPORTAGE_ENABLE_FleCSI=ON')
+
+        if '+tangram' in self.spec:
+            options.append('-DPORTAGE_ENABLE_TANGRAM=ON')
+            
+        # Unit test variant
+        if self.run_tests:
+            options.append('-DENABLE_UNIT_TESTS=ON')
+            options.append('-DENABLE_APP_TESTS=ON')
 
         return options
