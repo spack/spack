@@ -63,7 +63,8 @@ __all__ = [
     'touchp',
     'traverse_tree',
     'unset_executable_mode',
-    'working_dir'
+    'working_dir',
+    'keep_modification_time'
 ]
 
 
@@ -1819,3 +1820,20 @@ def remove_directory_contents(dir):
                 os.unlink(entry)
             else:
                 shutil.rmtree(entry)
+
+
+@contextmanager
+def keep_modification_time(*filenames):
+    """
+    Context manager to keep the modification timestamps of the input files.
+
+    Parameters:
+        *filenames: glob expressions for files
+    """
+    mtimes = {}
+    for f in itertools.chain(*[glob.glob(x) for x in filenames]):
+        mtimes[f] = os.path.getmtime(f)
+    yield
+    for f, mtime in mtimes.items():
+        if os.path.exists(f):
+            os.utime(f, (os.path.getatime(f), mtime))
