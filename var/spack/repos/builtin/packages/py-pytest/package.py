@@ -36,9 +36,11 @@ class PyPytest(PythonPackage):
     # However, pytest requires setuptools during runtime as well.
     # FIXME: May no longer be needed at runtime, see:
     # https://github.com/pytest-dev/pytest/pull/5063
-    depends_on('py-setuptools@40.0:', when='@3.9.2:', type=('build', 'run'))
+    depends_on('py-setuptools@42.0:', when='@6.2:', type=('build', 'run'))
+    depends_on('py-setuptools@40.0:', when='@3.9.2:6.1.999', type=('build', 'run'))
     depends_on('py-setuptools@30.3:', when='@3.9.0:3.9.1', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('py-setuptools-scm@3.4:', when='@6.2:', type=('build', 'run'))
     depends_on('py-setuptools-scm', when='@3.1:', type='build')
     depends_on('py-py@1.8.2:', when='@6:', type=('build', 'run'))
     depends_on('py-py@1.5.0:', when='@3.3:5.999', type=('build', 'run'))
@@ -47,9 +49,9 @@ class PyPytest(PythonPackage):
     depends_on('py-py@1.4.29:', when='@:3.1.1', type=('build', 'run'))
     depends_on('py-six@1.10.0:', when='@3.3:4', type=('build', 'run'))
     depends_on('py-packaging', when='@4.6:', type=('build', 'run'))
-    depends_on('py-attrs@19.2.0:', when='@6.1.1:', type=('build', 'run'))
+    depends_on('py-attrs@19.2.0:', when='@6.2:', type=('build', 'run'))
+    depends_on('py-attrs@17.4.0:', when='@3.5:6.1.999', type=('build', 'run'))
     depends_on('py-attrs@17.2.0:', when='@3.3:3.4', type=('build', 'run'))
-    depends_on('py-attrs@17.4.0:', when='@3.5:', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:', when='@3.5.1:', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:6.0.0', when='@4.2.1:4.6.9 ^python@:2', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@3.6:5.2.999', type=('build', 'run'))
