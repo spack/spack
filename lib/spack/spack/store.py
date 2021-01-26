@@ -42,7 +42,6 @@ import llnl.util.filesystem as fs
 default_install_tree_root = os.path.join(spack.paths.opt_path, 'spack')
 
 install_root = None
-init_upstream = None
 
 
 def parse_install_tree(config_dict):
@@ -163,15 +162,6 @@ def parse_install_tree(config_dict):
             tty.warn(msg)
     else:
         root = unpadded_root
-
-    # Initializes upstream pointer if requested
-    if init_upstream:
-        if shared_install_trees:
-            init_upstream_path = shared_install_trees[init_upstream]['root']
-            initialize_upstream_pointer_if_unset(root, init_upstream_path)
-        else:
-            tty.die("Specified upstream must be defined"
-                    " as shared install tree.")
 
     return (root, unpadded_root, projections)
 

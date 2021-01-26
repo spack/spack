@@ -430,9 +430,6 @@ def make_argument_parser(**kwargs):
         action='store', default=None,
         help='specify non-default install tree'
     )
-    parser.add_argument(
-        '--init-upstream',
-        help="when initializing an install tree, this names an upstream")
 
     return parser
 
@@ -487,9 +484,6 @@ def setup_main_options(args):
     elif args.global_upstream:
         spack.store.install_root = 'spack-root'
         spack.modules.common.install_root = args.install_root
-
-    if args.init_upstream:
-        spack.store.init_upstream = args.init_upstream
 
 
 def allows_unknown_args(command):
