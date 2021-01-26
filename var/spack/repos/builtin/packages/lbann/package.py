@@ -60,6 +60,7 @@ class Lbann(CMakePackage, CudaPackage):
     variant('opencv', default=True,
             description='Builds with support for image processing with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('onednn', default=False, description='Support for OneDNN')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
@@ -168,6 +169,8 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('llvm-openmp', when='%apple-clang')
 
+    depends_on('onednn cpu_runtime=omp gpu_runtime=none', when='+onednn')
+
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
@@ -211,6 +214,7 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
+            '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
