@@ -22,7 +22,7 @@ class Adiak(CMakePackage):
     version('0.3.0-alpha', commit='054d2693a977ed0e1f16c665b4966bb90924779e',
             submodules=True)
     version('0.2.1', commit='950e3bfb91519ecb7b7ee7fa3063bfab23c0e2c9',
-            submodules=True)
+            submodules=True, preferred=True)
     version('0.1.1', sha256='438e4652e15e206cd0019423d829fd4f2329323ff0c8861d9586bae051d9624b')
 
     depends_on('mpi', when='+mpi')

@@ -17,11 +17,12 @@ class Caliper(CMakePackage):
 
     homepage = "https://github.com/LLNL/Caliper"
     git      = "https://github.com/LLNL/Caliper.git"
+    url      = "https://github.com/LLNL/Caliper/archive/v2.5.0.tar.gz"
 
     maintainers = ["daboehme"]
 
-    version('master')
-    version('2.5.0', tag='v2.5.0')
+    version('master', branch='master')
+    version('2.5.0', sha256='d553e60697d61c53de369b9ca464eb30710bda90fba9671201543b64eeac943c')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
     version('2.2.0', tag='v2.2.0')
