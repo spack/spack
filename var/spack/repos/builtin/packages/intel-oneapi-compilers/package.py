@@ -70,8 +70,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                          'compiler', 'latest', 'linux', 'lib'))
         env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
                          'compiler', 'latest', 'linux', 'lib'))
-        # Set these so that MPI wrappers will pick up these compilers 
-        # when this module is loaded. 
+        # Set these so that MPI wrappers will pick up these compilers
+        # when this module is loaded.
         env.set('I_MPI_CC', 'icx')
         env.set('I_MPI_CXX', 'icpx')
         env.set('I_MPI_FC', 'ifx')
