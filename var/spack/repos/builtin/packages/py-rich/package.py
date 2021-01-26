@@ -32,4 +32,4 @@ class PyRich(PythonPackage):
     depends_on('py-dataclasses@0.7:0.8', when='python@:3.6', type=('build', 'run'))
     depends_on('py-pygments@2.6:2.99', type=('build', 'run'))
     depends_on('py-commonmark@0.9.0:0.9.999', type=('build', 'run'))
-    depends_on('py-colorama@0.4:0.99', type=('build', 'run'))
+    depends_on('py-colorama@0.4.0:0.4.999', type=('build', 'run'))
