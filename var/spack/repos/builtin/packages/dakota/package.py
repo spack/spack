@@ -44,7 +44,6 @@ class Dakota(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     depends_on('python')
-    depends_on('perl-data-dumper', type='build', when='@:6.12')
     depends_on('perl-data-dumper', type='build', when='@6.12:')
     depends_on('boost@:1.68.0', when='@:6.12')
     depends_on('cmake@2.8.9:', type='build')
