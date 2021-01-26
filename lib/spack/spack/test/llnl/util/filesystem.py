@@ -592,30 +592,9 @@ def test_content_of_files_with_same_name(tmpdir):
 
 def test_keep_modification_time(tmpdir):
     file1 = tmpdir.ensure('file1')
-    file2 = tmpdir.ensure('file2')
+    mtime1 = file1.mtime()
 
-    # Account for the time resolution: pretend that the first and the second
-    # files were modified 10 and 5 seconds ago, respectively.
-    now = file1.mtime()
-    file1.setmtime(now - 10)
-    file2.setmtime(now - 5)
-
-    # Assert that the second file was modified later than the first one:
-    assert file2.mtime() > file1.mtime()
-
-    # Make sure that the write operation modifies the timestamp as expected and
-    # the time resolution is enough to make the following tests demonstrative:
-    file1.write('1')
-    assert file1.mtime() > file2.mtime()
-
-    # Restore the modification time to the previous value and re-run the write
-    # operation inside the tested context wrapper:
-    file1.setmtime(now - 10)
     with fs.keep_modification_time(file1.strpath):
-        file1.write('2')
+        file1.setmtime(mtime1 + 10)
 
-    # Assert that the last operation modified the file:
-    assert file1.read().strip() == '2'
-
-    # Assert that the last operation didn't change the modification timestamp:
-    assert file2.mtime() > file1.mtime()
+    assert int(mtime1) == int(file1.mtime())

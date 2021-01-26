@@ -1831,7 +1831,7 @@ def keep_modification_time(*filenames):
         *filenames: glob expressions for files
     """
     mtimes = {}
-    for f in itertools.chain(*[glob.glob(x) for x in filenames]):
+    for f in filenames:
         mtimes[f] = os.path.getmtime(f)
     yield
     for f, mtime in mtimes.items():
