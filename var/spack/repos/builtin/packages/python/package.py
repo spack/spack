@@ -889,11 +889,16 @@ class Python(AutotoolsPackage):
             if config_link.startswith(config_compile):
                 new_link = new_compile + config_link[len(config_compile):]
             else:
-                # with a few exceptions when the compilation command is either
-                # not mentioned in the link command at all (ld is used directly
-                # instead, which should be fine since the first ld in the PATH
-                # is the Spack wrapper) or somewhere in the middle surrounded
-                # with spaces:
+                # Otherwise, we try to replace the compiler command if it
+                # appears "in the middle" of the link command; to avoid
+                # mistaking some substring of a path for the compiler (e.g. to
+                # avoid replacing "gcc" in "-L/path/to/gcc/"), we require that
+                # the compiler command be surrounded by spaces. Note this may
+                # leave "config_link" unchanged if the compilation command does
+                # not appear in the link command at all, for example if "ld" is
+                # invoked directly (no change would be required in that case
+                # because Spack arranges for the Spack ld wrapper to be the
+                # first instance of "ld" in PATH).
                 new_link = config_link.replace(" {0} ".format(config_compile),
                                                " {0} ".format(new_compile))
 
