@@ -18,4 +18,4 @@ class PyShtab(PythonPackage):
     # setuptools and setuptools_scm imported in shtab/__init__.py
     depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools@42:', type='build')
-    depends_on('py-setuptools-scm', type=('build', 'run'))
+    depends_on('py-setuptools-scm@3.4:+toml', type='build')
