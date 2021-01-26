@@ -15,6 +15,8 @@ class FluxCore(AutotoolsPackage):
     git      = "https://github.com/flux-framework/flux-core.git"
 
     version('master', branch='master')
+    version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7')
+    version('0.22.0', sha256='1dd0b737199b8a40f245e6a4e1b3b28770f0ecf2f483d284232080b8b252521f')
     version('0.21.0', sha256='cc1b7a46d7c1c1a3e99e8861bba0dde89a97351eabd6f1b264788bd76e64c329')
     version('0.20.0', sha256='2970b9b1c389fc4a381f9e605921ce0eb6aa9339387ea741978bcffb4bd81b6f')
     version('0.19.0', sha256='f45328a37d989c308c46639a9ed771f47b11184422cf5604249919fbd320d6f5')
@@ -163,3 +165,14 @@ class FluxCore(AutotoolsPackage):
         if '+docs' not in self.spec:
             args.append('--disable-docs')
         return args
+
+    def flag_handler(self, name, flags):
+        if name == 'cflags':
+            # https://github.com/flux-framework/flux-core/issues/3482
+            if self.spec.satisfies('%gcc@10:') and \
+               self.spec.satisfies('@0.23.0:0.23.99'):
+                if flags is None:
+                    flags = []
+                flags.append('-Wno-error=stringop-truncation')
+
+        return (flags, None, None)
