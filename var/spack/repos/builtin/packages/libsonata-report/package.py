@@ -16,6 +16,7 @@ class LibsonataReport(CMakePackage):
     homepage = "https://github.com/BlueBrain/libsonata"
     git = "https://github.com/BlueBrain/libsonata.git"
 
+    version('0.1.6', commit='a738b0189f81fa', submodules=True, get_full_repo=True)
     version('0.1.5', commit='55567360dab0e8', submodules=True, get_full_repo=True)
     version('0.1.4', commit='3881a52ad7fe8b', submodules=True, get_full_repo=True)
     version('develop', branch='master', submodules=False, get_full_repo=True)
