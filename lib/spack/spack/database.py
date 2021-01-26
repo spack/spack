@@ -1010,6 +1010,11 @@ class Database(object):
         try:
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
+            # On Windows, os.rename will fail if the destination file
+            # already exists
+            if sys.platform == "win32":
+                if os.path.exists(self._index_path):
+                    os.remove(self._index_path)
             os.rename(temp_file, self._index_path)
             if _use_uuid:
                 with open(self._verifier_path, 'w') as f:
