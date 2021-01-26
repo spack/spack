@@ -1832,8 +1832,13 @@ def keep_modification_time(*filenames):
     """
     mtimes = {}
     for f in filenames:
-        mtimes[f] = os.path.getmtime(f)
+        try:
+            mtimes[f] = os.path.getmtime(f)
+        except (IOError, OSError):
+            pass
     yield
     for f, mtime in mtimes.items():
-        if os.path.exists(f):
+        try:
             os.utime(f, (os.path.getatime(f), mtime))
+        except (IOError, OSError):
+            pass
