@@ -38,6 +38,7 @@ import llnl.util.tty as tty
 from llnl.util.filesystem import (
     get_single_file,
     mkdirp,
+    rename,
     temp_cwd,
     temp_rename,
     working_dir,
@@ -324,7 +325,7 @@ class URLFetchStrategy(FetchStrategy):
             try:
                 partial_file, save_file = self._fetch_from_url(url)
                 if save_file and (partial_file is not None):
-                    os.rename(partial_file, save_file)
+                    rename(partial_file, save_file)
                 break
             except FailedDownloadError as e:
                 errors.append(str(e))
@@ -1399,7 +1400,7 @@ class S3FetchStrategy(URLFetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
 
         if self.stage.save_filename:
-            os.rename(
+            rename(
                 os.path.join(self.stage.path, basename),
                 self.stage.save_filename)
 
