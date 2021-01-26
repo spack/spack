@@ -16,6 +16,6 @@ class PyShtab(PythonPackage):
     version('1.3.3', sha256='1f7f263631acdf0a9e685bbf7126a0fa711c2d663db12441670b1cea3fa431d4')
 
     # setuptools and setuptools_scm imported in shtab/__init__.py
-    depends_on('python@2.7,3.2:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.2:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm', type=('build', 'run'))
