@@ -26,7 +26,7 @@ class PyRich(PythonPackage):
     version('9.5.0', sha256='a65a9d003cb6e87e6fa5d1b53bff6f43a8d7475524c58873acdbf5bba0683fa3')
     version('9.4.0', sha256='bde23a1761373fed2802502ff98292c5d735a5389ed96f4fe1be5fb4c2cde8ea')
 
-    depends_on('python@3.6:3.9', type=('build', 'run'))
+    depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-typing-extensions@3.7.4:3.99', type=('build', 'run'))
     depends_on('py-dataclasses@0.7:0.8', when='python@3.6', type=('build', 'run'))
