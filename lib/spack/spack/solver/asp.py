@@ -251,7 +251,7 @@ class ActionRecorder(object):
                 self.recorder = recorder
 
             def __call__(self, *args):
-                _record = (self.name, *args)
+                _record = (self.name,) + tuple(args)
                 self.recorder.actions.append(_record)
 
         return Record(item, self)
