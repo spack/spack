@@ -22,7 +22,7 @@ from six.moves.urllib.request import Request, urlopen
 
 import llnl.util.lang
 import llnl.util.tty as tty
-from llnl.util.filesystem import mkdirp
+from llnl.util.filesystem import mkdirp, rename
 
 import spack.config
 import spack.error
@@ -173,7 +173,7 @@ def push_to_url(
             shutil.copy(local_file_path, remote_file_path)
         else:
             try:
-                os.rename(local_file_path, remote_file_path)
+                rename(local_file_path, remote_file_path)
             except OSError as e:
                 if e.errno == errno.EXDEV:
                     # NOTE(opadron): The above move failed because it crosses

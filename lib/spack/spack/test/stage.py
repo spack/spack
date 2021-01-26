@@ -13,7 +13,7 @@ import stat
 
 import pytest
 
-from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
+from llnl.util.filesystem import getuid, mkdirp, partition_path, touch, working_dir
 
 import spack.paths
 import spack.stage
@@ -357,7 +357,7 @@ def check_stage_dir_perms(prefix, path):
 
     user = getpass.getuser()
     prefix_status = os.stat(prefix)
-    uid = os.getuid()
+    uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     #
@@ -753,7 +753,7 @@ class TestStage(object):
 
         # The following check depends on the patched os.stat as a poor
         # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != os.getuid()
+        assert os.stat(user_path).st_uid != getuid()
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""

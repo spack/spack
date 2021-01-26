@@ -565,7 +565,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
             }, tmp, default_flow_style=False, encoding='utf-8')
 
         # Atomic update by moving tmpfile on top of old one.
-        os.rename(tmp.name, path)
+        fs.rename(tmp.name, path)
 
 
 class DirectoryLayoutError(SpackError):

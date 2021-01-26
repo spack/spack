@@ -1001,7 +1001,8 @@ class Database(object):
         try:
             with open(temp_file, 'w') as f:
                 self._write_to_file(f)
-            os.rename(temp_file, self._index_path)
+            fs.rename(temp_file, self._index_path)
+
             if _use_uuid:
                 with open(self._verifier_path, 'w') as f:
                     new_verifier = str(uuid.uuid4())

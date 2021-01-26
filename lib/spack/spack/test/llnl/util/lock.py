@@ -59,7 +59,7 @@ import pytest
 
 import llnl.util.lock as lk
 import llnl.util.multiproc as mp
-from llnl.util.filesystem import touch
+from llnl.util.filesystem import getuid, touch
 
 #
 # This test can be run with MPI.  MPI is "enabled" if we can import
@@ -580,7 +580,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 1))
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
     touch(lock_path)
