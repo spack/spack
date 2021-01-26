@@ -89,9 +89,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         for dir in self._ld_library_path():
             env.prepend_path('LD_LIBRARY_PATH', dir)
         # set these so that wrappers know what compilers to use
-        env.set('I_MPI_CC', 'icx')
-        env.set('I_MPI_CXX', 'icpx')
-        env.set('I_MPI_FC', 'ifx')
+        # env.set('I_MPI_CC', 'icx')
+        # env.set('I_MPI_CXX', 'icpx')
+        # env.set('I_MPI_FC', 'ifx')
         # so wrappers know where MPI lives
         mpi_root = join_path(prefix, 'mpi', 'latest')
         env.set('I_MPI_ROOT', mpi_root)
