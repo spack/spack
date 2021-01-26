@@ -5,6 +5,7 @@
 
 import os
 import shutil
+from sys import platform as _platform
 
 from llnl.util.filesystem import mkdirp
 
@@ -145,6 +146,11 @@ class FileCache(object):
                     shutil.rmtree(cm.tmp_filename, True)
 
                 else:
+                    # On Windows, os.rename will fail if the destination file
+                    # already exists
+                    if _platform == "win32":
+                        if os.path.exists(cm.orig_filename):
+                            os.remove(cm.orig_filename)
                     os.rename(cm.tmp_filename, cm.orig_filename)
 
         return WriteTransaction(
