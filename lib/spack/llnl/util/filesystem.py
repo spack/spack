@@ -1828,7 +1828,8 @@ def keep_modification_time(*filenames):
     Context manager to keep the modification timestamps of the input files.
 
     Parameters:
-        *filenames: glob expressions for files
+        *filenames: one or more files that must have their modification
+            timestamps unchanged
     """
     mtimes = {}
     for f in filenames:
