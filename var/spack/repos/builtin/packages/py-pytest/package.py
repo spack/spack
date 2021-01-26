@@ -52,7 +52,7 @@ class PyPytest(PythonPackage):
     depends_on('py-attrs@19.2.0:', when='@6.2:', type=('build', 'run'))
     depends_on('py-attrs@17.4.0:', when='@3.5:6.1.999', type=('build', 'run'))
     depends_on('py-attrs@17.2.0:', when='@3.3:3.4', type=('build', 'run'))
-    depends_on('py-more-itertools@4.0.0:', when='@3.5.1:', type=('build', 'run'))
+    depends_on('py-more-itertools@4.0.0:', when='@3.5.1:5.999', type=('build', 'run'))
     depends_on('py-more-itertools@4.0.0:6.0.0', when='@4.2.1:4.6.9 ^python@:2', type=('build', 'run'))
     depends_on('py-atomicwrites@1.0:', when='@3.6:5.2.999', type=('build', 'run'))
     depends_on('py-pluggy@0.12:1.0.0', when='@6.2.1.', type=('build', 'run'))
