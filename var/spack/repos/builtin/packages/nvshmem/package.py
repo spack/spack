@@ -22,6 +22,7 @@ class Nvshmem(MakefilePackage, CudaPackage):
 
     version('2.0.3-0', sha256='20da93e8508511e21aaab1863cb4c372a3bec02307b932144a7d757ea5a1bad2', extension='txz')
 
+    variant('cuda', default=True, description='Build with CUDA')
     conflicts('~cuda')
 
     def url_for_version(self, version):
