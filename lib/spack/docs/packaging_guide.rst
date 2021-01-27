@@ -4020,7 +4020,7 @@ corresponding to successful execution (e.g. ``status=[0,3,7]``).
 Spack also checks that every string in ``expected`` is a regex matching
 part of the output from the test run (e.g.
 ``expected=['completed successfully', 'converged in']``). Default behavior
-is to behave as though ``status=[0,]`` and ``expected=[]`` are specified.
+is to behave as though ``status=[0]`` and ``expected=[]`` are specified.
 
 Output from the test is written to its log file. The ``purpose`` argument
 serves as the heading in text logs to highlight the start of each test part.
