@@ -13,6 +13,7 @@ class FluxCore(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-core"
     url      = "https://github.com/flux-framework/flux-core/releases/download/v0.8.0/flux-core-0.8.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-core.git"
+    maintainers = ['SteVwonder']
 
     version('master', branch='master')
     version('0.23.0', sha256='918b181be4e27c32f02d5036230212cd9235dc78dc2bde249c3651d6f75866c7')

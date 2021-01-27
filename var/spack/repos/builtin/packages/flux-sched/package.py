@@ -13,6 +13,7 @@ class FluxSched(AutotoolsPackage):
     homepage = "https://github.com/flux-framework/flux-sched"
     url      = "https://github.com/flux-framework/flux-sched/releases/download/v0.5.0/flux-sched-0.5.0.tar.gz"
     git      = "https://github.com/flux-framework/flux-sched.git"
+    maintainers = ['SteVwonder']
 
     version('master', branch='master')
     version('0.15.0', sha256='ff24d26997f91af415f98734b8117291f5a5001e86dac865b56b3d72980c80c8')
