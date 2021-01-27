@@ -93,10 +93,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     depends_on('cuda@9.2.88:11.1.1', when='+cuda')
     depends_on('pmix@3.1.3', when='pmi_version=pmix')
 
-    #ROCm dependencies
-    rocm_variant = '+rocm'
-    rocm_ver = '3.9.0'
-    depends_on('hip@' + rocm_ver, when=rocm_variant)
+    depends_on('hip@3.9.0', when='+rocm')
 
     filter_compiler_wrappers(
         'mpicc', 'mpicxx', 'mpif77', 'mpif90', 'mpifort', relative_root='bin'
