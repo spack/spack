@@ -461,6 +461,10 @@ class Openfoam(Package):
             except Exception:
                 minimal = True
 
+        # Avoid the exception that occurs at runtime with the Fujitsu compiler.
+        if self.spec.satisfies('%fj'):
+            env.set('FOAM_SIGFPE', 'false')
+
         if minimal:
             # pre-build or minimal environment
             self.setup_minimal_environment(env)
