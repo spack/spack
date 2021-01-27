@@ -5,7 +5,6 @@
 
 from spack import *
 import shutil
-import inspect
 
 
 class Gchp(CMakePackage):
