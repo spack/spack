@@ -13,6 +13,7 @@ class Onednn(CMakePackage):
 
     homepage = "https://01.org/onednn"
     url      = "https://github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz"
+    git      = "https://github.com/oneapi-src/oneDNN.git"
 
     maintainers = ['adamjstewart']
 
