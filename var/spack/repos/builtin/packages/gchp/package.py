@@ -43,14 +43,12 @@ class Gchp(CMakePackage):
 
     def install(self, spec, prefix):
         super().install(spec, prefix)
-        '''
-        Preserve source code in prefix for two reasons:
-        1. Run directory creation occurs independently of code compilation,
-        possibly multiple times depending on user needs,
-        and requires the preservation of some of the source code structure.
-        2. Run configuration is relatively complex and can result in error
-        messages that point to specific modules / lines of the source code.
-        Including source code thus facilitates runtime debugging.
-        '''
+        # Preserve source code in prefix for two reasons:
+        # 1. Run directory creation occurs independently of code compilation,
+        # possibly multiple times depending on user needs,
+        # and requires the preservation of some of the source code structure.
+        # 2. Run configuration is relatively complex and can result in error
+        # messages that point to specific modules / lines of the source code.
+        # Including source code thus facilitates runtime debugging.
         shutil.move(self.stage.source_path,
                     join_path(prefix, 'source_code'))
