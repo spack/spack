@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-import shutil
 from spack import *
 
 
@@ -17,8 +15,4 @@ class Cxxtest(Package):
     version('4.4', sha256='1c154fef91c65dbf1cd4519af7ade70a61d85a923b6e0c0b007dc7f4895cf7d8')
 
     def install(self, spec, prefix):
-        for path in os.listdir(os.getcwd()):
-            if os.path.isdir(path):
-                shutil.copytree(path, os.path.join(prefix, path))
-            else:
-                shutil.copy(path, os.path.join(prefix, path))
+        install_tree(self.stage.source_path, prefix)
