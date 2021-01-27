@@ -13,7 +13,7 @@ class PyProglog(PythonPackage):
     bars."""
 
     homepage = "https://pypi.org/project/proglog/"
-    url      = "https://pypi.io/packages/source/p/proglog/proglog-0.1.9.tar.gz"
+    pypi = "proglog/proglog-0.1.9.tar.gz"
 
     version('0.1.9', sha256='d8c4ccbf2138e0c5e3f3fc0d80dc51d7e69dcfe8bfde4cacb566725092a5b18d')
 
