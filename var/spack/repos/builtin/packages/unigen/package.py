@@ -21,7 +21,7 @@ class Unigen(MakefilePackage):
     version('2.3', sha256='8783bcabbdf8c50dab6e93153cff9cfb267a9a9e61aef51bf1e17679ba42a717')
     patch('unigen-2.3.patch', level=0)
 
-    depends_on('root', type=('build', 'link'))
+    depends_on('root')
 
     def build(self, spec, prefix):
         make(f'TOPDIR={self.build_directory}', 'all')
