@@ -60,12 +60,14 @@ class Lbann(CMakePackage, CudaPackage):
     variant('opencv', default=True,
             description='Builds with support for image processing with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('nvshmem', default=False, description='Support for NVSHMEM')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
     conflicts('@0.90:0.101.99', when='+fft')
     conflicts('~cuda', when='+nvprof')
     conflicts('~hwloc', when='+al')
+    conflicts('~cuda', when='+nvshmem')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -105,6 +107,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +distconv +cuda', when='+distconv')
     depends_on('dihydrogen ~half', when='+dihydrogen ~half')
     depends_on('dihydrogen +half', when='+dihydrogen +half')
+    depends_on('dihydrogen ~nvshmem', when='+dihydrogen ~nvshmem')
+    depends_on('dihydrogen +nvshmem', when='+dihydrogen +nvshmem')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
     conflicts('~dihydrogen', when='+distconv')
@@ -168,6 +172,8 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('llvm-openmp', when='%apple-clang')
 
+    depends_on('nvshmem', when='+nvshmem')
+
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
@@ -210,6 +216,7 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
+            '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
