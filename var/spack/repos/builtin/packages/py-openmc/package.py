@@ -50,8 +50,8 @@ class PyOpenmc(PythonPackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-uncertainties', type=('build', 'run'))
 
-    def install(self, spec, prefix):
-        super(PyOpenmc, self).install(spec, prefix)
+    @run_after('install')
+    def install_lib(self):
         openmc_dir = self.spec['openmc'].prefix
         libopenmc = 'libopenmc.{0}'.format(
             'dylib' if 'platform=darwin' in self.spec else 'so'
