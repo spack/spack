@@ -96,9 +96,6 @@ class Nvhpc(Package):
                                   'Linux_%s' % self.spec.target.family,
                                   self.version, 'compilers'))
 
-        # pgi/nvc doesn't support -isystem flag
-        env.set('DUMB_COMPILER', 'absolutely')
-
         env.set('CC',  join_path(prefix.bin, 'nvc'))
         env.set('CXX', join_path(prefix.bin, 'nvc++'))
         env.set('F77', join_path(prefix.bin, 'nvfortran'))

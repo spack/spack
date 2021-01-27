@@ -69,3 +69,39 @@ modules:
       environment:
         set:
           '${PACKAGE}_ROOT': '${PREFIX}'
+    gcc:
+      environment:
+        set:
+          MPICC_CC: 'gcc'
+          MPICXX_CXX: 'g++'
+          MPIF90_F90: 'gfortran'
+    intel-parallel-studio:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    intel:
+      environment:
+        set:
+          MPICC_CC: 'icc'
+          MPICXX_CXX: 'icpc'
+          MPIF90_F90: 'ifort'
+    pgi:
+      environment:
+        set:
+          MPICC_CC: 'pgcc'
+          MPICXX_CXX: 'pgc++'
+          MPIF90_F90: 'pgfortran'
+    llvm:
+      environment:
+        set:
+          MPICC_CC: 'clang'
+          MPICXX_CXX: 'clang++'
+          MPIF90_F90: 'gfortran'
+    nvhpc:
+      environment:
+        set:
+          MPICC_CC: 'nvc'
+          MPICXX_CXX: 'nvc++'
+          MPIF90_F90: 'nvfortran'

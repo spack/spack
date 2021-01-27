@@ -276,6 +276,7 @@ configure_compilers() {
         sha="${line%% *}"  # Remove everything after and including the first space
         spec="${line#* }"  # Remove everything up to and including the first space
         set +o nounset
+        env_mods=""
 
 
         # Skip all but compilers. Compiler variants need to be specified
@@ -352,6 +353,24 @@ configure_compilers() {
         cmd=${cmd/load/unload}
         echo "${cmd}"
         ${cmd}
+
+        cmd=${cmd/unload/show/}
+        full_module_path="$(${cmd}|&sed -ne '2{s/:$// p}')"
+        spec=${spec%%[+ ]*}             # truncate variants
+        spec=${spec/llvm/clang}         # LLVM identifies as clang
+        spec=${spec/20.0.2/19.1.2.254}  # Intel identifies as an older version
+        # Remove empty module definitions, as they may appear anywhere
+        # under the compiler key. Further, purge some garbage where clang's
+        # spec spans multiple lines with a quote in front.
+        #
+        # After removing all unnecessary stuff, re-add the appropriate
+        # module definition with a full path.
+        sed -i -e '
+            /modules: \[\]/ d;
+            /^\s*Target:.\s*$/ d;
+            /^\s*$/ d;
+            s#spec: .clang#spec: clang#
+            s#\( *\)spec: '"${spec}"'#&\n\1modules: ['"${full_module_path}"']#' ${HOME}/.spack/compilers.yaml
     done
 
     sed  -i 's#.*f\(77\|c\): null#      f\1: /usr/bin/gfortran#' ${HOME}/.spack/compilers.yaml
