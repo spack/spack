@@ -92,6 +92,8 @@ class Petsc(Package):
             description='Activates support for SuperluDist (only parallel)')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
+    variant('mkl-pardiso', default=False,
+            description='Activates support for MKL Pardiso')
     variant('int64', default=False,
             description='Compile with 64bit indices')
     variant('clanguage', default='C', values=('C', 'C++'),
@@ -206,7 +208,8 @@ class Petsc(Package):
     depends_on('zlib', when='+hdf5')
     depends_on('zlib', when='+libpng')
     depends_on('zlib', when='+p4est')
-    depends_on('parmetis', when='+metis+mpi')
+    depends_on('parmetis+int64', when='+metis+mpi+int64')
+    depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
@@ -243,6 +246,7 @@ class Petsc(Package):
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
     depends_on('trilinos@develop+mpi', when='@xdevelop+trilinos+mpi')
+    depends_on('mkl', when='+mkl-pardiso')
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
@@ -449,6 +453,11 @@ class Petsc(Package):
         else:
             options.append('--with-zlib=0')
 
+        if '+mkl-pardiso' in spec:
+            options.append(
+                '--with-mkl_pardiso-dir=%s' % spec['mkl'].prefix
+            )
+
         python('configure', '--prefix=%s' % prefix, *options)
 
         # PETSc has its own way of doing parallel make.
@@ -496,6 +505,13 @@ class Petsc(Package):
                         '-da_grid_y', '4',
                         '-pc_type', 'hypre',
                         '-pc_hypre_type', 'boomeramg')
+
+                if 'mkl-pardiso' in spec:
+                    run('ex50',
+                        '-da_grid_x', '4',
+                        '-da_grid_y', '4',
+                        '-pc_type', 'lu',
+                        '-pc_factor_mat_solver_package', 'mkl_pardiso')
 
     def setup_build_environment(self, env):
         # configure fails if these env vars are set outside of Spack

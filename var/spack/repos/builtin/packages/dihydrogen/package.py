@@ -66,6 +66,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    conflicts('~cuda', when='+nvshmem')
+
     depends_on('mpi')
     depends_on('catch2', type='test')
 
@@ -119,6 +121,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('doxygen', type='build', when='+docs')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
+
+    depends_on('nvshmem', when='+nvshmem')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',

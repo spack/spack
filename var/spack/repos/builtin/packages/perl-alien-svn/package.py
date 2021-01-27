@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
 
 from spack import *
 
@@ -23,7 +24,7 @@ class PerlAlienSvn(PerlPackage):
 
     depends_on('perl-module-build', type='build')
     depends_on('apr@1.6.2', type='build')
-    depends_on('apr-util', type='build')
+    depends_on('apr-util', type=('build', 'link'))
     depends_on('sqlite', type='build')
     depends_on('zlib')
     depends_on('libbsd')
@@ -34,6 +35,8 @@ class PerlAlienSvn(PerlPackage):
 
     def setup_run_environment(self, env):
         # SVN libs are not RPATHed correctly...
-        env.prepend_path('LD_LIBRARY_PATH', join_path(
-            self.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
-            'Alien', 'SVN'))
+        # TODO: extend to other plaforms
+        if sys.platform.startswith('linux'):
+            env.prepend_path('LD_LIBRARY_PATH', join_path(
+                self.prefix, 'lib', 'perl4', 'x86_64-linux-thread-multi',
+                'Alien', 'SVN'))

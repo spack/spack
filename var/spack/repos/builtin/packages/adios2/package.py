@@ -98,14 +98,11 @@ class Adios2(CMakePackage):
     depends_on('bzip2', when='@2.4: +bzip2')
     depends_on('libpng@1.6:', when='@2.4: +png')
     depends_on('zfp@0.5.1:', when='+zfp')
-    depends_on('sz@:2.0.2.0', when='+sz')
+    depends_on('sz@2.0.2.0:', when='+sz')
 
     extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.5:',
-               when='@:2.4.0 +python',
-               type=('build', 'run'))
-    depends_on('python@3.5:', when='@2.5.0: +python',
-               type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:2.4.0 +python', type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.5.0: +python', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@:2.4.0', type='test')
     depends_on('python@3.5:', when='@2.5.0:', type='test')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
@@ -119,6 +116,10 @@ class Adios2(CMakePackage):
     # third-party dill library.
     # See https://github.com/ornladios/ADIOS2/pull/1899
     patch('2.5-fix-clear_cache.patch', when='@2.5.0')
+
+    # Fix an unnecessary python dependency when testing is disabled
+    # See https://github.com/ornladios/ADIOS2/pull/2596
+    patch('2.7-fix-python-test-deps.patch', when='@2.5.0:2.7.0')
 
     @when('%fj')
     def patch(self):
@@ -141,7 +142,6 @@ class Adios2(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
-            '-DADIOS2_BUILD_TESTING=OFF',
             '-DADIOS2_BUILD_EXAMPLES=OFF',
             '-DADIOS2_USE_MPI={0}'.format(
                 'ON' if '+mpi' in spec else 'OFF'),

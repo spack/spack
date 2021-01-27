@@ -65,6 +65,11 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
     variant(
+        "flang",
+        default=True,
+        description="Build the LLVM Fortran compiler frontend",
+    )
+    variant(
         "omp_debug",
         default=False,
         description="Include debugging code in OpenMP runtime libraries",
@@ -175,6 +180,9 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
     conflicts("+compiler-rt", when="~clang")
+    conflicts("+flang", when="~clang")
+    # Introduced in version 11 as a part of LLVM and not a separate package.
+    conflicts("+flang", when="@:10.999")
 
     # LLVM 4 and 5 does not build with GCC 8
     conflicts("%gcc@8:", when="@:5")
@@ -235,7 +243,7 @@ class Llvm(CMakePackage, CudaPackage):
     # detection for LLVM. See:
     #
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
-    executables = ['clang', 'ld.lld', 'lldb']
+    executables = ['clang', 'flang', 'ld.lld', 'lldb']
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -288,6 +296,10 @@ class Llvm(CMakePackage, CudaPackage):
                 compilers['cxx'] = exe
             elif 'clang' in exe:
                 compilers['c'] = exe
+            elif 'flang' in exe:
+                variants.append('+flang')
+                compilers['fc'] = exe
+                compilers['f77'] = exe
             elif 'ld.lld' in exe:
                 lld_found = True
                 compilers['ld'] = exe
@@ -333,6 +345,28 @@ class Llvm(CMakePackage, CudaPackage):
             result = os.path.join(self.spec.prefix.bin, 'clang++')
         return result
 
+    @property
+    def fc(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fc', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
+    @property
+    def f77(self):
+        msg = "cannot retrieve Fortran 77 compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('f77', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
     @run_before('cmake')
     def codesign_check(self):
         if self.spec.satisfies("+code_signing"):
@@ -366,6 +400,9 @@ class Llvm(CMakePackage, CudaPackage):
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
 
     root_cmakelists_dir = "llvm"
 
@@ -436,6 +473,8 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("clang")
             projects.append("clang-tools-extra")
             projects.append("openmp")
+        if "+flang" in spec:
+            projects.append("flang")
         if "+lldb" in spec:
             projects.append("lldb")
         if "+lld" in spec:

@@ -78,6 +78,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.14:', type='build', when='@19.04:')
     # cmake @3.17: is necessary to handle cuda @11: correctly
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
+    depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
     conflicts('%apple-clang')
     conflicts('%clang')

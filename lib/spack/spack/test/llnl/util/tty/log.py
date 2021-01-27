@@ -11,10 +11,8 @@ import signal
 import sys
 import time
 
-try:
-    import termios
-except ImportError:
-    termios = None
+from typing import Optional  # novm
+from types import ModuleType  # novm
 
 import pytest
 
@@ -24,6 +22,13 @@ from llnl.util.tty.log import log_output
 from llnl.util.tty.pty import PseudoShell
 
 from spack.util.executable import which
+
+termios = None  # type: Optional[ModuleType]
+try:
+    import termios as term_mod
+    termios = term_mod
+except ImportError:
+    pass
 
 
 @contextlib.contextmanager

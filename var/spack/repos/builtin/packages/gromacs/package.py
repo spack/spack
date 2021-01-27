@@ -23,7 +23,8 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
-    version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478')
+    version('2021-rc1', sha256='baab9f9c7a659f0777f0ff06866e88685a4b06d22c0f431f5688a9a559f0a1e1')
+    version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478', preferred=True)
     version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
     version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
     version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
@@ -61,6 +62,7 @@ class Gromacs(CMakePackage):
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencl', default=False, description='Enable OpenCL support')
+    variant('sycl', default=False, description='Enable SYCL support')
     variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
@@ -100,6 +102,7 @@ class Gromacs(CMakePackage):
     depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
     depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
+    depends_on('sycl', when='+sycl')
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
@@ -140,10 +143,20 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_HWLOC:BOOL=OFF')
 
-        if '+cuda' in self.spec or '+opencl' in self.spec:
-            options.append('-DGMX_GPU:BOOL=ON')
+        if self.version >= Version('2021'):
+            if '+cuda' in self.spec:
+                options.append('-DGMX_GPU:STRING=CUDA')
+            elif '+opencl' in self.spec:
+                options.append('-DGMX_GPU:STRING=OpenCL')
+            elif '+sycl' in self.spec:
+                options.append('-DGMX_GPU:STRING=SYCL')
+            else:
+                options.append('-DGMX_GPU:STRING=OFF')
         else:
-            options.append('-DGMX_GPU:BOOL=OFF')
+            if '+cuda' in self.spec or '+opencl' in self.spec:
+                options.append('-DGMX_GPU:BOOL=ON')
+            else:
+                options.append('-DGMX_GPU:BOOL=OFF')
 
         if '+cuda' in self.spec:
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
