@@ -7,7 +7,7 @@ from spack import *
 
 
 class Libecpint(CMakePackage):
-    """A C++ library for the efficient evaluation of integrals over effective core 
+    """A C++ library for the efficient evaluation of integrals over effective core
     potentials.
     """
 
@@ -26,5 +26,5 @@ class Libecpint(CMakePackage):
     depends_on('googletest')
 
     def cmake_args(self):
-        args = [ '-DBUILD_SHARED_LIBS=ON' ]
+        args = ['-DBUILD_SHARED_LIBS=ON']
         return args
