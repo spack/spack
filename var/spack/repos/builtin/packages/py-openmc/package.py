@@ -17,8 +17,8 @@ class PyOpenmc(PythonPackage):
     url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
     git = "https://github.com/openmc-dev/openmc.git"
 
-    version('develop')
-    version('master')
+    version('develop', branch='develop')
+    version('master', branch='master')
     version('0.12.0', tag='v0.12.0', submodules=True)
     version('0.11.0', sha256='19a9d8e9c3b581e9060fbd96d30f1098312d217cb5c925eb6372a5786d9175af')
 
