@@ -11,35 +11,16 @@ class Portage(CMakePackage):
     """Portage is a framework that computational physics applications can use
        to build a highly customized, hybrid parallel (MPI+X) conservative
        remapping library for transfer of field data between meshes.
-
-       ***WARNING*** The older versions may not work and are not of much values.
-       ***WARNING*** They are left here until a deprecation policy is instituted
     """
     homepage = "http://portage.lanl.gov/"
     git      = "https://github.com/laristra/portage.git"
     url      = "https://github.com/laristra/portage/releases/download/3.0.0/portage-3.0.0.tar.gz"
 
-
     maintainers = ['raovgarimella']
-    
+
     # tarballs don't have submodules, so use git tags
     version('3.0.0', sha256='7a5a21ffbc35fa54a5136d937cfda6f836c7496ff2b5adf54deb4107501333da')
-    version('1.2.2', sha256='48b789447a3726dabaf9e57478b8e810e93b8426a5616840b47ccf813eb183e0', submodules=True)
-    version('1.1.1', sha256='79986c5155db03c7d1d716dbfd0444c32952646b80d7dc7f0ef940dbdd644ebd')
-    version('1.1.0', sha256='340a20b26e475b6b3344f4c4dcef6e5bd17cfdc7b82ee32edf9e529f1c0b12b0')
     version('master', branch='master', submodules=True)
-
-
-
-    # fabs() needs math.h for gcc-7, got fixed in
-    # versions above 1.2.2
-    patch('gcc-7.patch', when='@1.1.0:1.2.2 %gcc@7:')
-    # part of https://github.com/laristra/cinch/commit/f87f848269fac25aa5b8d0bd5d9c9b2d2d6fb0ad
-    # fixed in version above 1.2.2
-    patch('p_lapacke_config.patch', when='@1.2.2')
-    # don't enable debug prints in RelWithDebInfo build
-    # fixed in version above 1.2.2
-    patch('rel-with-deb-info.patch', when='@1.2.2')
 
     variant('mpi', default=True, description='Support MPI')
     variant('tangram', default=False, description='Use Tangram interface reconstruction package')
@@ -53,7 +34,7 @@ class Portage(CMakePackage):
     depends_on("cmake@3.13:", type='build')
 
     depends_on('mpi', when='+mpi')
-    
+
     depends_on('tangram', when='+tangram')
     depends_on('tangram+mpi', when='+tangram+mpi')
     depends_on('tangram+jali', when='+tangram+jali')
@@ -76,13 +57,13 @@ class Portage(CMakePackage):
 
     # Thrust with CUDA does not work as yet
     conflicts('+thrust +cuda')
-    
+
     # Don't enable Kokkos and Thrust simultaneously
     conflicts('+thrust +kokkos')
-     
+
     def cmake_args(self):
         options = []
-        
+
         if '+mpi' in self.spec:
             options.append('-DPORTAGE_ENABLE_MPI=ON')
         else:
@@ -113,7 +94,6 @@ class Portage(CMakePackage):
         else:
             options.append('-DPORTAGE_ENABLE_TANGRAM=OFF')
 
-            
         # Unit test variant
         if self.run_tests:
             options.append('-DENABLE_UNIT_TESTS=ON')
