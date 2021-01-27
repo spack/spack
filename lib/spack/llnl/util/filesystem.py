@@ -1826,6 +1826,8 @@ def remove_directory_contents(dir):
 def keep_modification_time(*filenames):
     """
     Context manager to keep the modification timestamps of the input files.
+    Tolerates and has no effect on non-existent files and files that are
+    deleted by the nested code.
 
     Parameters:
         *filenames: one or more files that must have their modification
@@ -1833,13 +1835,9 @@ def keep_modification_time(*filenames):
     """
     mtimes = {}
     for f in filenames:
-        try:
+        if os.path.exists(f):
             mtimes[f] = os.path.getmtime(f)
-        except (IOError, OSError):
-            pass
     yield
     for f, mtime in mtimes.items():
-        try:
+        if os.path.exists(f):
             os.utime(f, (os.path.getatime(f), mtime))
-        except (IOError, OSError):
-            pass

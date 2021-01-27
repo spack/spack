@@ -602,7 +602,7 @@ def test_keep_modification_time(tmpdir):
                                    file2.strpath,
                                    'non-existing-file'):
         file1.write('file1')
-        os.unlink(file2.strpath)
+        file2.remove()
 
     # Assert that the modifications took place the modification time has not
     # changed;
