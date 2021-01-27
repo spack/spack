@@ -18,3 +18,5 @@ class Bloaty(CMakePackage):
             sha256='a308d8369d5812aba45982e55e7c3db2ea4780b7496a5455792fb3dcba9abd6f')
 
     depends_on('cmake')
+
+
