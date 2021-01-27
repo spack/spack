@@ -39,7 +39,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
         ['font-arabic-misc', '1.0.3', '3022b6b124f4cc6aade961f8d1306f67ff42e3b7922fb2244847f287344aefea'],
         ['font-bh-100dpi', '1.0.3', '817703372f080d6508cf109011b17f3572ff31047559fe82d93b487ca4e4e2d9'],
         ['font-bh-75dpi', '1.0.3', '720b6a513894bfc09a163951ec3dd8311201e08ee40e8891547b6c129ffb5fce'],
-        ['font-bh-ttf', '1.0.3', 'c583b4b968ffae6ea30d5b74041afeac83126682c490a9624b770d60d0e63d59'],
+#        ['font-bh-ttf', '1.0.3', 'c583b4b968ffae6ea30d5b74041afeac83126682c490a9624b770d60d0e63d59'],
         ['font-bh-type1', '1.0.3', 'd5602f1d749ccd31d3bc1bb6f0c5d77400de0e5e3ac5abebd2a867aa2a4081a4'],
         ['font-bh-lucidatypewriter-100dpi', '1.0.3', '5e05a642182ec6a77bd7cacb913d3c86b364429329a5f223b69792d418f90ae9'],
         ['font-bh-lucidatypewriter-75dpi', '1.0.3', '38301bbdb6374494f30c0b44acc7052ed8fc2289e917e648ca566fc591f0a9e0'],

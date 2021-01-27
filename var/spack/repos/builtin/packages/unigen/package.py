@@ -19,8 +19,12 @@ class Unigen(MakefilePackage):
     url      = "https://github.com/FairRootGroup/UniGen/archive/v2.3.tar.gz"
 
     version('2.3', sha256='8783bcabbdf8c50dab6e93153cff9cfb267a9a9e61aef51bf1e17679ba42a717')
+#    patch('unigen-2.2.patch', level=0)
 
     depends_on('root', type=('build', 'link'))
 
+    def build(self, spec, prefix):
+        make(f'TOPDIR={self.build_directory}', 'all')
+
     def install(self, spec, prefix):
-        make(f'DESTDIR={self.spec.prefix}', 'install')
+        make(f'DESTDIR={prefix}', f'TOPDIR={self.build_directory}', 'install')
