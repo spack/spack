@@ -46,9 +46,9 @@ class Gchp(CMakePackage):
         '''
         Preserve source code in prefix for two reasons:
         1. Run directory creation occurs independently of code compilation,
-        possibly multiple times depending on user needs, 
+        possibly multiple times depending on user needs,
         and requires the preservation of some of the source code structure.
-        2. Run configuration is relatively complex and can result in error 
+        2. Run configuration is relatively complex and can result in error
         messages that point to specific modules / lines of the source code.
         Including source code thus facilitates runtime debugging.
         '''
