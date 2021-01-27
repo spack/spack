@@ -16,7 +16,7 @@ class Mvapich2Gdr(AutotoolsPackage):
     """
 
     homepage = 'http://mvapich.cse.ohio-state.edu'
-    url      = 'file:///home/packager/spack-related/tar-bundles/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
+    url      = 'http://mvapich.cse.ohio-state.edu/download/mvapich/spack-mirror/mvapich2-gdr/mvapich2-gdr-2.3.5.tar.gz'
 
     maintainers = ['apreifsteck', 'nithintsk', 'harisubramoni']
 
