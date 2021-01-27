@@ -26,6 +26,8 @@ class Knem(AutotoolsPackage):
     variant('hwloc', default=True,
             description='Enable hwloc in the user-space tools')
 
+    patch('knem_v1.1.4.patch', when="@1.1.4", level=1)
+
     depends_on('hwloc',                   when='+hwloc')
     depends_on('pkgconfig', type='build', when='+hwloc')
     depends_on('autoconf',  type='build', when='@master')
