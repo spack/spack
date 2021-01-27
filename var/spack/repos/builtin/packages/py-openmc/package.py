@@ -52,11 +52,5 @@ class PyOpenmc(PythonPackage):
 
     @run_after('install')
     def install_lib(self):
-        openmc_dir = self.spec['openmc'].prefix
-        libopenmc = 'libopenmc.{0}'.format(
-            'dylib' if 'platform=darwin' in self.spec else 'so'
-        )
-        copy(
-            join_path(openmc_dir, 'lib', libopenmc),
-            join_path(prefix, 'lib')
-        )
+        install(join_path(self.spec['openmc'].prefix.lib, 'libopenmc.*',
+                self.prefix.lib)
