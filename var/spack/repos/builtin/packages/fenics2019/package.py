@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Fenics2019(CMakePackage):
@@ -30,6 +29,8 @@ class Fenics2019(CMakePackage):
     variant('scotch',       default=True,  description='Compile with Scotch')
     variant('petsc',        default=True,  description='Compile with PETSc')
     variant('slepc',        default=True,  description='Compile with SLEPc')
+    variant('py-petsc4py',  default=True,  description='Use PETSC4py')
+    variant('py-slepc4py',  default=True,  description='Use SLEPc4py')
     variant('trilinos',     default=False,  description='Compile with Trilinos')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
@@ -48,6 +49,8 @@ class Fenics2019(CMakePackage):
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'MinSizeRel', 'Developer'))
 
+    variant('zlib',     default=False, description='Compile wit ZLIB')
+
     # apply patch to fix header issue with latest boost library
     patch('header_fix.patch')
 
@@ -56,9 +59,11 @@ class Fenics2019(CMakePackage):
     depends_on('python@3.7.8:', type=('build', 'run'), when='+python')
 
     # build python components of FEniCS
-    depends_on('py-fenics-ffc', type=('build'), when='~python')
-    depends_on('py-fenics-ffc', type=('build', 'run'), when='+python')
-    depends_on('py-fenics-dijitso', type=('build', 'run'), when='+python')
+    depends_on('py-fenics-fiat@2019.1.0', type=('build', 'run'), when='+python')
+    depends_on('py-fenics-dijitso@2019.1.0', type=('build', 'run'), when='+python')
+    depends_on('py-fenics-ufl@2019.1.0', type=('build', 'run'), when='+python')
+    depends_on('py-fenics-ffc@2019.1.0.post0', type=('build'), when='~python')
+    depends_on('py-fenics-ffc@2019.1.0.post0', type=('build', 'run'), when='+python')
 
     depends_on('eigen@3.3.7:')
     depends_on('pkg-config')
@@ -87,44 +92,29 @@ class Fenics2019(CMakePackage):
     depends_on('py-pkgconfig', type='run', when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
-    def cmake_is_on(self, option):
-        return 'ON' if option in self.spec else 'OFF'
-
     def cmake_args(self):
-        spec = self.spec
-
         opts = [
-            '-DDOLFIN_ENABLE_DOCS:BOOL={0}'.format(self.cmake_is_on('+doc')),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(self.cmake_is_on('+shared')),
-            '-DDOLFIN_SKIP_BUILD_TESTS:BOOL=ON',
-            '-DDOLFIN_ENABLE_OPENMP:BOOL={0}'.format(self.cmake_is_on('+openmp')),
-            '-DDOLFIN_ENABLE_CHOLMOD:BOOL={0}'.format(
-                self.cmake_is_on('suite-sparse')),
-            '-DDOLFIN_ENABLE_HDF5:BOOL={0}'.format(self.cmake_is_on('hdf5')),
-            '-DDOLFIN_ENABLE_MPI:BOOL={0}'.format(self.cmake_is_on('mpi')),
-            '-DDOLFIN_ENABLE_PARMETIS:BOOL={0}'.format(
-                self.cmake_is_on('parmetis')),
-            '-DDOLFIN_ENABLE_PASTIX:BOOL={0}'.format(self.cmake_is_on('pastix')),
-            '-DDOLFIN_ENABLE_PETSC:BOOL={0}'.format(self.cmake_is_on('petsc')),
-            '-DDOLFIN_ENABLE_PETSC4PY:BOOL={0}'.format(
-                self.cmake_is_on('py-petsc4py')),
-            '-DDOLFIN_ENABLE_PYTHON:BOOL={0}'.format(self.cmake_is_on('python')),
-            '-DDOLFIN_ENABLE_QT:BOOL={0}'.format(self.cmake_is_on('qt')),
-            '-DDOLFIN_ENABLE_SCOTCH:BOOL={0}'.format(self.cmake_is_on('scotch')),
-            '-DDOLFIN_ENABLE_SLEPC:BOOL={0}'.format(self.cmake_is_on('slepc')),
-            '-DDOLFIN_ENABLE_SLEPC4PY:BOOL={0}'.format(
-                self.cmake_is_on('py-slepc4py')),
-            '-DDOLFIN_ENABLE_SPHINX:BOOL={0}'.format(self.cmake_is_on('py-sphinx')),
-            '-DDOLFIN_ENABLE_TRILINOS:BOOL={0}'.format(
-                self.cmake_is_on('trilinos')),
-            '-DDOLFIN_ENABLE_UMFPACK:BOOL={0}'.format(
-                self.cmake_is_on('suite-sparse')),
-            '-DDOLFIN_ENABLE_VTK:BOOL={0}'.format(self.cmake_is_on('vtk')),
-            '-DDOLFIN_ENABLE_ZLIB:BOOL={0}'.format(self.cmake_is_on('zlib')),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('DOLFIN_SKIP_BUILD_TESTS', True),
+            self.define_from_variant('DOLFIN_ENABLE_OPENMP', 'openmp'),
+            self.define_from_variant('DOLFIN_ENABLE_CHOLMOD', 'suite-sparse'),
+            self.define_from_variant('DOLFIN_ENABLE_HDF5', 'hdf5'),
+            self.define_from_variant('DOLFIN_ENABLE_MPI', 'mpi'),
+            self.define_from_variant('DOLFIN_ENABLE_PARMETIS', 'parmetis'),
+            self.define_from_variant('DOLFIN_ENABLE_PETSC', 'petsc'),
+            self.define_from_variant('DOLFIN_ENABLE_PETSC4PY', 'py-petsc4py'),
+            self.define_from_variant('DOLFIN_ENABLE_PYTHON', 'python'),
+            self.define_from_variant('DOLFIN_ENABLE_QT', 'qt'),
+            self.define_from_variant('DOLFIN_ENABLE_SCOTCH', 'scotch'),
+            self.define_from_variant('DOLFIN_ENABLE_SLEPC', 'slepc'),
+            self.define_from_variant('DOLFIN_ENABLE_SLEPC4PY', 'py-slepc4py'),
+            self.define_from_variant('DOLFIN_ENABLE_DOCS', 'doc'),
+            self.define_from_variant('DOLFIN_ENABLE_SPHINX', 'doc'),
+            self.define_from_variant('DOLFIN_ENABLE_TRILINOS', 'trilinos'),
+            self.define_from_variant('DOLFIN_ENABLE_UMFPACK', 'suite-sparse'),
+            self.define_from_variant('DOLFIN_ENABLE_VTK', 'vtk'),
+            self.define_from_variant('DOLFIN_ENABLE_ZLIB', 'zlib'),
         ]
-        os.environ['PETSC_DIR'] = spec['petsc'].prefix
-        os.environ['SLEPC_DIR'] = spec['slepc'].prefix
-
         return opts
 
     # set environment for bulding python interface
@@ -139,6 +129,4 @@ class Fenics2019(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             cd('python')
-            python('setup.py', 'install',
-                   '--single-version-externally-managed',
-                   '--root=/', '--prefix={0}'.format(self.prefix))
+            python('setup.py', 'install', '--user')
