@@ -14,7 +14,7 @@ class PyOpenmc(PythonPackage):
        Group at MIT."""
 
     homepage = "http://openmc.readthedocs.io/"
-    url = "https://github.com/openmc-dev/openmc/tarball/v0.10.0"
+    url = "https://github.com/openmc-dev/openmc/tarball/v0.11.0"
     git = "https://github.com/openmc-dev/openmc.git"
 
     version('develop', branch='develop')
@@ -53,4 +53,4 @@ class PyOpenmc(PythonPackage):
     @run_after('install')
     def install_lib(self):
         install(join_path(self.spec['openmc'].prefix.lib, 'libopenmc.*'),
-                self.prefix.lib))
+                self.prefix.lib)
