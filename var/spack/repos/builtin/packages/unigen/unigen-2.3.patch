@@ -14,10 +14,10 @@
  $(TARGET)Dict.cxx : $(incl) include/$(TARGET)LinkDef.h
  	@echo 'Generating dictionary' $@ '...'
 +ifneq ($(strip $(RLIBMAP)),)
-+	# ROOTv5 
++# ROOTv5 
  	@rootcint -f $@ -c $(INCDIR) $^
 +else
-+	#ROOT v6
++#ROOT v6
 +	@rootcling -f $@ -rmf $(TOPDIR)/lib/lib$(TARGET).rootmap -rml lib$(TARGET) -s lib$(TARGET) $(INCDIR) $^
 +	@mv lib$(TARGET)_rdict.pcm $(TOPDIR)/lib/lib$(TARGET)_rdict.pcm
 +endif 
