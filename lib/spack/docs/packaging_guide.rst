@@ -4016,8 +4016,11 @@ the package being tested when ``installed`` is ``True``.
 The executable runs in ``work_dir``, when specified, using the provided
 ``options``. The return code is checked against the ``status`` argument,
 which can be an integer or list of integers representing status codes
-corresponding to successful execution. Spack also checks that every string
-in ``expected`` is a regex matching part of the output from the test run.
+corresponding to successful execution (e.g. ``status=[0,3,7]``).
+Spack also checks that every string in ``expected`` is a regex matching
+part of the output from the test run (e.g.
+``expected=['completed successfully', 'converged in']``). Default behavior
+is to behave as though ``status=[0]`` and ``expected=[]`` are specified.
 
 Output from the test is written to its log file. The ``purpose`` argument
 serves as the heading in text logs to highlight the start of each test part.
