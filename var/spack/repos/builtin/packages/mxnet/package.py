@@ -127,5 +127,8 @@ class Mxnet(MakefilePackage, CudaPackage):
 
         # install python bindings
         if '+python' in spec:
-            python = which('python')
-            python('python/setup.py', 'install', '--prefix={0}'.format(prefix))
+            # The python libs are in a separate dir, and it is necessary to change
+            # directory so that setup.py picks them up.
+            with working_dir('python'):
+                setup_py('install', '--prefix={0}'.format(prefix),
+                         '--single-version-externally-managed', '--root=/')
