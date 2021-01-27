@@ -284,13 +284,13 @@ def candidate_packages():
 
 
 @pytest.mark.detection
-@pytest.mark.parametrize('package_name', candidate_packages())
+@pytest.mark.parametrize('package_name', [
+    'gcc'
+])
 def test_package_detection(mock_executable, package_name):
     def detection_tests_for(pkg):
-        data_dir = os.path.join(spack.paths.test_path, 'data', 'detection')
-        detection_data = os.path.join(data_dir, '{0}.yaml'.format(pkg))
-        with open(detection_data) as f:
-            return syaml.load(f)
+        module = spack.repo.path.repo_for_pkg(pkg)._get_pkg_module(pkg)
+        return module.detection_tests
 
     @contextlib.contextmanager
     def setup_test_layout(layout):
