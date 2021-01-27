@@ -57,8 +57,10 @@ class Lbann(CMakePackage, CudaPackage):
             description='Builds with support for FP16 precision data types')
     variant('hwloc', default=True, description='Add support for topology aware algorithms')
     variant('nvprof', default=False, description='Build with region annotations for NVPROF')
-    variant('opencv', default=True,
-            description='Builds with support for image processing with OpenCV')
+    variant('numpy', default=False,
+            description='Builds with support for processing NumPy data files')
+    variant('vision', default=False,
+            description='Builds with support for image processing data with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
 
@@ -136,18 +138,18 @@ class Lbann(CMakePackage, CudaPackage):
     # bad OpenMP library when building with clang or Intel compilers
     depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda',
-               when='+opencv')
+               when='+vision')
 
     # Note that for Power systems we want the environment to add  +powerpc +vsx
-    depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
+    depends_on('opencv@4.1.0: +powerpc +vsx', when='+vision arch=ppc64le:')
 
-    depends_on('cnpy')
+    depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
-    depends_on('python@3:3.7.9 +shared', type=('build', 'run'), when='@:0.90,0.99:')
+    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
@@ -183,12 +185,18 @@ class Lbann(CMakePackage, CudaPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG -ldl')
-
-        return [
+        args = []
+        args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
-            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
-        ]
+        ])
+
+        if '+numpy' in spec:
+            args.append(
+                '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
+            )
+
+        return args
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%apple-clang'):
@@ -210,6 +218,7 @@ class Lbann(CMakePackage, CudaPackage):
         args.extend([
             '-DCMAKE_CXX_STANDARD=14',
             '-DCMAKE_CUDA_STANDARD=14',
+            '-DLBANN_WITH_CNPY=%s' % ('+numpy' in spec),
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
@@ -220,6 +229,7 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
+            '-DLBANN_WITH_VISION:BOOL=%s' % ('+vision' in spec),
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
@@ -260,7 +270,7 @@ class Lbann(CMakePackage, CudaPackage):
                 '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
                     clang_root)])
 
-        if '+opencv' in spec:
+        if '+vision' in spec:
             args.append('-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix))
 
@@ -314,7 +324,7 @@ class Lbann(CMakePackage, CudaPackage):
         elif spec.variants['dtype'].value == 'double':
             args.append('-DDATATYPE=8')
 
-        if '+opencv' in spec:
+        if '+vision' in spec:
             args.append('-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix))
 
