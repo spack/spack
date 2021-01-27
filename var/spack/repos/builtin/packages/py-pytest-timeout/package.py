@@ -16,6 +16,6 @@ class PyPytestTimeout(PythonPackage):
 
     version('1.4.2', sha256='20b3113cf6e4e80ce2d403b6fb56e9e1b871b510259206d40ff8d609f48bda76')
 
-    depends_on('python@3.5:', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-pytest@3.6.0:', type=('build', 'run'))
