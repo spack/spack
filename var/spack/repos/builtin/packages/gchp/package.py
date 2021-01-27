@@ -1,24 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install gchp
-#
-# You can edit this file again by typing:
-#
-#     spack edit gchp
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 import shutil
@@ -42,27 +25,33 @@ class Gchp(CMakePackage):
     depends_on('netcdf-fortran')
     depends_on('cmake@3.13:')
 
-    variant('omp',        default=False, description="OpenMP parallelization")
-    variant('real8',      default=True,  description="REAL*8 precision")
-    variant('apm',        default=False, description="APM Microphysics (Experimental)")
-    variant('rrtmg',      default=False, description="RRTMG radiative transfer model")
-    variant('luo_wetdep', default=False, description="Luo et al 2019 wet deposition scheme")
-    variant('tomas',      default=False, description="TOMAS Microphysics (Experimental)")
+    variant('omp',   default=False, description="OpenMP parallelization")
+    variant('real8', default=True,  description="REAL*8 precision")
+    variant('apm',   default=False, description="APM Microphysics (Experimental)")
+    variant('rrtmg', default=False, description="RRTMG radiative transfer model")
+    variant('luo',   default=False, description="Luo et al 2019 wet deposition scheme")
+    variant('tomas', default=False, description="TOMAS Microphysics (Experimental)")
 
     def cmake_args(self):
-        args = ["-DRUNDIR=" + self.prefix,
+        args = [self.define("RUNDIR", self.prefix),
                 self.define_from_variant('OMP', 'omp'),
                 self.define_from_variant('USE_REAL8', 'real8'),
                 self.define_from_variant('APM', 'apm'),
                 self.define_from_variant('RRTMG', 'rrtmg'),
-                self.define_from_variant('LUO_WETDEP', 'luo_wetdep'),
+                self.define_from_variant('LUO_WETDEP', 'luo'),
                 self.define_from_variant('TOMAS', 'tomas')]
         return args
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            inspect.getmodule(self).make(*self.install_targets)
-        # preserve source code structure for run directory creation
-        # can be shortened later
+        super().install(spec, prefix)
+        '''
+        Preserve source code in prefix for two reasons:
+        1. Run directory creation occurs independently of code compilation,
+        possibly multiple times depending on user needs, 
+        and requires the preservation of some of the source code structure.
+        2. Run configuration is relatively complex and can result in error 
+        messages that point to specific modules / lines of the source code.
+        Including source code thus facilitates runtime debugging.
+        '''
         shutil.move(self.stage.source_path,
                     join_path(prefix, 'source_code'))
