@@ -53,4 +53,4 @@ class PyOpenmc(PythonPackage):
     @run_after('install')
     def install_lib(self):
         install(join_path(self.spec['openmc'].prefix.lib, 'libopenmc.*',
-                self.prefix.lib)
+                self.prefix.lib))
