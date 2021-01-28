@@ -959,10 +959,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
         if 'script' not in noop_job:
             noop_job['script'] = [
-                'echo "Nothing to do"',
+                'echo "All specs already up to date, nothing to rebuild."',
             ]
 
-        sorted_output = {'noop': noop_job}
+        sorted_output = {'no-specs-to-rebuild': noop_job}
 
     with open(output_file, 'w') as outf:
         outf.write(syaml.dump_config(sorted_output, default_flow_style=True))

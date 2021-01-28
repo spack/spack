@@ -772,10 +772,10 @@ spack:
             with open(outputfile_pruned) as f:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
-                assert('noop' in yaml_contents)
+                assert('no-specs-to-rebuild' in yaml_contents)
                 # Make sure there are no other spec jobs
                 assert(len(yaml_contents.keys()) == 1)
-                the_elt = yaml_contents['noop']
+                the_elt = yaml_contents['no-specs-to-rebuild']
                 assert('tags' in the_elt)
                 assert('nonbuildtag' in the_elt['tags'])
                 assert('image' in the_elt)
@@ -1194,7 +1194,7 @@ spack:
             # without the monkeypatch, everything appears up to date and no
             # rebuild jobs are generated.
             assert(original_yaml_contents)
-            assert('noop' in original_yaml_contents)
+            assert('no-specs-to-rebuild' in original_yaml_contents)
 
             monkeypatch.setattr(spack.binary_distribution,
                                 'get_mirrors_for_spec',
