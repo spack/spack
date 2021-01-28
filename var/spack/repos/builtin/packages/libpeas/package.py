@@ -37,7 +37,7 @@ class Libpeas(AutotoolsPackage):
     depends_on('pango')
     depends_on('gnome-common')
     depends_on('py-pygobject@3:', type='build')
-    depends_on('python@3:', type='build')
+    depends_on('python@3:3.7.9', type='build')
 
     def url_for_version(self, version):
         url  = 'https://download.gnome.org/sources/libpeas/'
@@ -75,7 +75,7 @@ class Libpeas(AutotoolsPackage):
         # LDFLAGS.
         pkg_config = which('pkg-config')
         python_prefix = self.spec['python'].prefix.lib.pkgconfig
-        python_pc_file = os.path.join(python_prefix, 'python3-embed.pc')
+        python_pc_file = os.path.join(python_prefix, 'python3.pc')
         python_ldflags = pkg_config('--libs', python_pc_file, output=str)
 
         env.append_path('LDFLAGS', python_ldflags)
@@ -86,7 +86,7 @@ class Libpeas(AutotoolsPackage):
 
     def autoreconf(self, spec, prefix):
         autoreconf_args = ['-ivf']
-        aclocal_pkg_list = ['pkgconf',
+        aclocal_pkg_list = ['pkgconfig',
                             'gettext',
                             'intltool',
                             'glib',
