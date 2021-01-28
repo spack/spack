@@ -21,6 +21,7 @@ spack:
     - brion@3.1.0 +python
     - brion@3.2.0 +python
     - brion@3.3.0 +python
+    - brion@3.3.1 +python
     - circuit-build@3.1.1
     - connectome-tools@0.3.3
     - emsim ^brion@3.1.0
