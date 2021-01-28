@@ -16,9 +16,10 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    # relative path to smoke test sources
-    smoke_test_paths = [join_path('src', 'snes', 'tutorials'),
-                        join_path('lib', 'petsc', 'conf')]
+    # Relative path to smoke test sources, first configuration vars then
+    #   smoke test example.
+    config_dir = join_path('lib', 'petsc', 'conf')
+    snes_dir = join_path('src', 'snes', 'tutorials')
 
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
@@ -469,8 +470,7 @@ class Petsc(Package):
         spec = self.spec
         install_prefix = spec.prefix
         if 'mpi' in spec:
-            tutorials_dir = join_path('src', 'ksp', 'ksp', 'examples',
-                                      'tutorials')
+            tutorials_dir = join_path('src', 'ksp', 'ksp', 'tutorials')
             with working_dir(tutorials_dir):
                 env['PETSC_DIR'] = self.prefix
                 cc = Executable(spec['mpi'].mpicc)
@@ -539,14 +539,11 @@ class Petsc(Package):
         Copy all of the files within the examples source directory
         during installation to make them available for smoke testing.
         """
-        self.cache_extra_test_sources(self.smoke_test_paths)
+        self.cache_extra_test_sources([config_dir, snes_dir])
 
     def test(self):
         """Perform smoke tests on installed PETSc package."""
-        test_dir = join_path(self.install_test_root, self.smoke_test_paths[0])
-
-        #required = ['+mpi', '+hypre', '+superlu-dist']
-        #if all([var in self.spec for var in required]):
+        test_dir = join_path(self.install_test_root, self.snes_dir)
 
         if 'hypre' in self.spec:
             self.run_test('make',
