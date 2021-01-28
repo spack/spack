@@ -39,7 +39,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4', preferred=True)
+    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
+    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4')
     version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f')
     version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689')
     version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964')
@@ -262,6 +263,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Make the site packages directory for extensions,
             # if it does not exist already.
             mkdirp(module.perl_lib_dir)
+
+    def setup_build_environment(self, env):
+        # This is to avoid failures when using -mmacosx-version-min=11.1
+        # since not all Apple Clang compilers support that version range
+        # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
+        if self.spec.satisfies('os=bigsur'):
+            env.set('SYSTEM_VERSION_COMPAT', 1)
 
     @run_after('install')
     def filter_config_dot_pm(self):
