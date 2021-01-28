@@ -8,7 +8,9 @@ from spack import *
 
 
 class Virtuoso(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Virtuoso is a high-performance and scalable Multi-Model RDBMS, 
+    Data Integration Middleware, Linked Data Deployment, and HTTP 
+    Application Server Platform"""
 
     homepage = "https://github.com/openlink/virtuoso-opensource"
     url      = "https://github.com/openlink/virtuoso-opensource/archive/v7.2.5.1.tar.gz"
@@ -26,7 +28,14 @@ class Virtuoso(AutotoolsPackage):
     depends_on('readline')
     depends_on('openssl@0.9.8:1.1.99')
 
+    # Fix fail to include <rpc/types.h> problem
+    # https://github.com/openlink/virtuoso-opensource/commit/52b6f8ebe108c1ed86fb840305c5f5a9677228f5
     patch('virt_rpc.patch')
+
+    # support openssl@1.1.1
+    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
+    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
+    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
     patch('virt_openssl.patch')
 
     def autoreconf(self, spec, prefix):
