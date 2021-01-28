@@ -187,6 +187,9 @@ spack package at this time.''',
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
 
+    # see https://github.com/pmodels/mpich/pull/5031
+    conflicts('%clang@:7', when='@3.4:')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
