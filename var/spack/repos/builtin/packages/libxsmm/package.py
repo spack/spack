@@ -86,7 +86,6 @@ class Libxsmm(MakefilePackage):
 
         if '%aocc' in spec:
             make_args += ['GNU=1']
-            make_args += ['AVX=2']
             make_args += ['INTEL=0']
             make_args += ['MIC=0']
             make_args += ['LDFLAGS+=-Wl,-z,muldefs']

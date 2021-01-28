@@ -428,7 +428,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             elpa_incdir = elpa.headers.directories[0]
 
             fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'modules'))]
-            libs.append(os.path.join(elpa.libs.directories[0],
+            libs.append(os.path.join(elpa.prefix.lib,
                                      ('libelpa{elpa_suffix}.{dso_suffix}'
                                       .format(elpa_suffix=elpa_suffix,
                                               dso_suffix=dso_suffix))))
