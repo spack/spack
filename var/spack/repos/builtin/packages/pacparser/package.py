@@ -28,5 +28,5 @@ class Pacparser(MakefilePackage):
     def install(self, spec, prefix):
         make('-C', 'src', 'install', 'PREFIX=' + self.prefix)
         if '+python' in spec:
-            make('-C' , 'src', 'install-pymod', 'PREFIX=' + self.prefix,
+            make('-C', 'src', 'install-pymod', 'PREFIX=' + self.prefix,
                  'EXTRA_ARGS=--prefix={0}'.format(prefix))
