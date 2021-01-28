@@ -16,6 +16,10 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
+    # relative path to smoke test sources
+    smoke_test_paths = [join_path('src', 'snes', 'tutorials'),
+                        join_path('lib', 'petsc', 'conf')]
+
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
@@ -455,9 +459,19 @@ class Petsc(Package):
         make('MAKE_NP=%s' % make_jobs, parallel=False)
         make("install")
 
-        # solve Poisson equation in 2D to make sure nothing is broken:
-        if ('mpi' in spec) and self.run_tests:
-            with working_dir('src/ksp/ksp/examples/tutorials'):
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_install(self):
+        """
+        Checks the spack install using tutorial example for solving Poisson
+        equation in 2D to make sure nothing is broken
+        """
+        spec = self.spec
+        install_prefix = spec.prefix
+        if 'mpi' in spec:
+            tutorials_dir = join_path('src', 'ksp', 'ksp', 'examples',
+                                      'tutorials')
+            with working_dir(tutorials_dir):
                 env['PETSC_DIR'] = self.prefix
                 cc = Executable(spec['mpi'].mpicc)
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
@@ -518,3 +532,45 @@ class Petsc(Package):
             or None  # return None to indicate failure
 
     # For the 'libs' property - use the default handler.
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """
+        Copy all of the files within the examples source directory
+        during installation to make them available for smoke testing.
+        """
+        self.cache_extra_test_sources(self.smoke_test_paths)
+
+    def test(self):
+        """Perform smoke tests on installed PETSc package."""
+        test_dir = join_path(self.install_test_root, self.smoke_test_paths[0])
+
+        #required = ['+mpi', '+hypre', '+superlu-dist']
+        #if all([var in self.spec for var in required]):
+
+        if 'hypre' in self.spec:
+            self.run_test('make',
+                          ['PETSC_DIR={0}'.format(self.prefix), 'ex19'],
+                          [], installed=False,
+                          purpose='test: building the ex19 example',
+                          skip_missing=False, work_dir=test_dir)
+
+            output = get_escaped_text_output(join_path(test_dir, 'output',
+                                             'ex19_hypre.out'))
+            # Only check the first two and last lines due to numeric diffs
+            # - line 1: values
+            # - line 2: initial norm
+            # - last line: number of iterations
+            expected = output[:2]
+            expected.append(output[-1])
+            
+            self.run_test('./ex19',
+                          ['-da_refine', '3', '-snes_monitor_short',
+                           '-pc_type', 'hypre'],
+                          expected, installed=False,
+                          purpose='test: ensuring ex19 with hypre runs',
+                          work_dir=test_dir)
+
+            self.run_test('make', ['clean'], [], installed=False,
+                          purpose='test: ensuring test cleanup',
+                          skip_missing=False, work_dir=test_dir)
