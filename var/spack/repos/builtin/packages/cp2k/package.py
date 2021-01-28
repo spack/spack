@@ -192,11 +192,11 @@ class Cp2k(MakefilePackage, CudaPackage):
         makefile_basename = '.'.join([
             self.makefile_architecture, self.makefile_version
         ])
-        return os.path.join('arch', makefile_basename)
+        return join_path('arch', makefile_basename)
 
     @property
     def archive_files(self):
-        return [os.path.join(self.stage.source_path, self.makefile)]
+        return [join_path(self.stage.source_path, self.makefile)]
 
     def edit(self, spec, prefix):
         pkgconf = which('pkg-config')
@@ -309,7 +309,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             dflags.extend(['-D__PLUMED2'])
             cppflags.extend(['-D__PLUMED2'])
             libs.extend([
-                os.path.join(self.spec['plumed'].prefix.lib,
+                join_path(self.spec['plumed'].prefix.lib,
                              'libplumed.{0}'.format(dso_suffix))
             ])
 
@@ -363,7 +363,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             if 'wannier90' in spec:
                 cppflags.append('-D__WANNIER90')
-                wannier = os.path.join(
+                wannier = join_path(
                     spec['wannier90'].libs.directories[0], 'libwannier.a'
                 )
                 libs.append(wannier)
@@ -383,9 +383,9 @@ class Cp2k(MakefilePackage, CudaPackage):
                 # runtime due to wrong offsets into the shared library
                 # symbols.
                 libs.extend([
-                    os.path.join(
+                    join_path(
                         spec['libint'].libs.directories[0], 'libderiv.a'),
-                    os.path.join(
+                    join_path(
                         spec['libint'].libs.directories[0], 'libint.a'),
                 ])
             else:
@@ -406,18 +406,18 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         if '+pexsi' in spec:
             cppflags.append('-D__LIBPEXSI')
-            fcflags.append('-I' + os.path.join(
+            fcflags.append('-I' + join_path(
                 spec['pexsi'].prefix, 'fortran'))
             libs.extend([
-                os.path.join(spec['pexsi'].libs.directories[0],
+                join_path(spec['pexsi'].libs.directories[0],
                              'libpexsi.a'),
-                os.path.join(spec['superlu-dist'].libs.directories[0],
+                join_path(spec['superlu-dist'].libs.directories[0],
                              'libsuperlu_dist.a'),
-                os.path.join(
+                join_path(
                     spec['parmetis'].libs.directories[0],
                     'libparmetis.{0}'.format(dso_suffix)
                 ),
-                os.path.join(
+                join_path(
                     spec['metis'].libs.directories[0],
                     'libmetis.{0}'.format(dso_suffix)
                 ),
@@ -429,8 +429,8 @@ class Cp2k(MakefilePackage, CudaPackage):
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
             elpa_incdir = elpa.headers.directories[0]
 
-            fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'modules'))]
-            libs.append(os.path.join(elpa.prefix.lib,
+            fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'modules'))]
+            libs.append(join_path(elpa.prefix.lib,
                                      ('libelpa{elpa_suffix}.{dso_suffix}'
                                       .format(elpa_suffix=elpa_suffix,
                                               dso_suffix=dso_suffix))))
@@ -446,7 +446,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 cppflags.append('-D__ELPA={0}{1:02d}'
                                 .format(elpa.version[0],
                                         int(elpa.version[1])))
-                fcflags += ['-I{0}'.format(os.path.join(elpa_incdir, 'elpa'))]
+                fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'elpa'))]
 
         if spec.satisfies('+sirius'):
             sirius = spec['sirius']
@@ -482,12 +482,12 @@ class Cp2k(MakefilePackage, CudaPackage):
                     gpuver = 'K20X'
 
         if 'smm=libsmm' in spec:
-            lib_dir = os.path.join(
+            lib_dir = join_path(
                 'lib', self.makefile_architecture, self.makefile_version
             )
             mkdirp(lib_dir)
             try:
-                copy(env['LIBSMM_PATH'], os.path.join(lib_dir, 'libsmm.a'))
+                copy(env['LIBSMM_PATH'], join_path(lib_dir, 'libsmm.a'))
             except KeyError:
                 raise KeyError('Point environment variable LIBSMM_PATH to '
                                'the absolute path of the libsmm.a file')
@@ -558,7 +558,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             if spec.satisfies('+cuda'):
                 mkf.write('NVCC = {0}\n'.format(
-                    os.path.join(spec['cuda'].prefix, 'bin', 'nvcc')))
+                    join_path(spec['cuda'].prefix, 'bin', 'nvcc')))
 
             # Write compiler flags to file
             def fflags(var, lst):
@@ -589,7 +589,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
         if self.spec.satisfies('@:6.9999'):
             # prior to version 7.1 was the Makefile located in makefiles/
-            build_dir = os.path.join(build_dir, 'makefiles')
+            build_dir = join_path(build_dir, 'makefiles')
 
         return build_dir
 
@@ -610,12 +610,12 @@ class Cp2k(MakefilePackage, CudaPackage):
             super(Cp2k, self).build(spec, prefix)
 
     def install(self, spec, prefix):
-        exe_dir = os.path.join('exe', self.makefile_architecture)
+        exe_dir = join_path('exe', self.makefile_architecture)
         install_tree(exe_dir, self.prefix.bin)
         install_tree('data', self.prefix.share.data)
 
     def check(self):
-        data_dir = os.path.join(self.stage.source_path, 'data')
+        data_dir = join_path(self.stage.source_path, 'data')
 
         # CP2K < 7 still uses $PWD to detect the current working dir
         # and Makefile is in a subdir, account for both facts here:
