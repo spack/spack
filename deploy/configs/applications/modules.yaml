@@ -27,7 +27,6 @@ modules:
     verbose: True
     hash_length: 0
     whitelist:
-      - archngv
       - asciitoh5
       - brainbuilder
       - brayns

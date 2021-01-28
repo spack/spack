@@ -25,4 +25,4 @@ class PySimwriter(PythonPackage):
     depends_on('py-elephant', type='run')
     depends_on('py-neo', type='run')
     depends_on('py-quantities', type='run')
-    depends_on('py-h5py', type='run')
+    depends_on('py-h5py~mpi', type='run')

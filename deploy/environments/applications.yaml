@@ -10,7 +10,6 @@ spack:
     python:
       version: [3.8.3]
   specs:
-    - archngv
     - asciitoh5@1.0
     - brainbuilder
     - brayns@1.0.1%gcc +brion ^brion@3.1.0 ^ospray%intel

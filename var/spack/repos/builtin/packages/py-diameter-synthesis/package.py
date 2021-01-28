@@ -19,7 +19,7 @@ class PyDiameterSynthesis(PythonPackage):
     depends_on('py-click@7.0:', type='run')
     depends_on('py-numpy@1.15.0:', type='run')
     depends_on('py-scipy@0.13:', type='run')
-    depends_on('py-h5py@2.9:2.999', type='run')
+    depends_on('py-h5py@2.9:', type='run')
     depends_on('py-morphio@2.3.4:', type='run')
     depends_on('py-matplotlib@2.2:', type='run')
     depends_on('py-pandas@0.24:', type='run')
