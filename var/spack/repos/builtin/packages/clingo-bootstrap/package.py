@@ -11,6 +11,10 @@ class ClingoBootstrap(Clingo):
     """Clingo with some options used for bootstrapping"""
     variant('build_type', default='Release', values=('Release',),
             description='CMake build type')
+
+    # CMake at version 3.16.0 or higher has the possibility to force the
+    # Python interpreter, which is crucial to build against external Python
+    # in environment where more than one interpreter is in the same prefix
     depends_on('cmake@3.16.0:', type='build')
 
     # On Linux we bootstrap with GCC
@@ -33,20 +37,6 @@ class ClingoBootstrap(Clingo):
 
     # Clingo needs the Python module to be usable by Spack
     conflicts('~python', msg='Python support is required to bootstrap Spack')
-
-    @property
-    def cmake_python_hints(self):
-        """Return standard CMake defines to ensure that the
-        current spec is the one found by CMake find_package(Python, ...)
-        """
-        return [
-            '-DPython_EXECUTABLE={0}'.format(str(self.spec['python'].command))
-        ]
-
-    def cmake_args(self):
-        args = super(ClingoBootstrap, self).cmake_args()
-        args += self.cmake_python_hints
-        return args
 
     def setup_build_environment(self, env):
         if '%apple-clang platform=darwin' in self.spec:

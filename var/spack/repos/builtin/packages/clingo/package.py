@@ -51,13 +51,22 @@ class Clingo(CMakePackage):
                         'clasp/CMakeLists.txt',
                         'clasp/libpotassco/CMakeLists.txt')
 
+    @property
+    def cmake_python_hints(self):
+        """Return standard CMake defines to ensure that the
+        current spec is the one found by CMake find_package(Python, ...)
+        """
+        return [
+            '-DPython_EXECUTABLE={0}'.format(str(self.spec['python'].command))
+        ]
+
     def cmake_args(self):
         try:
             self.compiler.cxx14_flag
         except UnsupportedCompilerFlag:
             InstallError('clingo requires a C++14-compliant C++ compiler')
 
-        return [
+        args = [
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
             '-DCLINGO_BUILD_PY_SHARED=ON',
@@ -65,3 +74,7 @@ class Clingo(CMakePackage):
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
             '-DCLINGO_BUILD_WITH_LUA=OFF'
         ]
+        if self.spec['cmake'].satisfies('@3.16.0:'):
+            args += self.cmake_python_hints
+
+        return args
