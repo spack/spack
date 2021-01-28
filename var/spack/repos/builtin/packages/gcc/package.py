@@ -688,9 +688,12 @@ fi
         # Multiple compilers present at the same time
         {
             'layout': [
-                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-gcc-6', 'output': 'echo 6.5.0'},
-                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-gcc-10', 'output': 'echo 10.1.0'},
-                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-g++-10', 'output': 'echo 10.1.0'}
+                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-gcc-6',
+                 'output': 'echo 6.5.0'},
+                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-gcc-10',
+                 'output': 'echo 10.1.0'},
+                {'subdir': ['bin'], 'name': 'x86_64-linux-gnu-g++-10',
+                 'output': 'echo 10.1.0'}
             ],
             'results': [
                 {'spec': 'gcc@6.5.0 languages=c'},
