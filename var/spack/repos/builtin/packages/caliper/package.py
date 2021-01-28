@@ -8,7 +8,7 @@ from spack import *
 import sys
 
 
-class Caliper(CMakePackage):
+class Caliper(CMakePackage, CudaPackage):
     """Caliper is a program instrumentation and performance measurement
     framework. It is designed as a performance analysis toolbox in a
     library, allowing one to bake performance analysis capabilities
@@ -59,8 +59,6 @@ class Caliper(CMakePackage):
             description='Enable SOSflow support')
     variant('fortran', default=False,
             description='Enable Fortran support')
-    variant('cuda', default=False,
-            description='Enable NVTX and CUPTI support')
 
     depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
@@ -74,8 +72,6 @@ class Caliper(CMakePackage):
     depends_on('elfutils', when='+libdw')
 
     depends_on('sosflow@spack', when='@1.0:1.99+sosflow')
-
-    depends_on('cuda', when='+cuda')
 
     depends_on('cmake',  type='build')
     depends_on('python', type='build')
