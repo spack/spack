@@ -446,10 +446,11 @@ class Openmpi(AutotoolsPackage):
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
-            compiler_spec = get_spack_compiler_spec(
-                os.path.dirname(match.group(1)))
-            if compiler_spec:
-                variants += "%" + str(compiler_spec)
+            if match:
+                compiler_spec = get_spack_compiler_spec(
+                    os.path.dirname(match.group(1)))
+                if compiler_spec:
+                    variants += "%" + str(compiler_spec)
             results.append(variants)
         return results
 
