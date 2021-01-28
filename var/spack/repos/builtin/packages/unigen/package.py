@@ -25,7 +25,7 @@ class Unigen(MakefilePackage):
 
     def build(self, spec, prefix):
         mkdirp(join_path(self.build_directory, 'lib'))
-        make('TOPDIR='+self.build_directory, 'all')
+        make('TOPDIR=' + self.build_directory, 'all')
 
     def install(self, spec, prefix):
-        make('DESTDIR='+prefix, 'TOPDIR='+self.build_directory, 'install')
+        make('DESTDIR=' + prefix, 'TOPDIR=' + self.build_directory, 'install')
