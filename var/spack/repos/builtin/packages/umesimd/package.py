@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Umesimd(Package):
+class Umesimd(CMakePackage):
     """UME::SIMD is an explicit vectorization library. The library defines
     homogeneous interface for accessing functionality of SIMD registers of
     AVX, AVX2, AVX512 and IMCI (KNCNI, k1om) instruction set."""
@@ -23,7 +23,4 @@ class Umesimd(Package):
     version('0.4.1', sha256='e05b9f886164826005c8db5d2240f22cb88593c05b4fe45c81aba4d1d57a9bfa')
     version('0.3.2', sha256='90399fa64489ca4d492a57a49582f5b827d4710a691f533822fd61edc346e8f6')
     version('0.3.1', sha256='9bab8b4c70e11dbdd864a09053225c74cfabb801739e09a314ddeb1d84a43f0a')
-
-    def install(self, spec, prefix):
-        install_tree('.', prefix)
 
