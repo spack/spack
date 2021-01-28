@@ -15,7 +15,7 @@ class Pacparser(MakefilePackage):
     version('1.3.7', sha256='eb48ec2fc202d12a4b882133048c7590329849f32c2285bc4dbe418f29aad249')
 
     depends_on('python', when='+python')
-    depends_on('py-setuptools', when='+python')
+    depends_on('py-setuptools', when='+python', type=('build', 'run'))
 
     variant('python', default=False,
             description='Build and install python bindings')
