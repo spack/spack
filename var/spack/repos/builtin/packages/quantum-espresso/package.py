@@ -226,7 +226,7 @@ class QuantumEspresso(Package):
     patch('https://gitlab.com/QEF/q-e/-/commit/cf1fedefc20d39f5cd7551ded700ea4c77ad6e8f.diff',
           sha256='8f179663a8d031aff9b1820a32449942281195b6e7b1ceaab1f729651b43fa58',
           when='+patch@6.6')
-    # QE 6.5 INTENT(OUT) without settig value in tetra_weights_only(..., ef): 
+    # QE 6.5 INTENT(OUT) without settig value in tetra_weights_only(..., ef):
     # For Fujitsu compiler
     patch('https://gitlab.com/QEF/q-e/-/commit/8f096b53e75026701c681c508e2c24a9378c0950.diff',
           sha256='f4f1cce4182b57ac797c8f6ec8460fe375ee96385fcd8f6a61e1460bc957eb67',
