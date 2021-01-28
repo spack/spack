@@ -14,6 +14,7 @@ class CircuitBuild(PythonPackage):
 
     version('develop', branch='master')
     version('3.1.1', tag='circuit-build-v3.1.1')
+    version('3.1.3', tag='circuit-build-v3.1.3')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
