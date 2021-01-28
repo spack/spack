@@ -219,6 +219,8 @@ class Cp2k(MakefilePackage, CudaPackage):
                     fftw_header_dir = incdir
                     break
 
+        # for AOCC, -Hx,47,0x10000008 flag is added to resolve
+        # precision issue while using -ffast-math flag
         optimization_flags = {
             'gcc': [
                 '-O2',

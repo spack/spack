@@ -95,6 +95,8 @@ class Elpa(AutotoolsPackage, CudaPackage):
             ])
 
         if '%aocc' in spec:
+            # -Hx,47,0x10000008 flag is added to resolve precision
+            # issue while using -ffast-math flag
             options.extend([
                 'FCFLAGS=-O3 -ffast-math -Hx,47,0x10000008',
                 'CFLAGS=-O3 -ffast-math -Hx,47,0x10000008'
