@@ -1,5 +1,5 @@
---- frontier_config.c.orig	2020-07-28 09:20:59.456311478 +0200
-+++ frontier_config.c	2020-07-28 09:26:49.147996572 +0200
+--- client/frontier_config.c	2020-07-28 09:20:59.456311478 +0200
++++ client/frontier_config.c	2020-07-28 09:26:49.147996572 +0200
 @@ -47,8 +47,8 @@
  
  #define ENV_BUF_SIZE	1024

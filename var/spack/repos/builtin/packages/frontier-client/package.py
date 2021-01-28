@@ -23,15 +23,16 @@ class FrontierClient(MakefilePackage):
     depends_on('pacparser')
     depends_on('expat')
 
-    patch('frontier-client.patch')
+    patch('frontier-client.patch', level=0)
 
     def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
+        makefile = FileFilter('client/Makefile')
         makefile.filter('EXPAT_DIR}/lib', 'EXPAT_DIR}/lib64')
 
     def build(self, spec, prefix):
-	make('-j1', 'dist', 'PACPARSER_DIR=' + self.spec['pacparser'].prefix,
-             'EXPAT_DIR=' + self.spec['expat'].prefix)
+        with working_dir('client'):
+            make('-j1', 'dist', 'PACPARSER_DIR=' + self.spec['pacparser'].prefix,
+                 'EXPAT_DIR=' + self.spec['expat'].prefix)
 
     def install(self, spec, prefix):
-        install_tree(join_path(self.source_dir, 'dist'), prefix)
+        install_tree(join_path('client', 'dist'), prefix)
