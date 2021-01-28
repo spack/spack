@@ -200,7 +200,7 @@ class Python(AutotoolsPackage):
     patch('intel-3.6.7.patch', when='@3.6.7:3.6.8,3.7.1:3.7.5 %intel')
 
     # Fixes RPATH issue with Intel compilers
-    patch('python-intel-rpath.patch', when='%intel')
+    patch('python-intel-rpath.patch', when='@3.1:3.99 %intel')
 
     # CPython tries to build an Objective-C file with GCC's C frontend
     # https://github.com/spack/spack/pull/16222
