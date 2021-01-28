@@ -6,6 +6,7 @@
 import os.path
 import sys
 
+
 class Mvapich2Gdr(AutotoolsPackage):
     """MVAPICH2-GDR is an optimized version of the MVAPICH2 MPI library for
     GPU-enabled HPC and Deep Learning Applications. MVAPICH2-GDR is not
@@ -85,7 +86,6 @@ class Mvapich2Gdr(AutotoolsPackage):
     conflicts('+rocm', when='@:2.3.4', msg='MVAPICH2-GDR only supports ROCm in version >= 2.3.5')
     conflicts('+cuda +rocm', msg='MVAPICH2-GDR can only be built with either CUDA or ROCm')
     conflicts('~cuda ~rocm', msg='MVAPICH2-GDR must be built with either CUDA or ROCm')
-    
 
     depends_on('bison@3.4.2', type='build')
     depends_on('libpciaccess@0.13.5', when=(sys.platform != 'darwin'))
@@ -150,7 +150,6 @@ class Mvapich2Gdr(AutotoolsPackage):
                 '--with-pm=hydra',
                 '--with-pbs=/opt/pbs'
             ])
-           
 
         elif 'process_managers=jsrun' in spec:
             opts.append([
