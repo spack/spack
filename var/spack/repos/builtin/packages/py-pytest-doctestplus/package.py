@@ -16,6 +16,6 @@ class PyPytestDoctestplus(PythonPackage):
     version('0.9.0', sha256='6fe747418461d7b202824a3486ba8f4fa17a9bd0b1eddc743ba1d6d87f03391a')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-setuptools@30.3.0:', type='build')
+    depends_on('py-setuptools@30.3.0:', type=('build', 'run'))
     depends_on('py-setuptools-scm', type='build')
     depends_on('py-pytest@4.6:', type=('build', 'run'))
