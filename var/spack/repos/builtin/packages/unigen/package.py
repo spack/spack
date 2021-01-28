@@ -9,7 +9,7 @@ from spack import *
 
 class Unigen(MakefilePackage):
     """The United Generators project was launched by the Virtual Institute 146
-    VI-SIM in September 2005 following a proposal of Herbert Ströbele.
+    VI-SIM in September 2005 following a proposal of Herbert Strobele.
     The goal was to facilitate comparison between various models (see below)
     and/or various experiments (HADES, FOPI, CERES, NA49, CBM). The package
     at present allows to convert output of various event generators to a
@@ -25,7 +25,7 @@ class Unigen(MakefilePackage):
 
     def build(self, spec, prefix):
         mkdirp(join_path(self.build_directory, 'lib'))
-        make(f'TOPDIR={self.build_directory}', 'all')
+        make('TOPDIR='+self.build_directory, 'all')
 
     def install(self, spec, prefix):
-        make(f'DESTDIR={prefix}', f'TOPDIR={self.build_directory}', 'install')
+        make('DESTDIR='+prefix, 'TOPDIR='+self.build_directory, 'install')
