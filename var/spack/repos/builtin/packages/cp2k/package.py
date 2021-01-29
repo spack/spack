@@ -439,7 +439,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs.append(join_path(elpa.prefix.lib,
                             ('libelpa{elpa_suffix}.{dso_suffix}'
                                 .format(elpa_suffix=elpa_suffix,
-                                    dso_suffix=dso_suffix))))
+                                        dso_suffix=dso_suffix))))
 
             if spec.satisfies('@:4.999'):
                 if elpa.satisfies('@:2014.5.999'):
