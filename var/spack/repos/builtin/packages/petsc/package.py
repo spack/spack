@@ -16,9 +16,13 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    # Relative path to smoke test sources, first configuration vars then
-    #   smoke test example.
+    # Relative path to smoke test sources: configuration variable files
     config_dir = join_path('lib', 'petsc', 'conf')
+
+    # Relative path to smoke test sources
+    ksp_dir = join_path('src', 'ksp', 'ksp', 'tutorials')
+
+    # Relative path to smoke test sources
     snes_dir = join_path('src', 'snes', 'tutorials')
 
     version('develop', branch='master')
@@ -465,13 +469,12 @@ class Petsc(Package):
     def check_install(self):
         """
         Checks the spack install using tutorial example for solving Poisson
-        equation in 2D to make sure nothing is broken
+        equation in 2D to make sure nothing is broken.
         """
         spec = self.spec
-        install_prefix = spec.prefix
+        prefix = spec.prefix
         if 'mpi' in spec:
-            tutorials_dir = join_path('src', 'ksp', 'ksp', 'tutorials')
-            with working_dir(tutorials_dir):
+            with working_dir(ksp_dir):
                 env['PETSC_DIR'] = self.prefix
                 cc = Executable(spec['mpi'].mpicc)
                 cc('ex50.c', '-I%s' % prefix.include, '-L%s' % prefix.lib,
@@ -539,35 +542,96 @@ class Petsc(Package):
         Copy all of the files within the examples source directory
         during installation to make them available for smoke testing.
         """
-        self.cache_extra_test_sources([config_dir, snes_dir])
+        self.cache_extra_test_sources([self.config_dir, self.ksp_dir,
+                                       self.snes_dir])
 
-    def test(self):
-        """Perform smoke tests on installed PETSc package."""
+    def _run_ex19(self):
+        """Run smoke test: ex19 test with hypre."""
         test_dir = join_path(self.install_test_root, self.snes_dir)
+        exe = 'ex19'
 
         if 'hypre' in self.spec:
             self.run_test('make',
-                          ['PETSC_DIR={0}'.format(self.prefix), 'ex19'],
+                          ['PETSC_DIR={0}'.format(self.prefix), exe],
                           [], installed=False,
-                          purpose='test: building the ex19 example',
+                          purpose='test: building the {0} example'.format(exe),
                           skip_missing=False, work_dir=test_dir)
 
-            output = get_escaped_text_output(join_path(test_dir, 'output',
-                                             'ex19_hypre.out'))
             # Only check the first two and last lines due to numeric diffs
             # - line 1: values
             # - line 2: initial norm
             # - last line: number of iterations
+            output = get_escaped_text_output(join_path(test_dir, 'output',
+                                             '{0}_hypre.out'.format(exe)))
             expected = output[:2]
             expected.append(output[-1])
             
-            self.run_test('./ex19',
+            reason = 'test: ensuring {0} with hypre runs'.format(exe)
+            self.run_test('./{0}'.format(exe),
                           ['-da_refine', '3', '-snes_monitor_short',
                            '-pc_type', 'hypre'],
-                          expected, installed=False,
-                          purpose='test: ensuring ex19 with hypre runs',
+                          expected, installed=False, purpose=reason,
                           work_dir=test_dir)
 
+            reason = 'test: ensuring {0} test cleanup'.format(exe)
             self.run_test('make', ['clean'], [], installed=False,
-                          purpose='test: ensuring test cleanup',
-                          skip_missing=False, work_dir=test_dir)
+                          purpose=reason, skip_missing=False,
+                          work_dir=test_dir)
+
+    def _run_ex50(self):
+        """Run smoke test: ex50 test with hypre."""
+        test_dir = join_path(self.install_test_root, self.ksp_dir)
+        exe = 'ex50'
+
+        self.run_test('make',
+                      ['PETSC_DIR={0}'.format(self.prefix), exe],
+                      [], installed=False,
+                      purpose='test: building the {0} example'.format(exe),
+                      skip_missing=False, work_dir=test_dir)
+
+        solver_package_option = '-pc_factor_mat_solver_package' if \
+            self.spec.satisfies('@:3.8') else '-pc_factor_mat_solver_type'
+
+        if 'superlu-dist' in self.spec:
+            reason = 'test: ensuring {0} with superlu_dist runs'.format(exe)
+            self.run_test(exe,
+                          ['-da_grid_x', '4',
+                           '-da_grid_y', '4',
+                           '-pc_type', 'lu',
+                           solver_package_option, 'superlu_dist'],
+                          [], installed=False, purpose=reason,
+                          work_dir=test_dir)
+
+        if 'mumps' in self.spec:
+            reason = 'test: ensuring {0} with mumps runs'.format(exe)
+            self.run_test(exe,
+                          ['-da_grid_x', '4',
+                           '-da_grid_y', '4',
+                           '-pc_type', 'lu',
+                           solver_package_option, 'mumps'],
+                          [], installed=False, purpose=reason,
+                          work_dir=test_dir)
+
+        if 'hypre' in self.spec:
+            reason = 'test: ensuring {0} with hypre runs'.format(exe)
+            self.run_test(exe,
+                          ['-da_grid_x', '4',
+                           '-da_grid_y', '4',
+                           '-pc_type', 'hypre',
+                           '-pc_hypre_type', 'boomeramg'],
+                          [], installed=False, purpose=reason,
+                          work_dir=test_dir)
+
+        reason = 'test: ensuring {0} test cleanup'.format(exe)
+        self.run_test('make', ['clean'], [], installed=False,
+                      purpose=reason, skip_missing=False,
+                      work_dir=test_dir)
+
+    def test(self):
+        """Perform smoke tests on installed PETSc package."""
+
+        # First run snes ex19
+        self._run_ex19()
+
+        # First run ksp ex50
+        self._run_ex50()
