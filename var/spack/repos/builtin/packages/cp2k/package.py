@@ -220,7 +220,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                     break
 
         # for AOCC, -Hx,47,0x10000008 flag is added to resolve
-        # precision issue while using -ffast-math flag
+        # precision issue while using -O2 or -O3 flag for AOCC 2.2 and 2.3
         optimization_flags = {
             'gcc': [
                 '-O2',
@@ -423,16 +423,23 @@ class Cp2k(MakefilePackage, CudaPackage):
             ])
 
         if '+elpa' in spec:
-            dso_suffix = 'a' if '%aocc' in spec else 'so'
             elpa = spec['elpa']
             elpa_suffix = '_openmp' if '+openmp' in elpa else ''
             elpa_incdir = elpa.headers.directories[0]
 
             fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'modules'))]
-            libs.append(join_path(elpa.prefix.lib,
-                                  ('libelpa{elpa_suffix}.{dso_suffix}'
-                                      .format(elpa_suffix=elpa_suffix,
-                                              dso_suffix=dso_suffix))))
+
+            # As a best practice used by CP2K developers,
+            # AOCC considering using static libraries of ELPA
+            if '%aocc' in spec:
+                libs.append(join_path(elpa.prefix.lib,
+                            ('libelpa{elpa_suffix}.a'
+                                .format(elpa_suffix=elpa_suffix))))
+            else:
+                libs.append(join_path(elpa.prefix.lib,
+                            ('libelpa{elpa_suffix}.{dso_suffix}'
+                                .format(elpa_suffix=elpa_suffix,
+                                    dso_suffix=dso_suffix))))
 
             if spec.satisfies('@:4.999'):
                 if elpa.satisfies('@:2014.5.999'):
