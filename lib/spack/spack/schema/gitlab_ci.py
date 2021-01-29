@@ -65,66 +65,90 @@ runner_selector_schema = {
     'properties': runner_attributes_schema_items,
 }
 
-#: Properties for inclusion in other schemas
-properties = {
-    'gitlab-ci': {
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['mappings'],
-        'patternProperties': union_dicts(
-            runner_attributes_schema_items,
-            {
-                'bootstrap': {
-                    'type': 'array',
-                    'items': {
-                        'anyOf': [
-                            {
-                                'type': 'string',
-                            }, {
-                                'type': 'object',
-                                'additionalProperties': False,
-                                'required': ['name'],
-                                'properties': {
-                                    'name': {
-                                        'type': 'string',
-                                    },
-                                    'compiler-agnostic': {
-                                        'type': 'boolean',
-                                        'default': False,
-                                    },
-                                },
-                            },
-                        ],
-                    },
-                },
-                'mappings': {
-                    'type': 'array',
-                    'items': {
+
+core_shared_properties = union_dicts(
+    runner_attributes_schema_items,
+    {
+        'bootstrap': {
+            'type': 'array',
+            'items': {
+                'anyOf': [
+                    {
+                        'type': 'string',
+                    }, {
                         'type': 'object',
                         'additionalProperties': False,
-                        'required': ['match'],
+                        'required': ['name'],
                         'properties': {
-                            'match': {
-                                'type': 'array',
-                                'items': {
-                                    'type': 'string',
-                                },
+                            'name': {
+                                'type': 'string',
                             },
-                            'runner-attributes': runner_selector_schema,
+                            'compiler-agnostic': {
+                                'type': 'boolean',
+                                'default': False,
+                            },
                         },
                     },
+                ],
+            },
+        },
+        'mappings': {
+            'type': 'array',
+            'items': {
+                'type': 'object',
+                'additionalProperties': False,
+                'required': ['match'],
+                'properties': {
+                    'match': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'string',
+                        },
+                    },
+                    'runner-attributes': runner_selector_schema,
                 },
-                'enable-artifacts-buildcache': {
-                    'type': 'boolean',
-                    'default': False,
-                },
-                'service-job-attributes': runner_selector_schema,
-                'rebuild-index': {'type': 'boolean'},
-            }
-        ),
+            },
+        },
+        'service-job-attributes': runner_selector_schema,
+        'rebuild-index': {'type': 'boolean'},
     },
+)
+
+gitlab_ci_properties = {
+    'anyOf': [
+        {
+            'type': 'object',
+            'additionalProperties': False,
+            'required': ['mappings'],
+            'properties': union_dicts(
+                core_shared_properties,
+                {
+                    'enable-artifacts-buildcache': {
+                        'type': 'boolean',
+                    },
+                },
+            ),
+        },
+        {
+            'type': 'object',
+            'additionalProperties': False,
+            'required': ['mappings'],
+            'properties': union_dicts(
+                core_shared_properties,
+                {
+                    'temporary-storage-url-prefix': {
+                        'type': 'string',
+                    },
+                },
+            ),
+        },
+    ]
 }
 
+#: Properties for inclusion in other schemas
+properties = {
+    'gitlab-ci': gitlab_ci_properties,
+}
 
 #: Full schema with metadata
 schema = {

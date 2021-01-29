@@ -763,6 +763,10 @@ def generate_package_index(cache_prefix):
             url_util.join(cache_prefix, 'index.json.hash'),
             keep_original=False,
             extra_args={'ContentType': 'text/plain'})
+    except Exception as err:
+        msg = 'Encountered problem pushing package index to {0}: {1}'.format(
+            cache_prefix, err)
+        tty.warn(msg)
     finally:
         shutil.rmtree(tmpdir)
 
@@ -823,6 +827,10 @@ def generate_key_index(key_prefix, tmpdir=None):
                 url_util.join(key_prefix, 'index.json'),
                 keep_original=False,
                 extra_args={'ContentType': 'application/json'})
+        except Exception as err:
+            msg = 'Encountered problem pushing key index to {0}: {1}'.format(
+                key_prefix, err)
+            tty.warn(msg)
         finally:
             if remove_tmpdir:
                 shutil.rmtree(tmpdir)

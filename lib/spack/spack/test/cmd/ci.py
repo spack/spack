@@ -7,7 +7,7 @@ import filecmp
 import json
 import os
 import pytest
-from jsonschema import validate
+from jsonschema import validate, ValidationError
 
 import spack
 import spack.ci as ci
@@ -20,6 +20,7 @@ import spack.paths as spack_paths
 import spack.repo as repo
 from spack.schema.buildcache_spec import schema as spec_yaml_schema
 from spack.schema.database_index import schema as db_idx_schema
+from spack.schema.gitlab_ci import schema as gitlab_ci_schema
 from spack.spec import Spec, CompilerSpec
 from spack.util.mock_package import MockPackageMultiRepo
 import spack.util.executable as exe
@@ -185,10 +186,18 @@ def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
         for needs_def_name, needs_list in needs_graph.items():
             if job_name.startswith(needs_def_name):
                 # check job needs against the expected needs definition
+                j_needs = job_def['needs']
+                print('job {0} needs:'.format(needs_def_name))
+                print([j['job'] for j in j_needs])
+                print('expected:')
+                print([nl for nl in needs_list])
                 assert all([job_needs['job'][:job_needs['job'].index('/')]
-                           in needs_list for job_needs in job_def['needs']])
+                           in needs_list for job_needs in j_needs])
+                assert(all([nl in
+                           [n['job'][:n['job'].index('/')] for n in j_needs]
+                           for nl in needs_list]))
                 assert all([job_needs['artifacts'] == artifacts
-                           for job_needs in job_def['needs']])
+                           for job_needs in j_needs])
                 break
 
 
@@ -378,7 +387,10 @@ spack:
             fake_token = 'notreallyatokenbutshouldnotmatter'
             os.environ['SPACK_CDASH_AUTH_TOKEN'] = fake_token
             copy_to_file = str(tmpdir.join('backup-ci.yml'))
-            output = ci_cmd('generate', '--copy-to', copy_to_file, output=str)
+            try:
+                output = ci_cmd('generate', '--copy-to', copy_to_file, output=str)
+            finally:
+                del os.environ['SPACK_CDASH_AUTH_TOKEN']
             # That fake token should still have resulted in being unable to
             # register build group with cdash, but the workload should
             # still have been generated.
@@ -582,7 +594,11 @@ spack:
             os.environ['SPACK_PR_BRANCH'] = 'fake-test-branch'
             monkeypatch.setattr(
                 ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
-            ci_cmd('generate', '--output-file', outputfile)
+            try:
+                ci_cmd('generate', '--output-file', outputfile)
+            finally:
+                del os.environ['SPACK_IS_PR_PIPELINE']
+                del os.environ['SPACK_PR_BRANCH']
 
         with open(outputfile) as f:
             contents = f.read()
@@ -1271,3 +1287,97 @@ spack:
             output = ci_cmd('rebuild-index', output=str, fail_on_error=False)
             ex = 'spack ci rebuild-index requires an env containing a mirror'
             assert(ex in output)
+
+
+def test_ensure_only_one_temporary_storage():
+    """Make sure 'gitlab-ci' section of env does not allow specification of
+    both 'enable-artifacts-buildcache' and 'temporary-storage-url-prefix'."""
+    gitlab_ci_template = """
+  gitlab-ci:
+    {0}
+    mappings:
+      - match:
+          - notcheckedhere
+        runner-attributes:
+          tags:
+            - donotcare
+"""
+
+    enable_artifacts = 'enable-artifacts-buildcache: True'
+    temp_storage = 'temporary-storage-url-prefix: file:///temp/mirror'
+    specify_both = """{0}
+    {1}
+""".format(enable_artifacts, temp_storage)
+    specify_neither = ''
+
+    # User can specify "enable-artifacts-buildcache" (boolean)
+    yaml_obj = syaml.load(gitlab_ci_template.format(enable_artifacts))
+    validate(yaml_obj, gitlab_ci_schema)
+
+    # User can also specify "temporary-storage-url-prefix" (string)
+    yaml_obj = syaml.load(gitlab_ci_template.format(temp_storage))
+    validate(yaml_obj, gitlab_ci_schema)
+
+    # However, specifying both should fail to validate
+    yaml_obj = syaml.load(gitlab_ci_template.format(specify_both))
+    with pytest.raises(ValidationError):
+        validate(yaml_obj, gitlab_ci_schema)
+
+    # Specifying neither should be fine too, as neither of these properties
+    # should be required
+    yaml_obj = syaml.load(gitlab_ci_template.format(specify_neither))
+    validate(yaml_obj, gitlab_ci_schema)
+
+
+def test_ci_generate_temp_storage_url(tmpdir, mutable_mock_env_path,
+                                      env_deactivate, install_mockery,
+                                      mock_packages, monkeypatch):
+    """Verify correct behavior when using temporary-storage-url-prefix"""
+    filename = str(tmpdir.join('spack.yaml'))
+    with open(filename, 'w') as f:
+        f.write("""\
+spack:
+  specs:
+    - archive-files
+  mirrors:
+    some-mirror: https://my.fake.mirror
+  gitlab-ci:
+    temporary-storage-url-prefix: file:///work/temp/mirror
+    mappings:
+      - match:
+          - archive-files
+        runner-attributes:
+          tags:
+            - donotcare
+          image: donotcare
+""")
+
+    with tmpdir.as_cwd():
+        env_cmd('create', 'test', './spack.yaml')
+        outputfile = str(tmpdir.join('.gitlab-ci.yml'))
+
+        monkeypatch.setattr(
+            ci, 'SPACK_PR_MIRRORS_ROOT_URL', r"file:///fake/mirror")
+
+        with ev.read('test'):
+            ci_cmd('generate', '--output-file', outputfile)
+
+            with open(outputfile) as of:
+                pipeline_doc = syaml.load(of.read())
+
+                print(pipeline_doc)
+
+                assert('cleanup' in pipeline_doc)
+                cleanup_job = pipeline_doc['cleanup']
+
+                assert('script' in cleanup_job)
+                cleanup_task = cleanup_job['script'][0]
+
+                assert(cleanup_task.startswith('spack mirror destroy'))
+
+                assert('stages' in pipeline_doc)
+                stages = pipeline_doc['stages']
+
+                # Cleanup job should be 2nd to last, just before rebuild-index
+                assert('stage' in cleanup_job)
+                assert(cleanup_job['stage'] == stages[-2])
