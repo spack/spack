@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 
 
 class Superlu(Package):
@@ -160,13 +159,12 @@ class Superlu(Package):
         config_args = self._generate_make_hdr_for_test()
 
         # Write configuration options to make.inc file
-        make_file_inc = os.path.join(self.install_test_root,
-                                     self.make_hdr_file)
+        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
         with open(make_file_inc, 'w') as inc:
             for option in config_args:
                 inc.write('{0}\n'.format(option))
 
-        test_dir = os.path.join(self.install_test_root, self.examples_src_dir)
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
         with working_dir(test_dir, create=False):
             make('HEADER={0}'.format(self.prefix.include), 'superlu',
                  parallel=False)
