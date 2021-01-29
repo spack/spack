@@ -166,4 +166,8 @@ class Hpx(CMakePackage, CudaPackage):
                 self.define('OTF2_ROOT', spec['otf2'].prefix),
             ]
 
+            # it seems like there was a bug in the default version of APEX in 1.5.x
+            if spec.satisfies("@:1.5"):
+                args += [self.define('HPX_WITH_APEX_TAG', "v2.3.0")]
+
         return args
