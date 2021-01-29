@@ -31,7 +31,7 @@ class Zfp(CMakePackage, CudaPackage):
     version('0.5.1', sha256='f255dd1708c9ae4dc6a56dd2614e8b47a10d833c87fd349cbd47545a19c2b779', url='https://github.com/LLNL/zfp/archive/0.5.1/zfp-0.5.1.tar.gz')
 
     # Build targets
-    # variant('utilities', default=True,  description='Build utilities')
+    # TODO: variant('utilities', default=True,  description='Build utilities')
     variant('shared',    default=True,  description='Build shared libraries')
 
     # Language bindings
@@ -86,7 +86,7 @@ class Zfp(CMakePackage, CudaPackage):
 
         # CMake options
         args = [
-            # self.define_from_variant('BUILD_UTILITIES', 'utilities'),
+            # TODO: self.define_from_variant('BUILD_UTILITIES', 'utilities'),
             self.define('BUILD_TESTING', self.run_tests),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('BUILD_CFP', 'c'),
