@@ -1,0 +1,11 @@
+--- a/src/command.c	2021-01-28 19:08:45.591995457 +0900
++++ b/src/command.c	2021-01-28 19:09:05.551995350 +0900
+@@ -229,7 +229,7 @@
+ 
+ #define HelpPool   16
+ static char *HelpFileName;
+-static char HelpFileBuf[80];
++static char HelpFileBuf[1024];
+ static HlpEntry __far *FreeInfo;
+ static HlpEntry __far *HelpInfo;
+ 
