@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyCheetah3(PythonPackage):
-    """Cheetah is a template engine and code generation tool."""
+    """Cheetah3 is a template engine and code generation tool."""
 
     pypi = "Cheetah3/Cheetah3-3.2.6.tar.gz"
 
