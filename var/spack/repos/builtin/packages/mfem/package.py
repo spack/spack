@@ -706,12 +706,15 @@ class Mfem(Package):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        self.cache_extra_test_sources(self.examples_src_dir)
-        self.cache_extra_test_sources(self.examples_data_dir)
+        self.cache_extra_test_sources([self.examples_src_dir,
+                                       self.examples_data_dir])
 
     def test(self):
-        test_dir = os.path.join(self.install_test_root, self.examples_src_dir)
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
         with working_dir(test_dir, create=False):
+            # MFEM has many examples to serve as a suitable smoke check. ex10
+            # was chosen arbitrarily among the examples that work both with
+            # MPI and without it
             test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
             make('CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
                  test_exe, parallel=False)
