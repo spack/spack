@@ -167,7 +167,7 @@ class Hpx(CMakePackage, CudaPackage):
             ]
 
             # it seems like there was a bug in the default version of APEX in 1.5.x
-            if spec.satisfies("@:1.5"):
+            if spec.satisfies("@1.5"):
                 args += [self.define('HPX_WITH_APEX_TAG', "v2.3.0")]
 
         return args
