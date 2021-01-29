@@ -1,11 +1,4 @@
-int main()
-{
-    switch(sizeof(long int)) {
-        case sizeof(long int):
-            return 1;
-        case sizeof(long long int):
-            return 2;
-        default:
-            return 0;
-    }
-}
+#include <limits.h>
+#if LONG_MAX == LLONG_MAX
+#error LONG=LLONG
+#endif
