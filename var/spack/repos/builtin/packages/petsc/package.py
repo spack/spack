@@ -16,15 +16,6 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    # Relative path to smoke test sources: configuration variable files
-    config_dir = join_path('lib', 'petsc', 'conf')
-
-    # Relative path to smoke test sources
-    ksp_dir = join_path('src', 'ksp', 'ksp', 'tutorials')
-
-    # Relative path to smoke test sources
-    snes_dir = join_path('src', 'snes', 'tutorials')
-
     version('develop', branch='master')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
@@ -536,18 +527,9 @@ class Petsc(Package):
 
     # For the 'libs' property - use the default handler.
 
-    @run_after('install')
-    def cache_test_sources(self):
-        """
-        Copy all of the files within the examples source directory
-        during installation to make them available for smoke testing.
-        """
-        self.cache_extra_test_sources([self.config_dir, self.ksp_dir,
-                                       self.snes_dir])
-
     def _run_ex19(self):
         """Run smoke test: ex19 test with hypre."""
-        test_dir = join_path(self.install_test_root, self.snes_dir)
+        test_dir = self.prefix.share.petsc.examples.src.snes.tutorials
         exe = 'ex19'
 
         if 'hypre' in self.spec:
@@ -565,7 +547,7 @@ class Petsc(Package):
                                              '{0}_hypre.out'.format(exe)))
             expected = output[:2]
             expected.append(output[-1])
-            
+
             reason = 'test: ensuring {0} with hypre runs'.format(exe)
             self.run_test('./{0}'.format(exe),
                           ['-da_refine', '3', '-snes_monitor_short',
@@ -580,7 +562,7 @@ class Petsc(Package):
 
     def _run_ex50(self):
         """Run smoke test: ex50 test with hypre."""
-        test_dir = join_path(self.install_test_root, self.ksp_dir)
+        test_dir = self.prefix.share.petsc.examples.src.ksp.ksp.tutorials
         exe = 'ex50'
 
         self.run_test('make',
