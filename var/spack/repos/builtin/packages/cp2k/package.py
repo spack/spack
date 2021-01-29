@@ -310,7 +310,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             cppflags.extend(['-D__PLUMED2'])
             libs.extend([
                 join_path(self.spec['plumed'].prefix.lib,
-                             'libplumed.{0}'.format(dso_suffix))
+                          'libplumed.{0}'.format(dso_suffix))
             ])
 
         cc = spack_cc if '~mpi' in spec else spec['mpi'].mpicc
@@ -409,10 +409,9 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags.append('-I' + join_path(
                 spec['pexsi'].prefix, 'fortran'))
             libs.extend([
-                join_path(spec['pexsi'].libs.directories[0],
-                             'libpexsi.a'),
+                join_path(spec['pexsi'].libs.directories[0], 'libpexsi.a'),
                 join_path(spec['superlu-dist'].libs.directories[0],
-                             'libsuperlu_dist.a'),
+                          'libsuperlu_dist.a'),
                 join_path(
                     spec['parmetis'].libs.directories[0],
                     'libparmetis.{0}'.format(dso_suffix)
@@ -431,7 +430,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'modules'))]
             libs.append(join_path(elpa.prefix.lib,
-                                     ('libelpa{elpa_suffix}.{dso_suffix}'
+                                  ('libelpa{elpa_suffix}.{dso_suffix}'
                                       .format(elpa_suffix=elpa_suffix,
                                               dso_suffix=dso_suffix))))
 
