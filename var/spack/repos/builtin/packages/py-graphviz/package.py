@@ -18,6 +18,7 @@ class PyGraphviz(PythonPackage):
     version('0.12', sha256='c60e232a66e4847f9f644fbaa94730ca4f78385a1314a2cc1e7f4cb2d7461298')
     version('0.11.1', sha256='914b8b124942d82e3e1dcef499c9fe77c10acd3d18a1cfeeb2b9de05f6d24805')
     version('0.10.1', sha256='d311be4fddfe832a56986ac5e1d6e8715d7fcb0208560da79d1bb0f72abef41f')
+    version('0.8.4', sha256='4958a19cbd8461757a08db308a4a15c3d586660417e1e364f0107d2fe481689f')
 
     variant('dev', default=False, description='development mode')
     variant('docs', default=False, description='build documentation')

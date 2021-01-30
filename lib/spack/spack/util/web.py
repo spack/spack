@@ -41,6 +41,7 @@ import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
+import llnl.util.lang
 
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
@@ -424,12 +425,6 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    # TODO: Needed until we drop support for Python 2.X
-    def star(func):
-        def _wrapper(args):
-            return func(*args)
-        return _wrapper
-
     if isinstance(root_urls, six.string_types):
         root_urls = [root_urls]
 
@@ -450,7 +445,7 @@ def spider(root_urls, depth=0, concurrency=32):
             tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
                 current_depth, depth, len(spider_args))
             )
-            results = tp.map(star(_spider), spider_args)
+            results = tp.map(llnl.util.lang.star(_spider), spider_args)
             spider_args = []
             collect = current_depth < depth
             for sub_pages, sub_links, sub_spider_args in results:

@@ -453,6 +453,8 @@ def test_aocc_flags():
                          '-Os', '-Oz', '-Og',
                          '-O', '-O4'],
                         'aocc@2.2.0')
+
+    supported_flag_test("stdcxx_libs", ("-lstdc++",), "aocc@2.2.0")
     supported_flag_test("openmp_flag", "-fopenmp", "aocc@2.2.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "aocc@2.2.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "aocc@2.2.0")

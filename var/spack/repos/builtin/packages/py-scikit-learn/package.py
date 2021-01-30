@@ -13,6 +13,7 @@ class PyScikitLearn(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('0.24.1', sha256='a0334a1802e64d656022c3bfab56a73fbd6bf4b1298343f3688af2151810bbdf')
     version('0.24.0', sha256='076369634ee72b5a5941440661e2f306ff4ac30903802dc52031c7e9199ac640')
     version('0.23.2', sha256='20766f515e6cd6f954554387dfae705d93c7b544ec0e6c6a5d8e006f6f7ef480')
     version('0.23.1', sha256='e3fec1c8831f8f93ad85581ca29ca1bb88e2da377fb097cf8322aa89c21bc9b8')
@@ -62,6 +63,9 @@ class PyScikitLearn(PythonPackage):
     conflicts('~openmp', when='@:999', msg='Only master supports ~openmp')
 
     def setup_build_environment(self, env):
+        # enable parallel builds of the sklearn backend
+        env.append_flags("SKLEARN_BUILD_PARALLEL", str(make_jobs))
+
         # https://scikit-learn.org/stable/developers/advanced_installation.html#building-from-source
         if self.spec.satisfies('~openmp'):
             env.set('SKLEARN_NO_OPENMP', 'True')

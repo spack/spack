@@ -55,15 +55,22 @@ class Lbann(CMakePackage, CudaPackage):
     variant('fft', default=False, description='Support for FFT operations')
     variant('half', default=False,
             description='Builds with support for FP16 precision data types')
+    variant('hwloc', default=True, description='Add support for topology aware algorithms')
     variant('nvprof', default=False, description='Build with region annotations for NVPROF')
-    variant('opencv', default=True,
-            description='Builds with support for image processing with OpenCV')
+    variant('numpy', default=False,
+            description='Builds with support for processing NumPy data files')
+    variant('vision', default=False,
+            description='Builds with support for image processing data with OpenCV')
     variant('vtune', default=False, description='Builds with support for Intel VTune')
+    variant('onednn', default=False, description='Support for OneDNN')
+    variant('nvshmem', default=False, description='Support for NVSHMEM')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
-    conflicts('@:0.90,0.102:', when='+fft')
+    conflicts('@0.90:0.101.99', when='+fft')
     conflicts('~cuda', when='+nvprof')
+    conflicts('~hwloc', when='+al')
+    conflicts('~cuda', when='+nvshmem')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -103,6 +110,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +distconv +cuda', when='+distconv')
     depends_on('dihydrogen ~half', when='+dihydrogen ~half')
     depends_on('dihydrogen +half', when='+dihydrogen +half')
+    depends_on('dihydrogen ~nvshmem', when='+dihydrogen ~nvshmem')
+    depends_on('dihydrogen +nvshmem', when='+dihydrogen +nvshmem')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
     conflicts('~dihydrogen', when='+distconv')
@@ -117,30 +126,31 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
     depends_on('mpi')
-    depends_on('hwloc@1.11:', when='@:0.90,0.102:')
-    depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99')
+    depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
+    depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99 +hwloc')
+    depends_on('hwloc +cuda +nvml', when='+cuda')
 
     depends_on('half', when='+half')
 
-    depends_on('fftw +openmp +mpi', when='+fft')
+    depends_on('fftw@3.3: +openmp', when='+fft')
 
     # LBANN wraps OpenCV calls in OpenMP parallel loops, build without OpenMP
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
     depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
                '+imgcodecs +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda',
-               when='+opencv')
+               when='+vision')
 
     # Note that for Power systems we want the environment to add  +powerpc +vsx
-    depends_on('opencv@4.1.0: +powerpc +vsx', when='+opencv arch=ppc64le:')
+    depends_on('opencv@4.1.0: +powerpc +vsx', when='+vision arch=ppc64le:')
 
-    depends_on('cnpy')
+    depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
-    depends_on('python@3:3.7.9 +shared', type=('build', 'run'), when='@:0.90,0.99:')
+    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
     extends("python")
     depends_on('py-setuptools', type='build')
     depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
@@ -165,6 +175,9 @@ class Lbann(CMakePackage, CudaPackage):
 
     depends_on('llvm-openmp', when='%apple-clang')
 
+    depends_on('onednn cpu_runtime=omp gpu_runtime=none', when='+onednn')
+    depends_on('nvshmem', when='+nvshmem')
+
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
@@ -174,12 +187,18 @@ class Lbann(CMakePackage, CudaPackage):
         # Environment variables
         cppflags = []
         cppflags.append('-DLBANN_SET_EL_RNG -ldl')
-
-        return [
+        args = []
+        args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
             '-DLBANN_VERSION=spack',
-            '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
-        ]
+        ])
+
+        if '+numpy' in spec:
+            args.append(
+                '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
+            )
+
+        return args
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%apple-clang'):
@@ -201,15 +220,19 @@ class Lbann(CMakePackage, CudaPackage):
         args.extend([
             '-DCMAKE_CXX_STANDARD=14',
             '-DCMAKE_CUDA_STANDARD=14',
+            '-DLBANN_WITH_CNPY=%s' % ('+numpy' in spec),
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
+            '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
+            '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
+            '-DLBANN_WITH_VISION:BOOL=%s' % ('+vision' in spec),
             '-DLBANN_WITH_VTUNE:BOOL=%s' % ('+vtune' in spec),
             '-DLBANN_DATATYPE={0}'.format(spec.variants['dtype'].value),
             '-DCEREAL_DIR={0}'.format(spec['cereal'].prefix),
@@ -250,7 +273,7 @@ class Lbann(CMakePackage, CudaPackage):
                 '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
                     clang_root)])
 
-        if '+opencv' in spec:
+        if '+vision' in spec:
             args.append('-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix))
 
@@ -304,7 +327,7 @@ class Lbann(CMakePackage, CudaPackage):
         elif spec.variants['dtype'].value == 'double':
             args.append('-DDATATYPE=8')
 
-        if '+opencv' in spec:
+        if '+vision' in spec:
             args.append('-DOpenCV_DIR:STRING={0}'.format(
                 spec['opencv'].prefix))
 

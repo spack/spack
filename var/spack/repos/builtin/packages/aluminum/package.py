@@ -42,6 +42,7 @@ class Aluminum(CMakePackage, CudaPackage):
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
     depends_on('hwloc@1.11:')
+    depends_on('hwloc +cuda +nvml', when='+cuda')
     depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
 
     generator = 'Ninja'

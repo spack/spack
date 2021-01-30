@@ -31,6 +31,7 @@ class Mesa(MesonPackage):
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('expat')
+    depends_on('zlib@1.2.3:')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")

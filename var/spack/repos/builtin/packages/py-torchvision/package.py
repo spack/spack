@@ -50,7 +50,7 @@ class PyTorchvision(PythonPackage):
     depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.1', when='@0.6.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.0', when='@0.6.0', type=('build', 'link', 'run'))
-    depends_on('py-torch@1.4.0', when='@0.5.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.4.1', when='@0.5.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.1', when='@0.4.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.0', when='@0.4.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.2.0', when='@0.4.0', type=('build', 'link', 'run'))
