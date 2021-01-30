@@ -528,41 +528,48 @@ class Petsc(Package):
     # For the 'libs' property - use the default handler.
 
     def _run_ex19(self):
-        """Run smoke test: ex19 test with hypre."""
+        """Run smoke test: SNES ex19 test with hypre."""
         test_dir = self.prefix.share.petsc.examples.src.snes.tutorials
+        if not os.path.exists(test_dir):
+            return
+
         exe = 'ex19'
 
         if 'hypre' in self.spec:
             self.run_test('make',
-                          ['PETSC_DIR={0}'.format(self.prefix), exe],
+                          # Option 1
+                          # ['PETSC_DIR={0}'.format(self.prefix), exe],
+                          # Option 2 gives same results as option 1
+                          ['-f', join_path(self.prefix.share.petsc,
+                                           'Makefile.user'), exe],
                           [], installed=False,
-                          purpose='test: building the {0} example'.format(exe),
+                          purpose='test: building the SNES {0} example'.format(
+                              exe),
                           skip_missing=False, work_dir=test_dir)
 
-            # Only check the first two and last lines due to numeric diffs
-            # - line 1: values
-            # - line 2: initial norm
-            # - last line: number of iterations
-            output = get_escaped_text_output(join_path(test_dir, 'output',
-                                             '{0}_hypre.out'.format(exe)))
-            expected = output[:2]
-            expected.append(output[-1])
-
-            reason = 'test: ensuring {0} with hypre runs'.format(exe)
+            # This test check ensures the example runs with the options
+            # and produces a very basic expected output string.
+            reason = 'test: ensuring SNES {0} with hypre runs'.format(exe)
             self.run_test('./{0}'.format(exe),
                           ['-da_refine', '3', '-snes_monitor_short',
                            '-pc_type', 'hypre'],
-                          expected, installed=False, purpose=reason,
+                          ['SNES Function norm'],
+                          installed=False, purpose=reason,
                           work_dir=test_dir)
 
-            reason = 'test: ensuring {0} test cleanup'.format(exe)
-            self.run_test('make', ['clean'], [], installed=False,
+            reason = 'test: ensuring SNES {0} test cleanup'.format(exe)
+            self.run_test('make',
+                          ['clean'],
+                          [], installed=False,
                           purpose=reason, skip_missing=False,
                           work_dir=test_dir)
 
     def _run_ex50(self):
-        """Run smoke test: ex50 test with hypre."""
+        """Run smoke test: KSP ex50 test with different options."""
         test_dir = self.prefix.share.petsc.examples.src.ksp.ksp.tutorials
+        if not os.path.exists(test_dir):
+            return
+
         exe = 'ex50'
 
         self.run_test('make',
@@ -575,7 +582,9 @@ class Petsc(Package):
             self.spec.satisfies('@:3.8') else '-pc_factor_mat_solver_type'
 
         if 'superlu-dist' in self.spec:
-            reason = 'test: ensuring {0} with superlu_dist runs'.format(exe)
+            # This test check ensures the example runs with the options
+            # but does not expect or check outputs.
+            reason = 'test: ensuring KSP {0} with superlu-dist runs'.format(exe)
             self.run_test(exe,
                           ['-da_grid_x', '4',
                            '-da_grid_y', '4',
@@ -585,7 +594,9 @@ class Petsc(Package):
                           work_dir=test_dir)
 
         if 'mumps' in self.spec:
-            reason = 'test: ensuring {0} with mumps runs'.format(exe)
+            # This test check ensures the example runs with the options
+            # but does not expect or check outputs.
+            reason = 'test: ensuring KSP {0} with mumps runs'.format(exe)
             self.run_test(exe,
                           ['-da_grid_x', '4',
                            '-da_grid_y', '4',
@@ -595,7 +606,9 @@ class Petsc(Package):
                           work_dir=test_dir)
 
         if 'hypre' in self.spec:
-            reason = 'test: ensuring {0} with hypre runs'.format(exe)
+            # This test check ensures the example runs with the options
+            # but does not expect or check outputs.
+            reason = 'test: ensuring KSP {0} with hypre runs'.format(exe)
             self.run_test(exe,
                           ['-da_grid_x', '4',
                            '-da_grid_y', '4',
@@ -604,7 +617,7 @@ class Petsc(Package):
                           [], installed=False, purpose=reason,
                           work_dir=test_dir)
 
-        reason = 'test: ensuring {0} test cleanup'.format(exe)
+        reason = 'test: ensuring KSP {0} test cleanup'.format(exe)
         self.run_test('make', ['clean'], [], installed=False,
                       purpose=reason, skip_missing=False,
                       work_dir=test_dir)
