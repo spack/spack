@@ -37,6 +37,8 @@ class Pkgconf(AutotoolsPackage):
     # https://github.com/spack/spack/issues/3525
     conflicts('%pgi')
 
+    tags = ['dev-tools']
+
     executables = ['^pkgconf$', '^pkg-config$']
 
     @classmethod

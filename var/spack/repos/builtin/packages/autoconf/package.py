@@ -31,6 +31,8 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['dev-tools']
+
     executables = [
         '^autoconf$', '^autoheader$', '^autom4te$', '^autoreconf$',
         '^autoscan$', '^autoupdate$', '^ifnames$'

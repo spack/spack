@@ -33,6 +33,8 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['dev-tools']
+
     executables = ['^g?m4$']
 
     @classmethod

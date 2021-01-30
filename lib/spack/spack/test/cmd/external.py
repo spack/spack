@@ -242,3 +242,20 @@ def test_new_entries_are_reported_correctly(
     # has been found
     output = external('find', 'gcc')
     assert 'No new external packages detected' in output
+
+
+def test_use_tags_for_detection(mock_executable, mutable_config, monkeypatch):
+    # Prepare an environment to detect a fake cmake
+    cmake_exe = mock_executable('cmake', output="echo cmake version 3.19.1")
+    prefix = os.path.dirname(cmake_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    openssl_exe = mock_executable('openssl', output="OpenSSL 2.8.3")
+    prefix = os.path.dirname(openssl_exe)
+    monkeypatch.setenv('PATH', prefix)
+
+    # Test that we detect specs
+    output = external('find', '-t', 'dev-tools')
+    assert 'The following specs have been' in output
+    assert 'cmake' in output
+    assert 'openssl' not in output

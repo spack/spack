@@ -42,6 +42,10 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope('packages'),
         help="configuration scope to modify")
+    find_parser.add_argument(
+        '-t', '--tags', action='append',
+        help="try to detect packages with this tag"
+    )
     find_parser.add_argument('packages', nargs=argparse.REMAINDER)
 
     sp.add_parser(
@@ -148,10 +152,21 @@ def _spec_is_valid(spec):
 
 
 def external_find(args):
+    # Construct the list of possible packages to be detected
+    packages_to_check = []
+
+    # If tags have been passed, add the corresponding packages
+    if args.tags:
+        for pkg in spack.repo.path.packages_with_tags(*args.tags):
+            packages_to_check.append(spack.repo.get(pkg))
+
+    # Add the packages that have been required explicitly
     if args.packages:
-        packages_to_check = list(spack.repo.get(pkg) for pkg in args.packages)
-    else:
-        packages_to_check = spack.repo.path.all_packages()
+        packages_to_check += list(spack.repo.get(pkg) for pkg in args.packages)
+
+    # If the list of packages is empty, search for every possible package
+    if not packages_to_check:
+        packages_to_check += spack.repo.path.all_packages()
 
     pkg_to_entries = _get_external_packages(packages_to_check)
     new_entries = _update_pkg_config(

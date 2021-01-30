@@ -31,6 +31,8 @@ class PkgConfig(AutotoolsPackage):
 
     parallel = False
 
+    tags = ['dev-tools']
+
     executables = ['^pkg-config$']
 
     @classmethod
