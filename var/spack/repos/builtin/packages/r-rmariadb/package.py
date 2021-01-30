@@ -27,3 +27,7 @@ class RRmariadb(RPackage):
 
     # non-R dependencies
     depends_on('mariadb-client')
+
+    def setup_build_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH',
+                         self.spec['mariadb-client'].prefix.lib.mariadb)
