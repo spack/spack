@@ -19,6 +19,8 @@ class ParallelNetcdf(AutotoolsPackage):
 
     maintainers = ['skosukhin']
 
+    test_requires_compiler = True
+
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
             url = "https://parallel-netcdf.github.io/Release/pnetcdf-{0}.tar.gz"
@@ -169,3 +171,34 @@ class ParallelNetcdf(AutotoolsPackage):
             args.append('--enable-burst-buffering')
 
         return args
+
+    examples_src_dir = 'examples/CXX'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        with working_dir(test_dir, create=False):
+            # pnetcdf has many examples to serve as a suitable smoke check.
+            # column_wise was chosen based on the E4S test suite. Other
+            # examples should work as well.
+            test_exe = 'column_wise'
+            options = [
+                '-I{0}'.format(self.prefix.include),
+                '{0}.cpp'.format(test_exe),
+                '-o',
+                test_exe,
+                '-L{0}'.format(self.prefix.lib),
+                '-lpnetcdf']
+            reason = 'test: compiling and linking pnetcdf example'
+            self.run_test(self.spec['mpi'].mpicxx, options, [],
+                          installed=False, purpose=reason)
+            mpirun = join_path(self.spec['mpi'].prefix.bin, 'mpirun')
+            self.run_test(mpirun, ['-np', '4', test_exe], [],
+                          installed=False,
+                          purpose='test: pnetcdf smoke test')
+            self.run_test('rm', ['-f', test_exe])
