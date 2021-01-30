@@ -13,13 +13,12 @@ class PyBeancount(PythonPackage):
        interface.."""
 
     homepage = "http://furius.ca/beancount/"
-    pypi     = "https://pypi.io/packages/source/b/beancount/beancount-2.3.3.tar.gz"
+    pypi     = "beancount/beancount-2.3.3.tar.gz"
 
     version('2.3.3', sha256='d9a29839ea867d1dda7af1f4bf5d3959aa7c1574cd4a0bc86f69ee64c555c71c')
 
-    depends_on('python@3.5:',        type=('build', 'run'))
+    depends_on('python@3.6:',        type=('build', 'run'))
     depends_on('py-setuptools',      type=('build'))
-    depends_on('py-pytest',          type=('test', 'run'))
 
     depends_on('py-bottle',          type=('build', 'run'))
     depends_on('py-lxml+htmlsoup',   type=('build', 'run'))
