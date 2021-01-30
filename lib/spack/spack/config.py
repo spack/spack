@@ -859,6 +859,9 @@ def _config(cfg_paths=None, install_tree=None):
                 # unexpected, and the latter will likely result in serious
                 # issues (e.g. missing dependencies for locally-installed
                 # packages)
+                if install_tree not in shared_install_trees:
+                    tty.die("No default install tree found, install tree must be"
+                            " specified with `spack --install-tree [tree-name]`")
                 pass
             tty.die("The specified install tree does not exist")
 
