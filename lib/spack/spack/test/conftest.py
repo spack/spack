@@ -382,19 +382,12 @@ def use_store(store):
     spack.store.store = saved
 
 
-@contextlib.contextmanager
-def use_repo(repo):
-    """Context manager to swap out the global Spack repo path."""
-    with spack.repo.swap(repo):
-        yield
-
-
 #
 # Test-specific fixtures
 #
 @pytest.fixture(scope='session')
 def mock_repo_path():
-    yield spack.repo.RepoPath(spack.paths.mock_packages_path)
+    yield spack.repo.Repo(spack.paths.mock_packages_path)
 
 
 def _pkg_install_fn(pkg, spec, prefix):
@@ -411,15 +404,15 @@ def mock_pkg_install(monkeypatch):
 @pytest.fixture(scope='function')
 def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
-    with use_repo(mock_repo_path):
-        yield mock_repo_path
+    with spack.repo.use_repositories(mock_repo_path) as mock_repo:
+        yield mock_repo
 
 
 @pytest.fixture(scope='function')
 def mutable_mock_repo(mock_repo_path):
     """Function-scoped mock packages, for tests that need to modify them."""
-    mock_repo_path = spack.repo.RepoPath(spack.paths.mock_packages_path)
-    with use_repo(mock_repo_path):
+    mock_repo = spack.repo.Repo(spack.paths.mock_packages_path)
+    with spack.repo.use_repositories(mock_repo) as mock_repo_path:
         yield mock_repo_path
 
 
@@ -643,7 +636,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
     if not os.path.exists(str(store_cache.join('.spack-db'))):
         with use_configuration(mock_configuration):
             with use_store(store):
-                with use_repo(mock_repo_path):
+                with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
         store_path.copy(store_cache, mode=True, stat=True)
 
@@ -673,7 +666,7 @@ def mutable_mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
     if not os.path.exists(str(store_cache.join('.spack-db'))):
         with use_configuration(mock_configuration):
             with use_store(store):
-                with use_repo(mock_repo_path):
+                with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
         store_path.copy(store_cache, mode=True, stat=True)
 
@@ -1249,8 +1242,7 @@ repo:
     namespace: mock_test_repo
 """)
 
-    repo = spack.repo.RepoPath(str(repodir))
-    with spack.repo.swap(repo):
+    with spack.repo.use_repositories(str(repodir)) as repo:
         yield repo, repodir
 
     shutil.rmtree(str(repodir))

@@ -10,7 +10,7 @@ import pytest
 
 import spack.main
 import spack.modules
-from spack.test.conftest import use_store, use_configuration, use_repo
+from spack.test.conftest import use_store, use_configuration
 
 module = spack.main.SpackCommand('module')
 
@@ -23,7 +23,7 @@ def ensure_module_files_are_there(
     module = spack.main.SpackCommand('module')
     with use_store(mock_store):
         with use_configuration(mock_configuration):
-            with use_repo(mock_repo_path):
+            with spack.repo.use_repositories(mock_repo_path):
                 module('tcl', 'refresh', '-y')
 
 
