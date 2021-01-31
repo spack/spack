@@ -1091,6 +1091,7 @@ class Spec(object):
         # This attribute holds the original build copy of the spec if it is
         # deployed differently than it was built. None signals that the spec
         # is deployed "as built."
+        # Build spec should be the actual build spec unless marked dirty.
         self.build_spec = None
 
         if isinstance(spec_like, six.string_types):
@@ -1487,6 +1488,7 @@ class Spec(object):
         return b32_hash
 
     def _cached_hash(self, hash, length=None):
+        # 
         """Helper function for storing a cached hash on the spec.
 
         This will run _spec_hash() with the deptype and package_hash
@@ -2547,6 +2549,8 @@ class Spec(object):
         Only for internal use -- client code should use "concretize"
         unless there is a need to force a spec to be concrete.
         """
+        # if set to false, clear out all hashes (set to None or remove attr)
+        # may need to change references to respect None
         for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
@@ -4235,86 +4239,42 @@ class Spec(object):
 
         # Multiple unique specs with the same name will collide, so the
         # _dependents of these specs should not be trusted.
-        self_nodes = dict((s.name, s.copy(deps=False)) \
-            for s in self.traverse())
-        other_nodes = dict((s.name, s.copy(deps=False)) \
-            for s in other.traverse())
+        # Variants may also be ignored here for now...
 
-        names = other_nodes.copy()
-        names = names.update(self_nodes)
-        print(names)
+        if transitive:
+            self_nodes = dict((s.name, s.copy(deps=False)) \
+                for s in self.traverse(root=True) if s.name not in other)
+            other_nodes = dict((s.name, s.copy(deps=False)) \
+                for s in other.traverse(root=True))
+        else:
+            # If we're not doing a transitive splice, then we only want the
+            # root of other.
+            self_nodes = dict((s.name, s.copy(deps=False)) \
+                for s in self.traverse(root=True) if s.name != other.name)
+            other_nodes = {other.name: other.copy(deps=False)}
         
-        for name in names:
-            self_node = self_nodes.get(name)
-            other_node = other_nodes.get(name)
+        nodes = other_nodes.copy()
+        nodes.update(self_nodes)
 
-            if not other_node:
-                # hook everything up like self[name]
-                pass
+        for name in nodes:
+            if name in self_nodes:
+                dependencies = self[name]._dependencies 
+                for dep in dependencies:
+                    nodes[name]._add_dependency(nodes[dep], 
+                                                dependencies[dep].deptypes)
+                if any(dep not in self_nodes for dep in dependencies):
+                    nodes[name].build_spec = self[name]
+            else:
+                dependencies = other[name]._dependencies
+                for dep in dependencies:
+                    nodes[name]._add_dependency(nodes[dep], 
+                                                dependencies[dep].deptypes)
+                if any(dep not in other_nodes for dep in dependencies):
+                    nodes[name].build_spec = other[name]
 
-            if not self_node:
-                pass
-
-                # hook everything up like other[name]
-
-            # look at self.edges and other.edges
-            # foreach edge: if edge exists in self[name], hook up like self
-            #               else hook up like  other[name]
-
-        # hook up the build specs
-        # find other.name in the new spec:
-        #    self_nodes[self.name] is the root
-        #    self_nodes[self.name][other.name] is new spliced spec
-        # make a copy of self for the build spec
-        # for all ancestors of spliced spec:
-        #    ancestor.build_spec = copy_of_self[ancestor.name]
-
-        # if transitive:
-        #     other_deps = []
-        #     for other_dep in other.traverse(order='pre', root=True):
-        #         other_deps.append(other_dep)
-        # else:
-        #     other_deps = [other]
-
-        # target_direct_deps = []
-        # for direct_dep in self.dependencies(deptype=('link', 'run')):
-        #     target_direct_deps.append(direct_dep.name)
-
-        # for target_dep in self.traverse(order='pre'):
-        #     for other_dep in other_deps:
-        #         if target_dep.name == other_dep.name:
-        #             target_dep.build_spec = target_dep.copy()
-        #             if not transitive: 
-        #                 other_dep.build_spec = other_dep.copy()
-
-
-        #             if other_dep.name in target_direct_deps:  # root case
-        #                 # Use appropriate method instead; save old edge to 
-        #                 # preserve properties.
-        #                 old_dep = self._dependencies[target_dep.name].pop()
-        #                 if self.name in other._dependents.keys():
-        #                     del other._dependents[self.name]
-        #                 self._add_dependency(other_dep,
-        #                                      deptypes=('link', 'run'))
-
-        #             else:  # down in the DAG
-        #                 # Traverse other, not target here.
-        #                 target_dependents = target_dep.dependents()
-        #                 target_dependencies = target_dep.dependencies()
-        #                 for dependency in target_dependencies:
-        #                     if dependency.name in \
-        #                         other_dep._dependencies.keys():
-        #                         del other_dep._dependencies[dependency.name]
-        #                     other_dep._add_dependency(dependency,
-        #                                               deptypes=('link', 'run'))
-        #                 for dependent in target_dependents:
-        #                     if dependent.name in other._dependents.keys():
-        #                         del other._dependents[dependent.name]
-        #                     dependent._add_dependency(other_dep,
-        #                                               deptypes=('link', 'run'))
-        
-        # Need to clear out all cached hashes.
-        return
+        # Clear cached hashes
+        nodes[self.name]._mark_concrete(False) # check this; might not do the right thing
+        return nodes[self.name]
 
 
 class LazySpecCache(collections.defaultdict):

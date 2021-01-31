@@ -8,6 +8,10 @@
 import spack.dependency as dp
 
 
+# create a dictionary of hashes by attr name
+# confirm (assert) there is no hash with that attr already and then add to dict
+# key by attr
+
 class SpecHashDescriptor(object):
     """This class defines how hashes are generated on Spec objects.
 
@@ -22,6 +26,7 @@ class SpecHashDescriptor(object):
         self.deptype = dp.canonical_deptype(deptype)
         self.package_hash = package_hash
         self.attr = attr
+    
 
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.

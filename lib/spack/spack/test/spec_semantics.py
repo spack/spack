@@ -987,17 +987,20 @@ class TestSpecSematics(object):
 
     def test_splice(self):
         # TODO: Use a mock version of mpich that is different than the default
-        # concretization candidate for mpileaks.
-        # TODO: Test that this fails appropriately when one of the specs is not
-        # concrete.
+        # concretization candidate for mpileaks. (3.0.4?)
         # Set these two specs to have different targets.
         spec = Spec('splice-t')
-        dep = Spec('splice-h')
+        dep = Spec('splice-h+foo')
         spec.concretize()
         dep.concretize()
-        spec.splice(dep, True)
+        out = spec.splice(dep, True)
         # Traverse the spec and assert that the targets are correct.
-        assert spec.concrete
+        out.concretize()
+        assert out.concrete
+        # Can check that (the hash of the spliced splice-h) == the one from dep
+        # (Existing dag hash) 
+        # Spliced spec's dag hash should be different, but build hash should be 
+        # same as self's.
         # Also test being able to splice in different provider for a virtual
         # Example: mvapich for mpich.
         # May also want to resolve virtuals.
@@ -1031,7 +1034,6 @@ class TestSpecSematics(object):
         s = Spec('mpileaks')
         s._add_dependency(d, ())
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
-
 
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [

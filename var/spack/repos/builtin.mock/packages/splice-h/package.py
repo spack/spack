@@ -13,5 +13,9 @@ class SpliceH(AutotoolsPackage):
     url      = "http://www.example.com/splice-h-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
-    
-    depends_on('splice-z')
+
+    variant('foo', default=False, description='nope')
+    variant('bar', default=False, description='nope')
+    variant('baz', default=False, description='nope')
+
+    depends_on('splice-z', when='+foo')
