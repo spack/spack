@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
-import contextlib
 import errno
 import inspect
 import itertools
@@ -336,7 +335,7 @@ spack.config.config = spack.config._config()
 
 
 #
-# Context managers used by fixtures
+# Note on context managers used by fixtures
 #
 # Because these context managers modify global state, they should really
 # ONLY be used persistently (i.e., around yield statements) in
@@ -356,23 +355,6 @@ spack.config.config = spack.config._config()
 # these global objects, but we shouldn't module- or session-scope their
 # *USE*, or things can get really confusing.
 #
-
-@contextlib.contextmanager
-def use_configuration(config):
-    """Context manager to swap out the global Spack configuration."""
-    saved = spack.config.replace_config(config)
-
-    # Avoid using real spack configuration that has been cached by other
-    # tests, and avoid polluting the cache with spack test configuration
-    # (including modified configuration)
-    saved_compiler_cache = spack.compilers._cache_config_file
-    spack.compilers._cache_config_file = []
-
-    yield
-
-    spack.config.replace_config(saved)
-    spack.compilers._cache_config_file = saved_compiler_cache
-
 
 #
 # Test-specific fixtures
@@ -430,9 +412,7 @@ def default_config():
     This ensures we can test the real default configuration without having
     tests fail when the user overrides the defaults that we test against."""
     defaults_path = os.path.join(spack.paths.etc_path, 'spack', 'defaults')
-    defaults_scope = spack.config.ConfigScope('defaults', defaults_path)
-    defaults_config = spack.config.Configuration(defaults_scope)
-    with use_configuration(defaults_config):
+    with spack.config.use_configuration(defaults_path) as defaults_config:
         yield defaults_config
 
 
@@ -507,7 +487,7 @@ def configuration_dir(tmpdir_factory, linux_os):
 
 
 @pytest.fixture(scope='session')
-def mock_configuration(configuration_dir):
+def mock_configuration_scopes(configuration_dir):
     """Create a persistent Configuration object from the configuration_dir."""
     defaults = spack.config.InternalConfigScope(
         '_builtin', spack.config.config_defaults
@@ -518,14 +498,14 @@ def mock_configuration(configuration_dir):
         for name in ['site', 'system', 'user']]
     test_scopes.append(spack.config.InternalConfigScope('command_line'))
 
-    yield spack.config.Configuration(*test_scopes)
+    yield test_scopes
 
 
 @pytest.fixture(scope='function')
-def config(mock_configuration):
+def config(mock_configuration_scopes):
     """This fixture activates/deactivates the mock configuration."""
-    with use_configuration(mock_configuration):
-        yield mock_configuration
+    with spack.config.use_configuration(*mock_configuration_scopes) as config:
+        yield config
 
 
 @pytest.fixture(scope='function')
@@ -534,11 +514,10 @@ def mutable_config(tmpdir_factory, configuration_dir):
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
     configuration_dir.copy(mutable_dir)
 
-    cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
-          for name in ['site', 'system', 'user']])
+    scopes = [spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+              for name in ['site', 'system', 'user']]
 
-    with use_configuration(cfg):
+    with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
 
 
@@ -546,23 +525,20 @@ def mutable_config(tmpdir_factory, configuration_dir):
 def mutable_empty_config(tmpdir_factory, configuration_dir):
     """Empty configuration that can be modified by the tests."""
     mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+    scopes = [spack.config.ConfigScope(name, str(mutable_dir.join(name)))
+              for name in ['site', 'system', 'user']]
 
-    cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir.join(name)))
-          for name in ['site', 'system', 'user']])
-
-    with use_configuration(cfg):
+    with spack.config.use_configuration(*scopes) as cfg:
         yield cfg
 
 
 @pytest.fixture()
 def mock_low_high_config(tmpdir):
     """Mocks two configuration scopes: 'low' and 'high'."""
-    config = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(tmpdir.join(name)))
-          for name in ['low', 'high']])
+    scopes = [spack.config.ConfigScope(name, str(tmpdir.join(name)))
+              for name in ['low', 'high']]
 
-    with use_configuration(config):
+    with spack.config.use_configuration(*scopes) as config:
         yield config
 
 
@@ -611,7 +587,7 @@ def _store_dir_and_cache(tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
-def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
+def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes,
                _store_dir_and_cache):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
@@ -625,7 +601,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
     # If the cache does not exist populate the store and create it
     if not os.path.exists(str(store_cache.join('.spack-db'))):
-        with use_configuration(mock_configuration):
+        with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
@@ -640,8 +616,10 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
 
 @pytest.fixture(scope='function')
-def mutable_mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
-                       _store_dir_and_cache):
+def mutable_mock_store(
+        tmpdir_factory, mock_repo_path, mock_configuration_scopes,
+        _store_dir_and_cache
+):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -654,7 +632,7 @@ def mutable_mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
     # If the cache does not exist populate the store and create it
     if not os.path.exists(str(store_cache.join('.spack-db'))):
-        with use_configuration(mock_configuration):
+        with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
