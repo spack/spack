@@ -21,7 +21,7 @@ class Mpifileutils(Package):
     git      = "https://github.com/hpc/mpifileutils.git"
 
     version('develop', branch='master')
-    version('0.11.0', sha256='619dd7c7e915423ff66243f45b8d90ab63dd5b763bff17968f910c55c201ef73')
+    version('0.11',   sha256='f5dc1b39077b3c04f79b2c335c4fd80306f8c57ecfbcacbb82cf532caf02b5fd')
     version('0.10.1', sha256='4c8409ef4140f6f557d0e93f0c1267baf5d893c203b29fb7a33d9bc3c5a5d25c')
     version('0.10',   sha256='5a71a9acd9841c3c258fc0eaea942f18abcb40098714cc90462b57696c07e3c5')
     version('0.9.1',  sha256='15a22450f86b15e7dc4730950b880fda3ef6f59ac82af0b268674d272aa61c69')
