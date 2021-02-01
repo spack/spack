@@ -15,6 +15,6 @@ class PyFtfy(PythonPackage):
 
     version('5.8', sha256='51c7767f8c4b47d291fcef30b9625fb5341c06a31e6a3b627039c706c42f3720')
 
-    depends_on('python@3:', type=('build', 'run'))
+    depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-wcwidth', type=('build', 'run'))
