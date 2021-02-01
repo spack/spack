@@ -77,6 +77,9 @@ def env_activate_setup_parser(subparser):
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
     subparser.add_argument(
+        '-s', '--sourceable', action='store_true', default=False,
+        help="output a sourceable script when used with a print command")
+    subparser.add_argument(
         metavar='env', dest='activate_env',
         help='name of environment to activate')
 
@@ -110,6 +113,7 @@ def env_activate(args):
                             'activate')
     cmds = ev.activate(
         active_env, add_view=args.with_view, shell=args.shell,
+        sourceable=args.sourceable,
         prompt=env_prompt if args.prompt else None
     )
     sys.stdout.write(cmds)
