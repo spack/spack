@@ -305,3 +305,14 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    def setup_run_environment(self, env):
+        # Setup run environment if using SVN extension
+        # Libs from perl-alien-svn and apr-util are required in
+        # LD_LIBRARY_PATH
+        # TODO: extend to other platforms
+        if "+svn platform=linux" in self.spec:
+            perl_svn = self.spec['perl-alien-svn']
+            env.prepend_path('LD_LIBRARY_PATH', join_path(
+                perl_svn.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
+                'Alien', 'SVN'))

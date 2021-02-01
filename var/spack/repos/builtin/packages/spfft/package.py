@@ -17,6 +17,7 @@ class Spfft(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('1.0.1', sha256='f8ab706309776cfbd2bfd8e29a6a9ffb5c8f3cd62399bf82db1e416ae5c490c8')
     version('1.0.0', sha256='bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee')
     version('0.9.13', sha256='5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef')
     version('0.9.12', sha256='1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc')
