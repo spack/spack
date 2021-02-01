@@ -556,9 +556,11 @@ class EnvironmentModifications(object):
                 else:
                     if sourceable:
                         if old:
-                            new_env[name] = new_env[name].replace(old, "${}".format(name))
+                            new_env[name] = new_env[name].replace(
+                                old, "${0}".format(name))
                         else:
-                            new_env[name] = "{}:${}".format(new_env[name], name)
+                            new_env[name] = "{0}:${1}".format(
+                                new_env[name], name)
                         # no `cmd_quote` here as this is sourced and variable
                         # expansion does not happen in the quotes
                         cmds += _shell_set_strings[shell].format(
