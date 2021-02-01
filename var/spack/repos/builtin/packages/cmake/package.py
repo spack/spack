@@ -14,7 +14,7 @@ class Cmake(Package):
     url = 'https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz'
     maintainers = ['chuckatkins']
 
-    tags = ['dev-tools']
+    tags = ['build-tools']
 
     executables = ['^cmake$']
 

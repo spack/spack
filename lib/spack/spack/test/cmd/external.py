@@ -255,7 +255,7 @@ def test_use_tags_for_detection(mock_executable, mutable_config, monkeypatch):
     monkeypatch.setenv('PATH', prefix)
 
     # Test that we detect specs
-    output = external('find', '-t', 'dev-tools')
+    output = external('find', '-t', 'build-tools')
     assert 'The following specs have been' in output
     assert 'cmake' in output
     assert 'openssl' not in output
