@@ -38,3 +38,6 @@ class Cbflib(MakefilePackage):
 
     def build(self, spec, prefix):
         pass
+
+    def install(self, spec, prefix):
+        make('install', parallel = False)
