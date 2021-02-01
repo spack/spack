@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2012-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,11 @@ class Ldak(Package):
     depends_on('blas')
     depends_on('lapack')
     depends_on('mkl', when='+mkl')
+
+    conflicts('target=aarch64:', msg='libspot is avilable linux x86_64 only')
+    conflicts('target=ppc64:', msg='libspot is avilable linux x86_64 only')
+    conflicts('target=ppc64le:', msg='libspot is avilable linux x86_64 only')
+    conflicts('platform=darwin', msg='libspot is avilable linux x86_64 only')
 
     def setup_build_environment(self, env):
         env.append_flags('LDLIBS', '-lm')
