@@ -13,6 +13,8 @@ import code
 import os
 import signal
 import traceback
+import sys
+import pdb
 
 
 def debug_handler(sig, frame):
@@ -32,3 +34,31 @@ def debug_handler(sig, frame):
 def register_interrupt_handler():
     """Print traceback and enter an interpreter on Ctrl-C"""
     signal.signal(signal.SIGINT, debug_handler)
+
+
+# Subclass of the debugger to keep readline working.  See
+# https://stackoverflow.com/questions/4716533/how-to-attach-debugger-to-a-python-subproccess/23654936
+class ForkablePdb(pdb.Pdb):
+
+    _original_stdin_fd = sys.stdin.fileno()
+    _original_stdin = None
+
+    def __init__(self, stdout_fd=None, stderr_fd=None):
+        pdb.Pdb.__init__(self, nosigint=True)
+        self._stdout_fd = stdout_fd
+        self._stderr_fd = stderr_fd
+
+    def _cmdloop(self):
+        current_stdin = sys.stdin
+        try:
+            if not self._original_stdin:
+                self._original_stdin = os.fdopen(self._original_stdin_fd)
+            sys.stdin = self._original_stdin
+            if self._stdout_fd is not None:
+                os.dup2(self._stdout_fd, sys.stdout.fileno())
+                os.dup2(self._stdout_fd, self.stdout.fileno())
+            if self._stderr_fd is not None:
+                os.dup2(self._stderr_fd, sys.stderr.fileno())
+            self.cmdloop()
+        finally:
+            sys.stdin = current_stdin
