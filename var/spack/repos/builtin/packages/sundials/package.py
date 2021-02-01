@@ -125,6 +125,10 @@ class Sundials(CMakePackage):
     variant('generic-math', default=True,
             description='Use generic (std-c) math libraries on unix systems')
 
+    # Monitoring
+    variant('monitoring', default=False,
+            description='Build with simulation monitoring capabilities')
+
     # ==========================================================================
     # Conflicts
     # ==========================================================================
@@ -141,6 +145,7 @@ class Sundials(CMakePackage):
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
     conflicts('+trilinos',      when='@:4.1.0')
+    conflicts('+monitoring',    when='@:5.5.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -262,6 +267,11 @@ class Sundials(CMakePackage):
         # generic (std-c) math libraries
         args.extend([
             '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
+        ])
+
+        # Monitoring
+        args.extend([
+            '-DSUNDIALS_BUILD_WITH_MONITORING=%s' % on_off('+monitoring')
         ])
 
         # parallelism
