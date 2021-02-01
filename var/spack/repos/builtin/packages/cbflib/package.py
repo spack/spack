@@ -23,7 +23,7 @@ class Cbflib(MakefilePackage):
     patch('cbf_int.patch')
 
     def setup_build_environment(self, env):
-        ce = Executable(spack_cc)
+        ce = Executable(self.compiler.cc)
         ce('-E', join_path(os.path.dirname(__file__), "checkint.c"),
            output=str, error=str, fail_on_error=False)
         if ce.returncode != 0:
