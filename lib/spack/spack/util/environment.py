@@ -536,7 +536,7 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(os.environ)
 
-    def shell_modifications(self, shell='sh'):
+    def shell_modifications(self, shell='sh', sourceable=False):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
         new_env = os.environ.copy()
@@ -554,8 +554,18 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(
-                        name, cmd_quote(new_env[name]))
+                    if sourceable:
+                        if old:
+                            new_env[name] = new_env[name].replace(old, f"${name}")
+                        else:
+                            new_env[name] = f"{new_env[name]}:${name}"
+                        # no `cmd_quote` here as this is sourced and variable
+                        # expansion does not happen in the quotes
+                        cmds += _shell_set_strings[shell].format(
+                            name, new_env[name])
+                    else:
+                        cmds += _shell_set_strings[shell].format(
+                            name, cmd_quote(new_env[name]))
         return cmds
 
     @staticmethod
