@@ -31,8 +31,6 @@ class MiopenHip(CMakePackage):
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
     depends_on('zlib', type='link', when='@3.9.0:')
-    conflicts('^boost@1.74.0')
-    conflicts('^boost@1.75.0')
 
     patch('0001-Add-rocm-path-and-rocm-device-lib-path-flags.patch', when='@3.9.0:')
 

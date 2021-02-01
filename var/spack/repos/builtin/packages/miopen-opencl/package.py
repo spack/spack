@@ -30,8 +30,6 @@ class MiopenOpencl(CMakePackage):
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
-    conflicts('^boost@1.74.0')
-    conflicts('^boost@1.75.0')
 
     depends_on('miopengemm@1.1.6', type='link', when='@3.5.0')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
