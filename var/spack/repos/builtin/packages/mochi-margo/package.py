@@ -1,4 +1,4 @@
-# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,10 +6,9 @@
 from spack import *
 
 
-class Margo(AutotoolsPackage):
+class MochiMargo(AutotoolsPackage):
     """A library that provides Argobots bindings to the Mercury RPC
-    implementation.  This name will be deprecated soon; please use the
-    mochi-margo package instead."""
+    implementation."""
 
     homepage = 'https://xgitlab.cels.anl.gov/sds/margo'
     git = 'https://xgitlab.cels.anl.gov/sds/margo.git'
