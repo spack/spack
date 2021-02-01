@@ -35,6 +35,7 @@ import spack.paths
 import spack.platforms.test
 import spack.repo
 import spack.stage
+import spack.store
 import spack.util.executable
 import spack.util.gpg
 import spack.subprocess_context
@@ -373,15 +374,6 @@ def use_configuration(config):
     spack.compilers._cache_config_file = saved_compiler_cache
 
 
-@contextlib.contextmanager
-def use_store(store):
-    """Context manager to swap out the global Spack store."""
-    saved = spack.store.store
-    spack.store.store = store
-    yield
-    spack.store.store = saved
-
-
 #
 # Test-specific fixtures
 #
@@ -630,12 +622,11 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
     """
     store_path, store_cache = _store_dir_and_cache
-    store = spack.store.Store(str(store_path))
 
     # If the cache does not exist populate the store and create it
     if not os.path.exists(str(store_cache.join('.spack-db'))):
         with use_configuration(mock_configuration):
-            with use_store(store):
+            with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
         store_path.copy(store_cache, mode=True, stat=True)
@@ -660,12 +651,11 @@ def mutable_mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
 
     """
     store_path, store_cache = _store_dir_and_cache
-    store = spack.store.Store(str(store_path))
 
     # If the cache does not exist populate the store and create it
     if not os.path.exists(str(store_cache.join('.spack-db'))):
         with use_configuration(mock_configuration):
-            with use_store(store):
+            with spack.store.use_store(str(store_path)) as store:
                 with spack.repo.use_repositories(mock_repo_path):
                     _populate(store.db)
         store_path.copy(store_cache, mode=True, stat=True)
