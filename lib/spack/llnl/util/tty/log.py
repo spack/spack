@@ -564,7 +564,7 @@ class log_output(object):
         sys.stdout.flush()
         sys.stderr.flush()
 
-        # Now do the actual output rediction.
+        # Now do the actual output redirection.
         self.use_fds = _file_descriptors_work(sys.stdout, sys.stderr)
         if self.use_fds:
             # We try first to use OS-level file descriptors, as this
@@ -725,7 +725,8 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
     # write_fd to terminate the reading loop, so we close the file descriptor
     # here. Forking is the process spawning method everywhere except Mac OS
     # for Python >= 3.8 and on Windows
-    if sys.version_info < (3, 8) or sys.platform != 'darwin':
+    if sys.version_info < (3, 8) \
+            or sys.platform not in ['darwin', 'cygwin']:
         os.close(write_fd)
 
     # Use line buffering (3rd param = 1) since Python 3 has a bug
