@@ -119,9 +119,14 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
+                try:
+                    os.rmdir(path)
+                except FileNotFoundError:
+                    # already deleted, continue with parent
+                    pass
+                except OSError:
+                    # directory wasn't empty, done
                     return
-                os.rmdir(path)
             path = os.path.dirname(path)
 
 
