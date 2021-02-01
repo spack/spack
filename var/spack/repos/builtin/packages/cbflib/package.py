@@ -40,4 +40,4 @@ class Cbflib(MakefilePackage):
         pass
 
     def install(self, spec, prefix):
-        make('install', parallel = False)
+        make('install', parallel=False)
