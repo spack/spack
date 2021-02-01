@@ -23,6 +23,7 @@ install trees to define their own layouts with some per-tree
 configuration.
 
 """
+import contextlib
 import os
 import re
 import six
@@ -227,3 +228,28 @@ def _construct_upstream_dbs_from_install_roots(
         accumulated_upstream_dbs.insert(0, next_db)
 
     return accumulated_upstream_dbs
+
+
+@contextlib.contextmanager
+def use_store(store_or_path):
+    """Use the store passed as argument within the context manager.
+
+    Args:
+        store_or_path: either a Store object ot a path to where the store resides
+
+    Returns:
+        Store object associated with the context manager's store
+    """
+    global store
+
+    # Normalize input arguments
+    temporary_store = store_or_path
+    if not isinstance(store_or_path, Store):
+        temporary_store = Store(store_or_path)
+
+    # Swap the store with the one just constructed and return it
+    original_store, store = store, temporary_store
+    yield temporary_store
+
+    # Restore the original store
+    store = original_store
