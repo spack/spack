@@ -27,7 +27,7 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     # fmt: off
-    version('master', branch='master')
+    version('main', branch='main')
     version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
     version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
     version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
