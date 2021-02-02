@@ -16,14 +16,14 @@ class Openrasmol(MakefilePackage):
     version('2.7.5.2', sha256='b975e6e69d5c6b161a81f04840945d2f220ac626245c61bcc6c56181b73a5718')
 
     depends_on('imake', type='build')
-    depends_on('libxext')
-    depends_on('libxi')
+    depends_on('libxext', type='link')
+    depends_on('libxi', type='link')
 
-    depends_on('cbflib')
-    depends_on('cqrlib')
-    depends_on('cvector')
-    depends_on('neartree')
-    depends_on('xforms@1.0.91')
+    depends_on('cbflib@0.9.2', type='link')
+    depends_on('cqrlib@1.1.2', type='link')
+    depends_on('cvector@1.0.3', type='link')
+    depends_on('neartree@3.1', type='link')
+    depends_on('xforms@1.0.91', type='link')
 
     patch('rasmol_noqa.patch')
     patch('rasmol_imake.patch')
@@ -51,3 +51,12 @@ class Openrasmol(MakefilePackage):
         with working_dir('src'):
             bash = which('bash')
             bash('./rasmol_install.sh', '--prefix={0}'.format(prefix))
+
+    def test(self):
+        testdir = self.test_suite.current_test_data_dir
+        opts = []
+        opts.append('-insecure')
+        opts.append('-script')
+        opts.append(join_path(testdir, 'test.rsc'))
+        opts.append(join_path(self.prefix.sample, '1crn.pdb'))
+        self.run_test('rasmol', options=opts)
