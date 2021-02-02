@@ -18,7 +18,9 @@ class Sensei(CMakePackage):
     git      = "https://gitlab.kitware.com/sensei/sensei.git"
     maintainers = ['sshudler']
 
-    version('master', branch='master')
+    version('develop', branch='develop')
+    version('3.2.1', sha256='8cde9ac5313e6c03fd793d24a6f285b60cca14cacfc83931f11d878163ee9d5b')
+    version('3.2.0', sha256='fe4fe294c17e469bfd1824130648a7d25b1fa771904b5c5edc37b820d090e224')
     version('3.1.0', sha256='9a3e6d0d5bb6170ee666586435434da1708b3876fd448b9d41142571ed9da939')
     version('3.0.0', sha256='0aabbea03ade9947c88fc0aa6d3cbaf3c8267e8504e384a041445678a95e58eb')
     version('2.1.1', sha256='8a27ebf133fef00a59e4b29433762e6560bf20214072de7808836eb668bb5687')
@@ -41,12 +43,15 @@ class Sensei(CMakePackage):
     # Paraview 6 cannot be used since it requires Python 3. Starting from
     # version 3, SENSEI supports Python 3.
     depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst")
-    depends_on("paraview@5.6:+python3+mpi+hdf5", when="@3: +catalyst")
+    depends_on("paraview@5.6:5.7+python3+mpi+hdf5", when="@3:3.2.1 +catalyst")
+    depends_on("paraview+mpi+python3+hdf5", when="+catalyst")
     depends_on("visit", when="+libsim")
     depends_on("vtk", when="+libsim")
     depends_on("vtk", when="~libsim ~catalyst")
+    depends_on("vtk+python", when="~libsim ~catalyst+python")
     depends_on("adios", when="+adios")
-    depends_on("hdf5", when="+hdf5")
+    # VTK needs +hl and currently spack cannot resolve +hl and ~hl
+    depends_on("hdf5+hl", when="+hdf5")
     # SENSEI 3 supports Python 3, earlier versions upport only Python 2
     depends_on("python@:2.7.16", when="@:2.1.1 +python", type=('build', 'run'))
     depends_on("python@3:", when="@3: +python", type=('build', 'run'))
@@ -54,7 +59,7 @@ class Sensei(CMakePackage):
     depends_on("py-mpi4py", when="+python", type=('build', 'run'))
     depends_on("swig", when="+python", type='build')
     depends_on('cmake@3.6:', when="@3:", type='build')
-
+    depends_on('pugixml')
     # Can have either LibSim or Catalyst, but not both
     conflicts('+libsim', when='+catalyst')
     # hdf5 variant is available only for SENSEI 3
@@ -67,6 +72,7 @@ class Sensei(CMakePackage):
         args = [
             '-DCMAKE_CXX_STANDARD={0}'.format(spec.variants['cxxstd'].value),
             '-DCMAKE_C_STANDARD=11',
+            '-DSENSEI_USE_EXTERNAL_pugixml:BOOL=ON',
             '-DCMAKE_POSITION_INDEPENDENT_CODE=ON',
             '-DENABLE_SENSEI:BOOL={0}'.format(
                 'ON' if '+sencore' in spec else 'OFF')
