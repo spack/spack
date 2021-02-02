@@ -39,7 +39,8 @@ _cache_config_file = []
 _compiler_cache = {}
 
 _compiler_to_pkg = {
-    'clang': 'llvm+clang'
+    'clang': 'llvm+clang',
+    'oneapi': 'intel-oneapi-compilers'
 }
 
 
