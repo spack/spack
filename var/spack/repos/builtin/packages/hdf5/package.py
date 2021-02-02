@@ -78,9 +78,6 @@ class Hdf5(CMakePackage):
     conflicts('api=v18', when='@1.6:1.6.99', msg='v18 is not compatible with this release')
 
     depends_on('cmake@3.12:')
-    depends_on('readline')
-    depends_on('gdbm')
-    depends_on('perl')
 
     depends_on('mpi', when='+mpi')
     depends_on('java', type=('build', 'run'), when='+java')
