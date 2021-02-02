@@ -41,7 +41,8 @@ _cache_config_file = []
 _compiler_cache = {}  # type: Dict[str, spack.compiler.Compiler]
 
 _compiler_to_pkg = {
-    'clang': 'llvm+clang'
+    'clang': 'llvm+clang',
+    'oneapi': 'intel-oneapi-compilers'
 }
 
 
