@@ -45,8 +45,8 @@ class Sensei(CMakePackage):
     depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst")
     depends_on("paraview@5.6:5.7+python3+mpi+hdf5", when="@3:3.2.1 +catalyst")
     depends_on("paraview+mpi+python3+hdf5", when="+catalyst")
-    depends_on("visit", when="+libsim")
-    depends_on("vtk", when="+libsim")
+    depends_on("visit~gui~python", when="+libsim")
+    depends_on("vtk@8.1.0:8.1.2", when="+libsim")
     depends_on("vtk", when="~libsim ~catalyst")
     depends_on("vtk+python", when="~libsim ~catalyst+python")
     depends_on("adios", when="+adios")
@@ -93,7 +93,8 @@ class Sensei(CMakePackage):
         if '+libsim' in spec:
             args.extend([
                 '-DENABLE_LIBSIM:BOOL=ON',
-                '-DVISIT_DIR:PATH={0}'.format(spec['visit'].prefix),
+                '-DVISIT_DIR:PATH={}/current/{}-{}'.format(
+                    spec['visit'].prefix, spec.platform, spec.target.family),
                 '-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix)
             ])
             vtk_dir_needed = False
