@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,18 +10,17 @@ class OpenpmdApi(CMakePackage):
     """API for easy reading and writing of openPMD files"""
 
     homepage = "http://www.openPMD.org"
+    url      = "https://github.com/openPMD/openPMD-api/archive/0.13.1.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 
     maintainers = ['ax3l']
 
     version('dev', branch='dev')
+    version('0.13.1', sha256='81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7')
+    version('0.13.0', sha256='97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0')  # C++14 required
+    # C++11 up until here
     version('0.12.0',  tag='0.12.0-alpha')
     version('0.11.1',  tag='0.11.1-alpha')
-    version('0.11.0',  tag='0.11.0-alpha')
-    version('0.10.3',  tag='0.10.3-alpha')
-    version('0.10.2',  tag='0.10.2-alpha')
-    version('0.10.1',  tag='0.10.1-alpha')
-    version('0.10.0',  tag='0.10.0-alpha')
 
     variant('shared', default=True,
             description='Build a shared version of the library')
@@ -36,7 +35,7 @@ class OpenpmdApi(CMakePackage):
     variant('python', default=False,
             description='Enable Python bindings')
 
-    depends_on('cmake@3.12.0:', type='build')
+    depends_on('cmake@3.15.0:', type='build')
     depends_on('mpark-variant@1.4.0:')
     depends_on('catch2@2.6.1:', type='test')
     depends_on('mpi@2.3:', when='+mpi')  # might become MPI 3.0+
@@ -50,17 +49,13 @@ class OpenpmdApi(CMakePackage):
     depends_on('adios2@2.6.0:', when='+adios2 @0.12.0:')
     depends_on('adios2@2.5.0: ~mpi', when='~mpi +adios2')
     depends_on('adios2@2.5.0: +mpi', when='+mpi +adios2')
-    depends_on('nlohmann-json@3.7.0:')
-    depends_on('py-pybind11@2.3.0:', when='+python', type='link')
+    depends_on('nlohmann-json@3.9.1:')
+    depends_on('py-pybind11@2.6.1:', when='+python', type='link')
     depends_on('py-numpy@1.15.1:', when='+python', type=['test', 'run'])
     depends_on('py-mpi4py@2.1.0:', when='+python +mpi', type=['test', 'run'])
-    depends_on('python@3.5:', when='+python', type=['link', 'test', 'run'])
+    depends_on('python@3.6:', when='+python', type=['link', 'test', 'run'])
 
     extends('python', when='+python')
-
-    # Fix breaking HDF5 1.12.0 API
-    # https://github.com/openPMD/openPMD-api/pull/696
-    patch('hdf5-1.12.0.patch', when='@:0.11.0 +hdf5')
 
     def cmake_args(self):
         spec = self.spec
@@ -89,8 +84,12 @@ class OpenpmdApi(CMakePackage):
         # switch internally shipped third-party libraries for spack
         if spec.satisfies('+python'):
             args.append('-DopenPMD_USE_INTERNAL_PYBIND11:BOOL=OFF')
-            args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
-                        self.spec['python'].command.path))
+            if spec.version >= Version('0.13.0'):
+                args.append('-DPython_ROOT_DIR:FILEPATH={0}'.format(
+                            self.spec['python'].prefix))
+            else:
+                args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
+                            self.spec['python'].command.path))
 
         args.extend([
             '-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF',

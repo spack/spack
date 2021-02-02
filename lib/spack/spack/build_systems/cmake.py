@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import inspect
 import os
 import platform
 import re
+from typing import List  # novm
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir
@@ -74,7 +75,7 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
-    build_targets = []
+    build_targets = []  # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']
@@ -325,13 +326,20 @@ class CMakePackage(PackageBase):
                                                                libs_flags))
 
     @property
+    def build_dirname(self):
+        """Returns the directory name to use when building the package
+
+        :return: name of the subdirectory for building the package
+        """
+        return 'spack-build-%s' % self.spec.dag_hash(7)
+
+    @property
     def build_directory(self):
         """Returns the directory to use when building the package
 
         :return: directory where to build the package
         """
-        dirname = 'spack-build-%s' % self.spec.dag_hash(7)
-        return os.path.join(self.stage.path, dirname)
+        return os.path.join(self.stage.path, self.build_dirname)
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to

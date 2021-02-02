@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyFastdtw(PythonPackage):
     complexity."""
 
     homepage = "https://github.com/slaypni/fastdtw"
-    url      = "https://pypi.io/packages/source/f/fastdtw/fastdtw-0.3.4.tar.gz"
+    pypi = "fastdtw/fastdtw-0.3.4.tar.gz"
 
     version('0.3.4', sha256='2350fa6ec36bcad186eaf81f46eff35181baf04e324f522de8aeb43d0243f64f')
 

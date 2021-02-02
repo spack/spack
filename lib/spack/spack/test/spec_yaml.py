@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ YAML format preserves DAG information in the spec.
 import ast
 import inspect
 import os
-
-from collections import Iterable, Mapping
+import sys
 
 import pytest
 
@@ -27,6 +26,12 @@ from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
 from spack.util.mock_package import MockPackageMultiRepo
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Iterable, Mapping  # novm
+else:
+    from collections import Iterable, Mapping
 
 
 def check_yaml_round_trip(spec):

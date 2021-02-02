@@ -1,15 +1,14 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class BerkeleyDb(AutotoolsPackage):
     """Oracle Berkeley DB"""
 
     homepage = "https://www.oracle.com/database/technologies/related/berkeleydb.html"
+    # URL must remain http:// so Spack can bootstrap curl
     url      = "http://download.oracle.com/berkeley-db/db-18.1.40.tar.gz"
 
     version("18.1.40", sha256="0cecb2ef0c67b166de93732769abdeba0555086d51de1090df325e18ee8da9c8")
@@ -29,6 +28,8 @@ class BerkeleyDb(AutotoolsPackage):
             filter_file(r'gsg_db_server', '', 'dist/Makefile.in')
 
     def configure_args(self):
+        spec = self.spec
+
         config_args = [
             '--disable-static',
             '--enable-cxx',
@@ -41,9 +42,22 @@ class BerkeleyDb(AutotoolsPackage):
             '--with-repmgr-ssl=no',
         ]
 
-        # The default glibc provided by CentOS 7 does not provide proper
-        # atomic support when using the NVIDIA compilers
-        if self.spec.satisfies('%nvhpc os=centos7'):
+        # The default glibc provided by CentOS 7 and Red Hat 8 does not provide
+        # proper atomic support when using the NVIDIA compilers
+        if (spec.satisfies('%nvhpc')
+                and (spec.satisfies('os=centos7') or spec.satisfies('os=rhel8'))):
             config_args.append('--disable-atomicsupport')
 
         return config_args
+
+    def test(self):
+        """Perform smoke tests on the installed package binaries."""
+        exes = [
+            'db_checkpoint', 'db_deadlock', 'db_dump', 'db_load',
+            'db_printlog', 'db_stat', 'db_upgrade', 'db_verify'
+        ]
+        for exe in exes:
+            reason = 'test version of {0} is {1}'.format(exe,
+                                                         self.spec.version)
+            self.run_test(exe, ['-V'], [self.spec.version.string],
+                          installed=True, purpose=reason, skip_missing=True)

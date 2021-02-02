@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
+from spack.installer import PackageInstaller
+import spack.util.path
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -467,7 +469,7 @@ class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
         self.base = base_path
-        self.root = root
+        self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
@@ -684,7 +686,7 @@ class Environment(object):
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name)
+        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
         user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
                               self.spec_lists.copy())
         self.spec_lists[user_speclist_name] = user_specs
@@ -706,10 +708,11 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        self.concretization = configuration.get('concretization')
+        # default concretization to separately
+        self.concretization = configuration.get('concretization', 'separately')
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration['develop']
+        self.dev_specs = configuration.get('develop', {})
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
@@ -1371,24 +1374,7 @@ class Environment(object):
 
         return ret
 
-    def install(self, user_spec, concrete_spec=None, **install_args):
-        """Install a single spec into an environment.
-
-        This will automatically concretize the single spec, but it won't
-        affect other as-yet unconcretized specs.
-        """
-        concrete = self.concretize_and_add(user_spec, concrete_spec)
-
-        self._install(concrete, **install_args)
-
-    def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        package = spec.package
-
-        install_args['overwrite'] = install_args.get(
-            'overwrite', []) + self._get_overwrite_specs()
-        package.do_install(**install_args)
-
+    def _install_log_links(self, spec):
         if not spec.external:
             # Make sure log directory exists
             log_path = self.log_path
@@ -1402,19 +1388,22 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
-    def install_all(self, args=None):
+    def install_all(self, args=None, **install_args):
         """Install all concretized specs in an environment.
 
         Note: this does not regenerate the views for the environment;
         that needs to be done separately with a call to write().
 
+        Args:
+            args (Namespace): argparse namespace with command arguments
+            install_args (dict): keyword install arguments
         """
-
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
+        tty.debug('Assessing installation status of environment packages')
         specs_to_install = []
         with spack.store.db.read_transaction():
             for concretized_hash in self.concretized_order:
@@ -1426,14 +1415,43 @@ class Environment(object):
                     # If it's a dev build it could need to be reinstalled
                     specs_to_install.append(spec)
 
+        if not specs_to_install:
+            tty.msg('All of the packages are already installed')
+            return
+
+        tty.debug('Processing {0} uninstalled specs'
+                  .format(len(specs_to_install)))
+
+        install_args['overwrite'] = install_args.get(
+            'overwrite', []) + self._get_overwrite_specs()
+
+        installs = []
         for spec in specs_to_install:
             # Parse cli arguments and construct a dictionary
-            # that will be passed to Package.do_install API
+            # that will be passed to the package installer
             kwargs = dict()
+            if install_args:
+                kwargs.update(install_args)
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-            self._install(spec, **kwargs)
+            installs.append((spec.package, kwargs))
+
+        try:
+            builder = PackageInstaller(installs)
+            builder.install()
+        finally:
+            # Ensure links are set appropriately
+            for spec in specs_to_install:
+                if spec.package.installed:
+                    try:
+                        self._install_log_links(spec)
+                    except OSError as e:
+                        tty.warn('Could not install log links for {0}: {1}'
+                                 .format(spec.name, str(e)))
+
+            with self.write_transaction():
+                self.regenerate_views()
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""

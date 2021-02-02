@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,8 @@ class Dire(Package):
     url      = "http://dire.gitlab.io/Downloads/DIRE-2.004.tar.gz"
     git      = "http://gitlab.com/dire/direforpythia"
     list_url = "http://dire.gitlab.io/Downloads.html"
+
+    tags = ['hep']
 
     maintainer = ['mdiefent']
 

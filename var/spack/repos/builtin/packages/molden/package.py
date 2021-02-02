@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,9 @@ class Molden(MakefilePackage):
     depends_on('makedepend', type='build')
 
     parallel = False  # building in parallel is broken
+    build_targets = ['clean', 'all']
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
@@ -52,6 +55,10 @@ class Molden(MakefilePackage):
 
         makefile.filter(r'CFLAGS = (.*)', r'CFLAGS = {0} \1'.format(cflags))
         makefile.filter(r'FFLAGS = (.*)', r'FFLAGS = {0} \1'.format(fflags))
+
+        if spec.target.family == 'aarch64':
+            makefile.filter(r'AFLAG=*', r'AFLAG=')
+            makefile.filter(r'rm -f src/', r'rm -f ')
 
     def install(self, spec, prefix):
         install_tree('bin', prefix.bin)

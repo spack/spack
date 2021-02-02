@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -165,5 +165,9 @@ class Hpx(CMakePackage, CudaPackage):
                 self.define('APEX_WITH_OTF2', True),
                 self.define('OTF2_ROOT', spec['otf2'].prefix),
             ]
+
+            # it seems like there was a bug in the default version of APEX in 1.5.x
+            if spec.satisfies("@1.5"):
+                args += [self.define('HPX_WITH_APEX_TAG', "v2.3.0")]
 
         return args

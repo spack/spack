@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtMsi(PythonPackage):
     """Microsoft Azure MSI Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-msi/azure-mgmt-msi-1.0.0.zip"
+    pypi = "azure-mgmt-msi/azure-mgmt-msi-1.0.0.zip"
 
     version('1.0.0', sha256='d46f3aab25db3dad520e4055c1d67afe4fcc6d66335c762134e60f82265f8f58')
     version('0.2.0', sha256='8622bc9a164169a0113728ebe7fd43a88189708ce6e10d4507247d6907987167')

@@ -1,10 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import sys
 import os
 
+import spack.config
 import spack.util.prefix as prefix
 import spack.util.environment as environment
 import spack.build_environment as build_env
@@ -25,6 +26,10 @@ def prefix_inspections(platform):
         A dictionary mapping subdirectory names to lists of environment
             variables to modify with that directory if it exists.
     """
+    inspections = spack.config.get('modules:prefix_inspections', None)
+    if inspections is not None:
+        return inspections
+
     inspections = {
         'bin': ['PATH'],
         'lib': ['LD_LIBRARY_PATH', 'LIBRARY_PATH'],
@@ -35,6 +40,7 @@ def prefix_inspections(platform):
         'include': ['CPATH'],
         'lib/pkgconfig': ['PKG_CONFIG_PATH'],
         'lib64/pkgconfig': ['PKG_CONFIG_PATH'],
+        'share/pkgconfig': ['PKG_CONFIG_PATH'],
         '': ['CMAKE_PREFIX_PATH']
     }
 

@@ -1,7 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 
 
@@ -10,11 +11,14 @@ class Cmake(Package):
     tools designed to build, test and package software.
     """
     homepage = 'https://www.cmake.org'
-    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz'
     maintainers = ['chuckatkins']
 
     executables = ['^cmake$']
 
+    version('3.19.2',   sha256='e3e0fd3b23b7fb13e1a856581078e0776ffa2df4e9d3164039c36d3315e0c7f0')
+    version('3.19.1',   sha256='1d266ea3a76ef650cdcf16c782a317cb4a7aa461617ee941e389cb48738a3aba')
+    version('3.19.0',   sha256='fdda688155aa7e72b7c63ef6f559fca4b6c07382ea6dca0beb5f45aececaf493')
     version('3.18.4',   sha256='597c61358e6a92ecbfad42a9b5321ddd801fc7e7eca08441307c9138382d4f77')
     version('3.18.3',   sha256='2c89f4e30af4914fd6fb5d00f863629812ada848eee4e2d29ec7e456d7fa32e5')
     version('3.18.2',   sha256='5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e')
@@ -250,7 +254,7 @@ class Cmake(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         # Some tests fail, takes forever
         make('test')
 
@@ -262,3 +266,12 @@ class Cmake(Package):
                 filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
                 filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
                 filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        spec_vers_str = 'version {0}'.format(self.spec.version)
+
+        for exe in ['ccmake', 'cmake', 'cpack', 'ctest']:
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            self.run_test(exe, ['--version'], [spec_vers_str],
+                          installed=True, purpose=reason, skip_missing=True)

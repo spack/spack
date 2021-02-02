@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Eccodes(CMakePackage):
 
     maintainers = ['skosukhin']
 
+    version('2.19.1', sha256='9964bed5058e873d514bd4920951122a95963128b12f55aa199d9afbafdd5d4b')
     version('2.18.0', sha256='d88943df0f246843a1a062796edbf709ef911de7269648eef864be259e9704e3')
     version('2.13.0', sha256='c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272')
     version('2.5.0', sha256='18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e')
@@ -58,6 +59,8 @@ class Eccodes(CMakePackage):
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')
 
+    depends_on('cmake@3.6:', type='build')
+    depends_on('cmake@3.12:', when='@2.19:', type='build')
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
 

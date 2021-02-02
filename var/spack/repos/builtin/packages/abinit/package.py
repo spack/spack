@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,7 @@ class Abinit(AutotoolsPackage):
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
     version('8.10.3', sha256='ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75')
+    version('8.10.2', sha256='4ee2e0329497bf16a9b2719fe0536cc50c5d5a07c65e18edaf15ba02251cbb73')
     version('8.8.2', sha256='15216703bd56a799a249a112b336d07d733627d3756487a4b1cb48ebb625c3e7')
     version('8.6.3', sha256='82e8d071088ab8dc1b3a24380e30b68c544685678314df1213180b449c84ca65')
     version('8.2.2', sha256='e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1')
@@ -93,6 +94,9 @@ class Abinit(AutotoolsPackage):
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
 
+    patch('rm_march_settings.patch')
+    patch('fix_for_fujitsu.patch', level=0, when='%fj')
+
     def configure_args(self):
 
         spec = self.spec
@@ -113,10 +117,15 @@ class Abinit(AutotoolsPackage):
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
-            oapp('--enable-mpi-io=yes')
-            oapp('MPIFC={0}/mpifc'.format(spec['mpi'].prefix.bin))
+            if self.spec.satisfies('%fj'):
+                oapp('CC={0}'.format(spec['mpi'].mpicc))
+                oapp('CXX={0}'.format(spec['mpi'].mpicxx))
+                oapp('FC={0}'.format(spec['mpi'].mpifc))
+            else:
+                oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
+                oapp('--enable-mpi-io=yes')
+                oapp('MPIFC={0}'.format(spec['mpi'].mpifc))
             if '~wannier90' in spec:
                 oapp('--with-dft-flavor=atompaw+libxc')
 
@@ -172,6 +181,10 @@ class Abinit(AutotoolsPackage):
             # In Spack we do our best to avoid building any internally provided
             # dependencies, such as netcdf3 in this case.
             oapp('--with-trio-flavor=none')
+
+        if self.spec.satisfies('%fj'):
+            oapp('FCFLAGS_MODDIR=-M{0}'.format(join_path(
+                 self.stage.source_path, 'src/mods')))
 
         return options
 

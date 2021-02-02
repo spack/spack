@@ -1,11 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 from spack import *
 
 
-class Kokkos(CMakePackage, CudaPackage):
+class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
     """Kokkos implements a programming model in C++ for writing performance
     portable applications targeting all major HPC platforms."""
 
@@ -29,9 +29,9 @@ class Kokkos(CMakePackage, CudaPackage):
         'openmp': [False, 'Whether to build OpenMP backend'],
         'pthread': [False, 'Whether to build Pthread backend'],
         'serial': [True,  'Whether to build serial backend'],
-        'hip': [False, 'Whether to build HIP backend'],
+        'rocm': [False, 'Whether to build HIP backend'],
     }
-    conflicts("+hip", when="@:3.0")
+    conflicts("+rocm", when="@:3.0")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
@@ -71,16 +71,6 @@ class Kokkos(CMakePackage, CudaPackage):
         'qthread': [False, 'Eenable the QTHREAD library'],
         'tests': [False, 'Build for tests'],
     }
-
-    amd_gpu_arches = [
-        'fiji',
-        'gfx901',
-        'vega900',
-        'vega906',
-    ]
-    variant("amd_gpu_arch", default='none', values=amd_gpu_arches,
-            description="AMD GPU architecture")
-    conflicts("+hip", when="amd_gpu_arch=none")
 
     spack_micro_arch_map = {
         "graviton": "",
@@ -152,6 +142,20 @@ class Kokkos(CMakePackage, CudaPackage):
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
 
+    amdgpu_arch_map = {
+        'gfx900': 'vega900',
+        'gfx906': 'vega906',
+        'gfx908': 'vega908'
+    }
+    amd_support_conflict_msg = (
+        '{0} is not supported; '
+        'Kokkos supports the following AMD GPU targets: '
+        + ', '.join(amdgpu_arch_map.keys()))
+    for arch in ROCmPackage.amdgpu_targets:
+        if arch not in amdgpu_arch_map:
+            conflicts('+rocm', when='amdgpu_target={0}'.format(arch),
+                      msg=amd_support_conflict_msg.format(arch))
+
     devices_values = list(devices_variants.keys())
     for dev in devices_variants:
         dflt, desc = devices_variants[dev]
@@ -178,7 +182,7 @@ class Kokkos(CMakePackage, CudaPackage):
     depends_on("kokkos-nvcc-wrapper@master", when="@master+wrapper")
     conflicts("+wrapper", when="~cuda")
 
-    variant("std", default="11", values=["11", "14", "17", "20"], multi=False)
+    variant("std", default="14", values=["11", "14", "17", "20"], multi=False)
     variant("pic", default=False, description="Build position independent code")
 
     # nvcc does not currently work with C++17 or C++20
@@ -188,8 +192,10 @@ class Kokkos(CMakePackage, CudaPackage):
     variant('shared', default=True, description='Build shared libraries')
 
     def append_args(self, cmake_prefix, cmake_options, spack_options):
-        for opt in cmake_options:
-            enablestr = "+%s" % opt
+        variant_to_cmake_option = {'rocm': 'hip'}
+        for variant_name in cmake_options:
+            enablestr = "+%s" % variant_name
+            opt = variant_to_cmake_option.get(variant_name, variant_name)
             optuc = opt.upper()
             optname = "Kokkos_%s_%s" % (cmake_prefix, optuc)
             option = None
@@ -227,14 +233,22 @@ class Kokkos(CMakePackage, CudaPackage):
                 if not cuda_arch == "none":
                     kokkos_arch_name = self.spack_cuda_arch_map[cuda_arch]
                     spack_microarches.append(kokkos_arch_name)
+
         kokkos_microarch_name = self.spack_micro_arch_map[spec.target.name]
         if kokkos_microarch_name:
             spack_microarches.append(kokkos_microarch_name)
 
-        for arch in self.amd_gpu_arches:
-            keyval = "amd_gpu_arch=%s" % arch
-            if keyval in spec:
-                spack_microarches.append(arch)
+        if "+rocm" in spec:
+            for amdgpu_target in spec.variants['amdgpu_target'].value:
+                if amdgpu_target != "none":
+                    if amdgpu_target in self.amdgpu_arch_map:
+                        spack_microarches.append(
+                            self.amdgpu_arch_map[amdgpu_target])
+                    else:
+                        # Note that conflict declarations should prevent
+                        # choosing an unsupported AMD GPU target
+                        raise SpackError("Unsupported target: {0}".format(
+                            amdgpu_target))
 
         for arch in spack_microarches:
             options.append("-DKokkos_ARCH_%s=ON" % arch.upper())
@@ -248,13 +262,12 @@ class Kokkos(CMakePackage, CudaPackage):
             if var in self.spec:
                 options.append("-D%s_DIR=%s" % (tpl, spec[tpl].prefix))
 
-        # we do not need the compiler wrapper from Spack
-        # set the compiler explicitly (may be Spack wrapper or nvcc-wrapper)
-        try:
+        if '+rocm' in self.spec:
+            options.append('-DCMAKE_CXX_COMPILER=%s' %
+                           self.spec['hip'].hipcc)
+        elif '+wrapper' in self.spec:
             options.append("-DCMAKE_CXX_COMPILER=%s" %
                            self.spec["kokkos-nvcc-wrapper"].kokkos_cxx)
-        except Exception:
-            options.append("-DCMAKE_CXX_COMPILER=%s" % spack_cxx)
 
         # Set the C++ standard to use
         options.append("-DKokkos_CXX_STANDARD=%s" %

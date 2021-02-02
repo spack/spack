@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import os
 import re
 import shutil
 import sys
+from ordereddict_backport import OrderedDict
 
 from llnl.util.link_tree import LinkTree, MergeConflictError
 from llnl.util import tty
@@ -65,32 +66,35 @@ def view_copy(src, dst, view, spec=None):
         # Not metadata, we have to relocate it
 
         # Get information on where to relocate from/to
-        prefix_to_projection = dict(
-            (dep.prefix, view.get_projection_for_spec(dep))
-            for dep in spec.traverse()
-        )
+
+        # This is vestigial code for the *old* location of sbang. Previously,
+        # sbang was a bash script, and it lived in the spack prefix. It is
+        # now a POSIX script that lives in the install prefix. Old packages
+        # will have the old sbang location in their shebangs.
+        # TODO: Not sure which one to use...
+        import spack.hooks.sbang as sbang
+        orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(spack.paths.spack_root)
+        new_sbang = sbang.sbang_shebang_line()
+
+        prefix_to_projection = OrderedDict({
+            spec.prefix: view.get_projection_for_spec(spec),
+            spack.paths.spack_root: view._root})
+
+        for dep in spec.traverse():
+            prefix_to_projection[dep.prefix] = \
+                view.get_projection_for_spec(dep)
 
         if spack.relocate.is_binary(dst):
-            # relocate binaries
             spack.relocate.relocate_text_bin(
                 binaries=[dst],
-                orig_install_prefix=spec.prefix,
-                new_install_prefix=view.get_projection_for_spec(spec),
-                orig_spack=spack.paths.spack_root,
-                new_spack=view._root,
-                new_prefixes=prefix_to_projection
+                prefixes=prefix_to_projection
             )
         else:
-            # relocate text
+            prefix_to_projection[spack.store.layout.root] = view._root
+            prefix_to_projection[orig_sbang] = new_sbang
             spack.relocate.relocate_text(
                 files=[dst],
-                orig_layout_root=spack.store.layout.root,
-                new_layout_root=view._root,
-                orig_install_prefix=spec.prefix,
-                new_install_prefix=view.get_projection_for_spec(spec),
-                orig_spack=spack.paths.spack_root,
-                new_spack=view._root,
-                new_prefixes=prefix_to_projection
+                prefixes=prefix_to_projection
             )
 
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,7 +14,7 @@ class PyPy6s(PythonPackage):
     """
 
     homepage = "http://py6s.rtwilson.com/"
-    url      = "https://pypi.io/packages/source/p/py6s/Py6S-1.8.0.tar.gz"
+    pypi = "py6s/Py6S-1.8.0.tar.gz"
 
     version('1.8.0', sha256='256162d2f1f558e601d4f79022c037a0051838ba307b9f4d1f5fcf0b46a0c277')
 

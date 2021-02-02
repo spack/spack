@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ from spack import *
 class PyAmqp(PythonPackage):
     """Low-level AMQP client for Python (fork of amqplib)."""
 
-    homepage = "https://pypi.org/project/amqp/"
-    url      = "https://pypi.io/packages/source/a/amqp/amqp-2.4.1.tar.gz"
+    pypi = "amqp/amqp-2.4.1.tar.gz"
 
     version('5.0.1', sha256='9881f8e6fe23e3db9faa6cfd8c05390213e1d1b95c0162bc50552cad75bffa5f')
     version('2.6.1', sha256='70cdb10628468ff14e57ec2f751c7aa9e48e7e3651cfd62d431213c0c4e58f21')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PySpyder(PythonPackage):
     """Scientific PYthon Development EnviRonment"""
 
     homepage = "https://github.com/spyder-ide/spyder"
-    url      = "https://pypi.io/packages/source/s/spyder/spyder-3.1.3.tar.gz"
+    pypi = "spyder/spyder-3.1.3.tar.gz"
 
     version('3.1.3', sha256='4978872cc5a006803bc8742d0a8fb43c49aef9524f0a9fcb8bd6dfcfdc2d2d6a')
 

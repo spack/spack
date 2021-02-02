@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyRetrying(PythonPackage):
     about anything."""
 
     homepage = "https://github.com/rholder/retrying"
-    url      = "https://pypi.io/packages/source/r/retrying/retrying-1.3.3.tar.gz"
+    pypi = "retrying/retrying-1.3.3.tar.gz"
 
     version('1.3.3', sha256='08c039560a6da2fe4f2c426d0766e284d3b736e355f8dd24b37367b0bb41973b')
 

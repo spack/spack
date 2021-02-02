@@ -1,0 +1,486 @@
+{
+  "microarchitectures": {
+    "x86": {
+      "from": null,
+      "vendor": "generic",
+      "features": []
+    },
+    "i686": {
+      "from": "x86",
+      "vendor": "GenuineIntel",
+      "features": []
+    },
+    "pentium2": {
+      "from": "i686",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx"
+      ]
+    },
+    "pentium3": {
+      "from": "pentium2",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse"
+      ]
+    },
+    "pentium4": {
+      "from": "pentium3",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2"
+      ]
+    },
+    "prescott": {
+      "from": "pentium4",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse3"
+      ]
+    },
+    "x86_64": {
+      "from": null,
+      "vendor": "generic",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.2.0:",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          },
+          {
+            "versions": ":4.1.2",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "0.0.0-apple:",
+            "name": "x86-64",
+            "flags": "-march={name}"
+          },
+          {
+            "versions": ":",
+            "name": "x86-64",
+            "flags": "-march={name} -mtune=generic"
+          }
+        ],
+        "intel": {
+          "versions": ":",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
+        }
+      }
+    },
+    "nocona": {
+      "from": "x86_64",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "sse3"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.0.4:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "pentium4",
+          "flags": "-march={name} -mtune=generic"
+        }
+      }
+    },
+    "core2": {
+      "from": "nocona",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.3.0:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "flags": "-march={name} -mtune={name}}"
+        }
+      }
+    },
+    "nehalem": {
+      "from": "core2",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.6:4.8.5",
+            "name": "corei7",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "westmere": {
+      "from": "nehalem",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "16.0:",
+          "name": "corei7",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "sandybridge": {
+      "from": "westmere",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.6:4.8.5",
+            "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "corei7-avx",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "ivybridge": {
+      "from": "sandybridge",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.6:4.8.5",
+            "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx-i",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "haswell": {
+      "from": "ivybridge",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2"
+      ],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "4.9:",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "4.8:4.8.5",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": [
+          {
+            "versions": "16.0:17.9.0",
+            "name": "core-avx2",
+            "flags": "-march={name} -mtune={name}"
+          },
+          {
+            "versions": "18.0:",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ]
+      }
+    },
+    "broadwell": {
+      "from": "haswell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "4.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    },
+    "skylake": {
+      "from": "broadwell",
+      "vendor": "GenuineIntel",
+      "features": [
+        "mmx",
+        "sse",
+        "sse2",
+        "ssse3",
+        "sse4_1",
+        "sse4_2",
+        "popcnt",
+        "aes",
+        "pclmulqdq",
+        "avx",
+        "rdrand",
+        "f16c",
+        "movbe",
+        "fma",
+        "avx2",
+        "bmi1",
+        "bmi2",
+        "rdseed",
+        "adx",
+        "clflushopt",
+        "xsavec",
+        "xsaveopt"
+      ],
+      "compilers": {
+        "gcc": {
+          "versions": "6.0:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "clang": {
+          "versions": "3.9:",
+          "flags": "-march={name} -mtune={name}"
+        },
+        "intel": {
+          "versions": "18.0:",
+          "flags": "-march={name} -mtune={name}"
+        }
+      }
+    }
+  },
+  "feature_aliases": {
+    "sse3": {
+      "reason": "ssse3 is a superset of sse3 and might be the only one listed",
+      "any_of": [
+        "ssse3"
+      ]
+    },
+    "avx512": {
+      "reason": "avx512 indicates generic support for any of the avx512 instruction sets",
+      "any_of": [
+        "avx512f",
+        "avx512vl",
+        "avx512bw",
+        "avx512dq",
+        "avx512cd"
+      ]
+    },
+    "fma": {
+      "reason": "FMA has been supported by PowerISA since Power1, but might not be listed in features",
+      "families": [
+        "ppc64le",
+        "ppc64"
+      ]
+    },
+    "sse4.1": {
+      "reason": "permits to refer to sse4_1 also as sse4.1",
+      "any_of": [
+        "sse4_1"
+      ]
+    },
+    "sse4.2": {
+      "reason": "permits to refer to sse4_2 also as sse4.2",
+      "any_of": [
+        "sse4_2"
+      ]
+    }
+  },
+  "conversions": {
+    "description": "Conversions that map some platform specific values to canonical values",
+    "arm_vendors": {
+      "0x41": "ARM",
+      "0x42": "Broadcom",
+      "0x43": "Cavium",
+      "0x44": "DEC",
+      "0x46": "Fujitsu",
+      "0x48": "HiSilicon",
+      "0x49": "Infineon Technologies AG",
+      "0x4d": "Motorola",
+      "0x4e": "Nvidia",
+      "0x50": "APM",
+      "0x51": "Qualcomm",
+      "0x53": "Samsung",
+      "0x56": "Marvell",
+      "0x61": "Apple",
+      "0x66": "Faraday",
+      "0x68": "HXT",
+      "0x69": "Intel"
+    },
+    "darwin_flags": {
+      "sse4.1": "sse4_1",
+      "sse4.2": "sse4_2",
+      "avx1.0": "avx",
+      "clfsopt": "clflushopt",
+      "xsave": "xsavec xsaveopt"
+    }
+  }
+}

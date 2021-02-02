@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,3 +47,6 @@ class RRsamtools(RPackage):
     depends_on('r-rhtslib@1.17.7:', when='@2.2.1:', type=('build', 'run'))
 
     depends_on('gmake', type='build')
+
+    # this is not a listed dependency but is needed
+    depends_on('curl')

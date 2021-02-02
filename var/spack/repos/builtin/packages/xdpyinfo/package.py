@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,9 @@ class Xdpyinfo(AutotoolsPackage, XorgPackage):
     depends_on('libxtst')
     depends_on('libxcb')
 
-    depends_on('xproto@7.0.22:', type='build')
-    depends_on('recordproto', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('xproto@7.0.22:')
+    depends_on('recordproto')
+    depends_on('inputproto')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

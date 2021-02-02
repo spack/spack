@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,20 +11,20 @@ class PyMatplotlib(PythonPackage):
     and interactive visualizations in Python."""
 
     homepage = "https://matplotlib.org/"
-    url      = "https://pypi.io/packages/source/m/matplotlib/matplotlib-3.3.2.tar.gz"
+    pypi = "matplotlib/matplotlib-3.3.2.tar.gz"
 
     maintainers = ['adamjstewart']
-
     import_modules = [
-        'mpl_toolkits', 'matplotlib', 'mpl_toolkits.axes_grid1',
-        'mpl_toolkits.axes_grid', 'mpl_toolkits.mplot3d',
-        'mpl_toolkits.axisartist', 'matplotlib.compat', 'matplotlib.tri',
-        'matplotlib.axes', 'matplotlib.sphinxext', 'matplotlib.cbook',
-        'matplotlib.backends', 'matplotlib.style', 'matplotlib.projections',
-        'matplotlib.testing', 'matplotlib.backends.qt_editor',
-        'matplotlib.testing.jpl_units'
+        'mpl_toolkits.axes_grid1', 'mpl_toolkits.axes_grid',
+        'mpl_toolkits.mplot3d', 'mpl_toolkits.axisartist', 'matplotlib',
+        'matplotlib.compat', 'matplotlib.tri', 'matplotlib.axes',
+        'matplotlib.sphinxext', 'matplotlib.cbook', 'matplotlib.backends',
+        'matplotlib.backends.qt_editor', 'matplotlib.style',
+        'matplotlib.projections', 'matplotlib.testing',
+        'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.3.4', sha256='3e477db76c22929e4c6876c44f88d790aacdf3c3f8f3a90cb1975c0bf37825b0')
     version('3.3.3', sha256='b1b60c6476c4cfe9e5cf8ab0d3127476fd3d5f05de0f343a452badaad0e4bdec')
     version('3.3.2', sha256='3d2edbf59367f03cd9daf42939ca06383a7d7803e3993eb5ff1bee8e8a3fbb6b')
     version('3.3.1', sha256='87f53bcce90772f942c2db56736788b39332d552461a5cb13f05ff45c1680f0e')
@@ -183,6 +183,8 @@ class PyMatplotlib(PythonPackage):
                 setup.write('system_freetype = True\n')
                 setup.write('system_qhull = True\n')
 
-    def test(self):
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def build_test(self):
         pytest = which('pytest')
         pytest()

@@ -1,14 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import inspect
+import os
 
 from llnl.util.filesystem import working_dir, join_path
+from spack.build_systems.python import PythonPackage
 from spack.directives import depends_on, extends
 from spack.package import PackageBase, run_after
-import os
 
 
 class SIPPackage(PackageBase):
@@ -36,12 +37,14 @@ class SIPPackage(PackageBase):
     sip_module = 'sip'
 
     #: Callback names for install-time test
-    install_time_test_callbacks = ['import_module_test']
+    install_time_test_callbacks = ['test']
 
     extends('python')
 
     depends_on('qt')
     depends_on('py-sip')
+
+    import_modules = PythonPackage.import_modules
 
     def python(self, *args, **kwargs):
         """The python ``Executable``."""
@@ -98,17 +101,7 @@ class SIPPackage(PackageBase):
 
     # Testing
 
-    def import_module_test(self):
-        """Attempts to import the module that was just installed.
-
-        This test is only run if the package overrides
-        :py:attr:`import_modules` with a list of module names."""
-
-        # Make sure we are importing the installed modules,
-        # not the ones in the current directory
-        with working_dir('spack-test', create=True):
-            for module in self.import_modules:
-                self.python('-c', 'import {0}'.format(module))
+    test = PythonPackage.test
 
     run_after('install')(PackageBase._run_default_install_time_test_callbacks)
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import contextlib
 import errno
 import inspect
 import itertools
+import json
 import os
 import os.path
 import shutil
@@ -17,6 +18,8 @@ import xml.etree.ElementTree
 import py
 import pytest
 
+import archspec.cpu.microarchitecture
+import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
@@ -315,7 +318,7 @@ def _skip_if_missing_executables(request):
 # FIXME: The lines below should better be added to a fixture with
 # FIXME: session-scope. Anyhow doing it is not easy, as it seems
 # FIXME: there's some weird interaction with compilers during concretization.
-spack.architecture.real_platform = spack.architecture.platform
+spack.architecture.real_platform = spack.architecture.platform  # type: ignore
 
 
 def test_platform():
@@ -449,6 +452,39 @@ def default_config():
 
 
 @pytest.fixture(scope='session')
+def mock_uarch_json(tmpdir_factory):
+    """Mock microarchitectures.json with test architecture descriptions."""
+    tmpdir = tmpdir_factory.mktemp('microarchitectures')
+
+    uarch_json = py.path.local(spack.paths.test_path).join(
+        "data", "microarchitectures", "microarchitectures.json")
+    uarch_json.copy(tmpdir)
+    yield str(tmpdir.join("microarchitectures.json"))
+
+
+@pytest.fixture(scope='session')
+def mock_uarch_configuration(mock_uarch_json):
+    """Create mock dictionaries for the archspec.cpu."""
+    def load_json():
+        with open(mock_uarch_json) as f:
+            return json.load(f)
+
+    targets_json = load_json()
+    targets = archspec.cpu.microarchitecture._known_microarchitectures()
+
+    yield targets_json, targets
+
+
+@pytest.fixture(scope='function')
+def mock_targets(mock_uarch_configuration, monkeypatch):
+    """Use this fixture to enable mock uarch targets for testing."""
+    targets_json, targets = mock_uarch_configuration
+
+    monkeypatch.setattr(archspec.cpu.schema, "TARGETS_JSON", targets_json)
+    monkeypatch.setattr(archspec.cpu.microarchitecture, "TARGETS", targets)
+
+
+@pytest.fixture(scope='session')
 def configuration_dir(tmpdir_factory, linux_os):
     """Copies mock configuration files in a temporary directory. Returns the
     directory path.
@@ -464,12 +500,13 @@ def configuration_dir(tmpdir_factory, linux_os):
     tmpdir.ensure('user', dir=True)
 
     # Slightly modify config.yaml and compilers.yaml
+    solver = os.environ.get('SPACK_TEST_SOLVER', 'original')
     config_yaml = test_config.join('config.yaml')
     modules_root = tmpdir_factory.mktemp('share')
     tcl_root = modules_root.ensure('modules', dir=True)
     lmod_root = modules_root.ensure('lmod', dir=True)
     content = ''.join(config_yaml.read()).format(
-        str(tcl_root), str(lmod_root)
+        solver, str(tcl_root), str(lmod_root)
     )
     t = tmpdir.join('site', 'config.yaml')
     t.write(content)
@@ -591,6 +628,36 @@ def _store_dir_and_cache(tmpdir_factory):
 @pytest.fixture(scope='session')
 def mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
                _store_dir_and_cache):
+    """Creates a read-only mock database with some packages installed note
+    that the ref count for dyninst here will be 3, as it's recycled
+    across each install.
+
+    This does not actually activate the store for use by Spack -- see the
+    ``database`` fixture for that.
+
+    """
+    store_path, store_cache = _store_dir_and_cache
+    store = spack.store.Store(str(store_path))
+
+    # If the cache does not exist populate the store and create it
+    if not os.path.exists(str(store_cache.join('.spack-db'))):
+        with use_configuration(mock_configuration):
+            with use_store(store):
+                with use_repo(mock_repo_path):
+                    _populate(store.db)
+        store_path.copy(store_cache, mode=True, stat=True)
+
+    # Make the DB filesystem read-only to ensure we can't modify entries
+    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
+
+    yield store
+
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
+
+
+@pytest.fixture(scope='function')
+def mutable_mock_store(tmpdir_factory, mock_repo_path, mock_configuration,
+                       _store_dir_and_cache):
     """Creates a read-only mock database with some packages installed note
     that the ref count for dyninst here will be 3, as it's recycled
     across each install.
@@ -1148,9 +1215,7 @@ def installation_dir_with_headers(tmpdir_factory):
 
 @pytest.fixture(
     params=[
-        'conflict%clang',
         'conflict%clang+foo',
-        'conflict-parent%clang',
         'conflict-parent@0.9^conflict~foo'
     ]
 )
@@ -1202,7 +1267,7 @@ repo:
 class MockBundle(object):
     has_code = False
     name = 'mock-bundle'
-    versions = {}
+    versions = {}  # type: ignore
 
 
 @pytest.fixture
@@ -1237,3 +1302,14 @@ def mock_executable(tmpdir):
         return str(f)
 
     return _factory
+
+
+@pytest.fixture()
+def mock_test_stage(mutable_config, tmpdir):
+    # NOTE: This fixture MUST be applied after any fixture that uses
+    # the config fixture under the hood
+    # No need to unset because we use mutable_config
+    tmp_stage = str(tmpdir.join('test_stage'))
+    mutable_config.set('config:test_stage', tmp_stage)
+
+    yield tmp_stage

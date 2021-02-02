@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,7 @@ class Glog(Package):
     version('0.3.3', sha256='544e178644bd9b454768c2c91716c3b8365cc5d47adfbdbaecd8cf3fa17adfcb')
 
     depends_on('gflags')
-    depends_on('cmake', when="@0.3.5:")
+    depends_on('cmake', when="@0.3.5:", type='build')
 
     def install(self, spec, prefix):
         configure('--prefix=%s' % prefix)

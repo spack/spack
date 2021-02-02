@@ -9,6 +9,8 @@ packages:
       prefix: /path/to/external_tool
     - spec: externaltool@0.9%gcc@4.5.0
       prefix: /usr
+    - spec: externaltool@0_8%gcc@4.5.0
+      prefix: /usr
   externalvirtual:
     buildable: False
     externals:
@@ -22,3 +24,15 @@ packages:
     - spec: externalmodule@1.0%gcc@4.5.0
       modules:
       - external-module
+  'requires-virtual':
+    buildable: False
+    externals:
+    - spec:  requires-virtual@2.0
+      prefix: /usr
+  'external-buildable-with-variant':
+    buildable: True
+    externals:
+      - spec: external-buildable-with-variant@1.1.special +baz
+        prefix: /usr
+      - spec: external-buildable-with-variant@0.9 +baz
+        prefix: /usr

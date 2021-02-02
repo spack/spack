@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import llnl.util.filesystem as fs
+import llnl.util.tty as tty
 
 from spack import *
 
@@ -82,3 +84,34 @@ class Libxml2(AutotoolsPackage):
         if '+python' in self.spec:
             with working_dir('spack-test', create=True):
                 python('-c', 'import libxml2')
+
+    def test(self):
+        """Perform smoke tests on the installed package"""
+        # Start with what we already have post-install
+        tty.msg('test: Performing simple import test')
+        self.import_module_test()
+
+        data_dir = self.test_suite.current_test_data_dir
+
+        # Now run defined tests based on expected executables
+        dtd_path = data_dir.join('info.dtd')
+        test_filename = 'test.xml'
+        exec_checks = {
+            'xml2-config': [
+                ('--version', [str(self.spec.version)], 0)],
+            'xmllint': [
+                (['--auto', '-o', test_filename], [], 0),
+                (['--postvalid', test_filename],
+                 ['validity error', 'no DTD found', 'does not validate'], 3),
+                (['--dtdvalid', dtd_path, test_filename],
+                 ['validity error', 'does not follow the DTD'], 3),
+                (['--dtdvalid', dtd_path, data_dir.join('info.xml')], [], 0)],
+            'xmlcatalog': [
+                ('--create', ['<catalog xmlns', 'catalog"/>'], 0)],
+        }
+        for exe in exec_checks:
+            for options, expected, status in exec_checks[exe]:
+                self.run_test(exe, options, expected, status)
+
+        # Perform some cleanup
+        fs.force_remove(test_filename)

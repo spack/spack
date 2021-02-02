@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
+    version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242')
     version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9')
     version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46')
     version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
@@ -170,6 +171,14 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
                 os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
+
+    def patch(self):
+        if self.spec.satisfies('%nvhpc'):
+            # Remove incompatible preprocessor flags
+            filter_file('-MF ', '',
+                        'Configurations/unix-Makefile.tmpl', string=True)
+            filter_file(r'-MT \$\@ ', '',
+                        'Configurations/unix-Makefile.tmpl', string=True)
 
     def setup_build_environment(self, env):
         env.set('PERL', self.spec['perl'].prefix.bin.perl)

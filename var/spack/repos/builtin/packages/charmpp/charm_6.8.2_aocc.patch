@@ -1,0 +1,165 @@
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/cc-mpicxx.sh 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/cc-mpicxx.sh
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2018-01-11 19:06:19.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/cc-mpicxx.sh	2019-11-12 06:02:23.005454343 -0600
+@@ -15,6 +15,7 @@
+ CMK_REAL_COMPILER=`$MPICXX -show 2>/dev/null | cut -d' ' -f1 `
+ case "$CMK_REAL_COMPILER" in
+ g++)   CMK_AMD64="-m64 -fPIC" ;;
++clang++)   CMK_AMD64="-m64 -fPIC" ;;
+ icpc)  CMK_AMD64="-m64";;
+ pgCC)  CMK_AMD64="-DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std " ;;
+ FCC)   CMK_AMD64="-Kfast -DCMK_FIND_FIRST_OF_PREDICATE=1 --variadic_macros";;
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh	2018-01-11 19:06:19.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach-scyld.sh	2019-11-12 06:05:22.666969636 -0600
+@@ -1,13 +1,14 @@
+ 
+ case "$CMK_CC" in
+ mpicc*)
+-	CMK_CPP_C="gcc -E "
+-	CMK_CC="gcc -fPIC"
+-	CMK_CC_RELIABLE="gcc  -fPIC"
+-	CMK_CC_FASTEST="gcc  -fPIC"
+-	CMK_CXX="g++ -fPIC"
+-	CMK_LD="gcc"
+-	CMK_LDXX="g++"
++	CMK_CPP_C="clang -E "
++	CMK_CC="clang -fPIC"
++	CMK_CC_RELIABLE="clang  -fPIC"
++	CMK_CC_FASTEST="clang  -fPIC"
++	CMK_CXXPP="clang -E "
++	CMK_CXX="clang++ -fPIC"
++	CMK_LD="clang"
++	CMK_LDXX="clang++"
+ 
+ # native compiler for compiling charmxi, etc
+ 	CMK_NATIVE_CC="$CMK_CC"
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach.sh 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach.sh
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach.sh	2018-01-11 19:06:19.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/arch/mpi-linux-x86_64/conv-mach.sh	2019-11-12 06:07:41.361999246 -0600
+@@ -23,6 +23,7 @@
+ 
+ CMK_REAL_COMPILER=`$MPICXX -show 2>/dev/null | cut -d' ' -f1 `
+ case "$CMK_REAL_COMPILER" in
++clang++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
+ g++) CMK_AMD64_CC="$CMK_GCC64"; CMK_AMD64_CXX="$CMK_GCC64" ;;
+ pgCC)  CMK_AMD64_CC='-fPIC'; CMK_AMD64_CXX='-fPIC -DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std ' ;;
+ charmc)  echo "Error> charmc can not call AMPI's mpicxx/mpiCC wrapper! Please fix your PATH."; exit 1 ;;
+@@ -37,10 +38,10 @@
+ CMK_LIBS="-lckqt $CMK_SYSLIBS "
+ CMK_LD_LIBRARY_PATH="-Wl,-rpath,$CHARMLIBSO/"
+ 
+-CMK_NATIVE_CC="gcc $CMK_GCC64 "
+-CMK_NATIVE_LD="gcc $CMK_GCC64 "
+-CMK_NATIVE_CXX="g++ $CMK_GCC64 "
+-CMK_NATIVE_LDXX="g++ $CMK_GCC64 "
++CMK_NATIVE_CC="clang $CMK_GCC64 "
++CMK_NATIVE_LD="clang $CMK_GCC64 "
++CMK_NATIVE_CXX="clang++ $CMK_GCC64 "
++CMK_NATIVE_LDXX="clang++ $CMK_GCC64 "
+ CMK_NATIVE_LIBS=''
+ 
+ # fortran compiler
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/ckloop/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/ckloop/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/ckloop/Makefile	2018-01-11 19:06:15.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/ckloop/Makefile	2019-11-12 06:09:16.200438412 -0600
+@@ -38,7 +38,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done; 
+ 
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/completion/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/completion/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/completion/Makefile	2018-01-11 19:06:16.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/completion/Makefile	2019-11-12 06:09:41.247346697 -0600
+@@ -45,7 +45,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done; 
+ 
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/NDMeshStreamer/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/NDMeshStreamer/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/NDMeshStreamer/Makefile	2018-01-11 19:06:15.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/libs/ck-libs/NDMeshStreamer/Makefile	2019-11-12 06:09:59.079993368 -0600
+@@ -52,7 +52,7 @@
+         for i in $(LIBOBJ) ; do \
+ 	      SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$i : $$SRCFILE" ; \
+-              g++ -MM -Wno-deprecated -I$(CDIR)/tmp -I../completion $$SRCFILE >> $(DEPENDFILE); \
++              clang++ -MM -Wno-deprecated -I$(CDIR)/tmp -I../completion $$SRCFILE >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -I$(CDIR)/tmp -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done;
+ 
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/QuickThreads/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/QuickThreads/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/QuickThreads/Makefile	2018-01-11 19:06:13.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/QuickThreads/Makefile	2019-11-12 06:10:37.744395459 -0600
+@@ -1,5 +1,5 @@
+ 
+-CC=gcc -I. -O2
++CC=clang -I. -O2
+ 
+ all: qt stp testpgm
+ 
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/src/scripts/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/scripts/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/scripts/Makefile	2018-01-11 19:06:20.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/scripts/Makefile	2019-11-12 06:10:59.888198461 -0600
+@@ -962,7 +962,7 @@
+ 	      SRCFILE=`basename $$i .o`.C ; \
+ 	      [ ! -f $$SRCFILE ] && SRCFILE=`basename $$i .o`.c ;	\
+               echo "checking dependencies for $$SRCFILE" ; \
+-              if g++ -std=c++0x -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
++              if clang++ -std=c++0x -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
+ 	      echo '' >> $(DEPENDFILE) ; \
+         done;  \
+ 
+@@ -988,7 +988,7 @@
+ 	      found=`/usr/bin/find $$SRCDIR -depth 1 -name $$SRCFILE`; \
+               [ ! $$found ] && SRCFILE=`basename $$i .o`.c ; \
+               echo "checking dependencies for $$SRCFILE" ; \
+-              if g++ -std=c++0x -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
++              if clang++ -std=c++0x -MM -Wno-deprecated -I. -I$(INC) $$SRCFILE  >> $(DEPENDFILE); then true ; else echo '' ; echo "Compilation of '$$SRCFILE' failed, please fix it first!!!!" ; exit; fi;  \
+ 	      echo '' >> $(DEPENDFILE) ; \
+         done;  \
+ 
+diff -ruN 00/NAMD_2.13_Source/charm-6.8.2/tests/charm++/megatest/Makefile 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/tests/charm++/megatest/Makefile
+--- 00/NAMD_2.13_Source/charm-6.8.2/tests/charm++/megatest/Makefile	2018-01-11 19:06:18.000000000 -0600
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/tests/charm++/megatest/Makefile	2019-11-12 06:11:38.193587531 -0600
+@@ -116,7 +116,7 @@
+         for i in $(OBJS) ; do \
+               SRCFILE=`basename $$i .o`.C ; \
+               echo "checking dependencies for $$SRCFILE" ; \
+-              g++ -std=c++0x -MM -I$(CHARMINC) $$SRCFILE | \
++              clang++ -std=c++0x -MM -I$(CHARMINC) $$SRCFILE | \
+               perl $(CHARMBIN)/dep.pl $(CHARMINC) /usr/include /usr/local >> $(DEPENDFILE); \
+               echo '	$$(CHARMC) -o '$$i $$SRCFILE >> $(DEPENDFILE) ; \
+         done;
+--- 00/NAMD_2.13_Source/charm-6.8.2/src/scripts/configure	2018-01-12 06:36:21.000000000 +0530
++++ 00_aocc-patch/NAMD_2.13_Source/charm-6.8.2/src/scripts/configure	2020-10-21 15:01:20.240748316 +0530
+@@ -2183,8 +2183,8 @@
+ $as_echo_n "checking \"$1\"... " >&6; }
+ 	echo "### $1" >> $charmout
+ 	cat $tc >> $charmout
+-	echo $CMK_CC -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CC $OPTS_LD -c $tc -o test.o $4 >> $charmout
+-	$CMK_CC -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CC $OPTS_LD -c $tc -o test.o $4 > out 2>&1
++	echo $CMK_CC -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CC $OPTS_LD -Qunused-arguments -c $tc -o test.o $4 >> $charmout
++	$CMK_CC -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CC $OPTS_LD -Qunused-arguments  -c $tc -o test.o $4 > out 2>&1
+ 	test_result $? "$1" "$2" "$3"
+  	strictpass=$pass
+ 	strictfail=$fail
+@@ -2208,8 +2208,8 @@
+ $as_echo_n "checking \"$1\"... " >&6; }
+ 	echo "### $1" >> $charmout
+ 	cat $t >> $charmout
+-	echo $CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -c $t -o test.o $4 >> $charmout
+-	$CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -c $t -o test.o $4 > out 2>&1
++	echo $CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -Qunused-arguments -c $t -o test.o $4 >> $charmout
++	$CMK_CXX -I../include -I. $CMK_LIBDIR $CMK_INCDIR $CMK_SYSINC $OPTS_CXX $OPTS_LD -Qunused-arguments -c $t -o test.o $4 > out 2>&1
+ 	test_result $? "$1" "$2" "$3"
+  	strictpass=$pass
+ 	strictfail=$fail

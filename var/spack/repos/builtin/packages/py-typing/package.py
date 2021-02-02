@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,9 +11,7 @@ class PyTyping(PythonPackage):
     versions older than 3.6."""
 
     homepage = "https://docs.python.org/3/library/typing.html"
-    url      = "https://pypi.io/packages/source/t/typing/typing-3.7.4.1.tar.gz"
-
-    import_modules = ['typing']
+    pypi = "typing/typing-3.7.4.1.tar.gz"
 
     version('3.7.4.1', sha256='91dfe6f3f706ee8cc32d38edbbf304e9b7583fb37108fef38229617f8b3eba23')
     version('3.6.6', sha256='4027c5f6127a6267a435201981ba156de91ad0d1d98e9ddc2aa173453453492d')

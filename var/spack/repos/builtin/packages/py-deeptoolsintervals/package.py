@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,7 @@ class PyDeeptoolsintervals(PythonPackage):
     """A python module creating/accessing GTF-based interval trees with
     associated meta-data."""
 
-    homepage = 'https://pypi.org/project/deeptoolsintervals/'
-    url = 'https://pypi.io/packages/source/d/deeptoolsintervals/deeptoolsintervals-0.1.9.tar.gz'
+    pypi = 'deeptoolsintervals/deeptoolsintervals-0.1.9.tar.gz'
 
     version('0.1.9', sha256='7d94c36fd2b6f10d8b99e536d2672e8228971f1fc810497d33527bba2c40d4f6')
 

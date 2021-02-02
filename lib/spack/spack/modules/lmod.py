@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,10 +8,12 @@ import os.path
 import llnl.util.lang as lang
 import itertools
 import collections
+from typing import Dict, Any  # novm
 
 import spack.config
 import spack.compilers
 import spack.spec
+import spack.repo
 import spack.error
 import spack.tengine as tengine
 
@@ -25,7 +27,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {}  # type: Dict[str, Any]
 
 
 def make_configuration(spec):
@@ -125,7 +127,9 @@ class LmodConfiguration(BaseConfiguration):
 
         # Check if all the tokens in the hierarchy are virtual specs.
         # If not warn the user and raise an error.
-        not_virtual = [t for t in tokens if not spack.spec.Spec.is_virtual(t)]
+        not_virtual = [t for t in tokens
+                       if t != 'compiler' and
+                       not spack.repo.path.is_virtual(t)]
         if not_virtual:
             msg = "Non-virtual specs in 'hierarchy' list for lmod: {0}\n"
             msg += "Please check the 'modules.yaml' configuration files"

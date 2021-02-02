@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -507,7 +507,7 @@ def test_unconcretized_install(install_mockery, mock_fetch, mock_packages):
     """Test attempts to perform install phases with unconcretized spec."""
     spec = Spec('trivial-install-test-package')
 
-    with pytest.raises(ValueError, match="only install concrete packages"):
+    with pytest.raises(ValueError, match='must have a concrete spec'):
         spec.package.do_install()
 
     with pytest.raises(ValueError, match="only patch concrete packages"):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,6 @@
 import os
 
 from spack.util.environment import is_system_path
-from spack import *
 
 
 class Tcl(AutotoolsPackage, SourceforgePackage):
@@ -56,7 +55,8 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
             # Replace stage dir -> installed src dir in tclConfig
             filter_file(
                 stage_src, installed_src,
-                join_path(self.spec.prefix, 'lib', 'tclConfig.sh'))
+                join_path(self.spec['tcl'].libs.directories[0],
+                          'tclConfig.sh'))
 
         # Don't install binaries in src/ tree
         with working_dir(join_path(installed_src, self.configure_directory)):
@@ -85,45 +85,35 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         """
         return Executable(os.path.realpath(self.prefix.bin.tclsh))
 
-    @property
-    def tcl_lib_dir(self):
-        """The Tcl version-specific library directory where all extensions are
-        installed."""
-        return 'lib'
-
-    @property
-    def tcl_builtin_lib_dir(self):
-        """The Tcl version-specific library directory where all builtin
-        extensions are installed."""
-        return join_path(self.tcl_lib_dir,
-                         'tcl{0}'.format(self.version.up_to(2)))
-
     def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TCL_LIBRARY is set.
-        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         """Set TCLLIBPATH to include the tcl-shipped directory for
         extensions and any other tcl extension it depends on.
         For further info see: https://wiki.tcl.tk/1787"""
 
-        env.set('TCL_LIBRARY', join_path(self.prefix, self.tcl_lib_dir))
+        env.set('TCL_LIBRARY', self.spec['tcl'].libs.directories[0])
 
         # If we set TCLLIBPATH, we must also ensure that the corresponding
         # tcl is found in the build environment. This to prevent cases
         # where a system provided tcl is run against the standard libraries
         # of a Spack built tcl. See issue #7128 that relates to python but
         # it boils down to the same situation we have here.
-        path = os.path.dirname(self.command.path)
-        if not is_system_path(path):
-            env.prepend_path('PATH', path)
+        if not is_system_path(self.prefix.bin):
+            env.prepend_path('PATH', self.prefix.bin)
 
-        tcl_paths = [join_path(self.prefix, self.tcl_builtin_lib_dir)]
+        tcl_paths = [join_path(self.spec['tcl'].libs.directories[0],
+                               'tcl{0}'.format(self.version.up_to(2)))]
 
         for d in dependent_spec.traverse(deptype=('build', 'run', 'test')):
             if d.package.extends(self.spec):
-                tcl_paths.append(join_path(d.prefix, self.tcl_lib_dir))
+                # Tcl libraries may be installed in lib or lib64, see #19546
+                for lib in ['lib', 'lib64']:
+                    tcl_paths.append(join_path(
+                        d.prefix, lib, 'tcl{0}'.format(self.version.up_to(2))))
 
         # WARNING: paths in $TCLLIBPATH must be *space* separated,
         # its value is meant to be a Tcl list, *not* an env list
@@ -141,6 +131,9 @@ class Tcl(AutotoolsPackage, SourceforgePackage):
         # For run time environment set only the path for
         # dependent_spec and prepend it to TCLLIBPATH
         if dependent_spec.package.extends(self.spec):
-            dependent_tcllibpath = join_path(dependent_spec.prefix,
-                                             self.tcl_lib_dir)
-            env.prepend_path('TCLLIBPATH', dependent_tcllibpath, separator=' ')
+            # Tcl libraries may be installed in lib or lib64, see #19546
+            for lib in ['lib', 'lib64']:
+                tcllibpath = join_path(
+                    self.prefix, lib, 'tcl{0}'.format(self.version.up_to(2)))
+                if os.path.exists(tcllibpath):
+                    env.prepend_path('TCLLIBPATH', tcllibpath, separator=' ')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Amrex(CMakePackage):
+class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     """AMReX is a publicly available software framework designed
     for building massively parallel block- structured adaptive
     mesh refinement (AMR) applications."""
@@ -18,6 +18,8 @@ class Amrex(CMakePackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.01', sha256='59de3ed429347ee6a7ad4f09c0c431248f2e081f59c301db37cacb36993622f4')
+    version('20.12', sha256='a8ba1d605780250da77619939582ce44b33cd286f2dbcc0dfd5cdbaf209140a5')
     version('20.11', sha256='b86f4f2ebf414cec050e562d4ab81545944bda581b496d69767b4bf6a3060855')
     version('20.10', sha256='92def480d1f0bcb5bcb9dfae2ddc8997060414386a1d71ccbfdad785fa2e46fa')
     version('20.09', sha256='3ae203f18656117d8201da16e899a6144ec217817a2a5d9b7649e2eef9cacdf9')
@@ -57,9 +59,6 @@ class Amrex(CMakePackage):
             description='Build data services')
     variant('particles',  default=False,
             description='Build particle classes')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
     variant('sundials', default=False,
             description='Build AMReX with SUNDIALS support')
     variant('hdf5',  default=False,
@@ -68,8 +67,6 @@ class Amrex(CMakePackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
-    variant('cuda', default=False,
-            description='Enable CUDA interfaces')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -79,12 +76,18 @@ class Amrex(CMakePackage):
     depends_on('cmake@3.5:',  type='build', when='@:18.10.99')
     depends_on('cmake@3.13:', type='build', when='@18.11:')
     depends_on('cmake@3.14:', type='build', when='@19.04:')
+    # cmake @3.17: is necessary to handle cuda @11: correctly
+    depends_on('cmake@3.17:', type='build', when='^cuda @11:')
+    depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
+    depends_on('rocrand', type='build', when='+rocm')
     conflicts('%apple-clang')
     conflicts('%clang')
 
     # Check options compatibility
     conflicts('+sundials', when='~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')
+    conflicts('+sundials', when='@20.12:',
+              msg='AMReX >= 20.12 no longer supports SUNDIALS interfaces')
     conflicts('+hdf5', when='@:20.06',
               msg='AMReX HDF5 support needs AMReX newer than version 20.06')
     conflicts('+hypre', when='@:20.06',
@@ -99,6 +102,18 @@ class Amrex(CMakePackage):
               msg='AMReX PETSc support needs AMReX Fortran API (+fortran)')
     conflicts('+petsc', when='~linear_solvers',
               msg='AMReX PETSc support needs variant +linear_solvers')
+    conflicts('+cuda', when='@:19.08',
+              msg='AMReX CUDA support needs AMReX newer than version 19.08')
+    conflicts('cuda_arch=10', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=11', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=12', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=13', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=20', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=21', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=30', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('cuda_arch=32', when='+cuda', msg='AMReX only supports compute capabilities >= 3.5')
+    conflicts('+rocm', when='@:20.11', msg='AMReX HIP support needs AMReX newer than version 20.11')
+    conflicts('+cuda', when='+rocm', msg='CUDA and HIP support are exclusive')
 
     def url_for_version(self, version):
         if version >= Version('20.05'):
@@ -106,6 +121,14 @@ class Amrex(CMakePackage):
         else:
             url = "https://github.com/AMReX-Codes/amrex/archive/{0}.tar.gz"
         return url.format(version.dotted)
+
+    def get_cuda_arch_string(self, values):
+        if 'none' in values:
+            return 'Auto'
+        else:
+            # Use format x.y instead of CudaPackage xy format
+            vf = tuple(float(x) / 10.0 for x in values)
+            return ';'.join(str(x) for x in vf)
 
     #
     # For versions <= 20.11
@@ -133,8 +156,13 @@ class Amrex(CMakePackage):
             self.define_from_variant('ENABLE_PETSC', 'petsc'),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
         ]
+
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        if '+cuda' in self.spec:
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
 
@@ -158,13 +186,25 @@ class Amrex(CMakePackage):
                                      'linear_solvers'),
             self.define_from_variant('AMReX_AMRDATA', 'amrdata'),
             self.define_from_variant('AMReX_PARTICLES', 'particles'),
-            self.define_from_variant('AMReX_SUNDIALS', 'sundials'),
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
-            self.define_from_variant('AMReX_CUDA', 'cuda'),
         ]
+
         if self.spec.satisfies('%fj'):
             args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        if '+cuda' in self.spec:
+            args.append('-DAMReX_GPU_BACKEND=CUDA')
+            args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
+            args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
+
+        if '+rocm' in self.spec:
+            args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc))
+            args.append('-DAMReX_GPU_BACKEND=HIP')
+            targets = self.spec.variants['amdgpu_target'].value
+            args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets))
 
         return args

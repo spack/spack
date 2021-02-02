@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,9 +8,12 @@ class Hepmc(CMakePackage):
     """The HepMC package is an object oriented, C++ event record for
        High Energy Physics Monte Carlo generators and simulation."""
 
-    homepage = "http://hepmc.web.cern.ch/hepmc/"
-    url      = "http://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.09.tgz"
+    homepage = "https://hepmc.web.cern.ch/hepmc/"
+    url      = "https://hepmc.web.cern.ch/hepmc/releases/hepmc2.06.11.tgz"
 
+    tags = ['hep']
+
+    version('2.06.11', sha256='86b66ea0278f803cde5774de8bd187dd42c870367f1cbf6cdaec8dc7cf6afc10')
     version('2.06.10', sha256='5adedd9e3f7447e1e5fc01b72f745ab87da2c1611df89208bb3d7c6ea94c11a4')
     version('2.06.09', sha256='e0f8fddd38472c5615210894444686ac5d72df3be682f7d151b562b236d9b422')
     version('2.06.08', sha256='8be6c1793e0a045f07ddb88bb64b46de7e66a52e75fb72b3f82f9a3e3ba8a8ce')
@@ -35,5 +38,5 @@ class Hepmc(CMakePackage):
         if version <= Version("2.06.08"):
             url = "http://lcgapp.cern.ch/project/simu/HepMC/download/HepMC-{0}.tar.gz"
         else:
-            url = "http://hepmc.web.cern.ch/hepmc/releases/hepmc{0}.tgz"
+            url = "https://hepmc.web.cern.ch/hepmc/releases/hepmc{0}.tgz"
         return url.format(version)

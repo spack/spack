@@ -1,9 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import os.path
 
 
 class EnvironmentModules(Package):
@@ -12,10 +10,11 @@ class EnvironmentModules(Package):
     """
 
     homepage = 'https://cea-hpc.github.io/modules/'
-    url = 'https://github.com/cea-hpc/modules/releases/download/v4.6.0/modules-4.6.0.tar.gz'
+    url = 'https://github.com/cea-hpc/modules/releases/download/v4.6.1/modules-4.6.1.tar.gz'
 
     maintainers = ['xdelaruelle']
 
+    version('4.6.1', sha256='3445df39abe5838b94552b53e7dbff56ada8347b9fdc6c04a72297d5b04af76f')
     version('4.6.0', sha256='b42b14bb696bf1075ade1ecaefe7735dbe411db4c29031a1dae549435eafa946')
     version('4.5.3', sha256='7cbd9c61e6dcd82a3f81b5ced92c3cf84ecc5489639bdfc94869256383a2c915')
     version('4.5.2', sha256='74ccc9ab0fea0064ff3f4c5841435cef13cc6d9869b3c2b25e5ca4efa64a69a1')
@@ -51,21 +50,13 @@ class EnvironmentModules(Package):
     def install(self, spec, prefix):
         tcl = spec['tcl']
 
-        # Determine where we can find tclConfig.sh
-        for tcl_lib_dir in [tcl.prefix.lib, tcl.prefix.lib64]:
-            tcl_config_file = os.path.join(tcl_lib_dir, 'tclConfig.sh')
-            if os.path.exists(tcl_config_file):
-                break
-        else:
-            raise InstallError('Failed to locate tclConfig.sh')
-
         config_args = [
             "--prefix=" + prefix,
             "--without-tclx",
             "--with-tclx-ver=0.0",
             # It looks for tclConfig.sh
-            "--with-tcl=" + tcl_lib_dir,
-            "--with-tcl-ver={0}.{1}".format(*tcl.version.version[0:2]),
+            "--with-tcl=" + tcl.libs.directories[0],
+            "--with-tcl-ver={0}".format(tcl.version.up_to(2)),
             '--disable-versioning',
             '--datarootdir=' + prefix.share
         ]

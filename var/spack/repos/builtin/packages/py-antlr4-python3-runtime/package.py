@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyAntlr4Python3Runtime(PythonPackage):
     """
 
     homepage = "https://www.antlr.org"
-    url      = "https://pypi.io/packages/source/a/antlr4-python3-runtime/antlr4-python3-runtime-4.7.2.tar.gz"
+    pypi = "antlr4-python3-runtime/antlr4-python3-runtime-4.7.2.tar.gz"
 
     version('4.7.2', sha256='168cdcec8fb9152e84a87ca6fd261b3d54c8f6358f42ab3b813b14a7193bb50b')
 

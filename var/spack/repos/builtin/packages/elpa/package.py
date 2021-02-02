@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,8 @@ from spack import *
 class Elpa(AutotoolsPackage, CudaPackage):
     """Eigenvalue solvers for Petaflop-Applications (ELPA)"""
 
-    homepage = 'http://elpa.mpcdf.mpg.de/'
-    url = 'http://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
+    homepage = 'https://elpa.mpcdf.mpg.de/'
+    url = 'https://elpa.mpcdf.mpg.de/elpa-2015.11.001.tar.gz'
 
     version('2020.05.001', sha256='66ff1cf332ce1c82075dc7b5587ae72511d2bcb3a45322c94af6b01996439ce5')
     version('2019.11.001', sha256='10374a8f042e23c7e1094230f7e2993b6f3580908a213dbdf089792d05aff357')
@@ -37,9 +37,9 @@ class Elpa(AutotoolsPackage, CudaPackage):
     depends_on('libtool', type='build')
 
     def url_for_version(self, version):
-        t = 'http://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
+        t = 'https://elpa.mpcdf.mpg.de/html/Releases/{0}/elpa-{0}.tar.gz'
         if version < Version('2016.05.003'):
-            t = 'http://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
+            t = 'https://elpa.mpcdf.mpg.de/elpa-{0}.tar.gz'
         return t.format(str(version))
 
     # override default implementation which returns static lib

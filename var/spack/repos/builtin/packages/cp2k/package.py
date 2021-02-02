@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     maintainers = ['dev-zero']
 
+    version('8.1', sha256='7f37aead120730234a60b2989d0547ae5e5498d93b1e9b5eb548c041ee8e7772')
     version('7.1', sha256='ccd711a09a426145440e666310dd01cc5772ab103493c4ae6a3470898cd0addb')
     version('6.1', sha256='af803558e0a6b9e9d9ce8a3ab955ba32bacd179922455424e061c82c9fefa34b')
     version('5.1', sha256='e23613b593354fa82e0b8410e17d94c607a0b8c6d9b5d843528403ab09904412')
@@ -47,15 +48,11 @@ class Cp2k(MakefilePackage, CudaPackage):
             description=('Enable planewave electronic structure'
                          ' calculations via SIRIUS'))
     variant('cosma', default=False, description='Use COSMA for p?gemm')
+    variant('libvori', default=False,
+            description=('Enable support for Voronoi integration'
+                         ' and BQB compression'))
+    variant('spglib', default=False, description='Enable support for spglib')
 
-    # override cuda_arch from CudaPackage since we only support one arch
-    # at a time and only specific ones for which we have parameter files
-    # for optimal kernels
-    variant('cuda_arch',
-            description='CUDA architecture',
-            default='none',
-            values=('none', '35', '37', '60', '70'),
-            multi=False)
     variant('cuda_arch_35_k20x', default=False,
             description=('CP2K (resp. DBCSR) has specific parameter sets for'
                          ' different GPU models. Enable this when building'
@@ -74,6 +71,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             multi=False)
 
     depends_on('python', type='build')
+    depends_on('python@3:', when='@8:', type='build')
 
     depends_on('blas')
     depends_on('lapack')
@@ -129,6 +127,9 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
+    depends_on('libvori@201219:', when='@8:+libvori', type='build')
+    depends_on('spglib', when='+spglib')
+
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
     conflicts('~mpi', '+pexsi')
     conflicts('~mpi', '+elpa')
@@ -136,6 +137,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('~mpi', '+cosma')
     conflicts('+sirius', '@:6.999')  # sirius support was introduced in 7+
     conflicts('+cosma', '@:7.999')  # COSMA support was introduced in 8+
+
+    conflicts('+libvori', '@:7.999')  # libvori support was introduced in 8+
 
     conflicts('~cuda', '+cuda_fft')
     conflicts('~cuda', '+cuda_blas')
@@ -159,6 +162,19 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('^openblas threads=pthreads', when='+openmp')
 
     conflicts('~openmp', when='@8:', msg='Building without OpenMP is not supported in CP2K 8+')
+
+    # We only support specific cuda_archs for which we have parameter files
+    # for optimal kernels. Note that we don't override the cuda_archs property
+    # from the parent class, since the parent class defines constraints for all
+    # versions. Instead just mark all unsupported cuda archs as conflicting.
+    dbcsr_cuda_archs = ('35', '37', '60', '70')
+    cuda_msg = 'cp2k only supports cuda_arch {0}'.format(dbcsr_cuda_archs)
+
+    for arch in CudaPackage.cuda_arch_values:
+        if arch not in dbcsr_cuda_archs:
+            conflicts('+cuda', when='cuda_arch={0}'.format(arch), msg=cuda_msg)
+
+    conflicts('+cuda', when='cuda_arch=none', msg=cuda_msg)
 
     @property
     def makefile_architecture(self):
@@ -439,7 +455,7 @@ class Cp2k(MakefilePackage, CudaPackage):
                 cppflags += ['-D__PW_CUDA']
                 libs += ['-lcufft', '-lcublas']
 
-            cuda_arch = spec.variants['cuda_arch'].value
+            cuda_arch = spec.variants['cuda_arch'].value[0]
             if cuda_arch:
                 gpuver = {
                     '35': 'K40',
@@ -478,6 +494,19 @@ class Cp2k(MakefilePackage, CudaPackage):
             fcflags += pkgconf('--cflags-only-I', 'libxsmmf',
                                output=str).split()
             libs += pkgconf('--libs', 'libxsmmf', output=str).split()
+
+        if '+libvori' in spec:
+            cppflags += ['-D__LIBVORI']
+            libvori = spec['libvori'].libs
+            ldflags += [libvori.search_flags]
+            libs += libvori
+            libs += ['-lstdc++']
+
+        if '+spglib' in spec:
+            cppflags += ['-D__SPGLIB']
+            spglib = spec['spglib'].libs
+            ldflags += [spglib.search_flags]
+            libs += spglib
 
         dflags.extend(cppflags)
         cflags.extend(cppflags)
@@ -559,6 +588,9 @@ class Cp2k(MakefilePackage, CudaPackage):
         ]
 
     def build(self, spec, prefix):
+        if len(spec.variants['cuda_arch'].value) > 1:
+            raise InstallError("cp2k supports only one cuda_arch at a time")
+
         # Apparently the Makefile bases its paths on PWD
         # so we need to set PWD = self.build_directory
         with spack.util.environment.set_env(PWD=self.build_directory):

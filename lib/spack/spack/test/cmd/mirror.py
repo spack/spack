@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,7 +102,7 @@ class MockMirrorArgs(object):
         self.exclude_specs = exclude_specs
 
 
-def test_exclude_specs(mock_packages):
+def test_exclude_specs(mock_packages, config):
     args = MockMirrorArgs(
         specs=['mpich'],
         versions_per_spec='all',
@@ -117,7 +117,7 @@ def test_exclude_specs(mock_packages):
     assert (not expected_exclude & set(mirror_specs))
 
 
-def test_exclude_file(mock_packages, tmpdir):
+def test_exclude_file(mock_packages, tmpdir, config):
     exclude_path = os.path.join(str(tmpdir), 'test-exclude.txt')
     with open(exclude_path, 'w') as exclude_file:
         exclude_file.write("""\

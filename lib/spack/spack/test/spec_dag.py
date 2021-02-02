@@ -1,13 +1,13 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 """
 These tests check Spec DAG operations using dummy packages.
 """
 import pytest
 import spack.architecture
+import spack.error
 import spack.package
 
 from spack.spec import Spec
@@ -90,6 +90,11 @@ def test_installed_deps():
     that the installed instance of P should be used. In this case, D should
     not be constrained by P since P is already built.
     """
+    # FIXME: this requires to concretize build deps separately if we are
+    # FIXME: using the clingo based concretizer
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.xfail('requires separate concretization of build dependencies')
+
     default = ('build', 'link')
     build_only = ('build',)
 
@@ -152,13 +157,24 @@ def test_specify_preinstalled_dep():
 
 
 @pytest.mark.usefixtures('config')
-def test_conditional_dep_with_user_constraints():
+@pytest.mark.parametrize('spec_str,expr_str,expected', [
+    ('x ^y@2', 'y@2', True),
+    ('x@1', 'y', False),
+    ('x', 'y@3', True)
+])
+def test_conditional_dep_with_user_constraints(spec_str, expr_str, expected):
     """This sets up packages X->Y such that X depends on Y conditionally. It
     then constructs a Spec with X but with no constraints on X, so that the
     initial normalization pass cannot determine whether the constraints are
     met to add the dependency; this checks whether a user-specified constraint
     on Y is applied properly.
     """
+    # FIXME: We need to tweak optimization rules to make this test
+    # FIXME: not prefer a DAG with fewer nodes wrt more recent
+    # FIXME: versions of the package
+    if spack.config.get('config:concretizer') == 'clingo':
+        pytest.xfail('Clingo optimization rules prefer to trim a node')
+
     default = ('build', 'link')
 
     mock_repo = MockPackageMultiRepo()
@@ -171,27 +187,15 @@ def test_conditional_dep_with_user_constraints():
     mock_repo.add_package('x', [y], [default], conditions=x_on_y_conditions)
 
     with spack.repo.swap(mock_repo):
-        spec = Spec('x ^y@2')
+        spec = Spec(spec_str)
         spec.concretize()
 
-        assert ('y@2' in spec)
-
-    with spack.repo.swap(mock_repo):
-        spec = Spec('x@1')
-        spec.concretize()
-
-        assert ('y' not in spec)
-
-    with spack.repo.swap(mock_repo):
-        spec = Spec('x')
-        spec.concretize()
-
-        assert ('y@3' in spec)
+    result = expr_str in spec
+    assert result is expected, '{0} in {1}'.format(expr_str, spec)
 
 
 @pytest.mark.usefixtures('mutable_mock_repo', 'config')
 class TestSpecDag(object):
-
     def test_conflicting_package_constraints(self, set_dependency):
         set_dependency('mpileaks', 'mpich@1.0')
         set_dependency('callpath', 'mpich@2.0')
@@ -387,17 +391,12 @@ class TestSpecDag(object):
         with pytest.raises(spack.spec.UnsatisfiableArchitectureSpecError):
             spec.normalize()
 
-    def test_invalid_dep(self):
-        spec = Spec('libelf ^mpich')
-        with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.concretize()
-
-        spec = Spec('libelf ^libdwarf')
-        with pytest.raises(spack.spec.InvalidDependencyError):
-            spec.concretize()
-
-        spec = Spec('mpich ^dyninst ^libelf')
-        with pytest.raises(spack.spec.InvalidDependencyError):
+    @pytest.mark.parametrize('spec_str', [
+        'libelf ^mpich', 'libelf ^libdwarf', 'mpich ^dyninst ^libelf'
+    ])
+    def test_invalid_dep(self, spec_str):
+        spec = Spec(spec_str)
+        with pytest.raises(spack.error.SpecError):
             spec.concretize()
 
     def test_equal(self):

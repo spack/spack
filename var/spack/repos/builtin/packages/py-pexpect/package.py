@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,8 +8,7 @@ from spack import *
 
 class PyPexpect(PythonPackage):
     """Pexpect allows easy control of interactive console applications."""
-    homepage = "https://pypi.python.org/pypi/pexpect"
-    url      = "https://pypi.io/packages/source/p/pexpect/pexpect-4.2.1.tar.gz"
+    pypi = "pexpect/pexpect-4.2.1.tar.gz"
 
     version('4.7.0', sha256='9e2c1fd0e6ee3a49b28f95d4b33bc389c89b20af6a1255906e90ff1262ce62eb')
     version('4.6.0', sha256='2a8e88259839571d1251d278476f3eec5db26deb73a70be5ed5dc5435e418aba')

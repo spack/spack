@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -64,7 +64,7 @@ class Lammps(CMakePackage, CudaPackage):
                           'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
                           'srd', 'user-atc', 'user-h5md', 'user-lb',
                           'user-meamc', 'user-misc', 'user-netcdf', 'user-omp',
-                          'user-reaxc', 'voronoi']
+                          'user-reaxc', 'voronoi', 'opt']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -95,7 +95,6 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('blas', when='+user-atc')
     depends_on('lapack', when='+user-atc')
     depends_on('opencl', when='+opencl')
-
     depends_on('latte@1.0.1', when='@:20180222+latte')
     depends_on('latte@1.1.1:', when='@20180316:20180628+latte')
     depends_on('latte@1.2.1:', when='@20180629:20200505+latte')
@@ -186,6 +185,12 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('-DFFT=FFTW3')
             if '^mkl' in spec:
                 args.append('-DFFT=MKL')
+            if '^amdfftw' in spec:
+                fftw_prefix = spec['amdfftw'].prefix
+                args.append('-DFFTW_HOME={0}'.format(fftw_prefix))
+                args.append('-DFFTW_INCLUDE_DIRS={0}'
+                            .format(fftw_prefix.include))
+                args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
 

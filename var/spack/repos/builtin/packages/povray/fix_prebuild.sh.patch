@@ -1,0 +1,15 @@
+diff -Naur spack-src/unix/prebuild.sh spack-src.patched/unix/prebuild.sh
+--- spack-src/unix/prebuild.sh	2020-11-19 16:49:04.573263288 -0500
++++ spack-src.patched/unix/prebuild.sh	2020-11-19 16:51:35.599850471 -0500
+@@ -62,8 +62,9 @@
+ 
+ # Prevents running from another directory.
+ if test x"`dirname $0`" != x"."; then
+-  echo "$0: must ran from POV-Ray's unix/ directory"
+-  exit 1
++  wdir=`dirname $0`
++  echo >&2 "Changing directory to '$wdir' ..."
++  cd $wdir
+ fi
+ 
+ # Check optional argument.

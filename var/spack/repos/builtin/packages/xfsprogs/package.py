@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Xfsprogs(AutotoolsPackage):
     version('4.20.0', sha256='beafdfd080352a8c9d543491e0874d0e8809cb643a3b9d352d5feed38d77022a')
 
     depends_on('gettext')
+    depends_on('uuid')
     depends_on('util-linux')
 
     def setup_build_environment(self, env):

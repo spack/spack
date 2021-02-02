@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -275,3 +275,53 @@ def no_checksum():
     return Args(
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
+
+
+def add_cdash_args(subparser, add_help):
+    cdash_help = {}
+    if add_help:
+        cdash_help['upload-url'] = "CDash URL where reports will be uploaded"
+        cdash_help['build'] = """The name of the build that will be reported to CDash.
+Defaults to spec of the package to operate on."""
+        cdash_help['site'] = """The site name that will be reported to CDash.
+Defaults to current system hostname."""
+        cdash_help['track'] = """Results will be reported to this group on CDash.
+Defaults to Experimental."""
+        cdash_help['buildstamp'] = """Instead of letting the CDash reporter prepare the
+buildstamp which, when combined with build name, site and project,
+uniquely identifies the build, provide this argument to identify
+the build yourself.  Format: %%Y%%m%%d-%%H%%M-[cdash-track]"""
+    else:
+        cdash_help['upload-url'] = argparse.SUPPRESS
+        cdash_help['build'] = argparse.SUPPRESS
+        cdash_help['site'] = argparse.SUPPRESS
+        cdash_help['track'] = argparse.SUPPRESS
+        cdash_help['buildstamp'] = argparse.SUPPRESS
+
+    subparser.add_argument(
+        '--cdash-upload-url',
+        default=None,
+        help=cdash_help['upload-url']
+    )
+    subparser.add_argument(
+        '--cdash-build',
+        default=None,
+        help=cdash_help['build']
+    )
+    subparser.add_argument(
+        '--cdash-site',
+        default=None,
+        help=cdash_help['site']
+    )
+
+    cdash_subgroup = subparser.add_mutually_exclusive_group()
+    cdash_subgroup.add_argument(
+        '--cdash-track',
+        default='Experimental',
+        help=cdash_help['track']
+    )
+    cdash_subgroup.add_argument(
+        '--cdash-buildstamp',
+        default=None,
+        help=cdash_help['buildstamp']
+    )

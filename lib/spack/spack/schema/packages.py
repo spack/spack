@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,51 @@
 .. literalinclude:: _spack_root/lib/spack/spack/schema/packages.py
    :lines: 13-
 """
+
+
+def deprecate_paths_and_modules(instance, deprecated_properties):
+    """Function to produce warning/error messages if "paths" and "modules" are
+    found in "packages.yaml"
+
+    Args:
+        instance: instance of the configuration file
+        deprecated_properties: deprecated properties in instance
+
+    Returns:
+        Warning/Error message to be printed
+    """
+    import copy
+    import os.path
+    import llnl.util.tty
+    import spack.util.spack_yaml as syaml
+    # Copy the instance to remove default attributes that are not related
+    # to the part that needs to be reported
+    instance_copy = copy.copy(instance)
+
+    # Check if this configuration comes from an environment or not
+    absolute_path = instance_copy._end_mark.name
+    command_to_suggest = '$ spack config update packages'
+    if os.path.basename(absolute_path) == 'spack.yaml':
+        command_to_suggest = '$ spack env update <environment>'
+
+    # Retrieve the relevant part of the configuration as YAML
+    keys_to_be_removed = [
+        x for x in instance_copy if x not in deprecated_properties
+    ]
+    for key in keys_to_be_removed:
+        instance_copy.pop(key)
+    yaml_as_str = syaml.dump_config(instance_copy, blame=True)
+
+    if llnl.util.tty.is_debug():
+        msg = 'OUTDATED CONFIGURATION FILE [file={0}]\n{1}'
+        llnl.util.tty.debug(msg.format(absolute_path, yaml_as_str))
+
+    msg = ('detected deprecated properties in {0}\nActivate the debug '
+           'flag to have more information on the deprecated parts or '
+           'run:\n\n\t{2}\n\nto update the file to the new format\n')
+    return msg.format(
+        absolute_path, yaml_as_str, command_to_suggest
+    )
 
 
 #: Properties for inclusion in other schemas
@@ -95,9 +140,7 @@ properties = {
                 },
                 'deprecatedProperties': {
                     'properties': ['modules', 'paths'],
-                    'message': 'the attribute "{property}" in the "packages" '
-                               'section of the configuration has been '
-                               'deprecated [entry={entry}]',
+                    'message': deprecate_paths_and_modules,
                     'error': False
                 }
             },

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,7 @@ class PackageTemplate(BundlePackageTemplate):
         make()
         make('install')"""
 
-    url_line = """    url      = \"{url}\""""
+    url_line = '    url      = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -270,14 +270,47 @@ class PythonPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
+        # Simple PyPI URLs:
+        # https://<hostname>/packages/<type>/<first character of project>/<project>/<download file>
+        # e.g. https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://www.pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
+
+        # PyPI URLs containing hash:
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
+
+        # PyPI URLs for wheels are too complicated, ignore them for now
+
+        match = re.search(
+            r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
+            url
+        )
+        if match:
+            if len(match.group(2)) == 1:
+                # Simple PyPI URL
+                url = '/'.join(match.group(3, 4))
+            else:
+                # PyPI URL containing hash
+                # Project name doesn't necessarily match download name, but it
+                # usually does, so this is the best we can do
+                project = parse_name(url)
+                url = '/'.join([project, match.group(4)])
+
+            self.url_line = '    pypi     = "{url}"'
+
+        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -545,7 +578,8 @@ class BuildSystemGuesser:
         ]
 
         # Peek inside the compressed file.
-        if stage.archive_file.endswith('.zip'):
+        if (stage.archive_file.endswith('.zip') or
+                '.zip#' in stage.archive_file):
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)

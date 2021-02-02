@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,10 +20,10 @@ import six
 from six.moves.urllib.error import URLError
 from six.moves.urllib.request import urlopen, Request
 
-try:
+if sys.version_info < (3, 0):
     # Python 2 had these in the HTMLParser package.
     from HTMLParser import HTMLParser, HTMLParseError  # novm
-except ImportError:
+else:
     # In Python 3, things moved to html.parser
     from html.parser import HTMLParser
 
@@ -41,6 +41,7 @@ import spack.url
 import spack.util.crypto
 import spack.util.s3 as s3_util
 import spack.util.url as url_util
+import llnl.util.lang
 
 from spack.util.compression import ALLOWED_ARCHIVE_TYPES
 
@@ -424,12 +425,6 @@ def spider(root_urls, depth=0, concurrency=32):
 
         return pages, links, subcalls
 
-    # TODO: Needed until we drop support for Python 2.X
-    def star(func):
-        def _wrapper(args):
-            return func(*args)
-        return _wrapper
-
     if isinstance(root_urls, six.string_types):
         root_urls = [root_urls]
 
@@ -450,7 +445,7 @@ def spider(root_urls, depth=0, concurrency=32):
             tty.debug("SPIDER: [depth={0}, max_depth={1}, urls={2}]".format(
                 current_depth, depth, len(spider_args))
             )
-            results = tp.map(star(_spider), spider_args)
+            results = tp.map(llnl.util.lang.star(_spider), spider_args)
             spider_args = []
             collect = current_depth < depth
             for sub_pages, sub_links, sub_spider_args in results:
@@ -554,7 +549,10 @@ def find_versions_of_archive(
         #   .sha256
         #   .sig
         # However, SourceForge downloads still need to end in '/download'.
-        url_regex += r'(\/download)?$'
+        url_regex += r'(\/download)?'
+        # PyPI adds #sha256=... to the end of the URL
+        url_regex += '(#sha256=.*)?'
+        url_regex += '$'
 
         regexes.append(url_regex)
 

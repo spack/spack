@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class PyUproot4(PythonPackage):
     url      = "https://github.com/scikit-hep/uproot4/archive/0.0.27.tar.gz"
 
     maintainers = ['vvolkl']
+
+    tags = ['hep']
 
     version('master', branch='master')
     version('0.0.27', sha256='de87555937332998b476f3e310392962bc983bddc008ed2b3c07a25c0379c4c9')
