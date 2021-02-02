@@ -104,7 +104,7 @@ class Mxnet(CMakePackage, CudaPackage):
 
             # Workaround for bug in GCC 8+ and CUDA 10 on PowerPC
             args.append(self.define(
-                'CMAKE_CUDA_FLAGS', self.compiler.cxx11_flag + ' '))
+                'CMAKE_CUDA_FLAGS', self.compiler.cxx11_flag))
 
         return args
 
