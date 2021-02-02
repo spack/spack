@@ -24,6 +24,21 @@ class Superchic(MakefilePackage):
     depends_on('lhapdf')
     depends_on('apfel', when='@4.01:')
 
+    def build(self, spec, prefix):
+        make('PWD=' + self.build_directory)
+
+    def install(self, spec, prefix):
+        mkdirp(self.prefix.bin)
+        install_tree('bin', self.prefix.bin)
+        if self.spec.satisfies('@3.03:'):
+            mkdirp(self.prefix.lib)
+            install_tree('lib', self.prefix.lib)
+        if self.spec.satisfies('@3.05:'):
+            mkdirp(join_path(self.prefix, 'src', 'inc'))
+            install_tree(join_path('src', 'inc'), join_path(self.prefix, 'src', 'inc'))
+            mkdirp(join_path(self.prefix, 'obj'))
+            install_tree('obj', join_path(self.prefix, 'obj'))
+            
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
         makefile.filter('LHAPDFLIB = .*', 'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
