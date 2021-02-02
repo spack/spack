@@ -12,6 +12,9 @@ class PyNbsphinx(PythonPackage):
     *.ipynb files.
     """
 
+    # It should be noted that in order to have nbsphinx work,
+    # one must create a Spack view of the dependencies.
+
     homepage = "https://nbsphinx.readthedocs.io"
     pypi     = "nbsphinx/nbsphinx-0.8.0.tar.gz"
 
