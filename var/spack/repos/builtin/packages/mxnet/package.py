@@ -95,10 +95,15 @@ class Mxnet(CMakePackage, CudaPackage):
             self.define_from_variant('USE_MKLDNN', 'mkldnn'),
         ]
 
-        if '+cuda' in self.spec and 'cuda_arch=none' not in self.spec:
-            cuda_arch = ';'.join('{0:.1f}'.format(float(i) / 10.0) for i
-                                 in self.spec.variants['cuda_arch'].value)
-            args.append('-DMXNET_CUDA_ARCH={0}'.format(cuda_arch))
+        if '+cuda' in self.spec:
+            if 'cuda_arch=none' not in self.spec:
+                cuda_arch = ';'.join('{0:.1f}'.format(float(i) / 10.0) for i
+                                     in self.spec.variants['cuda_arch'].value)
+                args.append(self.define('MXNET_CUDA_ARCH', cuda_arch))
+
+            # Workaround for bug in GCC 8+ and CUDA 10 on PowerPC
+            args.append(self.define(
+                'CMAKE_CUDA_FLAGS', self.compiler.cxx11_flag))
 
         return args
 
