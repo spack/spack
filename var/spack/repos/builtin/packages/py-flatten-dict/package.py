@@ -16,7 +16,7 @@ class PyFlattenDict(PythonPackage):
 
     version('0.3.0', sha256='0ccc43f15c7c84c5ef387ad19254f6769a32d170313a1bcbf4ce582089313d7e')
 
-    depends_on('python@3.5:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
     depends_on('py-six@1.12:1.999', type=('build', 'run'))
     depends_on('py-pathlib2', type=('build', 'run'))
