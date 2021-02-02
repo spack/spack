@@ -72,6 +72,7 @@ class Mxnet(CMakePackage, CudaPackage):
     conflicts('+cudnn', when='~cuda')
     conflicts('+nccl', when='~cuda')
 
+    patch('openblas.patch', when='@1.7.0')
     patch('cmake_cuda_flags.patch', when='@1.6:1.7')
     patch('parallell_shuffle.patch', when='@1.6.0')
 
