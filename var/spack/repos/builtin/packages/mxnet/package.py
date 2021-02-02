@@ -94,6 +94,7 @@ class Mxnet(CMakePackage, CudaPackage):
             self.define_from_variant('USE_NCCL', 'nccl'),
             self.define_from_variant('USE_OPENCV', 'opencv'),
             self.define_from_variant('USE_OPENMP', 'openmp'),
+            self.define_from_variant('USE_LAPACK', 'lapack'),
             self.define_from_variant('USE_MKLDNN', 'mkldnn'),
         ]
 
