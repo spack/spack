@@ -986,24 +986,31 @@ class TestSpecSematics(object):
         assert spec.target < 'broadwell'
 
     def test_splice(self):
-        # TODO: Use a mock version of mpich that is different than the default
-        # concretization candidate for mpileaks. (3.0.4?)
-        # Set these two specs to have different targets.
+        # Tests the new splice function in Spec using a somewhat simple case
+        # with a variant with a conditional dependency.
+        # TODO: Set these two specs to have different targets.
+        # TODO: Test being able to splice in different provider for a virtual.
+        # Example: mvapich for mpich.
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
         spec.concretize()
         dep.concretize()
+        assert dep.dag_hash() != spec['splice-h'].dag_hash()
+        assert dep.build_hash() != spec['splice-h'].build_hash()
         out = spec.splice(dep, True)
-        # Traverse the spec and assert that the targets are correct.
         out.concretize()
         assert out.concrete
+        # Traverse the spec and assert that the targets are correct.
+        # The following should fail with a "NotFoundError" if the DAGs don't
+        # match by name.
+        for node in spec.traverse():
+            assert node.name == out[node.name].name
         # Can check that (the hash of the spliced splice-h) == the one from dep
-        # (Existing dag hash) 
-        # Spliced spec's dag hash should be different, but build hash should be 
+        # (Existing dag hash)
+        assert dep.dag_hash() != spec['splice-h'].dag_hash()
+        # Spliced spec's dag hash should be different, but build hash should be
         # same as self's.
-        # Also test being able to splice in different provider for a virtual
-        # Example: mvapich for mpich.
-        # May also want to resolve virtuals.
+        assert dep.build_hash() == out['splice-h'].build_hash()
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
@@ -1034,6 +1041,7 @@ class TestSpecSematics(object):
         s = Spec('mpileaks')
         s._add_dependency(d, ())
         assert s.satisfies('mpileaks ^zmpi ^fake', strict=True)
+
 
 @pytest.mark.regression('3887')
 @pytest.mark.parametrize('spec_str', [

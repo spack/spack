@@ -1488,7 +1488,6 @@ class Spec(object):
         return b32_hash
 
     def _cached_hash(self, hash, length=None):
-        # 
         """Helper function for storing a cached hash on the spec.
 
         This will run _spec_hash() with the deptype and package_hash
@@ -2554,6 +2553,9 @@ class Spec(object):
         for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
+            elif (not value):
+                s._hash = None
+                s._full_hash = None
             s._normal = value
             s._concrete = value
 
@@ -4242,38 +4244,40 @@ class Spec(object):
         # Variants may also be ignored here for now...
 
         if transitive:
-            self_nodes = dict((s.name, s.copy(deps=False)) \
-                for s in self.traverse(root=True) if s.name not in other)
-            other_nodes = dict((s.name, s.copy(deps=False)) \
-                for s in other.traverse(root=True))
+            self_nodes = dict((s.name, s.copy(deps=False))
+                              for s in self.traverse(root=True)
+                              if s.name not in other)
+            other_nodes = dict((s.name, s.copy(deps=False))
+                               for s in other.traverse(root=True))
         else:
             # If we're not doing a transitive splice, then we only want the
             # root of other.
-            self_nodes = dict((s.name, s.copy(deps=False)) \
-                for s in self.traverse(root=True) if s.name != other.name)
+            self_nodes = dict((s.name, s.copy(deps=False))
+                              for s in self.traverse(root=True)
+                              if s.name != other.name)
             other_nodes = {other.name: other.copy(deps=False)}
-        
+
         nodes = other_nodes.copy()
         nodes.update(self_nodes)
 
         for name in nodes:
             if name in self_nodes:
-                dependencies = self[name]._dependencies 
+                dependencies = self[name]._dependencies
                 for dep in dependencies:
-                    nodes[name]._add_dependency(nodes[dep], 
+                    nodes[name]._add_dependency(nodes[dep],
                                                 dependencies[dep].deptypes)
                 if any(dep not in self_nodes for dep in dependencies):
                     nodes[name].build_spec = self[name]
             else:
                 dependencies = other[name]._dependencies
                 for dep in dependencies:
-                    nodes[name]._add_dependency(nodes[dep], 
+                    nodes[name]._add_dependency(nodes[dep],
                                                 dependencies[dep].deptypes)
                 if any(dep not in other_nodes for dep in dependencies):
                     nodes[name].build_spec = other[name]
 
         # Clear cached hashes
-        nodes[self.name]._mark_concrete(False) # check this; might not do the right thing
+        nodes[self.name]._mark_concrete(False)
         return nodes[self.name]
 
 
