@@ -78,9 +78,6 @@ class Mxnet(CMakePackage, CudaPackage):
     build_directory = 'build'
     generator = 'Ninja'
 
-    def setup_build_environment(self, env):
-        env.set('MXNET_LIBRARY_PATH', self.spec['mxnet'].libs[0])
-
     def setup_run_environment(self, env):
         env.set('MXNET_LIBRARY_PATH', self.spec['mxnet'].libs[0])
 
