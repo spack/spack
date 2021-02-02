@@ -315,24 +315,18 @@ def _skip_if_missing_executables(request):
             pytest.skip(msg.format(', '.join(missing_execs)))
 
 
-# FIXME: The lines below should better be added to a fixture with
-# FIXME: session-scope. Anyhow doing it is not easy, as it seems
-# FIXME: there's some weird interaction with compilers during concretization.
-spack.architecture.real_platform = spack.architecture.platform  # type: ignore
-
-
+@pytest.fixture(scope='session')
 def test_platform():
     return spack.platforms.test.Test()
 
 
-spack.architecture.platform = test_platform
-
-
-# FIXME: Since we change the architecture above, we have to (re)initialize
-# FIXME: the config singleton. If it gets initialized too early with the
-# FIXME: actual architecture, tests will fail.
-spack.config.config = spack.config._config()
-
+@pytest.fixture(autouse=True, scope='session')
+def _use_test_platform(test_platform):
+    # This is the only context manager used at session scope (see note
+    # below for more insight) since we want to use the test platform as
+    # a default during tests.
+    with spack.architecture.use_platform(test_platform):
+        yield
 
 #
 # Note on context managers used by fixtures
@@ -355,6 +349,7 @@ spack.config.config = spack.config._config()
 # these global objects, but we shouldn't module- or session-scope their
 # *USE*, or things can get really confusing.
 #
+
 
 #
 # Test-specific fixtures
