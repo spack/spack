@@ -39,9 +39,11 @@ class Superchic(MakefilePackage):
             install_tree(join_path('src', 'inc'), join_path(self.prefix, 'src', 'inc'))
             mkdirp(join_path(self.prefix, 'obj'))
             install_tree('obj', join_path(self.prefix, 'obj'))
-            
+
     def edit(self, spec, prefix):
         makefile = FileFilter('makefile')
-        makefile.filter('LHAPDFLIB = .*', 'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
+        makefile.filter('LHAPDFLIB = .*',
+                        'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
         if self.spec.satisfies('@4.01:'):
-            makefile.filter('APFELLIB = .*', 'APFELLIB = ' + self.spec['apfel'].prefix.lib)
+            makefile.filter('APFELLIB = .*',
+                            'APFELLIB = ' + self.spec['apfel'].prefix.lib)
