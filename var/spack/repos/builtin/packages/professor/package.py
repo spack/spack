@@ -32,7 +32,7 @@ class Professor(Package):
     # notify when the package is updated.
     maintainers = ['mjk655']
 
-    version('2.3.3', '66BC46FA2106C85D991651A3E3CBC1C1')
+    version('2.3.3', sha256='60c5ba00894c809e2c31018bccf22935a9e1f51c0184468efbdd5d27b211009f')
 
     # FIXME: Add dependencies if required.
     depends_on('eigen')
@@ -40,7 +40,10 @@ class Professor(Package):
     depends_on('py-iminuit')
     depends_on('py-matplotlib')
     
+
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
+        #makefile = FileFilter('Makefile')
+        #makefile.filter('CC = .*', 'CC = cc')
         make()
-        make('install')
+        make("install")
+        
