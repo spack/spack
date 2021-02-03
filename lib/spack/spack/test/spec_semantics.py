@@ -998,7 +998,6 @@ class TestSpecSematics(object):
         assert dep.dag_hash() != spec['splice-h'].dag_hash()
         assert dep.build_hash() != spec['splice-h'].build_hash()
         out = spec.splice(dep, True)
-        out.concretize()
         assert out.concrete
         # Traverse the spec and assert that the targets are correct.
         # The following should fail with a "NotFoundError" if the DAGs don't

@@ -4278,6 +4278,7 @@ class Spec(object):
 
         # Clear cached hashes
         nodes[self.name]._mark_concrete(False)
+        nodes[self.name]._mark_concrete(True)
         return nodes[self.name]
 
 
