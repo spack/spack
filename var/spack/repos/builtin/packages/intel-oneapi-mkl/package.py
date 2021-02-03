@@ -45,9 +45,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
         for dir in dirs:
             yield self._join_prefix(dir)
 
-#    def install(self, spec, prefix):
-#        super(IntelOneapiMkl, self).install(spec, prefix)
-#
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self._join_prefix('bin/intel64'))
         env.prepend_path('CPATH', self._join_prefix('include'))
