@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Openrasmol(MakefilePackage):
     """RasMol is a molecular graphics program intended for the
        visualisation of proteins, nucleic acids and small molecules."""
