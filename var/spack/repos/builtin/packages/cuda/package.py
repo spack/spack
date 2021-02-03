@@ -97,6 +97,9 @@ class Cuda(Package):
 
     depends_on('libxml2', when='@10.1.243:')
 
+    provides('opencl@:1.2', when='@7:')
+    provides('opencl@:1.1', when='@:6')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
@@ -133,6 +136,15 @@ class Cuda(Package):
         # http://docs.nvidia.com/cuda/cuda-installation-guide-linux/#system-requirements
         # https://gist.github.com/ax3l/9489132
         # for details.
+
+        # CUDA 10.1 on ppc64le fails to copy some files, the workaround is adapted from
+        # https://forums.developer.nvidia.com/t/cuda-10-1-243-10-1-update-2-ppc64le-run-file-installation-issue/82433
+        # See also #21170
+        if spec.satisfies('@10.1.243') and platform.machine() == 'ppc64le':
+            includedir = "targets/ppc64le-linux/include"
+            os.makedirs(os.path.join(prefix, includedir))
+            os.makedirs(os.path.join(prefix, "src"))
+            os.symlink(includedir, os.path.join(prefix, "include"))
 
         # CUDA 10.1+ has different cmdline options for the installer
         arguments = [

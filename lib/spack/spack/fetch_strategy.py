@@ -776,6 +776,12 @@ class GitFetchStrategy(VCSFetchStrategy):
         if not self._git:
             self._git = which('git', required=True)
 
+            # Disable advice for a quieter fetch
+            # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
+            if self.git_version >= Version('1.7.2'):
+                self._git.add_default_arg('-c')
+                self._git.add_default_arg('advice.detachedHead=false')
+
             # If the user asked for insecure fetching, make that work
             # with git as well.
             if not spack.config.get('config:verify_ssl'):

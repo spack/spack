@@ -27,7 +27,7 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     # fmt: off
-    version('master', branch='master')
+    version('main', branch='main')
     version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
     version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
     version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
@@ -63,6 +63,11 @@ class Llvm(CMakePackage, CudaPackage):
         "clang",
         default=True,
         description="Build the LLVM C/C++/Objective-C compiler frontend",
+    )
+    variant(
+        "flang",
+        default=True,
+        description="Build the LLVM Fortran compiler frontend",
     )
     variant(
         "omp_debug",
@@ -175,6 +180,9 @@ class Llvm(CMakePackage, CudaPackage):
     conflicts("+libcxx", when="~clang")
     conflicts("+internal_unwind", when="~clang")
     conflicts("+compiler-rt", when="~clang")
+    conflicts("+flang", when="~clang")
+    # Introduced in version 11 as a part of LLVM and not a separate package.
+    conflicts("+flang", when="@:10.999")
 
     # LLVM 4 and 5 does not build with GCC 8
     conflicts("%gcc@8:", when="@:5")
@@ -235,7 +243,7 @@ class Llvm(CMakePackage, CudaPackage):
     # detection for LLVM. See:
     #
     # https://spack.readthedocs.io/en/latest/packaging_guide.html#making-a-package-discoverable-with-spack-external-find
-    executables = ['clang', 'ld.lld', 'lldb']
+    executables = ['clang', 'flang', 'ld.lld', 'lldb']
 
     @classmethod
     def filter_detected_exes(cls, prefix, exes_in_prefix):
@@ -288,6 +296,10 @@ class Llvm(CMakePackage, CudaPackage):
                 compilers['cxx'] = exe
             elif 'clang' in exe:
                 compilers['c'] = exe
+            elif 'flang' in exe:
+                variants.append('+flang')
+                compilers['fc'] = exe
+                compilers['f77'] = exe
             elif 'ld.lld' in exe:
                 lld_found = True
                 compilers['ld'] = exe
@@ -333,6 +345,28 @@ class Llvm(CMakePackage, CudaPackage):
             result = os.path.join(self.spec.prefix.bin, 'clang++')
         return result
 
+    @property
+    def fc(self):
+        msg = "cannot retrieve Fortran compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('fc', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
+    @property
+    def f77(self):
+        msg = "cannot retrieve Fortran 77 compiler [spec is not concrete]"
+        assert self.spec.concrete, msg
+        if self.spec.external:
+            return self.spec.extra_attributes['compilers'].get('f77', None)
+        result = None
+        if '+flang' in self.spec:
+            result = os.path.join(self.spec.prefix.bin, 'flang')
+        return result
+
     @run_before('cmake')
     def codesign_check(self):
         if self.spec.satisfies("+code_signing"):
@@ -366,6 +400,9 @@ class Llvm(CMakePackage, CudaPackage):
         if "+clang" in self.spec:
             env.set("CC", join_path(self.spec.prefix.bin, "clang"))
             env.set("CXX", join_path(self.spec.prefix.bin, "clang++"))
+        if "+flang" in self.spec:
+            env.set("FC", join_path(self.spec.prefix.bin, "flang"))
+            env.set("F77", join_path(self.spec.prefix.bin, "flang"))
 
     root_cmakelists_dir = "llvm"
 
@@ -436,6 +473,8 @@ class Llvm(CMakePackage, CudaPackage):
             projects.append("clang")
             projects.append("clang-tools-extra")
             projects.append("openmp")
+        if "+flang" in spec:
+            projects.append("flang")
         if "+lldb" in spec:
             projects.append("lldb")
         if "+lld" in spec:
@@ -499,7 +538,16 @@ class Llvm(CMakePackage, CudaPackage):
             cmake_args.append("-DLIBOMP_TSAN_SUPPORT=ON")
 
         if self.compiler.name == "gcc":
-            gcc_prefix = ancestor(self.compiler.cc, 2)
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-print-search-dirs', output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    # Get path and strip any whitespace
+                    # (causes oddity with ancestor)
+                    gcc_prefix = line.split(":")[1].strip()
+                    gcc_prefix = ancestor(gcc_prefix, 4)
+                    break
             cmake_args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
         if spec.satisfies("@4.0.0:"):

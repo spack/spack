@@ -22,6 +22,7 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.20.0', sha256='3d8233c03f116d068d5365fed4477f2947c7229582dad81e5953088989294cec')
     version('1.19.5', sha256='a76f502430dd98d7546e1ea2250a7360c065a5fdea52b2dffe8ae7180909b6f4')
     version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
     version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')
@@ -77,10 +78,11 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
-    depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
-    depends_on('python@3.6:', type=('build', 'run'), when='@1.19:')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16:')
+    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:')
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19:')
+    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:')
     depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
@@ -105,6 +107,9 @@ class PyNumpy(PythonPackage):
 
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
+
+    # NVHPC support added in https://github.com/numpy/numpy/pull/17344
+    conflicts('%nvhpc', when='@:1.19.999')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90

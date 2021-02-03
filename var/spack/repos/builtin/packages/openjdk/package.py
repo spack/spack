@@ -16,6 +16,8 @@ import re
 #    format returned by platform.system() and 'arch' by platform.machine()
 
 _versions = {
+    '11.0.9.1_1': {
+        'Linux-ppc64le': ('d94b6b46a14ab0974b1c1b89661741126d8cf8a0068b471b8f5fa286a71636b1', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.9.1%2B1/OpenJDK11U-jdk_ppc64le_linux_hotspot_11.0.9.1_1.tar.gz')},
     '11.0.8_10': {
         'Linux-x86_64': ('6e4cead158037cb7747ca47416474d4f408c9126be5b96f9befd532e0a762b47', 'https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.8%2B10/OpenJDK11U-jdk_x64_linux_hotspot_11.0.8_10.tar.gz')},
     '11.0.0-2020-01-01': {
@@ -53,8 +55,7 @@ class Openjdk(Package):
     provides('java@9', when='@9.0:9.99')
     provides('java@8', when='@1.8.0:1.8.999')
 
-    conflicts('target=ppc64:', msg='openjdk is only available for x86_64 and aarch64')
-    conflicts('target=ppc64le:', msg='openjdk is only available for x86_64 and aarch64')
+    conflicts('target=ppc64:', msg='openjdk is not available for ppc64 (big endian)')
 
     # FIXME:
     # 1. `extends('java')` doesn't work, you need to use `extends('openjdk')`

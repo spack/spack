@@ -435,7 +435,7 @@ def display_specs(specs, args=None, **kwargs):
     out = ''
     if groups:
         for specs in iter_groups(specs, indent, all_headers):
-            out += format_list(specs)
+            output.write(format_list(specs))
     else:
         out = format_list(sorted(specs))
 
