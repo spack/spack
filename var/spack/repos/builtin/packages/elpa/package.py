@@ -95,11 +95,9 @@ class Elpa(AutotoolsPackage, CudaPackage):
             ])
 
         if '%aocc' in spec:
-            # -Hx,47,0x10000008 flag is added to resolve precision
-            # issue while using -O2 or -O3 flag for AOCC 2.2 and 2.3
             options.extend([
-                'FCFLAGS=-O3 -ffast-math -Hx,47,0x10000008',
-                'CFLAGS=-O3 -ffast-math -Hx,47,0x10000008'
+                'FCFLAGS=-O3',
+                'CFLAGS=-O3'
             ])
 
         if '+cuda' in spec:

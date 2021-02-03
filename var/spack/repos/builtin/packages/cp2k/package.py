@@ -232,7 +232,7 @@ class Cp2k(MakefilePackage, CudaPackage):
             'nvhpc': ['-fast'],
             'cray': ['-O2'],
             'xl': ['-O3'],
-            'aocc': ['-O3', '-ffast-math', '-Hx,47,0x10000008', ],
+            'aocc': ['-O1'],
         }
 
         dflags = ['-DNDEBUG']
@@ -271,10 +271,8 @@ class Cp2k(MakefilePackage, CudaPackage):
             ]
         elif '%aocc' in spec:
             fcflags += [
-                '-D__F2008',
                 '-ffree-form',
             ]
-            ldflags += ['-Wl,-z,muldefs']
         elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
         elif '%cray' in spec:
@@ -429,8 +427,7 @@ class Cp2k(MakefilePackage, CudaPackage):
 
             fcflags += ['-I{0}'.format(join_path(elpa_incdir, 'modules'))]
 
-            # As a best practice used by CP2K developers,
-            # AOCC considering using static libraries of ELPA
+            # Currently AOCC support only static libraries of ELPA
             if '%aocc' in spec:
                 libs.append(join_path(elpa.prefix.lib,
                             ('libelpa{elpa_suffix}.a'
