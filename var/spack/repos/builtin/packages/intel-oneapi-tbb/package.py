@@ -27,3 +27,23 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
                             releases=releases,
                             url_name='tbb_oneapi')
         super(IntelOneapiTbb, self).__init__(spec)
+
+    def _join_prefix(self, path):
+        return join_path(self.prefix, 'tbb', 'latest', path)
+
+    def _ld_library_path(self):
+        dirs = ['lib/intel64/gcc4.8']
+        for dir in dirs:
+            yield self._join_prefix(dir)
+
+    def _library_path(self):
+        dirs = ['lib/intel64/gcc4.8']
+        for dir in dirs:
+            yield self._join_prefix(dir)
+
+    def setup_run_environment(self, env):
+        for dir in self._library_path():
+            env.prepend_path('LIBRARY_PATH', dir)
+        for dir in self._ld_library_path():
+            env.prepend_path('LD_LIBRARY_PATH', dir)
+        env.set('TBBROOT', join_path(self.prefix, 'tbb', 'latest'))
