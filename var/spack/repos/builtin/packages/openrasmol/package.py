@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class Openrasmol(MakefilePackage):
     """RasMol is a molecular graphics program intended for the
@@ -54,9 +54,10 @@ class Openrasmol(MakefilePackage):
 
     def test(self):
         testdir = self.test_suite.current_test_data_dir
+        work_dir = os.path.dirname(os.path.dirname(os.path.dirname(testdir)))
         opts = []
         opts.append('-insecure')
         opts.append('-script')
         opts.append(join_path(testdir, 'test.rsc'))
         opts.append(join_path(self.prefix.sample, '1crn.pdb'))
-        self.run_test('rasmol', options=opts)
+        self.run_test('rasmol', options=opts, work_dir=work_dir)
