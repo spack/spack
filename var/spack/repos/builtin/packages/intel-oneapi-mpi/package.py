@@ -91,6 +91,5 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         # so wrappers know where MPI lives
         mpi_root = join_path(prefix, 'mpi', 'latest')
         env.set('I_MPI_ROOT', mpi_root)
-        # set these so that wrappers can find libfabric providers
-        env.set('FI_PROVIDER_PATH', '/usr/lib64/libfabric')
-        env.prepend_path('FI_PROVIDER_PATH', self._join_prefix('libfabric/lib/prov'))
+        # set this so that wrappers can find libfabric providers
+        env.set('FI_PROVIDER_PATH', self._join_prefix('libfabric/lib/prov'))
