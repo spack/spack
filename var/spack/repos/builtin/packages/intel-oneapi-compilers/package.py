@@ -5,7 +5,6 @@
 
 import glob
 import subprocess
-from os import path
 
 from spack import *
 
@@ -38,35 +37,45 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             url_name='HPCKit')
         super(IntelOneapiCompilers, self).__init__(spec)
 
+    def _join_prefix(self, path):
+        return join_path(self.prefix, 'compiler', 'latest', 'linux', path)
+
+    def _ld_library_path(self):
+        dirs = ['lib',
+                'lib/x64',
+                'lib/emu',
+                'lib/oclfpga/host/linux64/lib',
+                'lib/oclfpga/linux64/lib',
+                'compiler/lib/intel64_lin',
+                'compiler/lib']
+        for dir in dirs:
+            yield self._join_prefix(dir)
+
     def install(self, spec, prefix):
+        # For quick turnaround debugging, comment out line below and
+        # use the copy instead
         super(IntelOneapiCompilers, self).install(spec, prefix)
-        # For quick turnaround debugging, copy instead of install
-        # copytree('/opt/intel/oneapi/compiler', path.join(prefix, 'compiler'),
-        #          symlinks=True)
-        rpath_dirs = ['lib',
-                      'lib/x64',
-                      'lib/emu',
-                      'lib/oclfpga/host/linux64/lib',
-                      'lib/oclfpga/linux64/lib',
-                      'compiler/lib/intel64_lin',
-                      'compiler/lib']
+        # Copy installed compiler instead of running the installer
+        # from shutil import copytree
+        # copytree('/opt/intel/oneapi/compiler', join_path(prefix, 'compiler'),
+        #         symlinks=True)
+
+        rpath = ':'.join(self._ld_library_path())
         patch_dirs = ['compiler/lib/intel64_lin',
                       'compiler/lib/intel64',
                       'bin']
-        eprefix = path.join(prefix, 'compiler', 'latest', 'linux')
-        rpath = ':'.join([path.join(eprefix, c) for c in rpath_dirs])
         for pd in patch_dirs:
-            for file in glob.glob(path.join(eprefix, pd, '*')):
+            for file in glob.glob(self._join_prefix(join_path(pd, '*'))):
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
                 subprocess.call(['patchelf', '--set-rpath', rpath, file])
 
     def setup_run_environment(self, env):
-        env.prepend_path('PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'bin'))
-        env.prepend_path('CPATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'include'))
-        env.prepend_path('LIBRARY_PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'lib'))
-        env.prepend_path('LD_LIBRARY_PATH', join_path(self.prefix,
-                         'compiler', 'latest', 'linux', 'lib'))
+        env.prepend_path('PATH', self._join_prefix('bin'))
+        env.prepend_path('CPATH', self._join_prefix('include'))
+        env.prepend_path('LIBRARY_PATH', self._join_prefix('lib'))
+        for dir in self._ld_library_path():
+            env.prepend_path('LD_LIBRARY_PATH', dir)
+        env.set('CC', self._join_prefix('bin/icx'))
+        env.set('CXX', self._join_prefix('bin/icpx'))
+        env.set('FC', self._join_prefix('bin/ifx'))
