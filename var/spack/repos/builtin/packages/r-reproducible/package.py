@@ -12,14 +12,14 @@ class RReproducible(RPackage):
     Collection of high-level, machine- and OS-independent tools for
     making deeply reproducible and reusable content in R. The two
     workhorse functions are Cache and prepInputs; these allow for:
-    nested caching, robust to environments, and objects with 
+    nested caching, robust to environments, and objects with
     environments (like functions); and data retrieval and processing
     in continuous workflow environments. In all cases, efforts are
     made to make the first and subsequent calls of functions have
     the same result, but vastly faster at subsequent times by way of
     checksums and digesting. Several features are still under active
     development, including cloud storage of cached objects, allowing
-    for sharing between users. Several advanced options are 
+    for sharing between users. Several advanced options are
     available, see ?reproducibleOptions."""
 
     homepage = "https://reproducible.predictiveecology.org/"
@@ -42,3 +42,4 @@ class RReproducible(RPackage):
     depends_on('r-rsqlite', type=('build', 'run'))
     depends_on('r-rlang', type=('build', 'run'))
     depends_on('r-sp@1.4-2:', type=('build', 'run'))
+    depends_on('unrar', type=('build', 'run'))
