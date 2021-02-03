@@ -93,7 +93,7 @@ class Sensei(CMakePackage):
         if '+libsim' in spec:
             args.extend([
                 '-DENABLE_LIBSIM:BOOL=ON',
-                '-DVISIT_DIR:PATH={}/current/{}-{}'.format(
+                '-DVISIT_DIR:PATH={0}/current/{1}-{2}'.format(
                     spec['visit'].prefix, spec.platform, spec.target.family),
                 '-DVTK_DIR:PATH={0}'.format(spec['vtk'].prefix)
             ])
