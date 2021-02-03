@@ -97,6 +97,9 @@ class Cuda(Package):
 
     depends_on('libxml2', when='@10.1.243:')
 
+    provides('opencl@:1.2', when='@7:')
+    provides('opencl@:1.1', when='@:6')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)('--version', output=str, error=str)
