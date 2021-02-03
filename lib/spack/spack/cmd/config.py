@@ -19,6 +19,7 @@ import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
 from spack.database import InstallStatuses
 import spack.store
+import spack.repo
 
 description = "get and set configuration options"
 section = "config"
@@ -446,40 +447,65 @@ def config_prefer_upstream(args):
     """m"""
 
     scope = args.scope
+    dest = args.dest
 
     if getattr(args, 'env', None) is not None:
         msg = 'Environment {} specified, but prefer-upstream operates ' \
               'outside of all environments.'.format(args.env)
         tty.die(msg)
 
-    if args.dest is not None and args.scope is not None:
+    if dest is not None and args.scope is not None:
         tty.die("You can specify a scope or a destination config file, "
                 "not both")
-    elif args.scope:
-        pkgs = spack.config.config.get_config('packages', scope=args.scope)
-    elif args.dest:
-        pkgs = {}
-    else:
+    elif dest is None and args.scope is None:
         tty.die(
             "You must specify either a scope or a destination config file.")
 
     specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
 
     # Get only our upstream specs
+    upstream_specs = []
+    for spec in specs:
+        try:
+            if spec.package.installed_upstream:
+                upstream_specs.append(spec)
+        except spack.repo.UnknownNamespaceError as err:
+            tty.die(
+                "Could not find package when checking spec {} ({}). "
+                "This is usually due to your Spack instance not being "
+                "configured to know about the upstream's repositories."
+                .format(spec.name, err.message)
+            )
+
     specs = [spec for spec in specs if spec.package.installed_upstream]
 
-    cfg_file = spack.config.config.get_config_filename(
-        scope.name, args.section
-    )
-
-    base_path = ['packages']
+    pkgs = {}
     for spec in specs:
-        path = base_path + [spec.name]
+        pkg = pkgs.get(spec.name, {
+            'version': [],
+            'compiler': [],
+        })
 
-        spec.version
+        if spec.version not in pkg['version']:
+            pkg['version'].append(spec.version)
 
+        if spec.compiler not in pkg['compiler']:
+            pkg['compiler'].append(spec.compiler)
 
+    if dest:
+        try:
+            with open(dest, 'w') as dest_file:
+                syaml.dump_config(pkgs, dest_file)
+        except OSError as err:
+            tty.die(
+                "Failed to write dest config {}: {}"
+                .format(dest, err.args[0])
+            )
 
+    else:
+        existing = spack.config.get('packages', scope=scope)
+        new = spack.config.merge_yaml(existing, pkgs)
+        spack.config.set(section, new, scope)
 
 def config(parser, args):
     action = {
