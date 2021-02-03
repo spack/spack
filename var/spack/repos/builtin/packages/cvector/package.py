@@ -10,7 +10,7 @@ class Cvector(MakefilePackage):
     """CVector -- ANSI C API for Dynamic Arrays"""
 
     homepage = "http://cvector.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/cvector/CVector-1.0.3.tar.gz"
+    url      = "https://downloads.sourceforge.net/project/cvector/cvector/CVector-1.0.3/CVector-1.0.3.tar.gz"
 
     version('1.0.3', sha256='d3fa92de3cd5ba8697abdbb52080248b2c252a81cf40a8ec639be301518d0ce3')
 
