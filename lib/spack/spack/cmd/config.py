@@ -445,14 +445,40 @@ def config_revert(args):
 def config_prefer_upstream(args):
     """m"""
 
+    scope = args.scope
+
     if getattr(args, 'env', None) is not None:
         msg = 'Environment {} specified, but prefer-upstream operates ' \
               'outside of all environments.'.format(args.env)
         tty.die(msg)
 
-    results = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
+    if args.dest is not None and args.scope is not None:
+        tty.die("You can specify a scope or a destination config file, "
+                "not both")
+    elif args.scope:
+        pkgs = spack.config.config.get_config('packages', scope=args.scope)
+    elif args.dest:
+        pkgs = {}
+    else:
+        tty.die(
+            "You must specify either a scope or a destination config file.")
 
-    print(results)
+    specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
+
+    # Get only our upstream specs
+    specs = [spec for spec in specs if spec.package.installed_upstream]
+
+    cfg_file = spack.config.config.get_config_filename(
+        scope.name, args.section
+    )
+
+    base_path = ['packages']
+    for spec in specs:
+        path = base_path + [spec.name]
+
+        spec.version
+
+
 
 
 def config(parser, args):
