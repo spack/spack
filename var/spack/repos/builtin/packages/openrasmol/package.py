@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Openrasmol(MakefilePackage):
@@ -32,14 +31,15 @@ class Openrasmol(MakefilePackage):
     patch('rasmol_help.patch')
 
     def edit(self, spec, prefix):
-        mf = FileFilter(join_path('src', 'Imakefile'))
-        mf.filter('SPACK_XFORMS', spec['xforms'].prefix)
-        mf.filter('SPACK_CBF', spec['cbflib'].prefix)
-        mf.filter('SPACK_CQR', spec['cqrlib'].prefix)
-        mf.filter('SPACK_CVECTOR', spec['cvector'].prefix)
-        mf.filter('SPACK_NEARTREE', spec['neartree'].prefix)
         df = FileFilter(join_path('src', 'host.def'))
         df.filter('SPACK_CC', spack_cc)
+
+    def setup_build_environment(self, env):
+        env.set('XFORMSLIB_DIR', self.spec['xforms'].prefix)
+        env.set('CBFLIB_DIR', self.spec['cbflib'].prefix)
+        env.set('CQRLIB_DIR', self.spec['cqrlib'].prefix)
+        env.set('CVECTOR_DIR', self.spec['cvector'].prefix)
+        env.set('NEARTREE_DIR', self.spec['neartree'].prefix)
 
     def build(self, spec, prefix):
         with working_dir('src'):
@@ -55,7 +55,7 @@ class Openrasmol(MakefilePackage):
 
     def test(self):
         testdir = self.test_suite.current_test_data_dir
-        work_dir = os.path.dirname(os.path.dirname(os.path.dirname(testdir)))
+        work_dir = ancestor(testdir, 3)
         opts = []
         opts.append('-insecure')
         opts.append('-script')
