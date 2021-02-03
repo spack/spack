@@ -8,9 +8,9 @@ from spack import *
 
 class Superchic(MakefilePackage):
     """SuperChic is a Fortran based Monte Carlo event generator for exclusive and
-    photon-initiated production in proton and heavy ion collisions. 
-    
-    A range of Standard Model final states are implemented, in most cases with 
+    photon-initiated production in proton and heavy ion collisions.
+
+    A range of Standard Model final states are implemented, in most cases with
     spin correlations where relevant, and a fully differential treatment of the soft
     survival factor is given. Arbitrary user-defined histograms and cuts may be
     made, as well as unweighted events in the HEPEVT, HEPMC and LHE formats.
@@ -25,6 +25,14 @@ class Superchic(MakefilePackage):
 
     depends_on('lhapdf')
     depends_on('apfel', when='@4.01:')
+
+    def edit(self, spec, prefix):
+        makefile = FileFilter('makefile')
+        makefile.filter('LHAPDFLIB = .*',
+                        'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
+        if self.spec.satisfies('@4.01:'):
+            makefile.filter('APFELLIB = .*',
+                            'APFELLIB = ' + self.spec['apfel'].prefix.lib)
 
     def build(self, spec, prefix):
         make('PWD=' + self.build_directory)
@@ -41,11 +49,3 @@ class Superchic(MakefilePackage):
             install_tree(join_path('src', 'inc'), join_path(self.prefix, 'src', 'inc'))
             mkdirp(join_path(self.prefix, 'obj'))
             install_tree('obj', join_path(self.prefix, 'obj'))
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('makefile')
-        makefile.filter('LHAPDFLIB = .*',
-                        'LHAPDFLIB = ' + self.spec['lhapdf'].prefix.lib)
-        if self.spec.satisfies('@4.01:'):
-            makefile.filter('APFELLIB = .*',
-                            'APFELLIB = ' + self.spec['apfel'].prefix.lib)
