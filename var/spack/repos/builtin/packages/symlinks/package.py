@@ -9,13 +9,14 @@ from spack import *
 class Symlinks(MakefilePackage):
     """Scan or change symbolic links."""
 
-    homepage = "http://ibiblio.org/pub/Linux/utils/file"
-    url      = "http://ibiblio.org/pub/Linux/utils/file/symlinks-1.4.tar.gz"
+    homepage = "https://ibiblio.org/pub/Linux/utils/file"
+    url      = "https://ibiblio.org/pub/Linux/utils/file/symlinks-1.4.tar.gz"
 
-    version('1.4', sha256='4818a3be253b53f2547fe51349652c87301794fc2ff4e3104850301ffe9843a0')
+    version('1.4', sha256='b0bb689dd0a2c46d9a7dd111b053707aba7b9cf29c4f0bad32984b14bdbe0399')
 
     def edit(self, spec, prefix):
         filter_file('/usr/local', prefix, 'Makefile', string=True)
+        filter_file('-o root -g root', '', 'Makefile')
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
