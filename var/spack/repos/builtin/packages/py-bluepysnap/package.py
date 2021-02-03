@@ -11,7 +11,7 @@ class PyBluepysnap(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/snap"
     git      = "https://github.com/BlueBrain/snap.git"
-    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.2.0.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.9.0.tar.gz"
 
     version('0.9.0', sha256='140e06b9a7cc90719ffaf4c71ffaa9320c13bdd8ef25ffb598fd348b850b6695')
     version('0.8.0', sha256='10337610cfb83121f2869cec53830de04eed8e90b2b27aba36b8799468fa9c0f')
@@ -28,12 +28,19 @@ class PyBluepysnap(PythonPackage):
 
     depends_on('py-functools32', type='run', when='^python@:3.1.99')
     depends_on('py-cached-property@1.0:', type='run')
-    depends_on('py-h5py@2.2:', type='run')
     depends_on('py-libsonata@0.1.4:', type='run')
-    depends_on('py-neurom@1.3:', type='run')
     depends_on('py-numpy@1.8:', type='run')
-    depends_on('py-pandas@0.17:', type='run')
-    depends_on('py-six@1.0:', type='run')
-
     depends_on('py-click@7.0:', type='run')
-    depends_on('py-pathlib2@2.3:', type='run')
+    depends_on('py-more-itertools@7.2.0:', type='run')
+
+    # Version 0.8.0 is the switch between the python2+python3
+    # and python3 only + the h5py > 3.0.0
+    depends_on('py-h5py@2.2:2.99', type='run', when='@:0.7.9')
+    depends_on('py-h5py@3.0.1:', type='run', when='@0.8.0:')
+
+    depends_on('py-neurom@1.3:1.5.99', type='run', when='@:0.7.9')
+    depends_on('py-neurom@1.6:', type='run', when='@0.8.0:')
+
+    # python2 only so only < 0.8.0
+    depends_on('py-pathlib2@2.3:', type='run', when='@:0.7.9')
+    depends_on('py-six@1.0:', type='run', when='@:0.7.9')

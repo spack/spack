@@ -39,7 +39,7 @@ class PyBluepy(PythonPackage):
 
     # neurom
     depends_on('py-neurom@1.6.0:', type='run', when='@2.0.0:')
-    depends_on('py-neurom@1.4.18:', type='run', when='@:1.0.0')
+    depends_on('py-neurom@1.4.18:1.5.99', type='run', when='@:1.0.0')
 
     # voxcell
     depends_on('py-voxcell@3.0.0', type='run', when='@2.0.0:')

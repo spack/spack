@@ -27,7 +27,7 @@ class PyMinisValidation(PythonPackage):
     depends_on('py-dask-mpi@2.0:', type='run')
     depends_on('neuron+python@7.8:', type='run')
     depends_on('py-bluepy@0.14:0.99', type='run')
-    depends_on('py-neurom@1.4:1.59', type='run')  # temp fix for h5py < 3
+    depends_on('py-neurom@1.4:1.5.9', type='run')  # temp fix for h5py < 3
     depends_on('py-bluepy-configfile@0.1.10:', type='run')
     depends_on('py-bglibpy@4.3:', type='run')
 
