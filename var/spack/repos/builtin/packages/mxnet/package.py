@@ -40,6 +40,10 @@ class Mxnet(CMakePackage, CudaPackage):
     version('1.6.0', sha256='01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def')
     version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2')
 
+    variant('build_type', default='Distribution',
+            description='CMake build type',
+            values=('Distribution', 'Debug', 'Release',
+                    'RelWithDebInfo', 'MinSizeRel'))
     variant('cuda', default=True, description='Enable CUDA support')
     variant('cudnn', default=True, description='Build with cudnn support')
     variant('nccl', default=False, description='Use NVidia NCCL with CUDA')
@@ -84,7 +88,7 @@ class Mxnet(CMakePackage, CudaPackage):
         env.set('MXNET_LIBRARY_PATH', self.spec['mxnet'].libs[0])
 
         if self.spec.satisfies('+nccl ^nccl@2.1:'):
-            env.set('NCCL_LAUNCH_MODE=PARALLEL')
+            env.set('NCCL_LAUNCH_MODE', 'PARALLEL')
 
     def cmake_args(self):
         # https://mxnet.apache.org/get_started/build_from_source
