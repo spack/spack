@@ -8,11 +8,13 @@ from spack import *
 
 class Superchic(MakefilePackage):
     """SuperChic is a Fortran based Monte Carlo event generator for exclusive and
-       photon-initiated production in proton and heavy ion collisions. A range of
-       Standard Model final states are implemented, in most cases with spin
-       correlations where relevant, and a fully differential treatment of the soft
-       survival factor is given. Arbitrary user-defined histograms and cuts may be
-       made, as well as unweighted events in the HEPEVT, HEPMC and LHE formats"""
+    photon-initiated production in proton and heavy ion collisions. 
+    
+    A range of Standard Model final states are implemented, in most cases with 
+    spin correlations where relevant, and a fully differential treatment of the soft
+    survival factor is given. Arbitrary user-defined histograms and cuts may be
+    made, as well as unweighted events in the HEPEVT, HEPMC and LHE formats.
+    """
 
     homepage = "https://superchic.hepforge.org/"
     url      = "https://superchic.hepforge.org/superchic4.01.tar.gz"
