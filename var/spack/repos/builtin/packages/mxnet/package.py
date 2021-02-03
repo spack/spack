@@ -36,6 +36,7 @@ class Mxnet(CMakePackage, CudaPackage):
     ]
 
     version('master', branch='master')
+    version('1.master', branch='v1.x')
     version('1.7.0', sha256='1d20c9be7d16ccb4e830e9ee3406796efaf96b0d93414d676337b64bc59ced18')
     version('1.6.0', sha256='01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def')
     version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2')
@@ -55,6 +56,7 @@ class Mxnet(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.13:', type='build')
     depends_on('ninja', type='build')
+    depends_on('pkgconfig', when='@1.6.0', type='build')
     depends_on('blas')
     depends_on('cudnn', when='+cudnn')
     depends_on('nccl', when='+nccl')
@@ -76,7 +78,8 @@ class Mxnet(CMakePackage, CudaPackage):
     conflicts('+cudnn', when='~cuda')
     conflicts('+nccl', when='~cuda')
 
-    patch('openblas.patch', when='@1.7.0')
+    patch('openblas-1.7.0.patch', when='@1.7.0:1.master')
+    patch('openblas-1.6.0.patch', when='@1.6.0')
     patch('cmake_cuda_flags.patch', when='@1.6:1.7')
     patch('parallell_shuffle.patch', when='@1.6.0')
 
@@ -95,7 +98,6 @@ class Mxnet(CMakePackage, CudaPackage):
         args = [
             self.define_from_variant('USE_CUDA', 'cuda'),
             self.define_from_variant('USE_CUDNN', 'cudnn'),
-            self.define_from_variant('USE_NCCL', 'nccl'),
             self.define_from_variant('USE_OPENCV', 'opencv'),
             self.define_from_variant('USE_OPENMP', 'openmp'),
             self.define_from_variant('USE_LAPACK', 'lapack'),
@@ -107,6 +109,8 @@ class Mxnet(CMakePackage, CudaPackage):
                 cuda_arch = ';'.join('{0:.1f}'.format(float(i) / 10.0) for i
                                      in self.spec.variants['cuda_arch'].value)
                 args.append(self.define('MXNET_CUDA_ARCH', cuda_arch))
+
+            args.append(self.define_from_variant('USE_NCCL', 'nccl'))
 
             # Workaround for bug in GCC 8+ and CUDA 10 on PowerPC
             args.append(self.define(
