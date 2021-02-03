@@ -30,9 +30,10 @@ class Superchic(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(self.prefix.bin)
         install_tree('bin', self.prefix.bin)
-        if self.spec.satisfies('@3.03:'):
-            mkdirp(self.prefix.lib)
-            install_tree('lib', self.prefix.lib)
+
+        mkdirp(self.prefix.lib)
+        install_tree('lib', self.prefix.lib)
+
         if self.spec.satisfies('@3.05:'):
             mkdirp(join_path(self.prefix, 'src', 'inc'))
             install_tree(join_path('src', 'inc'), join_path(self.prefix, 'src', 'inc'))
