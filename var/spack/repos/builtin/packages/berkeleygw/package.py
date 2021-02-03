@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Berkeleygw(MakefilePackage):
@@ -44,10 +43,12 @@ class Berkeleygw(MakefilePackage):
 
     def edit(self, spec, prefix):
         # archive is a tar file, despite the .gz expension
-        os.system("tar xf %s --strip-components=1" % self.stage.archive_file)
+        tar = which('tar')
+        tar('-x', '-f', self.stage.archive_file, '--strip-components=1')
 
         # get generic arch.mk template
-        copy(os.path.join(os.getcwd(), 'config', 'generic.mpi.linux.mk'), 'arch.mk')
+        copy(join_path(self.stage.source_path, 'config', 'generic.mpi.linux.mk'),
+             'arch.mk')
 
         # don't try to install missing file
         filter_file('install manual.html', '#install manual.html', 'Makefile')
@@ -145,11 +146,11 @@ class Berkeleygw(MakefilePackage):
                 elpa_suffix = ''
 
             elpa_incdir = elpa.headers.directories[0]
-            elpa_libs = os.path.join(elpa.libs.directories[0],
-                                     'libelpa%s.%s' % (elpa_suffix, dso_suffix))
+            elpa_libs = join_path(elpa.libs.directories[0],
+                                  'libelpa%s.%s' % (elpa_suffix, dso_suffix))
 
             buildopts.append('ELPALIB=%s' % elpa_libs)
-            buildopts.append('ELPAINCLUDE=%s' % os.path.join(elpa_incdir, 'modules'))
+            buildopts.append('ELPAINCLUDE=%s' % join_path(elpa_incdir, 'modules'))
 
         buildopts.append('MATHFLAG=%s' % ' '.join(mathflags))
 
