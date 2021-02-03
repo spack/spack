@@ -492,7 +492,7 @@ _spack_ci_rebuild_index() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -b --bootstrap -a --all"
     else
         _all_packages
     fi
@@ -912,7 +912,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date -b --bootstrap"
     else
         _installed_packages
     fi
