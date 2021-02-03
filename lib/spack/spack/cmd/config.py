@@ -17,6 +17,8 @@ import spack.environment as ev
 import spack.schema.packages
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
+from spack.database import InstallStatuses
+import spack.store
 
 description = "get and set configuration options"
 section = "config"
@@ -71,6 +73,15 @@ def setup_parser(subparser):
     add_parser.add_argument(
         '-f', '--file',
         help="file from which to set all config values"
+    )
+
+    prefer_upstream_parser = sp.add_parser(
+        'prefer-upstream',
+        help='generate package preferences from upstream, and write them in the given '
+             'config scope.')
+    prefer_upstream_parser.add_argument(
+        '--dest', required=False,
+        help="Instead of writing updating current configs, write a new config at this path."
     )
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
@@ -431,6 +442,19 @@ def config_revert(args):
         tty.msg(msg.format(cfg_file))
 
 
+def config_prefer_upstream(args):
+    """m"""
+
+    if getattr(args, 'env', None) is not None:
+        msg = 'Environment {} specified, but prefer-upstream operates ' \
+              'outside of all environments.'.format(args.env)
+        tty.die(msg)
+
+    results = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
+
+    print(results)
+
+
 def config(parser, args):
     action = {
         'get': config_get,
@@ -441,6 +465,7 @@ def config(parser, args):
         'rm': config_remove,
         'remove': config_remove,
         'update': config_update,
-        'revert': config_revert
+        'revert': config_revert,
+        'prefer-upstream': config_prefer_upstream,
     }
     action[args.config_command](args)

@@ -203,6 +203,9 @@ def find(parser, args):
     q_args = query_arguments(args)
     results = args.specs(**q_args)
 
+    print('args', args)
+    print('specs', args.specs)
+
     decorator = lambda s, f: f
     added = set()
     removed = set()
