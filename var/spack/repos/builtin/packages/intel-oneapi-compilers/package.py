@@ -84,4 +84,3 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         env.set('I_MPI_CC', 'icx')
         env.set('I_MPI_CXX', 'icpx')
         env.set('I_MPI_FC', 'ifx')
-
