@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-import os
 from spack import *
 
 
 class PyXgboost(PythonPackage):
-    """XGBoost is an optimized distributed gradient boosting library designed to be 
+    """XGBoost is an optimized distributed gradient boosting library designed to be
     highly efficient, flexible and portable."""
 
     homepage  = 'https://xgboost.ai/'
@@ -31,12 +30,11 @@ class PyXgboost(PythonPackage):
 
     depends_on('py-pandas', when='+pandas', type=('build', 'run'))
 
-    depends_on('py-scikit-learn', when='+py-scikit-learn', type=('build','run'))
+    depends_on('py-scikit-learn', when='+py-scikit-learn', type=('build', 'run'))
 
-    depends_on('py-dask', when='+dask', type=('build','run'))
-    depends_on('py-pandas', when='+dask', type=('build','run'))
-    depends_on('py-distributed', when='+dask', type=('build','run'))
+    depends_on('py-dask',        when='+dask', type=('build', 'run'))
+    depends_on('py-pandas',      when='+dask', type=('build', 'run'))
+    depends_on('py-distributed', when='+dask', type=('build', 'run'))
 
-    depends_on('py-graphviz', when='+plotting', type=('build','run'))
-    depends_on('py-matplotlib', when='+plotting', type=('build','run'))
-
+    depends_on('py-graphviz',   when='+plotting', type=('build', 'run'))
+    depends_on('py-matplotlib', when='+plotting', type=('build', 'run'))
