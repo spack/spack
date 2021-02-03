@@ -210,19 +210,6 @@ class Result(object):
                 *sorted(str(symbol) for symbol in core))
 
 
-def _normalize(body):
-    """Accept an AspAnd object or a single Symbol and return a list of
-    symbols.
-    """
-    if isinstance(body, clingo.Symbol):
-        args = [body]
-    elif hasattr(body, 'symbol'):
-        args = [body.symbol()]
-    else:
-        raise TypeError("Invalid typee: ", type(body))
-    return args
-
-
 def _normalize_packages_yaml(packages_yaml):
     normalized_yaml = copy.copy(packages_yaml)
     for pkg_name in packages_yaml:
@@ -280,19 +267,14 @@ class PyclingoDriver(object):
 
     def fact(self, head):
         """ASP fact (a rule without a body)."""
-        symbols = _normalize(head)
-        self.out.write("%s.\n" % ','.join(str(a) for a in symbols))
+        symbol = head.symbol() if hasattr(head, 'symbol') else head
 
-        atoms = {}
-        for s in symbols:
-            atoms[s] = self.backend.add_atom(s)
+        self.out.write("%s.\n" % str(symbol))
 
-        self.backend.add_rule(
-            [atoms[s] for s in symbols], [], choice=self.cores
-        )
+        atom = self.backend.add_atom(symbol)
+        self.backend.add_rule([atom], [], choice=self.cores)
         if self.cores:
-            for s in symbols:
-                self.assumptions.append(atoms[s])
+            self.assumptions.append(atom)
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
