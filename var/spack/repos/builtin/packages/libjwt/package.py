@@ -22,5 +22,5 @@ class Libjwt(AutotoolsPackage):
     depends_on('libtool', type='build')
     depends_on('m4', type='build')
     # Needs openssl at runtime to ensure we can generate keys
-    depends_on('openssl')
+    depends_on('openssl', type=('build', 'run'))
     depends_on('jansson')
