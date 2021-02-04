@@ -33,8 +33,9 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.12:', type='build')
     depends_on('py-fypp', type='build')
-    depends_on('pkgconfig', type='build')
     depends_on('python@3.6:', type='build', when='+cuda')
+    depends_on('python@3.6:', type='build', when='+rocm')
+    depends_on('pkgconfig', type='build', when='smm=libxsmm')
 
     depends_on('hipblas', when='+rocm')
 
