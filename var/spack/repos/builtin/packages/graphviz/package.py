@@ -62,9 +62,6 @@ class Graphviz(AutotoolsPackage):
     variant('x', default=False,
             description='Use the X Window System')
 
-    #patch('https://gitlab.com/graphviz/graphviz/-/commit/3b2a27f4a04b6c816ef294fff5e94058dfc7a893.diff',
-    #      sha256='f6baa102238847f8cf8def7e4a6dcd575f0b0c9e3f32a2b8f894e3b7911e9e38',
-    #      when='@2.44.1~doc')
     patch('http://www.linuxfromscratch.org/patches/blfs/9.0/graphviz-2.40.1-qt5-1.patch',
           sha256='bd532df325df811713e311d17aaeac3f5d6075ea4fd0eae8d989391e6afba930',
           when='@:2.40+qt^qt@5:')
@@ -111,15 +108,17 @@ class Graphviz(AutotoolsPackage):
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
-    # Build dependencies
-    depends_on('pkgconfig', type='build')
-    # The following are needed when building from git
+    # Build dependencies (graphviz binaries don't include configurefile)
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
+    depends_on('pkgconfig', type='build')
 
+    conflicts('~doc',
+              when='@:2.45',
+              msg='graphviz always builds documentation below version 2.46')
     conflicts('%gcc@:5.9',
               when='@2.40.1+qt ^qt@5:',
               msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
@@ -172,5 +171,9 @@ class Graphviz(AutotoolsPackage):
 
         args.append('--{0}-gtk'.format(
             "with" if "+gtkplus" in spec else "without"))
+
+        if spec.version >= Version('2.46'):
+            args.append('--{0}-man-pdfs'.format(
+                'enable' if '+doc' in spec else 'disable'))
 
         return args
