@@ -47,3 +47,6 @@ class RRsamtools(RPackage):
     depends_on('r-rhtslib@1.17.7:', when='@2.2.1:', type=('build', 'run'))
 
     depends_on('gmake', type='build')
+
+    # this is not a listed dependency but is needed
+    depends_on('curl')

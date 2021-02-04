@@ -1,0 +1,74 @@
+--- spack-src/configure.org	2021-01-18 10:12:04.000000000 +0900
++++ spack-src/configure	2021-01-20 20:26:16.000000000 +0900
+@@ -17412,7 +17412,7 @@
+       case "${enable_optim}" in
+         aggressive)
+           enable_optim_opt="aggressive"
+-          CFLAGS_OPTIM="-O3 -mtune=native -march=native"
++          CFLAGS_OPTIM="-O3 -mtune=native "
+           ;;
+         safe)
+           enable_optim_opt="safe"
+@@ -17420,7 +17420,7 @@
+           ;;
+         standard)
+           enable_optim_opt="standard"
+-          CFLAGS_OPTIM="-O2 -mtune=native -march=native"
++          CFLAGS_OPTIM="-O2 -mtune=native "
+           ;;
+       esac   # [case: enable_optim, indent: 2, item: True]
+       ;;
+@@ -17641,7 +17641,7 @@
+       case "${enable_optim}" in
+         aggressive)
+           enable_optim_opt="aggressive"
+-          CXXFLAGS_OPTIM="-O3 -mtune=native -march=native"
++          CXXFLAGS_OPTIM="-O3 -mtune=native "
+           ;;
+         safe)
+           enable_optim_opt="safe"
+@@ -17649,7 +17649,7 @@
+           ;;
+         standard)
+           enable_optim_opt="standard"
+-          CXXFLAGS_OPTIM="-O2 -mtune=native -march=native"
++          CXXFLAGS_OPTIM="-O2 -mtune=native "
+           ;;
+       esac   # [case: enable_optim, indent: 2, item: True]
+       ;;
+@@ -17815,7 +17815,7 @@
+           case "${enable_optim}" in
+             aggressive)
+               enable_optim_opt="aggressive"
+-              FCFLAGS_OPTIM="-O3 -mtune=native -march=native -faggressive-function-elimination -fstack-arrays"
++              FCFLAGS_OPTIM="-O3 -mtune=native  -faggressive-function-elimination -fstack-arrays"
+               ;;
+             safe)
+               enable_optim_opt="safe"
+@@ -17823,7 +17823,7 @@
+               ;;
+             standard)
+               enable_optim_opt="standard"
+-              FCFLAGS_OPTIM="-O2 -mtune=native -march=native"
++              FCFLAGS_OPTIM="-O2 -mtune=native "
+               ;;
+           esac   # [case: enable_optim, indent: 4, item: True]
+           ;;
+@@ -17833,7 +17833,7 @@
+           case "${enable_optim}" in
+             aggressive)
+               enable_optim_opt="aggressive"
+-              FCFLAGS_OPTIM="-O3 -mtune=native -march=native -funroll-loops -faggressive-function-elimination"
++              FCFLAGS_OPTIM="-O3 -mtune=native  -funroll-loops -faggressive-function-elimination"
+               ;;
+             safe)
+               enable_optim_opt="safe"
+@@ -17841,7 +17841,7 @@
+               ;;
+             standard)
+               enable_optim_opt="standard"
+-              FCFLAGS_OPTIM="-O2 -mtune=native -march=native"
++              FCFLAGS_OPTIM="-O2 -mtune=native "
+               ;;
+           esac   # [case: enable_optim, indent: 4, item: True]
+           ;;

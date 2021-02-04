@@ -18,6 +18,7 @@ class Slepc(Package):
     maintainers = ['joseeroman', 'balay']
 
     version('master', branch='master')
+    version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
     version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')
     version('3.14.0', sha256='37f8bb270169d1d3f5d43756ac8929d56204e596bd7a78a7daff707513472e46')
     version('3.13.4', sha256='ddc9d58e1a4413218f4e67ea3b255b330bd389d67f394403a27caedf45afa496')

@@ -31,6 +31,7 @@ class RGrbase(RPackage):
     version('1.8-6.7', sha256='aaafc7e1b521de60e1a57c0175ac64d4283850c3273bd14774cf24dabc743388')
     version('1.8-3.4', sha256='d35f94c2fb7cbd4ce3991570424dfe6723a849658da32e13df29f53b6ea2cc2c')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.0.2:', type=('build', 'run'))
     depends_on('r@3.6.0:', when='@1.8-6.7:', type=('build', 'run'))
     depends_on('r-graph', type=('build', 'run'))
