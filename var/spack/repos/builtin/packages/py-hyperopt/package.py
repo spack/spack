@@ -14,7 +14,7 @@ class PyHyperopt(PythonPackage):
     homepage = "http://hyperopt.github.io/hyperopt/"
     pypi     = "hyperopt/hyperopt-0.2.5.tar.gz"
     url      = "https://github.com/hyperopt/hyperopt/archive/0.2.5.zip"
-    
+
     version('0.2.5', sha256='2e3484be226ed1339e003553f0328b440cbf9c577b92553409fb160ecb671406')
     version('0.2.4', sha256='acf58881152269ae7bd9a9b834449221baf298c5c95a4d2331c626d4753a4721')
     version('0.2.2', sha256='4dd384d3ac18e4f8165321d6576ade703513bca43c9c51d6a00bc6fba747811e')
