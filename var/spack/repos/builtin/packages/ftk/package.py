@@ -5,8 +5,10 @@
 
 from spack import *
 
+
 class Ftk(CMakePackage):
-    """FTK is a library that simplifies, scales, and delivers feature tracking algorithms for scientific data."""
+    """FTK is a library that simplifies, scales, and delivers feature
+    tracking algorithms for scientific data."""
 
     # Add a proper url for your package's homepage here.
     homepage = "https://github.com/hguo/ftk"
