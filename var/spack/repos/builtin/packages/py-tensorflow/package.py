@@ -15,6 +15,7 @@ class PyTensorflow(Package, CudaPackage):
     url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
     maintainers = ['adamjstewart', 'aweits']
+    import_modules = ['tensorflow']
 
     version('2.4.1',  sha256='f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0')
     version('2.4.0',  sha256='26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae')
@@ -297,9 +298,6 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
     phases = ['configure', 'build', 'install']
-
-    import_modules = PythonPackage.import_modules
-    test = PythonPackage.test
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
@@ -790,3 +788,14 @@ def protobuf_deps():
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
         remove_linked_tree(tmp_path)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(self.spec['python'].command.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')
