@@ -80,10 +80,6 @@ def setup_parser(subparser):
         'prefer-upstream',
         help='generate package preferences from upstream, and write them in the given '
              'config scope.')
-    prefer_upstream_parser.add_argument(
-        '--dest', required=False,
-        help="Instead of writing updating current configs, write a new config at this path."
-    )
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
@@ -447,19 +443,13 @@ def config_prefer_upstream(args):
     """m"""
 
     scope = args.scope
-    dest = args.dest
+    if scope is None:
+        scope = spack.config.default_modify_scope('packages')
 
     if getattr(args, 'env', None) is not None:
         msg = 'Environment {} specified, but prefer-upstream operates ' \
               'outside of all environments.'.format(args.env)
         tty.die(msg)
-
-    if dest is not None and args.scope is not None:
-        tty.die("You can specify a scope or a destination config file, "
-                "not both")
-    elif dest is None and args.scope is None:
-        tty.die(
-            "You must specify either a scope or a destination config file.")
 
     specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
 
@@ -478,34 +468,63 @@ def config_prefer_upstream(args):
             )
 
     specs = [spec for spec in specs if spec.package.installed_upstream]
+    conflicting_variants = set()
 
     pkgs = {}
     for spec in specs:
+        # Collect all the upstream compilers and versions for this package.
         pkg = pkgs.get(spec.name, {
             'version': [],
             'compiler': [],
         })
+        pkgs[spec.name] = pkg
 
-        if spec.version not in pkg['version']:
-            pkg['version'].append(spec.version)
+        version = spec.version.string
+        if version not in pkg['version']:
+            pkg['version'].append(version)
 
-        if spec.compiler not in pkg['compiler']:
-            pkg['compiler'].append(spec.compiler)
+        compiler = str(spec.compiler)
+        if compiler not in pkg['compiler']:
+            pkg['compiler'].append(compiler)
 
-    if dest:
-        try:
-            with open(dest, 'w') as dest_file:
-                syaml.dump_config(pkgs, dest_file)
-        except OSError as err:
-            tty.die(
-                "Failed to write dest config {}: {}"
-                .format(dest, err.args[0])
-            )
+        # Get and list all the variants that differ from the default.
+        variants = []
+        for var_name, variant in spec.variants.items():
+            if var_name in ['patches']:
+                continue
 
-    else:
-        existing = spack.config.get('packages', scope=scope)
-        new = spack.config.merge_yaml(existing, pkgs)
-        spack.config.set(section, new, scope)
+            if var_name not in spec.package.variants:
+                continue
+
+            if variant.value != spec.package.variants[var_name].default:
+                variants.append(str(variant))
+        variants.sort()
+        variants = ' '.join(variants)
+
+        if variants:
+            # Only specify the variants if there's a single variant
+            # set across all versions/compilers.
+            if 'variants' in pkg and variants != pkg['variants']:
+                conflicting_variants.add(spec.name)
+                del pkg['variants']
+            else:
+                pkg['variants'] = variants
+
+    if conflicting_variants:
+        tty.warn(
+            "The following packages have multiple conflicting upstream "
+            "specs. You may have to specify, by " 
+            "concretized hash, which spec you want when building "
+            "packages that depend on them:\n - {}"
+            .format("\n - ".join(sorted(conflicting_variants))))
+    
+    # Simply write the config to the specified file.
+    existing = spack.config.get('packages', scope=scope)
+    new = spack.config.merge_yaml(existing, pkgs)
+    spack.config.set('packages', new, scope)
+    config_file = spack.config.config.get_config_filename(scope, section)
+
+    tty.msg("Updated config at {}".format(config_file))
 
 def config(parser, args):
     action = {
