@@ -250,8 +250,8 @@ def very_long():
 @arg
 def tags():
     return Args(
-        '-t', '--tags', action='append',
-        help='filter a package query by tags')
+        '-t', '--tag', action='append', dest='tags', metavar='TAG',
+        help='filter a package query by tag (multiple use allowed)')
 
 
 @arg
