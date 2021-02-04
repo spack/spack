@@ -655,6 +655,7 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
+
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
 
@@ -680,6 +681,9 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
     scope = spack.config.default_modify_scope('packages')
     cfg_file = spack.config.config.get_config_filename(scope, 'packages')
     packages = syaml.load(open(cfg_file))['packages']
+    # Cleanup the config file we added, so it doesn't break other unit tests.
+    os.unlink(cfg_file)
+
     assert packages['boost'] == {
         'compiler': ['gcc@4.5.0'],
         'variants': '+debug +graph',
