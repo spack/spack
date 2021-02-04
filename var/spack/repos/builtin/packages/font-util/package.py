@@ -73,7 +73,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
                  sha256=f_r[2], destination=f, when='fonts=' + f)
 
         conflicts('fonts=font-bh-tff', when='platform=cray')
-        conflicts('font=font-bh-tff', when='arch=linux-rhel7-broadwell')
+        conflicts('fonts=font-bh-tff', when='arch=linux-rhel7-broadwell')
 
         if f != 'font-bh-tff':
             default_fonts.append(f)
