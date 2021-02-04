@@ -100,7 +100,7 @@ class PyNumpy(PythonPackage):
     patch('blas-lapack-order.patch', when='@1.15:1.16')
 
     # Add Fujitsu Fortran compiler
-    patch('add_fj_compiler.patch', when='@1.19.3:%fj')
+    patch('add_fj_compiler.patch', when='@1.19.3:1.19.5%fj')
     patch('add_fj_compiler2.patch', when='@1.19.0:1.19.2%fj')
     patch('add_fj_compiler3.patch', when='@1.14.0:1.18.5%fj')
     patch('add_fj_compiler4.patch', when='@:1.13.3%fj')
