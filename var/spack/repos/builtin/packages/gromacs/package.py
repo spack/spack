@@ -143,6 +143,7 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+            options.append('-DGMXAPI:BOOL=OFF')
 
         if '+hwloc' in self.spec:
             options.append('-DGMX_HWLOC:BOOL=ON')
