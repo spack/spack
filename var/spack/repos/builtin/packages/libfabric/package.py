@@ -15,6 +15,8 @@ class Libfabric(AutotoolsPackage):
     git      = "https://github.com/ofiwg/libfabric.git"
 
     version('master', branch='master')
+    version('1.11.2', sha256='a5ecc429e71b19ad80ffe5044eaaa2a53f4557e5c7ebeb0593f5948de71f7768')
+    version('1.11.1', sha256='d49a45b9d875ba2a56aac06c07cf3ed34a8b8f10e3c169e5f6c123bf415cfce7')
     version('1.11.0', sha256='9938abf628e7ea8dcf60a94a4b62d499fbc0dbc6733478b6db2e6a373c80d58f')
     version('1.10.1', sha256='889fa8c99eed1ff2a5fd6faf6d5222f2cf38476b24f3b764f2cbb5900fee8284')
     version('1.10.0', sha256='c1ef6e9cd6dafec3f003d2f78f0f3a25f055a7a791e98b5a0db1e4c5036e40f6')
