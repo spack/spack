@@ -628,7 +628,7 @@ _spack_config_add() {
 }
 
 _spack_config_prefer_upstream() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --local"
 }
 
 _spack_config_remove() {
