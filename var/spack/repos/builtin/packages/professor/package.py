@@ -21,7 +21,7 @@ class Professor(Package):
     depends_on('py-iminuit')
     depends_on('py-matplotlib')
 
-    #The following 'esit' is done first to test on RCF as /usr/local is not visible to users
+    #The following 'edit' is done first to test on RCF as /usr/local is not visible to users
     phases = ['edit','install']
 
     def edit(self, spec, prefix):
