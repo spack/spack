@@ -62,9 +62,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if arch not in dbcsr_amdgpu_targets:
             conflicts('+rocm', when='amdgpu_target={0}'.format(arch), msg=amd_msg)
 
-    conflicts('+cuda', when='+rocm', msg="CUDA and ROCm are mutually exclusive")
-    conflicts('+cuda', when='+opencl')
-    conflicts('+rocm', when='+opencl')
+    accel_msg = "CUDA, ROCm and OpenCL support are mutually exlusive"
+    conflicts('+cuda', when='+rocm', msg=accel_msg)
+    conflicts('+cuda', when='+opencl', msg=accel_msg)
+    conflicts('+rocm', when='+opencl', msg=accel_msg)
 
     # Require openmp threading for OpenBLAS by making other options conflict
     conflicts('^openblas threads=pthreads', when='+openmp')
