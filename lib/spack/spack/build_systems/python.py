@@ -66,6 +66,8 @@ class PythonPackage(PackageBase):
     #: Package name, version, and extension on PyPI
     pypi = None
 
+    maintainers = ['adamjstewart']
+
     # Default phases
     phases = ['build', 'install']
 
