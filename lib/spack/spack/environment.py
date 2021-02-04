@@ -553,9 +553,10 @@ class ViewDescriptor(object):
             # that cannot be resolved or have repos that have been removed
             # we always regenerate the view from scratch. We must first make
             # sure the root directory exists for the very first time though.
-            root = self.root
-            if not os.path.isabs(root):
-                root = os.path.normpath(os.path.join(self.base, self.root))
+            root = os.path.normpath(
+                self.root if os.path.isabs(self.root) else os.path.join(
+                    self.base, self.root)
+            )
             fs.mkdirp(root)
 
             # The tempdir for the directory transaction must be in the same
