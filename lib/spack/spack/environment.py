@@ -558,9 +558,13 @@ class ViewDescriptor(object):
                 root = os.path.normpath(os.path.join(self.base, self.root))
             fs.mkdirp(root)
 
-            # The tempdir for the directory transaction must be in the same 
-            # filesystem mount as the view, so that view creation fails to 
-            # symlink only when the finished view would fail as well
+            # The tempdir for the directory transaction must be in the same
+            # filesystem mount as the view for symlinks to work. Provide
+            # dirname(root) as the tempdir for the
+            # replace_directory_transaction because it must be on the same
+            # filesystem mount as the view itself. Otherwise it may be
+            # impossible to construct the view in the tempdir even when it can
+            # be constructed in-place.
             with fs.replace_directory_transaction(root, os.path.dirname(root)):
                 view = self.view()
 
