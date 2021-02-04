@@ -181,6 +181,12 @@ class Paraview(CMakePackage, CudaPackage):
             env.set('PARAVIEW_VTK_DIR',
                     join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
+    def flag_handler(self, name, flags):
+        if name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
+
     def setup_run_environment(self, env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
@@ -372,10 +378,5 @@ class Paraview(CMakePackage, CudaPackage):
         # arises.
         if '%intel' in spec and spec.version >= Version('5.6'):
             cmake_args.append('-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF')
-
-        if '%intel' in spec:
-            cmake_args.extend([
-                '-DCMAKE_EXE_LINKER_FLAGS:STRING=-shared-intel'
-            ])
 
         return cmake_args
