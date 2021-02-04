@@ -456,7 +456,7 @@ def config_prefer_upstream(args):
                 upstream_specs.append(spec)
         except spack.repo.UnknownNamespaceError as err:
             tty.die(
-                "Could not find package when checking spec {} ({}). "
+                "Could not find package when checking spec {0} ({1}). "
                 "This is usually due to your Spack instance not being "
                 "configured to know about the upstream's repositories."
                 .format(spec.name, err.message)
@@ -514,7 +514,7 @@ def config_prefer_upstream(args):
             "The following packages have multiple conflicting upstream "
             "specs. You may have to specify, by "
             "concretized hash, which spec you want when building "
-            "packages that depend on them:\n - {}"
+            "packages that depend on them:\n - {0}"
             .format("\n - ".join(sorted(conflicting_variants))))
 
     # Simply write the config to the specified file.
@@ -523,7 +523,7 @@ def config_prefer_upstream(args):
     spack.config.set('packages', new, scope)
     config_file = spack.config.config.get_config_filename(scope, section)
 
-    tty.msg("Updated config at {}".format(config_file))
+    tty.msg("Updated config at {0}".format(config_file))
 
 
 def config(parser, args):
