@@ -2553,9 +2553,6 @@ class Spec(object):
         for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
-            elif (not value):
-                s._hash = None
-                s._full_hash = None
             s._normal = value
             s._concrete = value
 
@@ -4277,9 +4274,16 @@ class Spec(object):
                     nodes[name].build_spec = other[name]
 
         # Clear cached hashes
-        nodes[self.name]._mark_concrete(False)
-        nodes[self.name]._mark_concrete(True)
+        nodes[self.name].clear_cached_hashes()
         return nodes[self.name]
+
+    def clear_cached_hashes(self):
+        """
+        Clears all cached hashes in a Spec, while preserving other properties.
+        """
+        for attr in ht.SpecHashDescriptor.hash_types:
+            if hasattr(self, attr):
+                delattr(self, attr)
 
 
 class LazySpecCache(collections.defaultdict):

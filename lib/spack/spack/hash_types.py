@@ -18,6 +18,9 @@ class SpecHashDescriptor(object):
 
     We currently use different hashes for different use cases.
     """
+
+    hash_types = ('_dag_hash', '_build_hash', '_full_hash')
+
     def __init__(self, deptype=('link', 'run'), package_hash=False, attr=None):
         self.deptype = dp.canonical_deptype(deptype)
         self.package_hash = package_hash
