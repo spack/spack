@@ -41,8 +41,8 @@ class Parallelio(CMakePackage):
         args = [
             define('NetCDF_C_PATH', spec['netcdf-c'].prefix),
             define('NetCDF_Fortran_PATH', spec['netcdf-fortran'].prefix),
-            define('USER_CMAKE_MODULE_PATH', '{0}/CMake_Fortran_utils'.format(src)),
-            define('GENF90_PATH', '{0}/genf90'.format(src)),
+            define('USER_CMAKE_MODULE_PATH', join_path(src, 'CMake_Fortran_utils')),
+            define('GENF90_PATH', join_path(src, 'genf90')),
         ]
         if spec.satisfies('+pnetcdf'):
             args.extend([
