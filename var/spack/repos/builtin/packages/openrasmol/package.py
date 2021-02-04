@@ -26,13 +26,18 @@ class Openrasmol(MakefilePackage):
     depends_on('xforms@1.0.91', type='link')
 
     patch('rasmol_noqa.patch')
-    patch('rasmol_imake.patch')
-    patch('rasmol_imakec.patch')
     patch('rasmol_help.patch')
 
     def edit(self, spec, prefix):
-        df = FileFilter(join_path('src', 'host.def'))
-        df.filter('SPACK_CC', spack_cc)
+        with working_dir('src'):
+            # Imakefile
+            bash = which('bash')
+            bash('./rasmol_build_options.sh')
+            # host.def
+            with open('host.def', 'w') as f:
+                f.write('#ifdef AfterVendorCF\n')
+                f.write('#define CcCmd {0}\n'.format(spack_cc))
+                f.write('#endif\n')
 
     def setup_build_environment(self, env):
         env.set('XFORMSLIB_DIR', self.spec['xforms'].prefix)
