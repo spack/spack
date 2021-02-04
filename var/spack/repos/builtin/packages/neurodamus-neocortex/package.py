@@ -17,6 +17,7 @@ class NeurodamusNeocortex(NeurodamusModel):
     # IMPORTANT: Register versions (only) here to make them stable
     # Final version name is combined e.g. "1.0-3.0.1"
     model_core_dep_v = (
+        ('1.3', '3.2.0'),
         ('1.2', '3.1.0'),
         ('1.1', '3.0.2'),
     )
