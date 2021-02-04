@@ -1,0 +1,23 @@
+--- spack-src/ksw.c.bak	2019-01-21 10:35:00.000000000 +0900
++++ spack-src/ksw.c	2021-01-29 16:24:06.281952856 +0900
+@@ -25,7 +25,7 @@
+ 
+ #include <stdlib.h>
+ #include <stdint.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include "ksw.h"
+ 
+ #ifdef USE_MALLOC_WRAPPERS
+--- spack-src/poacns.h.bak	2019-01-21 10:35:00.000000000 +0900
++++ spack-src/poacns.h	2021-01-29 16:23:27.631956791 +0900
+@@ -25,8 +25,7 @@
+ #include "chararray.h"
+ #include "list.h"
+ #include "hashset.h"
+-#include <emmintrin.h>
+-#include <tmmintrin.h>
++#include <sse2neon.h>
+ 
+ #if __BYTE_ORDER == 1234
+ //#pragma message(" ** " __FILE__ " has been tested in LITTLE_ENDIAN **\n")

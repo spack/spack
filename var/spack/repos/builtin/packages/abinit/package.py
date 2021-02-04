@@ -94,6 +94,9 @@ class Abinit(AutotoolsPackage):
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
 
+    patch('rm_march_settings.patch')
+    patch('fix_for_fujitsu.patch', level=0, when='%fj')
+
     def configure_args(self):
 
         spec = self.spec
@@ -114,10 +117,15 @@ class Abinit(AutotoolsPackage):
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
-            oapp('--enable-mpi-io=yes')
-            oapp('MPIFC={0}/mpifc'.format(spec['mpi'].prefix.bin))
+            if self.spec.satisfies('%fj'):
+                oapp('CC={0}'.format(spec['mpi'].mpicc))
+                oapp('CXX={0}'.format(spec['mpi'].mpicxx))
+                oapp('FC={0}'.format(spec['mpi'].mpifc))
+            else:
+                oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
+                oapp('--enable-mpi-io=yes')
+                oapp('MPIFC={0}'.format(spec['mpi'].mpifc))
             if '~wannier90' in spec:
                 oapp('--with-dft-flavor=atompaw+libxc')
 
@@ -173,6 +181,10 @@ class Abinit(AutotoolsPackage):
             # In Spack we do our best to avoid building any internally provided
             # dependencies, such as netcdf3 in this case.
             oapp('--with-trio-flavor=none')
+
+        if self.spec.satisfies('%fj'):
+            oapp('FCFLAGS_MODDIR=-M{0}'.format(join_path(
+                 self.stage.source_path, 'src/mods')))
 
         return options
 
