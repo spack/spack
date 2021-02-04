@@ -108,7 +108,7 @@ class Graphviz(AutotoolsPackage):
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
-    # Build dependencies (graphviz binaries don't include configurefile)
+    # Build dependencies (graphviz binaries don't include configure file)
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('bison', type='build')
