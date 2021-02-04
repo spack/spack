@@ -76,9 +76,15 @@ def setup_parser(subparser):
         help="file from which to set all config values"
     )
 
-    sp.add_parser(
+    prefer_upstream_parser = sp.add_parser(
         'prefer-upstream',
         help='set package preferences from upstream')
+
+    prefer_upstream_parser.add_argument(
+        '--local', action='store_true', default=False,
+        help="Set packages preferences based on local installs, rather "
+             "than upstream."
+    )
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
@@ -448,12 +454,11 @@ def config_prefer_upstream(args):
 
     specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
 
-    # Get only our upstream specs
-    upstream_specs = []
+    pref_specs = []
     for spec in specs:
+        upstream = None
         try:
-            if spec.package.installed_upstream:
-                upstream_specs.append(spec)
+            upstream = spec.package.installed_upstream
         except spack.repo.UnknownNamespaceError as err:
             tty.die(
                 "Could not find package when checking spec {0} ({1}). "
@@ -461,12 +466,13 @@ def config_prefer_upstream(args):
                 "configured to know about the upstream's repositories."
                 .format(spec.name, err.message)
             )
+        if (upstream and not args.local) or (not upstream and args.local):
+            pref_specs.append(spec)
 
-    specs = [spec for spec in specs if spec.package.installed_upstream]
     conflicting_variants = set()
 
     pkgs = {}
-    for spec in specs:
+    for spec in pref_specs:
         # Collect all the upstream compilers and versions for this package.
         pkg = pkgs.get(spec.name, {
             'version': [],
@@ -489,10 +495,8 @@ def config_prefer_upstream(args):
         # Get and list all the variants that differ from the default.
         variants = []
         for var_name, variant in spec.variants.items():
-            if var_name in ['patches']:
-                continue
-
-            if var_name not in spec.package.variants:
+            if (var_name in ['patches']
+                    or var_name not in spec.package.variants):
                 continue
 
             if variant.value != spec.package.variants[var_name].default:
