@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class ParallelNetcdf(AutotoolsPackage):
@@ -182,23 +183,21 @@ class ParallelNetcdf(AutotoolsPackage):
 
     def test(self):
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
-        with working_dir(test_dir, create=False):
-            # pnetcdf has many examples to serve as a suitable smoke check.
-            # column_wise was chosen based on the E4S test suite. Other
-            # examples should work as well.
-            test_exe = 'column_wise'
-            options = [
-                '-I{0}'.format(self.prefix.include),
-                '{0}.cpp'.format(test_exe),
-                '-o',
-                test_exe,
-                '-L{0}'.format(self.prefix.lib),
-                '-lpnetcdf']
-            reason = 'test: compiling and linking pnetcdf example'
-            self.run_test(self.spec['mpi'].mpicxx, options, [],
-                          installed=False, purpose=reason)
-            mpirun = join_path(self.spec['mpi'].prefix.bin, 'mpirun')
-            self.run_test(mpirun, ['-np', '4', test_exe], [],
-                          installed=False,
-                          purpose='test: pnetcdf smoke test')
-            self.run_test('rm', ['-f', test_exe])
+        # pnetcdf has many examples to serve as a suitable smoke check.
+        # column_wise was chosen based on the E4S test suite. Other
+        # examples should work as well.
+        test_exe = 'column_wise'
+        options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf']
+        reason = 'test: compiling and linking pnetcdf example'
+        self.run_test(self.spec['mpi'].mpicxx, options, [],
+                      installed=False, purpose=reason, work_dir=test_dir)
+        mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+        for mpiexe in mpiexe_list:
+            if os.path.isfile(mpiexe):
+                self.run_test(mpiexe, ['-n', '4', test_exe], [],
+                              installed=False,
+                              purpose='test: pnetcdf smoke test',
+                              skip_missing=True,
+                              work_dir=test_dir)
+                break
+        self.run_test('rm', ['-f', test_exe], work_dir=test_dir)
