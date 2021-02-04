@@ -583,7 +583,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add remove rm update revert"
+        SPACK_COMPREPLY="get blame edit list add prefer-upstream remove rm update revert"
     fi
 }
 
@@ -625,6 +625,10 @@ _spack_config_add() {
     else
         SPACK_COMPREPLY=""
     fi
+}
+
+_spack_config_prefer_upstream() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_config_remove() {

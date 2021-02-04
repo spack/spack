@@ -76,10 +76,9 @@ def setup_parser(subparser):
         help="file from which to set all config values"
     )
 
-    prefer_upstream_parser = sp.add_parser(
+    sp.add_parser(
         'prefer-upstream',
-        help='generate package preferences from upstream, and write them in the given '
-             'config scope.')
+        help='set package preferences from upstream')
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help='remove configuration parameters')
@@ -440,16 +439,12 @@ def config_revert(args):
 
 
 def config_prefer_upstream(args):
-    """m"""
+    """Generate a packages config based on the configuration of all upstream
+    installs."""
 
     scope = args.scope
     if scope is None:
         scope = spack.config.default_modify_scope('packages')
-
-    if getattr(args, 'env', None) is not None:
-        msg = 'Environment {} specified, but prefer-upstream operates ' \
-              'outside of all environments.'.format(args.env)
-        tty.die(msg)
 
     specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
 
@@ -479,6 +474,10 @@ def config_prefer_upstream(args):
         })
         pkgs[spec.name] = pkg
 
+        # We have no existing variant if this is our first added version.
+        existing_variants = pkg.get('variants',
+                                    None if not pkg['version'] else '')
+
         version = spec.version.string
         if version not in pkg['version']:
             pkg['version'].append(version)
@@ -501,23 +500,23 @@ def config_prefer_upstream(args):
         variants.sort()
         variants = ' '.join(variants)
 
-        if variants:
+        if spec.name not in conflicting_variants:
             # Only specify the variants if there's a single variant
             # set across all versions/compilers.
-            if 'variants' in pkg and variants != pkg['variants']:
+            if existing_variants is not None and existing_variants != variants:
                 conflicting_variants.add(spec.name)
                 del pkg['variants']
-            else:
+            elif variants:
                 pkg['variants'] = variants
 
     if conflicting_variants:
         tty.warn(
             "The following packages have multiple conflicting upstream "
-            "specs. You may have to specify, by " 
+            "specs. You may have to specify, by "
             "concretized hash, which spec you want when building "
             "packages that depend on them:\n - {}"
             .format("\n - ".join(sorted(conflicting_variants))))
-    
+
     # Simply write the config to the specified file.
     existing = spack.config.get('packages', scope=scope)
     new = spack.config.merge_yaml(existing, pkgs)
@@ -525,6 +524,7 @@ def config_prefer_upstream(args):
     config_file = spack.config.config.get_config_filename(scope, section)
 
     tty.msg("Updated config at {}".format(config_file))
+
 
 def config(parser, args):
     action = {
