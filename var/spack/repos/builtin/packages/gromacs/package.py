@@ -130,9 +130,9 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_MPI:BOOL=ON')
             # Ensures gmxapi builds properly
             options.extend([
-                '-DMPI_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                '-DMPI_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DMPI_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc
+                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
             ])
 
         if '+double' in self.spec:
