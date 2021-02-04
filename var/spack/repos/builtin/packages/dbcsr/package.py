@@ -65,6 +65,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('^openblas threads=pthreads', when='+openmp')
     conflicts('^openblas threads=none', when='+openmp')
 
+    conflicts('smm=blas', when='+opencl')
+
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
 
