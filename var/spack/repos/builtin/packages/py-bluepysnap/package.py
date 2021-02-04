@@ -26,11 +26,12 @@ class PyBluepysnap(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-functools32', type='run', when='^python@:3.1.99')
-    depends_on('py-cached-property@1.0:', type='run')
+    depends_on('py-pandas@0.24.0:', type='run')
     depends_on('py-libsonata@0.1.4:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-click@7.0:', type='run')
+
+    depends_on('py-cached-property@1.0:', type='run')
     depends_on('py-more-itertools@7.2.0:', type='run')
 
     # Version 0.8.0 is the switch between the python2+python3
