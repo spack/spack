@@ -24,3 +24,7 @@ class Biobambam2(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-libmaus2={0}'.format(self.spec['libmaus2'].prefix)]
         return args
+
+    def test(self):
+        exe_name = join_path(self.test_suite.current_test_data_dir,  "testshortsort.sh")
+        self.run_test(exe_name, expected='Alignments sorted by coordinate.')
