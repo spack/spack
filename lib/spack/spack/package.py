@@ -30,7 +30,7 @@ from typing import Optional, List, Dict, Any, Callable  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
-import llnl.util.cpu as cpu
+import archspec.cpu as cpu
 import spack.architecture as architecture
 import spack.compilers
 import spack.config

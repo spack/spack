@@ -12,7 +12,7 @@ from spack.spec import Spec
 from spack.cmd.external import ExternalPackageEntry
 from spack.main import SpackCommand
 import spack.architecture as architecture
-import llnl.util.cpu as cpu
+import archspec.cpu as cpu
 
 target = cpu.host()
 arch = architecture.Arch(architecture.platform(), 'default_os', target.family)
