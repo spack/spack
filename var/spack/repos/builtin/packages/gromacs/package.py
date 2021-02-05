@@ -211,8 +211,8 @@ class Gromacs(CMakePackage):
         elif target == 'mic_knl':
             # Intel KNL
             options.append('-DGMX_SIMD=AVX_512_KNL')
-        elif target.vendor == 'GenuineIntel':
-            # Other Intel architectures
+        else:
+            # Other architectures
             simd_features = [
                 ('sse2', 'SSE2'),
                 ('sse4_1', 'SSE4.1'),
@@ -231,8 +231,8 @@ class Gromacs(CMakePackage):
                 if feature in target:
                     options.append('-DGMX_SIMD:STRING={0}'.format(flag))
                     break
-        else:
-            # Fall back to this for unknown microarchitectures
+
+            # Fall back
             options.append('-DGMX_SIMD:STRING=None')
 
         # Use the 'rtdscp' assembly instruction only on
