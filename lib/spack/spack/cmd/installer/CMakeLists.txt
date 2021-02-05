@@ -78,7 +78,7 @@ install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/" DESTINATION "scripts")
 # CPACK Installer Instructions
 set(CPACK_PACKAGE_NAME "Spack")
 set(CPACK_PACKAGE_VENDOR "Lawrence Livermore National Laboratories")
-#set(CPACK_PACKAGE_VERSION ${SPACK_VERSION}})
+set(CPACK_PACKAGE_VERSION "0.16.0")
 set(CPACK_PACKAGE_DESCRIPTION "A flexible package manager designed to support multiple versions, configurations, platforms, and compilers.")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://spack.io")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}")
