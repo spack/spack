@@ -71,7 +71,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('zfp', when='+zfp')
     depends_on('hipblas', when='+rocm')
     depends_on('rocsolver', when='+rocm')
-    depends_on('slate', when='+slate')
+    depends_on('slate', when='+slate+mpi')
+    depends_on('slate+cuda', when='+cuda+slate+mpi')
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
@@ -82,7 +83,6 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+rocm', when='+cuda')
     conflicts('+slate', when='@:5.1.1')
     conflicts('+slate', when='~mpi')
-    conflicts('+slate', when='~cuda')
 
     patch('intel-19-compile.patch', when='@3.1.1')
 
