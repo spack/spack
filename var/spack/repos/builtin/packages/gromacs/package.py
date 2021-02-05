@@ -74,7 +74,7 @@ class Gromacs(CMakePackage):
     variant('openmp', default=True,
             description='Enables OpenMP at configure time')
     variant('relaxed_double_precision', default=False,
-            description='GMX_RELAXED_DOUBLE_PRECISION, intended only for Fujitsu PRIMEHPC')
+            description='GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
