@@ -66,7 +66,7 @@ class Gromacs(CMakePackage):
     variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
-            values=('Debug', 'Release', 'RelWith?filepath=tutorial.ipynbDebInfo', 'MinSizeRel',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel',
                     'Reference', 'RelWithAssert', 'Profile'))
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
