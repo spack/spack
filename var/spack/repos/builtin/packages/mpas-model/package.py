@@ -81,7 +81,6 @@ class MpasModel(MakefilePackage):
         return targets
 
     def build(self, spec, prefix):
-
         copy_tree(join_path('MPAS-Data', 'atmosphere'),
                   join_path('src', 'core_atmosphere', 'physics'))
         make(*self.target('init_atmosphere', 'all'))
