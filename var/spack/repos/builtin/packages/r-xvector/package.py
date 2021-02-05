@@ -27,6 +27,7 @@ class RXvector(RPackage):
     depends_on('r-s4vectors@0.13.13:', type=('build', 'run'))
     depends_on('r-iranges@2.9.18:', type=('build', 'run'))
     depends_on('r-zlibbioc', type=('build', 'run'))
+    depends_on('zlib')
 
     depends_on('r-s4vectors@0.15.14:', when='@0.18.0:', type=('build', 'run'))
 

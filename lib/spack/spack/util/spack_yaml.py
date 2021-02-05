@@ -13,7 +13,7 @@
 
 """
 import ctypes
-import collections
+import sys
 from typing import List  # novm
 
 from ordereddict_backport import OrderedDict
@@ -25,6 +25,13 @@ from ruamel.yaml import RoundTripLoader, RoundTripDumper
 from llnl.util.tty.color import colorize, clen, cextra
 
 import spack.error
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
 
 # Only export load and dump
 __all__ = ['load', 'dump', 'SpackYAMLError']
@@ -344,7 +351,7 @@ def sorted_dict(dict_like):
     """
     result = syaml_dict(sorted(dict_like.items()))
     for key, value in result.items():
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             result[key] = sorted_dict(value)
     return result
 
