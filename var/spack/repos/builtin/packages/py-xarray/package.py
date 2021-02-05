@@ -12,6 +12,12 @@ class PyXarray(PythonPackage):
     homepage = "https://github.com/pydata/xarray"
     pypi = "xarray/xarray-0.9.1.tar.gz"
 
+    # 'xarray.tests' requires pytest
+    import_modules = [
+        'xarray', 'xarray.core', 'xarray.plot', 'xarray.util',
+        'xarray.backends', 'xarray.coding'
+    ]
+
     version('0.16.2', sha256='38e8439d6c91bcd5b7c0fca349daf8e0643ac68850c987262d53526e9d7d01e4')
     version('0.14.0', sha256='a8b93e1b0af27fa7de199a2d36933f1f5acc9854783646b0f1b37fed9b4da091')
     version('0.13.0', sha256='80e5746ffdebb96b997dba0430ff02d98028ef3828e6db6106cbbd6d62e32825')
