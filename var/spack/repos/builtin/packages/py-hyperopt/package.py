@@ -20,11 +20,6 @@ class PyHyperopt(PythonPackage):
     version('0.2.2', sha256='4dd384d3ac18e4f8165321d6576ade703513bca43c9c51d6a00bc6fba747811e')
     version('0.2.1', sha256='a6817b88b7c4807734c5729380bf0058b582d0efeacc8007d37244ff6e8c28d9')
     version('0.2',   sha256='3419179f71e962d4c9ecd81ad06f2918a604b060fe07189ef65417274807d054')
-    version('0.1.2', sha256='e0b2f48e922721eff244673976329128171b1c87e9224d9224b97745f0245c8d')
-    version('0.1.1', sha256='c1512c0916f8688b57bf2da9afdc7efe9de6727ce782c2087364b1694792cdf0')
-    version('0.1',   sha256='415d128fe59c2d98c014b7ae98763d2a5e84d9d02d57b4c153301b51abdccbfa')
-    version('0.0.2', sha256='632b475daef37794479735c684297c723b0363304909310611360227b2b69551')
-    version('0.0.2', sha256='632b475daef37794479735c684297c723b0363304909310611360227b2b69551')
 
     depends_on('python@2.7:',       type=('build', 'run'))
     depends_on('py-setuptools',     type='build')
