@@ -18,7 +18,7 @@ class PyFava(PythonPackage):
     # For some reason Fava adds a whole bunch of executables to
     # its bin directory, and this causes clashes when loading
     # the module.
-    extends('python', ignore='bin/(bean-*|chardetect|cheroot|flask|py*|treeify|upload-to-sheets)')
+    extends('python', ignore='bin/^(?!fava).*')
 
     # Some of the dependencies are not listed as required at
     # build or run time, but actually are.
@@ -26,10 +26,10 @@ class PyFava(PythonPackage):
     # - py-importlib
     # - py-pytest
     depends_on('python@3.6:',       type=('build', 'run'))
-    depends_on('py-setuptools',     type='build')
+    depends_on('py-setuptools',     type=('build', 'run'))
     depends_on('py-setuptools-scm', type=('build'))
 
-    depends_on('py-babel@2.6.0',         type=('build', 'run'))
+    depends_on('py-babel@2.6.0:',        type=('build', 'run'))
     depends_on('py-beancount@2.3.0:',    type=('build', 'run'))
     depends_on('py-cheroot',             type=('build', 'run'))
     depends_on('py-click',               type=('build', 'run'))
