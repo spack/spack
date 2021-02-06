@@ -65,7 +65,9 @@ class PyMatplotlib(PythonPackage):
     if sys.platform == 'darwin':
         default_backend = 'macosx'
 
-    variant('backend', default=default_backend, description='Default backend',
+    variant('backend', default=default_backend,
+            description='Default backend. All backends are installed and ' +
+            'functional as long as dependencies are found at run-time',
             values=all_backends, multi=False)
     variant('movies', default=False,
             description='Enable support for saving movies')
