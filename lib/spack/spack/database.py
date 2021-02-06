@@ -795,7 +795,7 @@ class Database(object):
         # do it *while* we're constructing specs,it causes hashes to be
         # cached prematurely.
         for hash_key, rec in data.items():
-            rec.spec._mark_concrete()
+            rec.spec._mark_root_concrete()
 
         self._data = data
 
