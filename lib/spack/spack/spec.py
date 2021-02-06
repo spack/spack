@@ -2538,6 +2538,13 @@ class Spec(object):
         else:
             self._old_concretize(tests)
 
+    def _mark_root_concrete(self, value=True):
+        """Mark just this spec (not dependencies) concrete."""
+        if (not value) and self.concrete and self.package.installed:
+            return
+        self._normal = value
+        self._concrete = value
+
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
@@ -2545,10 +2552,7 @@ class Spec(object):
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
-                continue
-            s._normal = value
-            s._concrete = value
+            s._mark_root_concrete(value)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().
