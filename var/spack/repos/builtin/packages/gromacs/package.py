@@ -73,8 +73,8 @@ class Gromacs(CMakePackage):
             ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True,
             description='Enables OpenMP at configure time')
-    variant('double_precision', default=False,
-            description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
+    variant('relaxed_double_precision', default=False,
+            description='GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
@@ -251,7 +251,7 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_OPENMP:BOOL=ON')
 
-        if '+double_precision' in self.spec:
+        if '+relaxed_double_precision' in self.spec:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
