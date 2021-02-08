@@ -18,6 +18,7 @@ class Libqglviewer(QMakePackage):
 
     depends_on('qt+gui+opengl')
     depends_on('freeglut', when='^qt@:3.0')
+    depends_on('glu', type='link')
 
     build_directory = 'QGLViewer'
 
