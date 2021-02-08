@@ -35,4 +35,4 @@ class Windows(Platform):
     @classmethod
     def detect(cls):
         plat = platform.system().lower()
-        return 'cygwin' in plat or 'win32' in plat
+        return 'cygwin' in plat or 'win32' in plat or 'windows' in plat
