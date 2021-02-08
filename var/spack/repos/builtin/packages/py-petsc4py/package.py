@@ -31,6 +31,8 @@ class PyPetsc4py(PythonPackage):
 
     variant('mpi', default=True,  description='Activates MPI support')
 
+    patch('ldshared.patch')
+
     depends_on('py-cython', type='build', when='@develop')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
