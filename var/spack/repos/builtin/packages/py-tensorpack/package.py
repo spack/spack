@@ -13,6 +13,8 @@ class PyTensorpack(PythonPackage):
     homepage = "https://github.com/tensorpack/tensorpack"
     pypi = "tensorpack/tensorpack-0.10.1.tar.gz"
 
+    maintainers = ['aweits']
+
     version('0.10.1', sha256='ae6af59794459de910725d268061f0c86d78f01948f9fd5d7b11dd9770ad71ef')
     version('0.9.8', sha256='bc6566c12471a0f9c0a79acc3d045595b1943af8e423c5b843986b73bfe5425f')
 
