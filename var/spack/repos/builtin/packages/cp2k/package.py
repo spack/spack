@@ -158,6 +158,7 @@ class Cp2k(MakefilePackage, CudaPackage):
     conflicts('smm=libxsmm',  when='target=aarch64:', msg='libxsmm is not available on arm')
 
     conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^amdfftw~openmp', when='+openmp')
     conflicts('^openblas threads=none', when='+openmp')
     conflicts('^openblas threads=pthreads', when='+openmp')
 
