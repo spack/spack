@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import tempfile
 
 
 class PyTensorflowEstimator(Package):
@@ -24,30 +25,27 @@ class PyTensorflowEstimator(Package):
 
     extends('python')
 
-    depends_on('py-tensorflow@2.4.0:2.4.999',  when='@2.4.0')
-    depends_on('py-tensorflow@2.3.0:2.3.999',  when='@2.3.0')
-    depends_on('py-tensorflow@2.2.0:2.2.999',  when='@2.2.0')
-    depends_on('py-tensorflow@2.1.0:2.1.999',  when='@2.1')
-    depends_on('py-tensorflow@2.0.0:2.0.999',  when='@2.0.0')
-    depends_on('py-tensorflow@1.13.1', when='@1.13.0')
+    depends_on('py-tensorflow@2.4.0:2.4.999', type=('build', 'run'), when='@2.4.0')
+    depends_on('py-tensorflow@2.3.0:2.3.999', type=('build', 'run'), when='@2.3.0')
+    depends_on('py-tensorflow@2.2.0:2.2.999', type=('build', 'run'), when='@2.2.0')
+    depends_on('py-tensorflow@2.1.0:2.1.999', type=('build', 'run'), when='@2.1')
+    depends_on('py-tensorflow@2.0.0:2.0.999', type=('build', 'run'), when='@2.0.0')
+    depends_on('py-tensorflow@1.13.1', type=('build', 'run'), when='@1.13.0')
 
     depends_on('bazel@0.19.0:', type='build')
     depends_on('py-funcsigs@1.0.2:', type=('build', 'run'))
 
     def install(self, spec, prefix):
-        tmp_path = join_path(env.get('SPACK_TMPDIR', '/tmp/spack'),
-                             'tf-estimator',
-                             self.module.site_packages_dir[1:])
-        mkdirp(tmp_path)
-        env['TEST_TMPDIR'] = tmp_path
-        env['HOME'] = tmp_path
+        self.tmp_path = tempfile.mkdtemp(dir='/tmp', prefix='spack')
+        env['TEST_TMPDIR'] = self.tmp_path
+        env['HOME'] = self.tmp_path
 
         args = [
             # Don't allow user or system .bazelrc to override build settings
             '--nohome_rc',
             '--nosystem_rc',
             # Bazel does not work properly on NFS, switch to /tmp
-            '--output_user_root=' + tmp_path,
+            '--output_user_root=' + self.tmp_path,
             'build',
             # Spack logs don't handle colored output well
             '--color=no',
@@ -77,3 +75,4 @@ class PyTensorflowEstimator(Package):
         with working_dir(buildpath):
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+        remove_linked_tree(self.tmp_path)
