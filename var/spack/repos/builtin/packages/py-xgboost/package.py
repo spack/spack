@@ -16,12 +16,11 @@ class PyXgboost(PythonPackage):
 
     version('1.3.3', sha256='397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43')
 
-    variant('pandas',       default=False)
-    variant('scikit-learn', default=False)
-    variant('dask',         default=False)
-    variant('plotting',     default=False)
+    variant('pandas',       default=False, description='Enable Pandas extensions for training.')
+    variant('scikit-learn', default=False, description='Enable scikit-learn extensions for training.')
+    variant('dask',         default=False, description='Enables Dask extensions for distributed training.')
+    variant('plotting',     default=False, description='Enables tree and importance plotting.')
 
-    extends('python')
     depends_on('cmake',         type='build')
     depends_on('python@3.6:',   type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
@@ -30,7 +29,7 @@ class PyXgboost(PythonPackage):
 
     depends_on('py-pandas', when='+pandas', type=('build', 'run'))
 
-    depends_on('py-scikit-learn', when='+py-scikit-learn', type=('build', 'run'))
+    depends_on('py-scikit-learn', when='+scikit-learn', type=('build', 'run'))
 
     depends_on('py-dask',        when='+dask', type=('build', 'run'))
     depends_on('py-pandas',      when='+dask', type=('build', 'run'))
