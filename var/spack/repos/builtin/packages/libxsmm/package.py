@@ -82,7 +82,7 @@ class Libxsmm(MakefilePackage):
         ]
 
         # JIT (AVX and later) makes MNK, M, N, or K spec. superfluous
-#       make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
+        # make_args += ['MNK=1 4 5 6 8 9 13 16 17 22 23 24 26 32']
 
         # include call trace as the build is already de-optimized
         if '+debug' in spec:
