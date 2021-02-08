@@ -125,17 +125,36 @@ class Gromacs(CMakePackage):
 
         options = []
 
+        if self.version < Version('2020'):
+            if '+mpi' in self.spec:
+                options.append('-DGMX_MPI:BOOL=ON')
+                # Ensures gmxapi builds properly
+                options.extend([
+                    '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                    '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                    '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
+                ])
+            else:
+                options.append('-DGMX_MPI:BOOL=OFF')
+        else:
+            options.extend(
+                [
+                    '-DCMAKE_C_COMPILER=%s' % spack_cc,
+                    '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
+                ]
+            )
+            if '+mpi' in self.spec:
+                options.append('-DGMX_MPI:BOOL=ON')
+                # Ensures gmxapi builds properly
+                options.extend([
+                    '-DMPI_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                    '-DMPI_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                ])
+            else:
+                options.append('-DGMX_MPI:BOOL=OFF')
+
         if self.spec.satisfies('@2020:'):
             options.append('-DGMX_INSTALL_LEGACY_API=ON')
-
-        if '+mpi' in self.spec:
-            options.append('-DGMX_MPI:BOOL=ON')
-            # Ensures gmxapi builds properly
-            options.extend([
-                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
-                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
-                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
-            ])
 
         if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
