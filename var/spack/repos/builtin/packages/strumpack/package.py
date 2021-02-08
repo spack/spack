@@ -71,8 +71,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('zfp', when='+zfp')
     depends_on('hipblas', when='+rocm')
     depends_on('rocsolver', when='+rocm')
-    depends_on('slate', when='+slate+mpi')
-    depends_on('slate+cuda', when='+cuda+slate+mpi')
+    depends_on('slate', when='+slate')
+    depends_on('slate+cuda', when='+cuda+slate')
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
