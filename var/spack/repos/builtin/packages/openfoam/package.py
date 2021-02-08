@@ -314,7 +314,7 @@ class Openfoam(Package):
     # conflicts('^openmpi~thread_multiple', when='@1712:')
 
     depends_on('zlib')
-    depends_on('fftw')
+    depends_on('fftw-api')
     depends_on('boost')
     depends_on('cgal')
     # The flex restriction is ONLY to deal with a spec resolution clash
@@ -629,10 +629,10 @@ class Openfoam(Package):
                      pkglib(spec['cgal'], '${CGAL_ARCH_PATH}'))),
             ],
             'FFTW': [
-                ('FFTW_ARCH_PATH', spec['fftw'].prefix),  # Absolute
+                ('FFTW_ARCH_PATH', spec['fftw-api'].prefix),  # Absolute
                 ('LD_LIBRARY_PATH',
                  foam_add_lib(
-                     pkglib(spec['fftw'], '${BOOST_ARCH_PATH}'))),
+                     pkglib(spec['fftw-api'], '${BOOST_ARCH_PATH}'))),
             ],
             # User-defined MPI
             'mpi-user': [
@@ -855,7 +855,7 @@ class OpenfoamArch(object):
 
     #: Map spack compiler names to OpenFOAM compiler names
     #  By default, simply capitalize the first letter
-    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu'}
+    compiler_mapping = {'intel': 'Icc', 'fj': 'Fujitsu', 'aocc': 'Amd'}
 
     def __init__(self, spec, **kwargs):
         # Some user settings, to be adjusted manually or via variants
