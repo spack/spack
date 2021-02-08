@@ -1,51 +1,23 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install py-msgpack-numpy
-#
-# You can edit this file again by typing:
-#
-#     spack edit py-msgpack-numpy
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 
 
 class PyMsgpackNumpy(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """This package provides encoding and decoding routines
+    that enable the serialization and deserialization of
+    numerical and array data types provided by numpy using the
+    highly efficient msgpack format. Serialization of Python's
+    native complex data types is also supported."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/lebedov/msgpack-numpy"
     url      = "https://github.com/lebedov/msgpack-numpy/archive/0.4.7.1.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('0.4.7.1', sha256='c1f3fc082efbf733aeb24aa638db622b8f6d6320a82b19116dc97e7afd0ab5cc')
 
-    # FIXME: Add dependencies if required. Only add the python dependency
-    # if you need specific versions. A generic python dependency is
-    # added implicity by the PythonPackage class.
-    # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy@1.9:', type=('build', 'run'))
     depends_on('py-msgpack@0.5.2:', type=('build', 'run'))
-
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
-        return args
