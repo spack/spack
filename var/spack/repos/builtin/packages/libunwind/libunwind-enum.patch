@@ -1,0 +1,44 @@
+--- include/libunwind-dynamic.h.orig	2019-06-14 08:37:40.946703234 +0200
++++ include/libunwind-dynamic.h	2019-06-14 08:38:10.394715072 +0200
+@@ -77,7 +77,7 @@
+     UNW_INFO_FORMAT_TABLE,              /* unw_dyn_table_t */
+     UNW_INFO_FORMAT_REMOTE_TABLE,       /* unw_dyn_remote_table_t */
+     UNW_INFO_FORMAT_ARM_EXIDX,          /* ARM specific unwind info */
+-    UNW_INFO_FORMAT_IP_OFFSET,          /* Like UNW_INFO_FORMAT_REMOTE_TABLE, but
++    UNW_INFO_FORMAT_IP_OFFSET           /* Like UNW_INFO_FORMAT_REMOTE_TABLE, but
+                                            table entries are considered
+                                            relative to di->start_ip, rather
+                                            than di->segbase */
+--- include/libunwind-common.h.in.orig	2019-06-14 08:39:56.494747842 +0200
++++ include/libunwind-common.h.in	2019-06-14 08:40:28.826755358 +0200
+@@ -88,7 +88,7 @@
+ 
+ typedef enum
+   {
+-    UNW_INIT_SIGNAL_FRAME = 1,          /* We know this is a signal frame */
++    UNW_INIT_SIGNAL_FRAME = 1           /* We know this is a signal frame */
+   }
+ unw_init_local2_flags_t;
+ 
+--- include/libunwind-aarch64.h.orig	2019-07-11 16:03:35.771977638 +0200
++++ include/libunwind-aarch64.h		2019-07-11 16:05:20.124812141 +0200
+@@ -154,7 +154,7 @@
+ 
+     UNW_TDEP_IP = UNW_AARCH64_X30,
+     UNW_TDEP_SP = UNW_AARCH64_SP,
+-    UNW_TDEP_EH = UNW_AARCH64_X0,
++    UNW_TDEP_EH = UNW_AARCH64_X0
+ 
+   }
+ aarch64_regnum_t;
+--- src/mi/dyn-info-list.c.orig	2020-07-23 16:40:58.409161489 +0200
++++ src/mi/dyn-info-list.c	2020-07-23 16:41:06.638025099 +0200
+@@ -25,7 +25,7 @@
+ 
+ #include "libunwind_i.h"
+ 
+-HIDDEN unw_dyn_info_list_t _U_dyn_info_list;
++extern HIDDEN unw_dyn_info_list_t _U_dyn_info_list;
+ 
+ unw_word_t
+ _U_dyn_info_list_addr (void)
