@@ -242,8 +242,8 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'LIBEXT=.so',
                     'AR=link_cmd() { $(FL) -%s -Wl,-soname '
-                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                    (build_shared_flag, prefix.lib, inject_libs),
+                    '-Wl,$(notdir $@) -o "$$@" %s; }; link_cmd ' %
+                    (build_shared_flag, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of

@@ -23,8 +23,8 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
-    version('2021-rc1', sha256='baab9f9c7a659f0777f0ff06866e88685a4b06d22c0f431f5688a9a559f0a1e1')
-    version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478', preferred=True)
+    version('2021', sha256='efa78ab8409b0f5bf0fbca174fb8fbcf012815326b5c71a9d7c385cde9a8f87b')
+    version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478')
     version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
     version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
     version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
@@ -73,8 +73,8 @@ class Gromacs(CMakePackage):
             ' of libgromacs and/or the mdrun program')
     variant('openmp', default=True,
             description='Enables OpenMP at configure time')
-    variant('double_precision', default=False,
-            description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
+    variant('relaxed_double_precision', default=False,
+            description='GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
@@ -128,6 +128,12 @@ class Gromacs(CMakePackage):
 
         if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
+            # Ensures gmxapi builds properly
+            options.extend([
+                '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
+            ])
 
         if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
@@ -137,6 +143,7 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+            options.append('-DGMXAPI:BOOL=OFF')
 
         if '+hwloc' in self.spec:
             options.append('-DGMX_HWLOC:BOOL=ON')
@@ -204,8 +211,8 @@ class Gromacs(CMakePackage):
         elif target == 'mic_knl':
             # Intel KNL
             options.append('-DGMX_SIMD=AVX_512_KNL')
-        elif target.vendor == 'GenuineIntel':
-            # Other Intel architectures
+        else:
+            # Other architectures
             simd_features = [
                 ('sse2', 'SSE2'),
                 ('sse4_1', 'SSE4.1'),
@@ -224,8 +231,8 @@ class Gromacs(CMakePackage):
                 if feature in target:
                     options.append('-DGMX_SIMD:STRING={0}'.format(flag))
                     break
-        else:
-            # Fall back to this for unknown microarchitectures
+
+            # Fall back
             options.append('-DGMX_SIMD:STRING=None')
 
         # Use the 'rtdscp' assembly instruction only on
@@ -244,7 +251,7 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_OPENMP:BOOL=ON')
 
-        if '+double_precision' in self.spec:
+        if '+relaxed_double_precision' in self.spec:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
         else:
             options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')

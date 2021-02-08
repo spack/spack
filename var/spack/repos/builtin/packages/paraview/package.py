@@ -261,6 +261,8 @@ class Paraview(CMakePackage, CudaPackage):
                 cmake_args.extend([
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
+                if spec.satisfies('%cce'):
+                    cmake_args.append('-DVTK_PYTHON_OPTIONAL_LINK:BOOL=OFF')
             else:  # @5.7:
                 cmake_args.extend([
                     '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
