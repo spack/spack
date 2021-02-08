@@ -22,7 +22,8 @@ spack:
     - brion@3.3.0 +python
     - brion@3.3.1 +python
     - circuit-build
-    - connectome-tools@0.3.3
+    - connectome-tools@0.3.4
+    - connectome-tools@0.4.0
     - emsim
     - functionalizer@3.12.2
     - meshball ^brion@3.1.0
