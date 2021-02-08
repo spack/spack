@@ -40,7 +40,7 @@ class PyDvc(PythonPackage):
     depends_on('py-shortuuid@0.5.0:', type=('build', 'run'))
     depends_on('py-tqdm@4.45.0:4.99', type=('build', 'run'))
     depends_on('py-packaging@19.0:', type=('build', 'run'))
-    depends_on('py-flufl-lock@3.2:4', type=('build', 'run'))
+    depends_on('py-flufl-lock@3.2:3.999', type=('build', 'run'))
     depends_on('py-zc-lockfile@1.2.1:', type=('build', 'run'))
     depends_on('py-networkx@2.1:2.4', type=('build', 'run'))
     depends_on('py-pydot@1.2.4:', type=('build', 'run'))
