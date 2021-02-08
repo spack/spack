@@ -47,7 +47,7 @@ class Libunwind(AutotoolsPackage):
               msg='Non-GNU libunwind needs ELF libraries Darwin does not have')
 
     provides('unwind')
-    patch('libunwind-1.3.1.patch', when='@1.3.1:')
+    patch('libunwind-enum.patch', when='@1.3.1:')
 
     def flag_handler(self, name, flags):
         wrapper_flags = []
