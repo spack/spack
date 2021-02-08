@@ -262,20 +262,34 @@ class Gromacs(CMakePackage):
             'GMX_USE_RDTSCP', str(target.family) in ('x86_64', 'x86')
         ))
 
-        if '+mdrun_only' in self.spec:
-            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+        # Handle incompatible variants.
+        if self.spec.satisfies('@:2020'):
+            if '+mdrun_only' in self.spec:
+                options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
+            else:
+                options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
         else:
-            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
+            # There is not yet a mechanism for version-dependent variants.
+            # Ref: https://github.com/spack/spack/issues/9740
+            if '+mdrun_only' in self.spec:
+                raise InstallError('mdrun-only build was removed in GROMACS 2021.')
 
         if '~openmp' in self.spec:
             options.append('-DGMX_OPENMP:BOOL=OFF')
         else:
             options.append('-DGMX_OPENMP:BOOL=ON')
 
-        if '+relaxed_double_precision' in self.spec:
-            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
+        # Handle incompatible variants.
+        if self.spec.satisfies('@:2020'):
+            if '+relaxed_double_precision' in self.spec:
+                options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
+            else:
+                options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
         else:
-            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
+            # There is not yet a mechanism for version-dependent variants.
+            # Ref: https://github.com/spack/spack/issues/9740
+            if '+relaxed_double_precision' in self.spec:
+                raise InstallError('GMX_RELAXED_DOUBLE_PRECISION option was removed in GROMACS 2021.')
 
         if '+cycle_subcounters' in self.spec:
             options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
