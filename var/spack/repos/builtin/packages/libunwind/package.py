@@ -48,6 +48,7 @@ class Libunwind(AutotoolsPackage):
 
     provides('unwind')
     patch('libunwind-enum.patch', when='@1.3.1:')
+    patch('libunwind-1.3.1.patch', when='@:1.3.99')
 
     def flag_handler(self, name, flags):
         wrapper_flags = []

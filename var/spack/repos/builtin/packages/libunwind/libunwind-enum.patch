@@ -31,14 +31,3 @@
  
    }
  aarch64_regnum_t;
---- src/mi/dyn-info-list.c.orig	2020-07-23 16:40:58.409161489 +0200
-+++ src/mi/dyn-info-list.c	2020-07-23 16:41:06.638025099 +0200
-@@ -25,7 +25,7 @@
- 
- #include "libunwind_i.h"
- 
--HIDDEN unw_dyn_info_list_t _U_dyn_info_list;
-+extern HIDDEN unw_dyn_info_list_t _U_dyn_info_list;
- 
- unw_word_t
- _U_dyn_info_list_addr (void)
