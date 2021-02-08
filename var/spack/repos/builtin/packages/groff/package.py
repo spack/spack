@@ -35,6 +35,11 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     # patch('gropdf.patch')
     parallel = False
 
+    # The perl interpreter line in scripts might be too long as it has
+    # not been transformed yet. Call scripts with spack perl explicitly.
+    patch('BuildFoundries.patch')
+    patch('pdfmom.patch')
+
     def configure_args(self):
         args = [
             "--without-x"
