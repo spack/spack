@@ -62,7 +62,7 @@ class Spykfunc(PythonPackage):
 
     patch('setup-spark3.patch', when='@:0.15.6 ^spark@3:')
     patch('properties-spark3.patch', when='@:0.15.6 ^spark@3:')
-    patch('bogus-h5py.patch', when='@0.15.2:0.16.999')
+    patch('bogus-h5py.patch', when='@0.15.2:0.15.9')
 
     def setup_build_environment(self, env):
         # This is a rather ugly setup to run spykfunc without having to
