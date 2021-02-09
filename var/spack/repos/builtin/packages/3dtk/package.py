@@ -89,5 +89,4 @@ class _3dtk(CMakePackage):
         ]
 
     def install(self, spec, prefix):
-        with working_dir(self.build_directory):
-            install_tree('bin', prefix.bin)
+        install_tree('bin', prefix.bin)
