@@ -8,7 +8,7 @@ from spack import *
 
 class RAbsseq(RPackage):
     """ABSSeq: a new RNA-Seq analysis method based on modelling absolute
-       expression differences.
+       expression differences
 
        Inferring differential expression genes by absolute counts difference
        between two groups, utilizing Negative binomial distribution and
@@ -18,6 +18,7 @@ class RAbsseq(RPackage):
     homepage = "https://bioconductor.org/packages/ABSSeq"
     git      = "https://git.bioconductor.org/packages/ABSSeq.git"
 
+    version('1.44.0', commit='c202b4a059021ed1228ccee7303c69b0aa4ca1ee')
     version('1.38.0', commit='b686d92f0f0efdb835982efe761d059bc24b34ce')
     version('1.36.0', commit='bd419072432cba4ef58b4b37b3c69c85d78b1c4a')
     version('1.34.1', commit='0c3a2514ef644c6e0de3714bc91959a302c9e006')
