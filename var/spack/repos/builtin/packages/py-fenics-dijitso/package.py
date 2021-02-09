@@ -22,5 +22,4 @@ class PyFenicsDijitso(PythonPackage):
     version('2016.2.0', sha256='1bfa0ac0d47dae75bbde8fabb1145d3caa2e6c28a1e4097ad5550a91a8a205e4')
 
     depends_on("py-setuptools", type="build")
-    depends_on("python@3.5:", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))
