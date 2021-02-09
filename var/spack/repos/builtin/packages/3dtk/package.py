@@ -34,12 +34,14 @@ class _3dtk(CMakePackage):
 
     generator = 'Ninja'
 
-    depends_on('cmake@3.5:', type='build')
+    depends_on('cmake@3.5:', when='@trunk', type='build')
+    depends_on('cmake@2.6.1:2.999', when='@1.2', type='build')
     depends_on('ninja', type='build')
     depends_on('boost+serialization+graph+regex+filesystem+system+thread+date_time+program_options')
     depends_on('suite-sparse')
     depends_on('zlib')
     depends_on('libpng')
+    depends_on('eigen')
     depends_on('cgal', when='+cgal')
     depends_on('gl', when='+opengl')
     depends_on('glew', when='+opengl')
@@ -66,7 +68,6 @@ class _3dtk(CMakePackage):
             self.define('WITH_GLFW', False),
             self.define('WITH_FTGL', False),
             self.define('WITH_XMLRPC', False),
-            self.define('WITH_EIGEN3', False),
             self.define('WITH_LIBCONFIG', False),
             self.define('WITH_ROS', False),
             self.define('WITH_PYTHON', False),
