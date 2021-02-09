@@ -18,6 +18,6 @@ class RPheatmap(RPackage):
 
     extends('r')
     depends_on('r@2.0:', type=('build', 'run'))
-    depends_on('r-rcolorbrewer' type=('build', 'run'))
-    depends_on('r-scales' type=('build', 'run'))
-    depends_on('r-gtable' type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-scales', type=('build', 'run'))
+    depends_on('r-gtable', type=('build', 'run'))
