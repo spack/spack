@@ -1,92 +1,31 @@
-From 59975736f6942f8a4ca33d1481585ba952399788 Mon Sep 17 00:00:00 2001
+From 0448e229d5c38d00e8a4b9f7081a862e966f8c17 Mon Sep 17 00:00:00 2001
 From: Evan Bollig <ebbollig@amazon.com>
-Date: Mon, 8 Feb 2021 19:51:38 -0600
-Subject: [PATCH 2/2] Simple patch to fix intel mkl linking
+Date: Tue, 9 Feb 2021 09:48:13 -0600
+Subject: [PATCH] Simple patch to fix intel mkl linking
 
 ---
- src/apps/CMakeLists.txt | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+ src/apps/CMakeLists.txt | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/src/apps/CMakeLists.txt b/src/apps/CMakeLists.txt
-index 9f23f797..a5548cf3 100644
+index 9f23f797..b26d373d 100644
 --- a/src/apps/CMakeLists.txt
 +++ b/src/apps/CMakeLists.txt
-@@ -34,7 +34,7 @@ if (ALTCPU)
- 	file(GLOB REL_SRC_H "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/acc/*.h" "${CMAKE_SOURCE_DIR}/src/acc/cpu/*.h" "${CMAKE_SOURCE_DIR}/src/acc/cpu/cpu_kernels/*.h" )
- else()
- 	file(GLOB REL_SRC "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_BINARY_DIR}/macros.cpp" "${CMAKE_SOURCE_DIR}/src/*.c" "${CMAKE_SOURCE_DIR}/src/acc/*.cpp" )
--	file(GLOB REL_SRC_H "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/acc/*.h" ) 
-+	file(GLOB REL_SRC_H "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/acc/*.h" )
- endif(ALTCPU)
- 
- # Remove GUI files from relion_lib
-@@ -200,24 +200,32 @@ endif()
- 
- foreach (_target ${RELION_TARGETS})
- 	GET_FILENAME_COMPONENT(_target "relion_${_target}" NAME_WE)  #specify target name WE=WithoutExtension
--	
-+
- 	add_executable(${_target} ${_target}.cpp )
- 	set(LIB relion_lib)
--	
-+
-  	add_dependencies(${_target} relion_lib)
--	
-+
- 	set_target_properties(${_target} PROPERTIES PREFIX "relion_")
- 
- 	if(NOT MKLFFT)
+@@ -212,6 +212,14 @@ foreach (_target ${RELION_TARGETS})
  		target_link_libraries(${_target} ${LIB} ${EXTRA_LIBS} ${MPI_LIBRARIES} ${CMAKE_DL_LIBS})
--	else()	
-+	else()
+ 	else()	
  		target_link_libraries(${_target} ${LIB} ${FFTW_LIBRARIES} ${EXTRA_LIBS} ${MPI_LIBRARIES} ${CMAKE_DL_LIBS})
-+        # Intel MKL needs to be last in the list
-+        if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
-+            SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -mkl -limf ")
-+            #target_link_libraries(${_target} "fopenmp" "mkl" "imf")
-+        else()
-+            #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential ")
-+            target_link_libraries(${_target} "mkl_intel_ilp64" "mkl_core" "mkl_sequential")
-+        endif()
++		# Intel MKL needs to be last in the list
++		if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
++			SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp -mkl -limf ")
++			#target_link_libraries(${_target} "fopenmp" "mkl" "imf")
++		else()
++			#SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -lmkl_intel_ilp64 -lmkl_core -lmkl_sequential ")
++			target_link_libraries(${_target} "mkl_intel_ilp64" "mkl_core" "mkl_sequential")
++		endif()
  	endif(NOT MKLFFT)
  
  	if(CUDA_FOUND)
- 		target_link_libraries(${_target} relion_gpu_util)
- 	endif(CUDA_FOUND)
--	
-+
- 	if (ALTCPU)
- 		target_link_libraries(${_target} ${TBB_LIBRARIES})
- 	endif(ALTCPU)
-@@ -227,7 +235,7 @@ foreach (_target ${RELION_TARGETS})
- 	                      XX_STANDARD_REQUIRED ON
- 	                      XX_EXTENSIONS OFF
- 	)
--	
-+
- 	list(FIND GUI_TARGETS ${_target} IS_GUI_TARGET)
- 	if(NOT ${IS_GUI_TARGET} LESS 0)
- 		add_dependencies(${_target} relion_gui_lib)
-@@ -237,9 +245,9 @@ foreach (_target ${RELION_TARGETS})
- 	if(TIFF_FOUND)
- 		target_link_libraries(${_target} ${TIFF_LIBRARIES})
- 	endif()
--    
-+
- 	#message(STATUS "added ${_target}...")
--	
-+
- 	install (TARGETS ${_target} RUNTIME DESTINATION bin)
- endforeach()
- 
-@@ -264,6 +272,6 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
- set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
- 
- # Set this flag to activate bounds checking in stl-vectors (incl. strings)
--# It is useful to do this periodically, as it catches 
-+# It is useful to do this periodically, as it catches
- # difficult-to-see and rare-to-manifest bugs
- # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_DEBUG")
 -- 
 2.25.1
 
