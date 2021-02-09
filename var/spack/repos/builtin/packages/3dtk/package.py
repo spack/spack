@@ -57,6 +57,9 @@ class _3dtk(CMakePackage):
 
     patch('homebrew.patch', when='platform=darwin')
 
+    def setup_build_environment(self, env):
+        env.prepend_path('CPATH', self.spec['eigen'].prefix.include)
+
     def cmake_args(self):
         return [
             self.define_from_variant('WITH_CGAL', 'cgal'),
