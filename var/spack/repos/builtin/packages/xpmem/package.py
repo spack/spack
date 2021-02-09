@@ -25,7 +25,7 @@ class Xpmem(AutotoolsPackage):
     # Versions starting 2.6.4 are neither tagged nor released in the repo
     # (the choice of commits is based on the commit history of
     # 'kernel/xpmem_private.h'):
-    version('2.6.5', commit='4efeed9cbaabe971f3766d67cb108e2c3316d4b8')
+    version('2.6.5', commit='0d0bad4e1d07b38d53ecc8f20786bb1328c446da')
     version('2.6.4', commit='522054850e4d1479d69f50f7190d1548bf9749fd')
 
     # Released versions:
@@ -34,6 +34,9 @@ class Xpmem(AutotoolsPackage):
 
     variant('kernel-module', default=True,
             description='Enable building the kernel module')
+
+    # Added RHEL 8.3 kernel support
+    patch('xpmem_v2.6.5.patch', when="@2.6.5", level=1)
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
