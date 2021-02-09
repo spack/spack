@@ -19,7 +19,7 @@ class _3dtk(CMakePackage):
     # Repo seems to be in the process of switching to git:
     # https://github.com/3DTK/3DTK
 
-    version('trunk', svn='https://svn.code.sf.net/p/slam6d/code/trunk')
+    version('trunk', svn='https://svn.code.sf.net/p/slam6d/code/trunk', preferred=True)
     version('1.2', svn='https://svn.code.sf.net/p/slam6d/code/branches/3dtk-release-1.2')
 
     variant('cgal', default=False, description='Compile with CGAL support')
