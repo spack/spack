@@ -54,6 +54,7 @@ class Gearshifft(CMakePackage):
             '-DGEARSHIFFT_CLFFT:BOOL={0}'.format(
                 'ON' if '+clfft' in spec else 'OFF')
         ])
-        if '%gcc' in spec:
+        if self.spec.target.family == 'aarch64':
             args.append('-DCMAKE_CXX_FLAGS=-pthread')
+
         return args
