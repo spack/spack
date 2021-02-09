@@ -155,9 +155,9 @@ class Xsdk(BundlePackage):
 
     depends_on('strumpack ~cuda', when='~cuda @0.6.0:')
     depends_on('strumpack@master', when='@develop +strumpack')
-    depends_on('strumpack@5.0.0', when='@0.6.0 +strumpack')
-    depends_on('strumpack@3.3.0', when='@0.5.0 +strumpack')
-    depends_on('strumpack@3.1.1', when='@0.4.0 +strumpack')
+    depends_on('strumpack@5.0.0~slate', when='@0.6.0 +strumpack')
+    depends_on('strumpack@3.3.0~slate', when='@0.5.0 +strumpack')
+    depends_on('strumpack@3.1.1~slate', when='@0.4.0 +strumpack')
 
     depends_on('pumi@develop', when='@develop')
     depends_on('pumi@2.2.5', when='@0.6.0')
@@ -196,6 +196,7 @@ class Xsdk(BundlePackage):
 
     depends_on('py-libensemble@develop+petsc4py', type='run', when='@develop +libensemble')
     depends_on('py-libensemble@0.7.1+petsc4py', type='run', when='@0.6.0 +libensemble')
+    depends_on('py-petsc4py@3.14.0', type='run', when='@0.6.0 +libensemble')
     depends_on('py-libensemble@0.5.2+petsc4py', type='run', when='@0.5.0 +libensemble')
     depends_on('py-petsc4py@3.12.0', type='run', when='@0.5.0 +libensemble')
 
