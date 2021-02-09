@@ -22,17 +22,9 @@ class Professor(Package):
     depends_on('py-iminuit')
     depends_on('py-matplotlib')
     
-    #The following 'edit' is done first to test on RCF as /usr/local is not write-able to users
-    #Comment out to follow original makefile or change intall directory below
-    phases = ['edit','install']
-
-    def edit(self, spec, prefix):
-        makefile = FileFilter('Makefile')
-        makefile.filter('PREFIX := /usr/local', 'PREFIX := /star/u/mkelsey/spack/newbin')    
-
     def install(self, spec, prefix):
         make()
-        make("install")
+        make('PREFIX={0}'.format(prefix),"install")
         
     
     
