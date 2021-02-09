@@ -224,7 +224,7 @@ _spack_pathadd() {
 	    # Remove value from variable if it is present
 	    # This ensures we prepend
 	    _pa_canonical=":$_pa_oldvalue:"
-	    _pa_canonical_removed=$(echo $_pa_canonical | sed "s/:\$_pa_new_path:/:/")
+	    _pa_canonical_removed=$(echo $_pa_canonical | sed "s#:\$_pa_new_path:#:#")
 	    # Strip trailing colon. Leave starting colon since we prepend next
 	    # Use a wildcard because colons have meaning for some shells
 	    _pa_removed=${_pa_canonical_removed%?}
