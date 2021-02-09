@@ -44,7 +44,7 @@ class _3dtk(CMakePackage):
     depends_on('gl', when='+opengl')
     depends_on('glew', when='+opengl')
     depends_on('freeglut', when='+opengl')
-    depends_on('opencv+calib3d+core+features2d+highgui+imgproc+ml', when='+opencv')
+    depends_on('opencv+calib3d+core+features2d+highgui+imgcodecs+imgproc+ml+videoio', when='+opencv')
     # Because concretizer is broken
     depends_on('opencv+flann', when='+opencv')
     depends_on('cuda', when='+cuda')
