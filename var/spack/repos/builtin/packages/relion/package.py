@@ -53,7 +53,7 @@ class Relion(CMakePackage, CudaPackage):
     depends_on('tbb', when='~cuda')
     depends_on('mkl', when='~cuda +mklfft')
 
-    patch('0002-Simple-patch-to-fix-intel-mkl-linking.patch', when='os=ubuntu18.04')
+    patch('0002-Simple-patch-to-fix-intel-mkl-linking.patch', when='@:3.1.1 os=ubuntu18.04')
 
     def cmake_args(self):
 
