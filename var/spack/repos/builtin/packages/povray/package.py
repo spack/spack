@@ -147,3 +147,13 @@ class Povray(AutotoolsPackage):
         extra_args.append('--without-x')
 
         return extra_args
+
+    def test(self):
+        testdir = self.test_suite.current_test_data_dir
+        work_dir = ancestor(testdir, 3)
+        povs = join_path(self.prefix.share, 'povray-3.7',
+               'scenes', 'advanced', 'biscuit.pov')
+        copy(povs, work_dir)
+        povd = join_path(work_dir, 'biscuit.pov')
+        opts = [povd]
+        self.run_test('povray', options=opts)
