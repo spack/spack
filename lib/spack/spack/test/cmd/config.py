@@ -666,7 +666,7 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
             'hdf5 ~mpi',
             'boost+debug~icu+graph',
             'dependency-install',
-            'patch-several-dependencies']:
+            'patch']:
         dep = spack.spec.Spec(spec)
         dep.concretize()
         prepared_db.add(dep, upstream_layout)
