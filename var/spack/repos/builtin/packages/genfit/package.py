@@ -22,7 +22,6 @@ class Genfit(CMakePackage):
 
     depends_on('root')
 
-
     def cmake_args(self):
         args = []
         # normally, as a cmake package root should be
@@ -31,6 +30,6 @@ class Genfit(CMakePackage):
         # but genfit cooks its own root cmake config
         # so this workaround is needed for now.
         root_prefix = self.spec["root"].prefix
-        args.append('-DROOT_DIR=%s'%root_prefix)
+        args.append('-DROOT_DIR=%s' % root_prefix)
 
         return args
