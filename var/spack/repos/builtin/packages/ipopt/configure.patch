@@ -1,0 +1,42 @@
+diff --git a/configure b/configure
+index 41df0e8..33ba6a4 100755
+--- a/configure
++++ b/configure
+@@ -3017,12 +3017,12 @@ echo "$as_me: Will use MPI C compiler $MPICC" >&6;}
+ fi
+ 
+ # Correct the LD variable if we are using the MS or Intel-windows compiler
+-case "$CC" in
+-  clang* ) ;;
+-  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+-    LD=link
+-    ;;
+-esac
++#case "$CC" in
++#  clang* ) ;;
++#  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
++#    LD=link
++#    ;;
++#esac
+ 
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
+@@ -3892,12 +3892,12 @@ echo "$as_me: Will use MPI C++ compiler $MPICXX" >&6;}
+ fi
+ 
+ # correct the LD variable in a build with MS or Intel-windows compiler
+-case "$CXX" in
+-  clang* ) ;;
+-  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
+-    LD=link
+-    ;;
+-esac
++#case "$CXX" in
++#  clang* ) ;;
++#  cl* | */cl* | CL* | */CL* | icl* | */icl* | ICL* | */ICL*)
++#    LD=link
++#    ;;
++#esac
+ 
+ ac_ext=c
+ ac_cpp='$CPP $CPPFLAGS'
