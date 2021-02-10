@@ -683,21 +683,26 @@ class SpackSolverSetup(object):
         """Translate 'depends_on' directives into ASP logic."""
         for _, conditions in sorted(pkg.dependencies.items()):
             for cond, dep in sorted(conditions.items()):
+                deptypes = dep.type.copy()
+                # Skip test dependencies if they're not requested
+                if not tests:
+                    deptypes.discard("test")
+
+                # ... or if they are requested only for certain packages
+                if not isinstance(tests, bool) and pkg.name not in tests:
+                    deptypes.discard("test")
+
+                # if there are no dependency types to be considered
+                # anymore, don't generate the dependency
+                if not deptypes:
+                    continue
+
                 condition_id = self.condition(cond, dep.spec, pkg.name)
                 self.gen.fact(fn.dependency_condition(
                     condition_id, pkg.name, dep.spec.name
                 ))
 
-                for t in sorted(dep.type):
-                    # Skip test dependencies if they're not requested at all
-                    if t == 'test' and not tests:
-                        continue
-
-                    # ... or if they are requested only for certain packages
-                    if t == 'test' and (not isinstance(tests, bool)
-                                        and pkg.name not in tests):
-                        continue
-
+                for t in sorted(deptypes):
                     # there is a declared dependency of type t
                     self.gen.fact(fn.dependency_type(condition_id, t))
 
