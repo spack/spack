@@ -34,6 +34,6 @@ class PyHyperopt(PythonPackage):
     depends_on('py-future',         type=('build', 'run'))
     depends_on('py-tqdm',           type=('build', 'run'))
     depends_on('py-cloudpickle',    type=('build', 'run'))
-    depends_on('py-pyspark',        type=('build', 'run'))
+    depends_on('py-pyspark@3.0.1',        type=('build', 'run'))
     depends_on('py-pymongo',        type=('build', 'run'))
     depends_on('py-scikit-learn',   type=('build', 'run'))
