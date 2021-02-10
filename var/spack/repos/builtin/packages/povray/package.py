@@ -8,7 +8,7 @@ from spack import *
 import socket
 # For getting username for defaulting COMPILED_BY
 import getpass
-import os
+
 
 class Povray(AutotoolsPackage):
     """The Persistence of Vision Raytracer creates three-dimensional,
