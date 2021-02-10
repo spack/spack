@@ -17,6 +17,7 @@ class Libsonata(CMakePackage):
     git = "https://github.com/BlueBrain/libsonata.git"
 
     version('develop', branch='master', submodules=False, get_full_repo=True)
+    version('0.1.8', tag='v0.1.8', submodules=False, get_full_repo=True)
     version('0.1.6', tag='v0.1.6', submodules=False, get_full_repo=True)
     version('0.1.5', tag='v0.1.5', submodules=False, get_full_repo=True)
     version('0.1.4', tag='v0.1.4', submodules=False, get_full_repo=True)
@@ -35,6 +36,7 @@ class Libsonata(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('catch2', when='@0.1.3:')
     depends_on('spdlog', when='@0.1.3:')
+    depends_on('nlohmann-json', when='@0.1.7:')
 
     def cmake_args(self):
         result = [
