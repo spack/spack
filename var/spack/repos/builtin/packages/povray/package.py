@@ -8,7 +8,7 @@ from spack import *
 import socket
 # For getting username for defaulting COMPILED_BY
 import getpass
-
+import os
 
 class Povray(AutotoolsPackage):
     """The Persistence of Vision Raytracer creates three-dimensional,
@@ -149,11 +149,7 @@ class Povray(AutotoolsPackage):
         return extra_args
 
     def test(self):
-        testdir = self.test_suite.current_test_data_dir
-        work_dir = ancestor(testdir, 3)
-        povs = join_path(self.prefix.share, 'povray-3.7',
-               'scenes', 'advanced', 'biscuit.pov')
-        copy(povs, work_dir)
-        povd = join_path(work_dir, 'biscuit.pov')
-        opts = [povd]
-        self.run_test('povray', options=opts)
+        povs = find(self.prefix.share, 'biscuit.pov')[0]
+        copy(povs, '.')
+        self.run_test('povray', options=['biscuit.pov'])
+        copy('./biscuit.png', '..')
