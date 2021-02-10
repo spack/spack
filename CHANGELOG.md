@@ -1,3 +1,28 @@
+# v0.16.1 (2021-02-10)
+
+This minor release includes a new feature and associated fixes:
+* intel-oneapi support through new packages (20411, 20686, 20693, 20717,
+  20732, 20808, 21377, 21448)
+
+This release also contains bug fixes/enhancements for:
+* HIP/ROCm support (19715, 20095)
+* concretization (19988, 20020, 20082, 20085, 20086, 20099, 20102, 20128,
+  20182, 20193, 20194, 20196, 20203, 20247, 20259, 20307, 20362, 20383, 20423,
+  20473, 20506, 20507, 20509, 20604, 20638, 20649, 20677, 20680, 20790)
+* spack installs (20004, 20236, 20351)
+* spack find -d spec grouping (20028)
+* spack smoke test results error handling (19987)
+* macOS 11.1 recognition as big sur (20038)
+* abstract spec comparisons (20341)
+* continuous integration (17563, 20376, 20384, 20420)
+* binary package relocation (19690, 20768)
+* variant defaults as allowed values (20373)
+* non-empty default values in environment yaml files (20526)
+
+plus assorted documentation (20021, 20174) and package bug fixes/enhancements
+(19617, 19816, 19986, 20006, 20097, 20160, 20198, 20794, 20906).
+
+
 # v0.16.0 (2020-11-18)
 
 `v0.16.0` is a major feature release.
