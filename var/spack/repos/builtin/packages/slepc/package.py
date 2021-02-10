@@ -87,6 +87,8 @@ class Slepc(Package):
                                    'externalpackages'),
              when='@3.13.0:+blopex')
 
+    test_requires_compiler = True
+
     def install(self, spec, prefix):
         # set SLEPC_DIR for installation
         # Note that one should set the current (temporary) directory instead
@@ -133,3 +135,9 @@ class Slepc(Package):
     def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package
         env.set('SLEPC_DIR', self.prefix)
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
