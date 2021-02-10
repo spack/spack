@@ -148,6 +148,5 @@ class Fenics(CMakePackage):
     def install_python_interface(self):
         if '+python' in self.spec:
             cd('python')
-            python('setup.py', 'install',
-                   '--single-version-externally-managed',
-                   '--root=/', '--prefix={0}'.format(self.prefix))
+            setup_py('install', '--single-version-externally-managed',
+                     '--root=/', '--prefix={0}'.format(self.prefix))
