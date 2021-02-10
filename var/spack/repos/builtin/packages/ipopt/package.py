@@ -44,7 +44,7 @@ class Ipopt(AutotoolsPackage):
     conflicts('~mumps', when='~coinhsl')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
-    patch('configure.patch')
+    patch('windows_clang_compiler_conflict.patch')
 
     flag_handler = build_system_flags
     build_directory = 'spack-build'
