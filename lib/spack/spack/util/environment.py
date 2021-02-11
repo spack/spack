@@ -536,7 +536,7 @@ class EnvironmentModifications(object):
             for x in actions:
                 x.execute(os.environ)
 
-    def shell_modifications(self, shell='sh', sourceable=False):
+    def shell_modifications(self, shell='sh', with_env_vars=False):
         """Return shell code to apply the modifications and clears the list."""
         modifications = self.group_by_name()
         new_env = os.environ.copy()
@@ -554,7 +554,7 @@ class EnvironmentModifications(object):
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    if sourceable:
+                    if with_env_vars:
                         if old:
                             new_env[name] = new_env[name].replace(
                                 old, "${0}".format(name))
