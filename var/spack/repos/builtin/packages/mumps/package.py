@@ -145,11 +145,6 @@ class Mumps(Package):
 
         opt_level = '3' if using_xl else ''
 
-        if self.spec.satisfies("%gcc@10"):
-            fortran_flags = "-fallow-argument-mismatch"
-        else:
-            fortran_flags = ""
-
         if '+int64' in self.spec:
             if using_xlf:
                 makefile_conf.append('OPTF = -O%s %s' % opt_level)
