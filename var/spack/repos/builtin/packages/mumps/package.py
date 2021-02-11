@@ -145,7 +145,10 @@ class Mumps(Package):
 
         opt_level = '3' if using_xl else ''
 
-        fortran_flags = "-fallow-argument-mismatch" if self.spec.satisfies("%gcc@10") else ""
+        if self.spec.satisfies("%gcc@10"):
+            fortran_flags = "-fallow-argument-mismatch"
+        else:
+            fortran_flags = ""
 
         if '+int64' in self.spec:
             if using_xlf:
