@@ -290,7 +290,8 @@ class Gromacs(CMakePackage):
             # There is not yet a mechanism for version-dependent variants.
             # Ref: https://github.com/spack/spack/issues/9740
             if '+relaxed_double_precision' in self.spec:
-                raise InstallError('GMX_RELAXED_DOUBLE_PRECISION option was removed in GROMACS 2021.')
+                raise InstallError(
+                    'GMX_RELAXED_DOUBLE_PRECISION option was removed in GROMACS 2021.')
 
         if '+cycle_subcounters' in self.spec:
             options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
