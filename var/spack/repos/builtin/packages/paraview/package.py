@@ -152,6 +152,8 @@ class Paraview(CMakePackage, CudaPackage):
     # Do not search system paths for python
     # Python3_ROOT_DIR works for ParaView 5.9 but it does not for 5.7
     patch('no-system-path-for-python.patch', when='@5.7:5.7.999')
+    # Backport FindNetCDF.cmake from 5.9 to fix finding netcdf libraries
+    patch('find-external-netcdf.patch', when='@5.7:5.7.999')
 
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
