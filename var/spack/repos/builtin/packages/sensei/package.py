@@ -55,11 +55,13 @@ class Sensei(CMakePackage):
     # SENSEI 3 supports Python 3, earlier versions upport only Python 2
     depends_on("python@:2.7.16", when="@:2.1.1 +python", type=('build', 'run'))
     depends_on("python@3:", when="@3: +python", type=('build', 'run'))
+    extends('python', when='+python')
     depends_on("py-numpy", when="+python", type=('build', 'run'))
     depends_on("py-mpi4py", when="+python", type=('build', 'run'))
     depends_on("swig", when="+python", type='build')
     depends_on('cmake@3.6:', when="@3:", type='build')
     depends_on('pugixml')
+
     # Can have either LibSim or Catalyst, but not both
     conflicts('+libsim', when='+catalyst')
     # hdf5 variant is available only for SENSEI 3
