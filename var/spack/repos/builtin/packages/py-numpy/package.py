@@ -5,7 +5,6 @@
 
 from spack import *
 import platform
-import subprocess
 
 
 class PyNumpy(PythonPackage):
