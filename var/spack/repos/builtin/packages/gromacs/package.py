@@ -268,7 +268,8 @@ class Gromacs(CMakePackage):
         ))
 
         if self.spec.satisfies('@:2020'):
-            options.append(self.define_from_variant('GMX_BUILD_MDRUN_ONLY', 'mdrun_only'))
+            options.append(
+                self.define_from_variant('GMX_BUILD_MDRUN_ONLY', 'mdrun_only'))
 
         if '~openmp' in self.spec:
             options.append('-DGMX_OPENMP:BOOL=OFF')
@@ -276,7 +277,10 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_OPENMP:BOOL=ON')
 
         if self.spec.satisfies('@:2020'):
-            options.append(self.define_from_variant('GMX_RELAXED_DOUBLE_PRECISION', 'relaxed_double_precision'))
+            options.append(
+                self.define_from_variant(
+                    'GMX_RELAXED_DOUBLE_PRECISION',
+                    'relaxed_double_precision'))
 
         if '+cycle_subcounters' in self.spec:
             options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')
