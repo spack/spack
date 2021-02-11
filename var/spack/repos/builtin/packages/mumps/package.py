@@ -145,18 +145,21 @@ class Mumps(Package):
 
         opt_level = '3' if using_xl else ''
 
+        fortran_flags = "-fallow-argument-mismatch" if self.spec.satisfies("%gcc@10") else ""
+
         if '+int64' in self.spec:
             if using_xlf:
-                makefile_conf.append('OPTF = -O%s' % opt_level)
+                makefile_conf.append('OPTF = -O%s %s' % (opt_level, fortran_flags))
             else:
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
                 makefile_conf.extend([
-                    'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
+                    'OPTF = %s -O  -DALLOW_NON_INIT %s %s' % (
                         fpic,
                         '-fdefault-integer-8' if using_gcc
-                                              else '-i8'),  # noqa
+                                              else '-i8',
+                        fortran_flags),  # noqa
                 ])
 
             makefile_conf.extend([
@@ -167,8 +170,8 @@ class Mumps(Package):
             if using_xlf:
                 makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
             else:
-                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
-                    fpic, opt_level))
+                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT %s' % (
+                    fpic, opt_level, fortran_flags))
 
             makefile_conf.extend([
                 'OPTL = %s -O%s' % (cpic, opt_level),
