@@ -71,10 +71,14 @@ class Gromacs(CMakePackage):
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
+    conflicts('+mdrun_only', when='@2021:',
+              msg='mdrun-only build option was removed for GROMACS 2021.')
     variant('openmp', default=True,
             description='Enables OpenMP at configure time')
     variant('relaxed_double_precision', default=False,
             description='GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC')
+    conflicts('+relaxed_double_precision', when='@2021:',
+              msg='GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
