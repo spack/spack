@@ -271,10 +271,7 @@ class Gromacs(CMakePackage):
             options.append(
                 self.define_from_variant('GMX_BUILD_MDRUN_ONLY', 'mdrun_only'))
 
-        if '~openmp' in self.spec:
-            options.append('-DGMX_OPENMP:BOOL=OFF')
-        else:
-            options.append('-DGMX_OPENMP:BOOL=ON')
+        options.append(self.define_from_variant('GMX_OPENMP', 'openmp'))
 
         if self.spec.satisfies('@:2020'):
             options.append(
