@@ -58,8 +58,8 @@ class Eospac(Package):
             compilerArgs.append('CXX={0}'.format(spack_cxx))
             compilerArgs.append('F77={0}'.format(spack_f77))
             compilerArgs.append('F90={0}'.format(spack_fc))
-            # This looks goofy because eospac does not actually respect the 
-            # value of DO_OFFLOAD and instead only attempts to check for its 
+            # This looks goofy because eospac does not actually respect the
+            # value of DO_OFFLOAD and instead only attempts to check for its
             # existence; a quirk of eospac.
             if "+offload" in spec:
                 compilerArgs.append('DO_OFFLOAD=1')
