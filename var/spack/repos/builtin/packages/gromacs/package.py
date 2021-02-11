@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
+
 
 class Gromacs(CMakePackage):
     """GROMACS (GROningen MAchine for Chemical Simulations) is a molecular
@@ -116,6 +118,13 @@ class Gromacs(CMakePackage):
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
+
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs_mpi'))
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs'))
 
     def patch(self):
         if '+plumed' in self.spec:
