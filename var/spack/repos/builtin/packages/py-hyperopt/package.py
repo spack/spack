@@ -15,7 +15,6 @@ class PyHyperopt(PythonPackage):
     pypi     = "hyperopt/hyperopt-0.2.5.tar.gz"
 
     version('0.2.5', sha256='bc6047d50f956ae64eebcb34b1fd40f186a93e214957f20e87af2f10195295cc')
-    version('0.2.4', sha256='6e72089a42eb70cf84b0567d4552a908adff7cfc5cf6b1c38add41adc775d9c6')
 
     depends_on('python@2.7:',       type=('build', 'run'))
     depends_on('py-setuptools',     type='build')
