@@ -130,7 +130,11 @@ def default_config(
 @pytest.fixture(scope='function')
 def install_dir_default_layout(tmpdir):
     """Hooks a fake install directory with a default layout"""
-    scheme = '${architecture}/${compiler.name}-${compiler.version}/${name}-${version}-${hash}'  # noqa: E501
+    scheme = os.path.join(
+        '${architecture}',
+        '${compiler.name}-${compiler.version}',
+        '${name}-${version}-${hash}'
+    )
     real_store, real_layout = spack.store.store, spack.store.layout
     opt_dir = tmpdir.join('opt')
     spack.store.store = spack.store.Store(str(opt_dir))
@@ -145,7 +149,10 @@ def install_dir_default_layout(tmpdir):
 @pytest.fixture(scope='function')
 def install_dir_non_default_layout(tmpdir):
     """Hooks a fake install directory with a non-default layout"""
-    scheme = '${name}/${version}/${architecture}-${compiler.name}-${compiler.version}-${hash}'  # noqa: E501
+    scheme = os.path.join(
+        '${name}', '${version}',
+        '${architecture}-${compiler.name}-${compiler.version}-${hash}'
+    )
     real_store, real_layout = spack.store.store, spack.store.layout
     opt_dir = tmpdir.join('opt')
     spack.store.store = spack.store.Store(str(opt_dir))
@@ -482,7 +489,10 @@ def test_update_sbang(tmpdir, test_mirror):
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
-    scheme = '${name}/${version}/${architecture}-${compiler.name}-${compiler.version}-${hash}'  # noqa: E501
+    scheme = os.path.join(
+        '${name}', '${version}',
+        '${architecture}-${compiler.name}-${compiler.version}-${hash}'
+    )
     # Save the original store and layout before we touch ANYTHING.
     real_store, real_layout = spack.store.store, spack.store.layout
 
