@@ -269,10 +269,7 @@ class Gromacs(CMakePackage):
 
         # Handle incompatible variants.
         if self.spec.satisfies('@:2020'):
-            if '+mdrun_only' in self.spec:
-                options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
-            else:
-                options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
+            options.append(self.define_from_variant('GMX_BUILD_MDRUN_ONLY', 'mdrun_only'))
         else:
             # There is not yet a mechanism for version-dependent variants.
             # Ref: https://github.com/spack/spack/issues/9740
@@ -286,10 +283,7 @@ class Gromacs(CMakePackage):
 
         # Handle incompatible variants.
         if self.spec.satisfies('@:2020'):
-            if '+relaxed_double_precision' in self.spec:
-                options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
-            else:
-                options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
+            options.append(self.define_from_variant('GMX_RELAXED_DOUBLE_PRECISION', 'relaxed_double_precision'))
         else:
             # There is not yet a mechanism for version-dependent variants.
             # Ref: https://github.com/spack/spack/issues/9740
