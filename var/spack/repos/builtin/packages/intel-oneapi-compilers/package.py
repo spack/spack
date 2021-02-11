@@ -79,3 +79,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         env.set('CC', self._join_prefix('bin/icx'))
         env.set('CXX', self._join_prefix('bin/icpx'))
         env.set('FC', self._join_prefix('bin/ifx'))
+        # Set these so that MPI wrappers will pick up these compilers
+        # when this module is loaded.
+        env.set('I_MPI_CC', 'icx')
+        env.set('I_MPI_CXX', 'icpx')
+        env.set('I_MPI_FC', 'ifx')

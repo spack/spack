@@ -20,7 +20,7 @@ class Parsec(CMakePackage, CudaPackage):
     maintainers = ['abouteiller', 'bosilca', 'herault']
 
     version('master', branch='master')
-    version('3.0.2012-rc1', sha256='a0f013bd5a2c44c61d3d76bab102e3ca3bab68ef2e89d7b5f544b9c1a6fde475')
+    version('3.0.2012', sha256='f565bcfffe106be8237b6aea3e83a5770607b7236606414b6f270244fa6ec3bc')
     version('1.1.0', sha256='d2928033c121000ae0a554f1e7f757c1f22274a8b74457ecd52744ae1f70b95a', url='https://bitbucket.org/icldistcomp/parsec/get/v1.1.0.tar.bz2')
 
     variant('build_type', default='RelWithDebInfo', description='CMake build type', values=('Debug', 'Release', 'RelWithDebInfo'))

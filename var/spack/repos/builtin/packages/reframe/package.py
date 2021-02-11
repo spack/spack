@@ -23,6 +23,7 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master',   branch='master')
+    version('3.4',       sha256='7e74b1c7468b94e89cff4cd4a91934645ab227ad61d57a9ddf6a7d3d0726010e')
     version('3.3',       sha256='9da150a051e9fa4ffea1361f30e8593261e7f6ebc71ec91ed32143539f871ad7')
     version('3.2',       sha256='dc7f72e31386e549a874699067666607a72835914fef18c38ae6032ab5e5ed51')
     version('3.1',       sha256='a9f6ac1ae8fdc51be8032d5cc79c117ff602f57b57aace2e195b2cfe1bd3a16f')
@@ -41,6 +42,7 @@ class Reframe(Package):
     depends_on('python@3.5:', when='@2.0:2.999', type='run')
     depends_on('python@3.6:', when='@3.0:', type='run')
     depends_on('py-jsonschema', type='run')
+    depends_on('py-importlib-metadata', type='run')
     depends_on('py-setuptools', type='build')
     depends_on("py-pygelf", when="+gelf", type="run")
     depends_on("py-sphinx", when="+docs", type="build")

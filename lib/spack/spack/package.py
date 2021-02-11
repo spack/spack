@@ -1309,7 +1309,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug('No fetch required for {0}: package has no code.'
                       .format(self.name))
 
-        start_time = time.time()
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
         if checksum and fetch and self.version not in self.versions:
@@ -1331,8 +1330,34 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
+        deprecated = spack.config.get('config:deprecated')
+        if not deprecated and self.versions.get(
+                self.version, {}).get('deprecated', False):
+            tty.warn("{0} is deprecated and may be removed in a future Spack "
+                     "release.".format(
+                         self.spec.format('{name}{@version}')))
+
+            # Ask the user whether to install deprecated version if we're
+            # interactive, but just fail if non-interactive.
+            dp_msg = ("If you are willing to be a maintainer for this version "
+                      "of the package, submit a PR to remove `deprecated=False"
+                      "`, or use `--deprecated` to skip this check.")
+            ignore_deprecation = False
+            if sys.stdout.isatty():
+                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?",
+                                                       default=False)
+
+                if ignore_deprecation:
+                    tty.debug("Fetching deprecated version. {0}".format(
+                        dp_msg))
+
+            if not ignore_deprecation:
+                raise FetchError("Will not fetch {0}".format(
+                    self.spec.format('{name}{@version}')), dp_msg)
+
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
+        start_time = time.time()
         self.stage.fetch(mirror_only, err_msg=err_msg)
         self._fetch_time = time.time() - start_time
 
@@ -1379,7 +1404,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1397,10 +1422,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.debug('Already patched {0}'.format(self.name))
+            tty.msg('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1409,7 +1434,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.debug('Applied patch {0}'.format(patch.path_or_url))
+                tty.msg('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1423,7 +1448,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.debug('Ran patch() for {0}'.format(self.name))
+                tty.msg('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1433,7 +1458,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.debug('No patches needed for {0}'.format(self.name))
+                    tty.msg('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 

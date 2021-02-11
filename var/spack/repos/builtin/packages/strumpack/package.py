@@ -53,8 +53,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
             description='Build developer test routines')
     variant('build_tests', default=False,
             description='Build test routines')
-
-    # TODO: add a slate variant
+    variant('slate', default=True,
+            description="Build with SLATE support")
 
     depends_on('cmake@3.11:', type='build')
     depends_on('mpi', when='+mpi')
@@ -71,6 +71,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('zfp', when='+zfp')
     depends_on('hipblas', when='+rocm')
     depends_on('rocsolver', when='+rocm')
+    depends_on('slate', when='+slate')
+    depends_on('slate+cuda', when='+cuda+slate')
 
     conflicts('+parmetis', when='~mpi')
     conflicts('+butterflypack', when='~mpi')
@@ -79,6 +81,8 @@ class Strumpack(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+cuda', when='@:3.9.999')
     conflicts('+rocm', when='@:5.0.999')
     conflicts('+rocm', when='+cuda')
+    conflicts('+slate', when='@:5.1.1')
+    conflicts('+slate', when='~mpi')
 
     patch('intel-19-compile.patch', when='@3.1.1')
 
