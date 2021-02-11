@@ -22,7 +22,7 @@ class Reframe(Package):
     # notify when the package is updated.
     maintainers = ['victorusu', 'vkarak']
 
-    version('master',   branch='master')
+    version('master',    branch='master')
     version('3.4',       sha256='7e74b1c7468b94e89cff4cd4a91934645ab227ad61d57a9ddf6a7d3d0726010e')
     version('3.3',       sha256='9da150a051e9fa4ffea1361f30e8593261e7f6ebc71ec91ed32143539f871ad7')
     version('3.2',       sha256='dc7f72e31386e549a874699067666607a72835914fef18c38ae6032ab5e5ed51')
@@ -34,30 +34,53 @@ class Reframe(Package):
     version('2.17.2',    sha256='092241cdc15918040aacb922c806aecb59c5bdc3ff7db034a4f355d39aecc101')
     version('2.17.1',    sha256='0b0d32a892607840a7d668f5dcea6f03f7022a26b23e5042a0faf5b8c41cb146')
 
-    variant("docs", default=False,
-            description="Build ReFrame's man page documentation")
-    variant("gelf", default=False,
-            description="Add graylog handler support")
+    variant('docs', default=False,
+            description='Build ReFrame\'s man page documentation')
+    variant('gelf', default=False,
+            description='Add graylog handler support')
 
-    depends_on('python@3.5:', when='@2.0:2.999', type='run')
-    depends_on('python@3.6:', when='@3.0:', type='run')
-    depends_on('py-jsonschema', type='run')
-    depends_on('py-importlib-metadata', type='run')
-    depends_on('py-setuptools', type='build')
-    depends_on("py-pygelf", when="+gelf", type="run")
-    depends_on("py-sphinx", when="+docs", type="build")
-    depends_on("py-sphinx-rtd-theme", when="+docs", type="build")
     # ReFrame requires git up to version 3.1, see:
     # https://github.com/eth-cscs/reframe/issues/1464
-    depends_on("git", when="@2.0:3.1", type="run")
+    depends_on('git', when='@2.0:3.1', type='run')
+
+    # supported python
+    depends_on('python@3.5:', when='@2.0:2.999', type='run')
+    depends_on('python@3.6:', when='@3.0:', type='run')
+
+    # python build dependencies
+    depends_on('py-setuptools', type='build')
+
+    # python runtime dependencies
+    depends_on('py-jsonschema', type='run')
+    depends_on('py-importlib-metadata', type='run')
+
+    # communication dependencies
+    depends_on('py-pygelf', when='+gelf', type='run')
+
+    # documentation dependencies
+    depends_on('py-sphinx', when='+docs', type='build')
+    depends_on('py-sphinx-rtd-theme', when='+docs', type='build')
+
+    # sanity check
+    sanity_check_is_file = ['bin/reframe']
+    sanity_check_is_dir  = ['bin', 'config', 'docs', 'reframe', 'tutorials',
+                            'unittests', 'cscs-checks']
+
+    # check if we can run reframe
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
+    def check_list(self):
+        with working_dir(self.stage.source_path):
+            reframe = Executable(self.prefix + '/bin/reframe')
+            reframe('-l')
 
     def install(self, spec, prefix):
         if spec.version >= Version('3.0'):
-            if "+docs" in spec:
-                with working_dir("docs"):
-                    make("man")
-                    make("html")
-                    with working_dir("man"):
+            if '+docs' in spec:
+                with working_dir('docs'):
+                    make('man')
+                    make('html')
+                    with working_dir('man'):
                         mkdir('man1')
                         shutil.move('reframe.1', 'man1')
                         mkdir('man8')
@@ -66,5 +89,5 @@ class Reframe(Package):
 
     def setup_run_environment(self, env):
         if self.spec.version >= Version('3.0'):
-            if "+docs" in self.spec:
+            if '+docs' in self.spec:
                 env.prepend_path('MANPATH',  self.prefix.docs.man)
