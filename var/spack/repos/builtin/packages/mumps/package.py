@@ -160,8 +160,7 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'OPTF = %s -O  -DALLOW_NON_INIT %s %s' % (
                         fpic,
-                        '-fdefault-integer-8' if using_gcc
-                                              else '-i8',
+                        '-fdefault-integer-8' if using_gcc else '-i8',
                         fortran_flags),  # noqa
                 ])
 
