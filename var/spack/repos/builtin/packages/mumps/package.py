@@ -147,7 +147,7 @@ class Mumps(Package):
 
         if '+int64' in self.spec:
             if using_xlf:
-                makefile_conf.append('OPTF = -O%s %s' % opt_level)
+                makefile_conf.append('OPTF = -O%s' % opt_level)
             else:
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
@@ -276,7 +276,6 @@ class Mumps(Package):
 
     def flag_handler(self, name, flags):
         if name == 'fflags':
-            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
             if self.spec.satisfies('%gcc@10:'):
                 if flags is None:
                     flags = []
