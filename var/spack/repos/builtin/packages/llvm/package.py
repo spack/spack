@@ -393,8 +393,14 @@ class Llvm(CMakePackage, CudaPackage):
                         'create this identity.'
                     )
 
-    def setup_build_environment(self, env):
-        env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+            return(None, flags, None)
+        elif name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
 
     def setup_run_environment(self, env):
         if "+clang" in self.spec:

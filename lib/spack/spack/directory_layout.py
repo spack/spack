@@ -7,6 +7,7 @@ import os
 import shutil
 import glob
 import tempfile
+import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
@@ -119,9 +120,17 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
-                    return
-                os.rmdir(path)
+                try:
+                    os.rmdir(path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # already deleted, continue with parent
+                        pass
+                    elif e.errno == errno.ENOTEMPTY:
+                        # directory wasn't empty, done
+                        return
+                    else:
+                        raise e
             path = os.path.dirname(path)
 
 

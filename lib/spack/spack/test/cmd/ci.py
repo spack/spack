@@ -73,7 +73,7 @@ and then 'd', 'b', and 'a' to be put in the next three stages, respectively.
     b = mock_repo.add_package('b', [d, e], [default, default])
     mock_repo.add_package('a', [b, c], [default, default])
 
-    with repo.swap(mock_repo):
+    with repo.use_repositories(mock_repo):
         spec_a = Spec('a')
         spec_a.concretize()
 

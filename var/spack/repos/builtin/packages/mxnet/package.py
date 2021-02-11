@@ -39,7 +39,7 @@ class Mxnet(CMakePackage, CudaPackage):
     version('1.master', branch='v1.x')
     version('1.7.0', sha256='1d20c9be7d16ccb4e830e9ee3406796efaf96b0d93414d676337b64bc59ced18')
     version('1.6.0', sha256='01eb06069c90f33469c7354946261b0a94824bbaf819fd5d5a7318e8ee596def')
-    version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2')
+    version('1.3.0', sha256='c00d6fbb2947144ce36c835308e603f002c1eb90a9f4c5a62f4d398154eed4d2', deprecated=True)
 
     variant('build_type', default='Distribution',
             description='CMake build type',

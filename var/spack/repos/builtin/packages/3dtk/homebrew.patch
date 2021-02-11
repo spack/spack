@@ -1,0 +1,18 @@
+--- a/src/show/CMakeLists.txt	2021-01-14 16:08:27.000000000 -0600
++++ b/src/show/CMakeLists.txt	2021-01-14 20:42:24.000000000 -0600
+@@ -9,13 +9,8 @@
+   find_package(OpenGL REQUIRED)
+   find_package(GLUT REQUIRED)
+   add_definitions(-DWITH_OPENGL)
+-  if(APPLE)
+-    include_directories(/usr/local/Cellar/glui/2.37/)
+-    set(SHOW_LIBS ${SHOW_LIBS} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES} /usr/local/Cellar/glui/2.37/lib/libglui.a CACHE INTERNAL "")
+-  else()
+-    include_directories(${PROJECT_SOURCE_DIR}/3rdparty/glui-2.36/include/)
+-    set(SHOW_LIBS ${SHOW_LIBS} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES} glui CACHE INTERNAL "")
+-  endif()
++  include_directories(${PROJECT_SOURCE_DIR}/3rdparty/glui-2.36/include/)
++  set(SHOW_LIBS ${SHOW_LIBS} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES} glui CACHE INTERNAL "")
+   if(WITH_GLEE)
+     message(STATUS "Using opengl extensions")
+     set(SHOW_LIBS ${SHOW_LIBS} glee CACHE INTERNAL "")

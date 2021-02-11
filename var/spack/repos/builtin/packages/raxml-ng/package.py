@@ -31,4 +31,4 @@ class RaxmlNg(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        return [self.define_from_variants('USE_MPI', 'mpi')]
+        return [self.define_from_variant('USE_MPI', 'mpi')]

@@ -732,7 +732,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -895,7 +895,7 @@ _spack_external_list() {
 _spack_fetch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -m --missing -D --dependencies"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -m --missing -D --dependencies"
     else
         _all_packages
     fi
@@ -1033,7 +1033,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1117,7 +1117,7 @@ _spack_mark() {
 _spack_mirror() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
         SPACK_COMPREPLY="create add remove rm set-url list"
     fi
@@ -1283,7 +1283,7 @@ _spack_module_tcl_loads() {
 _spack_patch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
         _all_packages
     fi
@@ -1502,7 +1502,7 @@ _spack_spec() {
 _spack_stage() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -p --path"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -p --path"
     else
         _all_packages
     fi
