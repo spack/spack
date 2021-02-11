@@ -17,6 +17,7 @@ class PyPyspark(PythonPackage):
     version('2.3.0', sha256='0b3536910e154c36a94239f0ba0a201f476aadc72006409e5787198ffd01986e')
 
     depends_on('python@2.7:3.7', when='@:2.999', type=('build', 'run'))
+    depends_on('python@2.7:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-py4j@0.10.9', when='@3.0.1' type=('build', 'run'))
     depends_on('py-py4j@0.10.7', when='@2.4.4' type=('build', 'run'))
