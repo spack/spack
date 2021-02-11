@@ -1092,7 +1092,7 @@ class Spec(object):
         # deployed differently than it was built. None signals that the spec
         # is deployed "as built."
         # Build spec should be the actual build spec unless marked dirty.
-        self.build_spec = None
+        self._build_spec = None
 
         if isinstance(spec_like, six.string_types):
             spec_list = SpecParser(self).parse(spec_like)
@@ -3367,6 +3367,7 @@ class Spec(object):
         self.compiler_flags = other.compiler_flags.copy()
         self.compiler_flags.spec = self
         self.variants = other.variants.copy()
+        self._build_spec = other._build_spec
 
         # FIXME: we manage _patches_in_order_of_appearance specially here
         # to keep it from leaking out of spec.py, but we should figure
@@ -4227,6 +4228,14 @@ class Spec(object):
         # to give to the attribute the appropriate comparison semantic
         return self.architecture.target.microarchitecture
 
+    @property
+    def build_spec(self):
+        return self._build_spec or self
+
+    @build_spec.setter
+    def build_spec(self, value):
+        self._build_spec = value
+
     def splice(self, other, transitive):
         """Splices dependency "other" into this ("target") Spec.
         If transitive, then other and its dependencies will be extrapolated to
@@ -4264,14 +4273,14 @@ class Spec(object):
                     nodes[name]._add_dependency(nodes[dep],
                                                 dependencies[dep].deptypes)
                 if any(dep not in self_nodes for dep in dependencies):
-                    nodes[name].build_spec = self[name]
+                    nodes[name].build_spec = self[name].build_spec
             else:
                 dependencies = other[name]._dependencies
                 for dep in dependencies:
                     nodes[name]._add_dependency(nodes[dep],
                                                 dependencies[dep].deptypes)
                 if any(dep not in other_nodes for dep in dependencies):
-                    nodes[name].build_spec = other[name]
+                    nodes[name].build_spec = other[name].build_spec
 
         # Clear cached hashes
         nodes[self.name].clear_cached_hashes()

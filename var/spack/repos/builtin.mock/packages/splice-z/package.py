@@ -13,3 +13,6 @@ class SpliceZ(AutotoolsPackage):
     url      = "http://www.example.com/splice-z-1.0.tar.gz"
 
     version('1.0', '0123456789abcdef0123456789abcdef')
+
+    variant('foo', default=False, description='nope')
+    variant('bar', default=False, description='nope')

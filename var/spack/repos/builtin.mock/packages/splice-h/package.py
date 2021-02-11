@@ -19,3 +19,4 @@ class SpliceH(AutotoolsPackage):
     variant('baz', default=False, description='nope')
 
     depends_on('splice-z')
+    depends_on('splice-z+foo', when='+foo')
