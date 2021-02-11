@@ -478,7 +478,7 @@ _spack_ci() {
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only"
 }
 
 _spack_ci_rebuild() {
