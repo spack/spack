@@ -152,16 +152,15 @@ class Mumps(Package):
 
         if '+int64' in self.spec:
             if using_xlf:
-                makefile_conf.append('OPTF = -O%s %s' % (opt_level, fortran_flags))
+                makefile_conf.append('OPTF = -O%s %s' % opt_level)
             else:
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
                 makefile_conf.extend([
-                    'OPTF = %s -O  -DALLOW_NON_INIT %s %s' % (
+                    'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
                         fpic,
-                        '-fdefault-integer-8' if using_gcc else '-i8',
-                        fortran_flags),  # noqa
+                        '-fdefault-integer-8' if using_gcc else '-i8'), #noqa
                 ])
 
             makefile_conf.extend([
@@ -172,8 +171,8 @@ class Mumps(Package):
             if using_xlf:
                 makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
             else:
-                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT %s' % (
-                    fpic, opt_level, fortran_flags))
+                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
+                    fpic, opt_level))
 
             makefile_conf.extend([
                 'OPTL = %s -O%s' % (cpic, opt_level),
@@ -279,6 +278,16 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            # https://bugzilla.redhat.com/show_bug.cgi?id=1795817
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         self.write_makefile_inc()
