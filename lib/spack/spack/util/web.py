@@ -564,15 +564,15 @@ def find_versions_of_archive(
     # Scrape them for archive URLs
     regexes = []
     for aurl in archive_urls:
+        # We'll be a bit more liberal and just look for the archive
+        # part, not the full path.
+        url_regex = os.path.basename(aurl)
+
         # This creates a regex from the URL with a capture group for
         # the version part of the URL.  The capture group is converted
         # to a generic wildcard, so we can use this to extract things
         # on a page that look like archive URLs.
-        url_regex = spack.url.wildcard_version(aurl)
-
-        # We'll be a bit more liberal and just look for the archive
-        # part, not the full path.
-        url_regex = os.path.basename(url_regex)
+        url_regex = spack.url.wildcard_version(url_regex)
 
         # We need to add a / to the beginning of the regex to prevent
         # Spack from picking up similarly named packages like:
@@ -601,6 +601,7 @@ def find_versions_of_archive(
     # Any conflicting versions will be overwritten by the list_url links.
     versions = {}
     for url in archive_urls + sorted(links):
+        url = url.replace("\\", "/")
         if any(re.search(r, url) for r in regexes):
             try:
                 ver = spack.url.parse_version(url)
