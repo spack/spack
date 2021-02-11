@@ -1454,11 +1454,12 @@ class Database(object):
                     rec.spec.name) != known:
                 continue
 
-            inst_date = datetime.datetime.fromtimestamp(
-                rec.installation_time
-            )
-            if not (start_date < inst_date < end_date):
-                continue
+            if start_date or end_date:
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
+                if not (start_date < inst_date < end_date):
+                    continue
 
             if (query_spec is any or
                 rec.spec.satisfies(query_spec, strict=True)):
