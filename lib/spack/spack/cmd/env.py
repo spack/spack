@@ -59,6 +59,9 @@ def env_activate_setup_parser(subparser):
     shells.add_argument(
         '--fish', action='store_const', dest='shell', const='fish',
         help="print fish commands to activate the environment")
+    subparser.add_argument(
+        '--with-env-vars', action='store_true', default=False,
+        help="print prepend commands to activate the environment")
 
     view_options = subparser.add_mutually_exclusive_group()
     view_options.add_argument(
@@ -76,9 +79,6 @@ def env_activate_setup_parser(subparser):
     subparser.add_argument(
         '-p', '--prompt', action='store_true', default=False,
         help="decorate the command line prompt when activating")
-    subparser.add_argument(
-        '-s', '--with-env-vars', action='store_true', default=False,
-        help="output a script that uses en used with a print command")
     subparser.add_argument(
         metavar='env', dest='activate_env',
         help='name of environment to activate')
