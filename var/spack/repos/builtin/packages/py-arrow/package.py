@@ -17,6 +17,7 @@ class PyArrow(PythonPackage):
     homepage = "https://arrow.readthedocs.io/en/latest/"
     pypi = "arrow/arrow-0.16.0.tar.gz"
 
+    version('0.17.0', sha256='ff08d10cda1d36c68657d6ad20d74fbea493d980f8b2d45344e00d6ed2bf6ed4')
     version('0.16.0', sha256='92aac856ea5175c804f7ccb96aca4d714d936f1c867ba59d747a8096ec30e90a')
     version('0.14.7', sha256='67f8be7c0cf420424bc62d8d7dc40b44e4bb2f7b515f9cc2954fb36e35797656')
     version('0.14.1', sha256='2d30837085011ef0b90ff75aa0a28f5c7d063e96b7e76b6cbc7e690310256685')
