@@ -30,6 +30,3 @@ class Hevea(MakefilePackage):
 
     def edit(self, spec, prefix):
         env['PREFIX'] = self.spec.prefix
-
-    def build(self, spec, prefix):
-        make()
