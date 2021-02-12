@@ -12,6 +12,7 @@ class Syscalc(MakefilePackage):
     homepage = "https://cp3.irmp.ucl.ac.be/projects/madgraph/wiki/SysCalc"
     url      = "https://bazaar.launchpad.net/~mgtools/mg5amcnlo/SysCalc/tarball/17"
 
+    version('17', sha256='ac73df0f9f195eb62601fafc2eede3db17a562750f7971616870d6df4abd1b6c')
     version('1.1.7', sha256='ac73df0f9f195eb62601fafc2eede3db17a562750f7971616870d6df4abd1b6c',
             url='https://bazaar.launchpad.net/~mgtools/mg5amcnlo/SysCalc/tarball/17')
 
