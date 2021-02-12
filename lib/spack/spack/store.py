@@ -240,7 +240,7 @@ def use_store(store_or_path):
     Returns:
         Store object associated with the context manager's store
     """
-    global store
+    global store, db, layout, root, unpadded_root
 
     # Normalize input arguments
     temporary_store = store_or_path
@@ -248,8 +248,14 @@ def use_store(store_or_path):
         temporary_store = Store(store_or_path)
 
     # Swap the store with the one just constructed and return it
+    _ = store.db
     original_store, store = store, temporary_store
+    db, layout = store.db, store.layout
+    root, unpadded_root = store.root, store.unpadded_root
+
     yield temporary_store
 
     # Restore the original store
     store = original_store
+    db, layout = original_store.db, original_store.layout
+    root, unpadded_root = original_store.root, original_store.unpadded_root

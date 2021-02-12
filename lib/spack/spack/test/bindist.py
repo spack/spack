@@ -493,8 +493,6 @@ def test_update_sbang(tmpdir, test_mirror):
         '${name}', '${version}',
         '${architecture}-${compiler.name}-${compiler.version}-${hash}'
     )
-    # Save the original store and layout before we touch ANYTHING.
-    real_store, real_layout = spack.store.store, spack.store.layout
 
     # Concretize a package with some old-fashioned sbang lines.
     sspec = Spec('old-sbang')
@@ -516,15 +514,13 @@ def test_update_sbang(tmpdir, test_mirror):
     # Uninstall the original package.
     uninstall_cmd('-y', '/%s' % sspec.dag_hash())
 
-    try:
-        # New install tree locations...
-        # Too fine-grained to do be done in a fixture
-        newtree_dir = tmpdir.join('newtree')
-        spack.store.store = spack.store.Store(str(newtree_dir))
-        spack.store.layout = YamlDirectoryLayout(
-            str(newtree_dir), path_scheme=scheme
-        )
+    # New install tree locations...
+    # Too fine-grained to do be done in a fixture
+    newtree_dir = tmpdir.join('newtree')
+    s = spack.store.Store(str(newtree_dir))
+    s.layout = YamlDirectoryLayout(str(newtree_dir), path_scheme=scheme)
 
+    with spack.store.use_store(s):
         # Install package from buildcache
         buildcache_cmd('install', '-a', '-u', '-f', sspec.name)
 
@@ -537,12 +533,12 @@ def test_update_sbang(tmpdir, test_mirror):
 #!/usr/bin/env python
 
 {1}
-        '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
+'''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
         sbang_style_2_expected = '''{0}
 #!/usr/bin/env python
 
 {1}
-        '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
+'''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
 
         installed_script_style_1_path = sspec.prefix.bin.join('sbang-style-1.sh')
         assert sbang_style_1_expected == \
@@ -553,7 +549,3 @@ def test_update_sbang(tmpdir, test_mirror):
             open(str(installed_script_style_2_path)).read()
 
         uninstall_cmd('-y', '/%s' % sspec.dag_hash())
-
-    finally:
-        spack.store.store = real_store
-        spack.store.layout = real_layout

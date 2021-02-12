@@ -605,7 +605,7 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes,
     # Make the DB filesystem read-only to ensure we can't modify entries
     store_path.join('.spack-db').chmod(mode=0o555, rec=1)
 
-    yield store
+    yield store_path
 
     store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
@@ -613,10 +613,9 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes,
 @pytest.fixture(scope='function')
 def database(mock_store, mock_packages, config, monkeypatch):
     """This activates the mock store, packages, AND config."""
-    monkeypatch.setattr(spack.store, 'store', mock_store)
-    yield mock_store.db
-    # Force reading the database again between tests
-    mock_store.db.last_seen_verifier = ''
+    with spack.store.use_store(str(mock_store)) as store:
+        yield store.db
+        store.db.last_seen_verifier = ''
 
 
 @pytest.fixture(scope='function')
@@ -687,45 +686,41 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages, monkeypatch):
+def install_mockery(tmpdir, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    monkeypatch.setattr(
-        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
+    s = spack.store.Store(str(tmpdir.join('opt')))
+    with spack.store.use_store(s):
+        # We use a fake package, so temporarily disable checksumming
+        with spack.config.override('config:checksum', False):
+            yield
 
-    # We use a fake package, so temporarily disable checksumming
-    with spack.config.override('config:checksum', False):
-        yield
-
-    tmpdir.join('opt').remove()
-
-    # Also wipe out any cached prefix failure locks (associated with
-    # the session-scoped mock archive).
-    for pkg_id in list(spack.store.db._prefix_failures.keys()):
-        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
-        if lock:
-            try:
-                lock.release_write()
-            except Exception:
-                pass
+        tmpdir.join('opt').remove()
+        # Also wipe out any cached prefix failure locks (associated with
+        # the session-scoped mock archive).
+        for pkg_id in list(spack.store.db._prefix_failures.keys()):
+            lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+            if lock:
+                try:
+                    lock.release_write()
+                except Exception:
+                    pass
 
 
 @pytest.fixture(scope='function')
-def install_mockery_mutable_config(
-        tmpdir, mutable_config, mock_packages, monkeypatch):
+def install_mockery_mutable_config(tmpdir, mutable_config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack.
 
     This is specifically for tests which want to use 'install_mockery' but
     also need to modify configuration (and hence would want to use
     'mutable config'): 'install_mockery' does not support this.
     """
-    monkeypatch.setattr(
-        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
+    s = spack.store.Store(str(tmpdir.join('opt')))
+    with spack.store.use_store(s):
+        # We use a fake package, so temporarily disable checksumming
+        with spack.config.override('config:checksum', False):
+            yield
 
-    # We use a fake package, so temporarily disable checksumming
-    with spack.config.override('config:checksum', False):
-        yield
-
-    tmpdir.join('opt').remove()
+        tmpdir.join('opt').remove()
 
 
 @pytest.fixture()

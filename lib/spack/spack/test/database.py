@@ -39,12 +39,8 @@ pytestmark = pytest.mark.db
 
 @pytest.fixture()
 def test_store(tmpdir):
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
-
-    yield
-
-    spack.store.store = real_store
+    with spack.store.use_store(str(tmpdir.join('test_store'))) as s:
+        yield s
 
 
 @pytest.fixture()
