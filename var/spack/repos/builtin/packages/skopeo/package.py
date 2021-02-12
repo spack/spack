@@ -14,6 +14,13 @@ class Skopeo(MakefilePackage):
     homepage = "https://github.com/containers/skopeo"
     url      = "https://github.com/containers/skopeo/archive/v0.1.39.tar.gz"
 
+    version('1.2.1',  sha256='aed062afdd9aed305679294a0c238d0f39b8a206084db1c6e6aa3b1e20c71be8')
+    version('1.2.0',  sha256='113290f6747b7a9946ddf50ad1a7d924d3e507fe923b2e0460df1e6823de0ffb')
+    version('1.1.1',  sha256='9e0fdca1f2663f5a07bc1d932fec734578c5fffdb27faa8f847a393a44b072df')
+    version('1.1.0',  sha256='3bd3acc614514fc2261b89dc0ea85ac7a4dba64fb7dcef8676ae61849e8faeb4')
+    version('1.0.0',  sha256='df5f38ee72e2fede508d1fd272a48773b86eb6bc6cc4b7b856a99669d22fa5df')
+    version('0.2.0',  sha256='b58c54732932cdd89f760f30136317fc2fef6457d158fb1e5d4976aeabcb20f2')
+    version('0.1.41', sha256='d9f4a0dcf4a43469768dbf16865d5bc98e5434fadd65af35051edb36767c9c70')
     version('0.1.40', sha256='ee1e33245938fcb622f5864fac860e2d8bfa2fa907af4b5ffc3704ed0db46bbf')
     version('0.1.39', sha256='e9d70f7f7b891675a816f06a22df0490285ad20eefbd91f5da69ca12f56c29f2')
     version('0.1.38', sha256='104ceb9c582dc5c3a49dd1752c4c326bba03f2f801596f089372e831f48ed705')
