@@ -24,6 +24,8 @@ class Volk(CMakePackage):
 
     maintainers = ['aweits']
 
+    version('2.4.1', sha256='61d681f90e0f30894f806ab050e9ba28260799c01f1ed0f58623942d8c7f4d48')
+    version('2.4.0', sha256='504a316f5bf784d68334bc9df4627b8e8deb1ac67edd70d185360507af0cb1b4')
     version('2.3.0', sha256='f42c928f561b128acfe4adb21227e4a62a3f6ab8103592fc3233765ff326d5fc')
 
     depends_on('python@3.4:', type=('build', 'run'))
