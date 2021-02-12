@@ -13,6 +13,8 @@ class PyPythonLevenshtein(PythonPackage):
     homepage = "https://github.com/ztane/python-Levenshtein"
     pypi = "python-Levenshtein/python-Levenshtein-0.12.0.tar.gz"
 
+    version('0.12.2', sha256='dc2395fbd148a1ab31090dd113c366695934b9e85fe5a4b2a032745efd0346f6')
+    version('0.12.1', sha256='554e273a88060d177e7b3c1e6ea9158dde11563bfae8f7f661f73f47e5ff0911')
     version('0.12.0', sha256='033a11de5e3d19ea25c9302d11224e1a1898fe5abd23c61c7c360c25195e3eb1')
 
     depends_on('py-setuptools', type='build')
