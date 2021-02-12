@@ -12,6 +12,9 @@ class PyDistributed(PythonPackage):
     homepage = "https://distributed.dask.org/"
     pypi = "distributed/distributed-2.10.0.tar.gz"
 
+    version('2021.2.0', sha256='9150b99b2c28e7c238c486b117154abd545c6990080d084aaff02f803f86f75e')
+    version('2021.1.1', sha256='423dda6fd8d263d6e988700721e7269d588c1bc368026a0a6ae8f2fde108be39')
+    version('2021.1.0', sha256='a9be18981a40031c6cb8aa7a01c7ef23aa20708e28e1c7aaf6c1e958d79586ec')
     version('2020.12.0', sha256='2a0b6acc921cd4e0143a7c4383cdcbed7defbc4bd9dc3aab0c7f1c45f14f80e1')
     version('2.10.0', sha256='2f8cca741a20f776929cbad3545f2df64cf60207fb21f774ef24aad6f6589e8b')
     version('1.28.1', sha256='3bd83f8b7eb5938af5f2be91ccff8984630713f36f8f66097e531a63f141c48a')
