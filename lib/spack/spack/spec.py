@@ -4261,9 +4261,9 @@ class Spec(object):
         If transitive, then other and its dependencies will be extrapolated to
         a list of Specs and spliced in accordingly.
         For example, let there exist a dependency graph as follows:
-        (T)
-         |  \
-        (Z)<-(H)
+        T
+        | \
+        Z<-H
         In this example, Spec T depends on H and Z, and H also depends on Z.
         Suppose, however, that we wish to use a differently-built H, known as
         H'. This function will splice in the new H' in one of two ways:
