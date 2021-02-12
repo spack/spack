@@ -12,6 +12,7 @@ class PyGraphqlCore(PythonPackage):
     homepage = "https://github.com/graphql-python/graphql-core"
     url      = "https://github.com/graphql-python/graphql-core/archive/v3.1.2.tar.gz"
 
+    version('3.1.3', sha256='7b1ffd9362d1aa271403a027c93f0ec82589ae2fd05a472bdfd78f68b57cfd9e')
     version('3.1.2', sha256='16087360d34f9cfa295b401fc17f9f11bcddef0e6e0dc5a694bbe2298b31949b')
     version('3.0.5', sha256='88021f8b879f18cf56523644e51e1552b126a9ad9ab218f579bf503d236d5272')
 
