@@ -15,6 +15,10 @@ class Nim(Package):
     homepage = "https://nim-lang.org/"
     url = "https://nim-lang.org/download/nim-0.20.0.tar.xz"
 
+    version('1.5.1',  sha256='dfb34d959e944ba26ef844e184daea671635dfb164f8c9a58538ff2dcc879b1b')
+    version('1.4.3',  sha256='4d6cb6501a1306c1ed205770bc7d59bd701b5beda651e8c9ede04e80b371ef04')
+    version('1.2.9',  sha256='a5073c6289cf31cc6d4d9f79a12482df1a8b3e3f9cd8eb204ac3b34712000f4a')
+    version('1.0.11', sha256='26bef3877b90b841c7a88cb1982eb4688132759a291e93b0752f6eaac8a42df7')
     version('0.20.0', sha256='4be00d7dd47220da508b30ce3b4deade4ba39800ea4a1e574018b3c733359780')
     version('0.19.6', sha256='a09f0c58d29392434d4fd6d15d4059cf7e013ae948413cb9233b8233d67e3a29')
     version('0.19.9', sha256='154c440cb8f27da20b3d6b1a8cc03f63305073fb995bbf26ec9bc6ad891ce276',
