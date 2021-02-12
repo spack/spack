@@ -32,6 +32,8 @@ class PyLightgbm(PythonPackage):
 
     version('3.1.1', sha256='babece2e3613e97748a67ed45387bb0e984bdb1f4126e39f010fbfe7503c7b20')
 
+    variant('mpi', default=False, description="Build with mpi support")
+
     # FIXME: Add dependencies if required. Only add the python dependency
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
@@ -46,8 +48,12 @@ class PyLightgbm(PythonPackage):
 
     depends_on('cmake@3.8:', type='build')
 
-    def build_args(self, spec, prefix):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
+    depends_on('mpi', when='+mpi')
+
+    def install_args(self, spec, prefix):
         args = []
+
+        if spec.satisfies('+mpi'):
+            args.append('--mpi')
+
         return args
