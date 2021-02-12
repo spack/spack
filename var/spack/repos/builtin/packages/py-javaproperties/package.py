@@ -10,6 +10,7 @@ class PyJavaproperties(PythonPackage):
     homepage = "https://github.com/jwodder/javaproperties"
     pypi = "javaproperties/javaproperties-0.7.0.tar.gz"
 
+    version('0.8.0', sha256='c00646a4aa3aaa7170bcd4d776e0cba67e214a9381df2c39d40c5242e6356b3d')
     version('0.7.0', sha256='cf45b39fcbaeced1dfc0b7f2bda16e34fc0349116269e001dada42fd2e145d87')
     version('0.5.1', sha256='2b0237b054af4d24c74f54734b7d997ca040209a1820e96fb4a82625f7bd40cf')
 
