@@ -12,6 +12,7 @@ class PerlParamsValidate(PerlPackage):
     homepage = "https://metacpan.org/pod/Params::Validate"
     url      = "https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Params-Validate-1.29.tar.gz"
 
+    version('1.30', sha256='9a3a35583d3125d07e8c802c1f92f5be7d526e76dd496e944da270b1e273d812')
     version('1.29', sha256='49a68dfb430bea028042479111d19068e08095e5a467e320b7ab7bde3d729733')
 
     depends_on('perl-module-build', type='build')
