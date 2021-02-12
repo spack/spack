@@ -15,6 +15,15 @@ class Fzf(MakefilePackage):
 
     executables = ['^fzf$']
 
+    version('0.25.1',   sha256='22ffce1a9fd4b7a1d53ec5fc9c36b0abc5a61eccfa89898149b6d4e3871e637d')
+    version('0.25.0',   sha256='70996bb38b3f74c29d5f663e4f19d7cd5e2c231835090bdd51044a3400dafa69')
+    version('0.24.4',   sha256='bbb200f99e183b2aa587b4b968abbbcbc7c45d01726a5bf059dceb3f260798bd')
+    version('0.24.3',   sha256='68d3fdf1aaed9813986c6e501602297f8fdf1c428eee06dc65ebda6e8285c308')
+    version('0.24.2',   sha256='6a053adc620d1adc5aead7c80596db748f2f9f251b75e3c97783f96cc96c5b68')
+    version('0.24.1',   sha256='211c438fffcd4751c24a7f36101030a671d350f8926bffe1f663f3efacc45f6a')
+    version('0.24.0-1', sha256='d61fb19048467c2bb4901d6d032e98b4879d85e9b322e0056260a598815f9c00')
+    version('0.24.0',   sha256='8cf8435e64b418646c309c9ddc3c8fe34b2a0fff73d1b7b9a69f3c587bf012fb')
+    version('0.23.1',   sha256='07576e47d2d446366eb7806fd9f825a2340cc3dc7f799f1f53fe038ca9bf30f6')
     version('0.22.0',   sha256='3090748bb656333ed98490fe62133760e5da40ba4cd429a8142b4a0b69d05586')
     version('0.17.5',   sha256='de3b39758e01b19bbc04ee0d5107e14052d3a32ce8f40d4a63d0ed311394f7ee')
     version('0.17.4',   sha256='a4b009638266b116f422d159cd1e09df64112e6ae3490964db2cd46636981ff0')
