@@ -12,6 +12,7 @@ class PyInferenceSchema(Package):
     homepage = "https://pypi.org/project/inference-schema/"
     url      = "https://pypi.io/packages/py3/i/inference-schema/inference_schema-1.0.2-py3-none-any.whl"
 
+    version('1.1.0', sha256='75c006113104b0327290cb80c3f082698a420f46eadd80d1514c8da32eac2148')
     version('1.0.2', sha256='fd379becbd12dcf9f7a1ad5c03b163d501ef1dcc4fb85204735c84b1d139f478', expand=False)
 
     variant('numpy', default=False, description='Enable numpy support')
