@@ -1308,6 +1308,13 @@ class Spec(object):
         """
         return self._concrete
 
+    @property
+    def spliced(self):
+        """Returns whether or not this Spec is being deployed as built i.e.
+        whether or not this Spec has ever been spliced.
+        """
+        return any(s.build_spec is not s for s in self.traverse(root=True))
+
     def traverse(self, **kwargs):
         direction = kwargs.get('direction', 'children')
         depth = kwargs.get('depth', False)
@@ -2553,6 +2560,8 @@ class Spec(object):
         for s in self.traverse():
             if (not value) and s.concrete and s.package.installed:
                 continue
+            elif not value:
+                s.clear_cached_hashes()
             s._normal = value
             s._concrete = value
 
@@ -4237,9 +4246,26 @@ class Spec(object):
         self._build_spec = value
 
     def splice(self, other, transitive):
-        """Splices dependency "other" into this ("target") Spec.
+        """Splices dependency "other" into this ("target") Spec, and return the
+        result as a concrete Spec.
         If transitive, then other and its dependencies will be extrapolated to
         a list of Specs and spliced in accordingly.
+        For example, let there exist a dependency graph as follows:
+        (T)
+         |  \
+        (Z)<-(H)
+        In this example, Spec T depends on H and Z, and H also depends on Z.
+        Suppose, however, that we wish to use a differently-built H, known as
+        H'. This function will splice in the new H' in one of two ways:
+        1. transitively, where H' depends on the Z' it was built with, and the
+        new T* also directly depends on this new Z', or
+        2. intransitively, where the new T* and H' both depend on the original
+        Z.
+        Since the Spec returned by this splicing function is no longer deployed
+        the same way it was built, any such changes are tracked by setting the
+        build_spec to point to the corresponding dependency from the original
+        Spec.
+        TODO: Extend this for non-concrete Specs.
         """
         assert self.concrete
         assert other.concrete
@@ -4292,7 +4318,7 @@ class Spec(object):
         """
         for attr in ht.SpecHashDescriptor.hash_types:
             if hasattr(self, attr):
-                delattr(self, attr)
+                setattr(self, attr, None)
 
 
 class LazySpecCache(collections.defaultdict):
