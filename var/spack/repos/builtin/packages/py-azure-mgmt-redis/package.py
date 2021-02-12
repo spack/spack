@@ -11,6 +11,7 @@ class PyAzureMgmtRedis(PythonPackage):
     pypi = "azure-mgmt-redis/azure-mgmt-redis-6.0.0.zip"
 
     # Release candidate needed for py-azure-cli
+    version('12.0.0', sha256='8ae563e3df82a2f206d0483ae6f05d93d0d1835111c0bbca7236932521eed356')
     version('7.0.0rc1', sha256='d3cc259c507b79962495ed00d0a3432a45e4e90a0fb48b49e80d51cdc398dc20')
     version('6.0.0', sha256='db999e104edeee3a13a8ceb1881e15196fe03a02635e0e20855eb52c1e2ecca1', preferred=True)
 
