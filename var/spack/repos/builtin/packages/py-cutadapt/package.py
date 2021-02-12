@@ -15,6 +15,9 @@ class PyCutadapt(PythonPackage):
     pypi = "cutadapt/cutadapt-1.13.tar.gz"
     git      = "https://github.com/marcelm/cutadapt.git"
 
+    version('3.2', sha256='82c063129d0449d3c0bfb9b849db2bee6b226d3d1c31cad68011e2473791dc75')
+    version('3.1', sha256='cc82d709a7de9c3299f5c585bf5c2bcf75093ea64a137f61e2fc46d9e35e1410')
+    version('3.0', sha256='8e5626bea77f3548e972cb19c45c641db80fe1ee50efa19c6f878a469b136792')
     version('2.10', sha256='936b88374b5b393a954852a0fe317a85b798dd4faf5ec52cf3ef4f3c062c242a')
     version('2.9', sha256='cad8875b461ca09cea498b4f0e78b0d3dcd7ea84d27d51dac4ed45080bf1499e')
     version('2.5', sha256='ced79e49b93e922e579d0bb9d21298dcb2d7b7b1ea721feed484277e08b1660b')
