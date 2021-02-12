@@ -16,6 +16,7 @@ class Meson(PythonPackage):
 
     maintainers = ['michaelkuhn']
 
+    version('0.56.2', sha256='aaae961c3413033789248ffe6762589e80b6cf487c334d0b808e31a32c48f35f')
     version('0.56.0', sha256='a9ca7adf66dc69fbb7e583f7c7aef16b9fe56ec2874a3d58747e69a3affdf300')
     version('0.55.3', sha256='2b276df50c5b13ccdbfb14d3333141e9e7985aca31b60400b3f3e0be2ee6897e')
     version('0.55.2', sha256='56244896e56c2b619f819d047b6de412ecc5250975ee8717f1e329113d178e06')
@@ -35,7 +36,6 @@ class Meson(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('ninja', type='run')
-    depends_on('cmake', type='run')
 
     # By default, Meson strips the rpath on installation. This patch disables
     # rpath modification completely to make sure that Spack's rpath changes
