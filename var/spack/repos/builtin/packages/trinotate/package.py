@@ -16,6 +16,8 @@ class Trinotate(Package):
     homepage = "https://trinotate.github.io/"
     url      = "https://github.com/Trinotate/Trinotate/archive/Trinotate-v3.1.1.tar.gz"
 
+    version('3.2.1', sha256='e3d430c1a63317585cff568fc6dfc9f8987f34e74fa21624c19a5f302a80eed7')
+    version('3.2.0', sha256='93195661a822b5a4eeb6504051795db91626a75c81c03f03f1f9fbfbf7e1e291')
     version('3.1.1', sha256='f8af0fa5dbeaaf5a085132cd4ac4f4206b05cc4630f0a17a672c586691f03843')
 
     depends_on('trinity', type='run')
