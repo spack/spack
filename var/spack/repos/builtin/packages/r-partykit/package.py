@@ -25,6 +25,7 @@ class RPartykit(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/partykit_1.1-1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/partykit"
 
+    version('1.2-12', sha256='1494f754655cc6fc192a0b2dffcb752a527790ef524ae419dacddac8137aa595')
     version('1.2-11', sha256='3a83332d782a235cfb5ba60cc8f1c51d46ca5477b22979a614f514d1c951c602')
     version('1.2-5', sha256='f48e30790f93fa5d03e68e8ce71ce33d009d107d46d45d85da2016b38b27629c')
     version('1.2-3', sha256='56749b246e283f94ac2ad2cdcfc0a477e05cd44b5e8f6e462c26f4dff818da35')
