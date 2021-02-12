@@ -14,6 +14,9 @@ class PyPyodbc(PythonPackage):
     homepage = "https://github.com/mkleehammer/pyodbc"
     pypi = "pyodbc/pyodbc-4.0.26.tar.gz"
 
+    version('4.0.30', sha256='852b5deeeb3366af8b4408efed993501708be45d221881bce60c9aac54be726a')
+    version('4.0.28', sha256='510643354c4c687ed96bf7e7cec4d02d6c626ecf3e18696f5a0228dd6d11b769')
+    version('4.0.27', sha256='2b5628e1bb56e60f22514b058b591a60b013fcfa5c6d712265608cc0e089a2cd')
     version('4.0.26', sha256='e52700b5d24a846483b5ab80acd9153f8e593999c9184ffea11596288fb33de3')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
