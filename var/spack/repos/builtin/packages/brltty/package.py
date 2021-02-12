@@ -14,6 +14,9 @@ class Brltty(AutotoolsPackage):
     homepage = "http://brltty.app/"
     url      = "https://github.com/brltty/brltty/archive/BRLTTY-6.0.tar.gz"
 
+    version('6.3', sha256='ff120d238d2a746d04fd509878e0e89be20f2139accf5979532021f1b9e833a0')
+    version('6.2', sha256='f472bb0cea0a7f579e997ccce45da0b9f8bc1bfa6b38315cc74dbfd25449d762')
+    version('6.1', sha256='6af7a53964dba8b21a23eab4bbd7183185ce798b4ff9091ab48c73d312cf168f')
     version('6.0', sha256='acfea5274bdc9230b0ea1a87f8796e241615d4d2c1ba08d87601b9d116c7804c')
     version('5.6', sha256='74f35043943525396b340b9f65f0d73c3cc4054a8f63d1c685f27ccf59f46c5d')
     version('5.5', sha256='cd80a0d225f13779791dc3a72d7f137c06c48e5f2c9600e80a565d2378422207')
