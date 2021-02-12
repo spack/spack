@@ -13,6 +13,11 @@ class PyDvc(PythonPackage):
     homepage = "https://www.dvc.org"
     pypi     = "dvc/dvc-1.11.10.tar.gz"
 
+    version('1.11.15', sha256='65d22c4232d38ca8ed524b45d5e987b6f87db0cec99f0f0c56205e10103947b5')
+    version('1.11.14', sha256='55d47ff0da7138dbe07bde6d9a82a8f5f1c2006d6682f4401fb2baf96431e103')
+    version('1.11.13', sha256='904d2a484513dcaefca13812a90ae9a5eb1a8f3455ebf519dda90f2d80e71bf0')
+    version('1.11.12', sha256='aa419a0174fc7bc104dedd08017eef045e3e82e51c0ee4755f284117737b4d30')
+    version('1.11.11', sha256='ed19fffaa1ad6323ff390fbf53b73a5da802b0238fa425e8c82d12ea314a90d0')
     version('1.11.10', sha256='6b53ebf1bd5619836f131181402bb21f7b44109166e9db8f8d6a0d8c7ce9458d')
     version('1.11.6', sha256='41ba76c51c6142b28dae3aab039cb12423ba52fed6bd2a838f8308f315cfc20b')
 
