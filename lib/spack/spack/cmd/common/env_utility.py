@@ -12,6 +12,7 @@ import spack.build_environment as build_environment
 import spack.paths
 import spack.cmd
 import spack.cmd.common.arguments as arguments
+import spack.environment as ev
 from spack.util.environment import dump_environment, pickle_environment
 
 
@@ -53,10 +54,28 @@ def emulate_env_utility(cmd_name, context, args):
         spec = args.spec[0]
         cmd = args.spec[1:]
 
-    specs = spack.cmd.parse_specs(spec, concretize=True)
+    specs = spack.cmd.parse_specs(spec, concretize=False)
     if len(specs) > 1:
         tty.die("spack %s only takes one spec." % cmd_name)
     spec = specs[0]
+
+    # If the user requests a spec that matches a concretized spec in the
+    # environment, we implicitly use that.
+    env = ev.get_env(args, cmd_name)
+    spec_from_env = None
+    if env:
+        dep_spec = None
+        for user_spec, concretized_user_spec in env.concretized_specs():
+            for dep_spec in concretized_user_spec.traverse():
+                if dep_spec.satisfies(spec):
+                    spec_from_env = dep_spec
+                    break
+            if spec_from_env:
+                break
+    if spec_from_env:
+        spec = spec_from_env
+    else:
+        spec.concretize()
 
     build_environment.setup_package(spec.package, args.dirty, context)
 
