@@ -17,6 +17,8 @@ class Autogen(AutotoolsPackage, GNUMirrorPackage):
     list_url = "https://ftp.gnu.org/gnu/autogen"
     list_depth = 1
 
+    version('5.18.16', sha256='e23c5bbd0ac83079ae2ef6eb3fd1948fecce718ac853025607a3ab0395538406')
+    version('5.18.14', sha256='93842ec26552b50e4f22d10bcc2b102e9fb9922ae68765801f1f043631b7db66')
     version('5.18.12', sha256='805c20182f3cb0ebf1571d3b01972851c56fb34348dfdc38799fd0ec3b2badbe')
 
     variant('xml', default=True, description='Enable XML support')
