@@ -13,6 +13,7 @@ class Heaptrack(CMakePackage):
     homepage = "https://github.com/KDE/heaptrack"
     url      = "https://github.com/KDE/heaptrack/archive/v1.1.0.tar.gz"
 
+    version('1.2.0', sha256='f299a4846b80e607a412f439e17cddae13f0529701ffdb05eaa7ba878865717e')
     version('1.1.0', sha256='bd247ac67d1ecf023ec7e2a2888764bfc03e2f8b24876928ca6aa0cdb3a07309')
 
     depends_on('boost@1.41:')
