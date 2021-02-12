@@ -12,6 +12,8 @@ class Memtester(MakefilePackage):
     homepage = "http://pyropus.ca/software/memtester/"
     url      = "http://pyropus.ca/software/memtester/old-versions/memtester-4.3.0.tar.gz"
 
+    version('4.5.0', sha256='8ed52b0d06d4aeb61954994146e2a5b2d20448a8f3ce3ee995120e6dbde2ae37')
+    version('4.4.0', sha256='6ffe23e6e6449b42c577c7953778fb6f698050196797a94fc619d9badc59f8e8')
     version('4.3.0', sha256='f9dfe2fd737c38fad6535bbab327da9a21f7ce4ea6f18c7b3339adef6bf5fd88')
     version('4.2.2', sha256='a494569d58d642c796332a1b7f3b4b86845b52da66c15c96fbeecd74e48dae8e')
     version('4.2.1', sha256='3433e1c757e56457610f5a97bf1a2d612c609290eba5183dd273e070134a21d2')
