@@ -99,8 +99,15 @@ def location(parser, args):
 
             else:
                 # These versions need concretized specs.
-                spec.concretize()
-                pkg = spack.repo.get(spec)
+                env = ev.get_env(args, 'location')
+                spec_from_env = None
+                if env:
+                    spec_from_env = env.matching_spec(spec)
+                if spec_from_env:
+                    spec = spec_from_env
+                else:
+                    spec.concretize()
+                pkg = spec.package
 
                 if args.stage_dir:
                     print(pkg.stage.path)

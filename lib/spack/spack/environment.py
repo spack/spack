@@ -1509,6 +1509,17 @@ class Environment(object):
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
 
+    def matching_spec(self, spec):
+        """
+        Given a spec (likely not concretized), find a matching concretized
+        spec in the environment. The matching spec does not have to be
+        installed in the environment.
+        """
+        for user_spec, concretized_user_spec in self.concretized_specs():
+            for dep_spec in concretized_user_spec.traverse():
+                if dep_spec.satisfies(spec):
+                    return dep_spec
+
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
            removed on nexg concretize."""
