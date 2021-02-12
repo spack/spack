@@ -15,6 +15,10 @@ class PyTraitsui(PythonPackage):
     homepage = "https://docs.enthought.com/traitsui"
     pypi = "traitsui/traitsui-6.1.3.tar.gz"
 
+    version('7.1.1', sha256='77d9dc5830c4e7ab94f9225bc2f082430399d95c943f1616db41e83a94df38e5')
+    version('7.1.0', sha256='b699aeea588b55723860ddc6b2bd9b5013c4a72e18d1bbf51c6689cc7c6a562a')
+    version('7.0.1', sha256='74fb4db848ac1343241fa4dc5d9bf3fab561f309826c602e8a3568309df91fe3')
+    version('7.0.0', sha256='e569f359a58e4567b14265abe89b3de4b0f95bbbf8f491a9a7d45219628735ec')
     version('6.1.3', sha256='48381763b181efc58eaf288431d1d92d028d0d97dfdd33eba7809aae8aef814f')
 
     variant('backend', default='pyqt5', description='Default backend',
