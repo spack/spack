@@ -14,6 +14,7 @@ class PyHtmlgen(PythonPackage):
     homepage = "https://github.com/srittau/python-htmlgen"
     url      = "https://github.com/srittau/python-htmlgen/archive/v1.2.2.tar.gz"
 
+    version('2.0.0', sha256='891ac5a30266d658a6d4e708e53f1c4a0621a36cbdbda4c4c4e9ac09a06ea863')
     version('1.2.2', sha256='9dc60e10511f0fd13014659514c6c333498c21779173deb585cd4964ea667770')
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
