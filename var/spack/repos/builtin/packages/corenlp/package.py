@@ -19,6 +19,8 @@ class Corenlp(Package):
     homepage = "https://stanfordnlp.github.io/CoreNLP/index.html"
     url      = "https://github.com/stanfordnlp/CoreNLP/archive/v4.0.0.tar.gz"
 
+    version('4.2.0', sha256='c987412d568e98993dae7c48b122d87d6f17f1bea0726f7775e71bc919fb4242')
+    version('4.1.0', sha256='a54cdeb3a559441773d4cadc532c8042422d8c3cd33b182d9ea24841af9e9dcf')
     version('4.0.0', sha256='07195eed46dd39bdc364d3988da8ec6a5fc9fed8c17613cfe5a8b84d649c8f0f')
 
     resources = [
