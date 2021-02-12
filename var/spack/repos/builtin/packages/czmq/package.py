@@ -11,6 +11,8 @@ class Czmq(AutotoolsPackage):
     homepage = "http://czmq.zeromq.org"
     url      = "https://github.com/zeromq/czmq/archive/v4.0.2.tar.gz"
 
+    version('4.2.1', sha256='5d720a204c2a58645d6f7643af15d563a712dad98c9d32c1ed913377daa6ac39')
+    version('4.2.0', sha256='cfab29c2b3cc8a845749758a51e1dd5f5160c1ef57e2a41ea96e4c2dcc8feceb')
     version('4.1.1', sha256='b7623433547aa4b6e79722796c27ebc7c0470fea4204e920fd05e717c648f889')
     version('4.0.2', sha256='794f80af7392ec8d361ad69646fc20aaa284d23fef92951334009771a732c810')
     version('3.0.2', sha256='e56f8498daf70310b31c42669b2f9b753c5e747eafaff6d4fdac26d72a474b27')
