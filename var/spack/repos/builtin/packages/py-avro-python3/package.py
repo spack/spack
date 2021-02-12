@@ -14,6 +14,7 @@ class PyAvroPython3(PythonPackage):
     homepage = "https://github.com/apache/avro/tree/master/lang/py3"
     pypi = "avro-python3/avro-python3-1.10.0.tar.gz"
 
+    version('1.10.1', sha256='9027abeab63dd9b66bd3c564fa0670c70f78027ecb1978d96c6af7ed415b626b')
     version('1.10.0', sha256='a455c215540b1fceb1823e2a918e94959b54cb363307c97869aa46b5b55bde05')
 
     depends_on('python@2.7,3.0:', type=('build', 'run'))
