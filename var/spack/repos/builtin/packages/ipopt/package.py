@@ -12,6 +12,13 @@ class Ipopt(AutotoolsPackage):
     homepage = "https://projects.coin-or.org/Ipopt"
     url      = "http://www.coin-or.org/download/source/Ipopt/Ipopt-3.12.4.tgz"
 
+    version('3.13.3',  sha256='86354b36c691e6cd6b8049218519923ab0ce8a6f0a432c2c0de605191f2d4a1c')
+    version('3.13.2',  sha256='891ab9e9c7db29fc8ac5c779ccec6313301098de7bbf735ca230cd5544c49496')
+    version('3.13.1',  sha256='64fc63a3fe27cf5efaf17ebee861f7db5bf70aacf9c316c0d37e4beb4eb72e11')
+    version('3.13.0',  sha256='dc392396be28c4a0d49bfab399320cb3f70db5b8f090028a883d826a47744ecf')
+    version('3.12.13', sha256='aac9bb4d8a257fdfacc54ff3f1cbfdf6e2d61fb0cf395749e3b0c0664d3e7e96')
+    version('3.12.12', sha256='7baeb713ef8d1999bed397b938e9654b38ad536406634384455372dd7e4ed61f')
+    version('3.12.11', sha256='cbfc8a37978fdbaeed73b5b2d93b92b7c8b5b615ece02d4646e1556b0a7b382a')
     version('3.12.10', sha256='e1a3ad09e41edbfe41948555ece0bdc78757a5ca764b6be5a9a127af2e202d2e')
     version('3.12.9', sha256='8ff3fe1a8560896fc5559839a87c2530cac4ed231b0806e487bfd3cf2d294ab8')
     version('3.12.8', sha256='62c6de314220851b8f4d6898b9ae8cf0a8f1e96b68429be1161f8550bb7ddb03')
