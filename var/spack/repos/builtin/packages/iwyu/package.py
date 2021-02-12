@@ -16,6 +16,9 @@ class Iwyu(CMakePackage):
 
     maintainers = ['sethrj']
 
+    version('3.5',  sha256='bc8475fc853a4b60941eb30ea31c62d096e131e359ac69a5d6a2a237393ad4f1')
+    version('3.4',  sha256='73cf2c715c8604c4e832d0a63773210a2cd396988c970ddcbe8fe35bc026d0a4')
+    version('0.15', sha256='2bd6f2ae0d76e4a9412f468a5fa1af93d5f20bb66b9e7bf73479c31d789ac2e2')
     version('0.14', sha256='43184397db57660c32e3298a6b1fd5ab82e808a1f5ab0591d6745f8d256200ef')
     version('0.13', sha256='49294270aa64e8c04182369212cd919f3b3e0e47601b1f935f038c761c265bc9')
     version('0.12', sha256='a5892fb0abccb820c394e4e245c00ef30fc94e4ae58a048b23f94047c0816025')
