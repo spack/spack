@@ -17,6 +17,7 @@ class RCrosstalk(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/crosstalk_1.0.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/crosstalk"
 
+    version('1.1.1', sha256='ed3234f7f000fb607cc42e005d68be1dd598d95fa687a3f6e6b17ba38e36ccd8')
     version('1.1.0.1', sha256='36a70b10bc11826e314c05f9579fd791b9ac3b3a2cfed4d4ca74ce1ad991300e')
     version('1.0.0', sha256='b31eada24cac26f24c9763d9a8cbe0adfd87b264cf57f8725027fe0c7742ca51')
 
