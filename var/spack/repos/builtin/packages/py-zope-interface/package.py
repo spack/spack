@@ -15,6 +15,9 @@ class PyZopeInterface(PythonPackage):
     homepage = "https://github.com/zopefoundation/zope.interface"
     pypi = "zope.interface/zope.interface-4.5.0.tar.gz"
 
+    version('5.2.0', sha256='8251f06a77985a2729a8bdbefbae79ee78567dddc3acbd499b87e705ca59fe24')
+    version('5.1.2', sha256='c9c8e53a5472b77f6a391b515c771105011f4b40740ce53af8428d1c8ca20004')
+    version('5.1.1', sha256='5e98cd35f2ae34e7830f3c91675bf418e6ee985817568d982c44dabd7345325b')
     version('5.1.0', sha256='40e4c42bd27ed3c11b2c983fecfb03356fae1209de10686d03c02c8696a1d90e')
     version('4.5.0', sha256='57c38470d9f57e37afb460c399eb254e7193ac7fb8042bd09bdc001981a9c74c')
 
