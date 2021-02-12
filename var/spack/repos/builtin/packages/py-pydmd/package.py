@@ -14,6 +14,8 @@ class PyPydmd(PythonPackage):
     homepage = "https://mathlab.github.io/PyDMD/"
     url      = "https://github.com/mathLab/PyDMD/archive/v0.3.tar.gz"
 
+    version('0.3.2', sha256='b7a4f5f188dad9fd0a06e728e81d1e062f16fda98b7159cf5a773c065f892ade')
+    version('0.3.1', sha256='f8b24f0a449b93920c44eef1c9f6fe9d966dac75b9a59fb92ba5bfd16089f69b')
     version('0.3', sha256='f490fc139677e4d9fc1240636a2c5992d22879517c9574d13164dc5179b0f785')
 
     variant('docs', default=False, description='Build HTML documentation')
