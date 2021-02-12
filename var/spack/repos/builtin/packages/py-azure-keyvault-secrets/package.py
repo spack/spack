@@ -10,6 +10,7 @@ class PyAzureKeyvaultSecrets(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/keyvault/azure-keyvault-secrets"
     pypi = "azure-keyvault-secrets/azure-keyvault-secrets-4.1.0.zip"
 
+    version('4.2.0', sha256='1083ab900da5ec63c518ffef49d9fdca02c81ddffdf80c52c03cd9da479e021f')
     version('4.1.0', sha256='4f3bfac60e025e01dd1c1998b73649d45d706975356c0cf147174cf5a6ddf8be')
 
     depends_on('py-setuptools', type='build')
