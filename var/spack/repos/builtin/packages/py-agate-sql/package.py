@@ -12,6 +12,7 @@ class PyAgateSql(PythonPackage):
     homepage = "https://agate-sql.readthedocs.io/en/latest/"
     pypi = "agate-sql/agate-sql-0.5.4.tar.gz"
 
+    version('0.5.5', sha256='50a39754babef6cd0d1b1e75763324a49593394fe46ab1ea9546791b5e6b69a7')
     version('0.5.4', sha256='9277490ba8b8e7c747a9ae3671f52fe486784b48d4a14e78ca197fb0e36f281b')
 
     depends_on('py-setuptools',        type='build')
