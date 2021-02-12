@@ -15,6 +15,9 @@ class Cmor(AutotoolsPackage):
     homepage = "http://cmor.llnl.gov"
     url = "https://github.com/PCMDI/cmor/archive/3.4.0.tar.gz"
 
+    version('3.6.1', sha256='991035a41424f72ea6f0f85653fc13730eb035e63c7dff6ca740aa7a70976fb4')
+    version('3.6.0', sha256='1608904a35106e83d365f27522209c325bd4bfc19d022b1a8abfb12cdf85fe20')
+    version('3.5.0', sha256='37ce11332f9adfd4fa7560dfb358d14b300315221614c4a44c7407297103c62a')
     version('3.4.0', sha256='e700a6d50f435e6ffdedf23bf6832b7d37fe21dc78815e1372f218d1d52bd2cb')
     version('3.3.0', sha256='b763707272c470fc6f7077d9c541591a60f9075b52f5f0298eaf2cb2f2fff4d2')
     version('3.2.0', sha256='8d49899549dd4c08197739300d507e6fc2b4a5cfe2bfd3e6b44e8e3eaf79b132')
