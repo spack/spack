@@ -12,6 +12,9 @@ class Libtasn1(Package):
     homepage = "https://www.gnu.org/software/libtasn1/"
     url      = "https://ftp.gnu.org/gnu/libtasn1/libtasn1-4.13.tar.gz"
 
+    version('4.16.0', sha256='0e0fb0903839117cb6e3b56e68222771bebf22ad7fc2295a0ed7d576e8d4329d')
+    version('4.15.0', sha256='dd77509fe8f5304deafbca654dc7f0ea57f5841f41ba530cff9a5bf71382739e')
+    version('4.14',   sha256='9e604ba5c5c8ea403487695c2e407405820d98540d9de884d6e844f9a9c5ba08')
     version('4.13',     sha256='7e528e8c317ddd156230c4e31d082cd13e7ddeb7a54824be82632209550c8cca')
     version('4.12',     sha256='6753da2e621257f33f5b051cc114d417e5206a0818fe0b1ecfd6153f70934753')
     version('4.10',     sha256='681a4d9a0d259f2125713f2e5766c5809f151b3a1392fd91390f780b4b8f5a02')
