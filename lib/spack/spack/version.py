@@ -30,8 +30,6 @@ from bisect import bisect_left
 from functools import wraps
 from six import string_types
 
-from llnl.util.lang import memoized
-
 import spack.error
 from spack.util.spack_yaml import syaml_dict
 
@@ -385,8 +383,12 @@ def _endpoint_only(fun):
     """We want to avoid logic that handles any type of version range, just endpoints."""
     @wraps(fun)
     def validate_endpoint_argument(self, other):
-        assert isinstance(other, _VersionEndpoint), "required two _VersionEndpoint arguments, received {0} and {1}".format(self, other)
-        assert self.location == other.location, "two _VersionEndpoint arguments with different locations is a programming bug: received {0} and {1}".format(self, other)
+        assert isinstance(other, _VersionEndpoint), (
+            "required two _VersionEndpoint arguments, received {0} and {1}"
+            .format(self, other))
+        assert self.location == other.location, (
+            "two _VersionEndpoint arguments with different locations "
+            "is a programming bug: received {0} and {1}".format(self, other))
         return fun(self, other)
     return validate_endpoint_argument
 
@@ -403,16 +405,16 @@ class _VersionEndpoint(object):
         # We arbitrarily decide this is a nonsensical state, consistent with
         # VersionRange.__init__().
         if value is None:
-            assert includes_endpoint, "infinite (None) value is incompatible with includes_endpoint=False"
+            assert includes_endpoint, (
+                "infinite (None) value is incompatible with includes_endpoint=False")
 
         self.value = value
         self.location = location
         self.includes_endpoint = includes_endpoint
 
     def __repr__(self):
-        return "_VersionEndpoint(value={0!r}, location={1!r}, includes_endpoint={2!r})".format(
-            self.value, self.location, self.includes_endpoint
-        )
+        return ("_VersionEndpoint(value={0!r}, location={1!r}, includes_endpoint={2!r})"
+                .format(self.value, self.location, self.includes_endpoint))
 
     def __hash__(self):
         return hash((self.value, self.location, self.includes_endpoint))

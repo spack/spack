@@ -4348,9 +4348,9 @@ class LazySpecCache(collections.defaultdict):
 
 #: These are possible token types in the spec grammar.
 (
-    HASH, DEP, AT, ID, COLON, COMMA, ON, OFF, PCT, EQ, VAL, FILE, LT_COLON, GT_COLON, LT_GT_COLON,
-    ID,
-) = range(16)
+    HASH, DEP, AT, ID, COLON, COMMA, ON, OFF, PCT, EQ, VAL, FILE, LT_COLON, GT_COLON,
+    LT_GT_COLON,
+) = range(15)
 
 # NB: `spec_id_re` currently contains a literal `*` to match against, because
 # we use that same regex for matching version strings, and we want to support
@@ -4684,7 +4684,6 @@ class SpecParser(spack.parse.Parser):
 
             # @:!1.2.3!: (@!=1.2.3) (not equal to)
             if self.accept(GT_COLON):
-                r_op = self.token.value
                 return vn.VersionRange(
                     end, end,
                     includes_left_endpoint=False,
@@ -4735,7 +4734,6 @@ class SpecParser(spack.parse.Parser):
 
             # @1.2.3!:!1.2.3
             if self.accept(LT_GT_COLON):
-                r_op = self.token.value
                 assert self.accept(ID)
                 end = self.token.value
                 return vn.VersionRange(
@@ -4746,7 +4744,6 @@ class SpecParser(spack.parse.Parser):
 
             # @1.2.3:!1.2.3
             if self.accept(LT_COLON):
-                r_op = self.token.value
                 assert self.accept(ID)
                 end = self.token.value
                 return vn.VersionRange(
@@ -4757,7 +4754,6 @@ class SpecParser(spack.parse.Parser):
 
             # @1.2.3!:(1.2.3 | \epsilon)
             if self.accept(GT_COLON):
-                r_op = self.token.value
                 # @1.2.3!:1.2.3
                 if self.accept(ID):
                     end = self.token.value
@@ -4775,7 +4771,6 @@ class SpecParser(spack.parse.Parser):
 
             # @1.2.3:( 1.2.3 | \epsilon )
             if self.accept(COLON):
-                r_op = self.token.value
                 if self.accept(ID):
                     if self.next and self.next.type is EQ:
                         # This is a start: range followed by a key=value pair
@@ -4796,7 +4791,6 @@ class SpecParser(spack.parse.Parser):
             # No colon and no id: invalid version.
             self.next_token_error("Invalid version specifier")
 
-        description = (start or '') + op + (end or '')
         if start:
             start = vn.Version(start)
         if end:
