@@ -13,6 +13,7 @@ class PyBottle(PythonPackage):
     homepage = "https://github.com/bottlepy/bottle"
     url      = "https://github.com/bottlepy/bottle/archive/0.12.18.tar.gz"
 
+    version('0.12.19', sha256='b97277f8e87d452a0aa5fbcd16cd604a189e2cc17fdb2d4eaf6baa732f8d111b')
     version('0.12.18', sha256='176721f1e26082c66fd4df76f31800933e4bb36de6814b0fda3851cb409a95e6')
     version('0.12.17', sha256='7df26ca1789aa0693277c4a86d564524bff03e5d3132d9405946c58739190928')
     version('0.12.16', sha256='76143230ff034c1f47ada4b33674984220d070c557c10e22729ebd9764bc7960')
