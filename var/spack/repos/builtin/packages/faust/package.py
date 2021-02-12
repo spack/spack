@@ -14,6 +14,7 @@ class Faust(MakefilePackage):
     homepage = "http://faust.grame.fr/"
     url      = "https://github.com/grame-cncm/faust/archive/2.27.2.tar.gz"
 
+    version('2.30.5', sha256='6cf64b8ee92c2db74d7d83d726b0ecb6f7e141deeadf4cd40c60e467893e0bfc')
     version('2.27.2', sha256='3367a868a93b63582bae29ab8783f1df7a10f4084a2bc1d2258ebf3d6a8c31d7')
     version('2.27.1', sha256='b3e93ca573025b231931e5eb92efc1a1e7f7720902aa3b285061519600a8c417')
 
