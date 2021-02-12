@@ -13,6 +13,7 @@ class Vegas2(Package):
     homepage = "https://vegas2.qimrberghofer.edu.au/"
     url      = "https://vegas2.qimrberghofer.edu.au/vegas2v2"
 
+    version('19', sha256='44ec7f90dcbaf5aa08c811dcb221b233de02aee4302a82e378ea19e427f077fd')
     version('2', sha256='dc85834219141a4e9a246391b48185a739223a5e00b1b1c4d2517822388278ba', expand=False)
 
     depends_on('perl', type='run')
