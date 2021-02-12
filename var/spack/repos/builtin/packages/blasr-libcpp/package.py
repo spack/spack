@@ -17,6 +17,8 @@ class BlasrLibcpp(Package):
 
     maintainers = ['robqiao']
 
+    version('5.3.4', sha256='181f6d1cd54fd253e7d8cc723f121973f658c5551574b3ed878c5c3eb50ba594')
+    version('5.3.3', sha256='3b988349c34cacc285d2628ac08780483e7514ded15e26eb7646d9883a096de2')
     version('5.3.1', sha256='45a673255bfe7e29ed1f5bdb6410aa45cb6b907400d038c3da9daf1058b09156')
 
     depends_on('pbbam')
