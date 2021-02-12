@@ -14,6 +14,7 @@ class Bash(AutotoolsPackage, GNUMirrorPackage):
 
     maintainers = ['adamjstewart']
 
+    version('5.1', sha256='cc012bc860406dcf42f64431bcd3d2fa7560c02915a601aba9cd597a39329baa')
     version('5.0', sha256='b4a80f2ac66170b2913efbfb9f2594f1f76c7b1afd11f799e22035d63077fb4d')
     version('4.4', sha256='d86b3392c1202e8ff5a423b302e6284db7f8f435ea9f39b5b1b20fd3ac36dfcb')
     version('4.3', sha256='afc687a28e0e24dc21b988fa159ff9dbcf6b7caa92ade8645cc6d5605cd024d4')
