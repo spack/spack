@@ -12,6 +12,8 @@ class Shocklibs(Package):
     homepage = "https://github.com/MG-RAST/Shock"
     url      = "https://github.com/MG-RAST/Shock/archive/v0.9.24.tar.gz"
 
+    version('0.9.29', sha256='81c61f22b869b9923065ee57f9bcf62d95bf266887b09486f6c8e6aa07aa2c0a')
+    version('0.9.28', sha256='38d513bdb47d18232c16ee5f47adbec4b0390bf2534a7ea21571fc346c4e7ac2')
     version('0.9.24', sha256='465d06f33df2570eaf3ffd535a38fc464084ac95a2f145ead5c71f34beeb0a35')
 
     def install(self, spec, prefix):
