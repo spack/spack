@@ -13,6 +13,8 @@ class Blasr(Package):
     homepage = "https://github.com/PacificBiosciences/blasr/wiki"
     url      = "https://github.com/PacificBiosciences/blasr/archive/5.3.1.tar.gz"
 
+    version('5.3.3', sha256='0c69f0ed04c6998fdd60969dc6c87f29298453a230767f5f206ccceca939dc52')
+    version('5.3.2', sha256='5ddad0897d15b1e0ec7d1b2a22f050d8c93846aeb27bb335ff47247c1a4a4f6e')
     version('5.3.1', sha256='ff7da5a03096294572e6c64340354da5c5ee1c86c277e7b899f2c170c1ac4049')
 
     depends_on('ncurses')
