@@ -13,6 +13,7 @@ class Prism(MakefilePackage):
     homepage = "https://www.prismmodelchecker.org/"
     url      = "https://github.com/prismmodelchecker/prism/archive/v4.5.tar.gz"
 
+    version('4.6', sha256='7d5bd1106730c161ca926087cb5348c521b383f760229ae747d4ac091a202b25')
     version('4.5', sha256='1cb7a77538b5c997d98a8c209030c46f9e8f021f7a8332e5eb2fd3b4a23936fd')
 
     build_directory = 'prism'
