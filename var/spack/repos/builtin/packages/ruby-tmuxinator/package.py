@@ -10,6 +10,7 @@ class RubyTmuxinator(RubyPackage):
     homepage = "https://github.com/tmuxinator/tmuxinator"
     url      = "https://github.com/tmuxinator/tmuxinator/archive/v2.0.1.tar.gz"
 
+    version('2.0.2', sha256='2e473fc56f9491f682ec115b62c07b29bbfb79b2e5bb0cc33ea3c5e008e6f852')
     version('2.0.1', sha256='a2c8428d239a6e869da516cecee3ac64db47ba1f1932317eb397b1afd698ee09')
 
     depends_on('ruby@2.5.8:', type=('build', 'run'))
