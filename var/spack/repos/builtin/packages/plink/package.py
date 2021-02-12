@@ -13,6 +13,7 @@ class Plink(Package):
 
     homepage = "https://www.cog-genomics.org/plink/1.9/"
 
+    version('86_64_20190617', sha256='f8438656996c55a5edd95c223cce96277de6efaab1b9b1d457bfee0c272058d8')
     version('1.9-beta6.10', sha256='f8438656996c55a5edd95c223cce96277de6efaab1b9b1d457bfee0c272058d8',
             url='http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20190617.zip')
     version('1.9-beta5', sha256='e00ef16ac5abeb6b4c4d77846bd655fafc62669fbebf8cd2e941f07b3111907e',
