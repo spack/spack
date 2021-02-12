@@ -15,6 +15,12 @@ class Qemu(AutotoolsPackage):
 
     maintainers = ['anderbubble']
 
+    version('5.2.0', sha256='cb18d889b628fbe637672b0326789d9b0e3b8027e0445b936537c78549df17bc')
+    version('5.1.0', sha256='c9174eb5933d9eb5e61f541cd6d1184cd3118dfe4c5c4955bc1bdc4d390fa4e5')
+    version('5.0.1', sha256='135fab4c3699a378c9584b3453927e2f5002e440311f21efa66fc189d4bb4982')
+    version('5.0.0', sha256='2f13a92a0fa5c8b69ff0796b59b86b080bbb92ebad5d301a7724dd06b5e78cb6')
+    version('4.2.1', sha256='7e331163b72e7bcf63bd35cb85cba87b48d12fab3f264b94c23f7d3991094207')
+    version('4.2.0', sha256='d3481d4108ce211a053ef15be69af1bdd9dde1510fda80d92be0f6c3e98768f0')
     version('4.1.1',      sha256='ed6fdbbdd272611446ff8036991e9b9f04a2ab2e3ffa9e79f3bab0eb9a95a1d2')
     version('4.1.0',      sha256='656e60218689bdeec69903087fd7582d5d3e72238d02f4481d8dc6d79fd909c6')
     version('4.0.1',      sha256='f2674dd6053ef1d48593aa1f0a50c5ac9039f7a059ecb6f9b8307f3fb2fcedad')
