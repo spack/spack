@@ -14,6 +14,7 @@ class LtrRetriever(Package):
     homepage = "https://github.com/oushujun/LTR_retriever"
     url      = "https://github.com/oushujun/LTR_retriever/archive/v2.8.7.tar.gz"
 
+    version('2.9.0', sha256='e2d94f6179c33990a77fa9fdcefb842c8481b4c30833c9c12cbbe54cb3fdda73')
     version('2.8.7', sha256='29ca6f699c57b5e964aa0ee6c7d3e1e4cd5362dadd789e5f0e8c82fe0bb29369')
 
     depends_on('perl', type='run')
