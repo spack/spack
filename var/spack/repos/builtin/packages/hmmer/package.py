@@ -14,6 +14,8 @@ class Hmmer(Package):
     homepage = 'http://www.hmmer.org'
     url      = 'http://eddylab.org/software/hmmer/hmmer-3.3.tar.gz'
 
+    version('3.3.2', sha256='92fee9b5efe37a5276352d3502775e7c46e9f7a0ee45a331eacb2a0cac713c69')
+    version('3.3.1', sha256='8ce66a6930869534ad84bc7c9a5a566fd57188d6726c74c12fcd39c3c9c99bd5')
     version('3.3', sha256='0186bf40af67032666014971ed8ddc3cf2834bebc2be5b3bc0304a93e763736c')
     version('3.2.1', sha256='a56129f9d786ec25265774519fc4e736bbc16e4076946dcbd7f2c16efc8e2b9c')
     version('3.1b2', sha256='dd16edf4385c1df072c9e2f58c16ee1872d855a018a2ee6894205277017b5536')
