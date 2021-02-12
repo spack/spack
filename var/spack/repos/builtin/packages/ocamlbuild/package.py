@@ -20,7 +20,6 @@ class Ocamlbuild(MakefilePackage):
     maintainers = ['scemama', 'cessenat']
 
     # Add proper versions here.
-    # spack -d install --no-checksum ocamlbuild
     version('master', branch='master')
     version('0.14.0', sha256='87b29ce96958096c0a1a8eeafeb6268077b2d11e1bf2b3de0f5ebc9cf8d42e78')
     version('0.13.1', sha256='79839544bcaebc8f9f0d73d029e2b67e2c898bba046c559ea53de81ea763408c')
@@ -37,10 +36,6 @@ class Ocamlbuild(MakefilePackage):
         ]
         makefile_inc.append('OCAML_PREFIX       = %s' % self.spec['ocaml'].prefix)
         makefile_inc.append('DESTDIR       = %s/' % self.spec.prefix)
-        with working_dir('.'):
-            with open('Makefile.config', 'a') as fh:
-                fh.write('\n'.join(makefile_inc))
+        with open('Makefile.config', 'a') as fh:
+            fh.write('\n'.join(makefile_inc))
         make('configure')
-
-    def build(self, spec, prefix):
-        make()
