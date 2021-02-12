@@ -12,6 +12,8 @@ class PyPortend(PythonPackage):
     homepage = "https://github.com/jaraco/portend"
     pypi = "portend/portend-2.5.tar.gz"
 
+    version('2.7.0', sha256='ac0e57ae557f75dc47467579980af152e8f60bc2139547eff8469777d9110379')
+    version('2.6',   sha256='600dd54175e17e9347e5f3d4217aa8bcf4bf4fa5ffbc4df034e5ec1ba7cdaff5')
     version(
         '2.5', sha256='19dc27bfb3c72471bd30a235a4d5fbefef8a7e31cab367744b5d87a205e7bfd9')
 
