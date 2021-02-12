@@ -12,6 +12,7 @@ class PyMinrpc(PythonPackage):
     homepage = "https://github.com/hibtc/minrpc"
     pypi = "minrpc/minrpc-0.0.11.tar.gz"
 
+    version('0.1.0', sha256='ec3e58a506411e8fe62d70c73c3c067eb2227ecc35319763d556ef1b2b76d719')
     version('0.0.11', sha256='bed53160f2774fdae7bd3d0fb5d1c77d17395394ec28a9e95a5859f486b54893')
 
     depends_on('python@2.7:', type=('build', 'run'))
