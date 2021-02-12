@@ -13,6 +13,12 @@ class Grpc(CMakePackage):
     homepage = "https://grpc.io"
     url      = "https://github.com/grpc/grpc/archive/v1.30.0.tar.gz"
 
+    version('1.35.0', sha256='27dd2fc5c9809ddcde8eb6fa1fa278a3486566dfc28335fca13eb8df8bd3b958')
+    version('1.34.1', sha256='c260a1dcdd26a78a9596494a3f41f9594ab5ec3a4d65cba4658bdee2b55ac844')
+    version('1.34.0', sha256='7372a881122cd85a7224435a1d58bc5e11c88d4fb98a64b83f36f3d1c2f16d39')
+    version('1.33.2', sha256='2060769f2d4b0d3535ba594b2ab614d7f68a492f786ab94b4318788d45e3278a')
+    version('1.33.1', sha256='58eaee5c0f1bd0b92ebe1fa0606ec8f14798500620e7444726afcaf65041cb63')
+    version('1.33.0', sha256='06a87c5feb7efb979243c054dca2ea52695618c02fde54af8a85d71269f97102')
     version('1.30.0', sha256='419dba362eaf8f1d36849ceee17c3e2ff8ff12ac666b42d3ff02a164ebe090e9')
     version('1.29.1', sha256='0343e6dbde66e9a31c691f2f61e98d79f3584e03a11511fad3f10e3667832a45')
     version('1.29.0', sha256='c0a6b40a222e51bea5c53090e9e65de46aee2d84c7fa7638f09cb68c3331b983')
