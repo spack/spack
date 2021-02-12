@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Groff(AutotoolsPackage, GNUMirrorPackage):
@@ -40,7 +41,7 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     patch('BuildFoundries.patch')
     patch('pdfmom.patch')
 
-    executables = ['^automake$']
+    executables = ['^groff$']
 
     @classmethod
     def determine_version(cls, exe):
