@@ -25,6 +25,9 @@ class RRgdal(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rgdal_1.3-9.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rgdal"
 
+    version('1.5-23', sha256='9ca5744b946e7a3c4ca26598612bf54e550d3a0c5811d56e22c30b73f83ccb6e')
+    version('1.5-22', sha256='f0b63df7abc82d785ae084fa0094c084e3624118b8ad8c41938679eb268585f8')
+    version('1.5-21', sha256='a0256630e77fcd53c9ed2750657cb625a98ef7079a67d3ab5146ba0c73695696')
     version('1.5-19', sha256='6fbfd71b19e7b8d9dbddc91cb1eef8890c74a1e2bf8f619da165ff51bf1231b2')
     version('1.5-18', sha256='53467c19bc93d8ea311458eaa281c8c456168ab75e84d76ef5cc6c00f53122df')
     version('1.4-4',  sha256='2532e76e0af27d145f799d70006a5dbecb2d3be698e3d0bbf580f4c41a34c5d7')
