@@ -15,6 +15,11 @@ class Parallel(AutotoolsPackage, GNUMirrorPackage):
     homepage = "http://www.gnu.org/software/parallel/"
     gnu_mirror_path = "parallel/parallel-20170122.tar.bz2"
 
+    version('20210122', sha256='b4f1b6d3de4aea71f7c763ae6ba80d5e499c12869b00b66904778546cdc7b3f3')
+    version('20201222', sha256='b6e41f95ec4662177a6cd29856a00daaeebac67826dd17768c0c085fb7787d8e')
+    version('20201122', sha256='4da0bf42c466493b44dcbd8750e7bf99c31da4c701e8be272276c16ec4caff30')
+    version('20201022', sha256='35fe29864af62b5331affb84d8be683d52a7bf5fd3532fe0b6a4207a481af061')
+    version('20200922', sha256='2810412b616b59dcf6a6bd172f2b2561807cf370ccf93417aa1c8229f94c4172')
     version('20200822', sha256='9654226a808392c365b1e7b8dea91bf4870bc4f306228d853eb700679e21be09')
     version('20190222', sha256='86b1badc56ee2de1483107c2adf634604fd72789c91f65e40138d21425906b1c')
     version('20170322', sha256='f8f810040088bf3c52897a2ee0c0c71bd8d097e755312364b946f107ae3553f6')
