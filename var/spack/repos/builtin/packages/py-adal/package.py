@@ -14,6 +14,8 @@ class PyAdal(PythonPackage):
     homepage = "https://github.com/AzureAD/azure-activedirectory-library-for-python"
     pypi = "adal/adal-1.2.4.tar.gz"
 
+    version('1.2.6', sha256='08b94d30676ceb78df31bce9dd0f05f1bc2b6172e44c437cbf5b968a00ac6489')
+    version('1.2.5', sha256='8003ba03ef04170195b3eddda8a5ab43649ef2c5f0287023d515affb1ccfcfc3')
     version('1.2.4', sha256='7a15d22b1ee7ce1be92441199958748982feba6b7dec35fbf60f9b607bad1bc0')
 
     depends_on('py-setuptools', type='build')
