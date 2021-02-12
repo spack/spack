@@ -15,6 +15,11 @@ class Mxml(AutotoolsPackage):
     homepage = "http://michaelrsweet.github.io/mxml/"
     url      = "https://github.com/michaelrsweet/mxml/releases/download/release-2.10/mxml-2.10.tar.gz"
 
+    version('3.2',  sha256='b894f6c64964f2e77902564c17ba00f5d077a7a24054e7c1937903b0bd42c974')
+    version('3.1',  sha256='1ac8d252f62f9dc2b2004518c70d2da313bdfcd92b8350e215f46064a34b52fc')
+    version('3.0',  sha256='88f05b3318f29ef6164d99c34b7dced76440c4a99106866b76b7fb729dc8310e')
+    version('2.12', sha256='6bfb53baa1176e916855bd3b6d592fd5b962c3c259aacdb5670d90c57ce4034f')
+    version('2.11', sha256='aaf68aac637dd06ba73ae5bb0537a3c4e89ca86f8c09a2d806a1f5b937e2ba8f')
     version('2.10', sha256='267ff58b64ddc767170d71dab0c729c06f45e1df9a9b6f75180b564f09767891')
     version('2.9', sha256='cded54653c584b24c4a78a7fa1b3b4377d49ac4f451ddf170ebbc8161d85ff92')
     version('2.8', sha256='0c9369f91a718d82e32cb007c0bd41b6642822c9a0ffe1d10eccbdea9a3011d5')
