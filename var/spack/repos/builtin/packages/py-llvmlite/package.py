@@ -12,6 +12,7 @@ class PyLlvmlite(PythonPackage):
     homepage = "http://llvmlite.readthedocs.io/en/latest/index.html"
     pypi = "llvmlite/llvmlite-0.23.0.tar.gz"
 
+    version('0.35.0', sha256='80e51d5aa02ad72da9870e89d21f9b152b0220ca551b4596a6c0614bcde336fc')
     version('0.34.0', sha256='f03ee0d19bca8f2fe922bb424a909d05c28411983b0c2bc58b020032a0d11f63')
     version('0.33.0', sha256='9c8aae96f7fba10d9ac864b443d1e8c7ee4765c31569a2b201b3d0b67d8fc596')
     version('0.31.0', sha256='22ab2b9d7ec79fab66ac8b3d2133347de86addc2e2df1b3793e523ac84baa3c8')
