@@ -126,7 +126,7 @@ Using ``--prune-dag`` or ``--no-prune-dag`` configures whether or not jobs are
 generated for specs that are already up to date on the mirror.   If enabling
 DAG pruning using ``--prune-dag``, more information may be required in your
 ``spack.yaml`` file, see the :ref:`noop_jobs` section below regarding
-``nonbuild-job-attribs``.
+``service-job-attributes``.
 
 The ``--optimize`` argument is experimental and runs the generated pipeline
 document through a series of optimization passes designed to reduce the size
@@ -270,48 +270,12 @@ mirror.  As a result, the default is that the mirror's buildcache index may
 not correctly reflect the mirror's contents at the end of a pipeline.
 
 To make sure the buildcache index is up to date at the end of your pipeline,
-you can add a job to your ``.gitlab-ci.yml``.  Following is the example
-provided above, updated to include a job at the end to rebuild the buildcache
-index:
-
-   .. code-block:: yaml
-
-      stages: [generate, build, index]
-
-      generate-pipeline:
-        stage: generate
-        tags:
-          - <custom-tag>
-        script:
-          - spack env activate --without-view .
-          - spack ci generate
-            --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
-        artifacts:
-          paths:
-            - "${CI_PROJECT_DIR}/jobs_scratch_dir/pipeline.yml"
-
-      build-jobs:
-        stage: build
-        trigger:
-          include:
-            - artifact: "jobs_scratch_dir/pipeline.yml"
-              job: generate-pipeline
-          strategy: depend
-
-      rebuild-index:
-        stage: index
-        tags: [<custom-tag>]
-        script:
-          - spack env activate --without-view .
-          - spack ci rebuild-index
-
-The command ``spack ci rebuild-index`` used in the ``rebuild-index`` job is
-a convenience so you don't have to re-type the mirror url from your
-``spack.yaml`` file.  It is equivalent to running
-``spack buildcache update-index --keys -d <mirror-url>``.  The
-``spack ci rebuild-index`` command requires your environment to be active, as
-demonstrated above, so you can also just run the
-``spack buildcache update-index ...`` command if you prefer.
+spack generates a job to update the buildcache index of the target mirror
+at the end of each pipeline by default.  You can disable this behavior by
+adding ``rebuild-index: False`` inside the ``gitlab-ci`` section of your
+spack environment.  Spack will assign the job any runner attributes found
+on the ``service-job-attributes``, if you have provided that in your
+``spack.yaml``.
 
 .. _noop_jobs:
 
@@ -322,7 +286,7 @@ Note about "no-op" jobs
 If no specs in an environment need to be rebuilt during a given pipeline run
 (meaning all are already up to date on the mirror), a single succesful job
 (a NO-OP) is still generated to avoid an empty pipeline (which GitLab
-considers to be an error).  An optional ``nonbuild-job-attributes`` section
+considers to be an error).  An optional ``service-job-attributes`` section
 can be added to your ``spack.yaml`` where you can provide ``tags`` and
 ``image`` or ``variables`` for the generated NO-OP job.  This section also
 supports providing ``before_script``, ``script``, and ``after_script``, in
@@ -346,7 +310,7 @@ Following is an example of this section added to a ``spack.yaml``:
                - custom
                - tag
              image: spack/centos7
-       nonbuild-job-attributes:
+       service-job-attributes:
          tags: ['custom', 'tag']
          image:
            name: 'some.image.registry/custom-image:latest'

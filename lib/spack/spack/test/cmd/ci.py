@@ -111,6 +111,7 @@ def test_ci_generate_with_env(tmpdir, mutable_mock_env_path, env_deactivate,
                               install_mockery, mock_packages):
     """Make sure we can get a .gitlab-ci.yml from an environment file
        which has the gitlab-ci, cdash, and mirrors sections."""
+    mirror_url = 'https://my.fake.mirror'
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
         f.write("""\
@@ -130,7 +131,7 @@ spack:
     - matrix:
       - [$old-gcc-pkgs]
   mirrors:
-    some-mirror: https://my.fake.mirror
+    some-mirror: {0}
   gitlab-ci:
     bootstrap:
       - name: bootstrap
@@ -142,7 +143,7 @@ spack:
           tags:
             - donotcare
           image: donotcare
-    nonbuild-job-attributes:
+    service-job-attributes:
       image: donotcare
       tags: [donotcare]
   cdash:
@@ -150,7 +151,7 @@ spack:
     url: https://my.fake.cdash
     project: Not used
     site: Nothing
-""")
+""".format(mirror_url))
     with tmpdir.as_cwd():
         env_cmd('create', 'test', './spack.yaml')
         outputfile = str(tmpdir.join('.gitlab-ci.yml'))
@@ -168,8 +169,15 @@ spack:
                     assert('cmake' in ci_key)
             assert(found_spec)
             assert('stages' in yaml_contents)
-            assert(len(yaml_contents['stages']) == 5)
+            assert(len(yaml_contents['stages']) == 6)
             assert(yaml_contents['stages'][0] == 'stage-0')
+            assert(yaml_contents['stages'][5] == 'stage-rebuild-index')
+
+            assert('rebuild-index' in yaml_contents)
+            rebuild_job = yaml_contents['rebuild-index']
+            expected = 'spack buildcache update-index --keys -d {0}'.format(
+                mirror_url)
+            assert(rebuild_job['script'][0] == expected)
 
 
 def _validate_needs_graph(yaml_contents, needs_graph, artifacts):
@@ -559,9 +567,10 @@ spack:
         runner-attributes:
           tags:
             - donotcare
-    nonbuild-job-attributes:
+    service-job-attributes:
       image: donotcare
       tags: [donotcare]
+    rebuild-index: False
 """)
 
     with tmpdir.as_cwd():
@@ -580,6 +589,8 @@ spack:
             print('generated contents: ')
             print(contents)
             yaml_contents = syaml.load(contents)
+
+            assert('rebuild-index' not in yaml_contents)
 
             for ci_key in yaml_contents.keys():
                 if ci_key.startswith('(specs) '):
@@ -732,7 +743,7 @@ spack:
          tags:
            - donotcare
          image: donotcare
-   nonbuild-job-attributes:
+   service-job-attributes:
      tags:
        - nonbuildtag
      image: basicimage
@@ -773,7 +784,7 @@ spack:
                 contents = f.read()
                 yaml_contents = syaml.load(contents)
                 assert('no-specs-to-rebuild' in yaml_contents)
-                # Make sure there are no other spec jobs
+                # Make sure there are no other spec jobs or rebuild-index
                 assert(len(yaml_contents.keys()) == 1)
                 the_elt = yaml_contents['no-specs-to-rebuild']
                 assert('tags' in the_elt)
@@ -905,7 +916,7 @@ spack:
             - custom main step
           after_script:
             - custom post step one
-    nonbuild-job-attributes:
+    service-job-attributes:
       image: donotcare
       tags: [donotcare]
 """)

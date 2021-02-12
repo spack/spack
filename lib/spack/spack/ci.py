@@ -575,9 +575,16 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
     if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
         tty.die('spack ci generate requires an env containing a mirror')
 
+    ci_mirrors = yaml_root['mirrors']
+    mirror_urls = [url for url in ci_mirrors.values()]
+
     enable_artifacts_buildcache = False
     if 'enable-artifacts-buildcache' in gitlab_ci:
         enable_artifacts_buildcache = gitlab_ci['enable-artifacts-buildcache']
+
+    rebuild_index_enabled = True
+    if 'rebuild-index' in gitlab_ci and gitlab_ci['rebuild-index'] is False:
+        rebuild_index_enabled = False
 
     bootstrap_specs = []
     phases = []
@@ -907,11 +914,40 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
     else:
         tty.warn('Unable to populate buildgroup without CDash credentials')
 
-    nonbuild_job_config = None
-    if 'nonbuild-job-attributes' in gitlab_ci:
-        nonbuild_job_config = gitlab_ci['nonbuild-job-attributes']
+    service_job_config = None
+    if 'service-job-attributes' in gitlab_ci:
+        service_job_config = gitlab_ci['service-job-attributes']
+
+    default_attrs = [
+        'image',
+        'tags',
+        'variables',
+        'before_script',
+        # 'script',
+        'after_script',
+    ]
 
     if job_id > 0:
+        if rebuild_index_enabled and not is_pr_pipeline:
+            # Add a final job to regenerate the index
+            final_stage = 'stage-rebuild-index'
+            final_job = {}
+
+            if service_job_config:
+                copy_attributes(default_attrs,
+                                service_job_config,
+                                final_job)
+
+            final_script = 'spack buildcache update-index --keys'
+            final_script = '{0} -d {1}'.format(final_script, mirror_urls[0])
+
+            final_job['stage'] = final_stage
+            final_job['script'] = [final_script]
+            final_job['when'] = 'always'
+
+            output_object['rebuild-index'] = final_job
+            stage_names.append(final_stage)
+
         output_object['stages'] = stage_names
 
         # Capture the version of spack used to generate the pipeline, transform it
@@ -955,18 +991,9 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
         tty.debug('No specs to rebuild, generating no-op job')
         noop_job = {}
 
-        if nonbuild_job_config:
-            default_attrs = [
-                'image',
-                'tags',
-                'variables',
-                'before_script',
-                'script',
-                'after_script',
-            ]
-
+        if service_job_config:
             copy_attributes(default_attrs,
-                            nonbuild_job_config,
+                            service_job_config,
                             noop_job)
 
         if 'script' not in noop_job:

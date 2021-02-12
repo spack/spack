@@ -118,7 +118,8 @@ properties = {
                     'type': 'boolean',
                     'default': False,
                 },
-                'nonbuild-job-attributes': runner_selector_schema,
+                'service-job-attributes': runner_selector_schema,
+                'rebuild-index': {'type': 'boolean'},
             }
         ),
     },
