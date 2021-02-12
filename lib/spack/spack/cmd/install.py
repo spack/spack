@@ -17,6 +17,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.fetch_strategy
+import spack.monitor
 import spack.paths
 import spack.report
 from spack.error import SpackError
@@ -105,6 +106,24 @@ the dependencies"""
     cache_group.add_argument(
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
+
+    # Monitoring via https://github.com/spack/spack-monitor
+    monitor_group = subparser.add_mutually_exclusive_group()
+    monitor_group.add_argument(
+        '--monitor', action='store_true', dest='use_monitor', default=False,
+        help="interact with a montor server during builds.")
+    monitor_group.add_argument(
+        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth', 
+        default=False, help="the monitoring server does not require auth.")
+    monitor_group.add_argument(
+        '--monitor-keep-going', action='store_true', dest='monitor_keep_going', 
+        default=False, help="continue the build if a request to monitor fails.")
+    monitor_group.add_argument(
+        '--monitor-host', dest='monitor_host', default="http://127.0.0.1",
+        help="If using a monitor, customize the host.")
+    monitor_group.add_argument(
+        '--monitor-prefix', dest='monitor_prefix', default="ms1",
+        help="The API prefix for the monitor service.")
 
     subparser.add_argument(
         '--include-build-deps', action='store_true', dest='include_build_deps',
@@ -236,6 +255,14 @@ environment variables:
         parser.print_help()
         return
 
+    # The user wants to monitor builds using github.com/spack/spack-monitor
+    if args.use_monitor:
+        spack.monitor.get_client(
+            host=args.monitor_host,
+            prefix=args.monitor_prefix,
+            disable_auth=args.monitor_disable_auth
+        );
+         
     reporter = spack.report.collect_info(
         spack.package.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:

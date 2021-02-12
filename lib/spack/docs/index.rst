@@ -67,6 +67,7 @@ or refer to the full manual below.
    build_settings
    environments
    containers
+   monitoring
    mirrors
    module_file_support
    repositories

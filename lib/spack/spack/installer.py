@@ -611,6 +611,7 @@ class PackageInstaller(object):
         Return:
             (PackageInstaller) instance
         """
+
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args)
                                for pkg, install_args in installs]
@@ -1388,6 +1389,18 @@ class PackageInstaller(object):
 
         Args:
             pkg (Package): the package to be built and installed"""
+
+        import IPython
+        IPython.embed()
+        sys.exit(0)
+        
+        # STOPPED HERE - need to trace this and add appropriate endpoints
+        spack.monitor.get_client(
+            host=args.monitor_host,
+            prefix=args.monitor_prefix,
+            disable_auth=args.monitor_disable_auth
+        );
+
         self._init_queue()
 
         fail_fast_err = 'Terminating after first install failure'
