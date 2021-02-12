@@ -12,6 +12,8 @@ class Brotli(CMakePackage):
     homepage = "https://github.com/google/brotli"
     url      = "https://github.com/google/brotli/archive/v1.0.7.tar.gz"
 
+    version('1.0.9', sha256='f9e8d81d0405ba66d181529af42a3354f838c939095ff99930da6aa9cdf6fe46')
+    version('1.0.8', sha256='a0bfaf49d8d35262ef1d1e617486b061f47c634721c345051bf8d9fb806f3bb9')
     version('1.0.7', sha256='4c61bfb0faca87219ea587326c467b95acb25555b53d1a421ffa3c8a9296ee2c')
 
     @run_after('install')
