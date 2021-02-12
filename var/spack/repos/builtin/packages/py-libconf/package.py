@@ -11,6 +11,8 @@ class PyLibconf(PythonPackage):
 
     pypi = "libconf/libconf-1.0.1.tar.gz"
 
+    version('2.0.1', sha256='2f907258953ba60a95a82d5633726b47c81f2d5cf8d8801b092579016d757f4a')
+    version('2.0.0', sha256='4317bafc38ee7b1570dea609b58c805c4bcacf4110c15243bb38cebf7a53af18')
     version('1.0.1', sha256='6dd62847bb69ab5a09155cb8be2328cce01e7ef88a35e7c37bea2b1a70f8bd58')
 
     depends_on('py-setuptools', type='build')
