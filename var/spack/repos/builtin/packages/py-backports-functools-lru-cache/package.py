@@ -14,6 +14,8 @@ class PyBackportsFunctoolsLruCache(PythonPackage):
 
     py_namespace = 'backports'
 
+    version('1.6.1', sha256='8fde5f188da2d593bd5bc0be98d9abc46c95bb8a9dde93429570192ee6cc2d4a')
+    version('1.6.0', sha256='6bf7b39947b43e7835d889a2ce6ed4e0ddbed10aee17540c5fe56a0cd6a444ce')
     version('1.5', sha256='9d98697f088eb1b0fa451391f91afb5e3ebde16bbdb272819fd091151fda4f1a')
     version('1.4', sha256='31f235852f88edc1558d428d890663c49eb4514ffec9f3650e7f3c9e4a12e36f')
     version('1.0.1', sha256='593275768571eb2bcfe0795a30108f8a0e85e14e98c3a5e498e789f891d82f3d',
