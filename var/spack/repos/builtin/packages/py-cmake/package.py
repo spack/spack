@@ -14,6 +14,8 @@ class PyCmake(PythonPackage):
     homepage = "https://cmake.org/"
     pypi = "cmake/cmake-3.18.0.tar.gz"
 
+    version('3.18.4', sha256='40b9a559e4e0dc43ff130a9df2272f495ad73844b395c2b01648efac3d69d34d')
+    version('3.18.2', sha256='4570fbff976d8b920501c5e8f3c281e88bdad277bb14e0045dc051f319528656')
     version('3.18.0', sha256='52b98c5ee70b5fa30a8623e96482227e065292f78794eb085fdf0fecb204b79b')
 
     depends_on('cmake@3.18.0', type=('build', 'link', 'run'), when='@3.18.0')
