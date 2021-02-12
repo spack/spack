@@ -11,6 +11,7 @@ class PyAzureMgmtApplicationinsights(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-applicationinsights/azure-mgmt-applicationinsights-0.3.0.zip"
 
+    version('1.0.0', sha256='c287a2c7def4de19f92c0c31ba02867fac6f5b8df71b5dbdab19288bb455fc5b')
     version('0.3.0', sha256='3c788a54db4fbca1a8850151462ec1471ff59c86b3a10d6082952bbdaa7e6651')
     version('0.1.1', sha256='f10229eb9e3e9d0ad20188b8d14d67055e86f3815b43b75eedf96b654bee2a9b')
 
