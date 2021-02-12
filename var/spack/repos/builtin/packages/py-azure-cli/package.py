@@ -10,6 +10,24 @@ class PyAzureCli(PythonPackage):
     homepage = "https://github.com/Azure/azure-cli"
     pypi = "azure-cli/azure-cli-2.9.1.tar.gz"
 
+    version('2.19.1', sha256='28f2950855fa260d147aef38696a482fdba5c9a6e9d57d8dac45d46041bc869c')
+    version('2.19.0', sha256='4fa0929e8085648b0da2f3a0d802023089fceb92a25d5eea6811094d5d34f5c9')
+    version('2.18.0', sha256='7b5d4749dde722f22f087504d8ffab404eb54d2d9ab32fb52b3c9643fff6ba71')
+    version('2.17.1', sha256='e15dff02919b0b0c41ad395d66b98efb54e53d54065d8f09eb7e2f2bd8fcc44b')
+    version('2.17.0', sha256='58aedac214704080bc8b9b980e58b2ca4acce672ca5620ecdbdf57dfd5c04ff0')
+    version('2.16.0', sha256='2a6d466d4283bb30f45e9db17eec0163a6a876c3f2ee9f4699de7d29e97373a5')
+    version('2.15.1', sha256='3c19eefcb9f91dc69561b47d82268766d98a2b2904cab230548e8af9b66f280c')
+    version('2.15.0', sha256='43ce57008378f9779f2eedb709957763ac8a49dceb7a98717869f6986326dbf4')
+    version('2.14.2', sha256='5f510f3c560dc1129b180363de2931799ccdfcbeb032b588d9d63601d9fd324e')
+    version('2.14.1', sha256='d919edfd0ce9a4da871ee7b34a0dc671c43c0d537b21d2305d819a8508e64d15')
+    version('2.14.0', sha256='0b6d68ccc554a6ed359a931dc119a155a75a1e3fb248b5eb6bb80b3f4a34b900')
+    version('2.13.0', sha256='cfa10e314d3cfa3dc3fa33f5b2e7b11e54e02eba79592805eb66859a3e608a72')
+    version('2.12.1', sha256='487bc7bfc2752a253644f2fb226fa56b6cf837faa7817cf862a29c9add40cf37')
+    version('2.12.0', sha256='c555bbac05df4976fe1e0ae9e235c607f79ae8835f545eda766fd13fa4c4d0e5')
+    version('2.11.1', sha256='14001b02cb69879cf8b285d4711ef9b97a185df26d99b4062cde7a6e8146e192')
+    version('2.11.0', sha256='33c93b0c948dcbdc991bd33705ec0d4f3d22b9f2b4ca0203da9f2b4f026cec60')
+    version('2.10.1', sha256='36e08456bb0c6c3d89503c93d16113735dd973b2e99f87d0c0dd8232f288aeaf')
+    version('2.10.0', sha256='4ab764e5d0cbee142994e9ad90df17a2df60b1e3fcd979a592f82ecc90a96a10')
     version('2.9.1', sha256='749d850f73ea8956ab510288c1061dd7066180a8583081a6d560fdc7ac8314d6')
 
     depends_on('py-setuptools', type='build')
