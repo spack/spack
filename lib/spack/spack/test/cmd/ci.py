@@ -1237,7 +1237,8 @@ spack:
 
 
 def test_ci_subcommands_without_mirror(tmpdir, mutable_mock_env_path,
-                                       env_deactivate, mock_packages):
+                                       env_deactivate, mock_packages,
+                                       install_mockery):
     """Make sure we catch if there is not a mirror and report an error"""
     filename = str(tmpdir.join('spack.yaml'))
     with open(filename, 'w') as f:
