@@ -14,6 +14,8 @@ class XcursorThemes(Package, XorgPackage):
     homepage = "http://cgit.freedesktop.org/xorg/data/cursors"
     xorg_mirror_path = "data/xcursor-themes-1.0.4.tar.gz"
 
+    version('1.0.6', sha256='22638f7bd6257adf889d25af9c8a7b2cfdcf5a5e18339d25fbb092dbf6c663c1')
+    version('1.0.5', sha256='85636a3774debe830a15b9cd3c438171356fb451d7e3667212777a55d88f7897')
     version('1.0.4', sha256='8ed23bab13a4010fe4e95b37eefb634e31ac7cb8240b8b3b7d919c3a2db09503')
 
     depends_on('libxcursor')
