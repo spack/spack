@@ -19,6 +19,7 @@ class RTidycensus(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/tidycensus_0.3.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tidycensus"
 
+    version('0.11.4', sha256='bd63b715a5f7fae2109062519a92be899cc2aa6907d01e932ae4161e100d7708')
     version('0.11', sha256='da2fba4cd987615dedd22f64d9f38804f4e2161af31bacf1f3b5a013d71fdd43')
     version('0.9.2', sha256='2454525301caff9eaaf6ebe14f58706ece1fbace6187ce8bf3fff04c842b9536')
     version('0.3.1', sha256='d03cbee7abbf87bb4ce2e649726bdd143d47b549f30b5a11aaaa6c4aff78e778')
