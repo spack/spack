@@ -13,6 +13,7 @@ class PyPicrust(PythonPackage):
     homepage = "http://picrust.github.io/picrust/index.html"
     url      = "https://github.com/picrust/picrust/releases/download/v1.1.3/picrust-1.1.3.tar.gz"
 
+    version('1.1.4', sha256='ebfca914002ceb6d35376370e075379427d24e0c7711d46597afb52d4738c880')
     version('1.1.3', sha256='7538c8544899b8855deb73a2d7a4ccac4808ff294e161530a8c8762d472d8906')
 
     depends_on('python@2.7:2.999', type=('build', 'run'))
