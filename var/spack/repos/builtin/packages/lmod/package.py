@@ -19,6 +19,16 @@ class Lmod(AutotoolsPackage):
     homepage = 'https://www.tacc.utexas.edu/research-development/tacc-projects/lmod'
     url      = 'https://github.com/TACC/Lmod/archive/7.4.11.tar.gz'
 
+    version('8.4.20', sha256='bf42fb6b84eb3efc8cb0acaa39729393ed0aafa7661f3e981da0a2cdc2349c74')
+    version('8.4.19', sha256='143e8ef39825855580aa2dfe357bd0b8aebba3d4240eb083b2f6b5802b83bbf1')
+    version('8.4.18', sha256='ba801b146f6aa708eafb2415040b8a6d433f97eecad7592596d2bb7020d1fb35')
+    version('8.4.17', sha256='1a25d32d413063032160c128471facf7746cb56ac6077a8a08917a7f1e081d0e')
+    version('8.4.16', sha256='e026edb2895447b968b28c6080bd6c6226373b8ee3f5b7c996cca7d0a84f5f6d')
+    version('8.4.15', sha256='6d28b61671a78b4dc17ef61b119aa5e8eeddbcad2ba4affe63e3d72e88f9ef67')
+    version('8.4.14', sha256='98bfa151da114b60745262f2039e95ac83cc6a95593d56d3c0e11f8de641245b')
+    version('8.4.13', sha256='10ee1e6bf156b417bc822fe0ffd0692620f36f13b27f4f41eb21d1ea2ab8bc71')
+    version('8.4.12', sha256='b8590402d6bed99a27eed5f238116ddcb255e5ae34cff68fd5db9a5535bf909e')
+    version('8.4.11', sha256='46d1dde9f23c8a5faab115549683f21d36e5631562cde936d8ba0f6a19d5855d')
     version('8.3',    sha256='c2c2e9e6b387b011ee617cb009a2199caac8bf200330cb8a065ceedee09e664a')
     version('8.2.10', sha256='15676d82235faf5c755a747f0e318badb1a5c3ff1552fa8022c67ff083ee9e2f')
     version('8.1.5',  sha256='3e5846d3d8e593cbcdfa0aed1474569bf5b5cfd19fd288de22051823d449d344')
