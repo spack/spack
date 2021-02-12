@@ -12,6 +12,7 @@ class PyThreadpoolctl(PythonPackage):
     homepage = "https://github.com/joblib/threadpoolctl"
     pypi = "threadpoolctl/threadpoolctl-2.0.0.tar.gz"
 
+    version('2.1.0', sha256='ddc57c96a38beb63db45d6c159b5ab07b6bced12c45a1f07b2b92f272aebfa6b')
     version('2.0.0', sha256='48b3e3e9ee079d6b5295c65cbe255b36a3026afc6dde3fb49c085cd0c004bbcf')
 
     depends_on('python@3.5:', type=('build', 'run'))
