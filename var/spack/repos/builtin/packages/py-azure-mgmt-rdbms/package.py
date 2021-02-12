@@ -10,6 +10,7 @@ class PyAzureMgmtRdbms(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-rdbms/azure-mgmt-rdbms-2.2.0.zip"
 
+    version('8.0.0', sha256='8b018543048fc4fddb4155d9f22246ad0c4be2fb582a29dbb21ec4022724a119')
     version('2.2.0', sha256='f93344897a9bfa6ebc57dd0c10ad79602ff7965c322c65115e3f4b8584bbe1c7')
 
     depends_on('py-setuptools', type='build')
