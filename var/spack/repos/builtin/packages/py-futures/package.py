@@ -11,6 +11,7 @@ class PyFutures(PythonPackage):
 
     pypi = "futures/futures-3.0.5.tar.gz"
 
+    version('3.3.0', sha256='7e033af76a5e35f58e56da7a91e687706faf4e7bdfb2cbc3f2cca6b9bcda9794')
     version('3.2.0', sha256='9ec02aa7d674acb8618afb127e27fde7fc68994c0437ad759fa094a574adb265')
     version('3.0.5', sha256='0542525145d5afc984c88f914a0c85c77527f65946617edb5274f72406f981df')
 
