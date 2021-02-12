@@ -38,6 +38,11 @@ class PyLightgbm(PythonPackage):
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
     # depends_on('py-setuptools', type='build')
     # depends_on('py-foo',        type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-wheel', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-scikit-learn@:0.21.999,0.22.1:', type=('build', 'run'))
 
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
