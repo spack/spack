@@ -19,6 +19,8 @@ class Fastdfs(Package):
     homepage = "https://github.com/happyfish100/fastdfs"
     url      = "https://github.com/happyfish100/fastdfs/archive/V6.05.tar.gz"
 
+    version('6.07', sha256='96b14095cbcbec8ad039b1a705c495540bd8260819b46de435b5540d066ae490')
+    version('6.06', sha256='d724266719235c7901bf3281134903dfdbc925c44b4c4a9f7fb451ae916c80e1')
     version('6.05', sha256='00b736a1a7bd9cb5733aa51969efaa3b46df3764988c1edb43f06d72c4d575d9')
     version('6.04', sha256='76090f6bbd0add08b049ce17f30a7507a44ef0d883784cad774b380ba4906916')
     version('6.03', sha256='142be123eb389335b3b3793f0765494bdad3a632e4352af57861ed29098ec8d1')
