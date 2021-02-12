@@ -27,6 +27,7 @@ class GitImerge(MakefilePackage):
     homepage = "https://github.com/mhagger/git-imerge"
     url      = "https://github.com/mhagger/git-imerge/archive/v1.1.0.tar.gz"
 
+    version('1.2.0', sha256='cd80a817bc8dd4b5642f83610237e855fc0a23f5c11978d6f7d021cfb0e87bb2')
     version('1.1.0', sha256='62692f43591cc7d861689c60b68c55d7b10c7a201c1026096a7efc771df2ca28')
     version('1.0.0', sha256='2ef3a49a6d54c4248ef2541efc3c860824fc8295a7226760f24f0bb2c5dd41f2')
 
