@@ -13,6 +13,11 @@ class PyAbipy(PythonPackage):
     homepage = "https://github.com/abinit/abipy"
     pypi = "abipy/abipy-0.2.0.tar.gz"
 
+    version('0.8.0', sha256='4aef7f5467f9f9f0694b9b0877d56159e0d04b2957fa47fc9412d3dd8c837b74')
+    version('0.7.0', sha256='535028ce5a8721edfdaea454926af31f01abc42f769ae5bcae62b4e9ee85dbd8')
+    version('0.6.0', sha256='b7010753d0dab6f047c25294486f94342dece3c199282ab509c7ab90d629abe6')
+    version('0.5.0', sha256='cc363735981c3f4a1e85ebadc827b8e28dccaf77104f8efdedfe034548236b28')
+    version('0.4.1', sha256='2d00064e5689b78758d8a75c4e4941e9873ce3a75607b49b3bc12f3c6a973fab')
     version('0.2.0', sha256='c72b796ba0f9ea4299eac3085bede092d2652e9e5e8074d3badd19ef7b600792')
 
     variant('gui',     default=False, description='Build the GUI')
