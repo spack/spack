@@ -16,6 +16,10 @@ class Ltp(AutotoolsPackage):
     homepage = "https://github.com/linux-test-project/ltp"
     url      = "https://github.com/linux-test-project/ltp/archive/20190517.tar.gz"
 
+    version('20210121', sha256='c6f944e5b873eda51d1ede00a170058b20c67dd1c128f59b39b8174485881478')
+    version('20200930', sha256='12696d9a3a967daa94cccd2c05b65b4c185eb4ec290fa6b76bf32d0ff2427a43')
+    version('20200515', sha256='d2c96d77ea80d3bb8ae3da76c96de9c352c439a74a069afa29b7475293944791')
+    version('20200120', sha256='414fdf153ca56c7342d721cd70498f979a30f8b70f58eb9336b5ae12ca30f70e')
     version('20190930', sha256='eca11dbe11a61f3035561a2aa272d578ca9380563440f9ba876c0c4755a42533')
     version('20190517', sha256='538175fff2d6c9d69748b2d4afcf5ac43f7300456f839fa7b5b101c7ad447af7')
 
