@@ -30,6 +30,7 @@ class Amdfftw(FftwBase):
 
     maintainers = ['amd-toolchain-support']
 
+    version('2.2-4', sha256='06afb759e3419a0ea7ba9b08dd217d94d75e4bbb76e847345a1fa75af64fa60b')
     version('2.2', sha256='de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8')
 
     variant('shared', default=True, description='Builds a shared version of the library')
