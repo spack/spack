@@ -12,6 +12,11 @@ class PyOrTools(CMakePackage):
     homepage = "https://developers.google.com/optimization/"
     url      = "https://github.com/google/or-tools/archive/v7.8.tar.gz"
 
+    version('8.1.8487', sha256='3b637939202ff209a234a3953e1794ed6b2aed09036d302434e51b868a7aac63')
+    version('8.1',      sha256='5359291f2ddb7f9a1321dc9bdc5d714592697cc87d6d44d448c3684ff899a99b')
+    version('8.0.8283', sha256='b810b52ab220e95b79491b92fcf3c7cd70d371779076a07e7141e6f69b05f0b0')
+    version('8.0',      sha256='4151b549492e1270a1c469a0f486282035661db7fb7e27f338d5e32457a8dc23')
+    version('7.8.7959', sha256='881e95dd23ecb8af635fb31ba78d715c7b03631354f715bc4f7dd241523a24c3')
     version('7.8', sha256='d93a9502b18af51902abd130ff5f23768fcf47e266e6d1f34b3586387aa2de68')
 
     depends_on('cmake@3.14:', type='build')
