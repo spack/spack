@@ -18,6 +18,12 @@ class NodeJs(Package):
     list_depth = 1
 
     # Current (latest features)
+    version('15.8.0', sha256='e08c8778a6b767cd0d2ab4613946d1616c3d4054dead08b04f705d607c84510f')
+    version('15.7.0', sha256='cda67d79fe69b7a977a5b7fcb64721a68daca1fc6890368813525c8b5d349ddb')
+    version('15.6.0', sha256='1dd3681e85bb9c8205a331bfac5121050893defb5ad9d04698239aeef4e736b3')
+    version('15.5.1', sha256='9730d3099c051bd8733b3e6d62c54ba9b2d82ec40e6c65ee966ba3f346ff4157')
+    version('15.5.0', sha256='a4f10a2e67dc99ed64c297be988fbe37f8a62f8fb8ff880f121f8be4e30df3d1')
+    version('15.4.0', sha256='b199796544d988b4bb61e38584cd097744e073fa0559cbec772858d91ce4649f')
     version('15.3.0',  sha256='cadfa384a5f14591b84ce07a1afe529f28deb0d43366fb0ae4e78afba96bfaf2')
     version('14.13.0', sha256='8538b2e76aa06ee0e6eb1c118426c3c5ca53b2e49d66591738eacf76e89edd61')
     version('14.10.0', sha256='7e0d7a1aa23697415e3588a1ca4f1c47496e6c88b9cf37c66be90353d3e4ac3e')
