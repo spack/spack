@@ -18,6 +18,7 @@ class RKs(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/ks_1.11.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ks"
 
+    version('1.12.0', sha256='e6affe52bbfe73e31387462c57dfe56058c5d64f54e5c7b7c794187c6936cee9')
     version('1.11.7', sha256='6a6d9c2366e85a4c6af39b798f3798d20a42615ddfcebcedf6cf56087cdfd2b8')
     version('1.11.5', sha256='4f65565376391b8a6dcce76168ef628fd4859dba8496910cbdd54e4f88e8d51b')
     version('1.11.4', sha256='0beffaf8694819fba8c93af07a8782674a15fe00a04ad1d94d31238d0a41b134')
