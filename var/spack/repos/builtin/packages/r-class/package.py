@@ -16,6 +16,7 @@ class RClass(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/class_7.3-14.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/class"
 
+    version('7.3-18', sha256='d2ba722e6a898b4b8145f87c132f7d205a2ec54de7f17a9fe7669232e6211391')
     version('7.3-17', sha256='be1f85b6df7556db93f50cb08106aac6620d4b5bb3fee846422863a022461313')
     version('7.3-15', sha256='f6bf33d610c726d58622b6cea78a808c7d6a317d02409d27c17741dfd1c730f4')
     version('7.3-14', sha256='18b876dbc18bebe6a00890eab7d04ef72b903ba0049d5ce50731406a82426b9c')
