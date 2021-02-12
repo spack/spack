@@ -45,3 +45,21 @@ class Dsqss(CMakePackage):
         ]
 
         return args
+
+    def test(self):
+        tests = find(self.prefix.share, 'samples')[0]
+        copy(join_path(tests, 'dla', '01_spindimer', 'std.toml'), '.')
+        # prepare
+        pythonexe = self.spec['python'].command.path
+        opts = [self.spec.prefix.bin.dla_pre, 'std.toml']
+        self.run_test(pythonexe, options=opts)
+        # (mpi) run
+        opts = []
+        if self.spec.satisfies('+mpi'):
+            exe_name = self.spec['mpi'].prefix.bin.mpirun
+            opts.append(join_path(self.prefix.bin, 'dla'))
+        else:
+            exe_name = 'dla'
+        opts.append('param.in')
+        self.run_test(exe_name, options=opts)
+        copy('./sample.log', '..')
