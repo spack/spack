@@ -15,6 +15,7 @@ class RSpatial(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/spatial_7.3-11.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spatial"
 
+    version('7.3-13', sha256='c47033b41395f7ca91c5a5ad449c7400acf48d7ac4d6fabd582fb4273c523832')
     version('7.3-12', sha256='7639039ee7407bd088e1b253376b2cb4fcdf4cc9124d6b48e4119d5cda872d63')
     version('7.3-11', sha256='624448d2ac22e1798097d09fc5dc4605908a33f490b8ec971fc6ea318a445c11')
 
