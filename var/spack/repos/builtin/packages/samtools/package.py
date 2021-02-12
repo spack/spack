@@ -14,6 +14,7 @@ class Samtools(Package):
     homepage = "http://www.htslib.org"
     url      = "https://github.com/samtools/samtools/releases/download/1.3.1/samtools-1.3.1.tar.bz2"
 
+    version('1.11', sha256='e283cebd6c1c49f0cf8a3ca4fa56e1d651496b4d2e42f80ab75991a9ece4e5b6')
     version('1.10', sha256='7b9ec5f05d61ec17bd9a82927e45d8ef37f813f79eb03fe06c88377f1bd03585')
     version('1.9', sha256='083f688d7070082411c72c27372104ed472ed7a620591d06f928e653ebc23482')
     version('1.8', sha256='c942bc1d9b85fd1b05ea79c5afd2805d489cd36b2c2d8517462682a4d779be16')
