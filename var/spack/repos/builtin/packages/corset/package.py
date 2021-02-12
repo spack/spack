@@ -13,6 +13,9 @@ class Corset(Package):
     homepage = "https://github.com/Oshlack/Corset/wiki"
     url      = "https://github.com/Oshlack/Corset/releases/download/version-1.06/corset-1.06-linux64.tar.gz"
 
+    version('1.09', sha256='9c349afc5a66c43e6b73c62f5d3166dac2fd06696aa40cff648226a5d0427a59')
+    version('1.08', sha256='45af9d07393ccf599bcb301b4ff5cca80c54229cb189b2f3002f4f6e9d29bc45')
+    version('1.07', sha256='aef6dca575998dade336cf8b6ac8fe1b3de17eebca8fc0e1df4a212ae31271c2')
     version('1.06', sha256='4aff83844461cea1edfce3d89776236c300650fc02b497cc9f11eba42d161b60')
 
     def url_for_version(self, version):
