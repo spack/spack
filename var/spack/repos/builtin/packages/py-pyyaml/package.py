@@ -15,6 +15,8 @@ class PyPyyaml(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('5.4.1', sha256='607774cbba28732bfa802b54baa7484215f530991055bb562efbed5b2f20a45e')
+    version('5.4',   sha256='3c49e39ac034fd64fd576d63bb4db53cda89b362768a67f07749d55f128ac18a')
     version('5.3.1', sha256='b8eac752c5e14d3eca0e6dd9199cd627518cb5ec06add0de9d32baeee6fe645d')
     version('5.1.2', sha256='01adf0b6c6f61bd11af6e10ca52b7d4057dd0be0343eb9283c878cf3af56aee4')
     version('5.1',   sha256='436bc774ecf7c103814098159fbb84c2715d25980175292c648f2da143909f95')
