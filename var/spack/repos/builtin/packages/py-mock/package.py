@@ -14,6 +14,10 @@ class PyMock(PythonPackage):
     homepage = "https://github.com/testing-cabal/mock"
     pypi = "mock/mock-3.0.5.tar.gz"
 
+    version('4.0.3', sha256='7d3fbbde18228f4ff2f1f119a45cdffa458b4c0dee32eb4d2bb2f82554bac7bc')
+    version('4.0.2', sha256='dd33eb70232b6118298d516bbcecd26704689c386594f0f3c4f13867b2c56f72')
+    version('4.0.1', sha256='2a572b715f09dd2f0a583d8aeb5bb67d7ed7a8fd31d193cf1227a99c16a67bc3')
+    version('4.0.0', sha256='8fff3fd7c5796ea78ae2847f32e87ad4e111e03fef6e90d03b5efb4882211d78')
     version('3.0.5', sha256='83657d894c90d5681d62155c82bda9c1187827525880eda8ff5df4ec813437c3')
     version('2.0.0', sha256='b158b6df76edd239b8208d481dc46b6afd45a846b7812ff0ce58971cf5bc8bba')
     version('1.3.0', sha256='1e247dbecc6ce057299eb7ee019ad68314bb93152e81d9a6110d35f4d5eca0f6')
