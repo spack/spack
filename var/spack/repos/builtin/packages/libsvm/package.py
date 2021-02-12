@@ -13,6 +13,7 @@ class Libsvm(MakefilePackage):
     homepage = "https://www.csie.ntu.edu.tw/~cjlin/libsvm/"
     url      = "https://github.com/cjlin1/libsvm/archive/v322.tar.gz"
 
+    version('324', sha256='3ba1ac74ee08c4dd57d3a9e4a861ffb57dab88c6a33fd53eac472fc84fbb2a8f')
     version('323', sha256='7a466f90f327a98f8ed1cb217570547bcb00077933d1619f3cb9e73518f38196')
     version('322', sha256='a3469436f795bb3f8b1e65ea761e14e5599ec7ee941c001d771c07b7da318ac6')
 
