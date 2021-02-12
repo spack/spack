@@ -16,7 +16,7 @@ class Professor(Package):
     version('2.3.3', sha256='60c5ba00894c809e2c31018bccf22935a9e1f51c0184468efbdd5d27b211009f')
     
     #depends_on('wxwidgets')
-    #depends_on('yoda')   
+    depends_on('yoda')   
     depends_on('eigen')
     depends_on('py-cython')
     depends_on('py-iminuit')
