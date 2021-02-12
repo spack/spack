@@ -20,6 +20,10 @@ class IntelGpuTools(AutotoolsPackage, XorgPackage):
     homepage = "https://cgit.freedesktop.org/xorg/app/intel-gpu-tools/"
     xorg_mirror_path = "app/intel-gpu-tools-1.16.tar.gz"
 
+    version('1.20', sha256='c6ee992301e43ec14ef810ef532e2601ecf7399315f942207ae0dd568fd9c2b7')
+    version('1.19', sha256='70f6ecb45c5689a384402b9f103cf748c263d424a1cbc9bf11ce01b8082388da')
+    version('1.18', sha256='c6263e70a092f3c1302d3c294961b803a9e5952cbf33bdeb719a14b38252c0e7')
+    version('1.17', sha256='0d8407777afcd5252b950f21e8cfe0a3167ed7cc36232ebcd12fb58f8d49f21a')
     version('1.16', sha256='4874e6e7704c8d315deaf5b44cc9467ea5e502c7f816470a4a28827fcb34643f')
 
     depends_on('libdrm@2.4.64:')
