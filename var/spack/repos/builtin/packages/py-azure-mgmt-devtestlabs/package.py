@@ -10,6 +10,7 @@ class PyAzureMgmtDevtestlabs(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-devtestlabs/azure-mgmt-devtestlabs-4.0.0.zip"
 
+    version('9.0.0', sha256='d8160d93fd3d947e5613c6919176b0edf72c94ac69679ea3b92cf27ff7398e64')
     version('4.0.0', sha256='59549c4c4068f26466b1097b574a8e5099fb2cd6c8be0a00395b06d3b29e278d')
 
     depends_on('py-setuptools', type='build')
