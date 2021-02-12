@@ -32,3 +32,4 @@ class PyHyperopt(PythonPackage):
     depends_on('py-pyspark',        when="+spark",  type=('build', 'run'))
     depends_on('py-pymongo',        when="+mongo",  type=('build', 'run'))
     depends_on('py-scikit-learn',   when="+atpe",   type=('build', 'run'))
+    depends_on('py-lightgbm',       when="+atpe",   type=('build', 'run'))
