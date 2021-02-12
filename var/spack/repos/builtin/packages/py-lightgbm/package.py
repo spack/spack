@@ -44,6 +44,8 @@ class PyLightgbm(PythonPackage):
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-scikit-learn@:0.21.999,0.22.1:', type=('build', 'run'))
 
+    depends_on('cmake@3.8:', type='build')
+
     def build_args(self, spec, prefix):
         # FIXME: Add arguments other than --prefix
         # FIXME: If not needed delete this function
