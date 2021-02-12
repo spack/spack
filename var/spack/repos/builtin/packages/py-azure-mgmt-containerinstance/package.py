@@ -10,6 +10,7 @@ class PyAzureMgmtContainerinstance(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-containerinstance/azure-mgmt-containerinstance-2.0.0.zip"
 
+    version('7.0.0', sha256='9f624df0664ba80ba886bc96ffe5e468c620eb5b681bc3bc2a28ce26042fd465')
     version('2.0.0', sha256='5ad247d186c3c040da7a1d40ad39c9881e99afc58271f673abb602abb0b6b85b')
     version('1.5.0', sha256='b055386f04ba8433112b0df7fcbc260b5208828d7bb8c057e760fe596aa7a8cd')
 
