@@ -15,6 +15,10 @@ class PyAnsible(PythonPackage):
     homepage = "https://github.com/ansible"
     url      = "https://github.com/ansible/ansible/archive/v2.9.1.tar.gz"
 
+    version('2.10.5', sha256='9c79ffdb6d5acb278e1d5680f16c32d26d988162bc311cc7307a09f5f85b44ce')
+    version('2.10.4', sha256='1d65835ab4c116e56bf4acedeac71219e35d6ebb58092a86845fb7c694bfe5c4')
+    version('2.9.17', sha256='dff995fbd475a00852426157320747929a137f354d4252075cb0c985a0e185cf')
+    version('2.9.16', sha256='cc87113f0932a6c091abdcb986d5afab81affa5550efe836806278b12ce29765')
     version('2.9.2',  sha256='27673726435e8773ef031ef6ffb121b8ec75b85b07b7684454b430c3c9a848a9')
     version('2.9.1',  sha256='087a7644890e27c26171b0d24fc5d64024f12201ffb81d222aaa5704987e4c12')
     version('2.9.0',  sha256='a2a9b1a74f3d47b82f9ea9da10ebf3573fa10c1783b7ed9b7eb937c7052fcb13')
