@@ -13,6 +13,7 @@ class PyScs(PythonPackage):
     homepage = "https://github.com/cvxgrp/scs"
     pypi = "scs/scs-2.1.1-2.tar.gz"
 
+    version('2.1.2', sha256='667ed6019bb4e2f925bd9291161d2c61cc0077443094437b703ea905333fd585')
     version('2.1.1-2', sha256='f816cfe3d4b4cff3ac2b8b96588c5960ddd2a3dc946bda6b09db04e7bc6577f2')
 
     variant('cuda', default=False, description="Also compile the GPU CUDA version of SCS")
