@@ -17,6 +17,10 @@ class Ccache(AutotoolsPackage):
 
     executables = ['^ccache$']
 
+    version('4.2',    sha256='dbf139ff32031b54cb47f2d7983269f328df14b5a427882f89f7721e5c411b7e')
+    version('4.1',    sha256='cdeefb827b3eef3b42b5454858123881a4a90abbd46cc72cf8c20b3bd039deb7')
+    version('4.0',    sha256='ac97af86679028ebc8555c99318352588ff50f515fc3a7f8ed21a8ad367e3d45')
+    version('3.7.12', sha256='d2abe88d4c283ce960e233583061127b156ffb027c6da3cf10770fc0c7244194')
     version('3.7.11', sha256='34309a59d4b6b6b33756366aa9d3144a4655587be9f914476b4c0e2d36365f01')
     version('3.7.9', sha256='92838e2133c9e704fdab9ee2608dad86c99021278b9ac47d065aa8ff2ea8ce36')
     version('3.7.1', sha256='e562fcdbe766406b6fe4bf97ce5c001d2be8a17465f33bcddefc9499bbb057d8')
