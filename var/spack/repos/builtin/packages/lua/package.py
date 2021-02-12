@@ -13,6 +13,10 @@ class Lua(Package):
     homepage = "http://www.lua.org"
     url = "http://www.lua.org/ftp/lua-5.3.4.tar.gz"
 
+    version('5.4.2', sha256='11570d97e9d7303c0a59567ed1ac7c648340cd0db10d5fd594c09223ef2f524f')
+    version('5.4.1', sha256='4ba786c3705eb9db6567af29c91a01b81f1c0ac3124fdbf6cd94bdd9e53cca7d')
+    version('5.4.0', sha256='eac0836eb7219e421a96b7ee3692b93f0629e4cdb0c788432e3d10ce9ed47e28')
+    version('5.3.6', sha256='fc5fd69bb8736323f026672b1b7235da613d7177e72558893a0bdcd320466d60')
     version('5.3.5', sha256='0c2eed3f960446e1a3e4b9a1ca2f3ff893b6ce41942cf54d5dd59ab4b3b058ac')
     version('5.3.4', sha256='f681aa518233bc407e23acf0f5887c884f17436f000d453b2491a9f11a52400c')
     version('5.3.2', sha256='c740c7bb23a936944e1cc63b7c3c5351a8976d7867c5252c8854f7b2af9da68f')
