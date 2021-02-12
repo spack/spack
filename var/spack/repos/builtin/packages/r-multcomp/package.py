@@ -19,6 +19,7 @@ class RMultcomp(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/multcomp_1.4-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/multcomp"
 
+    version('1.4-16', sha256='3aacd5808f7ed3bec760405c0af47e9a45566851fbf868dfd3912aae24ad18e9')
     version('1.4-15', sha256='9927607efb3eb84ac3d25d82daf2faef6a69e05a334b163ce43fd31c14b19bce')
     version('1.4-10', sha256='29bcc635c0262e304551b139cd9ee655ab25a908d9693e1cacabfc2a936df5cf')
     version('1.4-8', sha256='a20876619312310e9523d67e9090af501383ce49dc6113c6b4ca30f9c943a73a')
