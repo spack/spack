@@ -13,6 +13,9 @@ class PyRq(PythonPackage):
     homepage = "https://github.com/rq/rq"
     url      = "https://github.com/rq/rq/archive/v1.5.2.tar.gz"
 
+    version('1.7.0', sha256='2118fef5da9757ad806e32c896bbe8567b5ee5d72b033f4f88858af7f7767e00')
+    version('1.6.1', sha256='e6e4d1b9e180303c0b42ed67c121935ad834212925bb0de08c360b2c4ab43ff7')
+    version('1.6.0', sha256='40864a59c311222181368a979d53462849c190cbe626ce721b50992898365b84')
     version('1.5.2', sha256='e8e7b6ffc4a962837eaff8eb0137514346e629633bf08550a1649771cdc4ace6')
     version('1.5.1', sha256='36ca5cd2762b5b15bb176943f77da933fac6c2f4e5b5d47a0475f918c167fd4c')
     version('1.5.0', sha256='97443acd8aab1c273710f74db197838f68a0678f9cabb64c3598dfb816d35e13')
