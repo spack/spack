@@ -36,6 +36,8 @@ class Amdlibflame(LibflameBase):
 
     maintainers = ['amd-toolchain-support']
 
+    version('5.1.0', sha256='e7189b750890bd781fe773f366b374518dd1d89a6513d3d6261bf549826384d1')
+    version('2.2-4', sha256='13e3eb9e174ff3c9f44f33e8c9b2bf9d7513ea5840109a4d37a2fa4f769f3451')
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
 
     patch('aocc-2.2.0.patch', when="@:2.999", level=1)
