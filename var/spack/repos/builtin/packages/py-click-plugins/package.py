@@ -12,6 +12,8 @@ class PyClickPlugins(PythonPackage):
 
     pypi = "click-plugins/click-plugins-1.0.4.tar.gz"
 
+    version('1.1.1', sha256='46ab999744a9d831159c3411bb0c79346d94a444df9a3a3742e9ed63645f264b')
+    version('1.1',   sha256='b7d23e0e06e7e51090372af5d01be17164bc221bc1ed6eca7145ded16c96aa0f')
     version('1.0.4', sha256='dfed74b5063546a137de99baaaf742b4de4337ad2b3e1df5ec7c8a256adc0847')
 
     depends_on('py-setuptools', type='build')
