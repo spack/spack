@@ -10,6 +10,7 @@ class PyAzureMgmtMedia(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-media/azure-mgmt-media-2.2.0.zip"
 
+    version('3.0.0', sha256='8944775725c5253614d257576d841ee68afa34f570b05c0924a7f73f1db28a24')
     version('2.2.0', sha256='0adeee9e654a9011f5107def06fea6838864a3514a1e5a9ed495f3a56a687cc7')
 
     depends_on('py-setuptools', type='build')
