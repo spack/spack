@@ -13,6 +13,9 @@ class PySemanticVersion(PythonPackage):
     homepage = "https://github.com/rbarrois/python-semanticversion"
     pypi = "semantic_version/semantic_version-2.8.2.tar.gz"
 
+    version('2.8.5', sha256='d2cb2de0558762934679b9a104e82eca7af448c9f4974d1f3eeccff651df8a54')
+    version('2.8.4', sha256='352459f640f3db86551d8054d1288608b29a96e880c7746f0a59c92879d412a3')
+    version('2.8.3', sha256='9dcc6fbad58da3c4d5eee2287025e226bb05c39463f14b741357801baae9dcce')
     version('2.8.2', sha256='71c716e99086c44d068262b86e4775aa6db7fabee0743e4e33b00fbf6f672585')
     version('2.6.0', sha256='2a4328680073e9b243667b201119772aefc5fc63ae32398d6afafff07c4f54c0')
 
