@@ -7,15 +7,16 @@ from spack import *
 
 
 class RSpadesCore(RPackage):
-    """Core Utilities for Developing and Running Spatially Explicit Discrete Event Models
+    """Utilities for Developing and Running Spatially Explicit Discrete Event Models
 
-    Provides the core framework for a discrete event system (DES) to implement a complete
-    data-to-decisions, reproducible workflow. The core DES components facilitate modularity,
-    and easily enable the user to include additional functionality by running user-built
-    modules. Includes conditional scheduling, restart after interruption,
-    packaging of reusable modules, tools for developing arbitrary automated workflows,
-    automated interweaving of modules of different temporal resolution, and tools for
-    visualizing and understanding the DES project."""
+    Provides the core framework for a discrete event system (DES) to implement
+    acomplete data-to-decisions, reproducible workflow. The core DES components
+    facilitate modularity, and easily enable the user to include additional
+    functionality by running user-built modules. Includes conditional scheduling,
+    restart after interruption, packaging of reusable modules, tools for
+    developing arbitrary automated workflows, automated interweaving of modules
+    of different temporal resolution, and tools for visualizing and understanding
+    the DES project."""
 
     homepage = "https://spades-core.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES.core_1.0.5.tar.gz"

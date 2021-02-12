@@ -7,12 +7,13 @@ from spack import *
 
 
 class RSpadesTools(RPackage):
-    """Additional Tools for Developing Spatially Explicit Discrete Event Simulation (SpaDES) Models
+    """Tools for Spatially Explicit Discrete Event Simulation (SpaDES) Models
 
-    Provides GIS and map utilities, plus additional modeling tools for developing cellular automata,
-    dynamic raster models, and agent based models in 'SpaDES'. Included are various methods for
-    spatial spreading, spatial agents, GIS operations, random map generation, and others. See
-    '?SpaDES.tools' for an categorized overview of these additional tools."""
+    Provides GIS and map utilities, plus additional modeling tools for developing
+    cellular automata, dynamic raster models, and agent based models in 'SpaDES'.
+    Included are various methods for spatial spreading, spatial agents, GIS
+    operations, random map generation, and others. See '?SpaDES.tools' for an
+    categorized overview of these additional tools."""
 
     homepage = "https://spades-tools.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES.tools_0.3.6.tar.gz"
