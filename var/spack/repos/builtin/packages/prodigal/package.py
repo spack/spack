@@ -13,6 +13,7 @@ class Prodigal(MakefilePackage):
     homepage = "https://github.com/hyattpd/Prodigal"
     url      = "https://github.com/hyattpd/Prodigal/archive/v2.6.3.tar.gz"
 
+    version('2.60', sha256='5988cf4ff0cb40d8c17a421321b0a9a6b1e1ed25eb4a83629ca12298528f1eef')
     version('2.6.3', sha256='89094ad4bff5a8a8732d899f31cec350f5a4c27bcbdd12663f87c9d1f0ec599f')
 
     def install(self, spec, prefix):
