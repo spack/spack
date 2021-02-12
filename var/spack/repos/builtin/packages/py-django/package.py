@@ -12,6 +12,13 @@ class PyDjango(PythonPackage):
     homepage = "https://www.djangoproject.com/"
     url      = "https://github.com/django/django/archive/3.0.5.tar.gz"
 
+    version('3.1.6',  sha256='3e52bd35556fc90cf797173c46885f04d6d6cf51f0632d628eb17f32f89c2d77')
+    version('3.1.5',  sha256='b481d9ffd70c51bd20039a3b5cd33ffe3ac188ba95d29b37e88e456472317eaf')
+    version('3.1.4',  sha256='393f64a8d7f9843323aa99684e908f9a1d1f2f685601a53a4aef6f00ff69f855')
+    version('3.1.3',  sha256='ff91a38b1f59a07efa0185b2d2275734aae6bd3ff274f8b29b41160df84c6f50')
+    version('3.1.2',  sha256='e6d1af7438b0d397b931c7ace6bd77359731cb29d90e7ac2d0931e8021453310')
+    version('3.0.12', sha256='0dcfdf882ca4f052b056bc7817bd4f3c4bd3d7d4524e7aae3cfabe6d4e88848a')
+    version('3.0.11', sha256='e584542559768224c5a67d90cd4590b0ec23911096ae250de877a9eaa4577414')
     version('3.0.5',  sha256='ef2d4f26414dc9598afce9c56cee4578313b88861cedfc5b3d9a71078e5cc79b')
     version('3.0.4',  sha256='99699643d83acfab51d3ad73c2c2904173e03a4f59fe24c3d494e4fafc0b679f')
     version('3.0.3',  sha256='d953c950f0c395db065c8bc39d20e87faded376632a3aacf889ae92d5adaac8b')
