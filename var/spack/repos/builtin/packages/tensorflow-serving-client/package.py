@@ -13,6 +13,9 @@ class TensorflowServingClient(CMakePackage):
     homepage = "https://github.com/figroc/tensorflow-serving-client"
     url      = "https://github.com/figroc/tensorflow-serving-client/archive/v2.2.0.tar.gz"
 
+    version('2.3.1', sha256='42f0b77c3ba23b8e207c6803027d25640b2c69b25d082635788d1023f32bde56')
+    version('2.3.0', sha256='621b1df1da521fe1ba873b4b5546c1b794cfa8a13bca91608783acc4c8748fb1')
+    version('2.2.1', sha256='75da08e401f9b5402b30ff25b1136df990ea35fa20220d12bdca5dfbff180295')
     version('2.2.0', sha256='010b464b3b09c3c33c5dc2aebbc85447c4d5f775b9cd45d90a9035ca015c1c08')
     version('2.1.0', sha256='7a31d8cfa1d861f73953d4728665dd6d74e205d1fa01062a6c2b1aeee4674f73')
     version('2.0.0', sha256='55310ad484f257173ad5194df7f7116b2049260c3d29049ef8d789d1d8bd9948')
