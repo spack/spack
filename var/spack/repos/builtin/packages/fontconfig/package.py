@@ -11,6 +11,9 @@ class Fontconfig(AutotoolsPackage):
     homepage = "http://www.freedesktop.org/wiki/Software/fontconfig/"
     url      = "http://www.freedesktop.org/software/fontconfig/release/fontconfig-2.12.3.tar.gz"
 
+    version('2.13.93', sha256='0f302a18ee52dde0793fe38b266bf269dfe6e0c0ae140e30d72c6cca5dc08db5')
+    version('2.13.92', sha256='3406a05b83a42231e3df68d02bc0a0cf47b3f2e8f11c8ede62267daf5f130016')
+    version('2.13.91', sha256='19e5b1bc9d013a52063a44e1307629711f0bfef35b9aca16f9c793971e2eb1e5')
     version('2.13.1', sha256='9f0d852b39d75fc655f9f53850eb32555394f36104a044bb2b2fc9e66dbbfa7f')
     version('2.12.3', sha256='ffc3cbf6dd9fcd516ee42f48306a715e66698b238933d6fa7cef02ea8b3b818e')
     version('2.12.1', sha256='a9f42d03949f948a3a4f762287dbc16e53a927c91a07ee64207ebd90a9e5e292')
