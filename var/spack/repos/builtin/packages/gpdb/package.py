@@ -19,6 +19,12 @@ class Gpdb(AutotoolsPackage):
     homepage = "https://github.com/greenplum-db/gpdb"
     url      = "https://github.com/greenplum-db/gpdb/archive/6.2.1.tar.gz"
 
+    version('6.14.0', sha256='9fba6b4410d983ed060d59c069e48af3347565c50b191ca996b75cb9da8056d3')
+    version('6.13.0', sha256='eef823cef85fa1bc92f4ecca9730513fe714ab742d1d51a14c5f50e791ad0380')
+    version('6.12.1', sha256='560549b73f24bfd112a7e19b82c2091770861bb08c72d55ab0ff6f63da5c322f')
+    version('6.12.0', sha256='ef98bff177a7eb38d521cde3ad41f3387a7121d65ec636c06f6ca7e10b6d5893')
+    version('6.11.2', sha256='b6c2717718324906138569131e1e0a7ff12e37afc9c82d185981b25ef5cfeaff')
+    version('6.11.1', sha256='970871ad06063417faf419a63b88f2e76b9dc60267fbc31401c5e8ccfe817e4c')
     version('6.2.1',     sha256='60c81d71665d623ea98a0e9bd8e6df7fecf6b30eb60a5881ccef781ff5214438')
     version('6.1.0',     sha256='81fa854b0ac5fe4e0de5fdee9a7b7c2514e1ea1feefa4e4d10518538a5c5b2a8')
     version('6.0.1',     sha256='8902f5d64386447f61c25686f283a785858760e0dcf9a049266db058d3597156')
