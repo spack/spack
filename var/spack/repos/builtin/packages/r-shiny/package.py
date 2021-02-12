@@ -18,6 +18,7 @@ class RShiny(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/shiny_1.0.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/shiny"
 
+    version('1.6.0', sha256='8bd7d76d67d610aabdcc1df7c8f6d0f18dd695ace16af29b60982541d784bb99')
     version('1.5.0', sha256='23cb8bfa448389c256efdab75e7e8d3ff90e5de66264c4ab02df322fb4298e9e')
     version('1.3.2', sha256='28b851ae6c196ca845f6e815c1379247595ac123a4faa10a16533d1a9ce0c24f')
     version('1.0.5', sha256='20e25f3f72f3608a2151663f7836f2e0c6da32683a555d7541063ae7a935fa42')
