@@ -10,6 +10,10 @@ class PyNbformat(PythonPackage):
     homepage = "https://github.com/jupyter/nbformat"
     pypi = "nbformat/nbformat-5.0.7.tar.gz"
 
+    version('5.1.2', sha256='1d223e64a18bfa7cdf2db2e9ba8a818312fc2a0701d2e910b58df66809385a56')
+    version('5.1.1', sha256='ce5d4d7989d85d4c59631d84fed475f899ac637bd33f100737d796af20b47ddd')
+    version('5.1.0', sha256='693616f25534a61fa3e02223073a88bc422eb0badbaf0b9f03c7b9764fceb4b9')
+    version('5.0.8', sha256='f545b22138865bfbcc6b1ffe89ed5a2b8e2dc5d4fe876f2ca60d8e6f702a30f8')
     version('5.0.7', sha256='54d4d6354835a936bad7e8182dcd003ca3dc0cedfee5a306090e04854343b340')
     version('4.4.0', sha256='f7494ef0df60766b7cabe0a3651556345a963b74dbc16bc7c18479041170d402')
     version('4.1.0', sha256='dbf6c0ed0cb7c5a7184536368f1dd1ada2d48fd6f016e0f9e9b69236e28c0857')
