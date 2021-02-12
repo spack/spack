@@ -16,6 +16,7 @@ class RSpatstatUtils(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/spatstat.utils_1.17-0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/spatstat.utils"
 
+    version('2.0-0', sha256='ad54b12850013c5359343d3637a7e2fb2053e40424722147f76fcfdbf5dc20d2')
     version('1.20-2', sha256='62c2413f989965a9fa6395742a605004b736a27c24304e6ffaebf2134019ce18')
     version('1.17-0', sha256='39cd683ed7f41d8adc9e28af073d91b244aa1cf5ad966dfbb396ee3ee79f0922')
     version('1.15-0', sha256='90e07d730b6939f47f93c939afae10874b2c82bd402960ede4133de67dca2a0c')
