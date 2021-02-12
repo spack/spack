@@ -14,6 +14,9 @@ class Sqlitebrowser(CMakePackage):
     homepage = "https://sqlitebrowser.org"
     url      = "https://github.com/sqlitebrowser/sqlitebrowser/archive/v3.10.1.tar.gz"
 
+    version('3.12.1', sha256='c1f13a7caeab9c36908d7fd6e46718d5f2bb5d116882c5c6392e7c4b0f8dba0f')
+    version('3.12.0', sha256='3f1a1453ed0f4b5b72b0468bf8ee56887eb23d71c2518a449f4eb179471d73d1')
+    version('3.11.2', sha256='298acb28878aa712277a1c35c185b07a5a1671cc3e2c6a21b323477b91d486fc')
     version('3.10.1', sha256='36eb53bc75192c687dce298c79f1532c410ce4ecbeeacfb07b9d02a307f16bef')
 
     msg = 'sqlitebrowser requires C++11 support'
