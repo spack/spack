@@ -14,6 +14,7 @@ class PyPygit2(PythonPackage):
     homepage = "http://www.pygit2.org/"
     pypi = "pygit2/pygit2-0.24.1.tar.gz"
 
+    version('1.5.0', sha256='9711367bd05f96ad6fc9c91d88fa96126ba2d1f1c3ea6f23c11402c243d66a20')
     version('1.4.0', sha256='cbeb38ab1df9b5d8896548a11e63aae8a064763ab5f1eabe4475e6b8a78ee1c8')
     version('1.3.0', sha256='0be93f6a8d7cbf0cc79ae2f0afb1993fc055fc0018c27e2bd01ba143e51d4452')
     version('0.28.2', sha256='4d8c3fbbf2e5793a9984681a94e6ac2f1bc91a92cbac762dbdfbea296b917f86')
