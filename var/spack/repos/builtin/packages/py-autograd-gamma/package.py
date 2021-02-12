@@ -11,6 +11,7 @@ class PyAutogradGamma(PythonPackage):
     homepage = "https://github.com/CamDavidsonPilon/autograd-gamma"
     pypi = "autograd-gamma/autograd-gamma-0.4.3.tar.gz"
 
+    version('0.5.0', sha256='f27abb7b8bb9cffc8badcbf59f3fe44a9db39e124ecacf1992b6d952934ac9c4')
     version('0.4.3', sha256='2cb570cbb8da61ede937ccc004d87d3924108f754b351a86cdd2ad31ace6cdf6')
 
     depends_on('py-setuptools', type='build')
