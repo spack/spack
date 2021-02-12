@@ -15,6 +15,7 @@ class Ccls(CMakePackage):
 
     maintainers = ['jacobmerson']
 
+    version('0.20201219', sha256='edd3435bc7e55d9e5dc931932f9c98275a6a28d1ab1f66416110e029f3f2882a')
     version('0.20201025', sha256='1470797b2c1a466e2d8a069efd807aac6fefdef8a556e1edf2d44f370c949221')
 
     variant('build_type', default='Release', description='CMake build type',
