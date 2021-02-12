@@ -15,6 +15,8 @@ class Mapnik(AutotoolsPackage):
     homepage = "https://mapnik.org/"
     url      = "https://github.com/mapnik/mapnik/releases/download/v3.0.22/mapnik-v3.0.22.tar.bz2"
 
+    version('3.1.0',  sha256='43d76182d2a975212b4ad11524c74e577576c11039fdab5286b828397d8e6261')
+    version('3.0.24', sha256='75520a98ff688f48e4dd36e86199530ea084b296f2d4972478db1fcb3475d71c')
     version('3.0.23', sha256='4b1352e01f7ce25ab099e586d7ae98e0b74145a3bf94dd365cb0a2bdab3b9dc2')
     version('3.0.22', sha256='930612ad9e604b6a29b9cea1bc1de85cf7cf2b2b8211f57ec8b6b94463128ab9')
 
