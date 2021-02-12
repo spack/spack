@@ -13,6 +13,8 @@ class SqliteJdbc(MavenPackage):
     homepage = "https://github.com/xerial/sqlite-jdbc"
     url      = "https://github.com/xerial/sqlite-jdbc/archive/3.32.3.2.tar.gz"
 
+    version('3.34.0',   sha256='7458741320744f69c87ee2c6355952a4ab2696fd0f27c0e3ad85a9a981e67eff')
+    version('3.32.3.3', sha256='c72ab51c49e7bc726b25e89cde1df92487124b47e73d639b737d79534961829e')
     version('3.32.3.2', sha256='9168ad02cb8b01449271eabd8a2a81461954c2c3fa854d3828a37dc07a1fefec')
     version('3.32.3.1', sha256='455e2a009101ede40f9510cf2c34e76f30d411f290957bfd9296da12d6e06591')
     version('3.32.3',   sha256='19725caa4742960d385472a6094b8164bb8f29e816f04b830fa65c56517b4564')
