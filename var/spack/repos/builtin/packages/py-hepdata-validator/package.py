@@ -14,6 +14,9 @@ class PyHepdataValidator(PythonPackage):
 
     tags = ['hep']
 
+    version('0.2.3', sha256='314e75eae7d4a134bfc8291440259839d82aabefdd720f237c0bf8ea5c9be4dc')
+    version('0.2.2', sha256='6a6b52545e0ef26619f5894daae7b259e4a0f1b0acd2edcb170e5fe720bef080')
+    version('0.2.1', sha256='2bc1bc23e4302fdb3cd9418e6a5c720fd0884410bcb8cff0bcdf41ad693f11ac')
     version('0.1.16', sha256='3d7f725328ecdbb66826bff2e48a40a1d9234249859c8092ca0e92be7fb78111')
     version('0.1.15', sha256='1030654b1a1cfc387c2759f8613f033da467c8182dc027e181227aeb52854bb2')
     version('0.1.14', sha256='d1596741fb26be234c2adb6972306908f09b049dc670d8312cf2636f1a615a52')
