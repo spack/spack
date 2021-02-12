@@ -29,8 +29,8 @@ class Alps(CMakePackage):
     depends_on('lapack')
     # build fails for latest python@3.7
     depends_on('python@:3.6.99', type=('build', 'link', 'run'))
-    depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-scipy', type=('build', 'run'))
+    depends_on('py-numpy@:1.19.9', type=('build', 'run'))
+    depends_on('py-scipy@:1.5.9', type=('build', 'run'))
     depends_on('py-matplotlib', type=('build', 'run'))
 
     # fix for gcc@7:
