@@ -16,6 +16,7 @@ class LlvmAmdgpu(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.1', sha256='8003ede5a1462f46f0bb1b8b16c14ac6e884d322561235f7111ef7c3e74c6b07')
     version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69')
     version('3.10.0', sha256='8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370')
     version('3.9.0', sha256='1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1')
