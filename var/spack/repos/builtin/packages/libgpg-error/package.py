@@ -12,6 +12,10 @@ class LibgpgError(AutotoolsPackage):
     homepage = "https://www.gnupg.org/related_software/libgpg-error/index.en.html"
     url      = "https://gnupg.org/ftp/gcrypt/libgpg-error/libgpg-error-1.37.tar.bz2"
 
+    version('1.41', sha256='64b078b45ac3c3003d7e352a5e05318880a5778c42331ce1ef33d1a0d9922742')
+    version('1.40', sha256='e6b0392e852a8ad069242265c513c946b492b00816f3967a97d297886939623a')
+    version('1.39', sha256='4a836edcae592094ef1c5a4834908f44986ab2b82e0824a0344b49df8cdb298f')
+    version('1.38', sha256='d8988275aa69d7149f931c10442e9e34c0242674249e171592b430ff7b3afd02')
     version('1.37', sha256='b32d6ff72a73cf79797f7f2d039e95e9c6f92f0c1450215410840ab62aea9763')
     version('1.36', sha256='babd98437208c163175c29453f8681094bcaf92968a15cafb1a276076b33c97c')
     version('1.27', sha256='4f93aac6fecb7da2b92871bb9ee33032be6a87b174f54abf8ddf0911a22d29d2')
