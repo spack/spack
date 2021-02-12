@@ -44,9 +44,6 @@ runner_attributes_schema_items = {
             },
         },
     },
-}
-
-customizable_job_schema_items = {
     'before_script': {
         'type': 'array',
         'items': {'type': 'string'}
@@ -65,10 +62,7 @@ runner_selector_schema = {
     'type': 'object',
     'additionalProperties': False,
     'required': ['tags'],
-    'properties': union_dicts(
-        runner_attributes_schema_items,
-        customizable_job_schema_items
-    ),
+    'properties': runner_attributes_schema_items,
 }
 
 #: Properties for inclusion in other schemas
@@ -79,7 +73,6 @@ properties = {
         'required': ['mappings'],
         'patternProperties': union_dicts(
             runner_attributes_schema_items,
-            customizable_job_schema_items,
             {
                 'bootstrap': {
                     'type': 'array',
