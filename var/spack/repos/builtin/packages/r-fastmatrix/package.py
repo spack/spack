@@ -16,6 +16,8 @@ class RFastmatrix(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/fastmatrix_0.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fastmatrix"
 
+    version('0.3-81', sha256='7ccea45fb31839dd8f44227fa9a064a1aef16cfc5a355ff6be48c2eebad6963d')
+    version('0.3-8',  sha256='f2df2aeea647d43f527be5f204aabad9517c198b3e2ef6f9a75af97a530f52b5')
     version('0.3', sha256='d92e789454a129db5f6f5b23e0d2245f3d55ff34b167427af265b9a6331e7c21')
 
     depends_on('r@3.5.0:', type=('build', 'run'))
