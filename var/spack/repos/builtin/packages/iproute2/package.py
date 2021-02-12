@@ -12,6 +12,7 @@ class Iproute2(AutotoolsPackage):
     homepage = "https://github.com/shemminger/iproute2"
     url      = "https://github.com/shemminger/iproute2/archive/v5.9.0.tar.gz"
 
+    version('5.10.0', sha256='65fb51d9bd5467fa9e34db34481b023a2eb559f719f944c1afbf605ab4d31190')
     version('5.9.0', sha256='1afde56d416f136b1236ac2f8276e4edbe114ca3c2ab12f11af11b84cf0992e4')
     version('5.8.0', sha256='78c73ed49c35fae59ab4e9d88220dcc70da924de3838e13a3cdc7c09496e5a45')
     version('5.7.0', sha256='12a3861f463c6bbd1bb3b213ac734f75c89172b74104140dd0bbfcb1e13ee798')
