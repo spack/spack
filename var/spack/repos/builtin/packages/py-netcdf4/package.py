@@ -14,6 +14,9 @@ class PyNetcdf4(PythonPackage):
 
     maintainers = ['skosukhin']
 
+    version('1.5.5.1', sha256='d957e55a667d1fc651ddef22fea10ded0f142b7d9dbbf4d08c0012d32f445abd')
+    version('1.5.5',   sha256='910b0c9d1ca7bef9c5796c45e2f5f30b91df70997ac655c51a58073eff2634f9')
+    version('1.5.4',   sha256='941de6f3623b6474ecb4d043be5990690f7af4cf0d593b31be912627fe5aad03')
     version('1.5.3',   sha256='2a3ca855848f4bbf07fac366da77a681fcead18c0a8813d91d46302f562dc3be')
     version('1.4.2',   sha256='b934af350459cf9041bcdf5472e2aa56ed7321c018d918e9f325ec9a1f9d1a30')
     version('1.2.7',   sha256='0c449b60183ee06238a8f9a75de7b0eed3acaa7a374952ff9f1ff06beb8f94ba')
