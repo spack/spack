@@ -22,6 +22,8 @@ class PyChainer(PythonPackage):
 
     maintainers = ['adamjstewart']
 
+    version('7.7.0', sha256='59ae120e4ddae8c4e4ed0bada2c97a38d5435a3adca2bb2ef400c48c6cd12446')
+    version('7.4.0', sha256='33a2ca59ab3ddb8cf20477c8a5dde55dcd78dd7eee64f76ef336f00c685759b7')
     version('7.2.0', sha256='6e2fba648cc5b8a5421e494385b76fe5ec154f1028a1c5908557f5d16c04f0b3')
     version('6.7.0', sha256='87cb3378a35e7c5c695028ec91d58dc062356bc91412384ea939d71374610389')
 
