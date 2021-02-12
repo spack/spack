@@ -15,6 +15,7 @@ class PyXopen(PythonPackage):
     homepage = "https://github.com/marcelm/xopen"
     pypi = "xopen/xopen-0.1.1.tar.gz"
 
+    version('1.1.0', sha256='38277eb96313b2e8822e19e793791801a1f41bf13ee5b48616a97afc65e9adb3')
     version('1.0.1', sha256='79d7e425fb0930b0153eb6beba9a540ca3e07ac254ca828577ad2e8fa24105dc')
     version('0.9.0', sha256='1e3918c8a5cd2bd128ba05b3b883ee322349219c99c305e10114638478e3162a')
     version('0.8.4', sha256='dcd8f5ef5da5564f514a990573a48a0c347ee1fdbb9b6374d31592819868f7ba')
