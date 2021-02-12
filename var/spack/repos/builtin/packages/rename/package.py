@@ -12,6 +12,7 @@ class Rename(Package):
     homepage = "http://plasmasturm.org/code/rename"
     url      = "https://github.com/ap/rename/archive/v1.600.tar.gz"
 
+    version('1.601', sha256='e8fd67b662b9deddfb6a19853652306f8694d7959dfac15538a9b67339c87af4')
     version('1.600', sha256='538fa908c9c2c4e7a08899edb6ddb47f7cbeb9b1a1d04e003d3c19b56fcc7f88')
 
     depends_on('perl', type=('build', 'run'))
