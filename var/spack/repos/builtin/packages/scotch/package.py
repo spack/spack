@@ -15,6 +15,20 @@ class Scotch(Package):
     url      = "http://gforge.inria.fr/frs/download.php/latestfile/298/scotch_6.0.4.tar.gz"
     list_url = "http://gforge.inria.fr/frs/?group_id=248"
 
+    version('31832', sha256='8206127d038bda868dda5c5a7f60ef8224f2e368298fbb01bf13fa250e378dd4')
+    version('28978', sha256='82654e63398529cd3bcc8eefdd51d3b3161c0429bb11770e31f8eb0c3790db6e')
+    version('28934', sha256='a52a58fab4a3def7674f345ee5f6e68c525c43607170a16cd37e42c7d2dc8c17')
+    version('28926', sha256='022e791a26507302d059feff343bf85aef0ba8c1f5f5e74ad75889d95f5ba2dc')
+    version('28044', sha256='595ccc664ba070264b851a27b7860042a6bc716d6aade93e0909619decfabc92')
+    version('27584', sha256='54c9e7fafefd49d8b2017d179d4f11a655abe10365961583baaddc4eeb6a9add')
+    version('27437', sha256='2405e177f1e9b89413972f5a516ade3094c485a91eb9ce676c6b2fba31df3e0b')
+    version('27249', sha256='67655a983c1f115a6362f1816263a32c62d4dc6df35adbbaebdf554f83aed718')
+    version('26886', sha256='fde7b4a396d180267a4b732b500c9434e36c92af57c73a7bee385c285542b8fa')
+    version('26855', sha256='aeed7ed6ead76f9117e992daead22a7df468a6fc5b23527ae69b1309ca65bfc8')
+    version('23391', sha256='2a43ad93fab633d8ae25cefb09d6dcfd2ec22867f2860a3e4485e677adb9e634')
+    version('22248', sha256='bd844fb0c79eaa2c53ae4158e22e8611d7c55f9cd46e9a27b63733408a8ca5c5')
+    version('298',   sha256='8206127d038bda868dda5c5a7f60ef8224f2e368298fbb01bf13fa250e378dd4')
+    version('6.1.0', sha256='a3bc3fa3b243fcb52f8d68de4272562a0328afb18a96f535724d284e36730485')
     version('6.0.10', sha256='fd8b707b8200823312a1571d97d3776ff3dfd3280cfa4b6e38987153cea5dbda')
     version('6.0.9', sha256='622b4143cf01c480bb15708b3651b29c25e4aeb00c8c6447ff196aca2eca5c93')
     version('6.0.8', sha256='0ba3f145026174304f910c8770a3cbb034f213c91d939573751cfbb4fd46d45e')
