@@ -14,6 +14,10 @@ class Ibmisc(CMakePackage):
 
     maintainers = ['citibeth']
 
+    version('0.2.0', sha256='46ea0eb515475f482de333c7e7ad14f621ad2a41baafd115bc2ecc6a6a0b7580')
+    version('0.1.3', sha256='b635848dc50060bafac4b2d43d5da751884c3d5938a894b7f49a1399a01b2b8c')
+    version('0.1.2', sha256='021f29d7e667d5a0aee47d40c7a85733e555ae98493d849f4779ff772b131f86')
+    version('0.1.1', sha256='2738136fe7f0e9393d6417802cd6d9d1ed9e7da778c815db5bd3ca9a16631064')
     version('0.1.0', sha256='38481a8680aad4b40eca6723b2898b344cf0ef891ebc3581f5e99fbe420fa0d8')
 
     variant('everytrace', default=False,
