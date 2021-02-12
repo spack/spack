@@ -13,6 +13,8 @@ class RDada2(RPackage):
     homepage = "http://benjjneb.github.io/dada2/"
     url      = "https://github.com/benjjneb/dada2/archive/v1.14.tar.gz"
 
+    version('1.18', sha256='c4b3db0af6e1ae3b345007e1012280518269fd9da8de7ba7ba5ab801bb8233ed')
+    version('1.16', sha256='8411fd71e52a05879338a7c331ac2dce4a357db2ac0391bd76775444d467e4a7')
     version('1.14', sha256='19980b9d7b0a0e80e86010357cae11d1fc07c2d02067c4445169143cf1f99906')
 
     depends_on('r@3.4:', type=('build', 'run'))
