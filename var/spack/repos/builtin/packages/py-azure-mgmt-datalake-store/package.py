@@ -10,6 +10,7 @@ class PyAzureMgmtDatalakeStore(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-datalake-store/azure-mgmt-datalake-store-0.5.0.zip"
 
+    version('1.0.0', sha256='1ab9952bdeccfa2a237af3cb553b8b99f4112f1beb1edafd0d11f2989bcb6071')
     version('0.5.0', sha256='9376d35495661d19f8acc5604f67b0bc59493b1835bbc480f9a1952f90017a4c')
 
     depends_on('py-setuptools', type='build')
