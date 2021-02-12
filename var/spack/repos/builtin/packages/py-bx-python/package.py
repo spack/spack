@@ -13,6 +13,7 @@ class PyBxPython(PythonPackage):
     homepage = "https://github.com/bxlab/bx-python"
     pypi = "bx-python/bx-python-0.8.8.tar.gz"
 
+    version('0.8.9', sha256='b7794220170af14bd4062cebd77ce56cb4c3ac6412fe197c2155aa5dc47ef6c9')
     version('0.8.8', sha256='ad0808ab19c007e8beebadc31827e0d7560ac0e935f1100fb8cc93607400bb47')
     version('0.7.4',
             sha256='1066d1e56d062d0661f23c19942eb757bd7ab7cb8bc7d89a72fdc3931c995cb4',
