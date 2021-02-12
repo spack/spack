@@ -13,6 +13,7 @@ class PySvgpathtools(PythonPackage):
 
     pypi = "svgpathtools/svgpathtools-1.3.3.tar.gz"
 
+    version('1.4.1', sha256='7aaba07923ad85b6628301e92e5e72fd0d0a5057620e1423509b3a0b609b7485')
     version('1.3.3', sha256='e4b3784ae41b725fbce6a33a8981210967b16d0b557cb5d98c0ed0c81f0f89b9')
 
     depends_on('py-setuptools', type='build')
