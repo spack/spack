@@ -12,6 +12,9 @@ class PyPeriodictable(PythonPackage):
 
     pypi = "periodictable/periodictable-1.4.1.tar.gz"
 
+    version('1.5.3', sha256='1d09c359468e2de74b43fc3a7dcb0d3d71e0ff53adb85995215d8d7796451af6')
+    version('1.5.2', sha256='1fea8abf0c20453550630ca682a75f0148f65b6d21fdcce7cf0c0e98631fa0d3')
+    version('1.5.1', sha256='cf3554e5ab28daeaa3d7acc16f702655bca56e822d5e984fec5d2c4ba1cca761')
     version('1.5.0', sha256='b020c04c6765d21903e4604a76ca33cda98677003fe6eb48ed3690cfb03253b2')
     version('1.4.1', sha256='f42e66f6efca33caec4f27dad8d6a6d4e59da147ecf5adfce152cb84e7bd160b')
 
