@@ -40,6 +40,14 @@ class Groff(AutotoolsPackage, GNUMirrorPackage):
     patch('BuildFoundries.patch')
     patch('pdfmom.patch')
 
+    executables = ['^automake$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'GNU groff version\s+(\S+)', output)
+        return match.group(1) if match else None 
+
     def configure_args(self):
         args = [
             "--without-x"
