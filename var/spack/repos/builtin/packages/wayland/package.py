@@ -17,6 +17,10 @@ class Wayland(AutotoolsPackage):
     homepage = "http://wayland.freedesktop.org/"
     url      = "https://github.com/wayland-project/wayland/archive/1.18.0.tar.gz"
 
+    version('1.19.0',  sha256='4e3b889468b9a4c2d16fc6489e28d000641e67c45dc97c4f6d9ecd3e261c895f')
+    version('1.18.93', sha256='42fcad670a74bed904a0615ca0835ffee889a0adb22ea4c0d48c7d7298a75669')
+    version('1.18.92', sha256='bc50d29bb1f30b2625521c6ad69e2de89e6cbf9459d538e4b0208ad15daff73a')
+    version('1.18.91', sha256='a437f8de270514a1da00c1a6fa245f47dca8436ad82b4287f5ef3f4aaef0c56f')
     version('1.18.0',  sha256='8d375719ebfa36b6f2968096fdf0bfa7d39ba110b7956c0032e395e7e012f332')
     version('1.17.93', sha256='293536ad23bfed15fc34e2a63bbb511167e8b096c0eba35e805cb64d46ad62ae')
     version('1.17.92', sha256='d944a7b999cfe6fee5327a2315c8e5891222c5a88a96e1ca73485978e4990512')
