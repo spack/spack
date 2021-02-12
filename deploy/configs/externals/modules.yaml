@@ -29,6 +29,7 @@ modules:
     whitelist:
       - arm-forge
       - blender
+      - cli-tools
       - cmake
       - cuda
       - cudnn

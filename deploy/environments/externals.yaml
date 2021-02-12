@@ -28,6 +28,7 @@ spack:
     - boost~mpi@1.73.0
     - bzip2
     - cgal
+    - cli-tools
     - cmake@3.15.7
     - cuda@10.1.243
     - cuda@11.1.0
