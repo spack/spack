@@ -41,6 +41,7 @@ class Conduit(Package):
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
+    version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
     version('0.7.0', sha256='ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c')
     version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')
     version('0.5.1', sha256='68a3696d1ec6d3a4402b44a464d723e6529ec41016f9b44c053676affe516d44')
