@@ -15,6 +15,8 @@ class PyTpot(PythonPackage):
     homepage = "http://epistasislab.github.io/tpot/"
     pypi = "tpot/TPOT-0.11.5.tar.gz"
 
+    version('0.11.7', sha256='64ff1845efdec3d9c70b35587f719cc0821722f27d16f542f83bf81f448e3ff1')
+    version('0.11.6', sha256='8a00f21307641a37d407bbd2f28d3e28393d54558f94e9e1e694cc998aa0ff7d')
     version('0.11.5', sha256='909be08b29165ce48de5e5d2e3fd73fee9aeeaf1030f2e0912ce0f0bd9c3d2f3')
 
     depends_on('py-setuptools',             type='build')
