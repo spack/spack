@@ -21,4 +21,5 @@ class RRcppdate(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/RcppDate_0.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RcppDate"
 
+    version('0.0.2', sha256='d494e691f28014967094fdb8779d6b2ff831f13f7e8193241e0313cc409b84b0')
     version('0.0.1', sha256='117721fc677dfb4209200a7ff894fbbb8ee1b652d01b3878b11c3253733b4a5f')
