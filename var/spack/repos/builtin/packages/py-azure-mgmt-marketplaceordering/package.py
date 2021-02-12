@@ -10,6 +10,7 @@ class PyAzureMgmtMarketplaceordering(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-marketplaceordering/azure-mgmt-marketplaceordering-0.2.1.zip"
 
+    version('1.0.0', sha256='85103080f9e59215036bdfb8f806d91ea182d72c46a13f55c3acc479849351e3')
     version('0.2.1', sha256='dc765cde7ec03efe456438c85c6207c2f77775a8ce8a7adb19b0df5c5dc513c2')
 
     depends_on('py-setuptools', type='build')
