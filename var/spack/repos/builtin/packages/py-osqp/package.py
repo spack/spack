@@ -13,6 +13,7 @@ class PyOsqp(PythonPackage):
     homepage = "https://osqp.org/"
     pypi = "osqp/osqp-0.6.1.tar.gz"
 
+    version('0.6.2', sha256='262162039f6ad6c9ffee658541b18cfae8240b65edbde71d9b9e3af42fbfe4b3')
     version('0.6.1', sha256='47b17996526d6ecdf35cfaead6e3e05d34bc2ad48bcb743153cefe555ecc0e8c')
 
     depends_on('cmake', type='build')
