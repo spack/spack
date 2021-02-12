@@ -11,6 +11,16 @@ class PyPylint(PythonPackage):
 
     pypi = "pylint/pylint-1.6.5.tar.gz"
 
+    version('2.6.0', sha256='bb4a908c9dadbc3aac18860550e870f58e1a02c9f2c204fdf5693d73be061210')
+    version('2.5.3', sha256='7dd78437f2d8d019717dbf287772d0b2dbdfd13fc016aa7faa08d67bccc46adc')
+    version('2.5.2', sha256='b95e31850f3af163c2283ed40432f053acbc8fc6eba6a069cb518d9dbf71848c')
+    version('2.5.1', sha256='f1a99799b1748bc5241e9a6b5a518893b34e2fd6245460207dec71f46c0abc17')
+    version('2.5.0', sha256='588e114e3f9a1630428c35b7dd1c82c1c93e1b0e78ee312ae4724c5e1a1e0245')
+    version('2.4.4', sha256='3db5468ad013380e987410a8d6956226963aed94ecb5f9d3a28acca6d9ac36cd')
+    version('2.4.3', sha256='856476331f3e26598017290fd65bebe81c960e806776f324093a46b76fb2d1c0')
+    version('2.4.2', sha256='7edbae11476c2182708063ac387a8f97c760d9cfe36a5ede0ca996f90cf346c8')
+    version('2.4.1', sha256='6cbd124a1a5ed1fd3f3fed4178a6c2ba166862ea0dac6ab2ff8d9f0998b13e5c')
+    version('2.4.0', sha256='92280a6085fc5e4fec67d6330c0c85eae50817696d02bdc85e9ca6bab830ad58')
     version('2.3.1', sha256='723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1')
     version('2.3.0', sha256='ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182')
     version('1.9.4', sha256='ee1e85575587c5b58ddafa25e1c1b01691ef172e139fc25585e5d3f02451da93')
