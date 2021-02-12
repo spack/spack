@@ -14,6 +14,7 @@ class Libspatialite(AutotoolsPackage):
     homepage = "http://www.gaia-gis.it"
     url      = "http://www.gaia-gis.it/gaia-sins/libspatialite-sources/libspatialite-4.3.0a.tar.gz"
 
+    version('5.0.1', sha256='eecbc94311c78012d059ebc0fae86ea5ef6eecb13303e6e82b3753c1b3409e98')
     version('5.0.0', preferred=True, sha256='7b7fd70243f5a0b175696d87c46dde0ace030eacc27f39241c24bac5dfac6dac')
     # Must download manually from:
     #     https://www.gaia-gis.it/fossil/libspatialite/info/c7f67038bf06d98d
