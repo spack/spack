@@ -39,7 +39,7 @@ from spack.util.spack_yaml import syaml_dict
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
-VALID_VERSION = re.compile(r'[A-Za-z0-9_\.\*\-]')
+VALID_VERSION = re.compile(r'[A-Za-z0-9_\-]')
 
 # regex for version segments
 SEGMENT_REGEX = re.compile(r'[a-zA-Z]+|[0-9]+')
@@ -76,8 +76,10 @@ def coerce_versions(a, b):
         return (a, b)
     elif order.index(ta) > order.index(tb):
         if ta == VersionRange:
+            assert isinstance(b, Version), b
             return (a, VersionRange(b, b))
         else:
+            assert isinstance(b, (Version, VersionRange)), b
             return (a, VersionList([b]))
     else:
         if tb == VersionRange:
@@ -224,10 +226,8 @@ class Version(object):
         gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
         a suitable compiler.
         """
-
-        nself = len(self.version)
-        nother = len(other.version)
-        return nother <= nself and self.version[:nother] == other.version
+        return ((len(other.version) <= len(self.version)) and
+                (self in other))
 
     def __iter__(self):
         return iter(self.version)
@@ -418,6 +418,17 @@ class _VersionEndpoint(object):
         return hash((self.value, self.location, self.includes_endpoint))
 
     @_endpoint_only
+    def __contains__(self, other):
+        return ((self == other) or
+                (self.value is not None and
+                 other.value is not None and
+                 other.value in self.value and
+                 self.includes_endpoint and
+                 other.includes_endpoint) or
+                ((self.location == 'left') and self < other) or
+                ((self.location == 'right') and self > other))
+
+    @_endpoint_only
     def __eq__(self, other):
         return (self.value == other.value and
                 # Note that this is already checked by @_endpoint_only.
@@ -475,93 +486,6 @@ class _VersionEndpoint(object):
 
 
 class VersionRange(object):
-
-    @classmethod
-    def has_star_component(cls, obj):
-        if not obj:
-            return False
-        if isinstance(obj, str):
-            obj = Version(obj)
-        assert isinstance(obj, Version), obj
-        for sep in obj.dotted.separators:
-            if sep.startswith('.*'):
-                return True
-        return False
-
-    @classmethod
-    def check_for_star_components(
-        cls, start, end, includes_left_endpoint, includes_right_endpoint,
-        description=None,
-    ):
-        if isinstance(start, string_types):
-            start = Version(start)
-        if isinstance(end, string_types):
-            end = Version(end)
-
-        would_be_range = VersionRange(start, end,
-                                      includes_left_endpoint,
-                                      includes_right_endpoint)
-        any_dotted_versions = []
-        for edge in [start, end]:
-            if cls.has_star_component(edge):
-                any_dotted_versions.append(edge)
-
-        if start != end:
-            if any_dotted_versions:
-                if description is None:
-                    description = str(would_be_range)
-                raise ValueError(
-                    "cannot create version range inequality '{0}' "
-                    "with starred versions: [{1}].\n"
-                    "please remove all '.*' version components "
-                    "or suffixes from your input specs"
-                    .format(description,
-                            ', '.join(
-                                v.string
-                                for v in any_dotted_versions
-                            )))
-            return would_be_range
-
-        assert start == end
-        assert includes_left_endpoint == includes_right_endpoint
-
-        if len(any_dotted_versions) == 0:
-            return would_be_range
-        assert start is not None
-
-        version_components = list(start.version)
-        suffix = ''
-        if not isinstance(version_components[-1], int):
-            suffix = version_components.pop()
-        low_end = version_components[:]
-        high_end = low_end[:]
-        high_end[-1] += 1
-
-        # NB: Using the same start.separators will still give us a version with
-        # the same .\*, so remove it before zipping.
-        fixed_seps = [re.sub(r'^.\*', '', s) for s in start.separators]
-
-        low_ver = Version(''.join(
-            str(k) + str(v) for k, v in zip(low_end, fixed_seps)
-        ) + suffix)
-        high_ver = Version(''.join(
-            str(k) + str(v) for k, v in zip(high_end, fixed_seps)
-        ) + suffix)
-
-        if not includes_left_endpoint:
-            assert not includes_right_endpoint
-            low_side = cls(None, low_ver,
-                           includes_left_endpoint=True,
-                           includes_right_endpoint=False)
-            high_side = cls(high_ver, None,
-                            includes_left_endpoint=True,
-                            includes_right_endpoint=True)
-            return VersionList([low_side, high_side])
-
-        return cls(low_ver, high_ver,
-                   includes_left_endpoint=True,
-                   includes_right_endpoint=False)
-
     def __init__(self, start, end, includes_left_endpoint=True,
                  includes_right_endpoint=True):
         if isinstance(start, string_types):
@@ -665,26 +589,8 @@ class VersionRange(object):
         if other is None:
             return False
 
-        in_lower = (
-            ((self.start == other.start) and
-             not self.includes_left_endpoint or
-             other.includes_left_endpoint) or
-            self.start is None or
-            (other.start is not None and (
-                self.start < other.start or
-                other.start in self.start)))
-        if not in_lower:
-            return False
-
-        in_upper = (
-            ((self.end == other.end) and
-             not self.includes_right_endpoint
-             or other.includes_right_endpoint) or
-            self.end is None or
-            (other.end is not None and (
-                self.end > other.end or
-                other.end in self.end)))
-        return in_upper
+        return ((other._low_endpoint() in self._low_endpoint()) and
+                (other._high_endpoint() in self._high_endpoint()))
 
     @coerced
     def satisfies(self, other):
@@ -714,18 +620,29 @@ class VersionRange(object):
         satisfies() is not.
         """
         return (self.overlaps(other) or
-                # if either self.start or other.end are None, then this can't
-                # satisfy, or overlaps() would've taken care of it.
-                self.start and other.end and self.start.satisfies(other.end))
+                (self.start is not None and
+                 other.end is not None and
+                 (self.start in other.end) and
+                 self.includes_left_endpoint and
+                 other.includes_right_endpoint))
 
     @coerced
     def overlaps(self, other):
+        # TODO: factor this out more into _VersionEndpoint!
         return ((self.start is None or other.end is None or
-                 self.start <= other.end or
-                 other.end in self.start or self.start in other.end) and
+                 self.start < other.end or
+                 (self.includes_left_endpoint and
+                  other.includes_right_endpoint and
+                  (self.start == other.end or
+                   other.end in self.start or
+                   self.start in other.end))) and
                 (other.start is None or self.end is None or
-                 other.start <= self.end or
-                 other.start in self.end or self.end in other.start))
+                 other.start < self.end or
+                 (self.includes_right_endpoint and
+                  other.includes_left_endpoint and
+                  (other.start == self.end or
+                   other.start in self.end or
+                   self.end in other.start))))
 
     @coerced
     def union(self, other):
@@ -1125,8 +1042,6 @@ def ver(obj):
     elif isinstance(obj, (int, float)):
         return _string_to_version(str(obj))
     elif type(obj) in (Version, VersionRange, VersionList):
-        if isinstance(obj, Version) and VersionRange.has_star_component(obj):
-            return VersionRange.check_for_star_components(obj, obj, True, True)
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))

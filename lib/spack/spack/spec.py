@@ -4348,9 +4348,9 @@ class LazySpecCache(collections.defaultdict):
 
 #: These are possible token types in the spec grammar.
 (
-    HASH, DEP, AT, ID, COLON, COMMA, ON, OFF, PCT, EQ, VAL, FILE, LT, GT, LE,
-    GE, EQEQ, NE, LT_COLON, GT_COLON, LT_GT_COLON, ID,
-) = range(22)
+    HASH, DEP, AT, ID, COLON, COMMA, ON, OFF, PCT, EQ, VAL, FILE, LT_COLON, GT_COLON, LT_GT_COLON,
+    ID,
+) = range(16)
 
 # NB: `spec_id_re` currently contains a literal `*` to match against, because
 # we use that same regex for matching version strings, and we want to support
@@ -4387,13 +4387,6 @@ class SpecLexer(spack.parse.Lexer):
                 (r'\~', lambda scanner, val: self.token(OFF,   val)),
                 # Compiler dependency syntax:
                 (r'\%', lambda scanner, val: self.token(PCT,   val)),
-                # More version syntax: @==2 is the same as @2.
-                (r'\=\=', lambda scanner, val: self.token(EQEQ, val)),
-                (r'\!\=', lambda scanner, val: self.token(NE,  val)),
-                (r'\<\=',  lambda scanner, val: self.token(LE, val)),
-                (r'\<',  lambda scanner, val: self.token(LT,   val)),
-                (r'\>\=',  lambda scanner, val: self.token(GE, val)),
-                (r'\>',  lambda scanner, val: self.token(GT,   val)),
 
                 # This is *not* used in version string parsing.
                 (r'\=', lambda scanner, val: self.token(EQ,    val)),
@@ -4683,69 +4676,6 @@ class SpecParser(spack.parse.Parser):
         end = None
         op = None
 
-        # @<1.2.3
-        if self.accept(LT):
-            op = self.token.value
-            assert self.accept(ID)
-            end = self.token.value
-            return vn.VersionRange.check_for_star_components(
-                None, end,
-                includes_left_endpoint=True,
-                includes_right_endpoint=False,
-                description=op + end)
-        # @<=1.2.3
-        if self.accept(LE):
-            op = self.token.value
-            assert self.accept(ID)
-            end = self.token.value
-            return vn.VersionRange.check_for_star_components(
-                None, end,
-                includes_left_endpoint=True,
-                includes_right_endpoint=True,
-                description=op + end)
-        # @>1.2.3
-        if self.accept(GT):
-            op = self.token.value
-            assert self.accept(ID)
-            start = self.token.value
-            return vn.VersionRange.check_for_star_components(
-                start, None,
-                includes_left_endpoint=False,
-                includes_right_endpoint=True,
-                description=op + start)
-        # @>=1.2.3
-        if self.accept(GE):
-            op = self.token.value
-            assert self.accept(ID)
-            start = self.token.value
-            return vn.VersionRange.check_for_star_components(
-                start, None,
-                includes_left_endpoint=True,
-                includes_right_endpoint=True,
-                description=op + start)
-        # @==1.2.3
-        if self.accept(EQEQ):
-            op = self.token.value
-            assert self.accept(ID)
-            end = self.token.value
-            start = end
-            return vn.VersionRange.check_for_star_components(
-                start, end,
-                includes_left_endpoint=True,
-                includes_right_endpoint=True,
-                description=op + start)
-        # @!=1.2.3
-        if self.accept(NE):
-            op = self.token.value
-            assert self.accept(ID)
-            end = self.token.value
-            start = end
-            return vn.VersionRange.check_for_star_components(
-                start, end,
-                includes_left_endpoint=False,
-                includes_right_endpoint=False,
-                description=op + start)
-
         # @:!1.2.3( !: | : | \epsilon )
         if self.accept(LT_COLON):
             op = self.token.value
@@ -4755,11 +4685,11 @@ class SpecParser(spack.parse.Parser):
             # @:!1.2.3!: (@!=1.2.3) (not equal to)
             if self.accept(GT_COLON):
                 r_op = self.token.value
-                return vn.VersionRange.check_for_star_components(
+                return vn.VersionRange(
                     end, end,
                     includes_left_endpoint=False,
                     includes_right_endpoint=False,
-                    description=op + end + r_op)
+                )
 
             # @:!1.2.3: => @: (all versions, which is often unexpected)
             if self.accept(COLON):
@@ -4768,11 +4698,11 @@ class SpecParser(spack.parse.Parser):
                     "A @:!{0}: is the same as @: (all versions)!".format(end))
 
             # @:!1.2.3 => @<1.2.3
-            return vn.VersionRange.check_for_star_components(
+            return vn.VersionRange(
                 None, end,
                 includes_left_endpoint=True,
                 includes_right_endpoint=False,
-                description=op + end)
+            )
 
         # @:( \epsilon | 1.2.3( !: | : | \epsilon ))
         if self.accept(COLON):
@@ -4793,11 +4723,11 @@ class SpecParser(spack.parse.Parser):
                     "A @:{0}: is the same as @: (all versions)!".format(end))
 
             # @:1.2.3 \epsilon => @<=1.2.3
-            return vn.VersionRange.check_for_star_components(
+            return vn.VersionRange(
                 None, end,
                 includes_left_endpoint=True,
                 includes_right_endpoint=True,
-                description=op + end)
+            )
 
         # @1.2.3( !:!1.2.3 | :!1.2.3 | !:1.2.3 | !: | :1.2.3 | : | \epsilon )
         if self.accept(ID):
@@ -4808,20 +4738,22 @@ class SpecParser(spack.parse.Parser):
                 r_op = self.token.value
                 assert self.accept(ID)
                 end = self.token.value
-                return vn.VersionRange.check_for_star_components(
+                return vn.VersionRange(
                     start, end,
                     includes_left_endpoint=False,
-                    includes_right_endpoint=False)
+                    includes_right_endpoint=False,
+                )
 
             # @1.2.3:!1.2.3
             if self.accept(LT_COLON):
                 r_op = self.token.value
                 assert self.accept(ID)
                 end = self.token.value
-                return vn.VersionRange.check_for_star_components(
+                return vn.VersionRange(
                     start, end,
                     includes_left_endpoint=True,
-                    includes_right_endpoint=False)
+                    includes_right_endpoint=False,
+                )
 
             # @1.2.3!:(1.2.3 | \epsilon)
             if self.accept(GT_COLON):
@@ -4829,15 +4761,17 @@ class SpecParser(spack.parse.Parser):
                 # @1.2.3!:1.2.3
                 if self.accept(ID):
                     end = self.token.value
-                    return vn.VersionRange.check_for_star_components(
+                    return vn.VersionRange(
                         start, end,
                         includes_left_endpoint=False,
-                        includes_right_endpoint=True)
+                        includes_right_endpoint=True,
+                    )
                 # @1.2.3!:
-                return vn.VersionRange.check_for_star_components(
+                return vn.VersionRange(
                     start, None,
                     includes_left_endpoint=False,
-                    includes_right_endpoint=True)
+                    includes_right_endpoint=True,
+                )
 
             # @1.2.3:( 1.2.3 | \epsilon )
             if self.accept(COLON):
@@ -4848,20 +4782,14 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                     else:
                         end = self.token.value
-                return vn.VersionRange.check_for_star_components(
+                return vn.VersionRange(
                     start, end,
                     includes_left_endpoint=True,
                     includes_right_endpoint=True,
-                    description=str(start) + r_op + (end or ''))
+                )
 
         if start:
             # No colon, but there was a version.
-            if vn.VersionRange.has_star_component(start):
-                return vn.VersionRange.check_for_star_components(
-                    start, start,
-                    includes_left_endpoint=True,
-                    includes_right_endpoint=True,
-                    description=str(start))
             return vn.Version(start)
 
         if op is None:
@@ -4873,11 +4801,11 @@ class SpecParser(spack.parse.Parser):
             start = vn.Version(start)
         if end:
             end = vn.Version(end)
-        return vn.VersionRange.check_for_star_components(
+        return vn.VersionRange(
             start, end,
             includes_left_endpoint=True,
             includes_right_endpoint=True,
-            description=description)
+        )
 
     def version_list(self):
         vlist = []
