@@ -1026,6 +1026,8 @@ class TestSpecSematics(object):
         # Sanity check build spec of out should match build spec of original.
         assert spec['splice-t'].build_spec.full_hash() == \
                out['splice-t'].build_spec.full_hash()
+        # Finally, the spec should know it's been spliced:
+        assert out.spliced
         # Now we attempt a second splice.
         dep = Spec('splice-z+bar')
         dep.concretize()
@@ -1040,6 +1042,7 @@ class TestSpecSematics(object):
                out2['splice-z'].build_spec.full_hash()
         assert spec['splice-t'].build_spec.full_hash() == \
                out2['splice-t'].build_spec.full_hash()
+        assert out2.spliced
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
