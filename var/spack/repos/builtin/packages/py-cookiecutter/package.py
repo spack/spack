@@ -14,6 +14,9 @@ class PyCookiecutter(PythonPackage):
     homepage = "https://cookiecutter.readthedocs.io/en/latest/"
     url      = "https://github.com/audreyr/cookiecutter/archive/1.6.0.tar.gz"
 
+    version('1.7.2', sha256='32d176621bbbe76f11012e015930d2382f0fbe803362091e79a5dddbf5612abc')
+    version('1.7.1', sha256='768aab727996758c9fa090876335f9912081d191b184816e5fc16f081ef110d6')
+    version('1.7.0', sha256='975c578050a040e77c9a68a49ba420137d8da820d8ebf109342144f73a02722d')
     version('1.6.0', sha256='0c9018699b556b83d7c37b27fe0cc17485b90b6e1f47365b3cdddf77f6ca9d36')
 
     depends_on('py-setuptools', type='build')
