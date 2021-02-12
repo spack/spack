@@ -12,6 +12,7 @@ class Bubblewrap(AutotoolsPackage):
     homepage = "https://github.com/containers/bubblewrap"
     url      = "https://github.com/containers/bubblewrap/archive/v0.4.0.tar.gz"
 
+    version('0.4.1', sha256='2d603d551cb9c75c7b49d5ed40e5421c211227bfdcd922c4730141d7f7c39915')
     version('0.4.0', sha256='dedea228f53dd5f589d8225b4584a9b354849a221caf7304874ca2e4d4bcdafb')
     version('0.3.3', sha256='439e4cd84d9d19c9e5b0c6aa0f0c3a55bbb893ae5ec112a5b575eadd2165f039')
     version('0.3.2', sha256='c66c1b6da3257e06b38a339611e76b21dc52a47975d55429071c22455259d010')
