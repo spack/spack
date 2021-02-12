@@ -16,6 +16,9 @@ class Mg(Package):
     homepage = "https://github.com/ibara/mg"
     url      = "https://github.com/ibara/mg/archive/mg-6.6.tar.gz"
 
+    version('6.8.1', sha256='a4af7afa77fed691096be8e2ff0507cc6bdd8efe7255916f714168d02790044c')
+    version('6.8',   sha256='bc5f2445b755b362dd6651fe63e5433034044d9f3cd214fcad4cb739592e76bd')
+    version('6.7',   sha256='02583d90df743e994fb1e411befbd23488fd1eaeb82c9db1fd4957d1a8f1abde')
     version('6.6', sha256='e8440353da1a52ec7d40fb88d4f145da49c320b5ba31daf895b0b0db5ccd0632')
 
     depends_on('ncurses')
