@@ -24,15 +24,11 @@ from spack import *
 
 
 class PyLightgbm(PythonPackage):
-    """FIXME: Put a proper description of your package here."""
+    """LightGBM is a gradient boosting framework that uses tree
+    based learning algorithms."""
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/microsoft/LightGBM"
     pypi     = "lightgbm/lightgbm-3.1.1.tar.gz"
-
-    # FIXME: Add a list of GitHub accounts to
-    # notify when the package is updated.
-    # maintainers = ['github_user1', 'github_user2']
 
     version('3.1.1', sha256='babece2e3613e97748a67ed45387bb0e984bdb1f4126e39f010fbfe7503c7b20')
 
