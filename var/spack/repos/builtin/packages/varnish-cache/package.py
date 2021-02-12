@@ -12,6 +12,8 @@ class VarnishCache(AutotoolsPackage):
     homepage = "https://www.varnish-cache.org/"
     url      = "https://github.com/varnishcache/varnish-cache/archive/varnish-6.4.0.tar.gz"
 
+    version('6.5.1', sha256='5f1597dfabf85b73aa2fa97c840e9ec687f33d025a85cc29174208b3f476bea1')
+    version('6.5.0', sha256='c2ca0e3541a7524a37af158e31a410eee64e7d5a6505abf32393db1d9a9558fb')
     version('6.4.0', sha256='d9702c2c689c5d4ecd911886f769ddf22f46ac0722e275bee4033928cab09243')
     version('6.3.2', sha256='e50f3dd4e26d5669c5b73657cdb0d5ddac7dcc3cfa1761a983afa24b659f3785')
     version('6.3.1', sha256='8cc57360c1db36e8c77fc51304a935803a06247f6d6120fa47e8345efadf17a9')
