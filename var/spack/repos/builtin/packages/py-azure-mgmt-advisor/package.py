@@ -10,6 +10,7 @@ class PyAzureMgmtAdvisor(PythonPackage):
     homepage = "https://github.com/Azure/azure-sdk-for-python"
     pypi = "azure-mgmt-advisor/azure-mgmt-advisor-4.0.0.zip"
 
+    version('9.0.0', sha256='fc408b37315fe84781b519124f8cb1b8ac10b2f4241e439d0d3e25fd6ca18d7b')
     version('4.0.0', sha256='1ecea7a9dc48c099c06aab68aace7fdbded91a5522932882b1707c29fa055054')
     version('2.0.1', sha256='1929d6d5ba49d055fdc806e981b93cf75ea42ba35f78222aaf42d8dcf29d4ef3')
 
