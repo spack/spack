@@ -14,6 +14,7 @@ class RFansi(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/fansi_0.4.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fansi"
 
+    version('0.4.2', sha256='a2edf06cf8b91333a5df4990d50cdb35a63aa4b63c8c8ddf5bedcb499daafc44')
     version('0.4.1', sha256='3c69eec803a3827e5227f9cf084976eeb738b22c7eb7665bb5faa251bce41e09')
     version('0.4.0', sha256='e104e9d01c7ff8a847f6b332ef544c0ef912859f9c6a514fe2e6f3b34fcfc209')
     version('0.3.0', sha256='dd6401d5c91ff4c45d752cceddd5379d1ae39a8a1196f236b0bc0ec6d691b88c')
