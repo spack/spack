@@ -15,6 +15,9 @@ class Sumo(CMakePackage):
     homepage = "http://projects.eclipse.org/projects/technology.sumo"
     url      = "https://github.com/eclipse/sumo/archive/v1_5_0.tar.gz"
 
+    version('1_8_0', sha256='c70a802509c354c222e40926c71314e05c04652b1759f50e581d8d95d2f1d836')
+    version('1_7_0', sha256='db0868318f2a602475a15ba8b83d30b686e6283b3ff753b9d112217529f2893b')
+    version('1_6_0', sha256='95d48b40a796e51db5dff91c316426262e6d6577347cc7a4e9a03c1b302a84ef')
     version('1.5.0', sha256='be6ba0361b487a5e71c81e60b4c07a67826d5e170500c10c37374c1086ac2cb6')
 
     variant('gdal',
