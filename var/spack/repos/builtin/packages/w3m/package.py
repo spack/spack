@@ -49,7 +49,6 @@ class W3m(AutotoolsPackage):
     patch('fix_gc.patch')
 
     def _add_arg_for_variant(self, args, variant, choices):
-        lib = None
         for avail_lib in choices:
             if self.spec.variants[variant].value == avail_lib:
                 args.append('--with-{}={}'.format(variant, avail_lib))
