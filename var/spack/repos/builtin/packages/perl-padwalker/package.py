@@ -12,4 +12,7 @@ class PerlPadwalker(PerlPackage):
     homepage = "http://search.cpan.org/~robin/PadWalker-2.2/PadWalker.pm"
     url      = "http://search.cpan.org/CPAN/authors/id/R/RO/ROBIN/PadWalker-2.2.tar.gz"
 
+    version('2.5', sha256='07b26abb841146af32072a8d68cb90176ffb176fd9268e6f2f7d106f817a0cd0')
+    version('2.4', sha256='ff7e285aecffa3c52ed5c996d070207b649aba38aae8615e5ffaa3b97fd787ec')
+    version('2.3', sha256='2a6c44fb600861e54568e74081a8d1f121f0060076069ceab34b1ae89d6588cf')
     version('2.2', sha256='fc1df2084522e29e892da393f3719d2c1be0da022fdd89cff4b814167aecfea3')
