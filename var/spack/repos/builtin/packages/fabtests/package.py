@@ -13,6 +13,11 @@ class Fabtests(AutotoolsPackage):
     homepage = "http://libfabric.org"
     url = "https://github.com/ofiwg/libfabric/releases/download/v1.9.1/fabtests-1.9.1.tar.bz2"
 
+    version('1.11.2', sha256='33ee3db1e3465c3c641faa1ba419c50c478787ab650bb1e46647590cd26216ba')
+    version('1.11.1', sha256='a367f1f940e0109388468289a2419ec959321a39e7220de9c08d5577fd506c9d')
+    version('1.11.0', sha256='b9bdf38e1f7daa4e6e6f4ab4b80ca68ef48d5440154414a3d5ebe19c3c85a85a')
+    version('1.10.1', sha256='ee16c645455f30c28cfa76387741182187e69b2854aa4f63ec384a78bf764f72')
+    version('1.10.0', sha256='8ead72bb31f124e07d74a235dc9b653fdc03053acedecce1e68a6ee1623da5dc')
     version('1.9.1', sha256='6f8ced2c6b3514759a0e177c8b2a19125e4ef0714d4cc0fe0386b33bd6cd5585')
     version('1.9.0', sha256='60cc21db7092334904cbdafd142b2403572976018a22218e7c453195caef366e')
     version('1.8.1', sha256='e9005d8fe73ca3849c872649c29811846bd72a62f897ecab73a08c7a9514f37b')
