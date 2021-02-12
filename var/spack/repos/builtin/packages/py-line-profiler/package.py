@@ -14,6 +14,10 @@ class PyLineProfiler(PythonPackage):
     homepage = "https://github.com/rkern/line_profiler"
     pypi = "line_profiler/line_profiler-2.0.tar.gz"
 
+    version('3.1.0', sha256='e73ff429236d59d48ce7028484becfa01449b3d52abdcf7337e0ff2acdc5093c')
+    version('3.0.2', sha256='7218ad6bd81f8649b211974bf108933910f016d66b49651effe7bbf63667d141')
+    version('3.0.1', sha256='5c034395261170dd9b663acce897ed54754d56db97ede30b31df38fbb24f9711')
+    version('3.0.0', sha256='ad27f7f48c0aae84f58d554160e6a9c3be507ae45c77b97e14ef537f55133cbe')
     version('2.1.2', sha256='efa66e9e3045aa7cb1dd4bf0106e07dec9f80bc781a993fbaf8162a36c20af5c')
     version('2.0', sha256='739f8ad0e4bcd0cb82e99afc09e00a0351234f6b3f0b1f7f0090a8a2fbbf8381')
 
