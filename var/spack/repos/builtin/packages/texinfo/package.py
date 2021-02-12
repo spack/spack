@@ -20,6 +20,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     executables = ['^info$']
 
+    version('6.7', sha256='a52d05076b90032cb2523673c50e53185938746482cf3ca0213e9b4b50ac2d3e')
+    version('6.6', sha256='900723b220baa4672c4214a873a69ecbe1cb5f14c926a1a4bbb230ac309294cb')
     version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
     version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')
     version('6.0', sha256='83d3183290f34e7f958d209d0b20022c6fe9e921eb6fe94c27d988827d4878d2')
