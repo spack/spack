@@ -29,6 +29,9 @@ class Mono(AutotoolsPackage):
     depends_on('perl', type=('build'))
     depends_on('python', type=('build'))
 
+    version('6.12.0.107', sha256='61f3cd629f8e99371c6b47c1f8d96b8ac46d9e851b5531eef20cdf9ab60d2a5f')
+    version('6.12.0.90',  sha256='51de5c02ad511333f93ff585bca54c8784de35af4ff27b759d16b46c4402cdac')
+    version('6.10.0.104', sha256='b8d6eb70a252d2efad8384d66b529883dc59e581565d617fa57f8e79317e332c')
     version('6.8.0.123', sha256='e2e42d36e19f083fc0d82f6c02f7db80611d69767112af353df2f279744a2ac5',
             url='https://download.mono-project.com/sources/mono/mono-6.8.0.123.tar.xz')
     version('6.8.0.105', sha256='578799c44c3c86a9eb5daf6dec6c60a24341940fd376371956d4a46cf8612178',
