@@ -14,6 +14,9 @@ class Nfft(AutotoolsPackage):
     homepage = "https://www-user.tu-chemnitz.de/~potts/nfft"
     url = "https://github.com/NFFT/nfft/releases/download/3.4.1/nfft-3.4.1.tar.gz"
 
+    version('3.5.2', sha256='cf3b2f3b2eabd79e49a5fbabf7f8d73fc3c57c4f68ae71e29f6dead853ab2901')
+    version('3.5.1', sha256='bb95b2c240c6d972d4bb20740751a8efeba8b48b3be1d61fd59883909776fee3')
+    version('3.5.0', sha256='5f78a9d2a675aee7ace55c96bdf1b54f049e05a1dd50697757bdc609a8586a07')
     version('3.4.1', sha256='1cf6060eec0afabbbba323929d8222397a77fa8661ca74927932499db26b4aaf')
     version('3.3.2', sha256='9dcebd905a82c4f0a339d0d5e666b68c507169d9173b66d5ac588aae5d50b57c')
 
