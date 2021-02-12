@@ -14,6 +14,7 @@ class Iceauth(AutotoolsPackage, XorgPackage):
     homepage = "http://cgit.freedesktop.org/xorg/app/iceauth"
     xorg_mirror_path = "app/iceauth-1.0.7.tar.gz"
 
+    version('1.0.8', sha256='25b94613173a6dd28d7b18d9479194aae3d9392f5a4a072f499bd48d3ca00740')
     version('1.0.7', sha256='6c9706cce276609876e768759ed4ee3b447cd17af4a61f9b5a374c7dda9696d8')
 
     depends_on('libice')
