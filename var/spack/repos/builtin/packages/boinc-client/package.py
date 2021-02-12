@@ -17,6 +17,14 @@ class BoincClient(AutotoolsPackage):
     homepage = "https://boinc.berkeley.edu/"
     url      = "https://github.com/BOINC/boinc/archive/client_release/7.16/7.16.5.tar.gz"
 
+    version('7.16.16', sha256='0d5656a9f8ed1048936a5764270848b892d63f27bdb863d0ace447f1eaae6002')
+    version('7.16.14', sha256='c328399cc27109f94ee77aaf80406ed304c6be6c198391ff8e83f8400431fc78')
+    version('7.16.12', sha256='e24dc9c54440dc2032a3b8304f87da5cef12aba3b0889cba6c3761aef8360730')
+    version('7.16.11', sha256='8a3f9453b16acfd8c636d18b4939c461c751aa1dd9e108cf60b90a3909bfa0a9')
+    version('7.16.10', sha256='adaaa59a8ec4f0658505f6fd319e5abd6651cba15474a8dc25787b1f8d3de30e')
+    version('7.16.9',  sha256='0a0cebabe53eb0637328b313d70043e2fd01fe3e896c9b1823dd8db4d90d76e1')
+    version('7.16.8',  sha256='826b0b0660167faa48e089bc7aa43120c797436214a3fd99ad32b8b48f85e6d7')
+    version('7.16.7',  sha256='38130d532031e75701eee910da64b9eb837e5bfeff9979dbb200c37146be3fed')
     version('7.16.5', sha256='33db60991b253e717c6124cce4750ae7729eaab4e54ec718b9e37f87012d668a')
 
     variant('manager', default=False, description='Builds the client manager')
