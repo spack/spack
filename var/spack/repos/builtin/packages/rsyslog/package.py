@@ -12,6 +12,9 @@ class Rsyslog(AutotoolsPackage):
     homepage = "https://www.rsyslog.com/"
     url      = "https://github.com/rsyslog/rsyslog/archive/v8.2006.0.tar.gz"
 
+    version('8.2012.0', sha256='57af8eb79545484dc9764d940819e6e39d8cd1715cf92cb9d8a81315e8054274')
+    version('8.2010.0', sha256='1b3fa2ef07f5548c7ca17dde01519967143125e96abd9bced036e81f802e726d')
+    version('8.2008.0', sha256='bf000a5f6d95fec26b77a2133ac225da439b0cd7a64f190a569d5c42fdacf795')
     version('8.2006.0', sha256='dc30a2ec02d5fac91d3a4f15a00641e0987941313483ced46592ab0b0d68f324')
     version('8.2004.0', sha256='b56b985fec076a22160471d389b7ff271909dfd86513dad31e401a775a6dfdc2')
     version('8.2002.0', sha256='b31d56311532335212ef2ea7be4501508224cb21f1bef9d262c6d78e21959ea1')
