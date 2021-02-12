@@ -16,6 +16,16 @@ class Icedtea(AutotoolsPackage):
     homepage = "http://icedtea.classpath.org/wiki/Main_Page"
     url      = "http://icedtea.wildebeest.org/download/source/icedtea-3.4.0.tar.gz"
 
+    version('3.18.0', sha256='ec12b72396fce12fd60471f10443cfb5c2924d1abb0847e19d2a195548c052c9')
+    version('3.17.1', sha256='880c6fda398cf08ae191ad4aa6ff35f6e1d41163e76897fbd14cc8cd91b0d395')
+    version('3.17.0', sha256='63323810671c36c188c8bfaaeeef3f93d97f7abbce79bdd996c4d7651d16a272')
+    version('3.16.0', sha256='a5a2ec58aac19744818cbbcce45c4e58785b76322ac64d8986b3eb3f727f2a2f')
+    version('3.15.0', sha256='31737a8483a8e65ce14be0ce454ab55c4357872148f43595ba40292ad5c3b8c0')
+    version('3.14.0', sha256='f713f9a03bc24f8548e69798dd23d3de2da9ce78771e49c2b4a77efd24af2ad5')
+    version('3.13.0', sha256='ecd817551a7338810170754795894c34354a272af7b280658a6096e5e8a9b0f6')
+    version('3.12.0', sha256='41261bfdd93616ac5d061ce44aaf5b46e5f4920a360f982a54c423b0e171f4bc')
+    version('3.11.0', sha256='4a258c29b532c843e451689e595001b472af8329f988b9d94e1b2b7661cba94b')
+    version('3.10.0', sha256='e3fbcaef960971add75d7e4cf7b0a994185672f68fcb4f97b1f61a66a71ef027')
     version('3.9.0', sha256='84a63bc59f4e101ce8fa183060a59c7e8cbe270945310e90c92b8609a9b8bc88')
     version('3.8.0', sha256='ef1a9110294d0a905833f1db30da0c8a88bd2bde8d92ddb711d72ec763cd25b0')
     version('3.7.0', sha256='936302694e193791885e81cf72097eeadee5b68ba220889228b0aafbfb2cb654')
