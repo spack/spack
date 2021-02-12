@@ -15,6 +15,8 @@ class Augustus(MakefilePackage):
     url      = "https://github.com/Gaius-Augustus/Augustus/archive/3.3.2.tar.gz"
     # Releases have moved to github
 
+    version('3.4.0', sha256='246772737862d16755ab0197bb1d4656cafb31db9b38c2cd991a8e8db6f116c8')
+    version('3.3.3', sha256='4cc4d32074b18a8b7f853ebaa7c9bef80083b38277f8afb4d33c755be66b7140')
     version('3.3.2', sha256='d09f972cfd88deb34b19b69878eb8af3bbbe4f1cde1434b69cedc2aa6247a0f2')
     version('3.3.1-tag1', sha256='011379606f381ee21b9716f83e8a1a57b2aaa01aefeebd2748104efa08c47cab',
             url='https://github.com/Gaius-Augustus/Augustus/archive/v3.3.1-tag1.tar.gz')
