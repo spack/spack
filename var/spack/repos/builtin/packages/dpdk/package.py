@@ -13,6 +13,7 @@ class Dpdk(MakefilePackage):
     homepage = "https://github.com/DPDK/dpdk"
     url      = "https://github.com/DPDK/dpdk/archive/v19.11.tar.gz"
 
+    version('20.11', sha256='c29bb5710d068efd2bc2c51d73ced4d3ca0dc0f5473874350a0eb3d9c3e50af4')
     version('20.02', sha256='29e56ea8e47e30110ecb881fa5a37125a865dd2d45b61f68e93e334caaab16b7')
     version('19.11', sha256='ce1befb20a5e5c5399b326a39cfa23314a5229c0ced2553f53b09b1ae630706b')
     version('19.08', sha256='1ceff1a6f4f8d5f6f62c1682097249227ac5225ccd9638e0af09f5411c681038')
