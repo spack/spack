@@ -14,6 +14,10 @@ class Qbox(MakefilePackage):
     homepage = "http://qboxcode.org/"
     url      = "http://qboxcode.org/download/qbox-1.63.7.tgz"
 
+    version('1.67.4', sha256='82b3dffa3977e74d51e9b84766bbb5ffafd17e2139e600f9e687d2b0a9126de7')
+    version('1.67.3', sha256='5b15a2ab91deab50854c276981e7f5764ddfbca48d26afa1cb0d888dc022b50a')
+    version('1.66.2', sha256='159e7e494b8c318cc50fe5a827783073d8c3449b1081dbba0ee28f77053cc608')
+    version('1.64.0', sha256='3dfa3b172cbd3d20ef933a33331928dfbbd03c545b4a13d37b2fac23ba2456b8')
     version('1.63.7', sha256='40acf4535c4dcab16066c218b1c2a083c238a1f54c43a1d2d4afcefb578086ed')
     version('1.63.5', sha256='fa6d0e41622690f14b7cd0c2735d3d8d703152eb2c51042cdd77a055926cd90a')
     version('1.63.4', sha256='829ae57e43ecb79f7dca8fb02aa70c85b0bbb68684a087d3cd1048b50fbc8e96')
