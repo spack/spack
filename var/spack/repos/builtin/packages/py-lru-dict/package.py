@@ -13,6 +13,7 @@ class PyLruDict(PythonPackage):
     homepage = "https://github.com/amitdev/lru-dict"
     pypi = "lru-dict/lru-dict-1.1.6.tar.gz"
 
+    version('1.1.7', sha256='45b81f67d75341d4433abade799a47e9c42a9e22a118531dcb5e549864032d7c')
     version('1.1.6', sha256='365457660e3d05b76f1aba3e0f7fedbfcd6528e97c5115a351ddd0db488354cc')
 
     depends_on('python@2.7:', type=('build', 'run'))
