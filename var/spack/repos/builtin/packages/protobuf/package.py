@@ -14,6 +14,11 @@ class Protobuf(Package):
     homepage = "https://developers.google.com/protocol-buffers"
     url      = "https://github.com/protocolbuffers/protobuf/archive/v3.12.2.tar.gz"
 
+    version('3.14.0',   sha256='d0f5f605d0d656007ce6c8b5a82df3037e1d8fe8b121ed42e536f569dec16113')
+    version('3.13.0.1', sha256='7d663c8dc81d282dc92e884b38e9c179671e31ccacce311154420e65f7d142c6')
+    version('3.13.0',   sha256='9b4ee22c250fe31b16f1a24d61467e40780a3fbb9b91c3b65be2a376ed913a1a')
+    version('3.12.4',   sha256='512e5a674bf31f8b7928a64d8adf73ee67b8fe88339ad29adaa3b84dbaa570d8')
+    version('3.12.3',   sha256='71030a04aedf9f612d2991c1c552317038c3c5a2b578ac4745267a45e7037c29')
     version('3.12.2',  sha256='bb8ce9ba11eb7bccf080599fe7cad9cc461751c8dd1ba61701c0070d58cde973')
     version('3.12.1',  sha256='cb9b3f9d625b5739a358268eb3421de11cacd90025f5f7672c3930553eca810e')
     version('3.12.0',  sha256='946ba5371e423e1220d2cbefc1f65e69a1e81ca5bab62a03d66894172983cfcd')
