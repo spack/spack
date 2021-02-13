@@ -1,3 +1,4 @@
+//Slepc tutorial: https://slepc.upv.es/handson/handson0.html.
 static char help[] = "Simple Hello World example program in SLEPc\n";
 
 #include "slepcsys.h"

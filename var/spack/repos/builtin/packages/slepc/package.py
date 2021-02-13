@@ -141,3 +141,8 @@ class Slepc(Package):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
         self.cache_extra_test_sources([self.examples_src_dir])
+
+    @run_after('install'):
+    def _run_smoke_test:
+        """Copy the build test files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
