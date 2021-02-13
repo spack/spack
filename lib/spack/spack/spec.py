@@ -1382,7 +1382,16 @@ class Spec(object):
         cover = kwargs.get('cover', 'nodes')
         direction = kwargs.get('direction', 'children')
         order = kwargs.get('order', 'pre')
-        deptype = dp.canonical_deptype(deptype)
+
+        # we don't want to run canonical_deptype every time through
+        # traverse, because it is somewhat expensive. This ensures we
+        # canonicalize only once.
+        canonical_deptype = kwargs.get("canonical_deptype", None)
+        if canonical_deptype is None:
+            deptype = dp.canonical_deptype(deptype)
+            kwargs["canonical_deptype"] = deptype
+        else:
+            deptype = canonical_deptype
 
         # Make sure kwargs have legal values; raise ValueError if not.
         def validate(name, val, allowed_values):
