@@ -973,3 +973,36 @@ def test_reindex_when_all_prefixes_are_removed(mutable_database, mock_store):
         mutable_database.remove(s)
 
     assert len(mutable_database.query_local(installed=False, explicit=True)) == 0
+
+
+@pytest.mark.parametrize('spec_str,parent_name,expected_nparents', [
+    ('dyninst', 'callpath', 3),
+    ('libelf', 'dyninst', 1),
+    ('libelf', 'libdwarf', 1)
+])
+@pytest.mark.regression('11983')
+def test_check_parents(spec_str, parent_name, expected_nparents, database):
+    """Check that a spec returns the correct number of parents."""
+    s = database.query_one(spec_str)
+
+    parents = s.dependents(name=parent_name)
+    assert len(parents) == expected_nparents
+
+    edges = s.edges_from_dependents(name=parent_name)
+    assert len(edges) == expected_nparents
+
+
+def test_consistency_of_dependents_upon_remove(mutable_database):
+    # Check the initial state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 3
+
+    # Remove a dependent (and all its dependents)
+    mutable_database.remove('mpileaks ^callpath ^mpich2')
+    mutable_database.remove('callpath ^mpich2')
+
+    # Check the final state
+    s = mutable_database.query_one('dyninst')
+    parents = s.dependents(name='callpath')
+    assert len(parents) == 2
