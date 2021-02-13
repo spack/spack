@@ -829,20 +829,3 @@ class TestSpecSyntax(object):
         for a, b in itertools.product(specs, repeat=2):
             # Check that we can compare without raising an error
             assert a <= b or b < a
-
-    @pytest.mark.parametrize('canonical_form,spec_string', [
-        ('@:!2', '@<2'),
-        ('@2!:', '@>2'),
-        ('@:2', '@<=2'),
-        ('@2:', '@>=2'),
-        ('@2', '@==2'),
-        ('@2:!3', '@==2.*'),
-        ('@2:!3', '@2.*'),
-        ('@2:!3+a', '@2.*+a'),
-        ('@:!2,3:', '@!=2.*'),
-        ('@2!:!4', '@2!:!4'),
-    ])
-    def test_version_inequalities_canonicalization(
-        self, canonical_form, spec_string,
-    ):
-        self.check_parse(canonical_form, spec_string)
