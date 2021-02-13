@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 
 from spack import *
 
@@ -14,6 +15,9 @@ class PyXgboost(PythonPackage):
     homepage  = 'https://xgboost.ai/'
     pypi = 'xgboost/xgboost-1.3.3.tar.gz'
 
+    maintainers = ['adamjstewart']
+    import_modules = ['xgboost']
+
     version('1.3.3', sha256='397051647bb837915f3ff24afc7d49f7fca57630ffd00fb5ef66ae2a0881fb43')
 
     variant('pandas',       default=False, description='Enable Pandas extensions for training.')
@@ -21,7 +25,9 @@ class PyXgboost(PythonPackage):
     variant('dask',         default=False, description='Enables Dask extensions for distributed training.')
     variant('plotting',     default=False, description='Enables tree and importance plotting.')
 
-    depends_on('cmake',         type='build')
+    for ver in ['1.3.3']:
+        depends_on('xgboost@' + ver, when='@' + ver)
+
     depends_on('python@3.6:',   type=('build', 'run'))
     depends_on('py-setuptools', type=('build'))
     depends_on('py-numpy',      type=('build', 'run'))
@@ -37,3 +43,29 @@ class PyXgboost(PythonPackage):
 
     depends_on('py-graphviz',   when='+plotting', type=('build', 'run'))
     depends_on('py-matplotlib', when='+plotting', type=('build', 'run'))
+
+    # `--use-system-libxgboost` is only valid for the 'install' phase, but we want to
+    # skip building of the C++ library and rely on an external dependency
+    phases = ['install']
+
+    def patch(self):
+        # https://github.com/dmlc/xgboost/issues/6706
+        # 'setup.py' is hard-coded to search in Python installation prefix
+        filter_file("lib_path = os.path.join(sys.prefix, 'lib')",
+                    "lib_path = '{0}'".format(self.spec['xgboost'].libs.directories[0]),
+                    "setup.py", string=True)
+
+        # Same for run-time search
+        filter_file("os.path.join(curr_path, 'lib'),",
+                    "'{0}',".format(self.spec['xgboost'].libs.directories[0]),
+                    os.path.join('xgboost', 'libpath.py'), string=True)
+
+    def install_args(self, spec, prefix):
+        args = super(PyXgboost, self).install_args(spec, prefix)
+        args.append('--use-system-libxgboost')
+        return args
+
+    # Tests need to be re-added since `phases` was overridden
+    run_after('install')(
+        PythonPackage._run_default_install_time_test_callbacks)
+    run_after('install')(PythonPackage.sanity_check_prefix)
