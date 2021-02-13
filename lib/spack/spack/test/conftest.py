@@ -563,12 +563,10 @@ def _populate(mock_db):
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True, explicit=True)
 
-    # Transaction used to avoid repeated writes.
-    with mock_db.write_transaction():
-        _install('mpileaks ^mpich')
-        _install('mpileaks ^mpich2')
-        _install('mpileaks ^zmpi')
-        _install('externaltest')
+    _install('mpileaks ^mpich')
+    _install('mpileaks ^mpich2')
+    _install('mpileaks ^zmpi')
+    _install('externaltest')
 
 
 @pytest.fixture(scope='session')

@@ -7,6 +7,7 @@
 This test verifies that the Spack directory layout works properly.
 """
 import os
+import os.path
 import pytest
 
 import spack.paths
@@ -22,11 +23,8 @@ max_packages = 10
 @pytest.fixture()
 def layout_and_dir(tmpdir):
     """Returns a directory layout and the corresponding directory."""
-    layout = YamlDirectoryLayout(str(tmpdir))
-    old_layout = spack.store.layout
-    spack.store.layout = layout
-    yield layout, str(tmpdir)
-    spack.store.layout = old_layout
+    with spack.store.use_store(str(tmpdir)) as s:
+        yield s.layout, str(tmpdir)
 
 
 def test_yaml_directory_layout_parameters(tmpdir, config):
