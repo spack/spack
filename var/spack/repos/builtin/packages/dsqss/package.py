@@ -57,9 +57,11 @@ class Dsqss(CMakePackage):
         opts = []
         if self.spec.satisfies('+mpi'):
             exe_name = self.spec['mpi'].prefix.bin.mpirun
+            opts.extend(['-n', '1'])
             opts.append(join_path(self.prefix.bin, 'dla'))
         else:
             exe_name = 'dla'
         opts.append('param.in')
+        expected = ['R ene = -3.74300000e-01 2.96344394e-03']
         self.run_test(exe_name, options=opts)
-        copy('./sample.log', '..')
+        self.run_test('cat', options=['sample.log'], expected = expected)
