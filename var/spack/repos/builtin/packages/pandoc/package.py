@@ -28,6 +28,8 @@ class Pandoc(Package):
 
     variant('texlive', default=True, description='Use TeX Live to enable PDF output')
 
+    conflicts('target=aarch64:', msg='aarch64 is not supported.')
+
     depends_on('texlive', when='+texlive')
 
     def install(self, spec, prefix):

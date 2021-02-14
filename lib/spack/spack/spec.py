@@ -116,6 +116,13 @@ import spack.util.string
 import spack.variant as vt
 import spack.version as vn
 
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Mapping  # novm
+else:
+    from collections import Mapping
+
+
 __all__ = [
     'Spec',
     'parse',
@@ -1779,10 +1786,12 @@ class Spec(object):
         name = next(iter(node))
         node = node[name]
 
-        spec = Spec(name, full_hash=node.get('full_hash', None))
+        spec = Spec()
+        spec.name = name
         spec.namespace = node.get('namespace', None)
         spec._hash = node.get('hash', None)
         spec._build_hash = node.get('build_hash', None)
+        spec._full_hash = node.get('full_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -2120,7 +2129,7 @@ class Spec(object):
         # which likely means the spec was created with Spec.from_detection
         msg = ('cannot validate "{0}" since it was not created '
                'using Spec.from_detection'.format(self))
-        assert isinstance(self.extra_attributes, collections.Mapping), msg
+        assert isinstance(self.extra_attributes, Mapping), msg
 
         # Validate the spec calling a package specific method
         validate_fn = getattr(
@@ -2529,6 +2538,13 @@ class Spec(object):
         else:
             self._old_concretize(tests)
 
+    def _mark_root_concrete(self, value=True):
+        """Mark just this spec (not dependencies) concrete."""
+        if (not value) and self.concrete and self.package.installed:
+            return
+        self._normal = value
+        self._concrete = value
+
     def _mark_concrete(self, value=True):
         """Mark this spec and its dependencies as concrete.
 
@@ -2536,10 +2552,7 @@ class Spec(object):
         unless there is a need to force a spec to be concrete.
         """
         for s in self.traverse():
-            if (not value) and s.concrete and s.package.installed:
-                continue
-            s._normal = value
-            s._concrete = value
+            s._mark_root_concrete(value)
 
     def concretized(self, tests=False):
         """This is a non-destructive version of concretize().

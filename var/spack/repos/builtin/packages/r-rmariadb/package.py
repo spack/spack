@@ -29,3 +29,12 @@ class RRmariadb(RPackage):
     depends_on('r-bh', type=('build', 'run'))
     depends_on('r-plogr', type=('build', 'run'))
     depends_on('mariadb-client')
+
+    patch('configure_add_rpath.patch')
+
+    def configure_vars(self):
+        lib_dir = self.spec['mariadb-client'].prefix.lib.mariadb
+        inc_dir = self.spec['mariadb-client'].prefix.include.mariadb
+        args = ['LIB_DIR={0}'.format(lib_dir),
+                'INCLUDE_DIR={0}'.format(inc_dir)]
+        return args

@@ -277,6 +277,10 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs.append('NO_AVX2=1')
 
+        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+        if self.spec.satisfies('%fj'):
+            make_defs.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
+
         # Newer versions of openblas will try to find ranlib in the compiler's
         # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
         if self.spec.satisfies('@0.3.13:'):

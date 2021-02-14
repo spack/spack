@@ -28,7 +28,7 @@ level = "long"
 
 
 def setup_parser(subparser):
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
 
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='mirror_command')
@@ -370,5 +370,8 @@ def mirror(parser, args):
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
+
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
 
     action[args.mirror_command](args)

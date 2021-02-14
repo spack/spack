@@ -11,8 +11,7 @@ YAML format preserves DAG information in the spec.
 import ast
 import inspect
 import os
-
-from collections import Iterable, Mapping
+import sys
 
 import pytest
 
@@ -27,6 +26,12 @@ from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
 from spack.util.mock_package import MockPackageMultiRepo
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Iterable, Mapping  # novm
+else:
+    from collections import Iterable, Mapping
 
 
 def check_yaml_round_trip(spec):
@@ -310,7 +315,7 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
     b = mock_repo.add_package('b', [d, e], [default, default])
     mock_repo.add_package('a', [b, c], [default, default])
 
-    with repo.swap(mock_repo):
+    with repo.use_repositories(mock_repo):
         spec_a = Spec('a')
         spec_a.concretize()
         b_spec = spec_a['b']

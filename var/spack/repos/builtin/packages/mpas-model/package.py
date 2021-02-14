@@ -26,6 +26,15 @@ class MpasModel(MakefilePackage):
 
     parallel = False
 
+    resource(when='@6.2:6.3',
+             name='MPAS-Data',
+             git='https://github.com/MPAS-Dev/MPAS-Data.git',
+             commit='33561790de8b43087ab850be833f51a4e605f1bb')
+    resource(when='@7.0',
+             name='MPAS-Data',
+             git='https://github.com/MPAS-Dev/MPAS-Data.git',
+             tag='v7.0')
+
     def target(self, model, action):
         spec = self.spec
         satisfies = spec.satisfies
@@ -72,6 +81,8 @@ class MpasModel(MakefilePackage):
         return targets
 
     def build(self, spec, prefix):
+        copy_tree(join_path('MPAS-Data', 'atmosphere'),
+                  join_path('src', 'core_atmosphere', 'physics'))
         make(*self.target('init_atmosphere', 'all'))
         mkdir('bin')
         copy('init_atmosphere_model', 'bin')

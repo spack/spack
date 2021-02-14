@@ -52,6 +52,9 @@ class Fastjet(AutotoolsPackage):
 
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('auto-ptr', default=False, description='Use auto_ptr')
+    variant('atlas', default=False, description='Patch to make random generator thread_local')
+
+    patch('atlas.patch', when='+atlas')
 
     def configure_args(self):
         extra_args = ["--enable-allplugins"]

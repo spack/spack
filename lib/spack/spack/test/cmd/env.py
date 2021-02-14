@@ -330,7 +330,7 @@ def test_env_status_broken_view(
         # switch to a new repo that doesn't include the installed package
         # test that Spack detects the missing package and warns the user
         new_repo = MockPackageMultiRepo()
-        with spack.repo.swap(new_repo):
+        with spack.repo.use_repositories(new_repo):
             output = env('status')
             assert 'In environment test' in output
             assert 'Environment test includes out of date' in output
@@ -351,7 +351,7 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     new_repo = MockPackageMultiRepo()
-    with spack.repo.swap(new_repo):
+    with spack.repo.use_repositories(new_repo):
         with pytest.raises(SpackCommandError):
             env('activate', '--sh', 'test')
 
@@ -929,7 +929,7 @@ def test_read_old_lock_and_write_new(tmpdir):
     y = mock_repo.add_package('y', [], [])
     mock_repo.add_package('x', [y], [build_only])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x = Spec('x')
         x.concretize()
 
@@ -960,7 +960,7 @@ def test_read_old_lock_creates_backup(tmpdir):
     mock_repo = MockPackageMultiRepo()
     y = mock_repo.add_package('y', [], [])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y = Spec('y')
         y.concretize()
 
@@ -997,7 +997,7 @@ def test_indirect_build_dep():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x_spec = Spec('x')
         x_concretized = x_spec.concretized()
 
@@ -1038,7 +1038,7 @@ def test_store_different_build_deps():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y_spec = Spec('y ^z@3')
         y_concretized = y_spec.concretized()
 
