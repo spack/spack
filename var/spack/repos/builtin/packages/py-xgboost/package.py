@@ -49,6 +49,11 @@ class PyXgboost(PythonPackage):
     depends_on('py-graphviz',   when='+plotting', type=('build', 'run'))
     depends_on('py-matplotlib', when='+plotting', type=('build', 'run'))
 
+    conflicts('+pandas', when='@:0.999')
+    conflicts('+scikit-learn', when='@:0.999')
+    conflicts('+dask', when='@:0.999')
+    conflicts('+plotting', when='@:0.999')
+
     # `--use-system-libxgboost` is only valid for the 'install' phase, but we want to
     # skip building of the C++ library and rely on an external dependency
     phases = ['install']
