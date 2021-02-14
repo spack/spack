@@ -21,7 +21,7 @@ class Xgboost(CMakePackage, CudaPackage):
 
     version('master', branch='master', submodules=True)
     version('1.3.3', tag='v1.3.3', submodules=True)
-    version('0.90', tag='v0.90', submodules=True, deprecated=True)
+    version('0.90', tag='v0.90', submodules=True)
     version('0.81', tag='v0.81', submodules=True, deprecated=True)
 
     variant('nccl', default=False, description='Build with NCCL to enable distributed GPU support')
