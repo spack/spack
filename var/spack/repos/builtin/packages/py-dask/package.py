@@ -136,7 +136,7 @@ class PyDask(PythonPackage):
     depends_on('py-toolz@0.8.2:',       type=('build', 'run'), when='@2.13.0: +delayed')
 
     # Support for YAML configuration files
-    depends_on('py-pyyaml',             type=('build', 'run'))
+    depends_on('py-pyyaml',             type=('build', 'run'), when='+yaml')
 
     @property
     def import_modules(self):
