@@ -253,7 +253,7 @@ function match_flag -d "checks all combinations of flags ocurring inside of a st
     set -l _a (string sub -s 2 (string trim "x$argv[1]"))
     set -l _b (string sub -s 2 (string trim "x$argv[2]"))
 
-    if test -z "$_a" or test -z "$_b"
+    if test -z "$_a"; or test -z "$_b"
         return 0
     end
 
