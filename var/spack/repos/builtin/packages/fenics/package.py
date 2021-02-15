@@ -21,9 +21,16 @@ class Fenics(CMakePackage):
 
     version('2019.1.0.post0', sha256='61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f')
     version('2018.1.0.post1', sha256='425cc49b90e0f5c2ebdd765ba9934b1ada97e2ac2710d982d6d267a5e2c5982d')
-    version('2017.2.0.post0', sha256='d3c40cd8c1c882f517999c25ea4220adcd01dbb1d829406fce99b1fc40184c82')
-    version('2016.2.0',       sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d')
-    version('1.6.0',          sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201')
+    # Pre 2018.1.0 versions are deprecated due to expected compatibility issues
+    version('2017.2.0.post0',
+            sha256='d3c40cd8c1c882f517999c25ea4220adcd01dbb1d829406fce99b1fc40184c82',
+            deprecated=True)
+    version('2016.2.0',
+            sha256='c6760996660a476f77889e11e4a0bc117cc774be0eec777b02a7f01d9ce7f43d',
+            deprecated=True)
+    version('1.6.0',
+            sha256='67f66c39983a8c5a1ba3c0787fa9b9082778bc7227b25c7cad80dc1299e0a201',
+            deprecated=True)
 
     dolfin_versions = ['2019.1.0', '2018.1.0', '2017.2.0', '2016.2.0', '1.6.0']
 
@@ -33,8 +40,8 @@ class Fenics(CMakePackage):
     variant('scotch',       default=True,  description='Compile with Scotch')
     variant('petsc',        default=True,  description='Compile with PETSc')
     variant('slepc',        default=True,  description='Compile with SLEPc')
-    variant('py-petsc4py',  default=True,  description='Use PETSC4py')
-    variant('py-slepc4py',  default=True,  description='Use SLEPc4py')
+    variant('petsc4py',     default=True,  description='Use PETSC4py')
+    variant('slepc4py',     default=True,  description='Use SLEPc4py')
     variant('trilinos',     default=False, description='Compile with Trilinos')
     variant('suite-sparse', default=True,
             description='Compile with SuiteSparse solvers')
@@ -53,6 +60,12 @@ class Fenics(CMakePackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo',
                     'MinSizeRel', 'Developer'))
+
+    # Conflics for PETSC4PY / SLEPC4PY
+    conflicts('+petsc4py', when='~python')
+    conflicts('+petsc4py', when='~petsc')
+    conflicts('+slepc4py', when='~python')
+    conflicts('+slepc4py', when='~slepc')
 
     # Patches
     # patch('petsc-3.7.patch', when='petsc@3.7:')
@@ -81,7 +94,7 @@ class Fenics(CMakePackage):
     # package dependencies
     depends_on('python@3:', type=('build', 'run'), when='+python')
     depends_on('eigen@3.2.0:')
-    depends_on('pkg-config')
+    depends_on('pkgconfig')
     depends_on('zlib', when='+zlib')
 
     for ver in dolfin_versions:
@@ -122,12 +135,12 @@ class Fenics(CMakePackage):
             self.define_from_variant('DOLFIN_ENABLE_MPI', 'mpi'),
             self.define_from_variant('DOLFIN_ENABLE_PARMETIS', 'parmetis'),
             self.define_from_variant('DOLFIN_ENABLE_PETSC', 'petsc'),
-            self.define_from_variant('DOLFIN_ENABLE_PETSC4PY', 'py-petsc4py'),
+            self.define_from_variant('DOLFIN_ENABLE_PETSC4PY', 'petsc4py'),
             self.define_from_variant('DOLFIN_ENABLE_PYTHON', 'python'),
             self.define_from_variant('DOLFIN_ENABLE_QT', 'qt'),
             self.define_from_variant('DOLFIN_ENABLE_SCOTCH', 'scotch'),
             self.define_from_variant('DOLFIN_ENABLE_SLEPC', 'slepc'),
-            self.define_from_variant('DOLFIN_ENABLE_SLEPC4PY', 'py-slepc4py'),
+            self.define_from_variant('DOLFIN_ENABLE_SLEPC4PY', 'slepc4py'),
             self.define_from_variant('DOLFIN_ENABLE_DOCS', 'doc'),
             self.define_from_variant('DOLFIN_ENABLE_SPHINX', 'doc'),
             self.define_from_variant('DOLFIN_ENABLE_TRILINOS', 'trilinos'),
@@ -147,6 +160,6 @@ class Fenics(CMakePackage):
     @run_after('install')
     def install_python_interface(self):
         if '+python' in self.spec:
-            cd('python')
-            setup_py('install', '--single-version-externally-managed',
-                     '--root=/', '--prefix={0}'.format(self.prefix))
+            with working_dir('python'):
+                setup_py('install', '--single-version-externally-managed',
+                         '--root=/', '--prefix={0}'.format(self.prefix))
