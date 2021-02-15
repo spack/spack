@@ -15,7 +15,8 @@ class Arbor(CMakePackage, CudaPackage):
     maintainers = ['bcumming', 'halfflat']
 
     version('master', branch='master')
-    version('0.5', commit="2158d2c61c0608363c66b9665ca4785e8c290b37", submodules=True)
+    version('0.5', 'd0c8a4c7f97565d7c30493c66249be794d1dc424de266fc79cecbbf0e313df59',
+            url='https://github.com/arbor-sim/arbor/releases/download/v0.5/arbor-v0.5-full.tar.gz')
 
     variant('assertions', default=False, description='Enable arb_assert() assertions in code.')
     variant('doc', default=False, description='Build documentation.')
@@ -28,7 +29,7 @@ class Arbor(CMakePackage, CudaPackage):
     conflicts('%gcc@:8.3')
     conflicts('%clang@:8.0')
     # Cray compiler v9.2 and later is Clang-based.
-    conflicts('%cce@:9.2')
+    conflicts('%cce@:9.1')
     conflicts('%intel')
 
     depends_on('cmake@3.12:', type='build')
