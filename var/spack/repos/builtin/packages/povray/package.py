@@ -152,4 +152,4 @@ class Povray(AutotoolsPackage):
         povs = find(self.prefix.share, 'biscuit.pov')[0]
         copy(povs, '.')
         self.run_test('povray', options=['biscuit.pov'])
-        copy('./biscuit.png', '..')
+        copy('biscuit.png', '..')
