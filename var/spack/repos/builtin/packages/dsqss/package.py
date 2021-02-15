@@ -47,8 +47,8 @@ class Dsqss(CMakePackage):
         return args
 
     def test(self):
-        tests = find(self.prefix.share, 'samples')[0]
-        copy(join_path(tests, 'dla', '01_spindimer', 'std.toml'), '.')
+        test01 = find(self.prefix.share, '01_spindimer')[0]
+        copy(join_path(test01, 'std.toml'), '.')
         # prepare
         pythonexe = self.spec['python'].command.path
         opts = [self.spec.prefix.bin.dla_pre, 'std.toml']
