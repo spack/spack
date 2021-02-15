@@ -14,6 +14,7 @@ class PyHorovod(PythonPackage, CudaPackage):
     maintainers = ['adamjstewart', 'aweits', 'tgaddair']
 
     version('master', branch='master', submodules=True)
+    version('0.21.3', tag='v0.21.3', submodules=True)
     version('0.21.2', tag='v0.21.2', submodules=True)
     version('0.21.1', tag='v0.21.1', submodules=True)
     version('0.21.0', tag='v0.21.0', submodules=True)
