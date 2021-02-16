@@ -151,5 +151,7 @@ class Povray(AutotoolsPackage):
     def test(self):
         povs = find(self.prefix.share, 'biscuit.pov')[0]
         copy(povs, '.')
-        self.run_test('povray', options=['biscuit.pov'])
-        copy('biscuit.png', '..')
+        self.run_test('povray', options=['biscuit.pov'],
+                      purpose="test: render sample file",
+                      expected=['POV-Ray finished']
+                      )
