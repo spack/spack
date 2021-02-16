@@ -64,4 +64,4 @@ class Dsqss(CMakePackage):
         opts.append('param.in')
         expected = ['R ene = -3.74300000e-01 2.96344394e-03']
         self.run_test(exe_name, options=opts)
-        self.run_test('cat', options=['sample.log'], expected = expected)
+        self.run_test('cat', options=['sample.log'], expected=expected)
