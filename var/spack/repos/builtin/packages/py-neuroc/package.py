@@ -15,8 +15,7 @@ class PyNeuroc(PythonPackage):
     git = "ssh://bbpcode.epfl.ch/nse/NeuroC"
 
     version('develop', branch='master')
-    version('0.1.7', tag='neuroc-v0.1.7')
-    version('0.1.1', sha256='e541f6c8a11826caa2b2d1cf18015a10ec7009f12813edfc2655084c7cf5021b')
+    version('0.2.4', tag='neuroc-v0.2.4')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
