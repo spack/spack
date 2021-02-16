@@ -1515,10 +1515,23 @@ class Environment(object):
         spec in the environment. The matching spec does not have to be
         installed in the environment.
         """
+        matches = list()
         for user_spec, concretized_user_spec in self.concretized_specs():
             for dep_spec in concretized_user_spec.traverse():
                 if dep_spec.satisfies(spec):
-                    return dep_spec
+                    matches.append((user_spec, dep_spec))
+
+        if len(matches) == 1:
+            return matches[0][1]
+        elif len(matches) > 1:
+            match_instance_format_str = "Abstract spec: {0}\n\Full spec: {1}"
+            matches_str = '\n\n'.join(
+                match_instance_format_str.format(x, y) for x, y in matches
+            )
+            msg = ("{0} matches multiple specs in the environment {1}: \n"
+                   "{2}".format(str(spec), self.name, matches_str))
+            raise SpackEnvironmentError(msg)
+        # If there are no matches, return nothing
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be

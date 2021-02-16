@@ -103,3 +103,19 @@ def test_match_spec_env(mock_packages, mutable_mock_env_path):
         env_spec = spack.cmd.matching_spec_from_env(
             spack.cmd.parse_specs(['a'])[0])
         assert env_spec.satisfies('foobar=baz')
+
+
+@pytest.mark.usefixtures('config')
+def test_multiple_env_match_raises_error(mock_packages, mutable_mock_env_path):
+    e = ev.create('test')
+    e.add('a foobar=baz')
+    e.add('a foobar=fee')
+    e.concretize()
+    with e:
+        with pytest.raises(
+                spack.environment.SpackEnvironmentError) as exc_info:
+
+            env_spec = spack.cmd.matching_spec_from_env(
+                spack.cmd.parse_specs(['a'])[0])
+
+    assert 'matches multiple specs' in exc_info.value.message
