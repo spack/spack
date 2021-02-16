@@ -33,6 +33,10 @@ class PyBglibpy(PythonPackage):
     depends_on('py-bluepy', type='run')
     depends_on('py-libsonata', type='run')
 
+    # skip import test, because bglibpy needs HOC_LIBRARY_PATH
+    # that could be provided by neurodamus-core
+    import_modules = []
+
     def setup_run_environment(self, env):
         env.set('NEURON_INIT_MPI', "0")
         env.unset('PMI_RANK')
