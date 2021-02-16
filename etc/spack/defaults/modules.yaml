@@ -30,8 +30,6 @@ modules:
     lib64:
       - LIBRARY_PATH
     include:
-      - C_INCLUDE_PATH
-      - CPLUS_INCLUDE_PATH
       # The INCLUDE env variable specifies paths to look for
       # .mod file for Intel Fortran compilers
       - INCLUDE
