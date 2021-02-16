@@ -19,7 +19,9 @@ class PyTyping(PythonPackage):
     version('3.6.4', sha256='d400a9344254803a2368533e4533a4200d21eb7b6b729c173bc38201a74db3f2')
     version('3.6.1', sha256='c36dec260238e7464213dcd50d4b5ef63a507972f5780652e835d0228d0edace')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    # Don't use this with new versions of python (3.5+)
+    # python 3.7 and later will actively not import
+    # https://github.com/python/typing/issues/573
+    # _abc_registry now private https://bugs.python.org/issue31333
+    depends_on('python@2.7:2.8,3.4:3.6', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    conflicts('^python@3.7:', msg='https://github.com/python/typing/issues/573'
-              ' - _abc_registry now private https://bugs.python.org/issue31333')
