@@ -13,7 +13,6 @@ class Blast2go(Package):
     homepage = "https://www.blast2go.com/"
 
     version('5.2.5', sha256='c37aeda25f96ac0553b52da6b5af3167d50671ddbfb3b39bcb11afe5d0643891')
-    version('5.2.5', sha256='c37aeda25f96ac0553b52da6b5af3167d50671ddbfb3b39bcb11afe5d0643891')
 
     for t in ['aarch64', 'arm', 'ppc', 'ppc64', 'ppc64le',
               'ppcle', 'sparc', 'sparc64', 'x86']:
