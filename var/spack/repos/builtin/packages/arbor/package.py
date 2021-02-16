@@ -12,11 +12,11 @@ class Arbor(CMakePackage, CudaPackage):
 
     homepage = "https://github.com/arbor-sim/arbor/"
     git      = "https://github.com/arbor-sim/arbor.git"
+    url      = "https://github.com/arbor-sim/arbor/releases/download/v0.5/arbor-v0.5-full.tar.gz"
     maintainers = ['bcumming', 'halfflat']
 
-    version('master', branch='master')
-    version('0.5', 'd0c8a4c7f97565d7c30493c66249be794d1dc424de266fc79cecbbf0e313df59',
-            url='https://github.com/arbor-sim/arbor/releases/download/v0.5/arbor-v0.5-full.tar.gz')
+    version('master', branch='master', submodules=True)
+    version('0.5', 'd0c8a4c7f97565d7c30493c66249be794d1dc424de266fc79cecbbf0e313df59')
 
     variant('assertions', default=False, description='Enable arb_assert() assertions in code.')
     variant('doc', default=False, description='Build documentation.')
