@@ -45,9 +45,12 @@ class Sensei(CMakePackage):
     # All SENSEI versions up to 2.1.1 support only Python 2, so in this case
     # Paraview 6 cannot be used since it requires Python 3. Starting from
     # version 3, SENSEI supports Python 3.
-    depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst")
-    depends_on("paraview@5.6:5.7+python3+mpi+hdf5", when="@3:3.2.1 +catalyst")
-    depends_on("paraview+mpi+python3+hdf5", when="+catalyst")
+    depends_on("paraview@5.5.0:5.5.2+mpi+hdf5", when="@:2.1.1 +catalyst")
+    depends_on("paraview@5.5.0:5.5.2+python+mpi+hdf5", when="@:2.1.1 +catalyst+python")
+    depends_on("paraview@5.6:5.7+mpi+hdf5", when="@3:3.2.1 +catalyst")
+    depends_on("paraview@5.6:5.7+python3+mpi+hdf5", when="@3:3.2.1 +catalyst+python")
+    depends_on("paraview+mpi+hdf5", when="+catalyst")
+    depends_on("paraview+python3+mpi+hdf5", when="+catalyst+python")
     depends_on("visit~gui~python", when="+libsim")
     depends_on("vtk@8.1.0:8.1.2", when="+libsim")
     depends_on("vtk", when="~libsim ~catalyst")
@@ -90,7 +93,6 @@ class Sensei(CMakePackage):
             self.define_from_variant('ENABLE_ASCENT', 'ascent'),
             self.define_from_variant('ENABLE_VTKM', 'vtkm'),
             self.define_from_variant('ENABLE_CATALYST', 'catalyst'),
-            self.define_from_variant('ENABLE_CATALYST_PYTHON', 'catalyst'),
             self.define_from_variant('ENABLE_LIBSIM', 'libsim'),
             self.define_from_variant('ENABLE_VTK_IO', 'vtkio'),
             self.define_from_variant('ENABLE_PYTHON', 'python'),
@@ -110,5 +112,6 @@ class Sensei(CMakePackage):
             args.append(self.define('PYTHON_EXECUTABLE', spec['python'].command.path))
             if spec.satisfies('@3:'):
                 args.append(self.define('SENSEI_PYTHON_VERSION', 3))
+            args.append(self.define_from_variant('ENABLE_CATALYST_PYTHON', 'catalyst'))
 
         return args
