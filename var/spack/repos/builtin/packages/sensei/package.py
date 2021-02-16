@@ -31,10 +31,11 @@ class Sensei(CMakePackage):
 
     variant('shared', default=True, description='Enables shared libraries')
     variant('sencore', default=True, description='Enables the SENSEI core library')
-    variant('catalyst', default=True, description='Build with ParaView-Catalyst support')
+    variant('ascent', default=False, description='Build with ParaView-Catalyst support')
+    variant('catalyst', default=False, description='Build with ParaView-Catalyst support')
     variant('libsim', default=False, description='Build with VisIt-Libsim support')
-    variant('vtkio', default=True, description='Enable adaptors to write to VTK XML format')
-    variant('adios2', default=True, description='Enable ADIOS2 adaptors and endpoints')
+    variant('vtkio', default=False, description='Enable adaptors to write to VTK XML format')
+    variant('adios2', default=False, description='Enable ADIOS2 adaptors and endpoints')
     variant('hdf5', default=False, description='Enables HDF5 adaptors and endpoints')
     variant('vtkm', default=False, description='Enable VTKm adaptors and endpoints')
     variant('python', default=False, description='Enable Python bindings')
@@ -52,6 +53,7 @@ class Sensei(CMakePackage):
     depends_on("vtk", when="~libsim ~catalyst")
     depends_on("vtk+python", when="~libsim ~catalyst+python")
     depends_on("adios2", when="+adios2")
+    depends_on("ascent", when="+ascent")
 
     # VTK needs +hl and currently spack cannot resolve +hl and ~hl
     depends_on("hdf5+hl", when="+hdf5")
@@ -85,6 +87,7 @@ class Sensei(CMakePackage):
             self.define('SENSEI_USE_EXTERNAL_pugixml', True),
             self.define('CMAKE_POSITION_INDEPENDENT_CODE',True),
             self.define_from_variant('ENABLE_SENSEI', 'sencore'),
+            self.define_from_variant('ENABLE_ASCENT', 'ascent'),
             self.define_from_variant('ENABLE_VTKM', 'vtkm'),
             self.define_from_variant('ENABLE_CATALYST', 'catalyst'),
             self.define_from_variant('ENABLE_CATALYST_PYTHON', 'catalyst'),
