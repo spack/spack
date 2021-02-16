@@ -1515,19 +1515,34 @@ class Environment(object):
         spec in the environment. The matching spec does not have to be
         installed in the environment.
         """
-        matches = list()
+        root_matches = list()  # These are abstract
+        dep_matches = list()  # These are concrete
+        # These are concrete (for root specs, they store the concretized spec
+        # rather than the abstract spec)
+        all_matches = list()
         for user_spec, concretized_user_spec in self.concretized_specs():
-            for dep_spec in concretized_user_spec.traverse():
+            if concretized_user_spec.satisfies(spec):
+                root_matches.append(user_spec)
+                all_matches.append(concretized_user_spec)
+            for dep_spec in concretized_user_spec.traverse(root=False):
                 if dep_spec.satisfies(spec):
-                    matches.append((user_spec, dep_spec))
+                    matches.append(dep_spec)
+                    all_matches.append(dep_spec)
 
-        if len(matches) == 1:
-            return matches[0][1]
-        elif len(matches) > 1:
-            match_instance_format_str = "Abstract spec: {0}\n\Full spec: {1}"
-            matches_str = '\n\n'.join(
-                match_instance_format_str.format(x, y) for x, y in matches
-            )
+        if len(all_matches) == 1:
+            return all_matches[0]
+        elif len(all_matches) > 1:
+            # If multiple root specs match, it is assumed that the abstract
+            # spec will most-succinctly summarize the difference between them
+            # (and the user can enter one of these to disambiguate)
+            root_matches_str = '\n'.join(
+                "Root spec: {0}".format(str(x)) for x in root_matches)
+            # For dependencies of concretized specs, no summarization is
+            # available
+            dep_matches_str = '\n'.join(
+                "Dependency spec: {0}".format(str(x)) for x in dep_matches)
+            matches_str = '\n'.join(
+                x for x in [root_matches_str, dep_matches_str] if x)
             msg = ("{0} matches multiple specs in the environment {1}: \n"
                    "{2}".format(str(spec), self.name, matches_str))
             raise SpackEnvironmentError(msg)
