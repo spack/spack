@@ -181,6 +181,23 @@ def parse_specs(args, **kwargs):
         raise spack.error.SpackError(msg)
 
 
+def matching_spec_from_env(spec):
+    """
+    Returns a concrete spec, matching what is available in the environment.
+    If no matching spec is found in the environment, this will return the
+    given spec but concretized.
+    """
+    env = spack.environment.get_env({}, cmd_name)
+    spec_from_env = None
+    if env:
+        spec_from_env = env.matching_spec(spec)
+    if spec_from_env:
+        spec = spec_from_env
+    else:
+        spec.concretize()
+    return spec
+
+
 def elide_list(line_list, max_num=10):
     """Takes a long list and limits it to a smaller number of elements,
        replacing intervening elements with '...'.  For example::

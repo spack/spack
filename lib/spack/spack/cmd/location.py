@@ -98,15 +98,7 @@ def location(parser, args):
                 print(spack.repo.path.dirname_for_package_name(spec.name))
 
             else:
-                # These versions need concretized specs.
-                env = ev.get_env(args, 'location')
-                spec_from_env = None
-                if env:
-                    spec_from_env = env.matching_spec(spec)
-                if spec_from_env:
-                    spec = spec_from_env
-                else:
-                    spec.concretize()
+                spec = spack.cmd.matching_spec_from_env(spec)
                 pkg = spec.package
 
                 if args.stage_dir:

@@ -59,16 +59,7 @@ def emulate_env_utility(cmd_name, context, args):
         tty.die("spack %s only takes one spec." % cmd_name)
     spec = specs[0]
 
-    # If the user requests a spec that matches a concretized spec in the
-    # environment, we implicitly use that.
-    env = ev.get_env(args, cmd_name)
-    spec_from_env = None
-    if env:
-        spec_from_env = env.matching_spec(spec)
-    if spec_from_env:
-        spec = spec_from_env
-    else:
-        spec.concretize()
+    spec = spack.cmd.matching_spec_from_env(spec)
 
     build_environment.setup_package(spec.package, args.dirty, context)
 
