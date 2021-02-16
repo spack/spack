@@ -54,12 +54,37 @@ def setup_parser(subparser):
         '--dependencies', action='store_true', default=False,
         help="(Experimental) disable DAG scheduling; use "
              ' "plain" dependencies.')
+    prune_group = generate.add_mutually_exclusive_group()
+    prune_group.add_argument(
+        '--prune-dag', action='store_true', dest='prune_dag',
+        default=True, help="""Do not generate jobs for specs already up to
+date on the mirror""")
+    prune_group.add_argument(
+        '--no-prune-dag', action='store_false', dest='prune_dag',
+        default=True, help="""Generate jobs for specs already up to date
+on the mirror""")
+    generate.add_argument(
+        '--check-index-only', action='store_true', dest='index_only',
+        default=False, help="""Spack always check specs against configured
+binary mirrors when generating the pipeline, regardless of whether or not
+DAG pruning is enabled.  This flag controls whether it might attempt to
+fetch remote spec.yaml files directly (ensuring no spec is rebuilt if it is
+present on the mirror), or whether it should reduce pipeline generation time
+by assuming all remote buildcache indices are up to date and only use those
+to determine whether a given spec is up to date on mirrors.  In the latter
+case, specs might be needlessly rebuilt if remote buildcache indices are out
+of date.""")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
     # mirror (if necessary).
     rebuild = subparsers.add_parser('rebuild', help=ci_rebuild.__doc__)
     rebuild.set_defaults(func=ci_rebuild)
+
+    # Rebuild the buildcache index associated with the mirror in the
+    # active, gitlab-enabled environment.
+    index = subparsers.add_parser('rebuild-index', help=ci_reindex.__doc__)
+    index.set_defaults(func=ci_reindex)
 
 
 def ci_generate(args):
@@ -75,6 +100,8 @@ def ci_generate(args):
     copy_yaml_to = args.copy_to
     run_optimizer = args.optimize
     use_dependencies = args.dependencies
+    prune_dag = args.prune_dag
+    index_only = args.index_only
 
     if not output_file:
         output_file = os.path.abspath(".gitlab-ci.yml")
@@ -86,7 +113,8 @@ def ci_generate(args):
 
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
-        env, True, output_file, run_optimizer=run_optimizer,
+        env, True, output_file, prune_dag=prune_dag,
+        check_index_only=index_only, run_optimizer=run_optimizer,
         use_dependencies=use_dependencies)
 
     if copy_yaml_to:
@@ -306,8 +334,8 @@ def ci_rebuild(args):
 
         # Checks all mirrors for a built spec with a matching full hash
         matches = bindist.get_mirrors_for_spec(
-            job_spec, force=False, full_hash_match=True,
-            mirrors_to_check=mirrors_to_check)
+            job_spec, full_hash_match=True, mirrors_to_check=mirrors_to_check,
+            index_only=False)
 
         if matches:
             # Got at full hash match on at least one configured mirror.  All
@@ -406,6 +434,22 @@ def ci_rebuild(args):
                 spack_ci.relate_cdash_builds(
                     spec_map, cdash_base_url, cdash_build_id, cdash_project,
                     artifact_mirror_url or pr_mirror_url or remote_mirror_url)
+
+
+def ci_reindex(args):
+    """Rebuild the buildcache index associated with the mirror in the
+       active, gitlab-enabled environment. """
+    env = ev.get_env(args, 'ci rebuild-index', required=True)
+    yaml_root = ev.config_dict(env.yaml)
+
+    if 'mirrors' not in yaml_root or len(yaml_root['mirrors'].values()) < 1:
+        tty.die('spack ci rebuild-index requires an env containing a mirror')
+
+    ci_mirrors = yaml_root['mirrors']
+    mirror_urls = [url for url in ci_mirrors.values()]
+    remote_mirror_url = mirror_urls[0]
+
+    buildcache.update_index(remote_mirror_url, update_keys=True)
 
 
 def ci(parser, args):
