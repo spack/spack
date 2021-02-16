@@ -60,10 +60,9 @@ class Openrasmol(MakefilePackage):
 
     def test(self):
         testdir = self.test_suite.current_test_data_dir
-        work_dir = ancestor(testdir, 3)
         opts = []
         opts.append('-insecure')
         opts.append('-script')
         opts.append(join_path(testdir, 'test.rsc'))
         opts.append(join_path(self.prefix.sample, '1crn.pdb'))
-        self.run_test('rasmol', options=opts, work_dir=work_dir)
+        self.run_test('rasmol', options=opts)
