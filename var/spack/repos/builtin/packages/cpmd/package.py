@@ -17,6 +17,7 @@ class Cpmd(MakefilePackage):
     homepage = "https://www.cpmd.org/wordpress/"
     basedir = os.getcwd()
     url = "file://{0}/cpmd-v4.3.tar.gz".format(basedir)
+    manual_download = True
 
     version('4.3', sha256='4f31ddf045f1ae5d6f25559d85ddbdab4d7a6200362849df833632976d095df4')
 
