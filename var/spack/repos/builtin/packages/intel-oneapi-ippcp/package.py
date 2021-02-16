@@ -21,7 +21,6 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
 
     def __init__(self, spec):
         self.component_info(dir_name='ippcp',
-                            components='intel.oneapi.lin.ippcp.devel',
                             releases=releases,
                             url_name='ippcp_oneapi')
         super(IntelOneapiIppcp, self).__init__(spec)

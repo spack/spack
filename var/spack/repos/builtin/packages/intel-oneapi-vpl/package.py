@@ -21,7 +21,6 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
 
     def __init__(self, spec):
         self.component_info(dir_name='vpl',
-                            components='intel.oneapi.lin.vpl.devel',
                             releases=releases,
                             url_name='oneVPL')
         super(IntelOneapiVpl, self).__init__(spec)

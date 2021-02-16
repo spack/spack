@@ -19,9 +19,10 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     version('2021.1.1', sha256='6e0e24bba462e80f0fba5a46e95cf0cca6cf17948a7753f8e396ddedd637544e', expand=False)
 
+    depends_on('intel-oneapi-tbb')
+
     def __init__(self, spec):
         self.component_info(dir_name='dal',
-                            components='intel.oneapi.lin.dal.devel',
                             releases=releases,
                             url_name='daal_oneapi')
         super(IntelOneapiDal, self).__init__(spec)

@@ -19,9 +19,10 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     version('2021.1.1', sha256='24002c57bb8931a74057a471a5859d275516c331fd8420bee4cae90989e77dc3', expand=False)
 
+    depends_on('intel-oneapi-tbb')
+
     def __init__(self, spec):
-        self.component_info(dir_name='dnn',
-                            components='intel.oneapi.lin.dnnl.devel',
+        self.component_info(dir_name='dnnl',
                             releases=releases,
                             url_name='onednn')
         super(IntelOneapiDnn, self).__init__(spec)
