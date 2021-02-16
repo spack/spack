@@ -21,4 +21,5 @@ class PyTyping(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    conflicts('^python@3.5:', msg='https://github.com/python/typing/issues/573')
+    conflicts('^python@3.7:', msg='https://github.com/python/typing/issues/573'
+              ' - _abc_registry now private https://bugs.python.org/issue31333')
