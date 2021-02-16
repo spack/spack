@@ -115,7 +115,6 @@ def test_multiple_env_match_raises_error(mock_packages, mutable_mock_env_path):
         with pytest.raises(
                 spack.environment.SpackEnvironmentError) as exc_info:
 
-            env_spec = spack.cmd.matching_spec_from_env(
-                spack.cmd.parse_specs(['a'])[0])
+            spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(['a'])[0])
 
     assert 'matches multiple specs' in exc_info.value.message

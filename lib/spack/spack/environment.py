@@ -1526,7 +1526,7 @@ class Environment(object):
                 all_matches.append(concretized_user_spec)
             for dep_spec in concretized_user_spec.traverse(root=False):
                 if dep_spec.satisfies(spec):
-                    matches.append(dep_spec)
+                    dep_matches.append(dep_spec)
                     all_matches.append(dep_spec)
 
         if len(all_matches) == 1:

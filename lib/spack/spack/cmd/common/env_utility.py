@@ -12,7 +12,6 @@ import spack.build_environment as build_environment
 import spack.paths
 import spack.cmd
 import spack.cmd.common.arguments as arguments
-import spack.environment as ev
 from spack.util.environment import dump_environment, pickle_environment
 
 
