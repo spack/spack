@@ -78,8 +78,7 @@ class Ipopt(AutotoolsPackage):
             mumps_libcmd = "-L%s " % mumps_dir.lib + mumps_flags
             args.extend([
                 "--with-mumps-incdir=%s" % mumps_dir.include,
-                "--with-mumps-lib=%s" % mumps_libcmd,
-              ])
+                "--with-mumps-lib=%s" % mumps_libcmd])
 
         if 'coinhsl' in spec:
             args.extend([
