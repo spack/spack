@@ -836,6 +836,8 @@ def modifications_from_dependencies(spec, context):
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 
+    print("OK")
+
     context = kwargs.get('context', 'build')
 
     try:
@@ -954,7 +956,12 @@ def start_build_process(pkg, function, kwargs):
             target=_setup_pkg_and_run,
             args=(serialized_pkg, function, kwargs, child_pipe,
                   input_multiprocess_fd))
+
+        print("OK1")
+
         p.start()
+
+        print("OK2")
 
     except InstallError as e:
         e.pkg = pkg
