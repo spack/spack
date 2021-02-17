@@ -5,13 +5,13 @@
 
 """Simple wrapper around JSON to guarantee consistent use of load/dump. """
 import json
-import sys
+from typing import Any, Dict, Optional  # novm
 
-from six import iteritems, string_types
+from six import binary_type, iteritems, string_types, PY3
 
 import spack.error
 
-__all__ = ['load', 'dump', 'SpackJSONError']
+__all__ = ['load', 'dump', 'SpackJSONError', 'encode_json_dict', 'decode_json_dict']
 
 _json_dump_args = {
     'indent': True,
@@ -20,32 +20,54 @@ _json_dump_args = {
 
 
 def load(stream):
+    # type: (Any) -> Dict
     """Spack JSON needs to be ordered to support specs."""
     if isinstance(stream, string_types):
-        load = json.loads
+        load = json.loads       # type: ignore[assignment]
     else:
-        load = json.load
+        load = json.load        # type: ignore[assignment]
 
     return _strify(load(stream, object_hook=_strify), ignore_dicts=True)
 
 
-def dump(data, stream=None):
-    """Dump JSON with a reasonable amount of indentation and separation."""
-    if stream is None:
-        return json.dumps(data, **_json_dump_args)
-    else:
-        return json.dump(data, stream, **_json_dump_args)
-
-
-def _strify(data, ignore_dicts=False):
+def encode_json_dict(data):
+    # type: (Dict) -> Dict
     """Converts python 2 unicodes to str in JSON data."""
+    return _strify(data)
+
+
+def dump(data, stream=None):
+    # type: (Dict, Optional[Any]) -> Optional[str]
+    """Dump JSON with a reasonable amount of indentation and separation."""
+    data = _strify(data, encode_strings=False)
+    if stream is None:
+        return json.dumps(data, **_json_dump_args)     # type: ignore[arg-type]
+    json.dump(data, stream, **_json_dump_args)         # type: ignore[arg-type]
+    return None
+
+
+def decode_json_dict(data):
+    # type: (Dict) -> Dict
+    """Converts str to python 2 unicodes in JSON data."""
+    return _strify(data, encode_strings=False)
+
+
+def _strify(data, ignore_dicts=False, encode_strings=True):
+    # type: (Dict, bool, bool) -> Dict
+    """Helper method for ``encode_json_dict()`` and ``decode_json_dict()``.
+
+    Converts python 2 unicodes to str in JSON data, or the other way around."""
     # this is a no-op in python 3
-    if sys.version_info[0] >= 3:
+    if PY3:
         return data
 
     # if this is a unicode string in python 2, return its string representation
-    if isinstance(data, string_types):
-        return data.encode('utf-8')
+    if encode_strings:
+        if isinstance(data, string_types):
+            return data.encode('utf-8')
+    else:
+        if isinstance(data, binary_type):
+            return data.decode()
 
     # if this is a list of values, return list of byteified values
     if isinstance(data, list):
@@ -66,4 +88,5 @@ class SpackJSONError(spack.error.SpackError):
     """Raised when there are issues with JSON parsing."""
 
     def __init__(self, msg, json_error):
+        # type: (str, BaseException) -> None
         super(SpackJSONError, self).__init__(msg, str(json_error))

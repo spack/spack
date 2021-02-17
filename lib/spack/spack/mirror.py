@@ -14,17 +14,14 @@ to download packages directly from a mirror (e.g., on an intranet).
 import operator
 import os
 import os.path
-import sys
 import traceback
+import operator
+
+import six
 
 import ruamel.yaml.error as yaml_error
-import six
-from ordereddict_backport import OrderedDict
 
-if sys.version_info >= (3, 5):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
+from compat import Mapping, OrderedDict
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp

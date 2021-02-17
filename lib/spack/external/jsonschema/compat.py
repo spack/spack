@@ -1,11 +1,8 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 import sys
 import operator
 
-try:
-    from collections import MutableMapping, Sequence  # noqa
-except ImportError:
-    from collections.abc import MutableMapping, Sequence  # noqa
+from compat import MutableMapping, Sequence
 
 PY3 = sys.version_info[0] >= 3
 

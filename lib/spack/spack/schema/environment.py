@@ -38,13 +38,8 @@ def parse(config_obj):
         config_obj: a configuration dictionary conforming to the
             schema definition for environment modifications
     """
-    import sys
-
     import spack.util.environment as ev
-    if sys.version_info >= (3, 5):
-        from collections.abc import Sequence  # novm
-    else:
-        from collections import Sequence  # novm
+    from compat import Sequence
 
     env = ev.EnvironmentModifications()
     for command, variable in config_obj.items():

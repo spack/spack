@@ -14,22 +14,17 @@
 """
 import ctypes
 import re
-import sys
 from typing import List  # novm
 
 import ruamel.yaml as yaml
-from ordereddict_backport import OrderedDict
 from ruamel.yaml import RoundTripDumper, RoundTripLoader
 from six import StringIO, string_types
+
+from compat import Mapping, OrderedDict
 
 from llnl.util.tty.color import cextra, clen, colorize
 
 import spack.error
-
-if sys.version_info >= (3, 3):
-    from collections.abc import Mapping  # novm
-else:
-    from collections import Mapping
 
 
 # Only export load and dump

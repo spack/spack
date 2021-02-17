@@ -60,11 +60,7 @@ def create_new_paste(contents):
     :returns: url to the pasted contents
     """
     import re
-    if sys.version_info < (3, 0):
-        from urllib import urlopen, urlencode
-    else:
-        from urllib.request import urlopen
-        from urllib.parse import urlencode
+    from compat import urlencode, urlopen
 
     params = {
         'code': contents,
