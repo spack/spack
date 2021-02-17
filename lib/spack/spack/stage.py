@@ -37,6 +37,10 @@ import spack.util.url as url_util
 
 from spack.util.crypto import prefix_bits, bit_length
 
+if _platform == "win32":
+    import win32api
+    import win32security
+
 
 # The well-known stage source subdirectory name.
 _source_path_subdir = 'spack-src'
@@ -56,11 +60,14 @@ def getuid():
 
 def _create_stage_root(path):
     """Create the stage root directory and ensure appropriate access perms."""
-    assert path.startswith(os.path.sep) and len(path.strip()) > 1
+    assert os.path.isabs(path) and len(path.strip()) > 1
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-    user_uid = getuid()
+    if _platform != "win32":
+        user_uid = os.getuid()
+    else:
+        user_uid = win32api.GetUserName()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     group_paths, user_node, user_paths = partition_path(path,
@@ -105,9 +112,17 @@ def _create_stage_root(path):
         else:
             p_stat = os.stat(p)
 
-        if user_uid != p_stat.st_uid:
+        if _platform != "win32":
+            owner_uid = p_stat.st_uid
+        else:
+            sid = win32security.GetFileSecurity(
+                p, win32security.OWNER_SECURITY_INFORMATION) \
+                .GetSecurityDescriptorOwner()
+            owner_uid = win32security.LookupAccountSid(None, sid)[0]
+
+        if user_uid != owner_uid:
             tty.warn("Expected user {0} to own {1}, but it is owned by {2}"
-                     .format(user_uid, p, p_stat.st_uid))
+                     .format(user_uid, p, owner_uid))
 
 
 def _first_accessible_path(paths):
