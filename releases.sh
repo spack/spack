@@ -88,6 +88,7 @@ for url in $pr_urls; do
     sha=${pr_info[2]}
     commits=${pr_info[3]}
     n="1"
+    investigate=""
     echo; echo "PR $pr: $commits commit(s):"
     if [ "$commits" != "1" ]; then
         getpatch $url $pr
@@ -103,8 +104,10 @@ for url in $pr_urls; do
             if [ -s $pr.diffs ]; then
                 echo "WARNING: Multi-commit diff detected differences for $pr"
                 #cat $pr.diffs
+                investigate="CheckPR"
+            else
+                n=$commits
             fi
-            n=$commits
         fi
         rm -f $pr.patch $pr.diffs $pr.tmp > /dev/null
     fi
@@ -113,8 +116,8 @@ for url in $pr_urls; do
     prs=`git log -n $n --pretty="%ci %H" $sha`
     echo "$prs" | while read -r line; do
         #abbrev=`echo $line | perl -pe 's/([0-9a-f]{10})[0-9a-f]{30}/\1/'`
-        abbrev=`echo $line | perl -pe 's/([0-9a-f]{20})[0-9a-f]{20}/\1/'`
-        echo "$abbrev $pr" >> $version.$$
+        #abbrev=`echo $line | perl -pe 's/([0-9a-f]{20})[0-9a-f]{20}/\1/'`
+        echo "$line $pr $investigate" >> $version.$$
     done
     echo ".. $n merge commit(s):"; echo "  $prs"
 done
