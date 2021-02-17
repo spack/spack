@@ -235,6 +235,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
+        if '+rocm' in self.spec:
+            env.set('CXX', self.spec['hip'].hipcc)
+
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
 
@@ -249,8 +252,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
-            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
-            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),

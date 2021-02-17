@@ -216,3 +216,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
+
+        if '+rocm' in self.spec:
+            env.set('CXX', self.spec['hip'].hipcc)

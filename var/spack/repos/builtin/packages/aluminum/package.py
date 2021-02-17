@@ -87,3 +87,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
                 '-DOpenMP_DIR={0}'.format(clang_root)])
 
         return args
+
+    def setup_build_environment(self, env):
+        if '+rocm' in self.spec:
+            env.set('CXX', self.spec['hip'].hipcc)
