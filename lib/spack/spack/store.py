@@ -158,7 +158,8 @@ class Store(object):
     ):
         self.root = root
         self.unpadded_root = unpadded_root or root
-        self.projections, self.hash_length = projections, hash_length
+        self.projections = projections
+        self.hash_length = hash_length
         self.db = spack.database.Database(
             root, upstream_dbs=retrieve_upstream_dbs())
         self.layout = spack.directory_layout.YamlDirectoryLayout(

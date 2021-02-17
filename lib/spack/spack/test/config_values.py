@@ -13,6 +13,9 @@ import spack.store
 def test_set_install_hash_length(hash_length, mutable_config, tmpdir):
     mutable_config.set('config:install_hash_length', hash_length)
     mutable_config.set('config:install_tree', {'root': str(tmpdir)})
+    # The call below is to reinitialize the directory layout associated
+    # with the store according to the configuration changes above (i.e.
+    # with the shortened hash)
     store = spack.store._store()
     with spack.store.use_store(store):
         spec = spack.spec.Spec('libelf').concretized()
