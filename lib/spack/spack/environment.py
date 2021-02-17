@@ -1512,17 +1512,31 @@ class Environment(object):
     def matching_spec(self, spec):
         """
         Given a spec (likely not concretized), find a matching concretized
-        spec in the environment. The matching spec does not have to be
-        installed in the environment.
+        spec in the environment.
+
+        The matching spec does not have to be installed in the environment,
+        but must be concrete (specs added with `spack add` without an
+        intervening `spack concretize` will not be matched).
+
+        If there is a single root spec that matches the provided spec or a
+        single dependency spec that matches the provided spec, then the
+        concretized instance of that spec will be returned.
+
+        If multiple root specs match the provided spec, or no root specs match
+        and multiple dependency specs match, then this raises an error
+        and reports all matching specs.
         """
-        root_matches = list()  # These are abstract
+        # These are pairs of abstract/concrete specs (the abstract specs are
+        # useful for constructing error messages when there are multiple
+        # matches)
+        root_matches = list()
         dep_matches = list()  # These are concrete
         # These are concrete (for root specs, they store the concretized spec
         # rather than the abstract spec)
         all_matches = list()
         for user_spec, concretized_user_spec in self.concretized_specs():
             if concretized_user_spec.satisfies(spec):
-                root_matches.append(user_spec)
+                root_matches.append((user_spec, concretized_user_spec))
                 all_matches.append(concretized_user_spec)
             for dep_spec in concretized_user_spec.traverse(root=False):
                 if dep_spec.satisfies(spec):
@@ -1531,12 +1545,14 @@ class Environment(object):
 
         if len(all_matches) == 1:
             return all_matches[0]
+        elif len(root_matches) == 1:
+            return root_matches[0][1]
         elif len(all_matches) > 1:
             # If multiple root specs match, it is assumed that the abstract
             # spec will most-succinctly summarize the difference between them
             # (and the user can enter one of these to disambiguate)
             root_matches_str = '\n'.join(
-                "Root spec: {0}".format(str(x)) for x in root_matches)
+                "Root spec: {0}".format(str(x)) for x, y in root_matches)
             # For dependencies of concretized specs, no summarization is
             # available
             dep_matches_str = '\n'.join(
@@ -1546,7 +1562,8 @@ class Environment(object):
             msg = ("{0} matches multiple specs in the environment {1}: \n"
                    "{2}".format(str(spec), self.name, matches_str))
             raise SpackEnvironmentError(msg)
-        # If there are no matches, return nothing
+        else:
+            return None
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
