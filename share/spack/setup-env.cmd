@@ -17,8 +17,6 @@ setlocal enabledelayedexpansion
 setlocal EnableExtensions
 if defined _sp_initializing (goto :eof)
 set "_sp_initializing=True"
-DOSKEY spacktivate = "spack env activate"
-set spack=%SPACK_ROOT%\bin\spack
 ::#######################################################################
 :: This is a wrapper around the spack command that forwards calls to
 :: 'spack load' and 'spack unload' to shell functions.  This in turn
@@ -43,7 +41,6 @@ set spack=%SPACK_ROOT%\bin\spack
 :: avoids the need to come up with a user-friendly naming scheme for
 :: spack module files.
 ::#######################################################################
-:_sp_shell_wrapper
 set "_sp_flags="
 set "_sp_args="
 set "_sp_subcommand="
@@ -52,34 +49,31 @@ for %%x in (%*) do (
     if "!t:~0,1!" == "-" (
         if not defined _sp_flags (
             set "_sp_flags=!t!"
-            shift
         ) else (
             set "_sp_flags=!_sp_flags! !t!"
-            shift
             )
         ) else (
             if not defined _sp_subcommand (
                 set "_sp_subcommand=!t!"
-                shift
             ) else (
                 set "_sp_args=!_sp_args! !t!"
             )
         )
     )
-
+echo "SP FLAGS IS %_sp_flags%"
+echo "SP COMMAND IS %_sp_subcommand%"
+echo "SP ARGS IS %_sp_args%"
 :: h and V flags don't require further output parsing.
-:: Boolean operators do not exist for non integers in batch
+:: Boolean operators do not exist for non booleans in batch
 if defined _sp_flags (
-    if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
-        if not defined _sp_subcommand (
-            python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
-            exit /B 0
-        ) else (
-            python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
-            exit /B 0 )
+    if NOT "%_sp_flags%"=="%_sp_flags:h=%" (
+        ::spack %_sp_flags% %_sp_subcommand% %_sp_args%
+        echo "spack %_sp_flags% %_sp_subcommand% %_sp_args%"
+        exit /B 0
     )
     if NOT "%_sp_flags%"=="%_sp_flags:V=%" (
-        python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
+        ::spack %_sp_flags% %_sp_subcommand% %_sp_args%
+        echo "spack %_sp_flags% %_sp_subcommand% %_sp_args%"
         exit /B 0
     )
 )
@@ -87,60 +81,20 @@ if defined _sp_flags (
 2>nul call :case_%_sp_subcommand%
 if ERRORLEVEL 1 goto :default_case
 :case_cd
-if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
-    python %spack% cd -h
-)
-if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-    python %spack% cd -h
-)
-FOR /F "tokens=* USEBACKQ" %%F IN (`spack location %_sp_args%`) DO (
-set "LOC=%%F"
-)
-for %%Z In ("%LOC%") do if "%%~aZ" GEq "d" (cd "%LOC%")
 goto :end_switch
-
 :case_env
-if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
-    if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-        call python %spack% env deactivate %_sp_flags% 
-    ) else (
-    if defined _sp_args (
-        call python %spack% env deactivate -h
-        ) else (
-        for /f "tokens=*" %%I in (
-        'call python %spack% env deactivate %_sp_flags% --bat') do %%I
-        )
-    )
-) else (
-    if "%_sp_args%"=="%_sp_args:activate=%" (
-    if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-        call python %spack% env activate %_sp_flags% 
-    )
-    for /f "tokens=*" %%I in (
-    'call python %spack% env activate %_sp_flags% --bat') do %%I
-    ) else (
-        goto :default_case
-    )
-)
 goto :end_switch
 :case_load
-if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-   python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
-)
-if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-    python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
-)
-for /f "tokens=*" %%I in (
-'call python %spack% %_sp_flags% %_sp_subcommand% %*') do %%I
 goto :end_switch
 :case_unload
-goto :case_load
+goto :end_switch
 :default_case
 echo "DEFAULT CASE"
-python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
 goto :end_switch
 :end_switch
 goto :eof
+
+DOSKEY spacktivate = "spack env activate"
 
 :_spack_pathadd
 _pa_varname=PATH
