@@ -4,17 +4,24 @@
 :: SPDX-License-Identifier: (Apache-2.0 OR MIT)
 ::#######################################################################
 ::
-:: This file is part of Spack and sets up the spack environment for bash,
-:: zsh, and dash (sh).  This includes environment modules and lmod support,
+:: This file is part of Spack and sets up the spack environment for batch,
+:: This includes environment modules and lmod support,
 :: and it also puts spack in your path. The script also checks that at least
 :: module support exists, and provides suggestions if it doesn't. Source
 :: it like this:
 ::
-::    . /path/to/spack/share/spack/setup-env.bat
+::    . /path/to/spack/install/spack_cmd.bat
 ::
 @echo off
 setlocal enabledelayedexpansion
 setlocal EnableExtensions
+if NOT defined SPACK_ROOT (
+:: this file is located in %SPACK_ROOT%\lib\spack\spack\cmd\installer
+    pushd %~dp0
+    cd ../../../../../
+    set SPACK_ROOT=%CD%
+    popd
+)
 if defined _sp_initializing (goto :eof)
 set "_sp_initializing=True"
 DOSKEY spacktivate = "spack env activate"
@@ -86,6 +93,7 @@ if defined _sp_flags (
 
 2>nul call :case_%_sp_subcommand%
 if ERRORLEVEL 1 goto :default_case
+
 :case_cd
 if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
     python %spack% cd -h
@@ -133,10 +141,11 @@ if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
 for /f "tokens=*" %%I in (
 'call python %spack% %_sp_flags% %_sp_subcommand% %*') do %%I
 goto :end_switch
+
 :case_unload
 goto :case_load
+
 :default_case
-echo "DEFAULT CASE"
 python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
 goto :end_switch
 :end_switch
