@@ -705,20 +705,27 @@ def install_mockery(tmpdir, config, mock_packages):
 
 
 @pytest.fixture(scope='function')
-def install_mockery_mutable_config(tmpdir, mutable_config, mock_packages):
+def temporary_store(tmpdir):
+    """Hooks a temporary empty store for the test function."""
+    temporary_store_path = tmpdir.join('opt')
+    with spack.store.use_store(str(temporary_store_path)) as s:
+        yield s
+    temporary_store_path.remove()
+
+
+@pytest.fixture(scope='function')
+def install_mockery_mutable_config(
+        temporary_store, mutable_config, mock_packages
+):
     """Hooks a fake install directory, DB, and stage directory into Spack.
 
     This is specifically for tests which want to use 'install_mockery' but
     also need to modify configuration (and hence would want to use
     'mutable config'): 'install_mockery' does not support this.
     """
-    s = spack.store.Store(str(tmpdir.join('opt')))
-    with spack.store.use_store(s):
-        # We use a fake package, so temporarily disable checksumming
-        with spack.config.override('config:checksum', False):
-            yield
-
-        tmpdir.join('opt').remove()
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
 
 
 @pytest.fixture()
