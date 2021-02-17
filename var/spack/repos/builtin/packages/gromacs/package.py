@@ -262,13 +262,16 @@ class Gromacs(CMakePackage):
                 ('avx512', 'AVX_512') in simd_features):
                 simd_features.remove(('avx512', 'AVX_512'))
 
+            feature_set = False
             for feature, flag in reversed(simd_features):
                 if feature in target:
                     options.append('-DGMX_SIMD:STRING={0}'.format(flag))
+                    feature_set = True
                     break
 
             # Fall back
-            options.append('-DGMX_SIMD:STRING=None')
+            if not feature_set:
+                options.append('-DGMX_SIMD:STRING=None')
 
         # Use the 'rtdscp' assembly instruction only on
         # appropriate architectures
