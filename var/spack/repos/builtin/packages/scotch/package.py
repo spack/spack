@@ -105,10 +105,11 @@ class Scotch(Package):
         ]
 
         if '+int64' in self.spec:
-            cflags.append('-DINTSIZE64') # SCOTCH_Num typedef: size of integers in arguments
-            cflags.append('-DIDXSIZE64') # SCOTCH_Idx typedef: indices for addressing
+            # SCOTCH_Num typedef: size of integers in arguments
+            cflags.append('-DINTSIZE64')
+            cflags.append('-DIDXSIZE64')  # SCOTCH_Idx typedef: indices for addressing
         else:
-            cflags.append('-DIDXSIZE32') # SCOTCH_Idx typedef: indices for addressing
+            cflags.append('-DIDXSIZE32')  # SCOTCH_Idx typedef: indices for addressing
 
         if self.spec.satisfies('platform=darwin'):
             cflags.extend([
