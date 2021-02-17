@@ -51,7 +51,7 @@ class W3m(AutotoolsPackage):
     def _add_arg_for_variant(self, args, variant, choices):
         for avail_lib in choices:
             if self.spec.variants[variant].value == avail_lib:
-                args.append('--with-{}={}'.format(variant, avail_lib))
+                args.append('--with-{0}={1}'.format(variant, avail_lib))
                 return
 
     def configure_args(self):
