@@ -20,6 +20,8 @@ class Slate(CMakePackage):
     url      = 'https://bitbucket.org/icl/slate/downloads/slate-2020.10.00.tar.gz'
     maintainers = ['G-Ragghianti', 'mgates3']
 
+    test_requires_compiler = True
+
     version('master', branch='master')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 
@@ -54,3 +56,36 @@ class Slate(CMakePackage):
             '-Duse_mpi=%s'           % ('+mpi' in spec),
             '-DSCALAPACK_LIBRARIES=%s'    % spec['scalapack'].libs.joined(';')
         ]
+
+    make_hdr_file = 'make.inc'
+
+    def test(self):
+        test_data_dir = self.test_suite.current_test_data_dir
+        test_prog = 'slate04_blas'
+
+        config_args = [
+            'slate_dir = {0}'.format(self.prefix),
+            'scalapack_libs = {0}'.format(self.spec['scalapack'].libs.ld_flags)
+        ]
+        # Write configuration options to make.inc file
+        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
+        with open(make_file_inc, 'w') as inc:
+            for option in config_args:
+                inc.write('{0}\n'.format(option))
+        reason_msg = 'test: slate smoke test'
+        with working_dir(test_data_dir, create=False):
+            make('all', parallel=False)
+            if '+mpi' in self.spec:
+                test_args = ['-n', '4', test_prog]
+                mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+                for mpiexe in mpiexe_list:
+                    if which(mpiexe) is not None:
+                        self.run_test(mpiexe, test_args, installed=False,
+                                      purpose=reason_msg, skip_missing=False,
+                                      work_dir='.')
+                        break
+            else
+                self.run_test(test_prog, [], installed=False,
+                              purpose=reason_msg, skip_missing=False,
+                              work_dir='.')
+            #make('clean')
