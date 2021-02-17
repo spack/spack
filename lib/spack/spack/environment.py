@@ -1448,6 +1448,11 @@ class Environment(object):
 
         try:
             builder = PackageInstaller(installs)
+
+            # If the user has requested a monitor client, attach to builder
+            if install_args.get('use_monitor', False):
+                builder.init_monitor_client(install_args)
+
             builder.install()
         finally:
             # Ensure links are set appropriately

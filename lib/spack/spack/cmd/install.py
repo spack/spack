@@ -113,10 +113,10 @@ the dependencies"""
         '--monitor', action='store_true', dest='use_monitor', default=False,
         help="interact with a montor server during builds.")
     monitor_group.add_argument(
-        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth', 
+        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
         default=False, help="the monitoring server does not require auth.")
     monitor_group.add_argument(
-        '--monitor-keep-going', action='store_true', dest='monitor_keep_going', 
+        '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
         default=False, help="continue the build if a request to monitor fails.")
     monitor_group.add_argument(
         '--monitor-host', dest='monitor_host', default="http://127.0.0.1",
@@ -229,6 +229,7 @@ def install_specs(cli_args, kwargs, specs):
         else:
             installs = [(concrete.package, kwargs) for _, concrete in specs]
             builder = PackageInstaller(installs)
+            builder.add_monitor_client(cli_args)
             builder.install()
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:
@@ -257,12 +258,12 @@ environment variables:
 
     # The user wants to monitor builds using github.com/spack/spack-monitor
     if args.use_monitor:
-        spack.monitor.get_client(
+        monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth
-        );
-         
+        )
+
     reporter = spack.report.collect_info(
         spack.package.PackageInstaller, '_install_task', args.log_format, args)
     if args.log_file:
@@ -398,4 +399,8 @@ environment variables:
             # overwrite all concrete explicit specs from this build
             kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
 
+        # If we are using the monitor, we send original configs.
+        # The full_hash is the main package id, the build_hash for others
+        if args.use_monitor:
+            monitor.new_configuration(specs)
         install_specs(args, kwargs, zip(abstract_specs, specs))

@@ -46,6 +46,7 @@ import spack.binary_distribution as binary_distribution
 import spack.compilers
 import spack.error
 import spack.hooks
+import spack.monitor
 import spack.package
 import spack.package_prefs as prefs
 import spack.repo
@@ -641,6 +642,9 @@ class PackageInstaller(object):
         # fast then that option applies to all build requests.
         self.fail_fast = False
 
+        # A Monitor client will interact with a monitor server at each step
+        self.monitor = None
+
     def __repr__(self):
         """Returns a formal representation of the package installer."""
         rep = '{0}('.format(self.__class__.__name__)
@@ -657,6 +661,16 @@ class PackageInstaller(object):
             len(self.installed), self.installed)
         return '{0}: {1}; {2}; {3}; {4}'.format(
             self.pid, requests, tasks, installed, failed)
+
+    def add_monitor_client(self, args):
+        """Given that the args.use_monitor is true, instantiate a client
+        """
+        if args.use_monitor:
+            self.monitor = spack.monitor.get_client(
+                host=args.monitor_host,
+                prefix=args.monitor_prefix,
+                disable_auth=args.monitor_disable_auth
+            )
 
     def _add_bootstrap_compilers(
             self, compiler, architecture, pkgs, request, all_deps):
@@ -1390,16 +1404,10 @@ class PackageInstaller(object):
         Args:
             pkg (Package): the package to be built and installed"""
 
+        print("IN INSTALLER")
         import IPython
         IPython.embed()
         sys.exit(0)
-        
-        # STOPPED HERE - need to trace this and add appropriate endpoints
-        spack.monitor.get_client(
-            host=args.monitor_host,
-            prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth
-        );
 
         self._init_queue()
 
@@ -1426,6 +1434,7 @@ class PackageInstaller(object):
             # dependencies handling).  So terminate under the assumption that
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
+
             if task.priority != 0:
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
@@ -1435,6 +1444,15 @@ class PackageInstaller(object):
                     tty.warn('{0} does NOT actually have any uninstalled deps'
                              ' left'.format(pkg_id))
                 dep_str = 'dependencies' if task.priority > 1 else 'dependency'
+
+                # Update the endpoint to indicate the failure (cancel)
+                # Here we do not consider fail fast, as an error is raised.
+                # TODO: this currently marks the main task as failed -
+                # in the future we want the main task to be cancelled,
+                # and the task that failed marked as failed.
+                if self.monitor:
+                    self.monitor.fail_task(task.request.pkg)
+
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
                     .format(pkg_id, task.priority, dep_str,
@@ -1453,6 +1471,12 @@ class PackageInstaller(object):
             if pkg_id in self.failed or spack.store.db.prefix_failed(spec):
                 tty.warn('{0} failed to install'.format(pkg_id))
                 self._update_failed(task)
+
+                # Mark that the package failed
+                # TODO: this should also be for the task.pkg, but we don't
+                # model transitive yet.
+                if self.monitor:
+                    self.monitor.fail_task(task.request.pkg)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)

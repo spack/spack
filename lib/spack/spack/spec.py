@@ -1629,7 +1629,12 @@ class Spec(object):
                 d['patches'] = variant._patches_in_order_of_appearance
 
         if hash.package_hash:
-            d['package_hash'] = self.package.content_hash()
+            package_hash = self.package.content_hash()
+
+            # Full hashes are in bytes
+            if isinstance(package_hash, bytes):
+                package_hash = package_hash.decode('utf-8')
+            d['package_hash'] = package_hash
 
         deps = self.dependencies_dict(deptype=hash.deptype)
         if deps:
