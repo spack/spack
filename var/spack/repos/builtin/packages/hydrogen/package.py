@@ -64,8 +64,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             description='Builds with support for FP16 precision data types')
 
     conflicts('~openmp', when='+omp_taskloops')
-    conflicts('+cuda', when='+rocm')
-    conflicts('+rocm', when='+cuda')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')

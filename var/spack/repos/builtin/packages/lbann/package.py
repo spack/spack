@@ -73,8 +73,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~cuda', when='+nvprof')
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
-    conflicts('+cuda', when='+rocm')
-    conflicts('+rocm', when='+cuda')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     depends_on('cmake@3.17.0:', type='build')
 

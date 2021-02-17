@@ -48,8 +48,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
     depends_on('cub', when='@:0.1,0.6.0: +rocm')
 
-    conflicts('+cuda', when='+rocm')
-    conflicts('+rocm', when='+cuda')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
