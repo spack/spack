@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 
 from six import string_types
 
-from llnl.util.compat import Hashable, MutableMapping, zip_longest
+from llnl.util.compat import MutableMapping, zip_longest
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
@@ -172,15 +172,19 @@ def memoized(func):
     func.cache = {}
 
     @functools.wraps(func)
-    def _memoized_function(*args):
-        if not isinstance(args, Hashable):
+    def _memoized_function(*args, **kwargs):
+        assert isinstance(args, tuple), args
+        key = args + tuple(kwargs.items() if kwargs else [])
+
+        try:
+            ret = func.cache[key]
+        except KeyError:
+            ret = func(*args, **kwargs)
+            func.cache[key] = ret
+        except TypeError:
             # Not hashable, so just call the function.
-            return func(*args)
-
-        if args not in func.cache:
-            func.cache[args] = func(*args)
-
-        return func.cache[args]
+            ret = func(*args, **kwargs)
+        return ret
 
     return _memoized_function
 
