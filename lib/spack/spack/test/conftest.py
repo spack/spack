@@ -684,24 +684,21 @@ def disable_compiler_execution(monkeypatch, request):
 
 
 @pytest.fixture(scope='function')
-def install_mockery(tmpdir, config, mock_packages):
+def install_mockery(temporary_store, config, mock_packages):
     """Hooks a fake install directory, DB, and stage directory into Spack."""
-    s = spack.store.Store(str(tmpdir.join('opt')))
-    with spack.store.use_store(s):
-        # We use a fake package, so temporarily disable checksumming
-        with spack.config.override('config:checksum', False):
-            yield
+    # We use a fake package, so temporarily disable checksumming
+    with spack.config.override('config:checksum', False):
+        yield
 
-        tmpdir.join('opt').remove()
-        # Also wipe out any cached prefix failure locks (associated with
-        # the session-scoped mock archive).
-        for pkg_id in list(spack.store.db._prefix_failures.keys()):
-            lock = spack.store.db._prefix_failures.pop(pkg_id, None)
-            if lock:
-                try:
-                    lock.release_write()
-                except Exception:
-                    pass
+    # Also wipe out any cached prefix failure locks (associated with
+    # the session-scoped mock archive).
+    for pkg_id in list(temporary_store.db._prefix_failures.keys()):
+        lock = spack.store.db._prefix_failures.pop(pkg_id, None)
+        if lock:
+            try:
+                lock.release_write()
+            except Exception:
+                pass
 
 
 @pytest.fixture(scope='function')
@@ -710,7 +707,7 @@ def temporary_store(tmpdir):
     temporary_store_path = tmpdir.join('opt')
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
-    temporary_store_path.remove()
+        temporary_store_path.remove()
 
 
 @pytest.fixture(scope='function')

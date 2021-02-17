@@ -36,6 +36,9 @@ def test_set_install_hash_length_upper_case(mutable_config, tmpdir):
             }
         }
     )
+    # The call below is to reinitialize the directory layout associated
+    # with the store according to the configuration changes above (i.e.
+    # with the shortened hash and projection)
     store = spack.store._store()
     with spack.store.use_store(store):
         spec = spack.spec.Spec('libelf').concretized()
