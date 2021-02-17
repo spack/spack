@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Dihydrogen(CMakePackage, CudaPackage):
+class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """DiHydrogen is the second version of the Hydrogen fork of the
        well-known distributed linear algebra library,
        Elemental. DiHydrogen aims to be a basic distributed
@@ -77,9 +77,15 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl +ht +cuda_rma', when='+al +rocm')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('aluminum amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))

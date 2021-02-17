@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Aluminum(CMakePackage, CudaPackage):
+class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     """Aluminum provides a generic interface to high-performance
     communication libraries, with a focus on allreduce
     algorithms. Blocking and non-blocking algorithms and GPU-aware
@@ -38,6 +38,7 @@ class Aluminum(CMakePackage, CudaPackage):
             ' communication of accelerator data')
     variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
             ' Put/Get and IPC RMA functionality')
+    variant('rccl', default=False, description='Builds with support for NCCL communication lib')
 
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
@@ -45,6 +46,10 @@ class Aluminum(CMakePackage, CudaPackage):
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
     depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
+    depends_on('cub', when='@:0.1,0.6.0: +rocm')
+
+    conflicts('+cuda', when='+rocm')
+    conflicts('+rocm', when='+cuda')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
