@@ -18,6 +18,9 @@ class Enzo(MakefilePackage):
 
     depends_on('mpi')
     depends_on('hdf5~mpi')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('for_aarch64.patch', when='target=aarch64:')
 
     # https://github.com/enzo-project/enzo-dev/pull/158
     patch('https://github.com/enzo-project/enzo-dev/commit/0191ff5ad9ad2c7639d44823e84cd0115e7a2970.patch', sha256='01328a5f5fe72ac5af31661deb6891ea160264b67a470d6ce91b71b001845810', when='@2.6.1 ^hdf5@1.12.0:')
