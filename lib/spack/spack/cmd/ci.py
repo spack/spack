@@ -17,6 +17,7 @@ import spack.cmd.buildcache as buildcache
 import spack.environment as ev
 import spack.hash_types as ht
 import spack.util.executable as exe
+import spack.util.url as url_util
 
 
 description = "manage continuous integration pipelines"
@@ -159,6 +160,7 @@ def ci_rebuild(args):
     # SPACK_SIGNING_KEY
 
     ci_artifact_dir = get_env_var('CI_PROJECT_DIR')
+    ci_pipeline_id = get_env_var('CI_PIPELINE_ID')
     signing_key = get_env_var('SPACK_SIGNING_KEY')
     root_spec = get_env_var('SPACK_ROOT_SPEC')
     job_spec_pkg_name = get_env_var('SPACK_JOB_SPEC_PKG_NAME')
@@ -219,19 +221,28 @@ def ci_rebuild(args):
 
     spack_is_pr_pipeline = True if pr_env_var == 'True' else False
 
+    pipeline_mirror_url = None
+    temp_storage_url_prefix = None
+    if 'temporary-storage-url-prefix' in gitlab_ci:
+        temp_storage_url_prefix = gitlab_ci['temporary-storage-url-prefix']
+        pipeline_mirror_url = url_util.join(
+            temp_storage_url_prefix, ci_pipeline_id)
+
     enable_artifacts_mirror = False
-    artifact_mirror_url = None
     if 'enable-artifacts-buildcache' in gitlab_ci:
         enable_artifacts_mirror = gitlab_ci['enable-artifacts-buildcache']
-        if enable_artifacts_mirror or spack_is_pr_pipeline:
-            # If this is a PR pipeline, we will override the setting to
-            # make sure that artifacts buildcache is enabled.  Otherwise
-            # jobs will not have binary deps available since we do not
-            # allow pushing binaries to remote mirror during PR pipelines
+        if (enable_artifacts_mirror or (spack_is_pr_pipeline and
+            not enable_artifacts_mirror and not temp_storage_url_prefix)):
+            # If you explicitly enabled the artifacts buildcache feature, or
+            # if this is a PR pipeline but you did not enable either of the
+            # per-pipeline temporary storage features, we force the use of
+            # artifacts buildcache.  Otherwise jobs will not have binary
+            # dependencies from previous stages available since we do not
+            # allow pushing binaries to the remote mirror during PR pipelines.
             enable_artifacts_mirror = True
-            artifact_mirror_url = 'file://' + local_mirror_dir
+            pipeline_mirror_url = 'file://' + local_mirror_dir
             mirror_msg = 'artifact buildcache enabled, mirror url: {0}'.format(
-                artifact_mirror_url)
+                pipeline_mirror_url)
             tty.debug(mirror_msg)
 
     # Clean out scratch directory from last stage
@@ -325,8 +336,8 @@ def ci_rebuild(args):
         if pr_mirror_url:
             add_mirror('ci_pr_mirror', pr_mirror_url)
 
-        if enable_artifacts_mirror:
-            add_mirror('ci_artifact_mirror', artifact_mirror_url)
+        if pipeline_mirror_url:
+            add_mirror(spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url)
 
         tty.debug('listing spack mirrors:')
         spack_cmd('mirror', 'list')
@@ -423,17 +434,18 @@ def ci_rebuild(args):
                     tty.msg('Permission problem writing to mirror')
                 tty.msg(err_msg)
 
-            # Create another copy of that buildcache on "local artifact
-            # mirror" (only done if artifacts buildcache is enabled)
+            # Create another copy of that buildcache in the per-pipeline
+            # temporary storage mirror (this is only done if either artifacts
+            # buildcache is enabled or a temporary storage url prefix is set)
             spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
-                                          artifact_mirror_url, cdash_build_id,
+                                          pipeline_mirror_url, cdash_build_id,
                                           sign_binaries)
 
             # Relate this build to its dependencies on CDash (if enabled)
             if enable_cdash:
                 spack_ci.relate_cdash_builds(
                     spec_map, cdash_base_url, cdash_build_id, cdash_project,
-                    artifact_mirror_url or pr_mirror_url or remote_mirror_url)
+                    pipeline_mirror_url or pr_mirror_url or remote_mirror_url)
 
 
 def ci_reindex(args):

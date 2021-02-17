@@ -42,6 +42,7 @@ JOB_RETRY_CONDITIONS = [
 ]
 
 SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-pr-mirrors'
+TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
 spack_compiler = spack.main.SpackCommand('compiler')
@@ -396,8 +397,6 @@ def compute_spec_deps(spec_list, check_index_only=False):
         # root_spec = get_spec_string(spec)
         root_spec = spec
 
-        rkey = spec_deps_key(spec)
-
         for s in spec.traverse(deptype=all):
             if s.external:
                 tty.msg('Will not stage external pkg: {0}'.format(s))
@@ -412,8 +411,6 @@ def compute_spec_deps(spec_list, check_index_only=False):
                 'root': root_spec,
                 'needs_rebuild': not up_to_date_mirrors,
             }
-
-            append_dep(rkey, skey)
 
             for d in s.dependencies(deptype=all):
                 dkey = spec_deps_key(d)
@@ -585,6 +582,10 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
     rebuild_index_enabled = True
     if 'rebuild-index' in gitlab_ci and gitlab_ci['rebuild-index'] is False:
         rebuild_index_enabled = False
+
+    temp_storage_url_prefix = None
+    if 'temporary-storage-url-prefix' in gitlab_ci:
+        temp_storage_url_prefix = gitlab_ci['temporary-storage-url-prefix']
 
     bootstrap_specs = []
     phases = []
@@ -928,9 +929,30 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
     ]
 
     if job_id > 0:
-        if rebuild_index_enabled and not is_pr_pipeline:
+        if temp_storage_url_prefix:
+            # There were some rebuild jobs scheduled, so we will need to
+            # schedule a job to clean up the temporary storage location
+            # associated with this pipeline.
+            stage_names.append('cleanup-temp-storage')
+            cleanup_job = {}
+
+            if service_job_config:
+                copy_attributes(default_attrs,
+                                service_job_config,
+                                cleanup_job)
+
+            cleanup_job['stage'] = 'cleanup-temp-storage'
+            cleanup_job['script'] = [
+                'spack mirror destroy --mirror-url {0}/$CI_PIPELINE_ID'.format(
+                    temp_storage_url_prefix)
+            ]
+            cleanup_job['when'] = 'always'
+
+            output_object['cleanup'] = cleanup_job
+
+        if rebuild_index_enabled:
             # Add a final job to regenerate the index
-            final_stage = 'stage-rebuild-index'
+            stage_names.append('stage-rebuild-index')
             final_job = {}
 
             if service_job_config:
@@ -938,15 +960,18 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
                                 service_job_config,
                                 final_job)
 
-            final_script = 'spack buildcache update-index --keys'
-            final_script = '{0} -d {1}'.format(final_script, mirror_urls[0])
+            index_target_mirror = mirror_urls[0]
+            if is_pr_pipeline:
+                index_target_mirror = pr_mirror_url
 
-            final_job['stage'] = final_stage
-            final_job['script'] = [final_script]
+            final_job['stage'] = 'stage-rebuild-index'
+            final_job['script'] = [
+                'spack buildcache update-index --keys -d {0}'.format(
+                    index_target_mirror)
+            ]
             final_job['when'] = 'always'
 
             output_object['rebuild-index'] = final_job
-            stage_names.append(final_stage)
 
         output_object['stages'] = stage_names
 

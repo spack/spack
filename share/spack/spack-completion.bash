@@ -1123,7 +1123,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
-        SPACK_COMPREPLY="create add remove rm set-url list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url list"
     fi
 }
 
@@ -1134,6 +1134,10 @@ _spack_mirror_create() {
     else
         _all_packages
     fi
+}
+
+_spack_mirror_destroy() {
+    SPACK_COMPREPLY="-h --help -m --mirror-name --mirror-url"
 }
 
 _spack_mirror_add() {
