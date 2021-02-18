@@ -198,6 +198,9 @@ class Sgpp(SConsPackage):
         if ('+mpi' in spec):
             self.args.append('CXX={0}'.format(
                 self.spec['mpi'].mpicxx))
+        else:
+            self.args.append('CXX={0}'.format(self.compiler.cxx))
+
 
         return self.args
 
