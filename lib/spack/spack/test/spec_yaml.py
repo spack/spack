@@ -148,15 +148,15 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         #
         # Dict & corresponding YAML & JSON from the original spec.
         #
-        spec_dict = spec.to_dict()
-        spec_yaml = spec.to_yaml()
-        spec_json = spec.to_json()
+        spec_dict = spec.to_dict(hash=ht.full_hash)
+        spec_yaml = spec.to_yaml(hash=ht.full_hash)
+        spec_json = spec.to_json(hash=ht.full_hash)
 
         #
         # Make a spec with reversed OrderedDicts for every
         # OrderedDict in the original.
         #
-        reversed_spec_dict = reverse_all_dicts(spec.to_dict())
+        reversed_spec_dict = reverse_all_dicts(spec.to_dict(hash=ht.full_hash))
 
         #
         # Dump to YAML and JSON
@@ -190,11 +190,10 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
             reversed_json_string
         )
 
-        # TODO: remove this when build deps are in provenance.
-        spec = spec.copy(deps=('link', 'run'))
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
         assert spec == round_trip_json_spec
+
         assert spec == round_trip_reversed_yaml_spec
         assert spec == round_trip_reversed_json_spec
         assert round_trip_yaml_spec == round_trip_reversed_yaml_spec

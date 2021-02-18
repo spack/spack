@@ -15,6 +15,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
 from spack.error import SpackError
 
@@ -242,7 +243,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
