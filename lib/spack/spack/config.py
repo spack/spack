@@ -29,6 +29,7 @@ schemas are in submodules of :py:mod:`spack.schema`.
 
 """
 import collections
+import contextlib
 import copy
 import functools
 import os
@@ -49,6 +50,7 @@ from llnl.util.filesystem import mkdirp
 
 import spack.paths
 import spack.architecture
+import spack.compilers
 import spack.schema
 import spack.schema.compilers
 import spack.schema.mirrors
@@ -804,22 +806,6 @@ def _config():
 config = llnl.util.lang.Singleton(_config)
 
 
-def replace_config(configuration):
-    """Replace the current global configuration with the instance passed as
-    argument.
-
-    Args:
-        configuration (Configuration): the new configuration to be used.
-
-    Returns:
-        The old configuration that has been removed
-    """
-    global config
-    config.clear_caches(), configuration.clear_caches()
-    old_config, config = config, configuration
-    return old_config
-
-
 def get(path, default=None, scope=None):
     """Module-level wrapper for ``Configuration.get()``."""
     return config.get(path, default, scope)
@@ -1132,6 +1118,55 @@ def ensure_latest_format_fn(section):
     section_module = getattr(spack.schema, section)
     update_fn = getattr(section_module, 'update', lambda x: False)
     return update_fn
+
+
+@contextlib.contextmanager
+def use_configuration(*scopes_or_paths):
+    """Use the configuration scopes passed as arguments within the
+    context manager.
+
+    Args:
+        *scopes_or_paths: scope objects or paths to be used
+
+    Returns:
+        Configuration object associated with the scopes passed as arguments
+    """
+    global config
+
+    # Normalize input and construct a Configuration object
+    configuration = _config_from(scopes_or_paths)
+    config.clear_caches(), configuration.clear_caches()
+
+    # Save and clear the current compiler cache
+    saved_compiler_cache = spack.compilers._cache_config_file
+    spack.compilers._cache_config_file = []
+
+    saved_config, config = config, configuration
+
+    yield configuration
+
+    # Restore previous config files
+    spack.compilers._cache_config_file = saved_compiler_cache
+    config = saved_config
+
+
+@llnl.util.lang.memoized
+def _config_from(scopes_or_paths):
+    scopes = []
+    for scope_or_path in scopes_or_paths:
+        # If we have a config scope we are already done
+        if isinstance(scope_or_path, ConfigScope):
+            scopes.append(scope_or_path)
+            continue
+
+        # Otherwise we need to construct it
+        path = os.path.normpath(scope_or_path)
+        assert os.path.isdir(path), '"{0}" must be a directory'.format(path)
+        name = os.path.basename(path)
+        scopes.append(ConfigScope(name, path))
+
+    configuration = Configuration(*scopes)
+    return configuration
 
 
 class ConfigError(SpackError):

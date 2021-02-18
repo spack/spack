@@ -46,7 +46,7 @@ class ArpackNg(Package):
     version('3.6.0', sha256='3c88e74cc10bba81dc2c72c4f5fff38a800beebaa0b4c64d321c28c9203b37ea')
     version('3.5.0', sha256='50f7a3e3aec2e08e732a487919262238f8504c3ef927246ec3495617dde81239')
     version('3.4.0', sha256='69e9fa08bacb2475e636da05a6c222b17c67f1ebeab3793762062248dd9d842f')
-    version('3.3.0', sha256='ad59811e7d79d50b8ba19fd908f92a3683d883597b2c7759fdcc38f6311fe5b3')
+    version('3.3.0', sha256='ad59811e7d79d50b8ba19fd908f92a3683d883597b2c7759fdcc38f6311fe5b3', deprecated=True)
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')

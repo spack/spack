@@ -75,6 +75,14 @@ shell integration for :ref:`certain commands <packaging-shell-support>`,
 If you do not want to use Spack's shell support, you can always just run
 the ``spack`` command directly from ``spack/bin/spack``.
 
+When the ``spack`` command is executed it searches for an appropriate
+Python interpreter to use, which can be explicitly overridden by setting
+the ``SPACK_PYTHON`` environment variable.  When sourcing the appropriate shell
+setup script, ``SPACK_PYTHON`` will be set to the interpreter found at
+sourcing time, ensuring future invocations of the ``spack`` command will
+continue to use the same consistent python version regardless of changes in
+the environment.
+
 
 ^^^^^^^^^^^^^^^^^^
 Check Installation

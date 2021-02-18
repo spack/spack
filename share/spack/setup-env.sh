@@ -326,6 +326,14 @@ if [ "$_sp_shell" = bash ]; then
     export -f _spack_shell_wrapper
 fi
 
+# Identify and lock the python interpreter
+for cmd in "${SPACK_PYTHON:-}" python3 python python2; do
+    if command -v > /dev/null "$cmd"; then
+        export SPACK_PYTHON="$(command -v "$cmd")"
+        break
+    fi
+done
+
 #
 # make available environment-modules
 #

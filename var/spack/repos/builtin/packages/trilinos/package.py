@@ -331,6 +331,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='@develop')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')

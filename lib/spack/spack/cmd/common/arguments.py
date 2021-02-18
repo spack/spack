@@ -277,6 +277,13 @@ def no_checksum():
         help="do not use checksums to verify downloaded files (unsafe)")
 
 
+@arg
+def deprecated():
+    return Args(
+        '--deprecated', action='store_true', default=False,
+        help='fetch deprecated versions without warning')
+
+
 def add_cdash_args(subparser, add_help):
     cdash_help = {}
     if add_help:

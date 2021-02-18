@@ -75,6 +75,9 @@ class Doxygen(CMakePackage):
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
 
+    # Workaround for gcc getting stuck in an infinite loop
+    patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
+
     def patch(self):
         if self.spec['iconv'].name == 'libc':
             return

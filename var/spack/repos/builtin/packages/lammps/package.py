@@ -87,6 +87,8 @@ class Lammps(CMakePackage, CudaPackage):
             description='Build with png support')
     variant('ffmpeg', default=True,
             description='Build with ffmpeg support')
+    variant('kim', default=True,
+            description='Build with KIM support')
     variant('openmp', default=True, description='Build with OpenMP')
     variant('opencl', default=False, description='Build with OpenCL')
     variant('exceptions', default=False,
@@ -114,6 +116,7 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
     depends_on('jpeg', when='+jpeg')
+    depends_on('kim-api', when='+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
@@ -205,6 +208,8 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('{0}=ON'.format(opt))
             else:
                 args.append('{0}=OFF'.format(opt))
+        if '+kim' in spec:
+            args.append('-DPKG_KIM=ON')
         if '+kspace' in spec:
             if '^fftw' in spec:
                 args.append('-DFFT=FFTW3')

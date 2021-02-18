@@ -181,6 +181,12 @@ class Paraview(CMakePackage, CudaPackage):
             env.set('PARAVIEW_VTK_DIR',
                     join_path(lib_dir, 'cmake', self.paraview_subdir, 'vtk'))
 
+    def flag_handler(self, name, flags):
+        if name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
+
     def setup_run_environment(self, env):
         # paraview 5.5 and later
         # - cmake under lib/cmake/paraview-5.5
@@ -261,6 +267,8 @@ class Paraview(CMakePackage, CudaPackage):
                 cmake_args.extend([
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
+                if spec.satisfies('%cce'):
+                    cmake_args.append('-DVTK_PYTHON_OPTIONAL_LINK:BOOL=OFF')
             else:  # @5.7:
                 cmake_args.extend([
                     '-DPARAVIEW_BUILD_QT_GUI:BOOL=%s' % variant_bool('+qt'),
