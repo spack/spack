@@ -11,7 +11,7 @@ class RAmelia(RPackage):
 
     homepage = "https://cloud.r-project.org/package=Amelia"
     url      = "https://cloud.r-project.org/src/contrib/Amelia_1.7.6.tar.gz"
-    list_url = "https://cloud.r-project.org/src/contrib/Archive/ggthemes"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/Amelia"
 
     version('1.7.6',  sha256='63c08d374aaf78af46c34dc78da719b3085e58d9fabdc76c6460d5193a621bea')
 
