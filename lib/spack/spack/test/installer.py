@@ -231,7 +231,7 @@ def test_process_binary_cache_tarball_tar(install_mockery, monkeypatch, capfd):
 def test_try_install_from_binary_cache(install_mockery, mock_packages,
                                        monkeypatch, capsys):
     """Tests SystemExit path for_try_install_from_binary_cache."""
-    def _mirrors_for_spec(spec, force, full_hash_match=False):
+    def _mirrors_for_spec(spec, full_hash_match=False):
         spec = spack.spec.Spec('mpi').concretized()
         return [{
             'mirror_url': 'notused',

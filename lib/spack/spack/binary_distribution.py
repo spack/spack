@@ -763,6 +763,10 @@ def generate_package_index(cache_prefix):
             url_util.join(cache_prefix, 'index.json.hash'),
             keep_original=False,
             extra_args={'ContentType': 'text/plain'})
+    except Exception as err:
+        msg = 'Encountered problem pushing package index to {0}: {1}'.format(
+            cache_prefix, err)
+        tty.warn(msg)
     finally:
         shutil.rmtree(tmpdir)
 
@@ -823,6 +827,10 @@ def generate_key_index(key_prefix, tmpdir=None):
                 url_util.join(key_prefix, 'index.json'),
                 keep_original=False,
                 extra_args={'ContentType': 'application/json'})
+        except Exception as err:
+            msg = 'Encountered problem pushing key index to {0}: {1}'.format(
+                key_prefix, err)
+            tty.warn(msg)
         finally:
             if remove_tmpdir:
                 shutil.rmtree(tmpdir)
@@ -1322,7 +1330,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
-def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
+def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
@@ -1360,11 +1368,26 @@ def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False,
-                         mirrors_to_check=None):
+def get_mirrors_for_spec(spec=None, full_hash_match=False,
+                         mirrors_to_check=None, index_only=False):
     """
     Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
+
+    Args:
+        spec (Spec): The spec to look for in binary mirrors
+        full_hash_match (bool): If True, only includes mirrors where the spec
+            full hash matches the locally computed full hash of the ``spec``
+            argument.  If False, any mirror which has a matching DAG hash
+            is included in the results.
+        mirrors_to_check (dict): Optionally override the configured mirrors
+            with the mirrors in this dictionary.
+        index_only (bool): Do not attempt direct fetching of ``spec.yaml``
+            files from remote mirrors, only consider the indices.
+
+    Return:
+        A list of objects, each containing a ``mirror_url`` and ``spec`` key
+            indicating all mirrors where the spec can be found.
     """
     if spec is None:
         return []
@@ -1390,10 +1413,9 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False,
         results = filter_candidates(candidates)
 
     # Maybe we just didn't have the latest information from the mirror, so
-    # try to fetch directly.
-    if not results:
+    # try to fetch directly, unless we are only considering the indices.
+    if not results and not index_only:
         results = try_direct_fetch(spec,
-                                   force=force,
                                    full_hash_match=full_hash_match,
                                    mirrors=mirrors_to_check)
 

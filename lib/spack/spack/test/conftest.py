@@ -611,37 +611,6 @@ def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes,
 
 
 @pytest.fixture(scope='function')
-def mutable_mock_store(
-        tmpdir_factory, mock_repo_path, mock_configuration_scopes,
-        _store_dir_and_cache
-):
-    """Creates a read-only mock database with some packages installed note
-    that the ref count for dyninst here will be 3, as it's recycled
-    across each install.
-
-    This does not actually activate the store for use by Spack -- see the
-    ``database`` fixture for that.
-
-    """
-    store_path, store_cache = _store_dir_and_cache
-
-    # If the cache does not exist populate the store and create it
-    if not os.path.exists(str(store_cache.join('.spack-db'))):
-        with spack.config.use_configuration(*mock_configuration_scopes):
-            with spack.store.use_store(str(store_path)) as store:
-                with spack.repo.use_repositories(mock_repo_path):
-                    _populate(store.db)
-        store_path.copy(store_cache, mode=True, stat=True)
-
-    # Make the DB filesystem read-only to ensure we can't modify entries
-    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
-
-    yield store
-
-    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
-
-
-@pytest.fixture(scope='function')
 def database(mock_store, mock_packages, config, monkeypatch):
     """This activates the mock store, packages, AND config."""
     monkeypatch.setattr(spack.store, 'store', mock_store)

@@ -12,7 +12,7 @@ class PyPetsc4py(PythonPackage):
 
     homepage = "https://gitlab.com/petsc/petsc4py"
     pypi = "petsc4py/petsc4py-3.14.0.tar.gz"
-    git      = "https://gitlab.com/petsc/petsc4py.git"
+    git      = "https://gitlab.com/petsc/petsc.git"
 
     maintainers = ['dalcinl', 'balay']
 
@@ -32,7 +32,8 @@ class PyPetsc4py(PythonPackage):
 
     variant('mpi', default=True,  description='Activates MPI support')
 
-    patch('ldshared.patch')
+    patch('ldshared.patch', when='@:99')
+    patch('ldshared-dev.patch', when='@develop')
 
     depends_on('py-cython', type='build', when='@develop')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
@@ -54,3 +55,11 @@ class PyPetsc4py(PythonPackage):
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.99', when='@3.7:3.7.99')
     depends_on('petsc@3.6:3.6.99', when='@3.6:3.6.99')
+
+    @property
+    def build_directory(self):
+        import os
+        if self.spec.satisfies('@develop'):
+            return os.path.join(self.stage.source_path, 'src', 'binding', 'petsc4py')
+        else:
+            return self.stage.source_path

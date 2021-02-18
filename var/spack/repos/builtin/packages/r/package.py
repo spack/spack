@@ -55,42 +55,34 @@ class R(AutotoolsPackage):
     variant('external-lapack', default=False,
             description='Links to externally installed BLAS/LAPACK')
     variant('X', default=False,
-            description='Enable X11 support (call configure --with-x)')
+            description='Enable X11 support (TCLTK, PNG, JPEG, TIFF, CAIRO)')
     variant('memory_profiling', default=False,
             description='Enable memory profiling')
     variant('rmath', default=False,
             description='Build standalone Rmath library')
 
-    # Virtual dependencies
     depends_on('blas', when='+external-lapack')
     depends_on('lapack', when='+external-lapack')
-
-    # Concrete dependencies.
-    depends_on('readline')
-    depends_on('ncurses')
-    depends_on('icu4c')
-    depends_on('glib')
-    depends_on('zlib@1.2.5:')
     depends_on('bzip2')
-    depends_on('libtiff')
-    depends_on('jpeg')
-    depends_on('cairo+pdf')
-    depends_on('cairo+X+gobject', when='+X')
-    depends_on('cairo~X', when='~X')
-    depends_on('pango')
-    depends_on('pango+X', when='+X')
-    depends_on('pango~X', when='~X')
-    depends_on('harfbuzz+graphite2', when='+X')
-    depends_on('freetype')
-    depends_on('tcl')
-    depends_on('tk', when='+X')
-    depends_on('libx11', when='+X')
-    depends_on('libxt', when='+X')
-    depends_on('libxmu', when='+X')
     depends_on('curl')
-    depends_on('pcre2', when='@4:')
-    depends_on('pcre', when='@:3.6.3')
+    depends_on('icu4c')
     depends_on('java')
+    depends_on('ncurses')
+    depends_on('pcre', when='@:3.6.3')
+    depends_on('pcre2', when='@4:')
+    depends_on('readline')
+    depends_on('xz')
+    depends_on('zlib@1.2.5:')
+    depends_on('cairo+X+gobject+pdf', when='+X')
+    depends_on('pango+X', when='+X')
+    depends_on('harfbuzz+graphite2', when='+X')
+    depends_on('jpeg', when='+X')
+    depends_on('libpng', when='+X')
+    depends_on('libtiff', when='+X')
+    depends_on('libx11', when='+X')
+    depends_on('libxmu', when='+X')
+    depends_on('libxt', when='+X')
+    depends_on('tk', when='+X')
 
     patch('zlib.patch', when='@:3.3.2')
 
@@ -130,23 +122,15 @@ class R(AutotoolsPackage):
         spec   = self.spec
         prefix = self.prefix
 
-        tcl_config_path = join_path(
-            spec['tcl'].libs.directories[0], 'tclConfig.sh')
-
         config_args = [
             '--libdir={0}'.format(join_path(prefix, 'rlib')),
             '--enable-R-shlib',
             '--enable-BLAS-shlib',
             '--enable-R-framework=no',
             '--without-recommended-packages',
-            '--with-tcl-config={0}'.format(tcl_config_path),
             'LDFLAGS=-L{0} -Wl,-rpath,{0}'.format(join_path(prefix, 'rlib',
                                                             'R', 'lib')),
         ]
-        if '^tk' in spec:
-            tk_config_path = join_path(
-                spec['tk'].libs.directories[0], 'tkConfig.sh')
-            config_args.append('--with-tk-config={0}'.format(tk_config_path))
 
         if '+external-lapack' in spec:
             if '^mkl' in spec and 'gfortran' in self.compiler.fc:
@@ -164,8 +148,26 @@ class R(AutotoolsPackage):
                 ])
 
         if '+X' in spec:
+            config_args.append('--with-cairo')
+            config_args.append('--with-jpeglib')
+            config_args.append('--with-libpng')
+            config_args.append('--with-libtiff')
+            config_args.append('--with-tcltk')
             config_args.append('--with-x')
+
+            tcl_config_path = join_path(
+                spec['tcl'].libs.directories[0], 'tclConfig.sh')
+            config_args.append('--with-tcl-config={0}'.format(tcl_config_path))
+
+            tk_config_path = join_path(
+                spec['tk'].libs.directories[0], 'tkConfig.sh')
+            config_args.append('--with-tk-config={0}'.format(tk_config_path))
         else:
+            config_args.append('--without-cairo')
+            config_args.append('--without-jpeglib')
+            config_args.append('--without-libpng')
+            config_args.append('--without-libtiff')
+            config_args.append('--without-tcltk')
             config_args.append('--without-x')
 
         if '+memory_profiling' in spec:
