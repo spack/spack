@@ -222,9 +222,9 @@ class Lbann(CMakePackage, CudaPackage):
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
-
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
+
     @when('@:0.90,0.94:')
     def cmake_args(self):
         spec = self.spec
