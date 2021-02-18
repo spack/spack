@@ -93,11 +93,7 @@ class TestState(object):
             self.config = spack.config.config
             self.platform = spack.architecture.platform
             self.test_patches = store_patches()
-
-            self.store_root = spack.store.store.root
-            self.store_unpadded_root = spack.store.store.unpadded_root
-            self.store_projections = spack.store.store.projections
-            self.store_hash_length = spack.store.store.hash_length
+            self.store_token = spack.store.store.serialize()
 
     def restore(self):
         if _serialize:
@@ -105,10 +101,7 @@ class TestState(object):
             spack.config.config = self.config
             spack.architecture.platform = self.platform
 
-            new_store = spack.store.Store(
-                self.store_root, self.store_unpadded_root,
-                self.store_projections, self.store_hash_length
-            )
+            new_store = spack.store.Store.deserialize(self.store_token)
             spack.store.store = new_store
             spack.store.root = new_store.root
             spack.store.unpadded_root = new_store.unpadded_root

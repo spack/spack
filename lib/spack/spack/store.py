@@ -169,6 +169,27 @@ class Store(object):
         """Convenience function to reindex the store DB with its own layout."""
         return self.db.reindex(self.layout)
 
+    def serialize(self):
+        """Return a pickle-able object that can be used to reconstruct
+        a store.
+        """
+        return (
+            self.root, self.unpadded_root, self.projections, self.hash_length
+        )
+
+    @staticmethod
+    def deserialize(token):
+        """Return a store reconstructed from a token created by
+        the serialize method.
+
+        Args:
+            token: return value of the serialize method
+
+        Returns:
+            Store object reconstructed from the token
+        """
+        return Store(*token)
+
 
 def _store():
     """Get the singleton store instance."""
