@@ -175,7 +175,7 @@ class Sgpp(SConsPackage):
             '1' if '+solver' in spec else '0'))
 
         # Misc flag did not exist in older versions
-        if ~spec.satisfies('@1.0.0:3.2.0'):
+        if not spec.satisfies('@1.0.0:3.2.0'):
             self.args.append('SG_MISC={0}'.format(
                 '1' if '+misc' in spec else '0'))
 
