@@ -17,5 +17,5 @@ class RAssertiveDataUs(RPackage):
 
     extends('r')
     depends_on('r@3.0.0:', type=('build', 'run'))
-    depends_on('r-asseritve-base@0.0-2:', type=('build', 'run'))
+    depends_on('r-assertive-base@0.0-2:', type=('build', 'run'))
     depends_on('r-assertive-strings', type=('build', 'run'))
