@@ -6,6 +6,7 @@ import os.path
 import shutil
 import sys
 import tempfile
+import re
 
 import spack.util.environment
 
@@ -269,6 +270,20 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             ])
         else:
             config_args.append("--without-z")
+
+        if '^mkl' in spec and 'gfortran' in self.compiler.fc:
+            mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
+            config_args.extend([
+                mkl_re.sub(r'\g<1>gf\g<2>',
+                    '--with-blas={0}'.format(
+                        spec['blas'].libs.ld_flags)),
+                    '--with-lapack'
+            ])
+        else:
+            config_args.extend([
+                '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+                '--with-lapack'
+            ])
 
         # If 64-bit BLAS is used:
         if (spec.satisfies('^openblas+ilp64') or
