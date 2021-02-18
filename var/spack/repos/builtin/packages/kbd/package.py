@@ -22,4 +22,15 @@ class Kbd(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('gettext',  type='build')
+    depends_on('yacc',     type='build')
+    depends_on('flex',     type='build')
     depends_on('libpam')
+
+    def autoreconf(self, spec, prefix):
+        sh = which('sh')
+        sh('./autogen.sh')
+
+    def configure_args(self):
+        args = ['--with-libintl-prefix={0}'.format(self.spec['gettext'].prefix)]
+        return args
