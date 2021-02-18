@@ -54,7 +54,7 @@ class Slepc(Package):
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Cannot mix release and development versions of SLEPc and PETSc:
-    depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@develop', when='@master')
     depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
