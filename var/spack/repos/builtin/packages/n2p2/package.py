@@ -60,7 +60,7 @@ class N2p2(MakefilePackage):
         )
         makefile.filter(
             "PROJECT_LDFLAGS_BLAS.*",
-            "PROJECT_LDFLAGS_BLAS={0} -lgsl -lgslcblas".format(blas_libs.ld_flags)
+            "PROJECT_LDFLAGS_BLAS={0} -lgsl -lgslcblas".format(blas_libs.ld_flags),
         )
 
     def build(self, spec, prefix):
@@ -95,13 +95,13 @@ class N2p2(MakefilePackage):
             make(
                 "MODE=test",
                 "PROJECT_GSL={0}".format(self.spec["gsl"].prefix.include),
-                "PROJECT_EIGEN={0}".format(self.spec["eigen"].prefix.include.eigen3)
+                "PROJECT_EIGEN={0}".format(self.spec["eigen"].prefix.include.eigen3),
             )
             make(
                 "MODE=test",
                 "lammps-nnp",
                 "PROJECT_GSL={0}".format(self.spec["gsl"].prefix.include),
-                "PROJECT_EIGEN={0}".format(self.spec["eigen"].prefix.include.eigen3)
+                "PROJECT_EIGEN={0}".format(self.spec["eigen"].prefix.include.eigen3),
             )
             make("pynnp", "MODE=test")
 
@@ -109,11 +109,11 @@ class N2p2(MakefilePackage):
             if self.spec.satisfies("%fj"):
                 f = FileFilter(join_path("cpp", "nnp_test.h"))
                 f.filter(
-                    "(example.command",
+                    '(example.command',
                     '("{0} -n 1 " + example.command'.format(
                         self.spec["mpi"].prefix.bin.mpirun
                     ),
-                    string=True
+                    string=True,
                 )
 
             f = FileFilter(join_path("cpp", "makefile"))
