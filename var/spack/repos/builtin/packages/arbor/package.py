@@ -70,4 +70,7 @@ class Arbor(CMakePackage, CudaPackage):
         if '+cuda' in self.spec:
             args.append('-DARB_GPU=cuda')
 
+        # rely on spack's compiler wrapper to set architecture
+        args.append('-DARB_ARCH=')
+
         return args
