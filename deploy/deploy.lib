@@ -725,7 +725,7 @@ EOF
     log "concretizing environment"
     spack -D "${HOME}/build_environment" concretize -f
     log "installing environment"
-    srun -N${BUILD_NODES:-1} --ntasks-per-node 4 -c12 -t24:0:0 -Aproj16 -Ccpu -pprod -ppre_prod -J"spack!" slurmspack "${HOME}/build_environment"
+    srun -N${BUILD_NODES:-1} --ntasks-per-node 4 -c12 -t24:0:0 -Aproj16 -Ccpu -pprod -J"spack!" slurmspack "${HOME}/build_environment"
 
     cat > "${HOME}/stack.xml" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
