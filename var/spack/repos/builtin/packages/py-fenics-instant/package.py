@@ -19,7 +19,7 @@ class PyFenicsInstant(PythonPackage):
     version('2017.2.0', sha256='be24f162fd1a89b82fae002db8df0b4f111fd50db83d78c0c121015c02e45b7b')
     version('2016.2.0', sha256='df5e8ca306546fd1ee1a28e36b61c5d46456dc8b07e3293d674ddff62cf8d953')
 
-    depends_on('python@2.7:', type="build")
+    depends_on('python@2.7:', type=("build", "run"))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-subprocess32', when='^python@:2.999', type=('build', 'run'))
     depends_on('py-setuptools', type="build")
