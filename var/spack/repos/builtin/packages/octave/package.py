@@ -10,7 +10,6 @@ import re
 
 import spack.util.environment
 
-
 class Octave(AutotoolsPackage, GNUMirrorPackage):
     """GNU Octave is a high-level language, primarily intended for numerical
     computations.
