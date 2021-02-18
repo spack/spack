@@ -5,6 +5,7 @@
 
 import os
 from six import StringIO
+import re
 
 import pytest
 
@@ -2100,7 +2101,8 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
         viewdir = e.default_view.root
 
     out = env('activate', '--sh', 'test')
-    assert 'PATH=%s' % os.path.join(viewdir, 'bin') in out
+    pattern = r'PATH=[^:]*{0}'.format(os.path.join(viewdir, 'bin'))
+    assert re.search(pattern, out)
 
 
 def test_concretize_user_specs_together():

@@ -114,6 +114,8 @@ def env_activate(args):
     )
     sys.stdout.write(cmds)
 
+    if args.with_view:
+        active_env.load_external_modules()
 
 #
 # env deactivate

@@ -31,6 +31,7 @@ import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.config
 import spack.user_environment as uenv
+import spack.build_environment
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
 import spack.architecture as architecture
@@ -1310,6 +1311,10 @@ class Environment(object):
         env_mod.extend(mods)
 
         return env_mod.shell_modifications(shell)
+
+    def load_external_modules(self):
+        for spec in self.roots():
+            spack.build_environment.load_external_modules(spec.package)
 
     def _add_concrete_spec(self, spec, concrete, new=True):
         """Called when a new concretized spec is added to the environment.
