@@ -243,6 +243,8 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
             spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
