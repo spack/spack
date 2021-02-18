@@ -185,6 +185,11 @@ def test_flatten_deps(
 
 @pytest.fixture()
 def install_upstream(tmpdir_factory, gen_mock_layout, install_mockery):
+    """Provides a function that installs a specified set of specs to an
+    upstream database. The function returns a store which points to the
+    upstream, as well as the upstream layout (for verifying that dependent
+    installs are using the upstream installs).
+    """
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     prepared_db = spack.database.Database(mock_db_root)
     upstream_layout = gen_mock_layout('/a/')

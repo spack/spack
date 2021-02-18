@@ -707,7 +707,7 @@ def temporary_store(tmpdir):
     temporary_store_path = tmpdir.join('opt')
     with spack.store.use_store(str(temporary_store_path)) as s:
         yield s
-        temporary_store_path.remove()
+    temporary_store_path.remove()
 
 
 @pytest.fixture(scope='function')
