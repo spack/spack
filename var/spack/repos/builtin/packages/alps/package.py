@@ -63,7 +63,7 @@ class Alps(CMakePackage):
         target = 'mc-02-susceptibilities'
         copy_tree(join_path(troot, target), target)
         self.run_test('parameter2xml',
-                      options=['parm2a','SEED=123456'],
+                      options=['parm2a', 'SEED=123456'],
                       work_dir=target
                       )
         self.run_test('spinmc',
@@ -74,7 +74,7 @@ class Alps(CMakePackage):
         target = 'ed-01-sparsediag'
         copy_tree(join_path(troot, target), target)
         self.run_test('parameter2xml',
-                      options=['parm1a','SEED=123456'],
+                      options=['parm1a', 'SEED=123456'],
                       work_dir=target
                       )
         self.run_test('sparsediag',
@@ -86,7 +86,7 @@ class Alps(CMakePackage):
         copy_tree(join_path(troot, target), target)
         copy(join_path(test_dir, 'spin_one_half'), target)
         self.run_test('parameter2xml',
-                      options=['spin_one_half','SEED=123456'],
+                      options=['spin_one_half', 'SEED=123456'],
                       work_dir=target
                       )
         self.run_test('dmrg',
