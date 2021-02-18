@@ -205,7 +205,6 @@ class Sgpp(SConsPackage):
         else:
             self.args.append('CXX={0}'.format(self.compiler.cxx))
 
-
         return self.args
 
     def install_args(self, spec, prefix):
