@@ -15,6 +15,6 @@ class RGparotation(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/GPArotation"
 
     version('2014.11-1', sha256='351bc15fc8dc6c8ea5045fbba22180d1e68314fc34d267545687748e312e5096')
-    
+
     extends('r')
     depends_on('r@2.0.0:', type=('build', 'run'))
