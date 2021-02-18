@@ -8,7 +8,8 @@ from spack import *
 
 
 class RCa(RPackage):
-    """Computation and visualization of simple, multiple and joint correspondence analysis."""
+    """Computation and visualization of simple, multiple and joint
+    correspondence analysis."""
 
     homepage = "https://cloud.r-project.org/package=ca"
     url      = "https://cloud.r-project.org/src/contrib/ca_0.71.1.tar.gz"
