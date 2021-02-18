@@ -118,6 +118,9 @@ class Openblas(MakefilePackage):
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
+    # See https://github.com/xianyi/OpenBLAS/issues/3074
+    conflicts('%gcc@:10.1.99', when='@0.3.13 target=ppc64le:')
+
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
     conflicts('+consistent_fpcsr', when='threads=none',
