@@ -54,3 +54,42 @@ class Alps(CMakePackage):
         args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
         args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
+
+    def test(self):
+        troot = self.prefix.tutorials
+        test_dir = self.test_suite.current_test_data_dir
+        expected = ['Finished with everything.']
+
+        target = 'mc-02-susceptibilities'
+        copy_tree(join_path(troot, target), target)
+        self.run_test('parameter2xml',
+                      options=['parm2a','SEED=123456'],
+                      work_dir=target
+                      )
+        self.run_test('spinmc',
+                      options=['--Tmin', '10', '--write-xml', 'parm2a.in.xml'],
+                      expected=expected, work_dir=target
+                      )
+
+        target = 'ed-01-sparsediag'
+        copy_tree(join_path(troot, target), target)
+        self.run_test('parameter2xml',
+                      options=['parm1a','SEED=123456'],
+                      work_dir=target
+                      )
+        self.run_test('sparsediag',
+                      options=['--write-xml', 'parm1a.in.xml'],
+                      expected=expected, work_dir=target
+                      )
+
+        target = 'dmrg-01-dmrg'
+        copy_tree(join_path(troot, target), target)
+        copy(join_path(test_dir, 'spin_one_half'), target)
+        self.run_test('parameter2xml',
+                      options=['spin_one_half','SEED=123456'],
+                      work_dir=target
+                      )
+        self.run_test('dmrg',
+                      options=['--write-xml', 'spin_one_half.in.xml'],
+                      expected=expected, work_dir=target
+                      )
