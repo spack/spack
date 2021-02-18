@@ -399,6 +399,15 @@ environment variables:
             # overwrite all concrete explicit specs from this build
             kwargs['overwrite'] = [spec.dag_hash() for spec in specs]
 
+        # Update install_args with the monitor args, needed for build task
+        kwargs.update({
+            "monitor_disable_auth": args.monitor_disable_auth,
+            "monitor_keep_going": args.monitor_keep_going,
+            "monitor_host": args.monitor_host,
+            "use_monitor": args.use_monitor,
+            "monitor_prefix": args.monitor_prefix,
+        })
+
         # If we are using the monitor, we send original configs.
         # The full_hash is the main package id, the build_hash for others
         if args.use_monitor:

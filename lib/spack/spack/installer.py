@@ -1397,17 +1397,19 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
+    def _send_monitor_task_failure(self, spec):
+        """Given that we have a spack monitor enabled, ping the server that
+        the task (spec) has failed.
+        """
+        if self.monitor:
+            self.monitor.fail_task(spec)
+
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
 
         Args:
             pkg (Package): the package to be built and installed"""
-
-        print("IN INSTALLER")
-        import IPython
-        IPython.embed()
-        sys.exit(0)
 
         self._init_queue()
 
@@ -1450,8 +1452,7 @@ class PackageInstaller(object):
                 # TODO: this currently marks the main task as failed -
                 # in the future we want the main task to be cancelled,
                 # and the task that failed marked as failed.
-                if self.monitor:
-                    self.monitor.fail_task(task.request.pkg)
+                self._send_monitor_task_failure(task.request.pkg.spec)
 
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
@@ -1475,8 +1476,7 @@ class PackageInstaller(object):
                 # Mark that the package failed
                 # TODO: this should also be for the task.pkg, but we don't
                 # model transitive yet.
-                if self.monitor:
-                    self.monitor.fail_task(task.request.pkg)
+                self._send_monitor_task_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)
@@ -1587,6 +1587,7 @@ class PackageInstaller(object):
                 # Only terminate at this point if a single build request was
                 # made.
                 if task.explicit and single_explicit_spec:
+                    self._send_monitor_task_failure(task.request.pkg.spec)
                     raise
 
                 if task.explicit:
@@ -1598,10 +1599,12 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
+                self._send_monitor_task_failure(task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
+                self._send_monitor_task_failure(task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -1642,6 +1645,8 @@ class PackageInstaller(object):
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
 
+        # Finish logging the task?
+
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
 
@@ -1671,6 +1676,16 @@ def build_process(pkg, kwargs):
     skip_patch = kwargs.get('skip_patch', False)
     unmodified_env = kwargs.get('unmodified_env', {})
     verbose = kwargs.get('verbose', False)
+    use_monitor = kwargs.get('use_monitor', False)
+    monitor = None
+
+    # Instantiate a monitor for the worker, if requested
+    if use_monitor:
+        monitor = spack.monitor.get_client(
+            host=kwargs.get("monitor_host"),
+            prefix=kwargs.get("monitor_prefix"),
+            disable_auth=kwargs.get("monitor_disable_auth")
+        )
 
     start_time = time.time()
     if not fake:
@@ -1693,6 +1708,7 @@ def build_process(pkg, kwargs):
 
     pkg.stage.keep = keep_stage
     with pkg.stage:
+
         # Run the pre-install hook in the child process after
         # the directory is created.
         spack.hooks.pre_install(pkg.spec)
@@ -1729,12 +1745,12 @@ def build_process(pkg, kwargs):
                 debug_level = tty.debug_level()
 
                 # Spawn a daemon that reads from a pipe and redirects
-                # everything to log_path
-                with log_output(pkg.log_path, echo, True,
-                                env=unmodified_env) as logger:
+                # everything to log_path, and provide the phase for logging
+                for phase_name, phase_attr in zip(
+                        pkg.phases, pkg._InstallPhase_phases):
 
-                    for phase_name, phase_attr in zip(
-                            pkg.phases, pkg._InstallPhase_phases):
+                    with log_output(pkg.log_path, echo, True, phase=phase_name,
+                                    env=unmodified_env) as logger:
 
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
@@ -1747,8 +1763,10 @@ def build_process(pkg, kwargs):
                         phase = getattr(pkg, phase_attr)
                         phase(pkg.spec, pkg.prefix)
 
+            # After log, we can get all output/error files from the package stage
             echo = logger.echo
             log(pkg)
+            # monitor.
 
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
@@ -1762,6 +1780,15 @@ def build_process(pkg, kwargs):
             .format(_hms(pkg._fetch_time), _hms(build_time),
                     _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
+
+    # Update that the task was succcessful, parse metadata folder
+    if monitor:
+        monitor.update_task(pkg.spec, "SUCCESS")
+
+        # Parse final output and metadata from package directory
+        full_hash = pkg.spec.full_hash()
+        package_dir = spack.store.layout.build_packages_path(pkg.spec)
+        monitor.send_package_metadata(full_hash, os.path.dirname(package_dir))
 
     # preserve verbosity across runs
     return echo

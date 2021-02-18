@@ -434,7 +434,7 @@ class log_output(object):
     """
 
     def __init__(self, file_like=None, echo=False, debug=0, buffer=False,
-                 env=None):
+                 env=None, phase=None):
         """Create a new output log context manager.
 
         Args:
@@ -442,6 +442,7 @@ class log_output(object):
                 output should be logged
             echo (bool): whether to echo output in addition to logging it
             debug (int): positive to enable tty debug mode during logging
+            phase (str): the name of the phase, to eventually help organize
             buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
 
@@ -465,6 +466,7 @@ class log_output(object):
         self.env = env  # the environment to use for _writer_daemon
 
         self._active = False  # used to prevent re-entry
+        self._phase = phase
 
     def __call__(self, file_like=None, echo=None, debug=None, buffer=None):
         """This behaves the same as init. It allows a logger to be reused.

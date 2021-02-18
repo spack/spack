@@ -151,8 +151,8 @@ class SpackMonitorClient:
         # If we have an authorization error, we retry with
         response = self.issue_request(request)
 
-        # A 401 response is a request for authentication
-        if response.code != 401:
+        # A 200/201 response incidates success
+        if response.code in [200, 201]:
             return json.loads(response.read().decode('utf-8'))
 
         return response
@@ -271,11 +271,65 @@ class SpackMonitorClient:
         # data = {current_package: "FAILED", main_package: "CANCELLED"}
         # return self.do_request("tasks/update/", data=json.dumps(data))
 
+    def send_package_metadata(self, full_hash, meta_dir):
+        """Given a metadata folder, usually .spack within the spack root
+        opt/<system>/<compiler>/<package>/.spack with (maximally) the following:
+
+             'spack-configure-args.txt',
+             'spack-build-env.txt',
+             'spec.yaml',
+             'archived-files',
+             'spack-build-out.txt',
+             'install_manifest.json',
+             'repos'
+
+        read in the environment, and output and (if they exist, error) files
+        and send to the monitor server. full_hash should be the full_hash for
+        the package in question, and meta_dir should be the .spack folder
+        mentioned above.
+        """
+        errors_file = os.path.join(meta_dir, "errors.txt")
+        output_file = os.path.join(meta_dir, "spack-build-out.txt")
+        env_file = os.path.join(meta_dir, "spack-build-env.txt")
+        config_file = os.path.join(meta_dir, "spack-configure-args.txt")
+        manifest_file = os.path.join(meta_dir, "install_manifest.json")
+
+        # Prepare request with subset of environment variables, manifest, and
+        # entire contents of output and config file. None if doesn't exist
+        data = {"environ": self._read_environment_file(env_file),
+                "config": read_file(config_file),
+                "manifest": read_json(manifest_file),
+                "output": read_file(output_file),
+                "errors": read_file(errors_file),
+                "full_hash": full_hash}
+
+        return self.do_request("packages/metadata/", data=json.dumps(data))
+
+    def _read_environment_file(self, filename):
+        """Given an environment file, we want to read it, split by semicolons
+        and new lines, and then parse down to the subset of SPACK_* variables.
+        We assume that all spack prefix variables are not secrets, and unlike
+        the install_manifest.json, we don't (at least to start) parse the values
+        to remove path prefixes specific to user systems.
+        """
+        if not os.path.exists(filename):
+            return
+        content = read_file(filename)
+
+        # Filter down to lines, not export statements. I'm only using multiple
+        # lines because of the length limit.
+        lines = re.split("(;|\n)", content)
+        lines = [x for x in lines if x not in ['', '\n', ';'] and "SPACK_" in x]
+        lines = [x.strip() for x in lines if "export " not in x]
+        lines = [x.strip() for x in lines if "export " not in x]
+        return {x.split("=", 1)[0]: x.split("=", 1)[1] for x in lines}
+
     def upload_specfile(self, filename):
         """Given a spec file (must be json) upload to the UploadSpec endpoint.
         This function is not used in the spack to server workflow, but could
         be useful is Spack Monitor is intended to send an already generated
-        file in some kind of separate analysis.
+        file in some kind of separate analysis. For the environment file, we
+        parse out SPACK_* variables to include.
         """
         # We load as json just to validate it
         spec = read_json(filename)
@@ -303,10 +357,17 @@ class authHeader:
 
 
 def read_file(filename):
+    """Read a file, if it exists. Otherwise return None
+    """
+    if not os.path.exists(filename):
+        return
     with open(filename, 'r') as fd:
         content = fd.read()
     return content
 
 
 def read_json(filename):
+    """Read a file and load into json, if it exists. Otherwise return None"""
+    if not os.path.exists(filename):
+        return
     return json.loads(read_file(filename))
