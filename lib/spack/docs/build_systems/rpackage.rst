@@ -297,8 +297,8 @@ like so:
 
 .. code-block:: python
 
-   def configure_args(self, spec, prefix):
-       mpi_name = spec['mpi'].name
+   def configure_args(self):
+       mpi_name = self.spec['mpi'].name
 
        # The type of MPI. Supported values are:
        # OPENMPI, LAM, MPICH, MPICH2, or CRAY
