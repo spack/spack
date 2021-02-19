@@ -6,6 +6,8 @@ import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.environment as ev
+import spack.paths
+import spack.repo
 from spack.util.executable import which
 
 _SPACK_UPSTREAM = 'https://github.com/spack/spack'
