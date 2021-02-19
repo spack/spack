@@ -30,9 +30,9 @@ class Ruby(AutotoolsPackage):
     depends_on('pkgconfig', type=('build'))
     depends_on('libffi')
     depends_on('zlib')
-    depends_on('libx11')
-    depends_on('tcl')
-    depends_on('tk')
+    depends_on('libx11', when='@:2.3')
+    depends_on('tcl', when='@:2.3')
+    depends_on('tk', when='@:2.3')
     depends_on('openssl@:1.0', when='@:2.3+openssl')
     depends_on('openssl', when='+openssl')
     depends_on('readline', when='+readline')
@@ -75,7 +75,8 @@ class Ruby(AutotoolsPackage):
         if '+readline' in self.spec:
             args.append("--with-readline-dir=%s"
                         % self.spec['readline'].prefix)
-        args.append('--with-tk=%s' % self.spec['tk'].prefix)
+        if '^tk' in self.spec:
+            args.append('--with-tk=%s' % self.spec['tk'].prefix)
         if self.spec.satisfies("%fj"):
             args.append('--disable-dtrace')
         return args
