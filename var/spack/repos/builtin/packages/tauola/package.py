@@ -19,15 +19,12 @@ class Tauola(AutotoolsPackage):
     variant('hepmc', default=True, description="Enable hepmc 2.x support")
     variant('hepmc3', default=False, description="Enable hepmc3 support")
     variant('lhapdf', default=False, description="Enable lhapdf support")
-    variant('tau-spinner', default=False, description="Build tau spinner")
     variant('cxxstd',
             default='11',
             values=('11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
- 
-    conflicts('+tau-spinner', when='~lhapdf', msg='tau-spinner requires lhapdf')
- 
+
     maintainers = ['vvolkl']
 
     depends_on('hepmc', when='+hepmc')
@@ -50,5 +47,4 @@ class Tauola(AutotoolsPackage):
         args.extend(self.with_or_without('hepmc', 'prefix'))
         args.extend(self.with_or_without('hepmc3', 'prefix'))
         args.extend(self.with_or_without('lhapdf', 'prefix'))
-        args.extend(self.with_or_without('tau-spinner'))
         return args
