@@ -48,7 +48,7 @@ def shell_init_instructions(cmd, equivalent):
             equivalent.format(sh_arg="--sh  ") + "  # bash/zsh/sh",
             equivalent.format(sh_arg="--csh ") + "  # csh/tcsh",
             equivalent.format(sh_arg="--fish") + "  # fish",
-            equivalent.format(sh_arg="--bat") + "  # batch"
+            equivalent.format(sh_arg="--bat ") + "  # batch"
         ]
     else:
         msg += ["  " + equivalent]
