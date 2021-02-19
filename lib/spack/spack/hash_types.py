@@ -35,5 +35,5 @@ build_hash = SpecHashDescriptor(
 
 
 #: Full hash used in build pipelines to determine when to rebuild packages.
-full_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=True,
-                               attr='_full_hash')
+full_hash = SpecHashDescriptor(
+    deptype=('build', 'link', 'run'), package_hash=True, attr='_full_hash')
