@@ -5,7 +5,6 @@
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
-import spack.cmd.common.deployment as deployment
 import spack.environment as ev
 from spack.util.executable import which
 

@@ -462,7 +462,7 @@ _spack_cd() {
 _spack_checkout() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -r --remote --url"
+        SPACK_COMPREPLY="-h --help -r --remote --url --env --repo"
     else
         SPACK_COMPREPLY=""
     fi
