@@ -129,7 +129,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('lzma')
     depends_on('zlib')
 
-    # Older builds of pugi export their symbols differently, 
+    # Older builds of pugi export their symbols differently,
     # and pre-5.9 is unable to handle that.
     depends_on('pugixml@:1.10', when='@:5.8.99')
     depends_on('pugixml', when='@5.9:')
