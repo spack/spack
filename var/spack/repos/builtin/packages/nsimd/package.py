@@ -12,6 +12,7 @@ class Nsimd(CMakePackage):
 
     maintainers = ['eschnett']
 
+    version('2.2', sha256='7916bec6c8ea9ddc690a5bfc80fb1b9402f9e1b2a4b4bb6b6bb8eb5a07eb018e')
     version('2.1', sha256='3274f1061d1fac170130b8c75378a6b94580629b3dc1d53db244b51500ee4695')
     # Version 2.0 is disabled since it does not support cmake
     # version('2.0', sha256='b239e98316f93257161b25c8232634884edcee358982a74742981cc9b68da642')
