@@ -1120,7 +1120,8 @@ def relocate_package(spec, allow_root):
 
     if old_sbang_install_path:
         import spack.hooks.sbang as sbang
-        prefix_to_prefix_text[old_sbang_install_path] = sbang.sbang_install_path()
+        prefix_to_prefix_text[old_sbang_install_path] = \
+            sbang.sbang_install_path()
 
     prefix_to_prefix_text[old_prefix] = new_prefix
     prefix_to_prefix_bin[old_prefix] = new_prefix

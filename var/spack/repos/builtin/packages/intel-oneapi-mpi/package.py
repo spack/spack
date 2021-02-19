@@ -50,8 +50,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     def libs(self):
         libs = []
         for dir in ['lib/release_mt', 'lib', 'libfabric/lib']:
-            lib_path = '{0}/{1}/latest/{2}'.format(self.prefix, self._dir_name, dir)
-            ldir = find_libraries('*', root=lib_path, shared=True, recursive=False)
+            lib_path = '{0}/{1}/latest/{2}'.format(self.prefix, self._dir_name,
+                                                   dir)
+            ldir = find_libraries('*', root=lib_path, shared=True,
+                                  recursive=False)
             libs += ldir
         return libs
 

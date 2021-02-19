@@ -741,11 +741,13 @@ def test_update_sbang(tmpdir, install_mockery, function_mirror):
 {1}
         '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
 
-        installed_script_style_1_path = sspec.prefix.bin.join('sbang-style-1.sh')
+        installed_script_style_1_path = \
+            sspec.prefix.bin.join('sbang-style-1.sh')
         assert sbang_style_1_expected == \
             open(str(installed_script_style_1_path)).read()
 
-        installed_script_style_2_path = sspec.prefix.bin.join('sbang-style-2.sh')
+        installed_script_style_2_path = \
+            sspec.prefix.bin.join('sbang-style-2.sh')
         assert sbang_style_2_expected == \
             open(str(installed_script_style_2_path)).read()
 
