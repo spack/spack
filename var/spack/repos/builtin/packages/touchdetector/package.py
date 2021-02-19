@@ -7,11 +7,11 @@ from spack import *
 
 
 class Touchdetector(CMakePackage):
-    """Detects autaptic touches between branches
+    """Detects touches between cells
     """
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/building/TouchDetector"
-    url      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
-    git      = "ssh://bbpcode.epfl.ch/building/TouchDetector"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/touchdetector"
+    url      = "git@bbpgitlab.epfl.ch:hpc/touchdetector.git"
+    git      = "git@bbpgitlab.epfl.ch:hpc/touchdetector.git"
 
     version('develop', submodules=True)
     version('5.5.1', tag='5.5.1', submodules=True)
