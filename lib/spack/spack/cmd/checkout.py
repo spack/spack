@@ -55,10 +55,6 @@ def known_commit_or_tag(ref):
 
 
 def checkout(parser, args):
-    deployment_required_args = {'remote': 'origin'}
-    deployment.setup_deployment_args('checkout', args,
-                                     deployment_required_args)
-
     remote = args.remote or 'origin'
     url = args.url
     ref = args.ref
@@ -66,12 +62,13 @@ def checkout(parser, args):
     global git  # make git available to called methods
     git = which('git', required=True)
 
-    # Always fetch branches
-    branches = map(lambda b: b.strip('* '),
-                   git('branch', output=str, error=str).split('\n'))
-    if ref in branches or not known_commit_or_tag(ref):
-        fetch_remote(remote, url)
+    with working_dir(spack.paths.prefix):
+        # Always fetch branches
+        branches = map(lambda b: b.strip('* '),
+                       git('branch', output=str, error=str).split('\n'))
+        if ref in branches or not known_commit_or_tag(ref):
+            fetch_remote(remote, url)
 
-    # For branches, ensure we're getting the version from the correct remote
-    full_ref = '%s/%s' % (remote, ref) if ref in branches else ref
-    git('checkout', full_ref)
+        # For branches, ensure we're getting the version from the correct remote
+        full_ref = '%s/%s' % (remote, ref) if ref in branches else ref
+        git('checkout', full_ref)
