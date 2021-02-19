@@ -129,6 +129,7 @@ def test_to_record_dict(mock_packages, config):
             assert key in record
             assert record[key] == value
 
+
 @pytest.mark.parametrize("hash_type", [
     ht.dag_hash,
     ht.build_hash,
