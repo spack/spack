@@ -451,22 +451,9 @@ def config_prefer_upstream(args):
     if scope is None:
         scope = spack.config.default_modify_scope('packages')
 
-    specs = spack.store.db.query(installed=True)
-
-    pref_specs = []
-    for spec in specs:
-        upstream = None
-        try:
-            upstream = spec.package.installed_upstream
-        except spack.repo.UnknownNamespaceError as err:
-            tty.die(
-                "Could not find package when checking spec {0} ({1}). "
-                "This is usually due to your Spack instance not being "
-                "configured to know about the upstream's repositories."
-                .format(spec.name, err.message)
-            )
-        if (upstream and not args.local) or (not upstream and args.local):
-            pref_specs.append(spec)
+    all_specs = set(spack.store.db.query(installed=True))
+    local_specs = set(spack.store.db.query_local(installed=True))
+    pref_specs = local_specs if args.local else all_specs - local_spec
 
     conflicting_variants = set()
 
