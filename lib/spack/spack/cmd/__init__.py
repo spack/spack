@@ -184,18 +184,14 @@ def parse_specs(args, **kwargs):
 def matching_spec_from_env(spec):
     """
     Returns a concrete spec, matching what is available in the environment.
-    If no matching spec is found in the environment, this will return the
-    given spec but concretized.
+    If no matching spec is found in the environment (or if no environment is
+    active), this will return the given spec but concretized.
     """
     env = spack.environment.get_env({}, cmd_name)
-    spec_from_env = None
     if env:
-        spec_from_env = env.matching_spec(spec)
-    if spec_from_env:
-        spec = spec_from_env
+        return env.matching_spec(spec) or spec.concretized()
     else:
-        spec.concretize()
-    return spec
+        return spec.concretized()
 
 
 def elide_list(line_list, max_num=10):
