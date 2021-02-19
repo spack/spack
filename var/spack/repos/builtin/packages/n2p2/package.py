@@ -109,8 +109,8 @@ class N2p2(MakefilePackage):
             if self.spec.satisfies("%fj"):
                 f = FileFilter(join_path("cpp", "nnp_test.h"))
                 f.filter(
-                    '(example.command',
-                    '("{0} -n 1 " + example.command'.format(
+                    "(example.co",
+                    '("{0} -n 1 " + example.co'.format(
                         self.spec["mpi"].prefix.bin.mpirun
                     ),
                     string=True,
