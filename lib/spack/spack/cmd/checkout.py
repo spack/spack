@@ -2,13 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import llnl.util.filesystem as fs
 import llnl.util.tty as tty
-from spack.util.executable import which
+
 import spack.cmd.common.deployment as deployment
+import spack.environment as ev
+from spack.util.executable import which
 
 _SPACK_UPSTREAM = 'https://github.com/spack/spack'
 
-description = "update the spack prefix to a git ref"
+description = "update the spack prefix or subcomponent to a git ref"
 section = "admin"
 level = "long"
 
@@ -22,6 +25,15 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--url', action='store', default=None,
         help="url to use if the remote does not already exist")
+
+    subrepo_subparser = subparser.add_mutually_exclusive_group()
+    subrepo_subparser.add_argument(
+        '--env', action='store', default=None,
+        help="checkout an environment instead of the Spack source")
+    subrepo_subparser.add_argument(
+        '--repo', action='store', default=None,
+        help="checkout a Spack repo instead of the Spack source")
+
     subparser.add_argument(
         'ref', help="git reference to checkout")
 
@@ -62,8 +74,29 @@ def checkout(parser, args):
     global git  # make git available to called methods
     git = which('git', required=True)
 
-    with working_dir(spack.paths.prefix):
+    work_dir = spack.paths.prefix
+
+    # Set the appropriate workdir if we are modifying an environment or repo
+    # instead of Spack itself
+    if args.env:
+        if ev.exists(args.env):
+            work_dir = ev.read(args.env).path
+        elif ev.is_env_dir(args.env):
+            work_dir = ev.Environment(args.env)
+        else:
+            raise ValueError("'%s' is not a valid Spack environment." %
+                             args.env)
+    elif args.repo:
+        if args.repo in spack.repo.path.by_namespace:
+            work_dir = spack.repo.path.by_namespace[args.repo]
+        else:
+            raise ValueError("'%s' is not a valid Spack repo namespace." %
+                             args.repo)
+
+    with fs.working_dir(work_dir):
         # Always fetch branches
+        # branches includes emptry string; since ref cannot be empty string,
+        # this does not cause a bug and fixing it reduces code legibility
         branches = map(lambda b: b.strip('* '),
                        git('branch', output=str, error=str).split('\n'))
         if ref in branches or not known_commit_or_tag(ref):
