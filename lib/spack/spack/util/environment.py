@@ -271,9 +271,16 @@ class RemovePath(NameValueModifier):
         environment_value = env.get(self.name, '')
         directories = environment_value.split(
             self.separator) if environment_value else []
-        directories = [os.path.normpath(x) for x in directories
-                       if x != os.path.normpath(self.value)]
-        env[self.name] = self.separator.join(directories)
+        copy_dir = []
+        already_found = False
+
+        for x in directories:
+            if x == os.path.normpath(self.value) and not already_found:
+                already_found = True
+            else:
+                copy_dir.append(os.path.normpath(x))
+
+        env[self.name] = self.separator.join(copy_dir)
 
 
 class DeprioritizeSystemPaths(NameModifier):
@@ -437,7 +444,7 @@ class EnvironmentModifications(object):
 
         Args:
             name: name of the path list in the environment
-            path: path to be removed
+            path: path to be removed once
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = RemovePath(name, path, **kwargs)
@@ -528,13 +535,16 @@ class EnvironmentModifications(object):
 
         return rev
 
-    def apply_modifications(self):
+    def apply_modifications(self, env=None):
         """Applies the modifications and clears the list."""
+        if env is None:
+            env = os.environ
+
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(os.environ)
+                x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""

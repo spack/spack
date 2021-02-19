@@ -1067,6 +1067,88 @@ def test_store_different_build_deps():
         assert x_read['z'] != y_read['z']
 
 
+def test_env_dir_remains_after_deactivation(working_env):
+    """
+    User activates an environment with a view and adds environment's
+    directory to their PATH. When the user deactivates the environment
+    the directory should be in the path once.
+    """
+    e = ev.create('test', with_view=True)
+
+    mods = e.add_default_view()
+    mods.apply_modifications()
+
+    if 'PATH' in os.environ.keys():
+        os.environ['PATH'] = os.path.join(
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
+    else:
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+
+    rm_mods = e.rm_default_view()
+    rm_mods.apply_modifications()
+
+    assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
+    assert os.environ['PATH'].count(os.path.join(
+        e.default_view.root, 'bin')) == 1
+
+
+def test_env_activate_record_modified_paths(working_env):
+    """
+    Changes done when an environment is activated are recorded separately
+    """
+    e = ev.create('test', with_view=True)
+
+    mods = e.add_default_view()
+    mods.apply_modifications()
+
+    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+
+    assert os.path.join(e.default_view.root, 'bin') in added_paths
+
+
+def test_env_dir_added_before_activation():
+    """
+    User added environment's directory to their PATH before
+    activating the environment
+    """
+    e = ev.create('test', with_view=True)
+
+    if 'PATH' in os.environ.keys():
+        os.environ['PATH'] = os.path.join(
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
+    else:
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+
+    _ = e.add_default_view()
+
+    assert 'SPACK_ENV_ADDED_PATH' not in os.environ
+    assert os.path.join(e.default_view.root, 'bin') in os.environ['PATH']
+
+
+def test_env_dir_added_after_activation(working_env):
+    """
+    User added environment's directory to their PATH after
+    activating the environment
+    """
+    e = ev.create('test', with_view=True)
+
+    mods = e.add_default_view()
+    mods.apply_modifications()
+
+    if 'PATH' in os.environ.keys():
+        os.environ['PATH'] = os.path.join(
+            e.default_view.root, 'bin') + ":" + os.environ['PATH']
+    else:
+        os.environ['PATH'] = os.path.join(e.default_view.root, 'bin')
+
+    added_paths = set(os.environ['SPACK_ENV_ADDED_PATH'].split(':'))
+
+    assert 'SPACK_ENV_ADDED_PATH' in mods.group_by_name()
+    assert os.path.join(e.default_view.root, 'bin') in added_paths
+
+
 def test_env_updates_view_install(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     view_dir = tmpdir.mkdir('view')
