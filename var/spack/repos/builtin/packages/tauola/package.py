@@ -26,6 +26,8 @@ class Tauola(AutotoolsPackage):
             multi=False,
             description='Use the specified C++ standard when building.')
  
+    conflicts('+tau-spinner', when='~lhapdf', msg='tau-spinner requires lhapdf')
+ 
     maintainers = ['vvolkl']
 
     depends_on('hepmc', when='+hepmc')
