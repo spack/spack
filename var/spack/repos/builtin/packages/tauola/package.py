@@ -21,7 +21,7 @@ class Tauola(AutotoolsPackage):
     variant('lhapdf', default=False, description="Enable lhapdf support")
     variant('cxxstd',
             default='11',
-            values=('11', '14', '17'),
+            values=('11', '14', '17', '20'),
             multi=False,
             description='Use the specified C++ standard when building.')
 
