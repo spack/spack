@@ -26,7 +26,7 @@ class Libqrencode(AutotoolsPackage):
     depends_on('m4', type='build')
     depends_on('pkgconfig', type='build')
     # https://fukuchi.org/works/qrencode/ requires libpng-dev
-    depends_on('libpng@1.2.0:', type=('build'))
+    depends_on('libpng@1.2.0:', type='link')
 
     def autoreconf(self, spec, prefix):
         # We had to call for autoreconf as well:
