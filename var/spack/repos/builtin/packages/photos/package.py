@@ -23,13 +23,13 @@ class Photos(AutotoolsPackage):
 
     maintainers = ['vvolkl']
 
-    depends_on('hepmc', when='+hepmc2')
+    depends_on('hepmc', when='+hepmc')
     depends_on('hepmc3', when='+hepmc3')
 
     def configure_args(self):
         args = []
 
-        args.append(self.with_or_without('hepmc'))
-        args.append(self.with_or_without('hepmc3'))
+        args.extend(self.with_or_without('hepmc', 'prefix'))
+        args.extend(self.with_or_without('hepmc3', 'prefix'))
 
         return args
