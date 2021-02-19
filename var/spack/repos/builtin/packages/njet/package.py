@@ -20,7 +20,7 @@ class Njet(AutotoolsPackage):
 
     depends_on('qd')
 
-    patch('njet-2.0.0.patch', when='@2.0.0')
+    patch('njet-2.0.0.patch', when='@2.0.0', level=0)
 
     def configure_args(self):
         args = ['--with-qd=' + self.spec['qd'].prefix,
