@@ -84,7 +84,6 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("hip@3.7:", when="+hip")
 
     conflicts("+hip", when="+cuda")
-    conflicts("~shared", when="~pic")
 
     def cmake_args(self):
         spec = self.spec
