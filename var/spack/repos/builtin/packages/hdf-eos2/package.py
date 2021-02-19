@@ -92,8 +92,5 @@ class HdfEos2(AutotoolsPackage):
         if self.spec['zlib']:
             extra_args.append('--with-zlib={0}'.format(
                 self.spec['zlib'].prefix))
-        if self.spec['szip']:
-            extra_args.append('--with-szlib={0}'.format(
-                self.spec['szip'].prefix))
 
         return extra_args
