@@ -17,7 +17,6 @@ import spack.environment as ev
 import spack.schema.packages
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
-from spack.database import InstallStatuses
 import spack.store
 import spack.repo
 
@@ -452,7 +451,7 @@ def config_prefer_upstream(args):
     if scope is None:
         scope = spack.config.default_modify_scope('packages')
 
-    specs = spack.store.db.query(installed=[InstallStatuses.INSTALLED])
+    specs = spack.store.db.query(installed=True)
 
     pref_specs = []
     for spec in specs:

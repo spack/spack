@@ -651,7 +651,7 @@ def check_config_updated(data):
 
 
 def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
-                                gen_mock_layout, monkeypatch):
+                                mutable_config, gen_mock_layout, monkeypatch):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -684,13 +684,16 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
     # Cleanup the config file we added, so it doesn't break other unit tests.
     os.unlink(cfg_file)
 
+    # Make sure only the non-default variants are set.
     assert packages['boost'] == {
         'compiler': ['gcc@4.5.0'],
         'variants': '+debug +graph',
         'version': ['1.63.0']}
     assert packages['dependency-install'] == {
         'compiler': ['gcc@4.5.0'], 'version': ['2.0']}
+    # Ensure that neither variant gets listed for hdf5, since they conflict
     assert packages['hdf5'] == {
         'compiler': ['gcc@4.5.0'], 'version': ['2.3']}
 
+    # Make sure a message about the conflicting hdf5's was given.
     assert '- hdf5' in output
