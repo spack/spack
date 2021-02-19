@@ -681,8 +681,6 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
     scope = spack.config.default_modify_scope('packages')
     cfg_file = spack.config.config.get_config_filename(scope, 'packages')
     packages = syaml.load(open(cfg_file))['packages']
-    # Cleanup the config file we added, so it doesn't break other unit tests.
-    os.unlink(cfg_file)
 
     # Make sure only the non-default variants are set.
     assert packages['boost'] == {
