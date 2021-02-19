@@ -21,7 +21,6 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     def __init__(self, spec):
         self.component_info(dir_name='dnn',
-                            components='intel.oneapi.lin.dnnl.devel',
                             releases=releases,
                             url_name='onednn')
         super(IntelOneapiDnn, self).__init__(spec)

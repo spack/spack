@@ -21,7 +21,6 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     def __init__(self, spec):
         self.component_info(dir_name='dal',
-                            components='intel.oneapi.lin.dal.devel',
                             releases=releases,
                             url_name='daal_oneapi')
         super(IntelOneapiDal, self).__init__(spec)

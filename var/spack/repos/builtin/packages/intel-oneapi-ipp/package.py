@@ -23,7 +23,6 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
 
     def __init__(self, spec):
         self.component_info(dir_name='ipp',
-                            components='intel.oneapi.lin.ipp.devel',
                             releases=releases,
                             url_name='ipp_oneapi')
         super(IntelOneapiIpp, self).__init__(spec)
