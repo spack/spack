@@ -40,7 +40,7 @@ class Evtgen(CMakePackage):
               "evtgen with pythia bindings results in a circular dependency "
               "that cannot be resolved at the moment! "
               "Use evtgen+pythia8^pythia8~evtgen.")
-    conflicts('hepmc=3', when='@:01.99.99',
+    conflicts('+hepmc3', when='@:01.99.99',
               msg='hepmc3 support was added in 02.00.00')
 
     def cmake_args(self):
