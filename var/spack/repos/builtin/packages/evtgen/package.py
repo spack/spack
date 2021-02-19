@@ -25,7 +25,7 @@ class Evtgen(CMakePackage):
     variant('tauola', default=False, description='Build with tauola')
     variant('photos', default=False, description='Build with photos')
     variant('hepmc3', default=False, description='Link with hepmc3 (instead of hepmc)')
- 
+
     patch("g2c.patch", when='@01.07.00')
 
     depends_on('hepmc', when='~hepmc3')
@@ -43,7 +43,6 @@ class Evtgen(CMakePackage):
     conflicts('hepmc=3', when='@:01.99.99',
               msg='hepmc3 support was added in 02.00.00')
 
-
     def cmake_args(self):
         args = []
 
@@ -53,7 +52,7 @@ class Evtgen(CMakePackage):
         args.append(self.define_from_variant('EVTGEN_HEPMC3', 'hepmc3'))
 
         return args
- 
+
     # Taken from AutotoolsPackage
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
@@ -65,7 +64,7 @@ class Evtgen(CMakePackage):
         options += self.configure_args()
 
         with working_dir(self.build_directory, create=True):
-            inspect.getmodule(self).configure(*options) 
+            inspect.getmodule(self).configure(*options)
 
     @when('@:01.99.99')
     def configure_args(self):
@@ -80,23 +79,23 @@ class Evtgen(CMakePackage):
             args.append('--tauoladir=%s' % self.spec['tauola'].prefix)
 
         return args
-        
+
     @when('@:01.99.99')
     def cmake(self, spec, prefix):
         pass
-            
+
     @when('@:01.99.99')
     def build(self, spec, prefix):
         self.configure(spec, prefix)
         # avoid parallel compilation errors
         # due to libext_shared depending on lib_shared
-        with working_dir(self.build_directory): 
+        with working_dir(self.build_directory):
             make('lib_shared')
             make('all')
-            
+
     @when('@:01.99.99')
     def install(self, spec, prefix):
-        with working_dir(self.build_directory): 
+        with working_dir(self.build_directory):
             make('install')
 
     def setup_run_environment(self, env):
