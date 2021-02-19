@@ -17,7 +17,6 @@ stages: [generate, build]
 e4s-pr-generate:
   only:
   - /^github\/pr[\d]+_.*$/
-  - move-pr-stack-into-spack
   extends: .generate
   before_script:
     - export SPACK_PR_BRANCH=${CI_COMMIT_REF_NAME}
@@ -33,7 +32,6 @@ e4s-develop-generate:
 e4s-pr-build:
   only:
   - /^github\/pr[\d]+_.*$/
-  - move-pr-stack-into-spack
   stage: build
   trigger:
     include:
