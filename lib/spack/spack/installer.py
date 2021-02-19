@@ -522,6 +522,12 @@ def log(pkg):
     # Archive the whole stdout + stderr for the package
     fs.install(pkg.log_path, pkg.install_log_path)
 
+    # Archive all phase log paths
+    for phase_log in pkg.phase_log_files:
+        log_file = os.path.basename(phase_log)
+        log_file = os.path.join(os.path.dirname(packages_dir), log_file)
+        fs.install(phase_log, log_file)
+
     # Archive the environment used for the build
     fs.install(pkg.env_path, pkg.install_env_path)
 
@@ -571,6 +577,21 @@ def log(pkg):
                      'See: {0}'.format(error_file))
 
     dump_packages(pkg.spec, packages_dir)
+
+
+def combine_phase_logs(pkg):
+    """
+    Each phase will produce it's own log, so this function aims to cat all the
+    separate phase log output files into the pkg.log_path.
+
+    Args:
+        pkg (Package): the package that was built and installed
+    """
+    log_files = pkg.phase_log_files
+
+    with open(pkg.log_path, 'w') as fd:
+        for line in itertools.chain.from_iterable(list(map(open, log_files))):
+            fd.write(line)
 
 
 def package_id(pkg):
@@ -1746,10 +1767,17 @@ def build_process(pkg, kwargs):
 
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path, and provide the phase for logging
-                for phase_name, phase_attr in zip(
-                        pkg.phases, pkg._InstallPhase_phases):
+                for i, (phase_name, phase_attr) in enumerate(zip(
+                        pkg.phases, pkg._InstallPhase_phases)):
 
-                    with log_output(pkg.log_path, echo, True, phase=phase_name,
+                    # Keep a log file for each phase
+                    log_dir = os.path.dirname(pkg.log_path)
+                    log_file = "spack-build-%02d-%s-out.txt" % (
+                        i + 1, phase_name.lower()
+                    )
+                    log_file = os.path.join(log_dir, log_file)
+
+                    with log_output(log_file, echo, True,
                                     env=unmodified_env) as logger:
 
                         with logger.force_echo():
@@ -1761,12 +1789,25 @@ def build_process(pkg, kwargs):
 
                         # Redirect stdout and stderr to daemon pipe
                         phase = getattr(pkg, phase_attr)
-                        phase(pkg.spec, pkg.prefix)
+
+                        # Catch any errors to report to logging
+                        try:
+                            phase(pkg.spec, pkg.prefix)
+                            if monitor:
+                                monitor.send_phase(pkg, phase_name, log_file, "SUCCESS")
+
+                        except Exception:
+                            combine_phase_logs(pkg)
+                            # This needs to be tested
+                            # TODO: Add BuildPhase model with output and error
+                            # statuses should be for phases
+                            if monitor:
+                                monitor.send_phase(pkg, phase_name, log_file, "ERROR")
 
             # After log, we can get all output/error files from the package stage
             echo = logger.echo
+            combine_phase_logs(pkg)
             log(pkg)
-            # monitor.
 
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
@@ -1781,14 +1822,9 @@ def build_process(pkg, kwargs):
                     _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
 
-    # Update that the task was succcessful, parse metadata folder
+    # Send final metadata (environment, etc.)
     if monitor:
-        monitor.update_task(pkg.spec, "SUCCESS")
-
-        # Parse final output and metadata from package directory
-        full_hash = pkg.spec.full_hash()
-        package_dir = spack.store.layout.build_packages_path(pkg.spec)
-        monitor.send_package_metadata(full_hash, os.path.dirname(package_dir))
+        monitor.send_final(pkg)
 
     # preserve verbosity across runs
     return echo

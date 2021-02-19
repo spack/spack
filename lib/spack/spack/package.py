@@ -15,6 +15,7 @@ import collections
 import contextlib
 import copy
 import functools
+import glob
 import hashlib
 import inspect
 import os
@@ -1065,6 +1066,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # Otherwise, return the current log path name.
         return os.path.join(self.stage.path, _spack_build_logfile)
+
+    @property
+    def phase_log_files(self):
+        """Find sorted phase log files written to the staging directory"""
+        log_files = glob.glob("%s/spack-build-*-out.txt" % self.stage.path)
+        log_files.sort()
+        return log_files
 
     @property
     def install_log_path(self):

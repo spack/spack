@@ -17,6 +17,7 @@ from urllib.error import URLError
 
 import spack
 import spack.hash_types as ht
+import spack.store
 import llnl.util.tty as tty
 from copy import deepcopy
 
@@ -271,9 +272,9 @@ class SpackMonitorClient:
         # data = {current_package: "FAILED", main_package: "CANCELLED"}
         # return self.do_request("tasks/update/", data=json.dumps(data))
 
-    def send_package_metadata(self, full_hash, meta_dir):
+    def send_final(self, pkg):
         """Given a metadata folder, usually .spack within the spack root
-        opt/<system>/<compiler>/<package>/.spack with (maximally) the following:
+        opt/<system>/<compiler>/<package>/.spack with the following:
 
              'spack-configure-args.txt',
              'spack-build-env.txt',
@@ -283,13 +284,11 @@ class SpackMonitorClient:
              'install_manifest.json',
              'repos'
 
-        read in the environment, and output and (if they exist, error) files
-        and send to the monitor server. full_hash should be the full_hash for
-        the package in question, and meta_dir should be the .spack folder
-        mentioned above.
+        read in all metadata files except for phase and output (which are sent
+        as they are generated) and send to the monitor server.
         """
+        meta_dir = os.path.dirname(pkg.install_log_path)
         errors_file = os.path.join(meta_dir, "errors.txt")
-        output_file = os.path.join(meta_dir, "spack-build-out.txt")
         env_file = os.path.join(meta_dir, "spack-build-env.txt")
         config_file = os.path.join(meta_dir, "spack-configure-args.txt")
         manifest_file = os.path.join(meta_dir, "install_manifest.json")
@@ -299,11 +298,23 @@ class SpackMonitorClient:
         data = {"environ": self._read_environment_file(env_file),
                 "config": read_file(config_file),
                 "manifest": read_json(manifest_file),
-                "output": read_file(output_file),
                 "errors": read_file(errors_file),
-                "full_hash": full_hash}
+                "full_hash": pkg.spec.full_hash()}
 
         return self.do_request("packages/metadata/", data=json.dumps(data))
+
+    def send_phase(self, pkg, phase_name, phase_output_file, status):
+        """Given a package, phase name, and status, update the monitor endpoint
+        to alert of the status of the stage. This includes parsing the package
+        metadata folder for phase output and error files
+        """
+        # Send output specific to the phase (does this include error?)
+        data = {"status": status,
+                "output": read_file(phase_output_file),
+                "full_hash": pkg.spec.full_hash()}
+
+        # TODO: Spack Monitor needs this endpoint added
+        return self.do_request("phases/metadata/", data=json.dumps(data))
 
     def _read_environment_file(self, filename):
         """Given an environment file, we want to read it, split by semicolons
