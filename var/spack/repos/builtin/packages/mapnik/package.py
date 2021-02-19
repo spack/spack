@@ -36,7 +36,7 @@ class Mapnik(AutotoolsPackage):
     depends_on('sqlite+rtree', type=('build', 'link', 'run'))
     depends_on('libwebp')
 
-    conflicts('%gcc@9.0.0:')
+    conflicts('%gcc@9.0.0:9.0.2')
 
     def setup_build_environment(self, env):
         spec = self.spec
