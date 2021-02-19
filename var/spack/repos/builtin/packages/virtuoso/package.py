@@ -8,8 +8,8 @@ from spack import *
 
 
 class Virtuoso(AutotoolsPackage):
-    """Virtuoso is a high-performance and scalable Multi-Model RDBMS, 
-    Data Integration Middleware, Linked Data Deployment, and HTTP 
+    """Virtuoso is a high-performance and scalable Multi-Model RDBMS,
+    Data Integration Middleware, Linked Data Deployment, and HTTP
     Application Server Platform"""
 
     homepage = "https://github.com/openlink/virtuoso-opensource"
