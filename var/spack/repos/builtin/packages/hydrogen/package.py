@@ -70,6 +70,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi')
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('hwloc@2.3.0:', when='+rocm')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas')
@@ -97,7 +98,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht +cuda_rma', when='+al +rocm')
+    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
@@ -105,7 +106,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
     for val in ROCmPackage.amdgpu_targets:
-        depends_on('aluminum amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+        depends_on('aluminum amdgpu_target=%s' % val, when='+al +rocm amdgpu_target=%s' % val)
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -117,6 +118,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('cub', when='^cuda@:10.99')
+    depends_on('hipcub', when='+rocm')
     depends_on('half', when='+half')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
@@ -162,13 +164,14 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCMAKE_CUDA_STANDARD=14')
 
         if '+rocm' in spec:
-            args.append(
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CLANG_INCLUDE_PATH=%s/lib/clang/12.0.0/include' % spec['llvm-amdgpu'].prefix])
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
                 args.append(
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'.format(arch_str)
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} -g -fsized-deallocation -fPIC'.format(arch_str)
                 )
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
@@ -218,4 +221,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
         if '+rocm' in self.spec:
-            env.set('CXX', self.spec['hip'].hipcc)
+            # These should not be set by Spack the hipcc script takes care of it
+            env.unset('HIPCC_COMPILE_FLAGS_APPEND')
+            env.unset('DEVICE_LIB_PATH')
+            env.unset('HIP_PLATFORM')

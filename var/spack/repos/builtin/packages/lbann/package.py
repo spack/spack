@@ -106,7 +106,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht +cuda_rma', when='+al +rocm')
+    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
 
     depends_on('dihydrogen +openmp', when='+dihydrogen')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
@@ -140,10 +140,12 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
+    depends_on('hipcub', when='+rocm')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
     depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99 +hwloc')
     depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('hwloc@2.3.0:', when='+rocm')
 
     depends_on('half', when='+half')
 
@@ -236,7 +238,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
         if '+rocm' in self.spec:
-            env.set('CXX', self.spec['hip'].hipcc)
+            # These should not be set by Spack the hipcc script takes care of it
+            env.unset('HIPCC_COMPILE_FLAGS_APPEND')
+            env.unset('DEVICE_LIB_PATH')
+            env.unset('HIP_PLATFORM')
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
@@ -335,6 +340,17 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         if spec.satisfies('@:0.90') or spec.satisfies('@0.101:'):
             args.append(
                 '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec))
+
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CLANG_INCLUDE_PATH=%s/lib/clang/12.0.0/include' % spec['llvm-amdgpu'].prefix])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} -g -fsized-deallocation -fPIC'.format(arch_str)
+                )
 
         return args
 

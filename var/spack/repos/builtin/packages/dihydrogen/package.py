@@ -196,6 +196,17 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
                     clang_root)])
 
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CLANG_INCLUDE_PATH=%s/lib/clang/12.0.0/include' % spec['llvm-amdgpu'].prefix])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} -g -fsized-deallocation -fPIC'.format(arch_str)
+                )
+
         return args
 
     def setup_build_environment(self, env):
@@ -210,4 +221,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
 
         if '+rocm' in self.spec:
-            env.set('CXX', self.spec['hip'].hipcc)
+            # These should not be set by Spack the hipcc script takes care of it
+            env.unset('HIPCC_COMPILE_FLAGS_APPEND')
+            env.unset('DEVICE_LIB_PATH')
+            env.unset('HIP_PLATFORM')
