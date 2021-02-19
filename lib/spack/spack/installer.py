@@ -1418,9 +1418,10 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
-    def _send_monitor_task_failure(self, spec):
+    def _send_task_failure(self, spec):
         """Given that we have a spack monitor enabled, ping the server that
-        the task (spec) has failed.
+        the task (spec) has failed. This is different from a phase fail in that
+        we typically don't even get to any phases.
         """
         if self.monitor:
             self.monitor.fail_task(spec)
@@ -1473,7 +1474,7 @@ class PackageInstaller(object):
                 # TODO: this currently marks the main task as failed -
                 # in the future we want the main task to be cancelled,
                 # and the task that failed marked as failed.
-                self._send_monitor_task_failure(task.request.pkg.spec)
+                self._send_task_failure(task.request.pkg.spec)
 
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
@@ -1497,7 +1498,7 @@ class PackageInstaller(object):
                 # Mark that the package failed
                 # TODO: this should also be for the task.pkg, but we don't
                 # model transitive yet.
-                self._send_monitor_task_failure(task.request.pkg.spec)
+                self._send_task_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)
@@ -1608,7 +1609,7 @@ class PackageInstaller(object):
                 # Only terminate at this point if a single build request was
                 # made.
                 if task.explicit and single_explicit_spec:
-                    self._send_monitor_task_failure(task.request.pkg.spec)
+                    self._send_task_failure(task.request.pkg.spec)
                     raise
 
                 if task.explicit:
@@ -1620,12 +1621,12 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
-                self._send_monitor_task_failure(task.request.pkg.spec)
+                self._send_task_failure(task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
-                self._send_monitor_task_failure(task.request.pkg.spec)
+                self._send_task_failure(task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -1728,6 +1729,7 @@ def build_process(pkg, kwargs):
         echo = spack.package.PackageBase._verbose
 
     pkg.stage.keep = keep_stage
+
     with pkg.stage:
 
         # Run the pre-install hook in the child process after
@@ -1746,6 +1748,7 @@ def build_process(pkg, kwargs):
 
             # Do the real install in the source directory.
             with fs.working_dir(pkg.stage.source_path):
+
                 # Save the build environment in a file before building.
                 dump_environment(pkg.env_path)
 
@@ -1798,9 +1801,6 @@ def build_process(pkg, kwargs):
 
                         except Exception:
                             combine_phase_logs(pkg)
-                            # This needs to be tested
-                            # TODO: Add BuildPhase model with output and error
-                            # statuses should be for phases
                             if monitor:
                                 monitor.send_phase(pkg, phase_name, log_file, "ERROR")
 
@@ -1822,9 +1822,11 @@ def build_process(pkg, kwargs):
                     _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
 
-    # Send final metadata (environment, etc.)
+    # Send final metadata (environment, etc.) and mark as successful
+    # (these two endpoints could possibly be combined?)
     if monitor:
         monitor.send_final(pkg)
+        monitor.update_task(pkg.spec, status="SUCCESS")
 
     # preserve verbosity across runs
     return echo

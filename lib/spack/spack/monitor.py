@@ -17,6 +17,7 @@ from urllib.error import URLError
 
 import spack
 import spack.hash_types as ht
+import spack.main
 import spack.store
 import llnl.util.tty as tty
 from copy import deepcopy
@@ -54,7 +55,9 @@ class SpackMonitorClient:
     """The SpackMonitorClient is a handle to interact with a spack monitor
     server. We require the host url, along with the prefix to discover the
     service_info endpoint. If allow_fail is set to True, we will not exit
-    on error with tty.fail given that a request is not successful.
+    on error with tty.fail given that a request is not successful. The spack
+    version is one of the fields to uniquely identify a spec, so we add it
+    to the client on init.
     """
     def __init__(self, host=None, prefix="ms1", allow_fail=False):
         self.host = host or "http://127.0.0.1"
@@ -63,6 +66,7 @@ class SpackMonitorClient:
         self.username = os.environ.get("SPACKMON_USER")
         self.headers = {}
         self.allow_fail = allow_fail
+        self.spack_version = spack.main.get_version()
 
     def require_auth(self):
         """Require authentication, meaning that the token and username must
@@ -218,7 +222,8 @@ class SpackMonitorClient:
             # Not sure if this is needed here, but I see it elsewhere
             if spec.name in spack.repo.path or spec.virtual:
                 spec.concretize()
-            as_dict = spec.to_dict(hash=ht.full_hash)
+            as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
+                       "spack_version": self.spack_version}
             response = self.do_request("specs/new/", data=json.dumps(as_dict))
             configs[spec.package.name] = response.get('data', {})
         return configs
@@ -233,8 +238,8 @@ class SpackMonitorClient:
         # The current spec being installed
         current_spec = spec.full_hash()
 
-        # also cancel any dependents that aren't already installed.
-        data = {current_spec: status}
+        tasks = {current_spec: status}
+        data = {"tasks": tasks, "spack_version": self.spack_version}
         return self.do_request("tasks/update/", data=json.dumps(data))
 
     def fail_task(self, spec):
@@ -253,24 +258,6 @@ class SpackMonitorClient:
         # TODO: in the future we want to fail the actual task that failed,
         # and then cancel the primary task. We currently just cancel
         return self.update_task(spec, status="FAILED")
-
-        # print("CANCEL TASK")
-        # import IPython
-        # IPython.embed()
-
-        # This is the main package requested
-        # main_package = task.request.pkg.spec.full_hash()
-
-        # The current package being installed (the one that has failure)
-        # current_package = task.pkg.spec.full_hash()
-
-        # All packages that should be cancelled if we fail
-        # dependents = task.pkg.spec.traverse(direction="parents")
-
-        # Data should include a lookup of specs and status. If we cancel, we
-        # also cancel any dependents that aren't already installed.
-        # data = {current_package: "FAILED", main_package: "CANCELLED"}
-        # return self.do_request("tasks/update/", data=json.dumps(data))
 
     def send_final(self, pkg):
         """Given a metadata folder, usually .spack within the spack root
@@ -299,7 +286,8 @@ class SpackMonitorClient:
                 "config": read_file(config_file),
                 "manifest": read_json(manifest_file),
                 "errors": read_file(errors_file),
-                "full_hash": pkg.spec.full_hash()}
+                "full_hash": pkg.spec.full_hash(),
+                "spack_version": self.spack_version}
 
         return self.do_request("packages/metadata/", data=json.dumps(data))
 
@@ -311,9 +299,10 @@ class SpackMonitorClient:
         # Send output specific to the phase (does this include error?)
         data = {"status": status,
                 "output": read_file(phase_output_file),
-                "full_hash": pkg.spec.full_hash()}
+                "full_hash": pkg.spec.full_hash(),
+                "phase_name": phase_name,
+                "spack_version": self.spack_version}
 
-        # TODO: Spack Monitor needs this endpoint added
         return self.do_request("phases/metadata/", data=json.dumps(data))
 
     def _read_environment_file(self, filename):
@@ -344,7 +333,8 @@ class SpackMonitorClient:
         """
         # We load as json just to validate it
         spec = read_json(filename)
-        return self.do_request("specs/new/", data=json.dumps(spec))
+        data = {"spec": spec, "spack_verison": self.spack_version}
+        return self.do_request("specs/new/", data=json.dumps(data))
 
 
 # Helper functions
