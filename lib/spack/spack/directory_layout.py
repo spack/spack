@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import os
 import shutil
 import glob
 import tempfile
-import re
+import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
@@ -15,8 +15,14 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
 from spack.error import SpackError
+
+
+default_projections = {'all': ('{architecture}/'
+                               '{compiler.name}-{compiler.version}/'
+                               '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
@@ -115,9 +121,17 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
-                    return
-                os.rmdir(path)
+                try:
+                    os.rmdir(path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # already deleted, continue with parent
+                        pass
+                    elif e.errno == errno.ENOTEMPTY:
+                        # directory wasn't empty, done
+                        return
+                    else:
+                        raise e
             path = os.path.dirname(path)
 
 
@@ -179,24 +193,31 @@ class YamlDirectoryLayout(DirectoryLayout):
        The hash here is a SHA-1 hash for the full DAG plus the build
        spec.  TODO: implement the build spec.
 
-       The installation directory scheme can be modified with the
-       arguments hash_len and path_scheme.
+       The installation directory projections can be modified with the
+       projections argument.
     """
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.hash_len       = kwargs.get('hash_len')
-        self.path_scheme    = kwargs.get('path_scheme') or (
-            "{architecture}/"
-            "{compiler.name}-{compiler.version}/"
-            "{name}-{version}-{hash}")
-        self.path_scheme = self.path_scheme.lower()
-        if self.hash_len is not None:
-            if re.search(r'{hash:\d+}', self.path_scheme):
-                raise InvalidDirectoryLayoutParametersError(
-                    "Conflicting options for installation layout hash length")
-            self.path_scheme = self.path_scheme.replace(
-                "{hash}", "{hash:%d}" % self.hash_len)
+        projections = kwargs.get('projections') or default_projections
+        self.projections = dict((key, projection.lower())
+                                for key, projection in projections.items())
+
+        # apply hash length as appropriate
+        self.hash_length = kwargs.get('hash_length', None)
+        if self.hash_length is not None:
+            for when_spec, projection in self.projections.items():
+                if '{hash}' not in projection:
+                    if '{hash' in projection:
+                        raise InvalidDirectoryLayoutParametersError(
+                            "Conflicting options for installation layout hash"
+                            " length")
+                    else:
+                        raise InvalidDirectoryLayoutParametersError(
+                            "Cannot specify hash length when the hash is not"
+                            " part of all install_tree projections")
+                self.projections[when_spec] = projection.replace(
+                    "{hash}", "{hash:%d}" % self.hash_length)
 
         # If any of these paths change, downstream databases may not be able to
         # locate files in older upstream databases
@@ -214,14 +235,17 @@ class YamlDirectoryLayout(DirectoryLayout):
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
 
-        path = spec.format(self.path_scheme)
+        projection = spack.projections.get_projection(self.projections, spec)
+        path = spec.format(projection)
         return path
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
+            spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
@@ -336,25 +360,32 @@ class YamlDirectoryLayout(DirectoryLayout):
         if not os.path.isdir(self.root):
             return []
 
-        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
-        path_elems += [self.metadata_dir, self.spec_file_name]
-        pattern = os.path.join(self.root, *path_elems)
-        spec_files = glob.glob(pattern)
-        return [self.read_spec(s) for s in spec_files]
+        specs = []
+        for _, path_scheme in self.projections.items():
+            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems += [self.metadata_dir, self.spec_file_name]
+            pattern = os.path.join(self.root, *path_elems)
+            spec_files = glob.glob(pattern)
+            specs.extend([self.read_spec(s) for s in spec_files])
+        return specs
 
     def all_deprecated_specs(self):
         if not os.path.isdir(self.root):
             return []
 
-        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
-        path_elems += [self.metadata_dir, self.deprecated_dir,
-                       '*_' + self.spec_file_name]
-        pattern = os.path.join(self.root, *path_elems)
-        spec_files = glob.glob(pattern)
-        get_depr_spec_file = lambda x: os.path.join(
-            os.path.dirname(os.path.dirname(x)), self.spec_file_name)
-        return set((self.read_spec(s), self.read_spec(get_depr_spec_file(s)))
-                   for s in spec_files)
+        deprecated_specs = set()
+        for _, path_scheme in self.projections.items():
+            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems += [self.metadata_dir, self.deprecated_dir,
+                           '*_' + self.spec_file_name]
+            pattern = os.path.join(self.root, *path_elems)
+            spec_files = glob.glob(pattern)
+            get_depr_spec_file = lambda x: os.path.join(
+                os.path.dirname(os.path.dirname(x)), self.spec_file_name)
+            deprecated_specs |= set((self.read_spec(s),
+                                     self.read_spec(get_depr_spec_file(s)))
+                                    for s in spec_files)
+        return deprecated_specs
 
     def specs_by_hash(self):
         by_hash = {}

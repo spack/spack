@@ -1,9 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+import glob
+from shutil import copyfile, Error
 
 
 class NetcdfFortran(AutotoolsPackage):
@@ -69,6 +72,14 @@ class NetcdfFortran(AutotoolsPackage):
             if self.spec.satisfies('%gcc@10:'):
                 # https://github.com/Unidata/netcdf-fortran/issues/212
                 flags.append('-fallow-argument-mismatch')
+            elif self.compiler.name == 'cce':
+                # Cray compiler generates module files with uppercase names by
+                # default, which is not handled by the makefiles of
+                # NetCDF-Fortran:
+                # https://github.com/Unidata/netcdf-fortran/pull/221.
+                # The following flag forces the compiler to produce module
+                # files with lowercase names.
+                flags.append('-ef')
         elif name == 'ldflags':
             # We need to specify LDFLAGS to get correct dependency_libs
             # in libnetcdff.la, so packages that use libtool for linking
@@ -125,7 +136,41 @@ class NetcdfFortran(AutotoolsPackage):
 
         return config_args
 
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for NETCDF-F"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\${wl}-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
+
     @when('@:4.4.5')
     def check(self):
         with working_dir(self.build_directory):
             make('check', parallel=False)
+
+    @run_after('install')
+    def cray_module_filenames(self):
+        # Cray compiler searches for module files with uppercase names by
+        # default and with lowercase names when the '-ef' flag is specified.
+        # To avoid warning messages when compiler user applications in both
+        # cases, we create copies of all '*.mod' files in the prefix/include
+        # with names in upper- and lowercase.
+        if self.spec.compiler.name != 'cce':
+            return
+
+        with working_dir(self.spec.prefix.include):
+            for f in glob.glob('*.mod'):
+                name, ext = os.path.splitext(f)
+                try:
+                    # Create a copy with uppercase name:
+                    copyfile(f, name.upper() + ext)
+                except Error:
+                    # Assume that the exception tells us that the file with
+                    # uppercase name already exists. Try to create a file with
+                    # lowercase name then:
+                    try:
+                        copyfile(f, name.lower() + ext)
+                    except Error:
+                        pass

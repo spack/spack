@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ import spack.spec
 
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
-libdwarf_spec_string = 'libdwarf arch=x64-linux'
+libdwarf_spec_string = 'libdwarf target=x86_64'
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.tcl.TclModulefileWriter
@@ -80,7 +80,7 @@ class TestTcl(object):
         """Tests asking direct dependencies as prerequisites."""
 
         module_configuration('prerequisites_direct')
-        content = modulefile_content('mpileaks arch=x86-linux')
+        content = modulefile_content('mpileaks target=x86_64')
 
         assert len([x for x in content if 'prereq' in x]) == 2
 
@@ -88,7 +88,7 @@ class TestTcl(object):
         """Tests asking all dependencies as prerequisites."""
 
         module_configuration('prerequisites_all')
-        content = modulefile_content('mpileaks arch=x86-linux')
+        content = modulefile_content('mpileaks target=x86_64')
 
         assert len([x for x in content if 'prereq' in x]) == 5
 
@@ -112,7 +112,7 @@ class TestTcl(object):
         assert len([x for x in content if 'setenv MPILEAKS_ROOT' in x]) == 1
 
         content = modulefile_content(
-            'libdwarf %clang platform=test target=x86'
+            'libdwarf platform=test target=core2'
         )
 
         assert len([x for x in content
@@ -133,11 +133,13 @@ class TestTcl(object):
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
 
-        # Returns a StringIO instead of a string as no module file was written
-        with pytest.raises(AttributeError):
-            modulefile_content('callpath arch=x86-linux')
+        # Catch "Exception" to avoid using FileNotFoundError on Python 3
+        # and IOError on Python 2 or common bases like EnvironmentError
+        # which are not officially documented
+        with pytest.raises(Exception):
+            modulefile_content('callpath target=x86_64')
 
-        content = modulefile_content('zmpi arch=x86-linux')
+        content = modulefile_content('zmpi target=x86_64')
 
         assert len([x for x in content if 'is-loaded' in x]) == 1
         assert len([x for x in content if 'module load ' in x]) == 1
@@ -267,15 +269,15 @@ class TestTcl(object):
         """Tests adding suffixes to module file name."""
         module_configuration('suffix')
 
-        writer, spec = factory('mpileaks+debug arch=x86-linux')
+        writer, spec = factory('mpileaks+debug target=x86_64')
         assert 'foo' in writer.layout.use_name
         assert 'foo-foo' not in writer.layout.use_name
 
-        writer, spec = factory('mpileaks~debug arch=x86-linux')
+        writer, spec = factory('mpileaks~debug target=x86_64')
         assert 'foo-bar' in writer.layout.use_name
         assert 'baz' not in writer.layout.use_name
 
-        writer, spec = factory('mpileaks~debug+opt arch=x86-linux')
+        writer, spec = factory('mpileaks~debug+opt target=x86_64')
         assert 'baz-foo-bar' in writer.layout.use_name
 
     def test_setup_environment(self, modulefile_content, module_configuration):
@@ -302,12 +304,12 @@ class TestTcl(object):
         """Tests overriding some sections of the configuration file."""
         module_configuration('override_config')
 
-        writer, spec = factory('mpileaks~opt arch=x86-linux')
+        writer, spec = factory('mpileaks~opt target=x86_64')
         assert 'mpich-static' in writer.layout.use_name
         assert 'over' not in writer.layout.use_name
         assert 'ridden' not in writer.layout.use_name
 
-        writer, spec = factory('mpileaks+opt arch=x86-linux')
+        writer, spec = factory('mpileaks+opt target=x86_64')
         assert 'over-ridden' in writer.layout.use_name
         assert 'mpich' not in writer.layout.use_name
         assert 'static' not in writer.layout.use_name
@@ -331,7 +333,7 @@ class TestTcl(object):
         content = modulefile_content('override-module-templates')
         assert 'Override even better!' in content
 
-        content = modulefile_content('mpileaks arch=x86-linux')
+        content = modulefile_content('mpileaks target=x86_64')
         assert 'Override even better!' in content
 
     def test_extend_context(

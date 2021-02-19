@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,25 +17,27 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
-    version('3.14.0', sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
-    version('3.12.3', sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
-    version('3.12.2', sha256='501f81715672205afd2c1a289ffc765aff96eaa8ecb49d079a58ef4d907467b8')
-    version('3.12.1', sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
-    version('3.12.0', sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
+    version('3.14.16',  sha256='c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04')
+    version('3.14.0',   sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
+    version('3.12.3',   sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
+    version('3.12.2',   sha256='501f81715672205afd2c1a289ffc765aff96eaa8ecb49d079a58ef4d907467b8')
+    version('3.12.1',   sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
+    version('3.12.0',   sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
-    version('3.10.7', sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564', preferred=True)
-    version('3.10.6', sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
-    version('3.10.5', sha256='f3e1cc362941ec69cc21062eeaea160354ef71382b21dc4b3191c315447b4ce1')
-    version('3.10.4', sha256='a032e2b8144c2fd825bc26766f586cfb1bd8574bc72efd1aa8ce18dfff8b6c9f')
-    version('3.10.3', sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7')
-    version('3.10.2', sha256='381cb01a8ac2f5379a915b124e9c830d727d2c67775ec49609c7153fe765a6f7')
-    version('3.10.1', sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
-    version('3.10.0', sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
-    version('3.8.3', sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
-    version('3.8.2', sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
-    version('3.8.1', sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
-    version('3.4.15', sha256='81c93b72adbea41bd765294c0cdb09476a632d8b3f90101abc409ca9ea7fb04d')
-    version('3.4.14', sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
+    version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839', preferred=True)
+    version('3.10.7',   sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564')
+    version('3.10.6',   sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
+    version('3.10.5',   sha256='f3e1cc362941ec69cc21062eeaea160354ef71382b21dc4b3191c315447b4ce1')
+    version('3.10.4',   sha256='a032e2b8144c2fd825bc26766f586cfb1bd8574bc72efd1aa8ce18dfff8b6c9f')
+    version('3.10.3',   sha256='0869704df9120dd642996ff1ed50213ac8247650aa0640b62f8c9c581c05d7a7')
+    version('3.10.2',   sha256='381cb01a8ac2f5379a915b124e9c830d727d2c67775ec49609c7153fe765a6f7')
+    version('3.10.1',   sha256='466ac9fad91f266cf3b9d148f58e2adebd5b9fcfc03e6730eb72251e6c34c8ab')
+    version('3.10.0',   sha256='25eb1c41d9fb922ffa337a720dfdceee43cf2d38409923f087c2010c9742f012')
+    version('3.8.3',    sha256='3cca3e8483bc158cb8e972eb819a55a5734ba70f2c7da28ebc485864aafb17bd')
+    version('3.8.2',    sha256='4d682f7625465a5b3596b3f7e83eddad86a60384fead9c81a6870704baffaddd')
+    version('3.8.1',    sha256='d65c8e1c7471bba46f5017f261ebbef81dffb5843a24f0e7713a00f70785ea99')
+    version('3.4.15',   sha256='81c93b72adbea41bd765294c0cdb09476a632d8b3f90101abc409ca9ea7fb04d')
+    version('3.4.14',   sha256='e138716c7ea84011d3b28fb9c75e6a79322fb66f532246393571906a595d7261')
 
     variant('3d',               default=False,  description='Build QGIS 3D library')
     variant('analysis',         default=True,   description='Build QGIS analysis library')

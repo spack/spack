@@ -1,0 +1,77 @@
+--- /dev/null	2020-08-25 10:23:08.110000124 -0700
++++ b/src/arch/common/cc-nvc.h	2020-09-03 08:11:13.912665728 -0700
+@@ -0,0 +1,9 @@
++#undef CMK_DLL_CC
++
++/* pgcc can not compile RDTSC timer */
++#if CMK_TIMER_USE_RDTSC
++# undef CMK_TIMER_USE_GETRUSAGE
++# undef CMK_TIMER_USE_RDTSC
++# define CMK_TIMER_USE_GETRUSAGE                            1
++# define CMK_TIMER_USE_RDTSC                                0
++#endif
+--- /dev/null	2020-08-25 10:23:08.110000124 -0700
++++ b/src/arch/common/cc-nvc.sh	2020-09-03 08:11:01.439597250 -0700
+@@ -0,0 +1,42 @@
++
++# machine specific recommendation
++CMK_DEFS=""
++case `hostname` in
++*.ranger.tacc.utexas.edu) CMK_DEFS="-tp barcelona-64 " ;;
++esac
++
++CMK_CPP_C="nvc -E "
++CMK_CC="nvc -fPIC -DCMK_FIND_FIRST_OF_PREDICATE=1 "
++CMK_CC_RELIABLE="gcc "
++CMK_CXX="nvc++ -fPIC -DCMK_FIND_FIRST_OF_PREDICATE=1 --no_using_std "
++CMK_LD="$CMK_CC "
++CMK_LDXX="$CMK_CXX "
++CMK_PIE=" "
++
++# compiler for compiling sequential programs
++# nvc can not handle QT right for generic64, so always use gcc
++CMK_SEQ_CC="gcc -fPIC "
++CMK_SEQ_LD="$CMK_SEQ_CC "
++CMK_SEQ_CXX="nvc++ -fPIC --no_using_std "
++CMK_SEQ_LDXX="$CMK_SEQ_CXX"
++CMK_SEQ_LIBS=""
++
++# compiler for native programs
++CMK_NATIVE_CC="gcc "
++CMK_NATIVE_LD="gcc "
++CMK_NATIVE_CXX="g++ "
++CMK_NATIVE_LDXX="g++ "
++CMK_NATIVE_LIBS=""
++
++# fortran compiler
++CMK_CF77="nvfortran "
++CMK_CF90="nvfortran "
++CMK_CF90_FIXED="$CMK_CF90 -Mfixed "
++f90libdir="."
++f90bindir=`which nvfortran 2>/dev/null`
++if test -n "$f90bindir"
++then
++  f90libdir="$f90bindir/../lib"
++fi
++CMK_F90LIBS="-L$f90libdir "
++CMK_F90_USE_MODDIR=""
+--- /dev/null	2020-08-25 10:23:08.110000124 -0700
++++ b/src/arch/common/conv-mach-nvfortran.sh	2020-09-03 08:25:09.042243776 -0700
+@@ -0,0 +1,13 @@
++COMMENT="Use nvfortran fortran compiler"
++NVFORTRAN=`which nvfortran`
++if test x$NVFORTRAN = x
++then
++  echo charmc> Fatal error: nvfortran not found!
++  exit 1
++fi
++CMK_CF77="$NVFORTRAN "
++CMK_CF90="$NVFORTRAN "
++CMK_CF90_FIXED="$CMK_CF90 -Mfixed "
++CMK_F90LIBS="-lm "
++CMK_F90_MODINC="-module "
++CMK_F90_USE_MODDIR=""
+--- /dev/null   2020-08-25 10:23:08.110000124 -0700
++++ b/src/arch/common/conv-mach-nvfortran.h	2020-09-03 08:25:09.042243776 -0700
+@@ -0,0 +1,1 @@
++/* empty file */

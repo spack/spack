@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -57,7 +57,8 @@ class SuperluMt(Package):
                 'TMGLIB     = libtmglib.a',
                 'MPLIB      = {0}'.format(self.compiler.openmp_flag),
                 'CFLAGS     = {0}'.format(self.compiler.openmp_flag),
-                'FFLAGS     = {0}'.format(self.compiler.openmp_flag)
+                'FFLAGS     = {0}'.format(self.compiler.openmp_flag),
+                'LOADOPTS   += {0}'.format(self.compiler.openmp_flag)
             ])
         elif '+pthread' in spec:
             # POSIX threads

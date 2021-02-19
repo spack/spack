@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -107,6 +107,19 @@ override the ``qmake_args`` method like so:
 
 
 This method can be used to pass flags as well as variables.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+``*.pro`` file in a sub-directory
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If the ``*.pro`` file used to tell QMake how to build the package is
+found in a sub-directory, you can tell Spack to run all phases in this
+sub-directory by adding the following to the package:
+
+.. code-block:: python
+
+   build_directory = 'src'
+
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

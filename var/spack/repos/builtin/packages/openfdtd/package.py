@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,9 @@ class Openfdtd(MakefilePackage):
     homepage = "http://www.e-em.co.jp/OpenFDTD/"
     url      = "http://www.e-em.co.jp/OpenFDTD/OpenFDTD.zip"
 
-    version('2.3.0', sha256='10ac70f2ed7160da87dd9222a5a17ca7b72365ee886235359afc48c4fb7b4be4')
+    version('2.6.0', sha256='92f7b92dc55ff6d8fc8c31eda77ca10fe25a5f54b002f2523a3d67f485d77e9f')
+    version('2.3.0', sha256='10ac70f2ed7160da87dd9222a5a17ca7b72365ee886235359afc48c4fb7b4be4',
+            url='http://www.e-em.co.jp/OpenFDTD/old/OpenFDTD_230.zip')
 
     variant('mpi', default=False, description='Build with MPI Support')
 

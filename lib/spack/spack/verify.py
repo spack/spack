@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,13 +117,13 @@ def check_entry(path, data):
     return res
 
 
-def check_file_manifest(file):
-    dirname = os.path.dirname(file)
+def check_file_manifest(filename):
+    dirname = os.path.dirname(filename)
 
     results = VerificationResults()
     while spack.store.layout.metadata_dir not in os.listdir(dirname):
         if dirname == os.path.sep:
-            results.add_error(file, 'not owned by any package')
+            results.add_error(filename, 'not owned by any package')
             return results
         dirname = os.path.dirname(dirname)
 
@@ -132,20 +132,20 @@ def check_file_manifest(file):
                                  spack.store.layout.manifest_file_name)
 
     if not os.path.exists(manifest_file):
-        results.add_error(file, "manifest missing")
+        results.add_error(filename, "manifest missing")
         return results
 
     try:
         with open(manifest_file, 'r') as f:
             manifest = sjson.load(f)
     except Exception:
-        results.add_error(file, "manifest corrupted")
+        results.add_error(filename, "manifest corrupted")
         return results
 
-    if file in manifest:
-        results += check_entry(file, manifest[file])
+    if filename in manifest:
+        results += check_entry(filename, manifest[filename])
     else:
-        results.add_error(file, 'not owned by any package')
+        results.add_error(filename, 'not owned by any package')
     return results
 
 

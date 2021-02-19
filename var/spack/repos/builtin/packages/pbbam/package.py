@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,10 +34,10 @@ class Pbbam(CMakePackage):
         return options
 
     def install(self, spec, prefix):
-        install_tree('include/pbbam', prefix.include.pbbam)
         with working_dir(self.build_directory):
             install_tree('bin', prefix.bin)
             install_tree('lib', prefix.lib)
+            install_tree('pbbam', prefix.include.pbbam)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('PacBioBAM_LIBRARIES', self.prefix.lib)

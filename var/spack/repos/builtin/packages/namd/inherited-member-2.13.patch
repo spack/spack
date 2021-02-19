@@ -1,0 +1,18 @@
+--- a/src/colvarproxy_namd.C	2020-09-04 12:07:22.649591658 -0700
++++ b/src/colvarproxy_namd.C	2020-09-04 12:08:41.724079519 -0700
+@@ -479,13 +479,13 @@
+ 
+ // Callback functions
+ 
++#ifdef NAMD_TCL
+ void colvarproxy_namd::init_tcl_pointers()
+ {
+-#ifdef NAMD_TCL
+   // Store pointer to NAMD's Tcl interpreter
+   _tcl_interp = reinterpret_cast<void *>(Node::Object()->getScript()->interp);
+-#endif
+ }
++#endif
+ 
+ int colvarproxy_namd::run_force_callback()
+ {

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ config_cmd = SpackCommand('config')
 
 def get_config_line(pattern, lines):
     """Get a configuration line that matches a particular pattern."""
-    line = next((l for l in lines if re.search(pattern, l)), None)
+    line = next((x for x in lines if re.search(pattern, x)), None)
     assert line is not None, 'no such line!'
     return line
 
@@ -57,7 +57,7 @@ def test_config_blame_with_override(config):
     """check blame for an element from an override scope"""
     config_file = config.get_config_filename('site', 'config')
 
-    with spack.config.override('config:install_tree', 'foobar'):
+    with spack.config.override('config:install_tree', {'root': 'foobar'}):
         check_blame('install_tree', 'overrides')
 
         check_blame('source_cache', config_file, 11)

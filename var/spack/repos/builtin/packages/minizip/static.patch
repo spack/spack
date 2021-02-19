@@ -1,0 +1,26 @@
+--- a/contrib/minizip/Makefile.am	2012-03-26 22:17:41.000000000 -0500
++++ b/contrib/minizip/Makefile.am	2020-12-26 12:48:31.000000000 -0600
+@@ -8,7 +8,7 @@
+ zlib_top_builddir = $(top_builddir)/../..
+ 
+ AM_CPPFLAGS = -I$(zlib_top_srcdir)
+-AM_LDFLAGS = -L$(zlib_top_builddir)
++AM_LDFLAGS = $(zlib_top_builddir)/libz.a
+ 
+ if WIN32
+ iowin32_src = iowin32.c
+@@ -22,7 +22,7 @@
+ 	zip.c \
+ 	${iowin32_src}
+ 
+-libminizip_la_LDFLAGS = $(AM_LDFLAGS) -version-info 1:0:0 -lz
++libminizip_la_LDFLAGS = $(AM_LDFLAGS) -version-info 1:0:0
+ 
+ minizip_includedir = $(includedir)/minizip
+ minizip_include_HEADERS = \
+@@ -42,4 +42,4 @@
+ miniunzip_LDADD = libminizip.la
+ 
+ minizip_SOURCES = minizip.c
+-minizip_LDADD = libminizip.la -lz
++minizip_LDADD = libminizip.la

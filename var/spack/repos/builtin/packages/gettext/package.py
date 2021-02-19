@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -47,6 +47,9 @@ class Gettext(AutotoolsPackage, GNUMirrorPackage):
     # depends_on('cvs')
 
     patch('test-verify-parallel-make-check.patch', when='@:0.19.8.1')
+    patch('nvhpc-builtin.patch', when='%nvhpc')
+    patch('nvhpc-export-symbols.patch', when='%nvhpc')
+    patch('nvhpc-long-width.patch', when='%nvhpc')
 
     def configure_args(self):
         spec = self.spec

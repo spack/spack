@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
 
 from spack import *
 
@@ -28,6 +30,7 @@ class Tar(AutotoolsPackage, GNUMirrorPackage):
     patch('se-selinux.patch', when='@:1.29')
     patch('argp-pgi.patch',   when='@:1.29')
     patch('gnutar-configure-xattrs.patch', when='@1.28')
+    patch('nvhpc.patch',      when='%nvhpc')
 
     @classmethod
     def determine_version(cls, exe):

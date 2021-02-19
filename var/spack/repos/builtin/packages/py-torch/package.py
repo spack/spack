@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,44 +13,15 @@ class PyTorch(PythonPackage, CudaPackage):
 
     homepage = "https://pytorch.org/"
     git      = "https://github.com/pytorch/pytorch.git"
-    install_time_test_callbacks = ['install_test', 'import_module_test']
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'tools', 'caffe2', 'torch', 'tools.cwrap', 'tools.autograd',
-        'tools.setup_helpers', 'tools.shared', 'tools.jit', 'tools.pyi',
-        'tools.nnwrap', 'tools.cwrap.plugins', 'caffe2.core', 'caffe2.proto',
-        'caffe2.python', 'caffe2.distributed', 'caffe2.perfkernels',
-        'caffe2.experiments', 'caffe2.contrib', 'caffe2.quantization',
-        'caffe2.core.nomnigraph', 'caffe2.python.ideep', 'caffe2.python.mint',
-        'caffe2.python.layers', 'caffe2.python.onnx', 'caffe2.python.trt',
-        'caffe2.python.models', 'caffe2.python.docs', 'caffe2.python.modeling',
-        'caffe2.python.mkl', 'caffe2.python.examples',
-        'caffe2.python.predictor', 'caffe2.python.helpers',
-        'caffe2.python.rnn', 'caffe2.python.onnx.bin',
-        'caffe2.python.models.seq2seq', 'caffe2.experiments.python',
-        'caffe2.contrib.nnpack', 'caffe2.contrib.warpctc',
-        'caffe2.contrib.nccl', 'caffe2.contrib.playground',
-        'caffe2.contrib.gloo', 'caffe2.contrib.script', 'caffe2.contrib.prof',
-        'caffe2.contrib.tensorboard', 'caffe2.contrib.aten',
-        'caffe2.contrib.playground.resnetdemo',
-        'caffe2.contrib.script.examples', 'caffe2.contrib.aten.docs',
-        'caffe2.quantization.server', 'torch.nn', 'torch.onnx',
-        'torch.distributed', 'torch.autograd', 'torch.multiprocessing',
-        'torch.cuda', 'torch.backends', 'torch.optim', 'torch.utils',
-        'torch.contrib', 'torch.jit', 'torch.sparse',
-        'torch.for_onnx', 'torch._thnn', 'torch.distributions',
-        'torch.nn.parallel', 'torch.nn._functions', 'torch.nn.backends',
-        'torch.nn.utils', 'torch.nn.modules', 'torch.nn.parallel.deprecated',
-        'torch.nn._functions.thnn', 'torch.distributed.deprecated',
-        'torch.autograd._functions', 'torch.backends.cuda',
-        'torch.backends.mkl', 'torch.backends.mkldnn', 'torch.backends.openmp',
-        'torch.backends.cudnn', 'torch.utils.backcompat',
-        'torch.utils.bottleneck', 'torch.utils.ffi', 'torch.utils.tensorboard',
-        'torch.utils.data', 'torch.utils.data._utils'
-    ]
+
+    # Exact set of modules is version- and variant-specific
+    import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.7.1', tag='v1.7.1', submodules=True)
+    version('1.7.0', tag='v1.7.0', submodules=True)
     version('1.6.0', tag='v1.6.0', submodules=True)
     version('1.5.1', tag='v1.5.1', submodules=True)
     version('1.5.0', tag='v1.5.0', submodules=True)
@@ -127,13 +98,17 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
-    depends_on('py-future', when='@1.1: ^python@:2', type='build')
+    depends_on('py-future', when='@1.5:', type=('build', 'run'))
+    depends_on('py-future', when='@1.1: ^python@:2', type=('build', 'run'))
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('py-typing', when='@0.4: ^python@:3.4', type=('build', 'run'))
+    depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
+    depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
+    depends_on('py-protobuf', when='@0.4:', type=('build', 'run'))
     depends_on('eigen', when='@0.4:')
     # TODO: replace all third_party packages with Spack packages
 
@@ -328,6 +303,8 @@ class PyTorch(PythonPackage, CudaPackage):
         if '+rocm' in self.spec:
             python(os.path.join('tools', 'amd_build', 'build_amd.py'))
 
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def install_test(self):
         with working_dir('test'):
             python('run_test.py')

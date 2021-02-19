@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,7 +30,8 @@ class Jube(PythonPackage):
     variant(
         'resource_manager', default='none',
         description='Select resource manager templates',
-        values=('loadleveler', 'lsf', 'moab', 'pbs', 'slurm'), multi=False
+        values=('none', 'loadleveler', 'lsf', 'moab', 'pbs', 'slurm'),
+        multi=False
     )
 
     depends_on('py-setuptools', type='build')

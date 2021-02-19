@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Ocaml(Package):
 
     maintainers = ['scemama']
 
+    version('4.11.0', sha256='b5bd04bf794a676389b167633f01f8275acdd853149b137f7575f2c2ddef1377')
     version('4.10.0', sha256='58d431dde66f5750ebe9b15d5a1c4872f80d283dec23448689b0d1a498b7e4c7')
     version('4.09.0', sha256='2b728f8a0e90da14f22fdc04660f2ab33819cdbb12bff0ceae3fdbb0133cf7a6')
     version('4.08.1', sha256='ee50118ee88472fd4b64311fa560f8f8ab66a1899f0117815c69a16070980f78')
@@ -50,11 +51,18 @@ class Ocaml(Package):
         # to use correct assembler. (See #17918)
         if self.spec.satisfies('%fj'):
             filter_file(
-                '${toolpref}clang -c -Wno-trigraphs',
-                spack_cc + ' -c',
+                'aspp="${toolpref}clang -c -Wno-trigraphs"',
+                'aspp="{0} -c"'.format(spack_cc),
                 'configure',
                 string=True
             )
+            if self.spec.satisfies('@4.11.0:'):
+                filter_file(
+                    'as="${toolpref}clang -c -Wno-trigraphs"',
+                    'as="${toolpref}as"',
+                    'configure',
+                    string=True
+                )
 
         configure(*(base_args))
 

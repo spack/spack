@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,8 @@ class PyPybind11(CMakePackage):
     maintainers = ['ax3l']
 
     version('master', branch='master')
-    version('2.5.0', sha256='97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504')
+    version('2.6.1', sha256='cdbe326d357f18b83d10322ba202d69f11b2f49e2d87ade0dc2be0c5c34f8e2a')
+    version('2.5.0', sha256='97504db65640570f32d3fdf701c25a340c8643037c3b69aec469c10c93dc8504', preferred=True)
     version('2.4.3', sha256='1eed57bc6863190e35637290f97a20c81cfe4d9090ac0a24f3bbf08f265eb71d')
     version('2.3.0', sha256='0f34838f2c8024a6765168227ba587b3687729ebf03dc912f88ff75c7aa9cfe8')
     version('2.2.4', sha256='b69e83658513215b8d1443544d0549b7d231b9f201f6fc787a2b2218b408181e')
@@ -35,7 +36,6 @@ class PyPybind11(CMakePackage):
     version('2.1.1', sha256='f2c6874f1ea5b4ad4ffffe352413f7d2cd1a49f9050940805c2a082348621540')
     version('2.1.0', sha256='2860f2b8d0c9f65f0698289a161385f59d099b7ead1bf64e8993c486f2b93ee0')
 
-    depends_on('py-pytest', type='test')
     depends_on('py-setuptools', type='build')
 
     extends('python')
@@ -74,7 +74,7 @@ class PyPybind11(CMakePackage):
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def install_test(self):
         with working_dir('spack-test', create=True):
             # test include helper points to right location
             python = self.spec['python'].command

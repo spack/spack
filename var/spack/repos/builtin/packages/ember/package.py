@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -60,7 +60,9 @@ class Ember(MakefilePackage):
     def build_targets(self):
         targets = []
         cc = self.spec['mpi'].mpicc
-        cflags = '-O3 -std=c99'
+        cflags = '-O3'
+        if not self.spec.satisfies('%nvhpc'):
+            cflags = '-O3 -std=c99'
         oshmem_cc = 'cc'
         oshmem_c_flags = '-O3 -g'
 

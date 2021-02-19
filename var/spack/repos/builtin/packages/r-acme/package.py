@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAcme(RPackage):
-    """Algorithms for Calculating Microarray Enrichment (ACME).
+    """Algorithms for Calculating Microarray Enrichment (ACME)
 
        ACME (Algorithms for Calculating Microarray Enrichment) is a set of
        tools for analysing tiling array ChIP/chip, DNAse hypersensitivity, or
@@ -22,6 +22,7 @@ class RAcme(RPackage):
     homepage = "https://bioconductor.org/packages/ACME"
     git      = "https://git.bioconductor.org/packages/ACME.git"
 
+    version('2.46.0', commit='68f45c9f7d34c28adf6a0fc4245fdf63881109de')
     version('2.40.0', commit='38499e512998d54d874a0bfdc173f4ba5de5f01a')
     version('2.38.0', commit='cd03196428e8adf62e84f25c4d4545429e2c908b')
     version('2.36.0', commit='39e056435b9775d35e7f7fc5446c2c3cafe15670')

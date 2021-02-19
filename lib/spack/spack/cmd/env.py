@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -84,17 +84,10 @@ def env_activate_setup_parser(subparser):
 def env_activate(args):
     env = args.activate_env
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env activate --sh %s`   # for bash/sh' % env,
-            '    eval `spack env activate --csh %s`  # for csh/tcsh' % env,
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env activate",
+            "    eval `spack env activate {sh_arg} %s`" % env,
+        )
         return 1
 
     if ev.exists(env) and not args.dir:
@@ -141,17 +134,10 @@ def env_deactivate_setup_parser(subparser):
 
 def env_deactivate(args):
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack env activate` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack env deactivate --sh`   # for bash/sh',
-            '    eval `spack env deactivate --csh`  # for csh/tcsh',
-        ]
-        tty.msg(*msg)
+        spack.cmd.common.shell_init_instructions(
+            "spack env deactivate",
+            "    eval `spack env deactivate {sh_arg}`",
+        )
         return 1
 
     if 'SPACK_ENV' not in os.environ:

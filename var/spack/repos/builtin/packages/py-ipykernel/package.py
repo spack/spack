@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,7 @@
 class PyIpykernel(PythonPackage):
     """IPython Kernel for Jupyter"""
 
-    homepage = "https://pypi.python.org/pypi/ipykernel"
-    url      = "https://pypi.io/packages/source/i/ipykernel/ipykernel-5.3.4.tar.gz"
+    pypi = "ipykernel/ipykernel-5.3.4.tar.gz"
 
     version('5.3.4',  sha256='9b2652af1607986a1b231c62302d070bc0534f564c393a5d9d130db9abbbe89d')
     version('5.1.1',  sha256='f0e962052718068ad3b1d8bcc703794660858f58803c3798628817f492a8769c')
@@ -36,7 +35,10 @@ class PyIpykernel(PythonPackage):
     depends_on('py-tornado@4.0:', when='@:4.999', type=('build', 'run'))
     depends_on('py-tornado@4.2:', when='@5.0.0:', type=('build', 'run'))
     depends_on('py-appnope', when='platform=darwin', type=('build', 'run'))
-    depends_on('py-pytest@:5.3.3,5.3.5:', type='test')
-    depends_on('py-pytest-cov', type='test')
-    # depends_on('py-flaky', type='test')
-    depends_on('py-nose', type='test')
+
+    phases = ['build', 'install', 'install_data']
+
+    def install_data(self, spec, prefix):
+        """ install the Jupyter kernel spec """
+        self.spec['python'].command(
+            '-m', 'ipykernel', 'install', '--prefix=' + prefix)

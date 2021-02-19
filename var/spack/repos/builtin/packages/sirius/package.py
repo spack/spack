@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,11 +19,11 @@ class Sirius(CMakePackage, CudaPackage):
     maintainers = ['simonpintarelli', 'haampie', 'dev-zero', 'AdhocMan']
 
     version('develop', branch='develop')
-    version('master', branch='master')
 
     version('7.0.0', sha256='da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99')
-    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae',
+    version('6.5.7', sha256='d886c3066163c43666ebac2ea50351df03907b5686671e514a75f131ba51b43c',
             preferred=True)
+    version('6.5.6', sha256='c8120100bde4477545eae489ea7f9140d264a3f88696ec92728616d78f214cae')
     version('6.5.5', sha256='0b23d3a8512682eea67aec57271031c65f465b61853a165015b38f7477651dd1')
     version('6.5.4', sha256='5f731926b882a567d117afa5e0ed33291f1db887fce52f371ba51f014209b85d')
     version('6.5.3', sha256='eae0c303f332425a8c792d4455dca62557931b28a5df8b4c242652d5ffddd580')
@@ -57,7 +57,7 @@ class Sirius(CMakePackage, CudaPackage):
     variant('magma', default=False, description="Enable MAGMA support")
     variant('nlcglib', default=False, description="enable robust wave function optimization")
     variant('rocm', default=False, description='Use ROCm GPU support')
-    variant('amdgpu_target', default=('gfx803', 'gfx900', 'gfx906'), multi=True, values=amdgpu_targets)
+    variant('amdgpu_target', default='gfx803,gfx900,gfx906', multi=True, values=amdgpu_targets)
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
@@ -82,13 +82,10 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('magma', when='+magma')
 
     depends_on('spfft', when='@6.4.0:')
-    depends_on('spfft', when='@master')
     depends_on('spfft', when='@develop')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
-    depends_on('spfft+cuda', when='@master+cuda')
     depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('spfft+rocm', when='@6.4.0:+rocm')
-    depends_on('spfft+rocm', when='@master+rocm')
     depends_on('spfft+rocm', when='@develop+rocm')
 
     depends_on('spla@1.1.0:', when='@develop')
@@ -205,12 +202,14 @@ class Sirius(CMakePackage, CudaPackage):
             )
             args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
 
-        if '+cuda' in spec:
-            cuda_arch = spec.variants['cuda_arch'].value
-            if cuda_arch[0] != 'none':
-                args += [
-                    '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(cuda_arch[0])
-                ]
+        cuda_arch = spec.variants['cuda_arch'].value
+        cuda_arch_selected = cuda_arch[0] != 'none'
+        if '+cuda' in spec and cuda_arch_selected:
+            cuda_args = '-DCUDA_ARCH={0}'.format(cuda_arch[0])
+            if spec.satisfies('@:6.999'):
+                cuda_args = '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(
+                    cuda_arch[0])
+            args.append(cuda_args)
 
         if '+rocm' in spec:
             archs = ",".join(self.spec.variants['amdgpu_target'].value)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class VotcaCsg(CMakePackage):
 
     version('master', branch='master')
     version('stable', branch='stable')
+    version('1.6.4', sha256='eae771b623f3c3edb09744030d053f10c75d64bad919df26c4f9bf3bfaa1cf86')
+    version('1.6.3', sha256='35456b1f3116364b10ada37d99798294bd2d3df2e670cef3936251f88036ef88')
     version('1.6.2', sha256='96b244b282005259832ed6ec0dc22dafe132dcfc3d73dcd8e53b62f40befb545')
     version('1.6.1', sha256='ed12bcb1ccdf71f54e21cdcc9803add4b8ebdc6b8263cb5b0034f5db01e31dbb')
     version('1.6', sha256='8cf6a4ac3ef7347c720a44d8a676f8cbd1462e162f6113de39f27b89354465ea')
@@ -32,7 +34,7 @@ class VotcaCsg(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     for v in ["1.4", "1.4.1", "1.5", "1.5.1", "1.6", "1.6.1", "1.6.2",
-              "master", "stable"]:
+              "1.6.3", "1.6.4", "master", "stable"]:
         depends_on('votca-tools@%s' % v, when="@%s:%s.0" % (v, v))
     depends_on("boost")
     depends_on("gromacs~mpi@5.1:2019.9999")

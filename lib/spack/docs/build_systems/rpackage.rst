@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -138,7 +138,6 @@ every R package needs this, the ``RPackage`` base class contains:
 .. code-block:: python
 
    extends('r')
-   depends_on('r', type=('build', 'run'))
 
 
 Take a close look at the homepage for ``caret``. If you look at the
@@ -298,8 +297,8 @@ like so:
 
 .. code-block:: python
 
-   def configure_args(self, spec, prefix):
-       mpi_name = spec['mpi'].name
+   def configure_args(self):
+       mpi_name = self.spec['mpi'].name
 
        # The type of MPI. Supported values are:
        # OPENMPI, LAM, MPICH, MPICH2, or CRAY

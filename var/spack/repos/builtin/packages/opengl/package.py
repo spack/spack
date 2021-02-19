@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,6 +9,8 @@ import sys
 
 class Opengl(Package):
     """Placeholder for external OpenGL libraries from hardware vendors"""
+
+    has_code = False
 
     homepage = "https://www.opengl.org/"
 
@@ -55,9 +57,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.5.0: /opt/opengl
             buildable: False
+            externals:
+            - spec: opengl@4.5.0
+              prefix: /opt/opengl
 
         In that case, /opt/opengl/ should contain these two folders:
 
@@ -70,9 +73,10 @@ class Opengl(Package):
 
         packages:
           opengl:
-            paths:
-              opengl@4.1: /usr/X11R6
             buildable: False
+            externals:
+            - spec: opengl@4.1
+              prefix: /usr/X11R6
 
         In that case, /usr/X11R6 should contain
 
@@ -87,8 +91,5 @@ class Opengl(Package):
 
     @property
     def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGL', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+        return find_libraries(
+            'libGL', self.prefix, shared=True, recursive=True)

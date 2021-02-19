@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,8 +35,12 @@ class Fj(spack.compiler.Compiler):
         return "-v"
 
     @property
+    def debug_flags(self):
+        return "-g"
+
+    @property
     def opt_flags(self):
-        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
+        return ['-O0', '-O1', '-O2', '-O3', '-Ofast']
 
     @property
     def openmp_flag(self):
@@ -53,6 +57,10 @@ class Fj(spack.compiler.Compiler):
     @property
     def cxx14_flag(self):
         return "-std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        return "-std=c++17"
 
     @property
     def c99_flag(self):

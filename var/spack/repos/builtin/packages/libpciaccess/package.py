@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,8 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 
+    patch('nvhpc.patch', when='%nvhpc')
+
     # A known issue exists when building with PGI as documented here:
     # https://bugs.freedesktop.org/show_bug.cgi?id=94398
     # https://www.pgroup.com/userforum/viewtopic.php?f=4&t=5126
@@ -28,3 +30,14 @@ class Libpciaccess(AutotoolsPackage, XorgPackage):
     # When the ability to use dependencies built by another compiler, using a
     # libpciaccess built by gcc should be usable by PGI builds.
     conflicts('%pgi')
+
+    def configure_args(self):
+        config_args = []
+
+        if (self.spec.satisfies('%nvhpc') and
+            (self.spec.target.family == 'aarch64' or
+             self.spec.target.family == 'ppc64le')):
+            config_args.append('--disable-strict-compilation')
+            config_args.append('--disable-selective-werror')
+
+        return config_args

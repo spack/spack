@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,3 +23,9 @@ class Libtiff(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('zlib')
     depends_on('xz')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('vl_cv_prog_cc_warnings="-Wall -W"',
+                        'vl_cv_prog_cc_warnings="-Wall"', 'configure')

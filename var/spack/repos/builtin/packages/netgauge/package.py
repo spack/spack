@@ -1,8 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -18,3 +19,9 @@ class Netgauge(AutotoolsPackage):
     version('2.4.6', sha256='dc9398e4e042efec70881f2c7074ff18cc5b74bc5ffc4b8a4aaf813b39f83444')
 
     depends_on("mpi")
+
+    def configure_args(self):
+        args = []
+        args.append('MPICC=%s' % os.path.basename(self.spec['mpi'].mpicc))
+        args.append('MPICXX=%s' % os.path.basename(self.spec['mpi'].mpicxx))
+        return args

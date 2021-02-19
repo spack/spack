@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # can occasionally change.
     # NOTE: 12/19/2017 QMCPACK 3.0.0 does not build properly with Spack.
     version('develop')
+    version('3.10.0', tag='v3.10.0')
     version('3.9.2', tag='v3.9.2')
     version('3.9.1', tag='v3.9.1')
     version('3.9.0', tag='v3.9.0')
@@ -47,9 +48,11 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='Build the mixed precision (mixture of single and '
                         'double precision) version')
     variant('soa', default=True,
-            description='Build with Structure-of-Array instead of '
-                        'Array-of-Structure code. Only for CPU code')
-    variant('timers', default=False,
+            description='Build with Structure-of-Array (SoA) instead of '
+                        'Array-of-Structure code (AoS). This is a legacy '
+                        'option and the AoS code is not available after  '
+                        'v3.10.0. Only affected performance, not results.')
+    variant('timers', default=True,
             description='Build with support for timers')
     variant('da', default=False,
             description='Install with support for basic data analysis tools')
@@ -74,6 +77,11 @@ class Qmcpack(CMakePackage, CudaPackage):
 
     # high-level variant conflicts
     conflicts(
+        '~soa',
+        when='@3.10.0:',
+        msg='AoS code path is not available after QMCPACK v3.10.0')
+
+    conflicts(
         '+phdf5',
         when='~mpi',
         msg='Parallel collective I/O requires MPI-enabled QMCPACK. '
@@ -87,17 +95,28 @@ class Qmcpack(CMakePackage, CudaPackage):
     conflicts('^openblas+ilp64',
               msg='QMCPACK does not support OpenBLAS 64-bit integer variant')
 
+    conflicts('cuda_arch=none',
+              when='+cuda',
+              msg='A value for cuda_arch must be specified. Add cuda_arch=XX')
+
     # Omitted for now due to concretizer bug
     # conflicts('^intel-mkl+ilp64',
     #           msg='QMCPACK does not support MKL 64-bit integer variant')
 
+    # QMCPACK 3.10.0 increased the minimum requirements for compiler versions
+    newer_compiler_warning = 'QMCPACK v3.10.0 or later requires a newer ' \
+                             'version of this compiler'
+    conflicts('%gcc@:6', when='@3.10.0:', msg=newer_compiler_warning)
+    conflicts('%intel@:18', when='@3.10.0:', msg=newer_compiler_warning)
+    conflicts('%clang@:6', when='@3.10.0:', msg=newer_compiler_warning)
+
     # QMCPACK 3.6.0 or later requires support for C++14
-    compiler_warning = 'QMCPACK 3.6.0 or later requires a ' \
-                       'compiler with support for C++14'
-    conflicts('%gcc@:4', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%intel@:17', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%pgi@:17', when='@3.6.0:', msg=compiler_warning)
-    conflicts('%llvm@:3.4', when='@3.6.0:', msg=compiler_warning)
+    cpp14_warning = 'QMCPACK v3.6.0 or later requires a ' \
+                    'compiler with support for C++14'
+    conflicts('%gcc@:4', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%intel@:17', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%pgi@:17', when='@3.6.0:', msg=cpp14_warning)
+    conflicts('%clang@:3.4', when='@3.6.0:', msg=cpp14_warning)
 
     conflicts('+afqmc', when='@:3.6.0', msg='AFQMC not recommended before v3.7')
     conflicts('+afqmc', when='~mpi', msg='AFQMC requires building with +mpi')
@@ -125,6 +144,7 @@ class Qmcpack(CMakePackage, CudaPackage):
     # Essential libraries
     depends_on('cmake@3.4.3:', when='@:3.5.0', type='build')
     depends_on('cmake@3.6.0:', when='@3.6.0:', type='build')
+    depends_on('cmake@3.14.0:', when='@3.10.0:', type='build')
     depends_on('boost')
     depends_on('boost@1.61.0:', when='@3.6.0:')
     depends_on('libxml2')
@@ -265,14 +285,7 @@ class Qmcpack(CMakePackage, CudaPackage):
                     'QMCPACK only supports compilation for a single '
                     'GPU architecture at a time'
                 )
-            if cuda_arch != 'none':
-                args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
-            else:
-                # This is the default value set in QMCPACK's CMake
-                # Not possible to set default value for cuda_arch,
-                # thus this won't be stored in the spec, which is
-                # a problem.
-                args.append('-DCUDA_ARCH=sm_35')
+            args.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
         else:
             args.append('-DQMC_CUDA=0')
 
@@ -352,7 +365,6 @@ class Qmcpack(CMakePackage, CudaPackage):
 
         # We assume cwd is self.stage.source_path, then
         # install manual, labs, and nexus
-        install_tree('manual', prefix.manual)
         install_tree('labs', prefix.labs)
         install_tree('nexus', prefix.nexus)
 

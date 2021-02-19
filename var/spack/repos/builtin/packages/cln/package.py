@@ -1,10 +1,12 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+
+import os
 
 
 class Cln(AutotoolsPackage):
@@ -14,8 +16,10 @@ class Cln(AutotoolsPackage):
     more."""
 
     homepage = "https://www.ginac.de/CLN/"
-    git = "git://www.ginac.de/cln.git"
+    url      = "https://www.ginac.de/CLN/cln-1.3.6.tar.bz2"
+    git      = "git://www.ginac.de/cln.git"
 
+    version('master', branch='master')
     version('1.3.6', commit='d4ba1cc869be2c647c4ab48ac571b1fc9c2021a9')
     version('1.3.5', commit='b221c033c082b462455502b7e63702a9c466aede')
     version('1.3.4', commit='9b86a7fc69feb1b288469982001af565f73057eb')
@@ -27,7 +31,54 @@ class Cln(AutotoolsPackage):
     version('1.2.1', commit='567378ab4cbfd443c3d82d810599860c769251fe')
     version('1.2.0', commit='679a0a8927f011fb32411f8a31070c77a9901094')
 
+    variant('gmp',   default=True, description='Enable GMP multiprecision library')
+
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('gmp@4.1:', when='+gmp')
+    depends_on('texinfo', type='build')
+
+    # Dependencies required to define macro AC_LIB_LINKFLAGS_FROM_LIBS
+    depends_on('gettext',  type='build')
+
+    def autoreconf(self, spec, prefix):
+        autoreconf_args = ['-i']
+
+        aclocal_pkg_list = ['gettext']
+        aclocal_path = os.path.join('share', 'aclocal')
+
+        for pkg in aclocal_pkg_list:
+            autoreconf_args += ['-I',
+                                os.path.join(spec[pkg].prefix, aclocal_path)]
+
+        autoreconf = which('autoreconf')
+        autoreconf(*autoreconf_args)
+
+    @run_before('autoreconf')
+    def force_config_rpath(self):
+        source_directory = self.stage.source_path
+        build_aux_directory = os.path.join(source_directory, 'build-aux')
+
+        mkdir = which('mkdir')
+        mkdir(build_aux_directory)
+
+        touch = which('touch')
+        touch(os.path.join(build_aux_directory, 'config.rpath'))
+
+    def configure_args(self):
+        spec = self.spec
+
+        configure_args = []
+
+        if '+gmp' in spec:
+            configure_args.append(
+                '--with-gmp={0}'.format(spec['gmp'].prefix)
+            )
+        else:
+            configure_args.append(
+                '--without-gmp'
+            )
+
+        return configure_args

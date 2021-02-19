@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class Stata(Package):
 # * I haven't tested any installer version but 15.
 
     homepage = "https://www.stata.com/"
+    manual_download = True
     # url      = "stata"
 
     version('16', 'a13a6a92558eeb3c6cb3013c458a6777e54c21af43599df6b0a924f5f5c2d5d2')

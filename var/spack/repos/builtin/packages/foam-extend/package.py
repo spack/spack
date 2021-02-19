@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,7 @@
 ##############################################################################
 #
 # Notes
-# - mpi handling: WM_MPLIB=USER and provide wmake rules for special purpose
-#   'USER and 'USERMPI' mpi implementations.
-#   The choice of 'USER' vs 'USERMPI' may change in the future.
+# - mpi handling: WM_MPLIB=USERMPI and generate mplibUSERMPI wmake rules.
 #
 # Changes
 # 2017-03-28 Mark Olesen <mark.olesen@esi-group.com>
@@ -99,7 +97,7 @@ class FoamExtend(Package):
     # Some user config settings
     config = {
         'label-size': False,    # <- No int32/int64 support
-        'mplib': 'USERMPI',     # USER | USERMPI
+        'mplib': 'USERMPI',     # USERMPI
     }
 
     # The openfoam architecture, compiler information etc

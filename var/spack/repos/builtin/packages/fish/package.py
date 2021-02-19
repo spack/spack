@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Fish(CMakePackage):
 
     # https://github.com/fish-shell/fish-shell#dependencies-1
     depends_on('cmake@3.2:', type='build')
-    depends_on('ncurses~termlib')
+    depends_on('ncurses')
     depends_on('pcre2@10.21:')
     depends_on('gettext')
     depends_on('py-sphinx', when='+docs', type='build')
@@ -40,6 +40,9 @@ class Fish(CMakePackage):
         output = Executable(exe)('--version', output=str, error=str)
         match = re.search(r'fish, version (\S+)', output)
         return match.group(1) if match else None
+
+    def setup_build_environment(self, env):
+        env.append_flags('LDFLAGS', self.spec['ncurses'].libs.link_flags)
 
     def cmake_args(self):
         args = [

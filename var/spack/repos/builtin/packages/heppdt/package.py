@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Heppdt(AutotoolsPackage):
     to the standard, but there are occasional differences."""
     homepage = "https://cdcvs.fnal.gov/redmine/projects/heppdt/wiki"
     url      = "https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/HepPDT-2.06.01.tar.gz"
+
+    tags = ['hep']
 
     version('3.04.01', sha256='2c1c39eb91295d3ded69e0d3f1a38b1cb55bc3f0cde37b725ffd5d722f63c0f6')
     version('3.04.00', sha256='c5f0eefa19dbbae99f2b6a2ab1ad8fd5d5f844fbbbf96e62f0ddb68cc6a7d5f3')

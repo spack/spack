@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,11 @@ class Git(AutotoolsPackage):
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
     releases = [
+        {
+            'version': '2.29.0',
+            'sha256': 'fa08dc8424ef80c0f9bf307877f9e2e49f1a6049e873530d6747c2be770742ff',
+            'sha256_manpages': '8f3bf70ddb515674ce2e19572920a39b1be96af12032b77f1dd57898981fb151'
+        },
         {
             'version': '2.28.0',
             'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
@@ -191,6 +196,8 @@ class Git(AutotoolsPackage):
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
+    variant('svn', default=False,
+            description='Provide SVN Perl dependency in run environment')
 
     depends_on('curl')
     depends_on('expat')
@@ -209,6 +216,7 @@ class Git(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
+    depends_on('perl-alien-svn', type='run', when='+svn')
 
     @classmethod
     def determine_version(cls, exe):
@@ -245,8 +253,9 @@ class Git(AutotoolsPackage):
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
-                self.spec['gettext'].prefix.lib))
+            if 'intl' in self.spec['gettext'].libs.names:
+                env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+                    self.spec['gettext'].prefix.lib))
             env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
@@ -297,3 +306,14 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    def setup_run_environment(self, env):
+        # Setup run environment if using SVN extension
+        # Libs from perl-alien-svn and apr-util are required in
+        # LD_LIBRARY_PATH
+        # TODO: extend to other platforms
+        if "+svn platform=linux" in self.spec:
+            perl_svn = self.spec['perl-alien-svn']
+            env.prepend_path('LD_LIBRARY_PATH', join_path(
+                perl_svn.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
+                'Alien', 'SVN'))

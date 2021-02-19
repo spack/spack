@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyGitReview(PythonPackage):
     """git-review is a tool that helps submitting git branches to gerrit"""
 
     homepage = "http://docs.openstack.org/infra/git-review"
-    url = "https://pypi.io/packages/source/g/git-review/git-review-1.25.0.tar.gz"
+    pypi = "git-review/git-review-1.25.0.tar.gz"
 
     version('1.28.0', sha256='8e3aabb7b9484063e49c2504d137609401e32ad5128ff2a5cf43e98d5d3dc15a')
     version('1.26.0', sha256='487c3c1d7cc81d02b303a1245e432579f683695c827ad454685b3953f70f0b94')
@@ -22,7 +22,6 @@ class PyGitReview(PythonPackage):
     depends_on('py-pbr',           type=('build', 'run'))
     depends_on('py-requests@1.1:', type=('build', 'run'))
     depends_on('git',              type=('run'))
-    depends_on('tk',               type=('run'))
 
     def setup_run_environment(self, env):
         env.set('PBR_VERSION', str(self.spec.version))

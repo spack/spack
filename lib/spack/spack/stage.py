@@ -1,19 +1,22 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import print_function
 
+import errno
+import getpass
+import glob
+import hashlib
 import os
+import shutil
 import stat
 import sys
-import errno
-import hashlib
 import tempfile
-import getpass
 from six import string_types
 from six import iteritems
+from typing import Dict  # novm
 
 import llnl.util.tty as tty
 from llnl.util.filesystem import mkdirp, can_access, install, install_tree
@@ -219,7 +222,7 @@ class Stage(object):
     """
 
     """Shared dict of all stage locks."""
-    stage_locks = {}
+    stage_locks = {}  # type: Dict[str, spack.util.lock.Lock]
 
     """Most staging is managed by Spack.  DIYStage is one exception."""
     managed_by_spack = True
@@ -491,6 +494,41 @@ class Stage(object):
 
         print_errors(errors)
 
+    def steal_source(self, dest):
+        """Copy the source_path directory in its entirety to directory dest
+
+        This operation creates/fetches/expands the stage if it is not already,
+        and destroys the stage when it is done."""
+        if not self.created:
+            self.create()
+        if not self.expanded and not self.archive_file:
+            self.fetch()
+        if not self.expanded:
+            self.expand_archive()
+
+        if not os.path.isdir(dest):
+            mkdirp(dest)
+
+        # glob all files and directories in the source path
+        hidden_entries = glob.glob(os.path.join(self.source_path, '.*'))
+        entries = glob.glob(os.path.join(self.source_path, '*'))
+
+        # Move all files from stage to destination directory
+        # Include hidden files for VCS repo history
+        for entry in hidden_entries + entries:
+            if os.path.isdir(entry):
+                d = os.path.join(dest, os.path.basename(entry))
+                shutil.copytree(entry, d)
+            else:
+                shutil.copy2(entry, dest)
+
+        # copy archive file if we downloaded from url -- replaces for vcs
+        if self.archive_file and os.path.exists(self.archive_file):
+            shutil.copy2(self.archive_file, dest)
+
+        # remove leftover stage
+        self.destroy()
+
     def check(self):
         """Check the downloaded archive against a checksum digest.
            No-op if this stage checks code out of a repository."""
@@ -565,12 +603,12 @@ class Stage(object):
         """
         Ensures the top-level (config:build_stage) directory exists.
         """
-        # Emulate file permissions for tempfile.mkdtemp.
+        # User has full permissions and group has only read permissions
         if not os.path.exists(self.path):
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
         elif not os.path.isdir(self.path):
             os.remove(self.path)
-            mkdirp(self.path, mode=stat.S_IRWXU)
+            mkdirp(self.path, mode=stat.S_IRWXU | stat.S_IRGRP | stat.S_IXGRP)
 
         # Make sure we can actually do something with the stage we made.
         ensure_access(self.path)
@@ -653,16 +691,19 @@ class ResourceStage(Stage):
                     install(src, destination_path)
 
 
-@pattern.composite(method_list=[
-    'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
-    'destroy', 'cache_local', 'cache_mirror', 'managed_by_spack'])
-class StageComposite:
+class StageComposite(pattern.Composite):
     """Composite for Stage type objects. The first item in this composite is
     considered to be the root package, and operations that return a value are
     forwarded to it."""
     #
     # __enter__ and __exit__ delegate to all stages in the composite.
     #
+
+    def __init__(self):
+        super(StageComposite, self).__init__([
+            'fetch', 'create', 'created', 'check', 'expand_archive', 'restage',
+            'destroy', 'cache_local', 'cache_mirror', 'steal_source',
+            'managed_by_spack'])
 
     def __enter__(self):
         for item in self:
@@ -798,12 +839,12 @@ def get_checksums_for_versions(
     max_len = max(len(str(v)) for v in sorted_versions)
     num_ver = len(sorted_versions)
 
-    tty.debug('Found {0} version{1} of {2}:'.format(
-              num_ver, '' if num_ver == 1 else 's', name),
-              '',
-              *spack.cmd.elide_list(
-                  ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
-                   for v in sorted_versions]))
+    tty.msg('Found {0} version{1} of {2}:'.format(
+            num_ver, '' if num_ver == 1 else 's', name),
+            '',
+            *spack.cmd.elide_list(
+                ['{0:{1}}  {2}'.format(str(v), max_len, url_dict[v])
+                 for v in sorted_versions]))
     print()
 
     if batch:

@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -74,6 +74,24 @@ should add:
 
    depends_on('java@7:', type='build')
    depends_on('maven@3.5.4:', type='build')
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Passing arguments to the build phase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The default build and install phases should be sufficient to install
+most packages. However, you may want to pass additional flags to
+the build phase. For example:
+
+.. code-block:: python
+
+   def build_args(self):
+       return [
+           '-Pdist,native',
+           '-Dtar',
+           '-Dmaven.javadoc.skip=true'
+       ]
 
 
 ^^^^^^^^^^^^^^^^^^^^^^

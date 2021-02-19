@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -141,9 +141,9 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
 
     @property
     def libs(self):
-        nc_libs = find_libraries(
-            ['libncurses', 'libncursesw'], root=self.prefix, recursive=True)
+        libraries = ['libncurses', 'libncursesw']
+
         if '+termlib' in self.spec:
-            nc_libs.extend(find_libraries(
-                ['libtinfo', 'libtinfow'], root=self.prefix, recursive=True))
-        return nc_libs
+            libraries += ['libtinfo', 'libtinfow']
+
+        return find_libraries(libraries, root=self.prefix, recursive=True)

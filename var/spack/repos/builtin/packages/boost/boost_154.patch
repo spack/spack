@@ -1,0 +1,31 @@
+--- a/tools/build/src/build/ac.jam
++++ b/tools/build/src/build/ac.jam
+@@ -76,14 +76,6 @@ rule construct-library ( name : property-set : provided-path ? )
+ rule find-library ( properties : names + : provided-path ? )
+ {
+     local result ;
+-    if ! $(.main.cpp)
+-    {
+-        local a = [ class.new action : ac.generate-main :
+-                    [ property-set.empty ] ] ;
+-        .main.cpp = [ virtual-target.register
+-            [ class.new file-target main.cpp exact
+-                : CPP : $(.project) : $(a) ] ] ;
+-    }
+     if [ $(properties).get <link> ] = shared
+     {
+         link-opts = <link>shared <link>static ;
+@@ -100,8 +92,12 @@ rule find-library ( properties : names + : provided-path ? )
+         {
+             local name = $(names-iter[1]) ;
+             local lib = [ construct-library $(name) : $(properties) : $(provided-path) ] ;
++            local a = [ class.new action : ac.generate-main :
++                [ property-set.empty ] ] ;
++            local main.cpp = [ virtual-target.register
++                [ class.new file-target main-$(name).cpp exact : CPP : $(.project) : $(a) ] ] ;
+             local test = [ generators.construct $(.project) $(name) : EXE
+-                : [ $(properties).add $(lib[1]) ] : $(.main.cpp) $(lib[2-])
++                : [ $(properties).add $(lib[1]) ] : $(main.cpp) $(lib[2-])
+                 : true ] ;
+             local jam-targets ;
+             for t in $(test[2-])

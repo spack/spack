@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class CrayLibsci(Package):
     homepage = "https://docs.nersc.gov/development/libraries/libsci/"
     has_code = False    # Skip attempts to fetch source that is not available
 
+    version("20.06.1")
+    version("19.06.1")
+    version("18.12.1")
     version("18.11.1.2")
     version("16.11.1")
     version("16.09.1")
@@ -32,6 +35,7 @@ class CrayLibsci(Package):
         'gcc': 'GNU',
         'cce': 'CRAY',
         'intel': 'INTEL',
+        'clang': 'ALLINEA'
     }
 
     @property

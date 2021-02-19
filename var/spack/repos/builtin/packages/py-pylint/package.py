@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,8 +9,7 @@ from spack import *
 class PyPylint(PythonPackage):
     """python code static checker"""
 
-    homepage = "https://pypi.python.org/pypi/pylint"
-    url      = "https://pypi.io/packages/source/p/pylint/pylint-1.6.5.tar.gz"
+    pypi = "pylint/pylint-1.6.5.tar.gz"
 
     version('2.3.1', sha256='723e3db49555abaf9bf79dc474c6b9e2935ad82230b10c1138a71ea41ac0fff1')
     version('2.3.0', sha256='ee80c7af4f127b2a480d83010c9f0e97beb8eaa652b78c2837d3ed30b12e1182')

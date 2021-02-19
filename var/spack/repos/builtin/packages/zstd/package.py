@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,3 +36,26 @@ class Zstd(MakefilePackage):
 
     def install(self, spec, prefix):
         make('install', 'PREFIX={0}'.format(prefix))
+
+    def patch(self):
+        # Remove flags not understood by the NVIDIA compilers
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fvisibility=hidden', '', 'lib/Makefile')
+            filter_file('-Wc++-compat', '', 'lib/Makefile', string=True)
+            filter_file('-Wcast-align', '', 'lib/Makefile')
+            filter_file('-Wcast-qual', '', 'lib/Makefile')
+            filter_file('-Wdeclaration-after-statement', '', 'lib/Makefile')
+            filter_file('-Wextra', '', 'lib/Makefile')
+            filter_file('-Wfloat-equal', '', 'lib/Makefile')
+            filter_file('-Wformat=2', '', 'lib/Makefile')
+            filter_file('-Winit-self', '', 'lib/Makefile')
+            filter_file('-Wmissing-prototypes', '', 'lib/Makefile')
+            filter_file('-Wpointer-arith', '', 'lib/Makefile')
+            filter_file('-Wredundant-decls', '', 'lib/Makefile')
+            filter_file('-Wshadow', '', 'lib/Makefile')
+            filter_file('-Wstrict-aliasing=1', '', 'lib/Makefile')
+            filter_file('-Wstrict-prototypes', '', 'lib/Makefile')
+            filter_file('-Wswitch-enum', '', 'lib/Makefile')
+            filter_file('-Wundef', '', 'lib/Makefile')
+            filter_file('-Wvla', '', 'lib/Makefile')
+            filter_file('-Wwrite-strings', '', 'lib/Makefile')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,12 @@ import sys
 from llnl.util.filesystem import FileFilter
 
 import spack.paths
-from spack.cmd.flake8 import flake8, setup_parser, changed_files
+from spack.cmd.style import style, setup_parser, changed_files
 from spack.repo import Repo
 from spack.util.executable import which
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def parser():
     """Returns the parser for the ``flake8`` command"""
     parser = argparse.ArgumentParser()
@@ -24,7 +24,7 @@ def parser():
     return parser
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def flake8_package():
     """Flake8 only checks files that have been modified.
     This fixture makes a small change to the ``flake8``
@@ -32,7 +32,7 @@ def flake8_package():
     change on cleanup.
     """
     repo = Repo(spack.paths.mock_packages_path)
-    filename = repo.filename_for_package_name('flake8')
+    filename = repo.filename_for_package_name("flake8")
     package = FileFilter(filename)
 
     # Make the change
@@ -60,16 +60,18 @@ def test_changed_files(parser, flake8_package):
 # As of flake8 3.0.0, Python 2.6 and 3.3 are no longer supported
 # http://flake8.pycqa.org/en/latest/release-notes/3.0.0.html
 @pytest.mark.skipif(
-    sys.version_info[:2] <= (2, 6) or
-    (3, 0) <= sys.version_info[:2] <= (3, 3),
-    reason='flake8 no longer supports Python 2.6 or 3.3 and older')
-@pytest.mark.skipif(not which('flake8'), reason='flake8 is not installed.')
+    sys.version_info[:2] <= (2, 6) or (3, 0) <= sys.version_info[:2] <= (3, 3),
+    reason="flake8 no longer supports Python 2.6 or 3.3 and older",
+)
+@pytest.mark.skipif(not which("flake8"), reason="flake8 is not installed.")
 def test_flake8(parser, flake8_package):
     # Only test the flake8_package that we modified
     # Otherwise, the unit tests would fail every time
     # the flake8 tests fail
-    args = parser.parse_args([flake8_package])
-    flake8(parser, args)
+    args = parser.parse_args(["--no-mypy", flake8_package])
+    style(parser, args)
     # Get even more coverage
-    args = parser.parse_args(['--output', '--root-relative', flake8_package])
-    flake8(parser, args)
+    args = parser.parse_args(
+        ["--no-mypy", "--output", "--root-relative", flake8_package]
+    )
+    style(parser, args)

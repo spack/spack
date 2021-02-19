@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,7 +19,11 @@ class Aluminum(CMakePackage, CudaPackage):
     url      = "https://github.com/LLNL/Aluminum/archive/v0.1.tar.gz"
     git      = "https://github.com/LLNL/Aluminum.git"
 
+    maintainers = ['bvanessen']
+
     version('master', branch='master')
+    version('0.7.0', sha256='bbb73d2847c56efbe6f99e46b41d837763938483f2e2d1982ccf8350d1148caa')
+    version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
     version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
     version('0.4.0', sha256='4d6fab5481cc7c994b32fb23a37e9ee44041a9f91acf78f981a97cb8ef57bb7d')
     version('0.3.3',   sha256='26e7f263f53c6c6ee0fe216e981a558dfdd7ec997d0dd2a24285a609a6c68f3b')
@@ -35,10 +39,12 @@ class Aluminum(CMakePackage, CudaPackage):
     variant('cuda_rma', default=False, description='Builds with support for CUDA intra-node '
             ' Put/Get and IPC RMA functionality')
 
-    depends_on('cmake@3.16.0:', type='build')
+    depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
     depends_on('nccl', when='+nccl')
-    depends_on('hwloc')
+    depends_on('hwloc@1.11:')
+    depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('cub', when='@:0.1,0.6.0: +cuda ^cuda@:10.99')
 
     generator = 'Ninja'
     depends_on('ninja', type='build')
@@ -46,10 +52,14 @@ class Aluminum(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
         args = [
+            '-DCMAKE_CXX_STANDARD=14',
             '-DALUMINUM_ENABLE_CUDA:BOOL=%s' % ('+cuda' in spec),
             '-DALUMINUM_ENABLE_NCCL:BOOL=%s' % ('+nccl' in spec)]
 
-        if '@0.5:':
+        if '+cuda' in spec:
+            args.append('-DCMAKE_CUDA_STANDARD=14')
+
+        if spec.satisfies('@0.5:'):
             args.extend([
                 '-DALUMINUM_ENABLE_HOST_TRANSFER:BOOL=%s' % ('+ht' in spec),
                 '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' %
@@ -57,8 +67,12 @@ class Aluminum(CMakePackage, CudaPackage):
                 '-DALUMINUM_ENABLE_MPI_CUDA_RMA:BOOL=%s' %
                 ('+cuda_rma' in spec)])
         else:
-            args.extend([
-                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec)])
+            args.append(
+                '-DALUMINUM_ENABLE_MPI_CUDA:BOOL=%s' % ('+ht' in spec))
+
+        if spec.satisfies('@:0.1,0.6.0: +cuda ^cuda@:10.99'):
+            args.append(
+                '-DCUB_DIR:FILEPATH=%s' % spec['cub'].prefix)
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang platform=darwin'):

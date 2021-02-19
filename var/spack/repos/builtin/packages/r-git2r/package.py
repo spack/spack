@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RGit2r(RPackage):
-    """Interface to the 'libgit2' library, which is a pure C implementation of
+    """Provides Access to Git Repositories
+
+    Interface to the 'libgit2' library, which is a pure C implementation of
     the 'Git' core methods. Provides access to 'Git' repositories to extract
     data and running some basic 'Git' commands."""
 
@@ -15,6 +17,7 @@ class RGit2r(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/git2r_0.18.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/git2r"
 
+    version('0.28.0', sha256='ce6d148d21d2c87757e98ef4474b2d09faded9b9b866f046bd26d4ca925e55f2')
     version('0.27.1', sha256='099207f180aa45ddcc443cbb22487eafd14e1cd8e5979b3476214253fd773bc0')
     version('0.26.1', sha256='13d609286a0af4ef75ba76f2c2f856593603b8014e311b88896243a50b417435')
     version('0.26.0', sha256='56671389c3a50591e1dae3be8c3b0112d06d291f897d7fe14db17aea175616cf')

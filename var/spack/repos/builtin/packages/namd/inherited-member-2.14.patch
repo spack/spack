@@ -1,0 +1,16 @@
+--- a/src/colvarproxy_namd.C	2020-10-02 15:11:37.205197956 -0700
++++ b/src/colvarproxy_namd.C	2020-10-02 15:11:47.865071117 -0700
+@@ -94,12 +94,11 @@
+           "the output restart file could be defined, exiting.\n");
+   }
+ 
++  init_tcl_pointers();
+ 
+ #ifdef NAMD_TCL
+   have_scripts = true;
+ 
+-  init_tcl_pointers();
+-
+   // See is user-scripted forces are defined
+   if (Tcl_FindCommand(reinterpret_cast<Tcl_Interp *>(tcl_interp_),
+                       "calc_colvar_forces", NULL, 0) == NULL) {

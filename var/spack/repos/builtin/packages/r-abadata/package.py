@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAbadata(RPackage):
-    """Averaged gene expression in human brain regions from Allen Brain Atlas.
+    """Averaged gene expression in human brain regions from Allen Brain Atlas
 
        Provides the data for the gene expression enrichment analysis conducted
        in the package 'ABAEnrichment'. The package includes three datasets
@@ -21,6 +21,7 @@ class RAbadata(RPackage):
     homepage = "https://bioconductor.org/packages/ABAData"
     git      = "https://git.bioconductor.org/packages/ABAData.git"
 
+    version('1.20.0', commit='c08a841ffb54d6555eb80b90a7a8afe7e48201b3')
     version('1.14.0', commit='ed7460e7d2948684db69dd4b4f8e135af50198bd')
     version('1.12.0', commit='9c2f0fbda75b06a0807bd714528915920899282d')
     version('1.10.0', commit='197edb2c3fc733c9e44dde2b9b86ecedcd2c5e1a')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,10 +17,11 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     homepage = "http://www.tcl.tk"
     sourceforge_mirror_path = "tcl/tk8.6.5-src.tar.gz"
 
-    version('8.6.8', sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
-    version('8.6.6', sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
-    version('8.6.5', sha256='fbbd93541b4cd467841208643b4014c4543a54c3597586727f0ab128220d7946')
-    version('8.6.3', sha256='ba15d56ac27d8c0a7b1a983915a47e0f635199b9473cf6e10fbce1fc73fd8333')
+    version('8.6.10', sha256='63df418a859d0a463347f95ded5cd88a3dd3aaa1ceecaeee362194bc30f3e386')
+    version('8.6.8',  sha256='49e7bca08dde95195a27f594f7c850b088be357a7c7096e44e1158c7a5fd7b33')
+    version('8.6.6',  sha256='d62c371a71b4744ed830e3c21d27968c31dba74dd2c45f36b9b071e6d88eb19d')
+    version('8.6.5',  sha256='fbbd93541b4cd467841208643b4014c4543a54c3597586727f0ab128220d7946')
+    version('8.6.3',  sha256='ba15d56ac27d8c0a7b1a983915a47e0f635199b9473cf6e10fbce1fc73fd8333')
     version('8.5.19', sha256='407af1de167477d598bd6166d84459a3bdccc2fb349360706154e646a9620ffa')
 
     variant('xft', default=True,
@@ -53,7 +54,7 @@ class Tk(AutotoolsPackage, SourceforgePackage):
             # Replace stage dir -> installed src dir in tkConfig
             filter_file(
                 stage_src, installed_src,
-                join_path(self.spec.prefix, 'lib', 'tkConfig.sh'))
+                join_path(self.spec['tk'].libs.directories[0], 'tkConfig.sh'))
 
     @property
     def libs(self):
@@ -63,19 +64,17 @@ class Tk(AutotoolsPackage, SourceforgePackage):
     def setup_run_environment(self, env):
         # When using Tkinter from within spack provided python+tkinter, python
         # will not be able to find Tcl/Tk unless TK_LIBRARY is set.
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-            self.spec.version.up_to(2))))
+        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
 
     def setup_dependent_build_environment(self, env, dependent_spec):
-        env.set('TK_LIBRARY', join_path(self.prefix.lib, 'tk{0}'.format(
-            self.spec.version.up_to(2))))
+        env.set('TK_LIBRARY', self.spec['tk'].libs.directories[0])
 
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-            '--x-includes={0}'.format(spec['libx11'].prefix.include),
-            '--x-libraries={0}'.format(spec['libx11'].prefix.lib)
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--x-includes={0}'.format(spec['libx11'].headers.directories[0]),
+            '--x-libraries={0}'.format(spec['libx11'].libs.directories[0])
         ]
         config_args += self.enable_or_disable('xft')
         config_args += self.enable_or_disable('xss')

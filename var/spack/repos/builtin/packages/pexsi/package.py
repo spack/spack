@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,14 +62,15 @@ class Pexsi(MakefilePackage):
             ('@STDCXX_LIB', ' '.join(self.compiler.stdcxx_libs))
         ]
 
+        fldflags = ''
         if '@0.9.2' in self.spec:
-            substitutions.append(
-                ('@FLDFLAGS', '-Wl,--allow-multiple-definition')
-            )
-        else:
-            substitutions.append(
-                ('@FLDFLAGS', '')
-            )
+            fldflags += ' -Wl,--allow-multiple-definition'
+
+        if ('^superlu +openmp' in self.spec
+                or '^openblas threads=openmp' in self.spec):
+            fldflags += ' ' + self.compiler.openmp_flag
+
+        substitutions.append(('@FLDFLAGS', fldflags.lstrip()))
 
         template = join_path(
             os.path.dirname(inspect.getmodule(self).__file__),

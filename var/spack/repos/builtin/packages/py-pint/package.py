@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,8 +12,7 @@ class PyPint(PythonPackage):
     It allows arithmetic operations between them and conversions from and
     to different units."""
 
-    homepage = "https://pypi.org/project/Pint"
-    url = "https://pypi.io/packages/source/p/pint/Pint-0.11.tar.gz"
+    pypi = "pint/Pint-0.11.tar.gz"
 
     version('0.11', sha256='308f1070500e102f83b6adfca6db53debfce2ffc5d3cbe3f6c367da359b5cf4d')
     version('0.10.1', sha256='d739c364b8326fe3d70773d5720fa8b005ea6158695cad042677a588480c86e6')

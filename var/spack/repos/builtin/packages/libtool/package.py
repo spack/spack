@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,6 +30,8 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['build-tools']
+
     executables = ['^g?libtool(ize)?$']
 
     @classmethod
@@ -42,8 +44,20 @@ class Libtool(AutotoolsPackage, GNUMirrorPackage):
     def autoreconf(self, spec, prefix):
         Executable('./bootstrap')()
 
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libltdl'], root=self.prefix, recursive=True, shared=True
+        )
+
     def _make_executable(self, name):
         return Executable(join_path(self.prefix.bin, name))
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('-fno-builtin', '-Mnobuiltin', 'configure')
+            filter_file('-fno-builtin', '-Mnobuiltin', 'libltdl/configure')
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.append_path('ACLOCAL_PATH', self.prefix.share.aclocal)

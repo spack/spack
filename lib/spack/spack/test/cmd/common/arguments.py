@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ def parser():
     arguments.add_common_arguments(p, ['jobs'])
     yield p
     # Cleanup the command line scope if it was set during tests
+    spack.config.config.clear_caches()
     if 'command_line' in spack.config.config.scopes:
         spack.config.config.scopes['command_line'].clear()
 

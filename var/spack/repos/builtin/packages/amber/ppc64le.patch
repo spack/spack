@@ -1,0 +1,24 @@
+--- a/ambertools_tmpdir/AmberTools/src/fftw-3.3/config.guess	2020-09-30 13:28:45.035344970 -0700
++++ b/ambertools_tmpdir/AmberTools/src/fftw-3.3/config.guess	2020-09-30 13:28:55.534923364 -0700
+@@ -953,6 +953,9 @@
+     ppc64:Linux:*:*)
+ 	echo powerpc64-unknown-linux-gnu
+ 	exit ;;
++    ppc64le:Linux:*:*)
++       echo powerpc64le-unknown-linux-gnu
++       exit ;;
+     ppc:Linux:*:*)
+ 	echo powerpc-unknown-linux-gnu
+ 	exit ;;
+--- a/ambertools_tmpdir/AmberTools/src/xblas/config/config.guess	2020-09-30 15:30:11.573779015 -0700
++++ b/ambertools_tmpdir/AmberTools/src/xblas/config/config.guess	2020-09-30 15:30:46.932366326 -0700
+@@ -967,6 +967,9 @@
+     ppc64:Linux:*:*)
+ 	echo powerpc64-unknown-linux-gnu
+ 	exit ;;
++    ppc64le:Linux:*:*)
++       echo powerpc64le-unknown-linux-gnu
++       exit ;;
+     ppc:Linux:*:*)
+ 	echo powerpc-unknown-linux-gnu
+ 	exit ;;

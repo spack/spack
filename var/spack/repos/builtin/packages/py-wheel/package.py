@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,9 @@ class PyWheel(PythonPackage):
     """A built-package format for Python."""
 
     homepage = "https://github.com/pypa/wheel"
-    url      = "https://pypi.io/packages/source/w/wheel/wheel-0.34.2.tar.gz"
+    pypi = "wheel/wheel-0.34.2.tar.gz"
 
+    version('0.35.1', sha256='99a22d87add3f634ff917310a3d87e499f19e663413a52eb9232c447aa646c9f')
     version('0.34.2', sha256='8788e9155fe14f54164c1b9eb0a319d98ef02c160725587ad60f14ddc57b6f96')
     version('0.33.4', sha256='62fcfa03d45b5b722539ccbc07b190e4bfff4bb9e3a4d470dd9f6a0981002565')
     version('0.33.1', sha256='66a8fd76f28977bb664b098372daef2b27f60dc4d1688cfab7b37a09448f0e9d')
@@ -25,5 +26,3 @@ class PyWheel(PythonPackage):
     depends_on('py-setuptools@40.9.0:', when='@0.34.1:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-setuptools-scm@3.4:', when='@0.34.0', type='build')
-    depends_on('py-pytest@3.0.0:', type='test')
-    depends_on('py-pytest-cov', type='test')

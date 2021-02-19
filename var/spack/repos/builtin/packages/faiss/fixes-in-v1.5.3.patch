@@ -1,0 +1,51 @@
+From 6a581e31bc461654460452be5255083ae2d33a6f Mon Sep 17 00:00:00 2001
+From: Harsh Bhatia <bhatia4@llnl.gov>
+Date: Mon, 29 Jun 2020 10:59:33 -0700
+Subject: [PATCH] fixed v1.5.3
+
+---
+ faiss             | 1 +
+ gpu/test/Makefile | 4 ++++
+ tests/Makefile    | 2 +-
+ 3 files changed, 6 insertions(+), 1 deletion(-)
+ create mode 120000 faiss
+
+diff --git a/faiss b/faiss
+new file mode 120000
+index 0000000..945c9b4
+--- /dev/null
++++ b/faiss
+@@ -0,0 +1 @@
++.
+\ No newline at end of file
+diff --git a/gpu/test/Makefile b/gpu/test/Makefile
+index 6836314..8aa67e8 100644
+--- a/gpu/test/Makefile
++++ b/gpu/test/Makefile
+@@ -17,6 +17,10 @@ TESTS_BIN = $(TESTS_OBJ:.o=) $(CUDA_TESTS_OBJ:.o=)
+ 
+ # test_gpu_index.py test_pytorch_faiss.py
+ 
++build: $(TESTS_BIN)
++TestUtils.o: TestUtils.cpp
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $^ ../../libfaiss.a -Igtest/include -I../..
++
+ run: $(TESTS_BIN) $(CUDA_TESTS_BIN)
+ 	for t in $(TESTS_BIN) $(CUDA_TESTS_BIN); do ./$$t || exit; done
+ 
+diff --git a/tests/Makefile b/tests/Makefile
+index c46c292..d22d70d 100644
+--- a/tests/Makefile
++++ b/tests/Makefile
+@@ -18,7 +18,7 @@ tests: $(TESTS_OBJ) ../libfaiss.a gtest/make/gtest_main.a
+ 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+ 
+ %.o: %.cpp gtest
+-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -c -o $@ $< -Igtest/include -I../..
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -c -o $@ $< -Igtest/include -I../.. -I..
+ 
+ gtest/make/gtest_main.a: gtest
+ 	$(MAKE) -C gtest/make CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" gtest_main.a
+-- 
+1.8.3.1
+

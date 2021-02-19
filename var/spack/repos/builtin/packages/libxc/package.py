@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class Libxc(AutotoolsPackage, CudaPackage):
     homepage = "https://tddft.org/programs/libxc/"
     url      = "https://www.tddft.org/programs/libxc/down.php?file=2.2.2/libxc-2.2.2.tar.gz"
 
+    version('5.1.0', sha256='f67b6e518372871d9eed6e5dba77c3ab5ea030c229ba7a7d44bcf51f3258373f')
     version('5.0.0', sha256='1cdc57930f7b57da4eb9b2c55a50ba1c2c385936ddaf5582fee830994461a892')
     version('4.3.4', sha256='a8ee37ddc5079339854bd313272856c9d41a27802472ee9ae44b58ee9a298337')
     version('4.3.2', sha256='bc159aea2537521998c7fb1199789e1be71e04c4b7758d58282622e347603a6f')
@@ -28,6 +29,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
 
     patch('0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch', when='@5.0.0')
     patch('0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch', when='@5.0.0')
+
+    patch('nvhpc-configure.patch', when='%nvhpc')
+    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
 
     @property
     def libs(self):
@@ -61,36 +65,17 @@ class Libxc(AutotoolsPackage, CudaPackage):
         )
 
     def setup_build_environment(self, env):
-        optflags = '-O2'
-        if self.compiler.name == 'intel':
-            # Optimizations for the Intel compiler, suggested by CP2K
-            #
-            # Note that not every lowly login node has advanced CPUs:
-            #
-            #   $ icc  -xAVX -axCORE-AVX2 -ipo hello.c
-            #   $ ./a.out
-            #   Please verify that both the operating system and the \
-            #   processor support Intel(R) AVX instructions.
-            #
-            # NB: The same flags are applied in:
-            #   - ../libint/package.py
-            #
-            # Related:
-            #   - ../fftw/package.py        variants: simd, fma
-            #   - ../c-blosc/package.py     variant:  avx2
-            #   - ../r-rcppblaze/package.py AVX* in "info" but not in code?
-            #   - ../openblas/package.py    variants: cpu_target!?!
-            #   - ../cp2k/package.py
-            #
-            # Documentation at:
-            # https://software.intel.com/en-us/cpp-compiler-18.0-developer-guide-and-reference-ax-qax
-            #
-            optflags += ' -xSSE4.2 -axAVX,CORE-AVX2 -ipo'
-            if which('xiar'):
-                env.set('AR', 'xiar')
+        # microarchitecture-specific optimization flags should be controlled
+        # by Spack, otherwise we may end up with contradictory or invalid flags
+        # see https://github.com/spack/spack/issues/17794
+        # libxc on the other hand only sets the generic -O2 when it detects GCC
 
+        optflags = '-O2'
         env.append_flags('CFLAGS',  optflags)
         env.append_flags('FCFLAGS', optflags)
+
+        if '%intel' in self.spec and which('xiar'):
+            env.set('AR', 'xiar')
 
         if '+cuda' in self.spec:
             nvcc = self.spec['cuda'].prefix.bin.nvcc

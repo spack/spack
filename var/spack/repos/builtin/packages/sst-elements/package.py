@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class SstElements(AutotoolsPackage):
 
     maintainers = ['jjwilke']
 
+    version('10.1.0', sha256="a790561449795dac48a84c525b8e0b09f05d0b0bff1a0da1aa2e903279a03c4a")
     version('10.0.0', sha256="ecf28ef97b27ea75be7e64cb0acb99d36773a888c1b32ba16034c62174b02693")
     version('9.1.0', sha256="e19b05aa6e59728995fc059840c79e476ba866b67887ccde7eaf52a18a1f52ca")
 
@@ -44,15 +45,15 @@ class SstElements(AutotoolsPackage):
     depends_on("sst-core@develop",  when="@develop")
     depends_on("sst-core@master", when="@master")
 
-    depends_on("intel-pin@2.14",   when="+pin")
-    depends_on("dramsim2@2.2",     when="+dramsim2")
+    depends_on("intel-pin",        when="+pin")
+    depends_on("dramsim2@2:",      when="+dramsim2")
     depends_on("hybridsim@2.0.1",  when="+hybridsim")
     depends_on("nvdimmsim@2.0.0",  when="+nvdimmsim")
     depends_on("goblin-hmc-sim",   when="+goblin")
     depends_on("ramulator@sst",    when="+ramulator")
     depends_on("hbm-dramsim2",     when="+hbm")
-    depends_on("dramsim2@2.2.2",   when="+hybridsim")
     depends_on("nvdimmsim@2.0.0",  when="+hybridsim")
+    depends_on("gettext")
 
     depends_on('autoconf@1.68:', type='build', when='@master:')
     depends_on('automake@1.11.1:', type='build', when='@master:')

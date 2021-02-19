@@ -1,0 +1,33 @@
+--- a/cluster_tools/jobsplitter/Makefile	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/jobsplitter/Makefile	2020-10-10 15:08:33.435073993 -0500
+@@ -4,6 +4,10 @@
+ CP := cp
+ RM := rm -rf
+ 
++ifndef GC_DEFAULT_PLATFORM
++$(error GC_DEFAULT_PLATFORM must be set)
++endif
++
+ MAINSOURCES := $(wildcard *.cc)
+ SOURCES := $(wildcard ./src/*.cc)
+ MAINOBJECTS := $(patsubst %.cc, tmp/%.o, $(notdir $(MAINSOURCES)))
+@@ -12,7 +16,7 @@
+ vpath %.hh ./include
+ vpath %.cc ./src
+ 
+-CXXFLAGS := -DGC_DEFAULT_PLATFORM=\"condor\"
++CXXFLAGS := -DGC_DEFAULT_PLATFORM=\"$(GC_DEFAULT_PLATFORM)\"
+ INCLUDE := -I./include `geant4-config --cflags`
+ LDFLAGS := `geant4-config --libs`
+ 
+@@ -57,8 +61,8 @@
+ 
+ install:
+ 	@echo Installing ...
+-	@$(CP) $(TARGET) /usr/local/bin
++	@$(CP) $(TARGET) $(PREFIX)/bin
+ 
+ uninstall:
+ 	@echo Uninstalling...
+-	@$(RM) /usr/local/bin/$(TARGET)
++	@$(RM) $(PREFIX)/bin/$(TARGET)
