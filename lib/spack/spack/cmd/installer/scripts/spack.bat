@@ -12,7 +12,7 @@
 ::
 ::    . /path/to/spack/install/spack_cmd.bat
 ::
-@echo off
+::@echo off
 setlocal enabledelayedexpansion
 setlocal EnableExtensions
 if NOT defined SPACK_ROOT (
@@ -85,21 +85,22 @@ if defined _sp_flags (
             python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
             exit /B 0 )
     )
-    if NOT "%_sp_flags%"=="%_sp_flags:V=%" (
+    if NOT "%_sp_flags%"=="%_sp_flags:-V=%" (
         python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
         exit /B 0
     )
 )
-
+echo "SPACK SUBCOMMAND IS %_sp_subcommand%"
 2>nul call :case_%_sp_subcommand%
 if ERRORLEVEL 1 goto :default_case
 
 :case_cd
 if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
     python %spack% cd -h
-)
-if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-    python %spack% cd -h
+) else (
+    if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
+        python %spack% cd -h
+    )
 )
 FOR /F "tokens=* USEBACKQ" %%F IN (`spack location %_sp_args%`) DO (
 set "LOC=%%F"
@@ -120,26 +121,29 @@ if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
         )
     )
 ) else (
-    if "%_sp_args%"=="%_sp_args:activate=%" (
+    if NOT "%_sp_args%"=="%_sp_args:activate=%" (
     if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-        call python %spack% env activate %_sp_flags% 
-    )
-    for /f "tokens=*" %%I in (
-    'call python %spack% env activate %_sp_flags% --bat') do %%I
+        call python %spack% env activate %_sp_flags% --bat %_sp_args:activate=% 
     ) else (
-        goto :default_case
+        for /f "tokens=*" %%I in (
+        'call python %spack% env activate %_sp_flags% --bat %_sp_args:activate=%'
+        ) do %%I
+    ) else (
+        python %spack% env -h
     )
 )
 goto :end_switch
 :case_load
 if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
    python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
+) else (
+    if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
+        python %spack% %_sp_subcommand% %_sp_flags% --bat %_sp_args%
+    ) else (
+        for /f "tokens=*" %%I in (
+        'call python %spack% %_sp_subcommand% %_sp_flags% --bat %*') do %%I
+    )
 )
-if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-    python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
-)
-for /f "tokens=*" %%I in (
-'call python %spack% %_sp_flags% %_sp_subcommand% %*') do %%I
 goto :end_switch
 
 :case_unload
@@ -149,6 +153,7 @@ goto :case_load
 python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
 goto :end_switch
 :end_switch
+set "_sp_initializing="
 goto :eof
 
 :_spack_pathadd
