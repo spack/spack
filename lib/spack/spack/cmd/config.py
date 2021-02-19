@@ -453,7 +453,7 @@ def config_prefer_upstream(args):
 
     all_specs = set(spack.store.db.query(installed=True))
     local_specs = set(spack.store.db.query_local(installed=True))
-    pref_specs = local_specs if args.local else all_specs - local_spec
+    pref_specs = local_specs if args.local else all_specs - local_specs
 
     conflicting_variants = set()
 
