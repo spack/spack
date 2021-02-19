@@ -45,8 +45,8 @@ class Tauola(AutotoolsPackage):
     def configure_args(self):
         args = ['--with-pic']
 
-        args.extend(self.with_or_without('hepmc', prefix))
-        args.extend(self.with_or_without('hepmc3', prefix))
-        args.extend(self.with_or_without('lhapdf', prefix))
+        args.extend(self.with_or_without('hepmc', 'prefix'))
+        args.extend(self.with_or_without('hepmc3', 'prefix'))
+        args.extend(self.with_or_without('lhapdf', 'prefix'))
         args.extend(self.with_or_without('tau-spinner'))
         return args
