@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -52,10 +52,11 @@ class Virtuoso(AutotoolsPackage):
         bash('./autogen.sh')
 
     def configure_args(self):
-        args = []
-        args.append('--with-layout=opt')
-        args.append('--with-readline=/usr')
-        args.append('--program-transform-name=s/isql/isql-v/')
+        readlinep = self.spec['readline'].prefix.lib
+        args = ['--with-layout=opt',
+                '--program-transform-name=s/isql/isql-v/',
+                '--with-readline={0}'.format(readlinep)
+                ]
         args.extend(self.enable_or_disable('dbpedia-vad'))
         args.extend(self.enable_or_disable('demo-vad'))
         args.extend(self.enable_or_disable('fct-vad'))
