@@ -19,7 +19,7 @@ class Njet(AutotoolsPackage):
     version('2.0.0', sha256='a1f5c171b8aff3553d9dde24d3ced5479bdaeec67f4c90c70a846ee3449b40ea')
 
     depends_on('qd')
-    
+
     patch('njet-2.0.0.patch', when='@2.0.0')
 
     def configure_args(self):
