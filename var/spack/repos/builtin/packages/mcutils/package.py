@@ -11,7 +11,7 @@ class Mcutils(MakefilePackage):
        particle physics simulated HepMC event records."""
 
     homepage = "https://gitlab.com/hepcedar/mcutils"
-    git       = "https://gitlab.com/hepcedar/mcutils.git"
+    git      = "https://gitlab.com/hepcedar/mcutils.git"
 
     tags = ['hep']
 
