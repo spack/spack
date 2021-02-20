@@ -203,7 +203,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             if archs != 'none':
                 arch_str = ",".join(archs)
                 args.append(
-                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0} -g -fsized-deallocation -fPIC'.format(arch_str)
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
+                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
                 )
 
         return args
