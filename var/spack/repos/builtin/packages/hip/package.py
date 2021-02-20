@@ -78,7 +78,10 @@ class Hip(CMakePackage):
                 msg += "a workaround."
                 raise RuntimeError(msg)
 
-            rocm_dev_libs_fallback = fallback_prefix.lib if self.spec.satisfies('@:3.8.0') else fallback_prefix.amdgcn.bitcode
+            if self.spec.satisfies('@:3.8.0'):
+                rocm_dev_libs_fallback = fallback_prefix.lib
+            else:
+                rocm_dev_libs_fallback = fallback_prefix.amdgcn.bitcode
 
             return {
                 'rocm-path': fallback_prefix,
@@ -123,7 +126,7 @@ class Hip(CMakePackage):
         env.set('HIPCC_COMPILE_FLAGS_APPEND',
                 '--rocm-path={0}'.format(rocm_prefixes['rocm-path']))
         env.set('HIP_CLANG_INCLUDE_PATH', '{0}/lib/clang/{1}/include'.format(
-                    rocm_prefixes['llvm-amdgpu'], self.compiler.get_real_version()))
+            rocm_prefixes['llvm-amdgpu'], self.compiler.get_real_version()))
 
     def setup_run_environment(self, env):
         self.set_variables(env)
