@@ -142,6 +142,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
         spec = self.spec
 
         args = [
+            '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
@@ -153,6 +154,11 @@ class Dihydrogen(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in spec:
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
+
             cuda_arch = spec.variants['cuda_arch'].value
             if len(cuda_arch) == 1 and cuda_arch[0] == 'auto':
                 args.append('-DCMAKE_CUDA_FLAGS=-arch=sm_60')

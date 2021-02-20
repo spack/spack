@@ -64,6 +64,8 @@ class Lbann(CMakePackage, CudaPackage):
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('onednn', default=False, description='Support for OneDNN')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
+    variant('python_dr', default=False, description='Support for generic Python Data Reader')
+    variant('pfe', default=True, description='Python Frontend for generating and launching models')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
@@ -186,7 +188,7 @@ class Lbann(CMakePackage, CudaPackage):
         spec = self.spec
         # Environment variables
         cppflags = []
-        cppflags.append('-DLBANN_SET_EL_RNG -ldl')
+        cppflags.append('-DLBANN_SET_EL_RNG')
         args = []
         args.extend([
             '-DCMAKE_CXX_FLAGS=%s' % ' '.join(cppflags),
@@ -197,6 +199,15 @@ class Lbann(CMakePackage, CudaPackage):
             args.append(
                 '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             )
+        # Use a high performance linker
+        if self.spec.satisfies('%clang'):
+            args.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld',
+                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld'])
+        elif self.spec.satisfies('%gcc'):
+            args.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold',
+                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold'])
 
         return args
 
@@ -213,13 +224,13 @@ class Lbann(CMakePackage, CudaPackage):
 
     # Get any recent versions or non-numeric version
     # Note that develop > numeric and non-develop < numeric
+
     @when('@:0.90,0.94:')
     def cmake_args(self):
         spec = self.spec
         args = self.common_config_args
         args.extend([
-            '-DCMAKE_CXX_STANDARD=14',
-            '-DCMAKE_CUDA_STANDARD=14',
+            '-DCMAKE_CXX_STANDARD=17',
             '-DLBANN_WITH_CNPY=%s' % ('+numpy' in spec),
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
@@ -230,6 +241,8 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
+            '-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s' % ('+python_dr' in spec),
+            '-DLBANN_WITH_PYTHON:BOOL=%s' % ('+pfe' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
             '-DLBANN_WITH_VISION:BOOL=%s' % ('+vision' in spec),
@@ -239,6 +252,12 @@ class Lbann(CMakePackage, CudaPackage):
             # protobuf is included by py-protobuf+cpp
             '-DProtobuf_DIR={0}'.format(spec['protobuf'].prefix),
             '-Dprotobuf_MODULE_COMPATIBLE=ON'])
+
+        if '+cuda' in spec:
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
 
         if spec.satisfies('@:0.90') or spec.satisfies('@0.95:'):
             args.append(

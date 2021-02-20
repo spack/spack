@@ -22,7 +22,7 @@ import llnl.util.tty as tty
 
 import spack
 import spack.binary_distribution as bindist
-import spack.cmd.buildcache as buildcache
+import spack.cmd
 import spack.compilers as compilers
 import spack.config as cfg
 import spack.environment as ev
@@ -41,7 +41,7 @@ JOB_RETRY_CONDITIONS = [
     'always',
 ]
 
-SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-pr-mirrors'
+SPACK_PR_MIRRORS_ROOT_URL = 's3://spack-binaries-prs'
 TEMP_STORAGE_MIRROR_NAME = 'ci_temporary_mirror'
 
 spack_gpg = spack.main.SpackCommand('gpg')
@@ -943,7 +943,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
             cleanup_job['stage'] = 'cleanup-temp-storage'
             cleanup_job['script'] = [
-                'spack mirror destroy --mirror-url {0}/$CI_PIPELINE_ID'.format(
+                'spack -d mirror destroy --mirror-url {0}/$CI_PIPELINE_ID'.format(
                     temp_storage_url_prefix)
             ]
             cleanup_job['when'] = 'always'
@@ -1262,16 +1262,35 @@ def read_cdashid_from_mirror(spec, mirror_url):
 def push_mirror_contents(env, spec, yaml_path, mirror_url, build_id,
                          sign_binaries):
     if mirror_url:
-        unsigned = not sign_binaries
-        tty.debug('Creating buildcache ({0})'.format(
-            'unsigned' if unsigned else 'signed'))
-        buildcache._createtarball(env, spec_yaml=yaml_path, add_deps=False,
-                                  output_location=mirror_url, force=True,
-                                  allow_root=True, unsigned=unsigned)
-        if build_id:
-            tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
-                build_id, mirror_url))
-            write_cdashid_to_mirror(build_id, spec, mirror_url)
+        try:
+            unsigned = not sign_binaries
+            tty.debug('Creating buildcache ({0})'.format(
+                'unsigned' if unsigned else 'signed'))
+            spack.cmd.buildcache._createtarball(
+                env, spec_yaml=yaml_path, add_deps=False,
+                output_location=mirror_url, force=True, allow_root=True,
+                unsigned=unsigned)
+            if build_id:
+                tty.debug('Writing cdashid ({0}) to remote mirror: {1}'.format(
+                    build_id, mirror_url))
+                write_cdashid_to_mirror(build_id, spec, mirror_url)
+        except Exception as inst:
+            # If the mirror we're pushing to is on S3 and there's some
+            # permissions problem, for example, we can't just target
+            # that exception type here, since users of the
+            # `spack ci rebuild' may not need or want any dependency
+            # on boto3.  So we use the first non-boto exception type
+            # in the heirarchy:
+            #     boto3.exceptions.S3UploadFailedError
+            #     boto3.exceptions.Boto3Error
+            #     Exception
+            #     BaseException
+            #     object
+            err_msg = 'Error msg: {0}'.format(inst)
+            if 'Access Denied' in err_msg:
+                tty.msg('Permission problem writing to {0}'.format(
+                    mirror_url))
+            tty.msg(err_msg)
 
 
 def copy_stage_logs_to_artifacts(job_spec, job_log_dir):
