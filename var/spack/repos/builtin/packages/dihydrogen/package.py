@@ -197,9 +197,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                     clang_root)])
 
         if '+rocm' in spec:
-            args.extend([
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_CLANG_INCLUDE_PATH=%s/lib/clang/12.0.0/include' % spec['llvm-amdgpu'].prefix])
+            args.append(
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
@@ -219,9 +218,3 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 'CXXFLAGS', self.spec['llvm-openmp'].headers.include_flags)
             env.append_flags(
                 'LDFLAGS', self.spec['llvm-openmp'].libs.ld_flags)
-
-        if '+rocm' in self.spec:
-            # These should not be set by Spack the hipcc script takes care of it
-            env.unset('HIPCC_COMPILE_FLAGS_APPEND')
-            env.unset('DEVICE_LIB_PATH')
-            env.unset('HIP_PLATFORM')

@@ -90,9 +90,8 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
                 '-DOpenMP_DIR={0}'.format(clang_root)])
 
         if '+rocm' in spec:
-            args.extend([
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_CLANG_INCLUDE_PATH=%s/lib/clang/12.0.0/include' % spec['llvm-amdgpu'].prefix])
+            args.append(
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
@@ -101,10 +100,3 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
                 )
 
         return args
-
-    def setup_build_environment(self, env):
-        if '+rocm' in self.spec:
-            # These should not be set by Spack the hipcc script takes care of it
-            env.unset('HIPCC_COMPILE_FLAGS_APPEND')
-            env.unset('DEVICE_LIB_PATH')
-            env.unset('HIP_PLATFORM')
