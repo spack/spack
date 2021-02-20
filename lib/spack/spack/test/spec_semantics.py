@@ -985,17 +985,12 @@ class TestSpecSematics(object):
         assert 'avx512' not in spec.target
         assert spec.target < 'broadwell'
 
-    @pytest.mark.parametrize('transitive,expected_result', [
-        (True, False),
-        (False, True)
-    ])
-    def test_splice(self, transitive, expected_result):
+    @pytest.mark.parametrize('transitive', [(True), (False)])
+    def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
-        # TODO: Set these two specs to have different targets.
         # TODO: Test being able to splice in different provider for a virtual.
         # Example: mvapich for mpich.
-        # TODO: Need to do this with different architectures
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
         spec.concretize()
@@ -1011,37 +1006,58 @@ class TestSpecSematics(object):
         # The following should fail with a "NotFoundError" if the DAGs don't
         # match by name.
         for node in spec.traverse():
-            assert node.name == out[node.name].name
-        # Post-splice, dag hash should still be different; no changes should be
-        # made to these specs.
-        assert dep.dag_hash() != spec['splice-h'].dag_hash()
+            assert node.name in out
         # If the splice worked, then the full hash of the spliced dep should
-        # now match the build hash of the dependency from the returned spec.
+        # now match the full hash of the build spec of the dependency from the
+        # returned spec.
         out_h_build = out['splice-h'].build_spec
         assert out_h_build.full_hash() == dep.full_hash()
         # Transitivity should determine whether the transitive dependency was
         # changed.
-        assert (spec['splice-z'].build_hash() == out['splice-z'].build_hash()) \
-            == expected_result
+        expected_z = dep['splice-z'] if transitive else spec['splice-z']
+        assert out['splice-z'].full_hash() == expected_z.full_hash()
         # Sanity check build spec of out should match build spec of original.
-        assert spec['splice-t'].build_spec.full_hash() == \
-               out['splice-t'].build_spec.full_hash()
+        assert (spec['splice-t'].full_hash() ==
+                out['splice-t'].build_spec.full_hash())
         # Finally, the spec should know it's been spliced:
         assert out.spliced
+
+    @pytest.mark.parametrize('transitive', [(True), (False)])
+    def test_splice_input_unchanged(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        orig_spec_hash = spec.full_hash
+        orig_dep_hash = dep.full_hash
+        spec.splice(dep, transitive)
+        # Post-splice, dag hash should still be different; no changes should be
+        # made to these specs.
+        assert spec.full_hash == orig_spec_hash
+        assert dep.full_hash == orig_dep_hash
+
+    @pytest.mark.parametrize('transitive', [(True), (False)])
+    def test_splice_subsequent(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
         # Now we attempt a second splice.
         dep = Spec('splice-z+bar')
         dep.concretize()
         # Transitivity shouldn't matter since Splice Z has no dependencies.
+        # Make this a separate test.
         out2 = out.splice(dep, transitive)
         assert out2.concrete
         assert spec['splice-z'].build_hash() != out2['splice-z'].build_hash()
         assert out['splice-z'].build_hash() != out2['splice-z'].build_hash()
-        assert spec['splice-z'].build_spec.full_hash() !=\
-               out2['splice-z'].build_spec.full_hash()
-        assert out['splice-z'].build_spec.full_hash() != \
-               out2['splice-z'].build_spec.full_hash()
-        assert spec['splice-t'].build_spec.full_hash() == \
-               out2['splice-t'].build_spec.full_hash()
+        assert (spec['splice-z'].full_hash() !=
+                out2['splice-z'].build_spec.full_hash())
+        assert (out['splice-z'].build_spec.full_hash() !=
+                out2['splice-z'].build_spec.full_hash())
+        assert (spec['splice-t'].full_hash() ==
+                out2['splice-t'].build_spec.full_hash())
         assert out2.spliced
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
