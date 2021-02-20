@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libblastrampoline(Package):
+class Libblastrampoline(MakefilePackage):
     """Using PLT trampolines to provide a BLAS and LAPACK demuxing library."""
 
     homepage = "https://github.com/staticfloat/libblastrampoline"
@@ -14,8 +14,8 @@ class Libblastrampoline(Package):
 
     version('2.2.0', commit='45f4a20ffdba5d368db66d71885312f5f73c2dc7')
 
-    def build(self, spec, prefix):
-        make('-C', 'src')
+    build_directory = 'src'
 
     def install(self, spec, prefix):
-        make('-C', 'src', 'prefix={0}'.format(prefix), 'install')
+        with working_dir(self.build_directory):
+            make('prefix={0}'.format(prefix), 'install')
