@@ -13,9 +13,11 @@ class Rivet(AutotoolsPackage):
     homepage = "https://rivet.hepforge.org/"
     url      = "https://rivet.hepforge.org/downloads/?f=Rivet-3.1.2.tar.bz2"
 
+    tags = ['hep']
+
+    version('3.1.3',  sha256='53ddce41705b9c22b2eaa90603f6659aa9bf46c466d8772ca9dbe4430972e021')
     version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
-    version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1',
-            preferred=True)
+    version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1')
     version('3.1.0',  sha256='4e156daee5eb10bd1573ef32d4a6a6df74788cd9180fc977db93ef4cb281000c')
     version('3.0.2',  sha256='9624d6cdcad77eafde40312cf6a1c97f4263f22faf9244b198c140b2c256d2f3')
     version('3.0.1',  sha256='e7551168b86a05c9c029c319c313a0aa142a476195e7ff986c896c1b868f89dd')
@@ -60,6 +62,11 @@ class Rivet(AutotoolsPackage):
     version('1.1.2',  sha256='a15b5d3339481446dec1b719d7d531a87a2e9d11c9fe8044e270ea69611b07c8')
     version('1.1.1',  sha256='bd87fefee6bb8368216755342dc80ab3f8f3c813732dd03c6f94135d45f7036b')
 
+    variant('hepmc', default='2', values=('2', '3'),
+            description="HepMC version to link against")
+            
+    conflicts('hepmc=3', when='@:2.99', msg='HepMC support was added in 3.0')
+
     # According to A. Buckley (main Rivet developer):
     # "typically a given Rivet version will work with
     # all YODA releases of that middle-digit version,
@@ -90,19 +97,21 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.8.0', when='@3.1.0')
     depends_on('yoda@1.8.2', when='@3.1.1')
     depends_on('yoda@1.8.3', when='@3.1.2')
+    depends_on('yoda@1.8.5', when='@3.1.3')
 
     # The following versions were not a part of LCG stack
     # and thus the exact version of YODA is unknown
     depends_on('yoda@1.7.0:1.7.999', when='@2.6.0,2.7.0,2.7.1,3.0.0,3.0.2')
     depends_on('yoda@1.5.0:1.5.999', when='@2.4.1')
 
-    depends_on('hepmc', type=('build', 'run'))
-    depends_on('boost', when='@:2.5.0,3:', type=('build', 'run'))
+    depends_on('hepmc',  type=('build', 'run'), when='hepmc=2')
+    depends_on('hepmc3', type=('build', 'run'), when='hepmc=3')
+    depends_on('boost', when='@:2.5.0', type=('build', 'run'))
     depends_on('fastjet', type=('build', 'run'))
     depends_on('fjcontrib', type=('build', 'run'), when='@3.0.0:')
-    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:')
+    depends_on('gsl', type=('build', 'run'), when='@:2.6.0,2.6.2:2.99.99')
     depends_on('python', type=('build', 'run'))
-    depends_on('py-cython', type='build')
+    depends_on('py-cython@0.24.0:', type='build')
     depends_on('swig', type=('build', 'run'))
     depends_on('yaml-cpp', when='@2.0.0:2.1.2', type=('build', 'run'))
 
@@ -147,29 +156,42 @@ class Rivet(AutotoolsPackage):
         fjcontrib_home = self.spec['fjcontrib'].prefix
         env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
 
+    @when('@3.1.2:')
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            flags.append('-faligned-new')
+            return (None, None, flags)
+        return (flags, None, None)
+        
     def configure_args(self):
         args = []
-        args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
+        if self.spec.variants['hepmc'] == '2':
+            args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
+        else:
+            args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]
 
         if self.spec.satisfies('@:1.999.999'):
             args += ['--with-boost-incpath=' + self.spec['boost'].includes]
         else:
-            if self.spec.satisfies('@:2.5.0,3:'):
+            if self.spec.satisfies('@:2.5.0'):
                 args += ['--with-boost=' + self.spec['boost'].prefix]
 
         args += ['--with-fastjet=' + self.spec['fastjet'].prefix]
         if self.spec.satisfies('@2:'):
             args += ['--with-yoda=' + self.spec['yoda'].prefix]
 
-        if self.spec.satisfies('@:2.6.0,2.6.2:'):
+        if self.spec.satisfies('@:2.6.0,2.6.2:2.99.99'):
             args += ['--with-gsl=' + self.spec['gsl'].prefix]
 
         if self.spec.satisfies('@3.0.0:'):
             args += ['--with-fjcontrib=' + self.spec['fjcontrib'].prefix]
 
-        args += ['--disable-pdfmanual', '--enable-unvalidated']
+        if self.spec.satisfies('@:2.5.1'):
+            args += ['--enable-unvalidated']
 
-        if self.spec.satisfies('@2:'):
+        if self.spec.satisfies('@2:2.4.99'):
             args += ['--enable-stdcxx11']
+
+        args += ['--disable-pdfmanual']
 
         return args
