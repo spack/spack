@@ -50,8 +50,11 @@ class PyNbconvert(PythonPackage):
         install(join_path(self.package_dir, 'style.min.css'),
                 join_path('nbconvert', 'resources', 'style.min.css'))
 
+    def setup_run_environment(self, env):
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
+
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
 
     def setup_dependent_run_environment(self, env, dependent_spec):
-        self.setup_dependent_build_environment(env, dependent_spec)
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
