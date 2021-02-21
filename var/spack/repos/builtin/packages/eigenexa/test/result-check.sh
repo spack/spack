@@ -3,6 +3,7 @@
 grep -q "Benchmark completed" $@
 if [ $? -eq 1 ]; then
   echo "EigenExa Test Failed !"
+  exit 1
 fi
 
 while read line;do
