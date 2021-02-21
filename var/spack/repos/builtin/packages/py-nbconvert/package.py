@@ -52,3 +52,6 @@ class PyNbconvert(PythonPackage):
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_dependent_build_environment(env, dependent_spec)
