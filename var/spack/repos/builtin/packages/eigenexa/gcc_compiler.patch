@@ -14,7 +14,7 @@
      
    elif test x"${FC_ACT}" = x"gfortran"; then
 -    FCFLAGS=${G_BASE}" -O3 "${G_ARCH}
-+    FCFLAGS=${G_BASE}" -O3 -fopenmp"${G_ARCH}
++    FCFLAGS=${G_BASE}" -O3 -fopenmp "${G_ARCH}
      
    elif test x"${FC_ACT}" = x"mpifrtpx"; then
      FCFLAGS=${F_BASE}" -Kfast,ocl,simd,swp "${F_ARCH}
