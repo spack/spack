@@ -32,9 +32,9 @@ class Pfapack(MakefilePackage):
     def build(self, spec, prefix):
         source_directory = self.stage.source_path
         with working_dir(join_path(source_directory, 'fortran')):
-            make()
+            make(parallel=False)
         with working_dir(join_path(source_directory, 'c_interface')):
-            make()
+            make(parallel=False)
 
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
