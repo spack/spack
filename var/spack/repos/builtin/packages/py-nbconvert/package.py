@@ -49,3 +49,6 @@ class PyNbconvert(PythonPackage):
         # doesn't try to download it.
         install(join_path(self.package_dir, 'style.min.css'),
                 join_path('nbconvert', 'resources', 'style.min.css'))
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path("JUPYTER_PATH", self.prefix.share.jupyter)
