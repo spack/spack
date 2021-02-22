@@ -68,6 +68,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             description='Enable Hypre interfaces')
     variant('petsc', default=False,
             description='Enable PETSc interfaces')
+    variant('pic', default=False,
+            description='Enable PIC')
 
     # Build dependencies
     depends_on('mpi', when='+mpi')
@@ -190,6 +192,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             self.define_from_variant('AMReX_HDF5', 'hdf5'),
             self.define_from_variant('AMReX_HYPRE', 'hypre'),
             self.define_from_variant('AMReX_PETSC', 'petsc'),
+            self.define_from_variant('AMReX_PIC', 'pic'),
         ]
 
         if self.spec.satisfies('%fj'):
