@@ -27,6 +27,7 @@ class UtilLinux(AutotoolsPackage):
 
     depends_on('python@2.7:', type='build')
     depends_on('pkgconfig', type='build')
+    depends_on('ncurses', type='link')
 
     variant('bash', default=False, description='Install bash completion scripts')
 

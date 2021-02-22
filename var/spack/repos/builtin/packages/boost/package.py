@@ -254,11 +254,11 @@ class Boost(Package):
 
     # Support bzip2 and gzip in other directory
     # See https://github.com/boostorg/build/pull/154
-    patch('boost_154.patch', when='@:1.63.99')
+    patch('boost_154.patch', when='@1.56.0:1.63.99')
 
     # Backport Python3 import problem
     # See https://github.com/boostorg/python/pull/218
-    patch('boost_218.patch', when='@:1.67.99')
+    patch('boost_218.patch', when='@1.63.0:1.67.99')
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler

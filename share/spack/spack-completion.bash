@@ -333,7 +333,7 @@ _spack() {
     then
         SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
-        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage setup solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
+        SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
 }
 
@@ -473,15 +473,19 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild"
+        SPACK_COMPREPLY="generate rebuild rebuild-index"
     fi
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only"
 }
 
 _spack_ci_rebuild() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_ci_rebuild_index() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -732,7 +736,7 @@ _spack_deprecate() {
 _spack_dev_build() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
+        SPACK_COMPREPLY="-h --help -j --jobs -d --source-path -i --ignore-dependencies -n --no-checksum --deprecated --keep-prefix --skip-patch -q --quiet --drop-in --test -b --before -u --until --clean --dirty"
     else
         _all_packages
     fi
@@ -882,7 +886,7 @@ _spack_external() {
 _spack_external_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --not-buildable --scope"
+        SPACK_COMPREPLY="-h --help --not-buildable --scope -t --tag"
     else
         _all_packages
     fi
@@ -895,7 +899,7 @@ _spack_external_list() {
 _spack_fetch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -m --missing -D --dependencies"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -m --missing -D --dependencies"
     else
         _all_packages
     fi
@@ -904,7 +908,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tags -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
     else
         _installed_packages
     fi
@@ -1033,7 +1037,7 @@ _spack_info() {
 _spack_install() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
+        SPACK_COMPREPLY="-h --help --only -u --until -j --jobs --overwrite --fail-fast --keep-prefix --keep-stage --dont-restage --use-cache --no-cache --cache-only --include-build-deps --no-check-signature --require-full-hash-match --show-log-on-error --source -n --no-checksum --deprecated -v --verbose --fake --only-concrete -f --file --clean --dirty --test --run-tests --log-format --log-file --help-cdash --cdash-upload-url --cdash-build --cdash-site --cdash-track --cdash-buildstamp -y --yes-to-all"
     else
         _all_packages
     fi
@@ -1063,7 +1067,7 @@ _spack_license_update_copyright_year() {
 _spack_list() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals -t --tags"
+        SPACK_COMPREPLY="-h --help -d --search-description --format --update -v --virtuals -t --tag"
     else
         _all_packages
     fi
@@ -1117,9 +1121,9 @@ _spack_mark() {
 _spack_mirror() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
-        SPACK_COMPREPLY="create add remove rm set-url list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url list"
     fi
 }
 
@@ -1130,6 +1134,10 @@ _spack_mirror_create() {
     else
         _all_packages
     fi
+}
+
+_spack_mirror_destroy() {
+    SPACK_COMPREPLY="-h --help -m --mirror-name --mirror-url"
 }
 
 _spack_mirror_add() {
@@ -1283,7 +1291,7 @@ _spack_module_tcl_loads() {
 _spack_patch() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
         _all_packages
     fi
@@ -1481,15 +1489,6 @@ _spack_restage() {
     fi
 }
 
-_spack_setup() {
-    if $list_options
-    then
-        SPACK_COMPREPLY="-h --help -i --ignore-dependencies -n --no-checksum -v --verbose --clean --dirty"
-    else
-        _all_packages
-    fi
-}
-
 _spack_solve() {
     if $list_options
     then
@@ -1511,7 +1510,7 @@ _spack_spec() {
 _spack_stage() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -n --no-checksum -p --path"
+        SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated -p --path"
     else
         _all_packages
     fi

@@ -7,6 +7,7 @@ import os
 import shutil
 import glob
 import tempfile
+import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
@@ -14,6 +15,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
 from spack.error import SpackError
 
@@ -119,9 +121,17 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
-                    return
-                os.rmdir(path)
+                try:
+                    os.rmdir(path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # already deleted, continue with parent
+                        pass
+                    elif e.errno == errno.ENOTEMPTY:
+                        # directory wasn't empty, done
+                        return
+                    else:
+                        raise e
             path = os.path.dirname(path)
 
 
@@ -233,7 +243,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
+            spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""

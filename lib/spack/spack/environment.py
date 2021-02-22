@@ -556,11 +556,20 @@ class ViewDescriptor(object):
             # that cannot be resolved or have repos that have been removed
             # we always regenerate the view from scratch. We must first make
             # sure the root directory exists for the very first time though.
-            root = self.root
-            if not os.path.isabs(root):
-                root = os.path.normpath(os.path.join(self.base, self.root))
+            root = os.path.normpath(
+                self.root if os.path.isabs(self.root) else os.path.join(
+                    self.base, self.root)
+            )
             fs.mkdirp(root)
-            with fs.replace_directory_transaction(root):
+
+            # The tempdir for the directory transaction must be in the same
+            # filesystem mount as the view for symlinks to work. Provide
+            # dirname(root) as the tempdir for the
+            # replace_directory_transaction because it must be on the same
+            # filesystem mount as the view itself. Otherwise it may be
+            # impossible to construct the view in the tempdir even when it can
+            # be constructed in-place.
+            with fs.replace_directory_transaction(root, os.path.dirname(root)):
                 view = self.view()
 
                 view.clean()

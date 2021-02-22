@@ -66,6 +66,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    conflicts('~cuda', when='+nvshmem')
+
     depends_on('mpi')
     depends_on('catch2', type='test')
 
@@ -120,6 +122,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
 
+    depends_on('nvshmem', when='+nvshmem')
+
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
         '20', '21',
@@ -138,6 +142,7 @@ class Dihydrogen(CMakePackage, CudaPackage):
         spec = self.spec
 
         args = [
+            '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
@@ -149,6 +154,11 @@ class Dihydrogen(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in spec:
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
+
             cuda_arch = spec.variants['cuda_arch'].value
             if len(cuda_arch) == 1 and cuda_arch[0] == 'auto':
                 args.append('-DCMAKE_CUDA_FLAGS=-arch=sm_60')

@@ -3,7 +3,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import collections
 import datetime
 import base64
 import binascii
@@ -24,6 +23,12 @@ except (ImportError, ValueError):  # for Jython
                                     ordereddict, text_type)
     from ruamel.yaml.comments import *                               # NOQA
     from ruamel.yaml.scalarstring import *                           # NOQA
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Hashable
+else:
+    from collections import Hashable
 
 
 __all__ = ['BaseConstructor', 'SafeConstructor', 'Constructor',
@@ -163,7 +168,7 @@ class BaseConstructor(object):
             # keys can be list -> deep
             key = self.construct_object(key_node, deep=True)
             # lists are not hashable, but tuples are
-            if not isinstance(key, collections.Hashable):
+            if not isinstance(key, Hashable):
                 if isinstance(key, list):
                     key = tuple(key)
             if PY2:
@@ -175,7 +180,7 @@ class BaseConstructor(object):
                         "found unacceptable key (%s)" %
                         exc, key_node.start_mark)
             else:
-                if not isinstance(key, collections.Hashable):
+                if not isinstance(key, Hashable):
                     raise ConstructorError(
                         "while constructing a mapping", node.start_mark,
                         "found unhashable key", key_node.start_mark)
@@ -959,7 +964,7 @@ class RoundTripConstructor(SafeConstructor):
             # keys can be list -> deep
             key = self.construct_object(key_node, deep=True)
             # lists are not hashable, but tuples are
-            if not isinstance(key, collections.Hashable):
+            if not isinstance(key, Hashable):
                 if isinstance(key, list):
                     key = tuple(key)
             if PY2:
@@ -971,7 +976,7 @@ class RoundTripConstructor(SafeConstructor):
                         "found unacceptable key (%s)" %
                         exc, key_node.start_mark)
             else:
-                if not isinstance(key, collections.Hashable):
+                if not isinstance(key, Hashable):
                     raise ConstructorError(
                         "while constructing a mapping", node.start_mark,
                         "found unhashable key", key_node.start_mark)
@@ -1003,7 +1008,7 @@ class RoundTripConstructor(SafeConstructor):
             # keys can be list -> deep
             key = self.construct_object(key_node, deep=True)
             # lists are not hashable, but tuples are
-            if not isinstance(key, collections.Hashable):
+            if not isinstance(key, Hashable):
                 if isinstance(key, list):
                     key = tuple(key)
             if PY2:
@@ -1015,7 +1020,7 @@ class RoundTripConstructor(SafeConstructor):
                         "found unacceptable key (%s)" %
                         exc, key_node.start_mark)
             else:
-                if not isinstance(key, collections.Hashable):
+                if not isinstance(key, Hashable):
                     raise ConstructorError(
                         "while constructing a mapping", node.start_mark,
                         "found unhashable key", key_node.start_mark)
