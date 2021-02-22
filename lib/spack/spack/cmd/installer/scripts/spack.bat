@@ -82,14 +82,14 @@ for %%x in (%*) do (
 if defined _sp_flags (
     if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
         if not defined _sp_subcommand (
-            python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
+            python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
             exit /B 0
         ) else (
-            python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
+            python "%spack%" %_sp_subcommand% %_sp_flags% %_sp_args%
             exit /B 0 )
     )
     if NOT "%_sp_flags%"=="%_sp_flags:-V=%" (
-        python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
+        python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
         exit /B 0
     )
 )
@@ -114,10 +114,10 @@ if "%_sp_subcommand%" == "cd" (
 if "%_sp_flags%" == "" (
 ) else (
     if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
-        python %spack% cd -h
+        python "%spack%" cd -h
     ) else (
         if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-            python %spack% cd -h
+            python "%spack%" cd -h
         )
     )
 )
@@ -131,16 +131,16 @@ goto :end_switch
 if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
     if "%_sp_flags%" == "" (
         @echo "HERE"
-        @echo python %spack% env deactivate %_sp_flags% --bat %_sp_args:deactivate=%
+        @echo python "%spack%" env deactivate %_sp_flags% --bat %_sp_args:deactivate=%
         for /f "tokens=*" %%I in (
-            'call python %spack% env deactivate %_sp_flags% --bat %_sp_args:deactivate=%'
+            'call python "%spack%" env deactivate %_sp_flags% --bat %_sp_args:deactivate=%'
             ) do %%I
     ) else (
         if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-            call python %spack% env deactivate %_sp_flags% %_sp_args:deactivate=%
+            call python "%spack%" env deactivate %_sp_flags% %_sp_args:deactivate=%
         ) else (
             for /f "tokens=*" %%I in (
-            'call python %spack% env deactivate %_sp_flags% --bat %_sp_args:deactivate=%'
+            'call python "%spack%" env deactivate %_sp_flags% --bat %_sp_args:deactivate=%'
             ) do %%I
         )
     )
@@ -148,19 +148,19 @@ if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
     if NOT "%_sp_args%"=="%_sp_args:activate=%" (
         if "%_sp_flags%" == "" (
             for /f "tokens=*" %%I in (
-                'call python %spack% env activate %_sp_flags% --bat %_sp_args:activate=%'
+                'call python "%spack%" env activate %_sp_flags% --bat %_sp_args:activate=%'
                 ) do %%I
         ) else (
             if NOT "%_sp_flags%"=="%_sp_flags:--bat=%" (
-                call python %spack% env activate %_sp_flags% %_sp_args:activate=%
+                call python "%spack%" env activate %_sp_flags% %_sp_args:activate=%
             ) else (
                 for /f "tokens=*" %%I in (
-                'call python %spack% env activate %_sp_flags% --bat %_sp_args:activate=%'
+                'call python "%spack%" env activate %_sp_flags% --bat %_sp_args:activate=%'
                 ) do %%I
             )
         )
     ) else (
-        python %spack% env -h
+        python "%spack%" env -h
     )
 )
 goto :end_switch
