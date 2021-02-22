@@ -57,13 +57,9 @@ class PyDaskMl(PythonPackage):
 
     conflicts('+docs', when='%gcc target=aarch64:')
 
-    @run_after('build')
-    def build_docs(self):
-        if '+docs' in self.spec:
-            with working_dir('docs'):
-                make('html')
-    
     @run_after('install')
     def install_docs(self):
         if '+docs' in self.spec:
+            with working_dir('docs'):
+                make('html')
             install_tree('docs', self.prefix.docs)
