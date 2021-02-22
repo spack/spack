@@ -50,7 +50,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     depends_on("mpi", type=("build", "run"))
     depends_on("lapack")
-    depends_on("python@2.7.18", type=("build", "run"), when="@2.0b")
+    depends_on("python@2.6.9:2.8.0", type=("build", "run"), when="@2.0b")
 
     patch("fj_compiler.patch", when="@2.0b %fj")
     patch("fj_compiler_1.5.1.patch", when="@1.5.1 %fj")
@@ -82,7 +82,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
         env.set("F77", self.spec["mpi"].mpif77, force=True)
         env.set("CC", self.spec["mpi"].mpicc, force=True)
         env.set("CXX", self.spec["mpi"].mpicxx, force=True)
-        env.set("LAPACK_LIBS", "{0}".format(self.spec["lapack"].libs.ld_flags))
+        env.set("LAPACK_LIBS", self.spec["lapack"].libs.ld_flags)
         if "+cuda" in self.spec:
             cuda_arch = self.spec.variants["cuda_arch"].value
             cuda_gencode = " ".join(self.cuda_flags(cuda_arch))
