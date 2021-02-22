@@ -22,5 +22,3 @@ class PyDaskGlm(PythonPackage):
     depends_on('py-multipledispatch@0.4.9:', type=('build', 'run'))
     depends_on('py-scipy@0.18.1:', type=('build', 'run'))
     depends_on('py-scikit-learn@0.18:', type=('build', 'run'))
-    depends_on('py-distributed', type=('build', 'run'))
-    depends_on('py-sparse@0.7.0:', type=('build', 'run'))
