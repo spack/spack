@@ -34,13 +34,13 @@ class Pegtl(CMakePackage):
 
         args = []
         if "+tests" in spec:
-           args.append('-DPEGTL_BUILD_TESTS=ON')
+            args.append('-DPEGTL_BUILD_TESTS=ON')
         else:
-           args.append('-DPEGTL_BUILD_TESTS=OFF')
+            args.append('-DPEGTL_BUILD_TESTS=OFF')
 
         if "+examples" in spec:
-           args.append('-DPEGTL_BUILD_EXAMPLES=ON')
+            args.append('-DPEGTL_BUILD_EXAMPLES=ON')
         else:
-           args.append('-DPEGTL_BUILD_EXAMPLES=OFF')
+            args.append('-DPEGTL_BUILD_EXAMPLES=OFF')
 
         return args
