@@ -6,23 +6,21 @@
 from spack import *
 
 
-class PyDaskMl(Package):
+class PyDaskMl(PythonPackage):
     """Scalable Machine Learning with Dask."""
 
     homepage = "https://ml.dask.org/"
-    url      = "https://pypi.io/packages/source/d/dask-ml/dask-ml-1.8.0.tar.gz"
+    pypi     = "dask-ml/dask-ml-1.8.0.tar.gz"
 
     version('1.8.0', sha256='8fc4ac3ec1915e382fb8cae9ff1ec9b5ac1bee0b6f4c6975d6e6cb7191a4a815')
 
     variant('docs', default=False, description='Build HTML documentation')
     variant('xgboost', default=False, description='Deploys XGBoost alongside Dask')
 
-    extends('python')
     depends_on('python@3.6:', type=('build', 'run'))
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('py-pip', type=('build', 'run'))
 
     depends_on('py-dask+array+dataframe@2.4.0:', type=('build', 'run'))
     depends_on('py-distributed@2.4.0:', type=('build', 'run'))
@@ -70,17 +68,13 @@ class PyDaskMl(Package):
 
     conflicts('+docs', when='%gcc target=aarch64:')
 
-    def install(self, spec, prefix):
-        pip = which('pip')
-
-        if '+xgboost' in spec:
-            pip('install', self.stage.source_path, '.[xgboost]',
-                '--prefix={0}'.format(prefix))
-        else:
-            pip('install', self.stage.source_path, '--prefix={0}'.format(prefix))
-
-        if '+docs' in spec:
+    @run_after('build')
+    def build_docs(self):
+        if '+docs' in self.spec:
             with working_dir('docs'):
                 make('html')
-                install_tree(
-                    join_path(self.stage.source_path, 'docs'), self.prefix.docs)
+    
+    @run_after('install')
+    def install_docs(self):
+        if '+docs' in self.spec:
+            install_tree('docs', self.prefix.docs)
