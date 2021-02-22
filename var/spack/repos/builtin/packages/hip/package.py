@@ -57,7 +57,7 @@ class Hip(CMakePackage):
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
-    patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.9.0.patch', when='@3.9.0')
+    patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.10.0.patch', when='@3.10.0:4.0.0')
 
     def get_paths(self):
