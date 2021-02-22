@@ -15,13 +15,18 @@ class N2p2(MakefilePackage):
     url = "https://github.com/CompPhysVienna/n2p2/archive/v2.1.0.tar.gz"
 
     version(
+        "2.1.1",
+        sha256="90fbc0756132984d0d7e6d92d2f53358c120e75f148910d90c027158163251b9",
+    )
+    version(
         "2.1.0",
         sha256="283c00e9a5b964f4c84a70c5f1cef7167e9b881080b50a221da08799e5ede400",
     )
 
     variant("doc", default=False, description="build documentation with Doxygen")
 
-    patch("interface-makefile.patch")
+    patch("interface-makefile.patch", when="@2.1.0")
+    patch("interface-makefile211.patch", when="@2.1.1")
     patch("libnnp-makefile.patch")
     patch("nnp_test.h.patch")
 
@@ -128,6 +133,8 @@ class N2p2(MakefilePackage):
             make("python", parallel=False)
 
             test_dir = self.test_suite.current_test_data_dir
-            expected_file = join_path(test_dir, "expected-result.txt")
+            expected_file = join_path(
+                test_dir, "expected-result-{0}.txt".format(self.version)
+            )
             check_n2p2 = Executable(join_path(test_dir, "result-check.sh"))
             check_n2p2("./output_cpp.txt", "./output_python.txt", expected_file)
