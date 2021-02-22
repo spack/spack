@@ -188,6 +188,7 @@ class PyTorch(PythonPackage, CudaPackage):
 
     @when('@1.5.0:')
     def patch(self):
+        # https://github.com/pytorch/pytorch/issues/52208
         filter_file('torch_global_deps PROPERTIES LINKER_LANGUAGE C',
                     'torch_global_deps PROPERTIES LINKER_LANGUAGE CXX',
                     'caffe2/CMakeLists.txt')
