@@ -16,8 +16,7 @@ class Fenics(CMakePackage):
 
     homepage = "http://fenicsproject.org/"
     git      = "https://bitbucket.org/fenics-project/dolfin.git"
-    url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-1.6.0.tar.gz"
-    base_url = "https://bitbucket.org/fenics-project/{pkg}/downloads/{pkg}-{version}.tar.gz"
+    url      = "https://bitbucket.org/fenics-project/dolfin/downloads/dolfin-2019.1.0.post0.tar.gz"
 
     version('2019.1.0.post0', sha256='61abdcdb13684ba2a3ba4afb7ea6c7907aa0896a46439d3af7e8848483d4392f')
     version('2018.1.0.post1', sha256='425cc49b90e0f5c2ebdd765ba9934b1ada97e2ac2710d982d6d267a5e2c5982d')
@@ -92,7 +91,7 @@ class Fenics(CMakePackage):
         depends_on('py-fenics-ffc{0}'.format(wver), type=('build', 'run'), when=wver)
 
     # package dependencies
-    depends_on('python@3:', type=('build', 'run'), when='+python')
+    depends_on('python@3.5:', type=('build', 'run'), when='+python')
     depends_on('eigen@3.2.0:')
     depends_on('pkgconfig')
     depends_on('zlib', when='+zlib')
@@ -122,7 +121,7 @@ class Fenics(CMakePackage):
     depends_on('cmake@3.17.3:', type='build')
 
     depends_on('py-setuptools', type='build', when='+python')
-    depends_on('py-pkgconfig', type='run', when='+python')
+    depends_on('py-pkgconfig', type=('build', 'run'), when='+python')
     depends_on('py-sphinx@1.0.1:', when='+doc', type='build')
 
     def cmake_args(self):
