@@ -24,10 +24,10 @@ if NOT defined SPACK_ROOT (
     set SPACK_ROOT=%CD%
     popd
 )
-if defined _sp_initializing (goto :eof)
-set "_sp_initializing=True"
+
 DOSKEY spacktivate = "spack env activate"
 set spack=%SPACK_ROOT%\bin\spack
+
 ::#######################################################################
 :: This is a wrapper around the spack command that forwards calls to
 :: 'spack load' and 'spack unload' to shell functions.  This in turn
@@ -183,7 +183,6 @@ if "%_sp_flags%" == "" (
 goto :end_switch
 
 :end_switch
-set "_sp_initializing="
 exit /B 0
 
 ::#######################################################################
@@ -196,5 +195,4 @@ if NOT "%~2" == "" (
     _pa_new_path=%~2
     )
 
-set "_sp_initializing="
 EXIT /B 0
