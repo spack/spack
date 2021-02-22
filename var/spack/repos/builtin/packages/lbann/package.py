@@ -336,8 +336,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec))
 
         if '+rocm' in spec:
-            args.append(
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix))
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
