@@ -1017,8 +1017,8 @@ class TestSpecSematics(object):
         expected_z = dep['splice-z'] if transitive else spec['splice-z']
         assert out['splice-z'].full_hash() == expected_z.full_hash()
         # Sanity check build spec of out should match build spec of original.
-        assert (spec['splice-t'].full_hash() ==
-                out['splice-t'].build_spec.full_hash())
+        assert (out['splice-t'].build_spec.full_hash() ==
+                spec['splice-t'].full_hash())
         # Finally, the spec should know it's been spliced:
         assert out.spliced
 
@@ -1050,14 +1050,14 @@ class TestSpecSematics(object):
         # Make this a separate test.
         out2 = out.splice(dep, transitive)
         assert out2.concrete
-        assert spec['splice-z'].build_hash() != out2['splice-z'].build_hash()
-        assert out['splice-z'].build_hash() != out2['splice-z'].build_hash()
-        assert (spec['splice-z'].full_hash() !=
-                out2['splice-z'].build_spec.full_hash())
-        assert (out['splice-z'].build_spec.full_hash() !=
-                out2['splice-z'].build_spec.full_hash())
-        assert (spec['splice-t'].full_hash() ==
-                out2['splice-t'].build_spec.full_hash())
+        assert out2['splice-z'].build_hash() != spec['splice-z'].build_hash()
+        assert out2['splice-z'].build_hash() != out['splice-z'].build_hash()
+        assert (out2['splice-z'].build_spec.full_hash() !=
+                spec['splice-z'].full_hash())
+        assert (out2['splice-z'].build_spec.full_hash() !=
+                out['splice-z'].build_spec.full_hash())
+        assert (out2['splice-t'].build_spec.full_hash() ==
+                spec['splice-t'].full_hash())
         assert out2.spliced
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
