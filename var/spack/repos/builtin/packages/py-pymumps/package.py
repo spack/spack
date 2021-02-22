@@ -38,7 +38,7 @@ class PyPymumps(PythonPackage):
                 '--library-dirs',
                 spec['mumps'].libs.directories[0],
                 '--rpath',
-                spec['mumps'].prefix.lib,
+                spec['mumps'].libs.directories[0],
                 '-l', 'dmumps',
                 '-l', 'mumps_common',
                 '-l', 'pord',
