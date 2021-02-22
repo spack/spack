@@ -71,7 +71,7 @@ class Cdo(AutotoolsPackage):
     depends_on('proj@:7', when='@1.9.7+proj')
     depends_on('proj@5:', when='@1.9.8:+proj')
     depends_on('curl', when='+curl')
-    depends_on('fftw@3:', when='+fftw3')
+    depends_on('fftw-api@3:', when='+fftw3')
     depends_on('magics', when='+magics')
     depends_on('uuid')
 

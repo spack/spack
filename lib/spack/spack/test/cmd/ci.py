@@ -878,6 +878,26 @@ spack:
             assert(len(dl_dir_list) == 3)
 
 
+def test_push_mirror_contents_exceptions(monkeypatch, capsys):
+    def faked(env, spec_yaml=None, packages=None, add_spec=True,
+              add_deps=True, output_location=os.getcwd(),
+              signing_key=None, force=False, make_relative=False,
+              unsigned=False, allow_root=False, rebuild_index=False):
+        raise Exception('Error: Access Denied')
+
+    import spack.cmd.buildcache as buildcache
+    monkeypatch.setattr(buildcache, '_createtarball', faked)
+
+    url = 'fakejunk'
+    ci.push_mirror_contents(None, None, None, url, None, None)
+
+    captured = capsys.readouterr()
+    std_out = captured[0]
+    expect_msg = 'Permission problem writing to {0}'.format(url)
+
+    assert(expect_msg in std_out)
+
+
 def test_ci_generate_override_runner_attrs(tmpdir, mutable_mock_env_path,
                                            env_deactivate, install_mockery,
                                            mock_packages, monkeypatch):
@@ -1373,7 +1393,7 @@ spack:
                 assert('script' in cleanup_job)
                 cleanup_task = cleanup_job['script'][0]
 
-                assert(cleanup_task.startswith('spack mirror destroy'))
+                assert(cleanup_task.startswith('spack -d mirror destroy'))
 
                 assert('stages' in pipeline_doc)
                 stages = pipeline_doc['stages']

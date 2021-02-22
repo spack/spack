@@ -15,10 +15,12 @@ class Nim(Package):
     homepage = "https://nim-lang.org/"
     url = "https://nim-lang.org/download/nim-0.20.0.tar.xz"
 
-    version('0.20.0', sha256='4be00d7dd47220da508b30ce3b4deade4ba39800ea4a1e574018b3c733359780')
-    version('0.19.6', sha256='a09f0c58d29392434d4fd6d15d4059cf7e013ae948413cb9233b8233d67e3a29')
+    version('1.4.2', sha256='03a47583777dd81380a3407aa6a788c9aa8a67df4821025770c9ac4186291161')
+    version('0.20.0', sha256='51f479b831e87b9539f7264082bb6a64641802b54d2691b3c6e68ac7e2699a90', deprecated=True)
+    version('0.19.6', sha256='a09f0c58d29392434d4fd6d15d4059cf7e013ae948413cb9233b8233d67e3a29', deprecated=True)
     version('0.19.9', sha256='154c440cb8f27da20b3d6b1a8cc03f63305073fb995bbf26ec9bc6ad891ce276',
-            url='https://github.com/nim-lang/nightlies/releases/download/2019-06-02-devel-1255b3c/nim-0.19.9-linux_x64.tar.xz')
+            url='https://github.com/nim-lang/nightlies/releases/download/2019-06-02-devel-1255b3c/nim-0.19.9-linux_x64.tar.xz',
+            deprecated=True)
 
     depends_on('pcre', type='build')
     depends_on('openssl', type='build')

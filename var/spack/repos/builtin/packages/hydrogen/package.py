@@ -18,6 +18,7 @@ class Hydrogen(CMakePackage, CudaPackage):
     maintainers = ['bvanessen']
 
     version('develop', branch='hydrogen')
+    version('1.5.1', sha256='447da564278f98366906d561d9c8bc4d31678c56d761679c2ff3e59ee7a2895c')
     version('1.5.0', sha256='03dd487fb23b9fdbc715554a8ea48c3196a1021502e61b0172ef3fdfbee75180')
     version('1.4.0', sha256='c13374ff4a6c4d1076e47ba8c8d91a7082588b9958d1ed89cffb12f1d2e1452e')
     version('1.3.4', sha256='7979f6656f698f0bbad6798b39d4b569835b3013ff548d98089fce7c283c6741')
@@ -90,7 +91,8 @@ class Hydrogen(CMakePackage, CudaPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
     depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
-    depends_on('aluminum@0.5:', when='@:1.0,1.5.0: +al')
+    depends_on('aluminum@0.5:', when='@1.5.0:1.5.1 +al')
+    depends_on('aluminum@0.7:', when='@:1.0,1.5.2: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
@@ -131,6 +133,7 @@ class Hydrogen(CMakePackage, CudaPackage):
         enable_gpu_fp16 = ('+cuda' in spec and '+half' in spec)
 
         args = [
+            '-DCMAKE_CXX_STANDARD=14',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
             '-DHydrogen_ENABLE_OPENMP:BOOL=%s'       % ('+openmp' in spec),
@@ -146,6 +149,9 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
             '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
         ]
+
+        if '+cuda' in spec:
+            args.append('-DCMAKE_CUDA_STANDARD=14')
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang +openmp platform=darwin'):
