@@ -20,7 +20,7 @@ class PyFenicsFfc(PythonPackage):
     version('2019.1.0.post0', sha256='306e1179630200a34202975a5369194939b3482eebfc34bc44ad74dab1f109e8')
     version('2018.1.0',       sha256='c5a6511693106d1cd2fc013148d0cd01cd1b99fc65dab461ca0b95851a9ea271')
     version('2017.2.0.post0',       sha256='1969a5460cb866c478df64874ce213f81cb5c893b89f991a578e258b1a64fee5')
-    version('2016.2.0',       sha256='916c94c18047e1281d08e67c515aa1d4175320723609fbbfb0fc498ab4d41bb6')
+    version('2016.2.0',       sha256='097c284780447ea7bb47d4d51956648a1efb2cb9047eb1382944421dde351ecb')
 
     depends_on('python@3.5:', type=('build', 'run'))
 
@@ -32,7 +32,7 @@ class PyFenicsFfc(PythonPackage):
             ver = ver[:ver.rfind('.post')]
         wver = '@' + ver
         depends_on('py-fenics-fiat{0}'.format(wver), type=('build', 'run'), when=wver)
-        if(Version(ver) < Version('2018.1.0')):
+        if(Version(ver) < Version('2017.2.0')):
             depends_on('py-fenics-instant{0}'.format(wver), type=('build', 'run'), when=wver)
         else:
             depends_on('py-fenics-dijitso{0}'.format(wver), type=('build', 'run'), when=wver)
