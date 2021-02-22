@@ -17,6 +17,8 @@ class Pfapack(MakefilePackage):
 
     version('2014-09-17', sha256='b68fc35dda23ee24c358641b1a92ef701c4ffa0b3f0b0808b24e68afeb58ef07')
 
+    parallel = False
+
     depends_on('lapack')
     depends_on('blas')
     depends_on('python', type=('build', 'run'))
@@ -32,9 +34,9 @@ class Pfapack(MakefilePackage):
     def build(self, spec, prefix):
         source_directory = self.stage.source_path
         with working_dir(join_path(source_directory, 'fortran')):
-            make(parallel=False)
+            make()
         with working_dir(join_path(source_directory, 'c_interface')):
-            make(parallel=False)
+            make()
 
     def install(self, spec, prefix):
         source_directory = self.stage.source_path
