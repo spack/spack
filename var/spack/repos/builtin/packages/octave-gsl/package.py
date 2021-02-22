@@ -16,3 +16,6 @@ class OctaveGsl(OctavePackage, SourceforgePackage):
 
     depends_on('gsl@2.4:')
     extends('octave@2.9.7:')
+
+    def setup_build_environment(self, env):
+        env.prepend_path('PKG_CONFIG_PATH', self.spec['gsl'].prefix)
