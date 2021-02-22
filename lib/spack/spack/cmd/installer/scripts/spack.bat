@@ -94,16 +94,25 @@ if defined _sp_flags (
     )
 )
 
-call :case_%_sp_subcommand%
-if ERRORLEVEL 1 goto :default_case
-EXIT /B 0
+
+if "%_sp_subcommand%" == "cd" (
+    goto :case_cd
+) else if "%_sp_subcommand%" == "env" (
+    goto :case_env
+) else if "%_sp_subcommand%" == "load" (
+    goto :case_load
+) else if "%_sp_subcommand%" == "unload" (
+    goto :case_load
+) else (
+    python "%spack%" %_sp_subcommand% %_sp_flags% %_sp_args%
+    goto :end_switch
+)
+
+::#######################################################################
 
 :case_cd
-@echo "CD"
 if "%_sp_flags%" == "" (
-    @echo "nothing to do"
 ) else (
-    @echo "ELSE"
     if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
         python %spack% cd -h
     ) else (
@@ -173,16 +182,11 @@ if "%_sp_flags%" == "" (
 )
 goto :end_switch
 
-:case_unload
-goto :case_load
-
-:default_case
-python "%spack%" %_sp_subcommand% %_sp_flags% %_sp_args%
-goto :end_switch
-
 :end_switch
 set "_sp_initializing="
 exit /B 0
+
+::#######################################################################
 
 :_spack_pathadd
 _pa_varname=PATH
