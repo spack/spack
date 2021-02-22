@@ -12,8 +12,9 @@ class PyCmakeFormat(PythonPackage):
     and ctest-to."""
 
     homepage = "https://pypi.python.org/pypi/cmake-format"
-    url      = "https://pypi.io/packages/source/c/cmake_format/cmake_format-0.6.9.tar.gz"
+    url      = "https://github.com/cheshirekow/cmake_format/archive/v0.6.13.tar.gz"
 
+    version('0.6.13', sha256='b67dd150380d9223036a12f82126a7a9b18e77db4a8d7240f993ee090884e4bf')
     version('0.6.10', sha256='82f0ef16236225cb43f45bfb6983ef7f6f72634727a1a6c26290402527bdd793')
     version('0.6.9', sha256='b2f8bf2e9c6651126f2f2954b7803222b0faf6b8649eabc4d965ea97483a4d20')
     version('0.6.0', sha256='fc9795907c508b4a1f851eba311bd7478b374a4ba4430cdda976ebbec440376a')
