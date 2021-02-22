@@ -23,5 +23,24 @@ class Pegtl(CMakePackage):
     version('2.1.4', sha256='d990dccc07b4d9ba548326d11c5c5e34fa88b34fe113cb5377da03dda29f23f2')
     version('2.0.0', sha256='5aae0505077e051cae4d855c38049cc6cf71103a6cc8d0ddef01a576e8a60cc0')
 
+    variant("examples", default=True, description='Build example programs')
+    variant("tests", default=True, description='Build test programs')
+
     # Ref: https://github.com/taocpp/PEGTL/blob/master/src/example/pegtl/json_classes.hpp
     patch('change_to_virtual_destructor.patch', when='@:2.4')
+
+    def cmake_args(self):
+        spec = self.spec
+
+        args = []
+        if "+tests" in spec:
+           args.append('-DPEGTL_BUILD_TESTS=ON')
+        else:
+           args.append('-DPEGTL_BUILD_TESTS=OFF')
+
+        if "+examples" in spec:
+           args.append('-DPEGTL_BUILD_EXAMPLES=ON')
+        else:
+           args.append('-DPEGTL_BUILD_EXAMPLES=OFF')
+
+        return args
