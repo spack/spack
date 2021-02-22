@@ -14,8 +14,8 @@ class PyFenicsUfl(PythonPackage):
     mathematical notation."""
 
     homepage = "https://fenicsproject.org/"
-    url = "https://bitbucket.org/fenics-project/ufl/downloads/ufl-2019.1.0.tar.gz"
-    git = "https://bitbucket.org/fenics-project/ufl.git"
+    url = "https://github.com/FEniCS/ufl/archive/2019.1.0.tar.gz"
+    git = "https://github.com/FEniCS/ufl.git"
     maintainers = ["js947", "chrisrichardson"]
 
     version("master", branch="master")
@@ -26,6 +26,6 @@ class PyFenicsUfl(PythonPackage):
     version('2017.1.0.post1', sha256='82c8170f44c2392c7e60aa86495df22cc209af50735af8115dc35aeda4b0ca96')
     version('2016.2.0', tag='ufl-2016.2.0')
 
-    depends_on("python@3:", type=('build', 'run'))
+    depends_on("python@3.5:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
     depends_on("py-numpy", type=("build", "run"))

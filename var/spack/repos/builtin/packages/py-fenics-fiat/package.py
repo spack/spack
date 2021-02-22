@@ -17,8 +17,8 @@ class PyFenicsFiat(PythonPackage):
     nonconforming elements"""
 
     homepage = "https://fenicsproject.org/"
-    url = "https://bitbucket.org/fenics-project/fiat/downloads/fiat-2019.1.0.tar.gz"
-    git = "https://bitbucket.org/fenics-project/fiat.git"
+    url = "https://github.com/FEniCS/fiat/archive/2019.1.0.tar.gz"
+    git = "https://github.com/FEniCS/fiat.git"
     maintainers = ["js947", "chrisrichardson"]
 
     version("master", branch="master")
