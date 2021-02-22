@@ -53,7 +53,7 @@ class Hip(CMakePackage):
     patch('0002-Fix-detection-of-HIP_CLANG_ROOT.patch', when='@:3.9.0')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
-    patch('0003-Improve-compilation-without-git-repo.3.8.0.patch', when='@3.8.0:3.9.0')
+    patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
