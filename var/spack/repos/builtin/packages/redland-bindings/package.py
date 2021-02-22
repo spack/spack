@@ -18,14 +18,14 @@ class RedlandBindings(AutotoolsPackage):
 
     depends_on('swig')
     depends_on('redland')
-    depends_on('python@3:')
+    depends_on('python')
     depends_on('krb5')
     depends_on('libssh')
     extends('python')
 
     def configure_args(self):
         args = []
-        args.append('--with-python=python3')
+        args.append('--with-python')
         python_version = self.spec['python'].version.up_to(2)
         plib = join_path(
             self.prefix.lib,
