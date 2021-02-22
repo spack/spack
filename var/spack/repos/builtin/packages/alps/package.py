@@ -55,7 +55,7 @@ class Alps(CMakePackage):
         args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
 
-    def _single_test(self, target, exename, dataname, opts):
+    def _single_test(self, target, exename, dataname, opts=[]):
         troot = self.prefix.tutorials
         copy_tree(join_path(troot, target), target)
 
@@ -67,10 +67,11 @@ class Alps(CMakePackage):
                       options=[dataname, 'SEED=123456'],
                       work_dir=target
                       )
-        opts.append('--write-xml')
-        opts.append('{0}.in.xml'.format(dataname))
+        options = []
+        options.extend(opts)
+        options.extend(['--write-xml', '{0}.in.xml'.format(dataname)])
         self.run_test(exename,
-                      options=opts,
+                      options=options,
                       expected=['Finished with everything.'],
                       work_dir=target
                       )
@@ -78,5 +79,5 @@ class Alps(CMakePackage):
     def test(self):
         self._single_test('mc-02-susceptibilities', 'spinmc', 'parm2a',
                           ['--Tmin', '10'])
-        self._single_test('ed-01-sparsediag', 'sparsediag', 'parm1a', [])
-        self._single_test('dmrg-01-dmrg', 'dmrg', 'spin_one_half', [])
+        self._single_test('ed-01-sparsediag', 'sparsediag', 'parm1a')
+        self._single_test('dmrg-01-dmrg', 'dmrg', 'spin_one_half')
