@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Lbann(CMakePackage, CudaPackage):
+class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
     memory, HPC-optimized, model and data parallel training toolkit for deep
     neural networks."""
@@ -73,6 +73,7 @@ class Lbann(CMakePackage, CudaPackage):
     conflicts('~cuda', when='+nvprof')
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -89,6 +90,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('hydrogen +cuda', when='+cuda')
     depends_on('hydrogen ~half', when='~half')
     depends_on('hydrogen +half', when='+half')
+    depends_on('hydrogen ~rocm', when='~rocm')
+    depends_on('hydrogen +rocm', when='+rocm')
     depends_on('hydrogen build_type=Debug', when='build_type=Debug')
 
     # Older versions depended on Elemental not Hydrogen
@@ -103,6 +106,7 @@ class Lbann(CMakePackage, CudaPackage):
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
 
     depends_on('dihydrogen +openmp', when='+dihydrogen')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
@@ -114,6 +118,8 @@ class Lbann(CMakePackage, CudaPackage):
     depends_on('dihydrogen +half', when='+dihydrogen +half')
     depends_on('dihydrogen ~nvshmem', when='+dihydrogen ~nvshmem')
     depends_on('dihydrogen +nvshmem', when='+dihydrogen +nvshmem')
+    depends_on('dihydrogen ~rocm', when='+dihydrogen ~rocm')
+    depends_on('dihydrogen +rocm', when='+dihydrogen +rocm')
     depends_on('dihydrogen@0.1', when='@0.101:0.101.99 +dihydrogen')
     depends_on('dihydrogen@:0.0,0.2:', when='@:0.90,0.102: +dihydrogen')
     conflicts('~dihydrogen', when='+distconv')
@@ -124,13 +130,22 @@ class Lbann(CMakePackage, CudaPackage):
         depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen cuda_arch=%s' % arch)
         depends_on('nccl cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
 
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('hydrogen amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+        depends_on('aluminum amdgpu_target=%s' % val, when='+al amdgpu_target=%s' % val)
+        depends_on('dihydrogen amdgpu_target=%s' % val, when='+dihydrogen amdgpu_target=%s' % val)
+
     depends_on('cudnn', when='@0.90:0.100.99 +cuda')
     depends_on('cudnn@8.0.2:', when='@:0.90,0.101: +cuda')
     depends_on('cub', when='@0.94:0.98.2 +cuda ^cuda@:10.99')
+    depends_on('hipcub', when='+rocm')
     depends_on('mpi')
     depends_on('hwloc@1.11:', when='@:0.90,0.102: +hwloc')
     depends_on('hwloc@1.11:1.11.99', when='@0.95:0.101.99 +hwloc')
     depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('hwloc@2.3.0:', when='+rocm')
 
     depends_on('half', when='+half')
 
@@ -236,8 +251,6 @@ class Lbann(CMakePackage, CudaPackage):
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
-            '-DLBANN_WITH_CUDA:BOOL=%s' % ('+cuda' in spec),
-            '-DLBANN_WITH_CUDNN:BOOL=%s' % ('+cuda' in spec),
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
@@ -321,6 +334,18 @@ class Lbann(CMakePackage, CudaPackage):
         if spec.satisfies('@:0.90') or spec.satisfies('@0.101:'):
             args.append(
                 '-DLBANN_WITH_DISTCONV:BOOL=%s' % ('+distconv' in spec))
+
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
+                    ' -g -fsized-deallocation -fPIC -std=c++17'.format(arch_str)
+                )
 
         return args
 
