@@ -151,8 +151,9 @@ class Hip(CMakePackage):
         # bin/.hipVersion file can still be parsed.
         # See also https://github.com/ROCm-Developer-Tools/HIP/issues/2223
         if '@3.8.0:' in self.spec:
-            env.set('HIPCC_COMPILE_FLAGS_APPEND',
-                    '--rocm-path={0}'.format(paths['rocm-path']))
+            env.append_path('HIPCC_COMPILE_FLAGS_APPEND',
+                            '--rocm-path={0}'.format(paths['rocm-path']),
+                            separator=' ')
 
     def setup_run_environment(self, env):
         self.set_variables(env)
