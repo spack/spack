@@ -14,11 +14,10 @@ class PyDaskXgboost(PythonPackage):
 
     version('0.1.11', sha256='3fbe1bf4344dc74edfbe9f928c7e3e6acc26dc57cefd8da8ae56a15469c6941c')
 
-    variant('sparse', default=False, description='Extras require')
+    variant('sparse', default=False, description='Add sparse support')
 
-    depends_on('python', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('xgboost@:0.90', type=('build', 'run'))
+    depends_on('py-xgboost@:0.90', type=('build', 'run'))
     depends_on('py-dask', type=('build', 'run'))
     depends_on('py-distributed@1.15.2:', type=('build', 'run'))
 
