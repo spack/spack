@@ -8,7 +8,7 @@ import os
 import sys
 
 
-class Hypre(Package):
+class Hypre(Package, CudaPackage):
     """Hypre is a library of high performance preconditioners that
        features parallel multigrid methods for both structured and
        unstructured grid problems."""
@@ -60,6 +60,12 @@ class Hypre(Package):
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
+    variant('cuda-uvm', default=False,
+            description="Enable CUDA UVM support")
+    variant('curand', default=False,
+            description="Enable CURAND integration")
+    variant('cub', default=False,
+            description="Enable CUB integration")
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
@@ -77,6 +83,8 @@ class Hypre(Package):
     depends_on("blas")
     depends_on("lapack")
     depends_on('superlu-dist', when='+superlu-dist+mpi')
+
+    conflicts('+cuda', when='+int64')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
@@ -100,7 +108,8 @@ class Hypre(Package):
 
         return url.format(version)
 
-    def install(self, spec, prefix):
+    def _configure_args(self):
+        spec = self.spec
         # Note: --with-(lapack|blas)_libs= needs space separated list of names
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
@@ -162,6 +171,40 @@ class Hypre(Package):
         else:
             configure_args.append("--disable-debug")
 
+        if '+cuda' in self.spec:
+            configure_args.extend([
+                '--with-cuda',
+                '--enable-curand',
+                '--enable-cub'
+            ])
+        else:
+            configure_args.extend([
+                '--without-cuda',
+                '--disable-curand',
+                '--disable-cub'
+            ])
+
+        return configure_args
+
+    def setup_build_environment(self, env):
+        if '+mpi' in self.spec:
+            env.set('CC', self.spec['mpi'].mpicc)
+            env.set('CXX', self.spec['mpi'].mpicxx)
+            env.set('F77', self.spec['mpi'].mpif77)
+
+        if '+cuda' in self.spec:
+            env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            env.set('CUDA_PATH', self.spec['cuda'].prefix)
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            if cuda_arch:
+                arch_sorted = list(sorted(cuda_arch, reverse=True))
+                env.set('HYPRE_CUDA_SM', arch_sorted[0])
+            # In CUDA builds hypre currently doesn't handle flags correctly
+            env.append_flags(
+                'CXXFLAGS', '-O2' if '~debug' in self.spec else '-g')
+
+    def install(self, spec, prefix):
+        configure_args = self._configure_args()
         # Hypre's source is staged under ./src so we'll have to manually
         # cd into it.
         with working_dir("src"):
