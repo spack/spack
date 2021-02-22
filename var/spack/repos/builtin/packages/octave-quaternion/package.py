@@ -1,0 +1,18 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
+
+
+class OctaveQuaternion(OctavePackage, SourceforgePackage):
+    """Quaternion package for GNU Octave,
+   includes a quaternion class with overloaded operators."""
+
+    homepage = "https://octave.sourceforge.io/quaternion/"
+    sourceforge_mirror_path = "octave/quaternion-2.4.0.tar.gz"
+
+    version('2.4.0', sha256='4c2d4dd8f1d213f080519c6f9dfbbdca068087ee0411122b16e377e0f4641610')
+
+    extends('octave@3.8.0:')
