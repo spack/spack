@@ -17,7 +17,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
     url = "https://www.r-ccs.riken.jp/labs/cbrt/wp-content/uploads/2020/09/genesis-1.5.1.tar.bz2"
     git = "https://github.com/genesis-release-r-ccs/genesis-2.0.git"
 
-    version("2.0b", branch="master")
+    version("master", branch="master")
     version(
         "1.5.1",
         sha256="62a453a573c36779484b4ffed2dfa56ea03dfe1308d631b33ef03f733259b3ac",
@@ -40,19 +40,19 @@ class Genesis(AutotoolsPackage, CudaPackage):
     conflicts("%apple-clang", when="+openmp")
 
     depends_on("autoconf", type="build", when="@1.5.1 %fj")
-    depends_on("autoconf", type="build", when="@2.0b")
+    depends_on("autoconf", type="build", when="@master")
     depends_on("automake", type="build", when="@1.5.1 %fj")
-    depends_on("automake", type="build", when="@2.0b")
+    depends_on("automake", type="build", when="@master")
     depends_on("libtool", type="build", when="@1.5.1 %fj")
-    depends_on("libtool", type="build", when="@2.0b")
+    depends_on("libtool", type="build", when="@master")
     depends_on("m4", type="build", when="@1.5.1 %fj")
-    depends_on("m4", type="build", when="@2.0b")
+    depends_on("m4", type="build", when="@master")
 
     depends_on("mpi", type=("build", "run"))
     depends_on("lapack")
-    depends_on("python@2.6.9:2.8.0", type=("build", "run"), when="@2.0b")
+    depends_on("python@2.6.9:2.8.0", type=("build", "run"), when="@master")
 
-    patch("fj_compiler.patch", when="@2.0b %fj")
+    patch("fj_compiler.patch", when="@master %fj")
     patch("fj_compiler_1.5.1.patch", when="@1.5.1 %fj")
 
     parallel = False
@@ -73,7 +73,7 @@ class Genesis(AutotoolsPackage, CudaPackage):
             options.append("--with-cuda=%s" % spec["cuda"].prefix)
         else:
             options.append("--disable-gpu")
-        if spec.target == "a64fx" and self.spec.satisfies("@2.0b %fj"):
+        if spec.target == "a64fx" and self.spec.satisfies("@master %fj"):
             options.append("--host=Fugaku")
         return options
 
@@ -94,11 +94,11 @@ class Genesis(AutotoolsPackage, CudaPackage):
 
     @run_after("install")
     def cache_test_sources(self):
-        if self.spec.satisfies("@2.0b"):
+        if self.spec.satisfies("@master"):
             self.cache_extra_test_sources(["tests"])
 
     def test(self):
-        if self.spec.satisfies("@2.0b"):
+        if self.spec.satisfies("@master"):
             exe_name = self.spec["python"].command.path
             test_name = join_path(
                 self.install_test_root, "tests", "regression_test", "test.py"
