@@ -22,7 +22,7 @@ class PyPymumps(PythonPackage):
     depends_on('py-cython', type='build')
     depends_on('py-setuptools', type='link')
     depends_on('mumps', type='link')
-    depends_on('py-mpi4py', type='link')
+    depends_on('py-mpi4py', type=('build', 'run'))
 
     # Patch to add libmumps_common.so to library dependencies
     # See https://github.com/PyMumps/pymumps/issues/13
