@@ -985,7 +985,7 @@ class TestSpecSematics(object):
         assert 'avx512' not in spec.target
         assert spec.target < 'broadwell'
 
-    @pytest.mark.parametrize('transitive', [(True), (False)])
+    @pytest.mark.parametrize('transitive', [True, False])
     def test_splice(self, transitive):
         # Tests the new splice function in Spec using a somewhat simple case
         # with a variant with a conditional dependency.
@@ -1022,7 +1022,7 @@ class TestSpecSematics(object):
         # Finally, the spec should know it's been spliced:
         assert out.spliced
 
-    @pytest.mark.parametrize('transitive', [(True), (False)])
+    @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
@@ -1036,7 +1036,7 @@ class TestSpecSematics(object):
         assert spec.full_hash == orig_spec_hash
         assert dep.full_hash == orig_dep_hash
 
-    @pytest.mark.parametrize('transitive', [(True), (False)])
+    @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_subsequent(self, transitive):
         spec = Spec('splice-t')
         dep = Spec('splice-h+foo')
