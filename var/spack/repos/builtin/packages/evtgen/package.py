@@ -31,7 +31,8 @@ class Evtgen(CMakePackage):
     depends_on('hepmc', when='~hepmc3')
     depends_on('hepmc3', when='+hepmc3')
     depends_on("pythia8", when="+pythia8")
-    depends_on("tauola", when="+tauola")
+    depends_on("tauola~hepmc3", when="+tauola~hepmc3")
+    depends_on("photos~hepmc3", when="+photos~hepmc3")
     depends_on("tauola+hepmc3", when="+tauola+hepmc3")
     depends_on("photos+hepmc3", when="+photos+hepmc3")
 
