@@ -74,7 +74,7 @@ class PyChainer(PythonPackage):
             lib_path = join_path(
                 "/usr", "lib", "FJSVtcs", "ple", "lib64", "libpmix.so"
             )
-         
+
             if self.spec.satisfies("%fj") and os.path.exists(lib_path):
                 env["LD_PRELOAD"] = lib_path
 
