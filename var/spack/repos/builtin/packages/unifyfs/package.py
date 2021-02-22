@@ -39,7 +39,7 @@ class Unifyfs(AutotoolsPackage):
 
     # Required dependencies
     depends_on('gotcha@1.0.3:', when='@0.9.1:')
-    depends_on('margo@0.4.3')
+    depends_on('mochi-margo@0.4.3')
     depends_on('mercury@1.0.1+bmi+sm')
     depends_on('mpi')
     depends_on('openssl')
