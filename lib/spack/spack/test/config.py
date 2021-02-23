@@ -10,6 +10,8 @@ import tempfile
 
 import pytest
 from six import StringIO
+import sys
+import ctypes
 
 from llnl.util.filesystem import mkdirp, touch
 
@@ -25,6 +27,15 @@ import spack.schema.packages
 import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
+
+def getuid(): 
+    if sys.platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
+
 
 # sample config data
 config_low = {
@@ -798,7 +809,7 @@ def test_bad_config_section(mock_low_high_config):
         spack.config.get('foobar')
 
 
-@pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_bad_command_line_scopes(tmpdir, mock_low_high_config):
     cfg = spack.config.Configuration()
 

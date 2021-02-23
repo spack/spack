@@ -13,6 +13,7 @@ import os
 import shutil
 import stat
 import sys
+import ctypes
 import tempfile
 from typing import Dict  # novm
 
@@ -48,14 +49,24 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
+def getuid(): 
+    if sys.platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
+
+
 def create_stage_root(path):
     # type: (str) -> None
+
     """Create the stage root directory and ensure appropriate access perms."""
     assert path.startswith(os.path.sep) and len(path.strip()) > 1
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-    user_uid = os.getuid()
+    user_uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     group_paths, user_node, user_paths = partition_path(path,
