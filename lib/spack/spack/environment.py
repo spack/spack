@@ -1556,13 +1556,14 @@ class Environment(object):
         # If multiple root specs match, it is assumed that the abstract
         # spec will most-succinctly summarize the difference between them
         # (and the user can enter one of these to disambiguate)
-        root_fmt_str = 'Root spec %s\n  '
-        no_root_str = 'Dependency spec\n  '
-        match_strings = [
-            (root_fmt_str % abstract.format() if abstract else no_root_str) +
-            concrete.format('{hash:7}  ' + spack.spec.default_format)
-            for concrete, abstract in matches.items()
-        ]
+        match_strings = []
+        fmt_str = '{hash:7}  ' + spack.spec.default_format
+        for concrete, abstract in matches.items():
+            if abstract:
+                s = 'Root spec %s\n  %s' % (abstract, concrete.format(fmt_str))
+            else:
+                s = 'Dependency spec\n  %s' % concrete.format(fmt_str)
+            match_strings.append(s)
         matches_str = '\n'.join(match_strings)
 
         msg = ("{0} matches multiple specs in the environment {1}: \n"
