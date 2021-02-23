@@ -5,6 +5,7 @@
 import collections
 import errno
 import glob
+import ctypes
 
 from sys import platform as _platform
 if _platform != "win32":
@@ -78,6 +79,15 @@ __all__ = [
     'working_dir',
     'keep_modification_time'
 ]
+
+
+def getuid(): 
+    if _platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
 
 
 def path_contains_subdirectory(path, root):
@@ -306,7 +316,7 @@ def group_ids(uid=None):
         return []
 
     if uid is None:
-        uid = os.getuid()
+        uid = getuid()
     user = pwd.getpwuid(uid).pw_name
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
