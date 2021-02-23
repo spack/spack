@@ -37,4 +37,3 @@ class RSpadesTools(RPackage):
     depends_on('r-reproducible@0.2.0:', type=('build', 'run'))
     depends_on('r-rgeos', type=('build', 'run'))
     depends_on('r-sp@1.2-4:', type=('build', 'run'))
-    depends_on('r-randomfields', type=('build', 'run'))
