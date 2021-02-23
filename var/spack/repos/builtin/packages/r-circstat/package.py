@@ -7,9 +7,12 @@ from spack import *
 
 
 class RCircstat(RPackage):
-    """Circular Statistics, from "Topics in Circular Statistics" (2001)"""
+    """Circular Statistics, from "Topics in Circular Statistics" (2001)
 
-    homepage = "https://cran.r-project.org/web/packages/CircStats/index.html"
+    Circular Statistics, from "Topics in Circular Statistics" (2001) S.
+    Rao Jammalamadaka and A. SenGupta, World Scientific."""
+
+    homepage = "https://cloud.r-project.org/web/packages/CircStats/index.html"
     url      = "https://cloud.r-project.org/src/contrib/CircStats_0.2-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/CircStats"
 
