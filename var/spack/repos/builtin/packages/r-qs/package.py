@@ -12,7 +12,7 @@ class RQs(RPackage):
     Provides functions for quickly writing and reading any R object
     to and from disk."""
 
-    homepage = "https://cran.r-project.org/web/packages/qs/index.html"
+    homepage = "https://cloud.r-project.org/web/packages/qs/index.html"
     url      = "https://cloud.r-project.org/src/contrib/qs_0.23.5.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/qs"
 
@@ -22,5 +22,5 @@ class RQs(RPackage):
 
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-rcpp', type=('build', 'run'))
-    depends_on('r-rapiserializer', type=('build', 'run'))
+    depends_on('r-rapiserialize', type=('build', 'run'))
     depends_on('r-stringfish@0.14.1:', type=('build', 'run'))
