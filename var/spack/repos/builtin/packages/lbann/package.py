@@ -170,7 +170,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
-    # LBANN can use Python in to modes 1) as part of an extensible framework
+    # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
 
     # Core library support for Python Data Reader and extensible interface
