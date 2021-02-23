@@ -47,7 +47,7 @@ class Warpx(MakefilePackage):
     depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('pkgconfig', type='build', when='+openpmd')
     depends_on('python', type='build')  # AMReX' build system info
-    depends_on('openpmd-api@0.12.0:,dev', when='+openpmd')
+    depends_on('openpmd-api@0.13.1:,dev', when='+openpmd')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
     depends_on('ascent', when='+ascent')
     depends_on('ascent +cuda', when='+ascent backend=cuda')

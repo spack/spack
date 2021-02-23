@@ -44,6 +44,7 @@ class Openblas(MakefilePackage):
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
 
+    variant('locking', default=True, description='Build with thread safety')
     variant(
         'threads', default='none',
         description='Multithreading support',
@@ -118,11 +119,15 @@ class Openblas(MakefilePackage):
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
+    # See https://github.com/xianyi/OpenBLAS/issues/3074
+    conflicts('%gcc@:10.1.99', when='@0.3.13 target=ppc64le:')
+
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
     conflicts('+consistent_fpcsr', when='threads=none',
               msg='FPCSR consistency only applies to multithreading')
 
+    conflicts('threads=pthreads', when='~locking', msg='Pthread support requires +locking')
     conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
@@ -252,6 +257,13 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
+        # serial, but still thread-safe version
+        if self.spec.satisfies('@0.3.7:'):
+            if '+locking' in self.spec:
+                make_defs += ['USE_LOCKING=1']
+            else:
+                make_defs += ['USE_LOCKING=0']
+
         # Add support for multithreading
         if self.spec.satisfies('threads=openmp'):
             make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
@@ -276,6 +288,10 @@ class Openblas(MakefilePackage):
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs.append('NO_AVX2=1')
+
+        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+        if self.spec.satisfies('%fj'):
+            make_defs.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
 
         # Newer versions of openblas will try to find ranlib in the compiler's
         # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.

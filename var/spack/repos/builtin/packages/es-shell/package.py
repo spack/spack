@@ -19,3 +19,4 @@ class EsShell(AutotoolsPackage):
     version('0.9.1', sha256='b0b41fce99b122a173a06b899a4d92e5bd3cc48b227b2736159f596a58fff4ba')
 
     depends_on('readline')
+    depends_on('yacc')

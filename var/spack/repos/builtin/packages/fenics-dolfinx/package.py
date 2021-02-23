@@ -33,8 +33,9 @@ class FenicsDolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
 
     depends_on("py-fenics-ffcx", type=("build", "run"))
+    depends_on("py-fenics-basix", type=("build", "run"))
 
-    conflicts('%gcc@:6', msg='C++17 support required')
+    conflicts('%gcc@:8', msg='Improved C++17 support required')
 
     root_cmakelists_dir = "cpp"
 

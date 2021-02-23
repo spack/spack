@@ -41,6 +41,9 @@ class Ascent(Package, CudaPackage):
 
     version('develop',
             branch='develop',
+            submodules=True)
+    version('0.6.0',
+            tag='v0.6.0',
             submodules=True,
             preferred=True)
 

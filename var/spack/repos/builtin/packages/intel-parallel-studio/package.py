@@ -20,7 +20,7 @@ class IntelParallelStudio(IntelPackage):
     # in the 'intel' package.
 
     # Cluster Edition (top tier; all components included)
-    version('cluster.2020.2',      sha256='4795c44374e8988b91da20ac8f13022d7d773461def4a26ca210a8694f69f133', url=' http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16744/parallel_studio_xe_2020_update2_cluster_edition.tgz')
+    version('cluster.2020.2',      sha256='4795c44374e8988b91da20ac8f13022d7d773461def4a26ca210a8694f69f133', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16744/parallel_studio_xe_2020_update2_cluster_edition.tgz')
     version('cluster.2020.1',      sha256='fd11d8de72b2bd60474f8bce7b463e4cbb2255969b9eaf24f689575aa2a2abab', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16526/parallel_studio_xe_2020_update1_cluster_edition.tgz')
     version('cluster.2020.0',      sha256='573b1d20707d68ce85b70934cfad15b5ad9cc14124a261c17ddd7717ba842c64', url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16225/parallel_studio_xe_2020_cluster_edition.tgz')
     #

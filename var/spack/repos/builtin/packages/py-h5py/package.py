@@ -36,6 +36,7 @@ class PyH5py(PythonPackage):
     depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:')
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
+    depends_on('py-wheel', type='build', when='@3.0.0:')
 
     # Build and runtime dependencies
     depends_on('py-cached-property@1.5:', type=('build', 'run'))
@@ -54,10 +55,10 @@ class PyH5py(PythonPackage):
     phases = ['configure', 'install']
 
     def setup_build_environment(self, env):
+        env.set('HDF5_DIR', self.spec['hdf5'].prefix)
         if '+mpi' in self.spec:
             env.set('CC', self.spec['mpi'].mpicc)
             env.set('HDF5_MPI', 'ON')
-            env.set('HDF5_DIR', self.spec['hdf5'].prefix)
 
     @when('@3.0.0:')
     def configure(self, spec, prefix):
