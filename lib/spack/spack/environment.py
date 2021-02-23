@@ -1526,44 +1526,48 @@ class Environment(object):
         and multiple dependency specs match, then this raises an error
         and reports all matching specs.
         """
-        # These are pairs of abstract/concrete specs (the abstract specs are
-        # useful for constructing error messages when there are multiple
-        # matches)
-        root_matches = list()
-        dep_matches = list()  # These are concrete
-        # These are concrete (for root specs, they store the concretized spec
-        # rather than the abstract spec)
-        all_matches = list()
+        # Root specs will be keyed by concrete spec, value abstract
+        # Dependency-only specs will have value None
+        matches = {}
+
         for user_spec, concretized_user_spec in self.concretized_specs():
             if concretized_user_spec.satisfies(spec):
-                root_matches.append((user_spec, concretized_user_spec))
-                all_matches.append(concretized_user_spec)
+                matches[concretized_user_spec] = user_spec
             for dep_spec in concretized_user_spec.traverse(root=False):
                 if dep_spec.satisfies(spec):
-                    dep_matches.append(dep_spec)
-                    all_matches.append(dep_spec)
+                    # Don't overwrite the abstract spec if present
+                    # If not present already, set to None
+                    matches[dep_spec] = matches.get(dep_spec)
 
-        if len(all_matches) == 1:
-            return all_matches[0]
-        elif len(root_matches) == 1:
-            return root_matches[0][1]
-        elif len(all_matches) > 1:
-            # If multiple root specs match, it is assumed that the abstract
-            # spec will most-succinctly summarize the difference between them
-            # (and the user can enter one of these to disambiguate)
-            root_matches_str = '\n'.join(
-                "Root spec: {0}".format(str(x)) for x, y in root_matches)
-            # For dependencies of concretized specs, no summarization is
-            # available
-            dep_matches_str = '\n'.join(
-                "Dependency spec: {0}".format(str(x)) for x in dep_matches)
-            matches_str = '\n'.join(
-                x for x in [root_matches_str, dep_matches_str] if x)
-            msg = ("{0} matches multiple specs in the environment {1}: \n"
-                   "{2}".format(str(spec), self.name, matches_str))
-            raise SpackEnvironmentError(msg)
-        else:
+        if not matches:
             return None
+        elif len(matches) == 1:
+            return list(matches.values())[0]
+
+        root_matches = dict((concrete, abstract)
+                            for concrete, abstract in matches.items()
+                            if abstract)
+
+        if len(root_matches) == 1:
+            return root_matches[0][1]
+
+        # More than one spec matched, and either multiple roots matched or
+        # none of the matches were roots
+        # If multiple root specs match, it is assumed that the abstract
+        # spec will most-succinctly summarize the difference between them
+        # (and the user can enter one of these to disambiguate)
+        root_fmt_str = 'Root spec %s\n  '
+        no_root_str = 'Dependency spec\n  '
+        match_strings = [
+            (root_fmt_str % abstract.format() if abstract else no_root_str) +
+            concrete.format('{hash:7}  ' + spack.spec.default_format)
+            for concrete, abstract in matches.items()
+        ]
+        matches_str = '\n'.join(match_strings)
+
+        msg = ("{0} matches multiple specs in the environment {1}: \n"
+               "{2}".format(str(spec), self.name, matches_str))
+        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
