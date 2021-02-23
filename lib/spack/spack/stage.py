@@ -373,7 +373,9 @@ class Stage(object):
         if isinstance(self.default_fetcher, fs.URLFetchStrategy):
             expanded = self.default_fetcher.expand_archive
             fnames.append(os.path.basename(self.default_fetcher.url))
-
+        elif isinstance(self.default_fetcher, fs.CurlFetchStrategy):
+            expanded = self.default_fetcher.expand_archive
+            fnames.append(os.path.basename(self.default_fetcher.url))
         if self.mirror_paths:
             fnames.extend(os.path.basename(x) for x in self.mirror_paths)
 
@@ -446,6 +448,10 @@ class Stage(object):
             expand = True
             extension = None
             if isinstance(self.default_fetcher, fs.URLFetchStrategy):
+                digest = self.default_fetcher.digest
+                expand = self.default_fetcher.expand_archive
+                extension = self.default_fetcher.extension
+            elif isinstance(self.default_fetcher, fs.CurlFetchStrategy):
                 digest = self.default_fetcher.digest
                 expand = self.default_fetcher.expand_archive
                 extension = self.default_fetcher.extension
@@ -876,8 +882,12 @@ def get_checksums_for_versions(
     for url, version in zip(urls, versions):
         try:
             if fetch_options:
-                url_or_fs = fs.URLFetchStrategy(
-                    url, fetch_options=fetch_options)
+                if spack.config.get('config:use_curl'):
+                    url_or_fs = fs.CurlFetchStrategy(
+                        url, fetch_options=fetch_options)
+                else:
+                    url_or_fs = fs.URLFetchStrategy(
+                        url, fetch_options=fetch_options)
             else:
                 url_or_fs = url
             with Stage(url_or_fs, keep=keep_stage) as stage:
