@@ -445,23 +445,30 @@ def _write_yaml(data, str_or_file):
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
-def _eval_conditional(string):
-    """Evaluate conditional definitions using restricted variable scope."""
+def _get_host_environment():
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
     arch = architecture.Arch(
         architecture.platform(), 'default_os', 'default_target')
     arch_spec = spack.spec.Spec('arch=%s' % arch)
-    valid_variables = {
+    return {
         'target': str(arch.target),
         'os': str(arch.os),
         'platform': str(arch.platform),
         'arch': arch_spec,
         'architecture': arch_spec,
         'arch_str': str(arch),
-        're': re,
-        'env': os.environ,
         'hostname': socket.gethostname()
     }
 
+def _eval_conditional(string):
+    """Evaluate conditional definitions using restricted variable scope."""
+    valid_variables = _get_host_environment()
+    valid_variables.update({
+        're': re,
+        'env': os.environ,
+    })
     return eval(string, valid_variables)
 
 

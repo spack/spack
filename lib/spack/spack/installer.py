@@ -1445,6 +1445,11 @@ class PackageInstaller(object):
             if task is None:
                 continue
 
+            # Each build task is a new build in the database
+            if self.monitor:
+                result = self.monitor.new_build(task.pkg.spec)
+                tty.verbose(result.get('message'))
+
             install_args = task.request.install_args
             keep_prefix = install_args.get('keep_prefix')
 
@@ -1826,7 +1831,7 @@ def build_process(pkg, kwargs):
     # (these two endpoints could possibly be combined?)
     if monitor:
         monitor.send_final(pkg)
-        monitor.update_task(pkg.spec, status="SUCCESS")
+        monitor.update_build(pkg.spec, status="SUCCESS")
 
     # preserve verbosity across runs
     return echo

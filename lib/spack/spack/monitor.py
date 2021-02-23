@@ -10,6 +10,7 @@ https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 import base64
 import json
 import os
+import platform
 import re
 
 from urllib.request import Request, urlopen
@@ -67,6 +68,34 @@ class SpackMonitorClient:
         self.headers = {}
         self.allow_fail = allow_fail
         self.spack_version = spack.main.get_version()
+        self.capture_build_environment()
+
+    def capture_build_environment(self):
+        """Use spack.environment._get_host_environment to capture the
+        environment for the build. This is important because it's a unique
+        identifier, along with the spec, for a Build. It should look something
+        like this:
+
+        {'target': 'skylake',
+         'os': 'ubuntu20.04',
+         'platform': 'linux',
+         'arch': arch=linux-ubuntu20.04-skylake,
+         'architecture': arch=linux-ubuntu20.04-skylake,
+         'arch_str': 'linux-ubuntu20.04-skylake',
+         'hostname': 'superman-computer',
+         'kernel_version': '#73-Ubuntu SMP Mon Jan 18 17:25:17 UTC 2021'}
+        """
+        from spack.environment import _get_host_environment
+        self.build_environment = _get_host_environment()
+        self.build_environment['kernel_version'] = platform.version()
+
+    def _get_build_environment(self):
+        return {"host_os": self.build_environment['os'],
+                "platform": self.build_environment['platform'],
+                "host_target": self.build_environment['target'],
+                "hostname": self.build_environment['hostname'],
+                "kernel_version": self.build_environment['kernel_version'],
+                "spack_version": self.spack_version}
 
     def require_auth(self):
         """Require authentication, meaning that the token and username must
@@ -213,7 +242,8 @@ class SpackMonitorClient:
     def new_configuration(self, specs):
         """Given a list of specs, generate a new configuration for each. We
         return a lookup of specs with their package names. This assumes
-        that we are only installing one version of each package.
+        that we are only installing one version of each package. We aren't
+        starting or creating any builds, so we don't need a build environment.
         """
         configs = {}
 
@@ -228,7 +258,20 @@ class SpackMonitorClient:
             configs[spec.package.name] = response.get('data', {})
         return configs
 
-    def update_task(self, spec, status="SUCCESS"):
+    def new_build(self, spec):
+        """Create a new build, meaning sending the hash of the spec to be built,
+        along with the build environment. These two sets of data uniquely can
+        identify the build, and we will add objects (the binaries produced) to
+        it.
+        """
+        current_spec = spec.full_hash()
+
+        # Prepare build environment data (including spack version)
+        data = self._get_build_environment()
+        data['full_hash'] = current_spec
+        return self.do_request("builds/new/", data=json.dumps(data))
+
+    def update_build(self, spec, status="SUCCESS"):
         """update task will just update the relevant package to indicate a
         successful install. Unlike cancel_task that sends a cancalled request
         to the main package, here we don't need to cancel or otherwise update any
@@ -237,27 +280,17 @@ class SpackMonitorClient:
         """
         # The current spec being installed
         current_spec = spec.full_hash()
+        data = self._get_build_environment()
+        data['full_hash'] = current_spec
+        data['status'] = status
 
-        tasks = {current_spec: status}
-        data = {"tasks": tasks, "spack_version": self.spack_version}
-        return self.do_request("tasks/update/", data=json.dumps(data))
+        return self.do_request("builds/update/", data=json.dumps(data))
 
     def fail_task(self, spec):
         """Given a spec, mark it as failed. This means that Spack Monitor
         marks all dependencies as cancelled, unless they are already successful
         """
-        return self.update_task(spec, status="FAILED")
-
-    def cancel_task(self, spec):
-        """Given a task that is cancelled for any reason, update
-        the Spack Monitor to label the install (and other packages not
-        installed) as cancelled). We take as input a BuildTask, which stores
-        provenance about the main package being installed, the current
-        cancelled, and the rest that still need to be installed.
-        """
-        # TODO: in the future we want to fail the actual task that failed,
-        # and then cancel the primary task. We currently just cancel
-        return self.update_task(spec, status="FAILED")
+        return self.update_build(spec, status="FAILED")
 
     def send_final(self, pkg):
         """Given a metadata folder, usually .spack within the spack root
@@ -272,38 +305,39 @@ class SpackMonitorClient:
              'repos'
 
         read in all metadata files except for phase and output (which are sent
-        as they are generated) and send to the monitor server.
+        as they are generated with the phase) and send to the monitor server.
         """
+
+        # Prepare build environment data (including spack version)
+        data = self._get_build_environment()
+        data['full_hash'] = pkg.spec.full_hash()
+
         meta_dir = os.path.dirname(pkg.install_log_path)
-        errors_file = os.path.join(meta_dir, "errors.txt")
         env_file = os.path.join(meta_dir, "spack-build-env.txt")
         config_file = os.path.join(meta_dir, "spack-configure-args.txt")
         manifest_file = os.path.join(meta_dir, "install_manifest.json")
 
-        # Prepare request with subset of environment variables, manifest, and
-        # entire contents of output and config file. None if doesn't exist
-        data = {"environ": self._read_environment_file(env_file),
-                "config": read_file(config_file),
-                "manifest": read_json(manifest_file),
-                "errors": read_file(errors_file),
-                "full_hash": pkg.spec.full_hash(),
-                "spack_version": self.spack_version}
+        metadata = {"environ": self._read_environment_file(env_file),
+                    "config": read_file(config_file),
+                    "manifest": read_json(manifest_file)}
 
-        return self.do_request("packages/metadata/", data=json.dumps(data))
+        data['metadata'] = metadata
+        return self.do_request("builds/metadata/", data=json.dumps(data))
 
     def send_phase(self, pkg, phase_name, phase_output_file, status):
         """Given a package, phase name, and status, update the monitor endpoint
         to alert of the status of the stage. This includes parsing the package
         metadata folder for phase output and error files
         """
-        # Send output specific to the phase (does this include error?)
-        data = {"status": status,
-                "output": read_file(phase_output_file),
-                "full_hash": pkg.spec.full_hash(),
-                "phase_name": phase_name,
-                "spack_version": self.spack_version}
+        data = self._get_build_environment()
+        data['full_hash'] = pkg.spec.full_hash()
 
-        return self.do_request("phases/metadata/", data=json.dumps(data))
+        # Send output specific to the phase (does this include error?)
+        data.update({"status": status,
+                     "output": read_file(phase_output_file),
+                     "phase_name": phase_name})
+
+        return self.do_request("builds/phases/metadata/", data=json.dumps(data))
 
     def _read_environment_file(self, filename):
         """Given an environment file, we want to read it, split by semicolons

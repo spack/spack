@@ -408,8 +408,8 @@ environment variables:
             "monitor_prefix": args.monitor_prefix,
         })
 
-        # If we are using the monitor, we send original configs.
+        # If we are using the monitor, we send configs. and create build
         # The full_hash is the main package id, the build_hash for others
-        if args.use_monitor:
+        if args.use_monitor and specs:
             monitor.new_configuration(specs)
         install_specs(args, kwargs, zip(abstract_specs, specs))
