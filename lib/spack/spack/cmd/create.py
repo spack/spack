@@ -335,19 +335,26 @@ class RPackageTemplate(PackageTemplate):
             tty.msg("Changing package name from {0} to r-{0}".format(name))
             name = 'r-{0}'.format(name)
 
-            r_name = parse_name(url)
+        r_name = parse_name(url)
 
-            if re.search(r'.*\.r-project\.org/src/contrib', url):
-                url = re.sub(r'cran\.r-project', 'cloud.r-project', url)
-                list_url = "https://cloud.r-project.org/src/contrib/Archive/{0}".format(r_name)
-                self.url_line = '    url      = "{0}"\n'\
-                    '    list_url = "{1}"'.format(url, list_url)
-            elif re.search(r'.*bioconductor.org', url):
-                git = "https://git.bioconductor.org/packages/{0}".format(r_name)
-                self.url_line = '    url      = "{0}"\n'\
-                    '    git      = "{1}"'.format(url, git)
-            else:
-                self.url_line = '    url      = "{url}"'
+        cran = re.search(
+            r'(?:r-project)[^/]+/src' + '/([^/]+)' * 2,
+            url
+        )
+
+        if cran:
+            url = '/'.join([r_name, cran.group(2)])
+
+            self.url_line = '    cran     = "{url}"'
+
+        bioc = re.search(
+            r'(?:bioconductor)[^/]+/packages' + '/([^/]+)' * 5,
+            url
+        )
+
+        if bioc:
+            self.url_line = '    url      = "{0}"\n'\
+                '    bioc     = "{1}"'.format(url, r_name)
 
         super(RPackageTemplate, self).__init__(name, url, *args, **kwargs)
 

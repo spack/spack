@@ -25,6 +25,14 @@ class RPackage(PackageBase):
     """
     phases = ['install']
 
+    # package attributes that can be expanded to set the homepage, url,
+    # list_url, and git values
+    # For CRAN packages
+    cran = None
+
+    # For Bioconductor packages
+    bioc = None
+
     maintainers = ['glennpj']
 
     #: This attribute is used in UI queries that need to know the build
@@ -32,6 +40,36 @@ class RPackage(PackageBase):
     build_system_class = 'RPackage'
 
     extends('r')
+
+    @property
+    def homepage(self):
+        if self.cran:
+            name = self.cran.split('/')[0]
+            return 'https://cloud.r-project.org/package=' + name
+        elif self.bioc:
+            name = self.bioc.split('/')[0]
+            return 'https://bioconductor.org/packages/' + name
+
+    @property
+    def url(self):
+        if self.cran:
+            distfile = self.cran.split('/')[1]
+            return 'https://cloud.r-project.org/src/contrib/' + distfile
+
+    @property
+    def list_url(self):
+        if self.cran:
+            name = self.cran.split('/')[0]
+            return (
+                'https://cloud.r-project.org/src/contrib/Archive/'
+                + name + '/'
+            )
+
+    @property
+    def git(self):
+        if self.bioc:
+            name = self.bioc.split('/')[0]
+            return 'https://git.bioconductor.org/packages/' + name
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
