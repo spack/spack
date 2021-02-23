@@ -5,13 +5,22 @@
 
 """Tests for Spack's wrapper module around llnl.util.lock."""
 import os
-
+import sys
+import ctypes
 import pytest
 
 from llnl.util.filesystem import group_ids
 
 import spack.config
 import spack.util.lock as lk
+
+def getuid(): 
+    if sys.platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
 
 
 def test_disable_locking(tmpdir):
@@ -42,7 +51,7 @@ def test_disable_locking(tmpdir):
 @pytest.mark.nomockstage
 def test_lock_checks_user(tmpdir):
     """Ensure lock checks work with a self-owned, self-group repo."""
-    uid = os.getuid()
+    uid = getuid()
     if uid not in group_ids():
         pytest.skip("user has no group with gid == uid")
 
@@ -76,7 +85,7 @@ def test_lock_checks_user(tmpdir):
 @pytest.mark.nomockstage
 def test_lock_checks_group(tmpdir):
     """Ensure lock checks work with a self-owned, non-self-group repo."""
-    uid = os.getuid()
+    uid = getuid()
     gid = next((g for g in group_ids() if g != uid), None)
     if not gid:
         pytest.skip("user has no group with gid != uid")
