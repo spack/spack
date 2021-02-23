@@ -130,6 +130,8 @@ class Wrf(Package):
     patch("patches/4.2/Makefile.patch", when="@4.2")
     patch("patches/4.2/tirpc_detect.patch", when="@4.2")
     patch("patches/4.2/add_aarch64.patch", when="@4.2")
+    patch("patches/4.2/configure4.2_aocc.patch", when="@4.2 %aocc@:3.0")
+    patch("patches/4.2/derf_fix.patch", when="@4.2 %aocc@:3.0")
 
     depends_on("pkgconfig", type=("build"))
     depends_on("libtirpc")
@@ -246,6 +248,28 @@ class Wrf(Package):
             )
             with open("./arch/configure_new.defaults.bak", "rt") as ifh:
                 with open("./arch/configure_new.defaults", "wt") as ofh:
+                    for line in ifh:
+                        if line.startswith("DM_"):
+                            line = line.replace(
+                                "mpif90 -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpifc + " -DMPI2_SUPPORT"
+                            )
+                            line = line.replace(
+                                "mpicc -DMPI2_SUPPORT",
+                                self.spec['mpi'].mpicc + " -DMPI2_SUPPORT"
+                            )
+                        ofh.write(line)
+
+        if self.spec.satisfies("@4.2 %aocc"):
+            # In version 4.2 the file to be patched is called
+            # configure.defaults, while in earlier versions
+            # it's configure_new.defaults
+            rename(
+                "./arch/configure.defaults",
+                "./arch/configure.defaults.bak",
+            )
+            with open("./arch/configure.defaults.bak", "rt") as ifh:
+                with open("./arch/configure.defaults", "wt") as ofh:
                     for line in ifh:
                         if line.startswith("DM_"):
                             line = line.replace(

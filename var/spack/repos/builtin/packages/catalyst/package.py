@@ -231,7 +231,7 @@ class Catalyst(CMakePackage):
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        if spec.platform == 'linux' and spec.target == 'aarch64':
+        if spec.platform == 'linux' and spec.target.family == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

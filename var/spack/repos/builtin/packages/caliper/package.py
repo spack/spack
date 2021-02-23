@@ -19,6 +19,7 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('2.5.0', tag='v2.5.0')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
     version('2.2.0', tag='v2.2.0')

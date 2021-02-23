@@ -39,6 +39,7 @@ class UtilLinuxUuid(AutotoolsPackage):
             '--without-systemd',
             '--disable-all-programs',
             '--without-python',
-            '--enable-libuuid'
+            '--enable-libuuid',
+            '--disable-bash-completion',
         ]
         return config_args

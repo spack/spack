@@ -29,11 +29,13 @@ class Blaspp(CMakePackage, CudaPackage):
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
 
-    # This will attempt to use a supported version of OpenBLAS
-    depends_on('openblas@:0.3.5', when='^openblas')
-    # In some cases, the spack concretizer will fail to use a supported
-    # version of OpenBLAS.  In this case, present an error message.
-    conflicts('^openblas@0.3.6:', msg='Testing errors in OpenBLAS >=0.3.6')
+    # only supported with clingo solver: virtual dependency preferences
+    # depends_on('openblas threads=openmp', when='+openmp ^openblas')
+
+    # BLASpp tests will fail when using openblas > 0.3.5 without multithreading support
+    # locking is only supported in openblas 3.7+
+    conflicts('^openblas@0.3.6 threads=none', msg='BLASpp requires a threadsafe openblas')
+    conflicts('^openblas@0.3.7: ~locking', msg='BLASpp requires a threadsafe openblas')
 
     def cmake_args(self):
         spec = self.spec

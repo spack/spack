@@ -10,13 +10,17 @@ class OpenpmdApi(CMakePackage):
     """API for easy reading and writing of openPMD files"""
 
     homepage = "http://www.openPMD.org"
+    url      = "https://github.com/openPMD/openPMD-api/archive/0.13.1.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 
     maintainers = ['ax3l']
 
     version('dev', branch='dev')
-    version('0.13.0',  tag='0.13.0')        # C++14 required
-    version('0.12.0',  tag='0.12.0-alpha')  # C++11 up until here
+    version('0.13.2', sha256='2e5170d41bb7b2c0608ec833eee7f9adf8175b46734743f6e46dcce6f6685fb0')
+    version('0.13.1', sha256='81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7')
+    version('0.13.0', sha256='97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0')  # C++14 required
+    # C++11 up until here
+    version('0.12.0',  tag='0.12.0-alpha')
     version('0.11.1',  tag='0.11.1-alpha')
 
     variant('shared', default=True,

@@ -25,12 +25,18 @@ class LlvmAmdgpu(CMakePackage):
 
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
+    variant('openmp', default=True, description='Enable OpenMP')
+
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')
     depends_on('cmake@3.13.4:', type='build', when='@3.9.0:')
     depends_on('python', type='build')
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
     depends_on('ncurses+termlib', type='link')
+    # openmp dependencies
+    depends_on("perl-data-dumper", type=("build"), when='+openmp')
+    depends_on("hwloc", when='+openmp')
+    depends_on('libelf', type='link', when='+openmp')
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
@@ -43,13 +49,32 @@ class LlvmAmdgpu(CMakePackage):
     install_targets = ['clang-tidy', 'install']
 
     def cmake_args(self):
+        llvm_projects = [
+            'clang',
+            'lld',
+            'clang-tools-extra',
+            'compiler-rt'
+        ]
+
+        if '+openmp' in self.spec:
+            llvm_projects.append('openmp')
+
         args = [
-            '-DLLVM_ENABLE_PROJECTS=clang;lld;clang-tools-extra;compiler-rt',
+            '-DLLVM_ENABLE_PROJECTS={0}'.format(';'.join(llvm_projects)),
             '-DLLVM_ENABLE_ASSERTIONS=1'
         ]
 
         if self.compiler.name == "gcc":
-            gcc_prefix = ancestor(self.compiler.cc, 2)
+            compiler = Executable(self.compiler.cc)
+            gcc_output = compiler('-print-search-dirs', output=str, error=str)
+
+            for line in gcc_output.splitlines():
+                if line.startswith("install:"):
+                    # Get path and strip any whitespace
+                    # (causes oddity with ancestor)
+                    gcc_prefix = line.split(":")[1].strip()
+                    gcc_prefix = ancestor(gcc_prefix, 4)
+                    break
             args.append("-DGCC_INSTALL_PREFIX=" + gcc_prefix)
 
         return args
