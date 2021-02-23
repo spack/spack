@@ -495,7 +495,7 @@ def config_prefer_upstream(args):
             # set across all versions/compilers.
             if existing_variants is not None and existing_variants != variants:
                 conflicting_variants.add(spec.name)
-                del pkg['variants']
+                pkg.pop('variants')
             elif variants:
                 pkg['variants'] = variants
 
