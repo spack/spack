@@ -27,15 +27,25 @@ class Silo(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
+    variant('szip', default=False,
+            description='Enable szip support')
 
-    depends_on('hdf5@:1.10.999', when='@:4.10.2')
-    depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@:1.10.999+szip', when='@:4.10.2+szip')
+    depends_on('hdf5@:1.10.999~szip', when='@:4.10.2~szip')
+    depends_on('hdf5~mpi+szip', when='~mpi+szip')
+    depends_on('hdf5+mpi+szip', when='+mpi+szip')
+    depends_on('hdf5~mpi~szip', when='~mpi~szip')
+    depends_on('hdf5+mpi~szip', when='+mpi~szip')
     depends_on('qt~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
+    # Xmu dependency is required on Ubuntu 18-20
+    depends_on('libxmu', when='+silex')
+    # Silo configure assumes readline by default, so better add it here (for browser)
     depends_on('readline')
     depends_on('zlib')
+    # Adding the compression feature
+    depends_on('szip', when='+szip')
 
     patch('remove-mpiposix.patch', when='@4.8:4.10.2')
     patch('H5FD_class_t-terminate.patch', when='^hdf5@1.10.0:')
@@ -101,6 +111,14 @@ class Silo(AutotoolsPackage):
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
         ]
+
+        # Compresssion feature:
+        if '+compress' in spec:
+            config_args.extend([
+                '--with-szlib=%s,%s' % (spec['szip'].prefix.include,
+                                        spec['szip'].prefix.lib),
+                '--enable-szip=yes',
+            ])
 
         if '+silex' in spec:
             x = spec['libx11']
