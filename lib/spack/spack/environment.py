@@ -1542,7 +1542,7 @@ class Environment(object):
         if not matches:
             return None
         elif len(matches) == 1:
-            return list(matches.values())[0]
+            return list(matches.keys())[0]
 
         root_matches = dict((concrete, abstract)
                             for concrete, abstract in matches.items()
