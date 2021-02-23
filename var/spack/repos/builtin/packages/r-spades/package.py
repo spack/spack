@@ -7,7 +7,11 @@ from spack import *
 
 
 class RSpades(RPackage):
-    """Develop and Run Spatially Explicit Discrete Event Simulation Models"""
+    """Develop and Run Spatially Explicit Discrete Event Simulation Modelsi
+
+    Metapackage for implementing a variety of event-based models, with a
+    focus on spatially explicit models. These include raster-based,
+    event-based, and agent-based models."""
 
     homepage = "http://spades.predictiveecology.org/"
     url      = "https://cloud.r-project.org/src/contrib/SpaDES_2.0.6.tar.gz"
@@ -23,4 +27,3 @@ class RSpades(RPackage):
     depends_on('r-spades-addins', type=('build', 'run'))
     depends_on('r-spades-core@1.0.4:', type=('build', 'run'))
     depends_on('r-spades-tools', type=('build', 'run'))
-    depends_on('r-codetools', type=('build', 'run'))
