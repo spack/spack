@@ -18,6 +18,8 @@ import archspec.cpu
 
 try:
     import clingo
+    # There may be a better way to detect this
+    clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
 
@@ -119,11 +121,11 @@ class AspFunction(AspObject):
     def symbol(self, positive=True):
         def argify(arg):
             if isinstance(arg, bool):
-                return str(arg)
+                return clingo.String(str(arg))
             elif isinstance(arg, int):
-                return arg
+                return clingo.Number(arg)
             else:
-                return str(arg)
+                return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
 
@@ -318,18 +320,26 @@ class PyclingoDriver(object):
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
-        solve_result = self.control.solve(
-            assumptions=self.assumptions,
-            on_model=on_model,
-            on_core=cores.append
-        )
+        solve_kwargs = {"assumptions": self.assumptions,
+                        "on_model": on_model,
+                        "on_core": cores.append}
+        if clingo_cffi:
+            solve_kwargs["on_unsat"] = cores.append
+        solve_result = self.control.solve(**solve_kwargs)
         timer.phase("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
 
         def stringify(x):
-            return x.string or str(x)
+            if clingo_cffi:
+                # Clingo w/ CFFI will throw an exception on failure
+                try:
+                    return x.string
+                except RuntimeError:
+                    return str(x)
+            else:
+                return x.string or str(x)
 
         if result.satisfiable:
             builder = SpecBuilder(specs)
