@@ -33,7 +33,7 @@ _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
     'fish': 'set -gx {0} {1};\n',
-    'bat': 'set {0} {1};\n'
+    'bat': 'set {0}={1};\n'
 }
 
 
