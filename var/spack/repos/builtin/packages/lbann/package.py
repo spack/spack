@@ -42,7 +42,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '(note that for v0.99 conduit is required)')
     variant('deterministic', default=False,
             description='Builds with support for deterministic execution')
-    variant('dihydrogen', default=False,
+    variant('dihydrogen', default=True,
             description='Builds with support for DiHydrogen Tensor Library')
     variant('distconv', default=False,
             description='Builds with support for spatial, filter, or channel '
@@ -64,16 +64,19 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('vtune', default=False, description='Builds with support for Intel VTune')
     variant('onednn', default=False, description='Support for OneDNN')
     variant('nvshmem', default=False, description='Support for NVSHMEM')
-    variant('python_dr', default=False, description='Support for generic Python Data Reader')
+    variant('python', default=True, description='Support for Python extensions (e.g. Data Reader)')
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
+    variant('boost', default=False, description='Enable callbacks that use Boost libraries')
 
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
     conflicts('@0.90:0.101.99', when='+fft')
+    conflicts('@:0.90,0.101.99:', when='~dihydrogen')
     conflicts('~cuda', when='+nvprof')
     conflicts('~hwloc', when='+al')
     conflicts('~cuda', when='+nvshmem')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
+    conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -167,19 +170,28 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
-    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99:')
-    extends("python")
-    depends_on('py-setuptools', type='build')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6')
-    depends_on('py-configparser', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +extras')
-    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +extras')
-    depends_on('py-pytest', type='test', when='@:0.90,0.99:')
-    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99:')
+    # LBANN can use Python in two modes 1) as part of an extensible framework
+    # and 2) to drive the front end model creation and launch
+
+    # Core library support for Python Data Reader and extensible interface
+    depends_on('python@3: +shared', type=('run'), when='@:0.90,0.99: +python')
+    extends("python", when='+python')
+
+    # Python front end and possible extra packages
+    depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+    extends("python", when='+pfe')
+    depends_on('py-setuptools', type='build', when='+pfe')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6 +pfe')
+    depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-numpy@1.16.0:', type=('build', 'run'), when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-onnx@1.3.0:', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-pandas@0.24.1:', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-texttable@1.4.0:', type='run', when='@:0.90,0.99: +pfe +extras')
+    depends_on('py-pytest', type='test', when='@:0.90,0.99: +pfe')
+    depends_on('py-protobuf+cpp@3.10.0', type=('build', 'run'), when='@:0.90,0.99: +pfe')
+
     depends_on('protobuf+shared@3.10.0', when='@:0.90,0.99:')
 
     depends_on('py-breathe', type='build', when='+docs')
@@ -250,12 +262,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             '-DLBANN_DETERMINISTIC:BOOL=%s' % ('+deterministic' in spec),
             '-DLBANN_WITH_HWLOC=%s' % ('+hwloc' in spec),
             '-DLBANN_WITH_ALUMINUM:BOOL=%s' % ('+al' in spec),
+            '-DLBANN_WITH_BOOST:BOOL=%s' % ('+boost' in spec),
             '-DLBANN_WITH_CONDUIT:BOOL=%s' % ('+conduit' in spec),
             '-DLBANN_WITH_NVSHMEM:BOOL=%s' % ('+nvshmem' in spec),
             '-DLBANN_WITH_FFT:BOOL=%s' % ('+fft' in spec),
             '-DLBANN_WITH_ONEDNN:BOOL=%s' % ('+onednn' in spec),
-            '-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s' % ('+python_dr' in spec),
-            '-DLBANN_WITH_PYTHON:BOOL=%s' % ('+pfe' in spec),
+            '-DLBANN_WITH_EMBEDDED_PYTHON:BOOL=%s' % ('+python' in spec),
+            '-DLBANN_WITH_PYTHON_FRONTEND:BOOL=%s' % ('+pfe' in spec),
             '-DLBANN_WITH_TBINF=OFF',
             '-DLBANN_WITH_UNIT_TESTING:BOOL=%s' % (self.run_tests),
             '-DLBANN_WITH_VISION:BOOL=%s' % ('+vision' in spec),
