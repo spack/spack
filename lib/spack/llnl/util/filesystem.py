@@ -6,6 +6,7 @@ import collections
 import errno
 import glob
 import grp
+import ctypes
 import hashlib
 import itertools
 import numbers
@@ -48,6 +49,7 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'getuid',
     'chgrp',
     'chmod_x',
     'copy',
@@ -74,6 +76,15 @@ __all__ = [
     'working_dir',
     'keep_modification_time'
 ]
+
+
+def getuid():
+    if _platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
 
 
 def rename(src, dst):
@@ -306,7 +317,7 @@ def group_ids(uid=None):
         (list of int): gids of groups the user is a member of
     """
     if uid is None:
-        uid = os.getuid()
+        uid = getuid()
     user = pwd.getpwuid(uid).pw_name
     return [g.gr_gid for g in grp.getgrall() if user in g.gr_mem]
 
