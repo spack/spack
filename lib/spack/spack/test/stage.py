@@ -11,7 +11,8 @@ import os
 import shutil
 import stat
 import tempfile
-
+import sys
+import ctypes
 import pytest
 
 from llnl.util.filesystem import mkdirp, partition_path, touch, working_dir
@@ -39,6 +40,15 @@ _readme_contents = 'hello world!\n'
 _include_readme = 1
 _include_hidden = 2
 _include_extra = 3
+
+
+def getuid(): 
+    if sys.platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
 
 
 # Mock fetch directories are expected to appear as follows:
@@ -358,7 +368,7 @@ def check_stage_dir_perms(prefix, path):
 
     user = getpass.getuser()
     prefix_status = os.stat(prefix)
-    uid = os.getuid()
+    uid = getuid()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     #
@@ -658,7 +668,7 @@ class TestStage(object):
         assert source_path.endswith(spack.stage._source_path_subdir)
         assert not os.path.exists(source_path)
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_first_accessible_path(self, tmpdir):
         """Test _first_accessible_path names."""
         spack_dir = tmpdir.join('paths')
@@ -754,7 +764,7 @@ class TestStage(object):
 
         # The following check depends on the patched os.stat as a poor
         # substitute for confirming the generated warnings.
-        assert os.stat(user_path).st_uid != os.getuid()
+        assert os.stat(user_path).st_uid != getuid()
 
     def test_resolve_paths(self):
         """Test _resolve_paths."""
@@ -789,7 +799,7 @@ class TestStage(object):
 
         assert spack.stage._resolve_paths(paths) == res_paths
 
-    @pytest.mark.skipif(os.getuid() == 0, reason='user is root')
+    @pytest.mark.skipif(getuid() == 0, reason='user is root')
     def test_get_stage_root_bad_path(self, clear_stage_root):
         """Ensure an invalid stage path root raises a StageError."""
         with spack.config.override('config:build_stage', '/no/such/path'):

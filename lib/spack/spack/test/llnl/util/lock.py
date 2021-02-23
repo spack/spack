@@ -52,6 +52,7 @@ import socket
 import stat
 import tempfile
 import traceback
+import ctypes
 from contextlib import contextmanager
 from multiprocessing import Process, Queue
 from sys import platform as _platform
@@ -120,6 +121,15 @@ barrier_timeout = 5
 """This is the lock timeout for expected failures.
 This may need to be higher for some filesystems."""
 lock_fail_timeout = 0.1
+
+
+def getuid(): 
+    if _platform == "win32":
+        if ctypes.windll.shell32.IsUserAnAdmin() == 0:
+            return 1
+        return 0
+    else:
+        return os.getuid()
 
 
 def make_readable(*paths):
@@ -635,7 +645,7 @@ def test_write_lock_timeout_with_multiple_readers_3_2_ranges(lock_path):
         TimeoutWrite(lock_path, 5, 1))
 
 
-@pytest.mark.skipif(_platform != 'win32' and os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(getuid() == 0, reason='user is root')
 def test_read_lock_on_read_only_lockfile(lock_dir, lock_path):
     """read-only directory, read-only lockfile."""
     touch(lock_path)
@@ -663,7 +673,7 @@ def test_read_lock_read_only_dir_writable_lockfile(lock_dir, lock_path):
             pass
 
 
-@pytest.mark.skipif(_platform == 'win32' or os.getuid() == 0, reason='user is root')
+@pytest.mark.skipif(_platform == 'win32' or getuid() == 0, reason='user is root')
 def test_read_lock_no_lockfile(lock_dir, lock_path):
     """read-only directory, no lockfile (so can't create)."""
     with read_only(lock_dir):
