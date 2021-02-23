@@ -323,8 +323,8 @@ class PyclingoDriver(object):
         solve_kwargs = {"assumptions": self.assumptions,
                         "on_model": on_model,
                         "on_core": cores.append}
-        # if clingo_cffi:
-        #     solve_kwargs["on_unsat"] = cores.append
+        if clingo_cffi:
+            solve_kwargs["on_unsat"] = cores.append
         solve_result = self.control.solve(**solve_kwargs)
         timer.phase("solve")
 
