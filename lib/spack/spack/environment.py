@@ -1537,7 +1537,7 @@ class Environment(object):
                 if dep_spec.satisfies(spec):
                     # Don't overwrite the abstract spec if present
                     # If not present already, set to None
-                    matches[dep_spec] = matches.get(dep_spec)
+                    matches[dep_spec] = matches.get(dep_spec, None)
 
         if not matches:
             return None
