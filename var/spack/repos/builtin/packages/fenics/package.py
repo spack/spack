@@ -80,15 +80,15 @@ class Fenics(CMakePackage):
     # fenics python package dependencies
     for ver in dolfin_versions:
         wver = '@' + ver
-        depends_on('py-fenics-fiat{0}'.format(wver), type=('build', 'run'), when=wver)
+        depends_on('py-fenics-fiat{0}'.format(wver), type=('build', 'run'), when=wver + '+python')
         if(Version(ver) < Version('2018.1.0')):
-            depends_on('py-fenics-instant{0}'.format(wver), type=('build', 'run'), when=wver)
+            depends_on('py-fenics-instant{0}'.format(wver), type=('build', 'run'), when=wver + '+python')
         else:
-            depends_on('py-fenics-dijitso{0}'.format(wver), type=('build', 'run'), when=wver)
-        depends_on('py-fenics-ufl{0}'.format(wver), type=('build', 'run'), when=wver)
+            depends_on('py-fenics-dijitso{0}'.format(wver), type=('build', 'run'), when=wver + '+python')
+        depends_on('py-fenics-ufl{0}'.format(wver), type=('build', 'run'), when=wver + '+python')
         if ver in ['2019.1.0', '2017.2.0']:
-            wver = wver + '.post0'
-        depends_on('py-fenics-ffc{0}'.format(wver), type=('build', 'run'), when=wver)
+            wver = '@' + ver + '.post0'
+        depends_on('py-fenics-ffc{0}'.format(wver), type=('build', 'run'), when=wver + '+python')
 
     # package dependencies
     depends_on('python@3.5:', type=('build', 'run'), when='+python')
@@ -117,7 +117,7 @@ class Fenics(CMakePackage):
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('qt', when='+qt')
 
-    depends_on('py-pybind11', type=('build', 'run'))
+    depends_on('py-pybind11@2.2.4', type=('build', 'run'))
     depends_on('cmake@3.17.3:', type='build')
 
     depends_on('py-setuptools', type='build', when='+python')
