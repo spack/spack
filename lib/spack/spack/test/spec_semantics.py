@@ -1002,9 +1002,7 @@ class TestSpecSematics(object):
         out = spec.splice(dep, transitive)
         # Returned spec should still be concrete.
         assert out.concrete
-        # Traverse the spec and assert that the targets are correct.
-        # The following should fail with a "NotFoundError" if the DAGs don't
-        # match by name.
+        # Traverse the spec and assert that all dependencies are accounted for.
         for node in spec.traverse():
             assert node.name in out
         # If the splice worked, then the full hash of the spliced dep should
@@ -1016,7 +1014,7 @@ class TestSpecSematics(object):
         # changed.
         expected_z = dep['splice-z'] if transitive else spec['splice-z']
         assert out['splice-z'].full_hash() == expected_z.full_hash()
-        # Sanity check build spec of out should match build spec of original.
+        # Sanity check build spec of out should be the original spec.
         assert (out['splice-t'].build_spec.full_hash() ==
                 spec['splice-t'].full_hash())
         # Finally, the spec should know it's been spliced:
@@ -1024,17 +1022,15 @@ class TestSpecSematics(object):
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_input_unchanged(self, transitive):
-        spec = Spec('splice-t')
-        dep = Spec('splice-h+foo')
-        spec.concretize()
-        dep.concretize()
-        orig_spec_hash = spec.full_hash
-        orig_dep_hash = dep.full_hash
+        spec = Spec('splice-t').concretized()
+        dep = Spec('splice-h+foo').concretized()
+        orig_spec_hash = spec.full_hash()
+        orig_dep_hash = dep.full_hash()
         spec.splice(dep, transitive)
         # Post-splice, dag hash should still be different; no changes should be
         # made to these specs.
-        assert spec.full_hash == orig_spec_hash
-        assert dep.full_hash == orig_dep_hash
+        assert spec.full_hash() == orig_spec_hash
+        assert dep.full_hash() == orig_dep_hash
 
     @pytest.mark.parametrize('transitive', [True, False])
     def test_splice_subsequent(self, transitive):
@@ -1047,15 +1043,12 @@ class TestSpecSematics(object):
         dep = Spec('splice-z+bar')
         dep.concretize()
         # Transitivity shouldn't matter since Splice Z has no dependencies.
-        # Make this a separate test.
         out2 = out.splice(dep, transitive)
         assert out2.concrete
         assert out2['splice-z'].build_hash() != spec['splice-z'].build_hash()
         assert out2['splice-z'].build_hash() != out['splice-z'].build_hash()
-        assert (out2['splice-z'].build_spec.full_hash() !=
-                spec['splice-z'].full_hash())
-        assert (out2['splice-z'].build_spec.full_hash() !=
-                out['splice-z'].build_spec.full_hash())
+        assert out2['splice-z'].full_hash() != spec['splice-z'].full_hash()
+        assert out2['splice-z'].full_hash() != out['splice-z'].full_hash()
         assert (out2['splice-t'].build_spec.full_hash() ==
                 spec['splice-t'].full_hash())
         assert out2.spliced

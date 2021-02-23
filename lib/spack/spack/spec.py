@@ -2571,8 +2571,6 @@ class Spec(object):
                 continue
             elif not value:
                 s.clear_cached_hashes()
-            s._normal = value
-            s._concrete = value
             s._mark_root_concrete(value)
 
     def concretized(self, tests=False):
