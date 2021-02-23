@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class Accumulo(Package):
+class Accumulo(MavenPackage):
     """Apache Accumulo is a sorted, distributed key/value store that
     provides robust, scalable data storage and retrieval."""
 
@@ -17,10 +15,5 @@ class Accumulo(Package):
     version('1.9.3', sha256='d9548d5b9cf9f494f027f0fe59d5d6d45d09064359d7761cade62991ce2a5d0c')
     version('1.9.2', sha256='11ab028143ad6313cd5fc701b36b4c35e46a4a3fa2ce663869860b9f6bf5ee4d')
 
-    depends_on('maven', type='build')
-    depends_on('java', type=('build', 'run'))
-
-    def install(self, spec, prefix):
-        mvn = which('mvn')
-        mvn('package', '-DskipTests')
-        install_tree('.', prefix)
+    depends_on('java@8:', type=('build', 'run'))
+    depends_on('maven@3.5.0:', type='build')

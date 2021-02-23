@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Httpie(PythonPackage):
     """Modern command line HTTP client."""
 
     homepage = "https://httpie.org/"
-    url      = "https://pypi.io/packages/source/h/httpie/httpie-0.9.8.tar.gz"
+    pypi = "httpie/httpie-0.9.8.tar.gz"
 
     version('0.9.9', sha256='f1202e6fa60367e2265284a53f35bfa5917119592c2ab08277efc7fffd744fcb')
     version('0.9.8', sha256='515870b15231530f56fe2164190581748e8799b66ef0fe36ec9da3396f0df6e1')

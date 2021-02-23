@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,7 +28,7 @@ level = "short"
 
 
 package_template = '''\
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -117,7 +117,7 @@ class PackageTemplate(BundlePackageTemplate):
         make()
         make('install')"""
 
-    url_line = """    url      = \"{url}\""""
+    url_line = '    url      = "{url}"'
 
     def __init__(self, name, url, versions):
         super(PackageTemplate, self).__init__(name, versions)
@@ -204,6 +204,17 @@ class QMakePackageTemplate(PackageTemplate):
         return args"""
 
 
+class MavenPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Maven-based packages"""
+
+    base_class_name = 'MavenPackage'
+
+    body_def = """\
+    def build(self, spec, prefix):
+        # FIXME: If not needed delete this function
+        pass"""
+
+
 class SconsPackageTemplate(PackageTemplate):
     """Provides appropriate overrides for SCons-based packages"""
 
@@ -259,14 +270,47 @@ class PythonPackageTemplate(PackageTemplate):
         args = []
         return args"""
 
-    def __init__(self, name, *args, **kwargs):
+    def __init__(self, name, url, *args, **kwargs):
         # If the user provided `--name py-numpy`, don't rename it py-py-numpy
         if not name.startswith('py-'):
             # Make it more obvious that we are renaming the package
             tty.msg("Changing package name from {0} to py-{0}".format(name))
             name = 'py-{0}'.format(name)
 
-        super(PythonPackageTemplate, self).__init__(name, *args, **kwargs)
+        # Simple PyPI URLs:
+        # https://<hostname>/packages/<type>/<first character of project>/<project>/<download file>
+        # e.g. https://pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://www.pypi.io/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://pypi.python.org/packages/source/n/numpy/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/source/n/numpy/numpy-1.19.4.zip
+
+        # PyPI URLs containing hash:
+        # https://<hostname>/packages/<two character hash>/<two character hash>/<longer hash>/<download file>
+        # e.g. https://pypi.io/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip
+        # e.g. https://files.pythonhosted.org/packages/c5/63/a48648ebc57711348420670bb074998f79828291f68aebfff1642be212ec/numpy-1.19.4.zip#sha256=141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512
+
+        # PyPI URLs for wheels are too complicated, ignore them for now
+
+        match = re.search(
+            r'(?:pypi|pythonhosted)[^/]+/packages' + '/([^/#]+)' * 4,
+            url
+        )
+        if match:
+            if len(match.group(2)) == 1:
+                # Simple PyPI URL
+                url = '/'.join(match.group(3, 4))
+            else:
+                # PyPI URL containing hash
+                # Project name doesn't necessarily match download name, but it
+                # usually does, so this is the best we can do
+                project = parse_name(url)
+                url = '/'.join([project, match.group(4)])
+
+            self.url_line = '    pypi     = "{url}"'
+
+        super(PythonPackageTemplate, self).__init__(name, url, *args, **kwargs)
 
 
 class RPackageTemplate(PackageTemplate):
@@ -278,7 +322,7 @@ class RPackageTemplate(PackageTemplate):
     # depends_on('r-foo', type=('build', 'run'))"""
 
     body_def = """\
-    def configure_args(self, spec, prefix):
+    def configure_args(self):
         # FIXME: Add arguments to pass to install via --configure-args
         # FIXME: If not needed delete this function
         args = []
@@ -352,6 +396,34 @@ class OctavePackageTemplate(PackageTemplate):
         super(OctavePackageTemplate, self).__init__(name, *args, **kwargs)
 
 
+class RubyPackageTemplate(PackageTemplate):
+    """Provides appropriate overrides for Ruby packages"""
+
+    base_class_name = 'RubyPackage'
+
+    dependencies = """\
+    # FIXME: Add dependencies if required. Only add the ruby dependency
+    # if you need specific versions. A generic ruby dependency is
+    # added implicity by the RubyPackage class.
+    # depends_on('ruby@X.Y.Z:', type=('build', 'run'))
+    # depends_on('ruby-foo', type=('build', 'run'))"""
+
+    body_def = """\
+    def build(self, spec, prefix):
+        # FIXME: If not needed delete this function
+        pass"""
+
+    def __init__(self, name, *args, **kwargs):
+        # If the user provided `--name ruby-numpy`, don't rename it
+        # ruby-ruby-numpy
+        if not name.startswith('ruby-'):
+            # Make it more obvious that we are renaming the package
+            tty.msg("Changing package name from {0} to ruby-{0}".format(name))
+            name = 'ruby-{0}'.format(name)
+
+        super(RubyPackageTemplate, self).__init__(name, *args, **kwargs)
+
+
 class MakefilePackageTemplate(PackageTemplate):
     """Provides appropriate overrides for Makefile packages"""
 
@@ -402,6 +474,7 @@ templates = {
     'cmake':      CMakePackageTemplate,
     'bundle':     BundlePackageTemplate,
     'qmake':      QMakePackageTemplate,
+    'maven':      MavenPackageTemplate,
     'scons':      SconsPackageTemplate,
     'waf':        WafPackageTemplate,
     'bazel':      BazelPackageTemplate,
@@ -410,6 +483,7 @@ templates = {
     'perlmake':   PerlmakePackageTemplate,
     'perlbuild':  PerlbuildPackageTemplate,
     'octave':     OctavePackageTemplate,
+    'ruby':       RubyPackageTemplate,
     'makefile':   MakefilePackageTemplate,
     'intel':      IntelPackageTemplate,
     'meson':      MesonPackageTemplate,
@@ -464,12 +538,16 @@ class BuildSystemGuesser:
         """Try to guess the type of build system used by a project based on
         the contents of its archive or the URL it was downloaded from."""
 
-        # Most octave extensions are hosted on Octave-Forge:
-        #     https://octave.sourceforge.net/index.html
-        # They all have the same base URL.
-        if url is not None and 'downloads.sourceforge.net/octave/' in url:
-            self.build_system = 'octave'
-            return
+        if url is not None:
+            # Most octave extensions are hosted on Octave-Forge:
+            #     https://octave.sourceforge.net/index.html
+            # They all have the same base URL.
+            if 'downloads.sourceforge.net/octave/' in url:
+                self.build_system = 'octave'
+                return
+            if url.endswith('.gem'):
+                self.build_system = 'ruby'
+                return
 
         # A list of clues that give us an idea of the build system a package
         # uses. If the regular expression matches a file contained in the
@@ -482,12 +560,16 @@ class BuildSystemGuesser:
             (r'/configure$',          'autotools'),
             (r'/configure\.(in|ac)$', 'autoreconf'),
             (r'/Makefile\.am$',       'autoreconf'),
+            (r'/pom\.xml$',           'maven'),
             (r'/SConstruct$',         'scons'),
             (r'/waf$',                'waf'),
             (r'/setup\.py$',          'python'),
             (r'/WORKSPACE$',          'bazel'),
             (r'/Build\.PL$',          'perlbuild'),
             (r'/Makefile\.PL$',       'perlmake'),
+            (r'/.*\.gemspec$',        'ruby'),
+            (r'/Rakefile$',           'ruby'),
+            (r'/setup\.rb$',          'ruby'),
             (r'/.*\.pro$',            'qmake'),
             (r'/(GNU)?[Mm]akefile$',  'makefile'),
             (r'/DESCRIPTION$',        'octave'),
@@ -496,7 +578,8 @@ class BuildSystemGuesser:
         ]
 
         # Peek inside the compressed file.
-        if stage.archive_file.endswith('.zip'):
+        if (stage.archive_file.endswith('.zip') or
+                '.zip#' in stage.archive_file):
             try:
                 unzip  = which('unzip')
                 output = unzip('-lq', stage.archive_file, output=str)

@@ -1,8 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from spack.concretize import NoBuildError
 from spack.util.module_cmd import module
 from spack.util.module_cmd import get_path_args_from_module_line
 
@@ -11,9 +10,12 @@ class CrayLibsci(Package):
     """The Cray Scientific Libraries package, LibSci, is a collection of
     numerical routines optimized for best performance on Cray systems."""
 
-    homepage = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
-    url      = "http://www.nersc.gov/users/software/programming-libraries/math-libraries/libsci/"
+    homepage = "https://docs.nersc.gov/development/libraries/libsci/"
+    has_code = False    # Skip attempts to fetch source that is not available
 
+    version("20.06.1")
+    version("19.06.1")
+    version("18.12.1")
     version("18.11.1.2")
     version("16.11.1")
     version("16.09.1")
@@ -33,6 +35,7 @@ class CrayLibsci(Package):
         'gcc': 'GNU',
         'cce': 'CRAY',
         'intel': 'INTEL',
+        'clang': 'ALLINEA'
     }
 
     @property
@@ -78,4 +81,6 @@ class CrayLibsci(Package):
         return self.blas_libs
 
     def install(self, spec, prefix):
-        raise NoBuildError(spec)
+        raise InstallError(
+            self.spec.format('{name} is not installable, you need to specify '
+                             'it as an external package in packages.yaml'))

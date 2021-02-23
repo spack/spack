@@ -1,67 +1,91 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division
 
+import multiprocessing
 import os
 import re
 import functools
-import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
 import sys
 
 
+if sys.version_info >= (3, 3):
+    from collections.abc import Hashable, MutableMapping  # novm
+else:
+    from collections import Hashable, MutableMapping
+
+
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 
 
+# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
+# method. Spack cannot currently handle this, so force the process to start
+# using the 'fork' start method.
+#
+# TODO: This solution is not ideal, as the 'fork' start method can lead to
+# crashes of the subprocess. Figure out how to make 'spawn' work.
+#
+# See:
+# * https://github.com/spack/spack/pull/18124
+# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
+# * https://bugs.python.org/issue33725
+if sys.version_info >= (3,):  # novm
+    fork_context = multiprocessing.get_context('fork')
+else:
+    fork_context = multiprocessing
+
+
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
-       set of objects on unique values of the supplied functions.
-       Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this::
+    set of objects on unique values of the supplied functions.
 
-          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+    Values are used as keys. For example, suppose you have four
+    objects with attributes that look like this::
 
-          list_of_specs = [a,b,c,d]
-          index1 = index_by(list_of_specs, lambda s: s.arch,
-                            lambda s: s.compiler)
-          index2 = index_by(list_of_specs, lambda s: s.compiler)
+        a = Spec("boost %gcc target=skylake")
+        b = Spec("mrnet %intel target=zen2")
+        c = Spec("libelf %xlc target=skylake")
+        d = Spec("libdwarf %intel target=zen2")
 
-       ``index1`` now has two levels of dicts, with lists at the
-       leaves, like this::
+        list_of_specs = [a,b,c,d]
+        index1 = index_by(list_of_specs, lambda s: str(s.target),
+                          lambda s: s.compiler)
+        index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
-             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
-           }
+    ``index1`` now has two levels of dicts, with lists at the
+    leaves, like this::
 
-       And ``index2`` is a single level dictionary of lists that looks
-       like this::
+        { 'zen2'    : { 'gcc' : [a], 'xlc' : [c] },
+          'skylake' : { 'intel' : [b, d] }
+        }
 
-           { 'gcc'    : [a],
-             'intel'  : [b,d],
-             'xlc'    : [c]
-           }
+    And ``index2`` is a single level dictionary of lists that looks
+    like this::
 
-       If any elemnts in funcs is a string, it is treated as the name
-       of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be::
+        { 'gcc'    : [a],
+          'intel'  : [b,d],
+          'xlc'    : [c]
+        }
 
-           index1 = index_by(list_of_specs, 'arch', 'compiler')
-           index2 = index_by(list_of_specs, 'compiler')
+    If any elements in funcs is a string, it is treated as the name
+    of an attribute, and acts like getattr(object, name).  So
+    shorthand for the above two indexes would be::
 
-       You can also index by tuples by passing tuples::
+        index1 = index_by(list_of_specs, 'arch', 'compiler')
+        index2 = index_by(list_of_specs, 'compiler')
 
-           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+    You can also index by tuples by passing tuples::
 
-       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
+        index1 = index_by(list_of_specs, ('target', 'compiler'))
+
+    Keys in the resulting dict will look like ('gcc', 'skylake').
     """
     if not funcs:
         return objects
@@ -170,7 +194,7 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, Hashable):
             # Not hashable, so just call the function.
             return func(*args)
 
@@ -245,7 +269,7 @@ def key_ordering(cls):
 
 
 @key_ordering
-class HashableMap(collections.MutableMapping):
+class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
 
@@ -549,6 +573,12 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
+        # When unpickling Singleton objects, the 'instance' attribute may be
+        # requested but not yet set. The final 'getattr' line here requires
+        # 'instance'/'_instance' to be defined or it will enter an infinite
+        # loop, so protect against that here.
+        if name in ['_instance', 'instance']:
+            raise AttributeError()
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -577,6 +607,8 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
         return getattr(self.ref_function(), name)
 
     def __getitem__(self, name):
@@ -644,3 +676,19 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+def star(func):
+    """Unpacks arguments for use with Multiprocessing mapping functions"""
+    def _wrapper(args):
+        return func(*args)
+    return _wrapper
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

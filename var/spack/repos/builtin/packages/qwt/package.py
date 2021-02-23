@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Qwt(QMakePackage):
 
     patch('no-designer.patch', when='~designer')
 
-    depends_on('qt+opengl')
+    depends_on('qt@:5.14.2+opengl')
     depends_on('qt+tools', when='+designer')
     # Qwt 6.1.1 and older use a constant that was removed in Qt 5.4
     # https://bugs.launchpad.net/ubuntu/+source/qwt-qt5/+bug/1485213

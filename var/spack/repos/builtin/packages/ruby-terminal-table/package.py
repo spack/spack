@@ -1,20 +1,15 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class RubyTerminalTable(Package):
+class RubyTerminalTable(RubyPackage):
     """Simple, feature rich ascii table generation library"""
 
-    homepage = "https://rubygems.org/gems/terminal-table"
-    url      = "https://rubygems.org/downloads/terminal-table-1.8.0.gem"
+    homepage = "https://github.com/tj/terminal-table"
+    url      = "https://github.com/tj/terminal-table/archive/v1.8.0.tar.gz"
 
-    version('1.8.0', sha256='13371f069af18e9baa4e44d404a4ada9301899ce0530c237ac1a96c19f652294', expand=False)
+    version('1.8.0', sha256='69b8e157f5dc3f056b5242923ab3e729a16c6f893b3a5d540e71135a973e5fbe')
 
-    extends('ruby')
-
-    def install(self, spec, prefix):
-        gem('install', 'terminal-table-{0}.gem'.format(self.version))
+    depends_on('ruby-unicode-display-width@1.1.1:1.999', type=('build', 'run'))

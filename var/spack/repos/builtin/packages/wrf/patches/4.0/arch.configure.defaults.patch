@@ -1,0 +1,10 @@
+--- a/arch/configure.defaults	2018-11-11 10:02:30.575095478 -0600
++++ b/arch/configure.defaults	2018-11-02 13:33:12.352663988 -0500
+@@ -1598,6 +1598,7 @@
+ 
+ LIB_EXTERNAL    = \
+                      ../external/io_netcdf/libwrfio_nf.a CONFIGURE_NETCDF_PATH/lib/libnetcdf.lib \
++                     CONFIGURE_NETCDFF_PATH/lib/libnetcdff.lib
+                      ../external/wavelet/libWavelet.a ../external/wavelet/lib_wavelet.a
+ ESMF_IO_LIB     =    ../external/esmf_time_f90/libesmf_time.a
+ LIB_BUNDLED     = \

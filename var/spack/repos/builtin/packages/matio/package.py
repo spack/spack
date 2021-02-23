@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,10 +9,13 @@ from spack import *
 class Matio(AutotoolsPackage):
     """matio is an C library for reading and writing Matlab MAT files"""
     homepage   = "https://sourceforge.net/projects/matio/"
-    url        = "https://sourceforge.net/projects/matio/files/matio/1.5.9/matio-1.5.9.tar.gz"
-    list_url   = "https://sourceforge.net/projects/matio/files/matio"
-    list_depth = 1
+    git        = "https://github.com/tbeu/matio"
+    url        = "https://github.com/tbeu/matio/releases/download/v1.5.9/matio-1.5.9.tar.gz"
 
+    version('1.5.17',  sha256='5e455527d370ab297c4abe5a2ab4d599c93ac7c1a0c85d841cc5c22f8221c400')
+    version('1.5.16',  sha256='47ba3d5d269d5709b8d9a7385c88c8b5fb5ff875ef781a1ced4892b5b03c4f44')
+    version('1.5.15',  sha256='21bf4587bb7f0231dbb4fcc88728468f1764c06211d5a0415cd622036f09b1cf')
+    version('1.5.14',  sha256='0b3abb98f5cd75627122a72522db4e4280eb580bdbeafe90a8a0d2df22801f6e')
     version('1.5.13',  sha256='feadb2f54ba7c9db6deba8c994e401d7a1a8e7afd0fe74487691052b8139e5cb')
     version('1.5.12',  sha256='8695e380e465056afa5b5e20128935afe7d50e03830f9f7778a72e1e1894d8a9')
     version('1.5.11',  sha256='0ccced0c55c9c2cdc21348b7e16447843402d729ffaadd6135767faad7c9cf0b')
@@ -44,3 +47,11 @@ class Matio(AutotoolsPackage):
         if '+shared' not in self.spec:
             args.append("--disable-shared")
         return args
+
+    def patch(self):
+        if self.spec.satisfies('%nvhpc'):
+            # workaround anonymous version tag linker error for the NVIDIA
+            # compilers
+            filter_file('${wl}-version-script '
+                        '${wl}$output_objdir/$libname.ver', '',
+                        'configure', string=True)

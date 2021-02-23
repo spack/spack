@@ -1,23 +1,19 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
 
-
-class RubyNarray(Package):
+class RubyNarray(RubyPackage):
     """Numo::NArray is an Numerical N-dimensional Array class for fast
        processing and easy manipulation of multi-dimensional numerical data,
        similar to numpy.ndaray."""
 
-    homepage = "https://rubygems.org/gems/narray"
-    git      = "https://github.com/ruby-numo/narray.git"
+    homepage = "https://masa16.github.io/narray/"
+    url      = "https://github.com/ruby-numo/numo-narray/archive/v0.9.1.8.tar.gz"
+    git      = "https://github.com/ruby-numo/numo-narray.git"
 
-    version('0.9.0.9', commit='9cadbbccf1e01b6d1bc143c19d598cad1c420869')
+    version('master',  branch='master')
+    version('0.9.1.8', sha256='48814c6ebf2c4846fcf6cfd2705a15a97a608960c1676cb6c7b5c9254b0dd51b')
 
-    extends('ruby')
-
-    def install(self, spec, prefix):
-        gem('build', 'numo-narray.gemspec')
-        gem('install', 'numo-narray-{0}.gem'.format(self.version))
+    depends_on('ruby@2.2:2.999', type=('build', 'run'))

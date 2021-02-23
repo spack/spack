@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,8 +7,8 @@ import glob
 import os
 import pytest
 
+import llnl.util.filesystem as fs
 import spack.repo
-from llnl.util.filesystem import working_dir
 from spack.build_environment import get_std_cmake_args, setup_package
 from spack.spec import Spec
 from spack.util.executable import which
@@ -30,7 +30,7 @@ def test_affirmative_make_check(directory, config, mock_packages, working_env):
     pkg = spack.repo.get(s)
     setup_package(pkg, False)
 
-    with working_dir(directory):
+    with fs.working_dir(directory):
         assert pkg._has_make_target('check')
 
         pkg._if_make_target_execute('check')
@@ -50,7 +50,7 @@ def test_negative_make_check(directory, config, mock_packages, working_env):
     pkg = spack.repo.get(s)
     setup_package(pkg, False)
 
-    with working_dir(directory):
+    with fs.working_dir(directory):
         assert not pkg._has_make_target('check')
 
         pkg._if_make_target_execute('check')
@@ -71,7 +71,7 @@ def test_affirmative_ninja_check(
     pkg = spack.repo.get(s)
     setup_package(pkg, False)
 
-    with working_dir(directory):
+    with fs.working_dir(directory):
         assert pkg._has_ninja_target('check')
 
         pkg._if_ninja_target_execute('check')
@@ -96,7 +96,7 @@ def test_negative_ninja_check(directory, config, mock_packages, working_env):
     pkg = spack.repo.get(s)
     setup_package(pkg, False)
 
-    with working_dir(directory):
+    with fs.working_dir(directory):
         assert not pkg._has_ninja_target('check')
 
         pkg._if_ninja_target_execute('check')
@@ -181,6 +181,36 @@ class TestAutotoolsPackage(object):
         assert '--without-bar' in options
         assert '--without-baz' in options
         assert '--no-fee' in options
+
+    def test_libtool_archive_files_are_deleted_by_default(
+            self, mutable_database
+    ):
+        # Install a package that creates a mock libtool archive
+        s = spack.spec.Spec('libtool-deletion')
+        s.concretize()
+        s.package.do_install(explicit=True)
+
+        # Assert the libtool archive is not there and we have
+        # a log of removed files
+        assert not os.path.exists(s.package.libtool_archive_file)
+        search_directory = os.path.join(s.prefix, '.spack')
+        libtool_deletion_log = fs.find(
+            search_directory, 'removed_la_files.txt', recursive=True
+        )
+        assert libtool_deletion_log
+
+    def test_libtool_archive_files_might_be_installed_on_demand(
+            self, mutable_database, monkeypatch
+    ):
+        # Install a package that creates a mock libtool archive,
+        # patch its package to preserve the installation
+        s = spack.spec.Spec('libtool-deletion')
+        s.concretize()
+        monkeypatch.setattr(s.package, 'install_libtool_archives', True)
+        s.package.do_install(explicit=True)
+
+        # Assert libtool archives are installed
+        assert os.path.exists(s.package.libtool_archive_file)
 
 
 @pytest.mark.usefixtures('config', 'mock_packages')

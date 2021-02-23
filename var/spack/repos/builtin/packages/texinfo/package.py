@@ -1,10 +1,11 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
+import re
 
 
 class Texinfo(AutotoolsPackage, GNUMirrorPackage):
@@ -16,6 +17,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
 
     homepage = "https://www.gnu.org/software/texinfo/"
     gnu_mirror_path = "texinfo/texinfo-6.0.tar.gz"
+
+    executables = ['^info$']
 
     version('6.5', sha256='d34272e4042c46186ddcd66bd5d980c0ca14ff734444686ccf8131f6ec8b1427')
     version('6.3', sha256='300a6ba4958c2dd4a6d5ce60f0a335daf7e379f5374f276f6ba31a221f02f606')
@@ -36,3 +39,11 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     # that uses the global locale.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
     patch('update_locale_handling.patch', when='@6.3:')
+
+    patch('nvhpc.patch', when='%nvhpc')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'info \(GNU texinfo\)\s+(\S+)', output)
+        return match.group(1) if match else None

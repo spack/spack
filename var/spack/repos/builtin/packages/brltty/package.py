@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Brltty(AutotoolsPackage):
     depends_on('libtool',   type='build')
     depends_on('m4',        type='build')
     depends_on('expat')
-    depends_on('alsa-lib',        type='link')
+    depends_on('alsa-lib', when='platform=linux', type='link')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

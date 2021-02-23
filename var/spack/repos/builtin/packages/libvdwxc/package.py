@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,13 +19,13 @@ class Libvdwxc(AutotoolsPackage):
     variant("mpi", default=True, description="Enable MPI support")
     variant("pfft", default=False, description="Enable support for PFFT")
 
-    depends_on("fftw@3:", when="~mpi")
+    depends_on("fftw-api@3")
     depends_on("mpi@2:", when="+mpi")
-    depends_on("fftw@3:+mpi", when="+mpi")
     depends_on("pfft", when="+pfft")
 
     # pfft needs MPI
     conflicts("~mpi", "+pfft")
+    conflicts("^fftw~mpi", "+mpi")
 
     def configure_args(self):
         spec = self.spec

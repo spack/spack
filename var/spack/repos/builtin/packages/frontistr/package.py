@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Frontistr(CMakePackage):
     git      = "https://gitlab.com/FrontISTR-Commons/FrontISTR.git"
     maintainers = ['hiroshi.okuda', 'kgoto', 'morita', 'inagaki', 'michioga']
 
+    version('5.1.1', tag='v5.1.1')
     version('5.1', tag='v5.1')
     version('5.0', tag='v5.0')
     version('master', tag='master')
@@ -31,7 +32,7 @@ class Frontistr(CMakePackage):
     # depends_on('revocap-coupler')
     depends_on('metis')
     depends_on('mumps')
-    depends_on('trilinos')
+    depends_on('trilinos@:12.18.1')
 
     def cmake_args(self):
         define = CMakePackage.define

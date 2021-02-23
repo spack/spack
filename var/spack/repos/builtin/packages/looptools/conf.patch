@@ -1,0 +1,45 @@
+diff -u -r -N a/configure b/configure
+--- a/configure	2020-08-18 12:07:36.000000000 +0900
++++ b/configure	2020-08-18 12:52:34.000000000 +0900
+@@ -243,30 +243,8 @@
+ 
+ ## does Fortran append underscores to symbols?
+ 
+-echo -n "does $CONF_FC append underscores... " 1>&3
+-
+-tee $test-c.c << _EOF_ 1>&2
+-int uscore_ = 95;
+-int uscore = 59;
+-_EOF_
+-
+-for CONF_BITS in ${CONF_BITS:--m64 -m32} "" ; do
+-  eval $CONF_CC$CONF_CFLAGS $CONF_BITS -c $test-c.c 1>&2 || continue
+-  eval $CONF_FC$CONF_FFLAGS -o $test$CONF_EXE $test.f $test-c.o $CONF_LDFLAGS 1>&2 && break
+-done
+-
+-./$test$CONF_EXE
+-case $? in
+-95)
+-  echo "yes" 1>&3
+-  CONF_NOUNDERSCORE=0 ;;
+-59)
+-  echo "no" 1>&3
+-  CONF_NOUNDERSCORE=1 ;;
+-*)
+-  echo "error linking Fortran and C" 1>&3
+-  exit 1 ;;
+-esac
++CONF_BITS=""
++CONF_NOUNDERSCORE=0
+ 
+ CONF_CFLAGS+=" $CONF_BITS"
+ CONF_CXXFLAGS+=" $CONF_BITS"
+@@ -426,7 +404,7 @@
+ QUADSIZE = $CONF_QUADSIZE
+ 
+ FC = $CONF_FC
+-FFLAGS =$CONF_FFLAGS \\
++FFLAGS =-Fwide $CONF_FFLAGS \\
+   \$(DEF)QUAD=\$(QUAD) \$(DEF)QUADSIZE=\$(QUADSIZE) \\
+   \$(DEF)U77EXT=$CONF_U77EXT
+ 

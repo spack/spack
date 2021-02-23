@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ class Catalyst(CMakePackage):
     depends_on('py-mpi4py', when='+python3+mpi', type=('build', 'run'))
 
     depends_on('gl@3.2:', when='+rendering')
-    depends_on('mesa+osmesa', when='+rendering+osmesa')
+    depends_on('osmesa', when='+rendering+osmesa')
     depends_on('glx', when='+rendering~osmesa')
     depends_on('cmake@3.3:', type='build')
 
@@ -231,7 +231,7 @@ class Catalyst(CMakePackage):
         else:
             cmake_args.append('-DPARAVIEW_ENABLE_PYTHON:BOOL=OFF')
 
-        if spec.platform == 'linux' and spec.target == 'aarch64':
+        if spec.platform == 'linux' and spec.target.family == 'aarch64':
             cmake_args.append('-DCMAKE_CXX_FLAGS=-DPNG_ARM_NEON_OPT=0')
             cmake_args.append('-DCMAKE_C_FLAGS=-DPNG_ARM_NEON_OPT=0')
 

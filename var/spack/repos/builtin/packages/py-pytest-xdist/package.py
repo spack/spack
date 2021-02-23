@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPytestXdist(PythonPackage):
     """py.test xdist plugin for distributed testing and loop-on-failing mode"""
 
     homepage = "https://github.com/pytest-dev/pytest-xdist"
-    url      = "https://pypi.io/packages/source/p/pytest-xdist/pytest-xdist-1.30.0.tar.gz"
+    pypi = "pytest-xdist/pytest-xdist-1.30.0.tar.gz"
 
     version('1.30.0', sha256='5d1b1d4461518a6023d56dab62fb63670d6f7537f23e2708459a557329accf48')
     version('1.29.0', sha256='3489d91516d7847db5eaecff7a2e623dba68984835dbe6cedb05ae126c4fb17f')

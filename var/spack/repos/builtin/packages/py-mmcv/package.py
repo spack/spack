@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,3 +22,5 @@ class PyMmcv(PythonPackage):
     depends_on('py-pyyaml', type=('build', 'run'))
     depends_on('opencv+python', type=('build', 'run'))
     depends_on('py-cython', type='build')
+
+    patch('opencv_for0.5.1.patch', when='@0.5.1')

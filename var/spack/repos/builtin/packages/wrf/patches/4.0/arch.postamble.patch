@@ -1,0 +1,27 @@
+--- a/arch/postamble	2018-06-08 19:39:31.000000000 -0500
++++ b/arch/postamble	2018-11-02 13:33:12.162660138 -0500
+@@ -48,6 +48,7 @@
+                       -I$(WRF_SRC_ROOT_DIR)/wrftladj \
+                       -I$(WRF_SRC_ROOT_DIR)/chem -I$(WRF_SRC_ROOT_DIR)/inc \
+                       -I$(NETCDFPATH)/include \
++                      -I$(NETCDFFPATH)/include \
+                       CONFIGURE_RTTOV_INC
+ REGISTRY        =    Registry
+ CC_TOOLS_CFLAGS = CONFIGURE_NMM_CORE
+@@ -70,6 +71,7 @@
+ ENVCOMPDEFS     =    CONFIGURE_COMPILEFLAGS
+ CPPFLAGS        =    $(ARCHFLAGS) $(ENVCOMPDEFS) -I$(LIBINCLUDE) $(TRADFLAG) CONFIGURE_COMMS_INCLUDE
+ NETCDFPATH      =    CONFIGURE_NETCDF_PATH
++NETCDFFPATH     =    CONFIGURE_NETCDFF_PATH
+ HDF5PATH        =    CONFIGURE_HDF5_PATH
+ WRFPLUSPATH     =    CONFIGURE_WRFPLUS_PATH
+ RTTOVPATH       =    CONFIGURE_RTTOV_PATH
+@@ -101,7 +103,7 @@
+ 
+ wrfio_nf : 
+ 	( cd $(WRF_SRC_ROOT_DIR)/external/io_netcdf ; \
+-          make $(J) NETCDFPATH="$(NETCDFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
++          make $(J) NETCDFPATH="$(NETCDFPATH)" NETCDFFPATH="$(NETCDFFPATH)" RANLIB="$(RANLIB)" CPP="$(CPP)" \
+           CC="$(SCC)" CFLAGS="$(CFLAGS)" \
+           FC="$(SFC) $(PROMOTION) $(OMP) $(FCFLAGS)" TRADFLAG="$(TRADFLAG)" AR="$(AR)" ARFLAGS="$(ARFLAGS)" )
+ 

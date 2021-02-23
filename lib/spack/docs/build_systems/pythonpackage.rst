@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,20 +23,11 @@ can be overridden:
 * ``build_ext``
 * ``build_clib``
 * ``build_scripts``
-* ``clean``
 * ``install``
 * ``install_lib``
 * ``install_headers``
 * ``install_scripts``
 * ``install_data``
-* ``sdist``
-* ``register``
-* ``bdist``
-* ``bdist_dumb``
-* ``bdist_rpm``
-* ``bdist_wininst``
-* ``upload``
-* ``check``
 
 These are all standard ``setup.py`` commands and can be found by running:
 
@@ -55,7 +46,7 @@ If for whatever reason you need to run more phases, simply modify your
 
 .. code-block:: python
 
-   phases = ['build_ext', 'install', 'bdist']
+   phases = ['build_ext', 'install']
 
 
 Each phase provides a function ``<phase>`` that runs:
@@ -81,6 +72,24 @@ you'll need to define a function for it like so:
        self.setup_py('configure')
 
 
+^^^^^^
+Wheels
+^^^^^^
+
+Some Python packages are closed-source and distributed as wheels.
+Instead of using the ``PythonPackage`` base class, you should extend
+the ``Package`` base class and implement the following custom installation
+procedure:
+
+.. code-block:: python
+
+   def install(self, spec, prefix):
+       pip = which('pip')
+       pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+
+
+This will require a dependency on pip, as mentioned below.
+
 ^^^^^^^^^^^^^^^
 Important files
 ^^^^^^^^^^^^^^^
@@ -95,9 +104,30 @@ file should be considered to be the truth. As dependencies are added or
 removed, the documentation is much more likely to become outdated than
 the ``setup.py``.
 
-^^^^^^^^^^^^^^^^^^^^^^^
-Finding Python packages
-^^^^^^^^^^^^^^^^^^^^^^^
+The Python ecosystem has evolved significantly over the years. Before
+setuptools became popular, most packages listed their dependencies in a
+``requirements.txt`` file. Once setuptools took over, these dependencies
+were listed directly in the ``setup.py``. Newer PEPs introduced additional
+files, like ``setup.cfg`` and ``pyproject.toml``. You should look out for
+all of these files, as they may all contain important information about
+package dependencies.
+
+Some Python packages are closed-source and are distributed as Python
+wheels. For example, ``py-azureml-sdk`` downloads a ``.whl`` file. This
+file is simply a zip file, and can be extracted using:
+
+.. code-block:: console
+
+   $ unzip *.whl
+
+
+The zip file will not contain a ``setup.py``, but it will contain a
+``METADATA`` file which contains all the information you need to
+write a ``package.py`` build recipe.
+
+^^^^
+PyPI
+^^^^
 
 The vast majority of Python packages are hosted on PyPI - The Python
 Package Index. ``pip`` only supports packages hosted on PyPI, making
@@ -105,8 +135,29 @@ it the only option for developers who want a simple installation.
 Search for "PyPI <package-name>" to find the download page. Note that
 some pages are versioned, and the first result may not be the newest
 version. Click on the "Latest Version" button to the top right to see
-if a newer version is available. The download page is usually at:
-https://pypi.org/project/<package-name>
+if a newer version is available. The download page is usually at::
+
+   https://pypi.org/project/<package-name>
+
+
+Since PyPI is so common, the ``PythonPackage`` base class has a
+``pypi`` attribute that can be set. Once set, ``pypi`` will be used
+to define the ``homepage``, ``url``, and ``list_url``. For example,
+the following:
+
+.. code-block:: python
+
+   homepage = 'https://pypi.org/project/setuptools/'
+   url      = 'https://pypi.org/packages/source/s/setuptools/setuptools-49.2.0.zip'
+   list_url = 'https://pypi.org/simple/setuptools/'
+
+
+is equivalent to:
+
+.. code-block:: python
+
+   pypi = 'setuptools/setuptools-49.2.0.zip'
+
 
 ^^^^^^^^^^^
 Description
@@ -144,50 +195,38 @@ also get the homepage on the command-line by running:
 URL
 ^^^
 
-You may have noticed that Spack allows you to add multiple versions of
-the same package without adding multiple versions of the download URL.
-It does this by guessing what the version string in the URL is and
-replacing this with the requested version. Obviously, if Spack cannot
-guess the version correctly, or if non-version-related things change
-in the URL, Spack cannot substitute the version properly.
+If ``pypi`` is set as mentioned above, ``url`` and ``list_url`` will
+be automatically set for you. If both ``.tar.gz`` and ``.zip`` versions
+are available, ``.tar.gz`` is preferred. If some releases offer both
+``.tar.gz`` and ``.zip`` versions, but some only offer ``.zip`` versions,
+use ``.zip``.
 
-Once upon a time, PyPI offered nice, simple download URLs like:
-https://pypi.python.org/packages/source/n/numpy/numpy-1.13.1.zip
+Some Python packages are closed-source and do not ship ``.tar.gz`` or ``.zip``
+files on either PyPI or GitHub. If this is the case, you can still download
+and install a Python wheel. For example, ``py-azureml-sdk`` is closed source
+and can be downloaded from::
 
-As you can see, the version is 1.13.1. It probably isn't hard to guess
-what URL to use to download version 1.12.0, and Spack was perfectly
-capable of performing this calculation.
+   https://pypi.io/packages/py3/a/azureml_sdk/azureml_sdk-1.11.0-py3-none-any.whl
 
-However, PyPI switched to a new download URL format:
-https://pypi.python.org/packages/c0/3a/40967d9f5675fbb097ffec170f59c2ba19fc96373e73ad47c2cae9a30aed/numpy-1.13.1.zip#md5=2c3c0f4edf720c3a7b525dacc825b9ae
 
-and more recently:
-https://files.pythonhosted.org/packages/b0/2b/497c2bb7c660b2606d4a96e2035e92554429e139c6c71cdff67af66b58d2/numpy-1.14.3.zip
+You may see Python-specific or OS-specific URLs. Note that when you add a
+``.whl`` URL, you should add ``expand=False`` to ensure that Spack doesn't
+try to extract the wheel:
 
-As you can imagine, it is impossible for Spack to guess what URL to
-use to download version 1.12.0 given this URL. There is a solution,
-however. PyPI offers a new hidden interface for downloading
-Python packages that does not include a hash in the URL:
-https://pypi.io/packages/source/n/numpy/numpy-1.13.1.zip
+.. code-block:: python
 
-This URL redirects to the files.pythonhosted.org URL. The general syntax for
-this pypi.io URL is:
-https://pypi.io/packages/source/<first-letter-of-name>/<name>/<name>-<version>.<extension>
+   version('1.11.0', sha256='d8c9d24ea90457214d798b0d922489863dad518adde3638e08ef62de28fb183a', expand=False)
 
-Please use the pypi.io URL instead of the pypi.python.org URL. If both
-``.tar.gz`` and ``.zip`` versions are available, ``.tar.gz`` is preferred.
-If some releases offer both ``.tar.gz`` and ``.zip`` versions, but some
-only offer ``.zip`` versions, use ``.zip``.
 
 """""""""""""""
 PyPI vs. GitHub
 """""""""""""""
 
-Many packages are hosted on PyPI, but are developed on GitHub and other
+Many packages are hosted on PyPI, but are developed on GitHub or another
 version control systems. The tarball can be downloaded from either
 location, but PyPI is preferred for the following reasons:
 
-#. PyPI contains the bare minimum of files to install the package.
+#. PyPI contains the bare minimum number of files needed to install the package.
 
    You may notice that the tarball you download from PyPI does not
    have the same checksum as the tarball you download from GitHub.
@@ -224,25 +263,6 @@ location, but PyPI is preferred for the following reasons:
    PyPI is nice because it makes it physically impossible to
    re-release the same version of a package with a different checksum.
 
-There are some reasons to prefer downloading from GitHub:
-
-#. The GitHub tarball may contain unit tests
-
-   As previously mentioned, the PyPI tarball contains the bare minimum
-   of files to install the package. Unless explicitly specified by the
-   developers, it will not contain development files like unit tests.
-   If you desire to run the unit tests during installation, you should
-   use the GitHub tarball instead.
-
-#. Spack does not yet support ``spack versions`` and ``spack checksum``
-   with PyPI URLs
-
-   These commands work just fine with GitHub URLs. This is a minor
-   annoyance, not a reason to prefer GitHub over PyPI.
-
-If you really want to run these unit tests, no one will stop you from
-submitting a PR for a new package that downloads from GitHub.
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Build system dependencies
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -262,26 +282,26 @@ mentions that Python 3 is required, this can be specified as:
 
 .. code-block:: python
 
-   depends_on('python@3:', type=('build', 'run')
+   depends_on('python@3:', type=('build', 'run'))
 
 
 If Python 2 is required, this would look like:
 
 .. code-block:: python
 
-   depends_on('python@:2', type=('build', 'run')
+   depends_on('python@:2', type=('build', 'run'))
 
 
 If Python 2.7 is the only version that works, you can use:
 
 .. code-block:: python
 
-   depends_on('python@2.7:2.8', type=('build', 'run')
+   depends_on('python@2.7:2.8', type=('build', 'run'))
 
 
 The documentation may not always specify supported Python versions.
-Another place to check is in the ``setup.py`` file. Look for a line
-containing ``python_requires``. An example from
+Another place to check is in the ``setup.py`` or ``setup.cfg`` file.
+Look for a line containing ``python_requires``. An example from
 `py-numpy <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/py-numpy/package.py>`_
 looks like:
 
@@ -290,7 +310,7 @@ looks like:
    python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*'
 
 
-More commonly, you will find a version check at the top of the file:
+You may also find a version check at the top of the ``setup.py``:
 
 .. code-block:: python
 
@@ -305,6 +325,39 @@ This can be converted to Spack's spec notation like so:
    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
 
 
+If you are writing a recipe for a package that only distributes
+wheels, look for a section in the ``METADATA`` file that looks like::
+
+   Requires-Python: >=3.5,<4
+
+
+This would be translated to:
+
+.. code-block:: python
+
+   extends('python')
+   depends_on('python@3.5:3.999', type=('build', 'run'))
+
+
+Many ``setup.py`` or ``setup.cfg`` files also contain information like::
+
+   Programming Language :: Python :: 2
+   Programming Language :: Python :: 2.6
+   Programming Language :: Python :: 2.7
+   Programming Language :: Python :: 3
+   Programming Language :: Python :: 3.3
+   Programming Language :: Python :: 3.4
+   Programming Language :: Python :: 3.5
+   Programming Language :: Python :: 3.6
+
+
+This is a list of versions of Python that the developer likely tests.
+However, you should not use this to restrict the versions of Python
+the package uses unless one of the two former methods (``python_requires``
+or ``sys.version_info``) is used. There is no logic in setuptools
+that prevents the package from building for Python versions not in
+this list, and often new releases like Python 3.7 or 3.8 work just fine.
+
 """"""""""
 setuptools
 """"""""""
@@ -317,7 +370,7 @@ Most notably, there was no way to list a project's dependencies
 with distutils. Along came setuptools, a non-builtin build system
 designed to overcome the limitations of distutils. Both projects
 use a similar API, making the transition easy while adding much
-needed functionality. Today, setuptools is used in around 75% of
+needed functionality. Today, setuptools is used in around 90% of
 the Python packages in Spack.
 
 Since setuptools isn't built-in to Python, you need to add it as a
@@ -360,6 +413,20 @@ run-time. This can be specified as:
    depends_on('py-setuptools', type='build')
 
 
+"""
+pip
+"""
+
+Packages distributed as Python wheels will require an extra dependency
+on pip:
+
+.. code-block:: python
+
+   depends_on('py-pip', type='build')
+
+
+We will use pip to install the actual wheel.
+
 """"""
 cython
 """"""
@@ -382,6 +449,12 @@ designed to compile software, and is meant for HPC facilities
 where speed is crucial. There is no reason why someone would not
 want an optimized version of a library instead of the pure-Python
 version.
+
+Note that some release tarballs come pre-cythonized, and cython is
+not needed as a dependency. However, this is becoming less common
+as Python continues to evolve and developers discover that cythonized
+sources are no longer compatible with newer versions of Python and
+need to be re-cythonized.
 
 ^^^^^^^^^^^^^^^^^^^
 Python dependencies
@@ -429,21 +502,33 @@ Obviously, this means that ``py-numpy`` is a dependency.
 
 If the package uses ``setuptools``, check for the following clues:
 
+* ``python_requires``
+
+  As mentioned above, this specifies which versions of Python are
+  required.
+
+* ``setup_requires``
+
+  These packages are usually only needed at build-time, so you can
+  add them with ``type='build'``.
+
 * ``install_requires``
 
-  These packages are required for installation.
+  These packages are required for building and installation. You can
+  add them with ``type=('build', 'run')``.
 
 * ``extra_requires``
 
   These packages are optional dependencies that enable additional
   functionality. You should add a variant that optionally adds these
-  dependencies.
+  dependencies. This variant should be False by default.
 
 * ``test_requires``
 
   These are packages that are required to run the unit tests for the
   package. These dependencies can be specified using the
-  ``type='test'`` dependency type.
+  ``type='test'`` dependency type. However, the PyPI tarballs rarely
+  contain unit tests, so there is usually no reason to add these.
 
 In the root directory of the package, you may notice a
 ``requirements.txt`` file. It may look like this file contains a list
@@ -461,13 +546,37 @@ sphinx. If you can't find any information about the package's
 dependencies, you can take a look in ``requirements.txt``, but be sure
 not to add test or documentation dependencies.
 
+Newer PEPs have added alternative ways to specify a package's dependencies.
+If you don't see any dependencies listed in the ``setup.py``, look for a
+``setup.cfg`` or ``pyproject.toml``. These files can be used to store the
+same ``install_requires`` information that ``setup.py`` used to use.
+
+If you are write a recipe for a package that only distributes wheels,
+check the ``METADATA`` file for lines like::
+
+   Requires-Dist: azureml-core (~=1.11.0)
+   Requires-Dist: azureml-dataset-runtime[fuse] (~=1.11.0)
+   Requires-Dist: azureml-train (~=1.11.0)
+   Requires-Dist: azureml-train-automl-client (~=1.11.0)
+   Requires-Dist: azureml-pipeline (~=1.11.0)
+   Provides-Extra: accel-models
+   Requires-Dist: azureml-accel-models (~=1.11.0); extra == 'accel-models'
+   Provides-Extra: automl
+   Requires-Dist: azureml-train-automl (~=1.11.0); extra == 'automl'
+
+
+Lines that use ``Requires-Dist`` are similar to ``install_requires``.
+Lines that use ``Provides-Extra`` are similar to ``extra_requires``,
+and you can add a variant for those dependencies. The ``~=1.11.0``
+syntax is equivalent to ``1.11.0:1.11.999``.
+
 """"""""""
 setuptools
 """"""""""
 
 Setuptools is a bit of a special case. If a package requires setuptools
 at run-time, how do they express this? They could add it to
-``install_requires``, but setuptools is imported long before this and
+``install_requires``, but setuptools is imported long before this and is
 needed to read this line. And since you can't install the package
 without setuptools, the developers assume that setuptools will already
 be there, so they never mention when it is required. We don't want to
@@ -475,7 +584,8 @@ add run-time dependencies if they aren't needed, so you need to
 determine whether or not setuptools is needed. Grep the installation
 directory for any files containing a reference to ``setuptools`` or
 ``pkg_resources``. Both modules come from ``py-setuptools``.
-``pkg_resources`` is particularly common in scripts in ``prefix/bin``.
+``pkg_resources`` is particularly common in scripts found in
+``prefix/bin``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Passing arguments to setup.py
@@ -549,46 +659,64 @@ a "package" is a directory containing files like:
    foo/baz.py
 
 
-whereas a "module" is a single Python file. Since ``find_packages``
-only returns packages, you'll have to determine the correct module
-names yourself. You can now add these packages and modules to the
-package like so:
+whereas a "module" is a single Python file.
+
+The ``PythonPackage`` base class automatically detects these module
+names for you. If, for whatever reason, the module names detected
+are wrong, you can provide the names yourself by overriding
+``import_modules`` like so:
 
 .. code-block:: python
 
    import_modules = ['six']
 
 
-When you run ``spack install --test=root py-six``, Spack will attempt
-to import the ``six`` module after installation.
+Sometimes the list of module names to import depends on how the
+package was built. For example, the ``py-pyyaml`` package has a
+``+libyaml`` variant that enables the build of a faster optimized
+version of the library. If the user chooses ``~libyaml``, only the
+``yaml`` library will be importable. If the user chooses ``+libyaml``,
+both the ``yaml`` and ``yaml.cyaml`` libraries will be available.
+This can be expressed like so:
 
-These tests most often catch missing dependencies and non-RPATHed
+.. code-block:: python
+
+   @property
+   def import_modules(self):
+       modules = ['yaml']
+
+       if '+libyaml' in self.spec:
+           modules.append('yaml.cyaml')
+
+       return modules
+
+
+These tests often catch missing dependencies and non-RPATHed
 libraries. Make sure not to add modules/packages containing the word
-"test", as these likely won't end up in installation directory.
+"test", as these likely won't end up in the installation directory,
+or may require test dependencies like pytest to be installed.
+
+These tests can be triggered by running ``spack install --test=root``
+or by running ``spack test run`` after the installation has finished.
 
 """"""""""
 Unit tests
 """"""""""
 
 The package you want to install may come with additional unit tests.
-By default, Spack runs:
-
-.. code-block:: console
-
-   $ python setup.py test
-
-
-if it detects that the ``setup.py`` file supports a ``test`` phase.
-You can add additional build-time or install-time tests by overriding
-``test`` and ``installtest``, respectively. For example, ``py-numpy``
-adds:
+You can add additional build-time or install-time tests by adding
+additional testing functions. For example, ``py-numpy`` adds:
 
 .. code-block:: python
 
+   @run_after('install')
+   @on_package_attributes(run_tests=True)
    def install_test(self):
-        with working_dir('..'):
-            python('-c', 'import numpy; numpy.test("full", verbose=2)')
+       with working_dir('spack-test', create=True):
+           python('-c', 'import numpy; numpy.test("full", verbose=2)')
 
+
+These tests can be triggered by running ``spack install --test=root``.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Setup file in a sub-directory
@@ -629,7 +757,7 @@ PythonPackage vs. packages that use Python
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 There are many packages that make use of Python, but packages that depend
-on Python are not necessarily ``PythonPackages``.
+on Python are not necessarily ``PythonPackage``'s.
 
 """""""""""""""""""""""
 Choosing a build system
@@ -651,6 +779,8 @@ that the package uses the ``PythonPackage`` build system. However, there
 are occasionally packages that use ``PythonPackage`` that shouldn't
 start with ``py-``. For example:
 
+* awscli
+* aws-parallelcluster
 * busco
 * easybuild
 * httpie
@@ -724,8 +854,8 @@ and ``pip`` may be a perfectly valid alternative to using Spack. The
 main advantage of Spack over ``pip`` is its ability to compile
 non-Python dependencies. It can also build cythonized versions of a
 package or link to an optimized BLAS/LAPACK library like MKL,
-resulting in calculations that run orders of magnitude faster.
-Spack does not offer a significant advantage to other python-management
+resulting in calculations that run orders of magnitudes faster.
+Spack does not offer a significant advantage over other python-management
 systems for installing and using tools like flake8 and sphinx.
 But if you need packages with non-Python dependencies like
 numpy and scipy, Spack will be very valuable to you.
@@ -736,8 +866,9 @@ non-Python dependencies. Anaconda contains many Python packages that
 are not yet in Spack, and Spack contains many Python packages that are
 not yet in Anaconda. The main advantage of Spack over Anaconda is its
 ability to choose a specific compiler and BLAS/LAPACK or MPI library.
-Spack also has better platform support for supercomputers. On the
-other hand, Anaconda offers Windows support.
+Spack also has better platform support for supercomputers, and can build
+optimized binaries for your specific microarchitecture. On the other hand,
+Anaconda offers Windows support.
 
 ^^^^^^^^^^^^^^^^^^^^^^
 External documentation

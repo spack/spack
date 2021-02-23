@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,7 @@ class MongoCDriver(Package):
 
     maintainers = ['michaelkuhn']
 
+    version('1.17.0', sha256='90aa23a3f92be0a076fe0b903b68276a7973d4e472929943069f503d5ab50cb9')
     version('1.16.2', sha256='0a722180e5b5c86c415b9256d753b2d5552901dc5d95c9f022072c3cd336887e')
     version('1.9.5', sha256='4a4bd0b0375450250a3da50c050b84b9ba8950ce32e16555714e75ebae0b8019')
     version('1.9.4', sha256='910c2f1b2e3df4d0ea39c2f242160028f90fcb8201f05339a730ec4ba70811fb')
@@ -43,6 +44,7 @@ class MongoCDriver(Package):
     depends_on('pkgconfig', type='build')
 
     # When updating mongo-c-driver, libbson has to be kept in sync.
+    depends_on('libbson@1.17.0:1.17.99', when='@1.17')
     depends_on('libbson@1.16.0:1.16.99', when='@1.16')
     depends_on('libbson@1.9.0:1.9.99', when='@1.9')
     depends_on('libbson@1.8.0:1.8.99', when='@1.8')

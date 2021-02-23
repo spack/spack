@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,6 +63,7 @@ class Gnuplot(AutotoolsPackage):
     depends_on('cairo@1.2:', when='+cairo')
     depends_on('wxwidgets', when='+wx')
     depends_on('pango@1.10:', when='+wx')
+    depends_on('libsm', when='+wx')
     depends_on('pango@1.10:', when='+cairo')
     depends_on('libx11', when='+X')
     depends_on('qt@5.7:+opengl', when='+qt')

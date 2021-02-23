@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class OpenIscsi(MakefilePackage):
     version('2.0.876', sha256='9f01327d5e100ed794dc5083fc18dc4a06a0c29c77b252e21abd1b8f56edd9a7')
 
     depends_on('gettext')
+    depends_on('uuid')
     depends_on('util-linux+libmount')
     depends_on('kmod')
     depends_on('open-isns')
@@ -27,6 +28,10 @@ class OpenIscsi(MakefilePackage):
 
     def setup_build_environment(self, env):
         env.set('CFLAGS', '-DNO_SYSTEMD')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.sbin)
+        env.prepend_path('LD_LIBRARY_PATH', self.prefix.usr.lib64)
 
     def install(self, spec, prefix):
         make('install', 'DESTDIR={0}'.format(prefix))

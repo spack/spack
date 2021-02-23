@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import glob
-from spack import *
 
 
 class Leveldb(CMakePackage):
@@ -52,13 +49,10 @@ class Leveldb(CMakePackage):
         mkdirp(prefix.lib)
 
         # Needed for version 1.20
-        libraries  = glob.glob('out-shared/libleveldb.*')
-        libraries += glob.glob('out-static/libleveldb.*')
+        install('out-shared/libleveldb.*', prefix.lib)
+        install('out-static/libleveldb.*', prefix.lib)
         # Needed for version 1.18
-        libraries += glob.glob('libleveldb.*')
-
-        for library in libraries:
-            install(library, prefix.lib)
+        install('libleveldb.*', prefix.lib)
 
         install_tree('include', prefix.include)
 

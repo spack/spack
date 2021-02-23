@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 """
 This module contains all the elements that are required to create an
 architecture object. These include, the target processor, the operating system,
-and the architecture platform (i.e. cray, darwin, linux, bgq, etc) classes.
+and the architecture platform (i.e. cray, darwin, linux, etc) classes.
 
 On a multiple architecture machine, the architecture spec field can be set to
 build a package against any target and operating system that is present on the
@@ -56,17 +56,20 @@ set. The user can set the front-end and back-end operating setting by the class
 attributes front_os and back_os. The operating system as described earlier,
 will be responsible for compiler detection.
 """
+import contextlib
 import functools
 import inspect
 import warnings
 
+import archspec.cpu
 import six
 
-import llnl.util.cpu as cpu
 import llnl.util.tty as tty
 from llnl.util.lang import memoized, list_modules, key_ordering
 
 import spack.compiler
+import spack.compilers
+import spack.config
 import spack.paths
 import spack.error as serr
 import spack.util.executable
@@ -109,9 +112,9 @@ class Target(object):
                 current target. This is typically used on machines
                 like Cray (e.g. craype-compiler)
         """
-        if not isinstance(name, cpu.Microarchitecture):
-            name = cpu.targets.get(
-                name, cpu.generic_microarchitecture(name)
+        if not isinstance(name, archspec.cpu.Microarchitecture):
+            name = archspec.cpu.TARGETS.get(
+                name, archspec.cpu.generic_microarchitecture(name)
             )
         self.microarchitecture = name
         self.module_name = module_name
@@ -207,7 +210,9 @@ class Target(object):
         # has an unexpected suffix. If so, treat it as a compiler with a
         # custom spec.
         compiler_version = compiler.version
-        version_number, suffix = cpu.version_components(compiler.version)
+        version_number, suffix = archspec.cpu.version_components(
+            compiler.version
+        )
         if not version_number or suffix not in ('', 'apple'):
             # Try to deduce the underlying version of the compiler, regardless
             # of its name in compilers.yaml. Depending on where this function
@@ -217,7 +222,7 @@ class Target(object):
             if isinstance(compiler, spack.spec.CompilerSpec):
                 compiler = spack.compilers.compilers_for_spec(compiler).pop()
             try:
-                compiler_version = compiler.get_real_version()
+                compiler_version = compiler.real_version
             except spack.util.executable.ProcessError as e:
                 # log this and just return compiler.version instead
                 tty.debug(str(e))
@@ -233,14 +238,19 @@ class Platform(object):
         Will return a instance of it once it is returned.
     """
 
-    priority        = None  # Subclass sets number. Controls detection order
-    front_end       = None
-    back_end        = None
-    default         = None  # The default back end target. On cray ivybridge
+    # Subclass sets number. Controls detection order
+    priority        = None   # type: int
 
-    front_os        = None
-    back_os         = None
-    default_os      = None
+    #: binary formats used on this platform; used by relocation logic
+    binary_formats  = ['elf']
+
+    front_end       = None   # type: str
+    back_end        = None   # type: str
+    default         = None   # type: str # The default back end target.
+
+    front_os        = None   # type: str
+    back_os         = None   # type: str
+    default_os      = None   # type: str
 
     reserved_targets = ['default_target', 'frontend', 'fe', 'backend', 'be']
     reserved_oss = ['default_os', 'frontend', 'fe', 'backend', 'be']
@@ -436,6 +446,12 @@ class Arch(object):
             ('target', self.target.to_dict_or_value())])
         return syaml_dict([('arch', d)])
 
+    def to_spec(self):
+        """Convert this Arch to an anonymous Spec with architecture defined."""
+        spec = spack.spec.Spec()
+        spec.architecture = spack.spec.ArchSpec(str(self))
+        return spec
+
     @staticmethod
     def from_dict(d):
         spec = spack.spec.ArchSpec.from_dict(d)
@@ -479,7 +495,7 @@ def arch_for_spec(arch_spec):
 
 
 @memoized
-def all_platforms():
+def _all_platforms():
     classes = []
     mod_path = spack.paths.platform_path
     parent_module = "spack.platforms"
@@ -500,7 +516,7 @@ def all_platforms():
 
 
 @memoized
-def platform():
+def _platform():
     """Detects the platform for this machine.
 
     Gather a list of all available subclasses of platforms.
@@ -509,7 +525,7 @@ def platform():
     a file path (/opt/cray...)
     """
     # Try to create a Platform object using the config file FIRST
-    platform_list = all_platforms()
+    platform_list = _all_platforms()
     platform_list.sort(key=lambda a: a.priority)
 
     for platform_cls in platform_list:
@@ -517,7 +533,28 @@ def platform():
             return platform_cls()
 
 
+#: The "real" platform of the host running Spack. This should not be changed
+#: by any method and is here as a convenient way to refer to the host platform.
+real_platform = _platform
+
+#: The current platform used by Spack. May be swapped by the use_platform
+#: context manager.
+platform = _platform
+
+#: The list of all platform classes. May be swapped by the use_platform
+#: context manager.
+all_platforms = _all_platforms
+
+
 @memoized
+def default_arch():
+    """Default ``Arch`` object for this machine.
+
+    See ``sys_type()``.
+    """
+    return Arch(platform(), 'default_os', 'default_target')
+
+
 def sys_type():
     """Print out the "default" platform-os-target tuple for this machine.
 
@@ -530,17 +567,52 @@ def sys_type():
     architectures.
 
     """
-    arch = Arch(platform(), 'default_os', 'default_target')
-    return str(arch)
+    return str(default_arch())
 
 
 @memoized
 def compatible_sys_types():
     """Returns a list of all the systypes compatible with the current host."""
     compatible_archs = []
-    current_host = cpu.host()
+    current_host = archspec.cpu.host()
     compatible_targets = [current_host] + current_host.ancestors
     for target in compatible_targets:
         arch = Arch(platform(), 'default_os', target)
         compatible_archs.append(str(arch))
     return compatible_archs
+
+
+class _PickleableCallable(object):
+    """Class used to pickle a callable that may substitute either
+    _platform or _all_platforms. Lambda or nested functions are
+    not pickleable.
+    """
+    def __init__(self, return_value):
+        self.return_value = return_value
+
+    def __call__(self):
+        return self.return_value
+
+
+@contextlib.contextmanager
+def use_platform(new_platform):
+    global platform, all_platforms
+
+    msg = '"{0}" must be an instance of Platform'
+    assert isinstance(new_platform, Platform), msg.format(new_platform)
+
+    original_platform_fn, original_all_platforms_fn = platform, all_platforms
+    platform = _PickleableCallable(new_platform)
+    all_platforms = _PickleableCallable([type(new_platform)])
+
+    # Clear configuration and compiler caches
+    spack.config.config.clear_caches()
+    spack.compilers._cache_config_files = []
+
+    yield new_platform
+
+    platform, all_platforms = original_platform_fn, original_all_platforms_fn
+
+    # Clear configuration and compiler caches
+    spack.config.config.clear_caches()
+    spack.compilers._cache_config_files = []

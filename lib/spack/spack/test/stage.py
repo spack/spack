@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -529,15 +529,21 @@ class TestStage(object):
                 pass
         check_destroy(stage, self.stage_name)
 
-    def test_search_if_default_fails(self, failing_fetch_strategy, search_fn):
+    @pytest.mark.parametrize(
+        "err_msg,expected", [('Fetch from fetch.test.com',
+                              'Fetch from fetch.test.com'),
+                             (None, 'All fetchers failed')])
+    def test_search_if_default_fails(self, failing_fetch_strategy, search_fn,
+                                     err_msg, expected):
         stage = Stage(failing_fetch_strategy,
                       name=self.stage_name,
                       search_fn=search_fn)
+
         with stage:
-            try:
-                stage.fetch(mirror_only=False)
-            except spack.fetch_strategy.FetchError:
-                pass
+            with pytest.raises(spack.fetch_strategy.FetchError,
+                               match=expected):
+                stage.fetch(mirror_only=False, err_msg=err_msg)
+
         check_destroy(stage, self.stage_name)
         assert search_fn.performed_search
 
@@ -833,7 +839,8 @@ class TestStage(object):
                 assert 'spack' in path.split(os.path.sep)
 
                 # Make sure cached stage path value was changed appropriately
-                assert spack.stage._stage_root == test_path
+                assert spack.stage._stage_root in (
+                    test_path, os.path.join(test_path, getpass.getuser()))
 
                 # Make sure the directory exists
                 assert os.path.isdir(spack.stage._stage_root)

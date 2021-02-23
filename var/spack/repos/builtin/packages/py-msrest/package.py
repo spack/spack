@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyMsrest(PythonPackage):
     """AutoRest swagger generator Python client runtime."""
 
     homepage = "https://github.com/Azure/msrest-for-python"
-    url      = "https://pypi.io/packages/source/m/msrest/msrest-0.6.16.tar.gz"
+    pypi = "msrest/msrest-0.6.16.tar.gz"
 
     version('0.6.16', sha256='214c5be98954cb45feb6a6a858a7ae6d41a664e80294b65db225bbaa33d9ca3c')
 

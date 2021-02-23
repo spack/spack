@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,14 +10,16 @@ Modules
 =======
 
 The use of module systems to manage user environment in a controlled way
-is a common practice at HPC centers that is often embraced also by individual
-programmers on their development machines. To support this common practice
-Spack integrates with `Environment Modules
-<http://modules.sourceforge.net/>`_  and  `LMod
-<http://lmod.readthedocs.io/en/latest/>`_ by
-providing post-install hooks that generate module files and commands to manipulate them.
+is a common practice at HPC centers that is often embraced also by
+individual programmers on their development machines. To support this
+common practice Spack integrates with `Environment Modules
+<http://modules.sourceforge.net/>`_ and `LMod
+<http://lmod.readthedocs.io/en/latest/>`_ by providing post-install hooks
+that generate module files and commands to manipulate them.
 
-.. _shell-support:
+Modules are one of several ways you can use Spack packages. For other
+options that may fit your use case better, you should also look at
+:ref:`spack load <spack-load>` and :ref:`environments <environments>`.
 
 ----------------------------
 Using module files via Spack
@@ -60,206 +62,9 @@ to load the ``cmake`` module:
 
    $ module load cmake-3.7.2-gcc-6.3.0-fowuuby
 
-Neither of these is particularly pretty, easy to remember, or
-easy to type. Luckily, Spack has its own interface for using modules.
-
-^^^^^^^^^^^^^
-Shell support
-^^^^^^^^^^^^^
-
-To enable additional Spack commands for loading and unloading module files,
-and to add the correct path to ``MODULEPATH``,  you need to source the appropriate
-setup file in the ``$SPACK_ROOT/share/spack`` directory. This will activate shell
-support for the commands that need it. For ``bash``, ``ksh`` or ``zsh`` users:
-
-.. code-block:: console
-
-   $ . ${SPACK_ROOT}/share/spack/setup-env.sh
-
-For ``csh`` and ``tcsh`` instead:
-
-.. code-block:: console
-
-   $ set SPACK_ROOT ...
-   $ source $SPACK_ROOT/share/spack/setup-env.csh
-
-Note that in the latter case it is necessary to explicitly set ``SPACK_ROOT``
-before sourcing the setup file (you will get a meaningful error message
-if you don't).
-
-If you want to have Spack's shell support available on the command line at
-any login you can put this source line in one of the files that are sourced
-at startup (like ``.profile``, ``.bashrc`` or ``.cshrc``). Be aware though
-that the startup time may be slightly increased because of that.
-
-
-.. _cmd-spack-load:
-
-^^^^^^^^^^^^^^^^^^^^^^^
-``spack load / unload``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Once you have shell support enabled you can use the same spec syntax
-you're used to and you can use the same shortened names you use
-everywhere else in Spack.
-
-For example this will add the ``mpich`` package built with ``gcc`` to your path:
-
-.. code-block:: console
-
-   $ spack install mpich %gcc@4.4.7
-
-   # ... wait for install ...
-
-   $ spack load mpich %gcc@4.4.7
-   $ which mpicc
-   ~/spack/opt/linux-debian7-x86_64/gcc@4.4.7/mpich@3.0.4/bin/mpicc
-
-These commands will add appropriate directories to your ``PATH``,
-``MANPATH``, ``CPATH``, and ``LD_LIBRARY_PATH``.  When you no longer
-want to use a package, you can type unload or unuse similarly:
-
-.. code-block:: console
-
-   $ spack unload mpich %gcc@4.4.7
-
-.. note::
-
-   The ``load`` and ``unload`` subcommands are only available if you
-   have enabled Spack's shell support. These command DO NOT use the
-   underlying Spack-generated module files.
-
-^^^^^^^^^^^^^^^
-Ambiguous specs
-^^^^^^^^^^^^^^^
-
-If a spec used with load/unload or is ambiguous (i.e. more than one
-installed package matches it), then Spack will warn you:
-
-.. code-block:: console
-
-   $ spack load libelf
-   ==> Error: libelf matches multiple packages.
-   Matching packages:
-     libelf@0.8.13%gcc@4.4.7 arch=linux-debian7-x86_64
-     libelf@0.8.13%intel@15.0.0 arch=linux-debian7-x86_64
-   Use a more specific spec
-
-You can either type the ``spack load`` command again with a fully
-qualified argument, or you can add just enough extra constraints to
-identify one package.  For example, above, the key differentiator is
-that one ``libelf`` is built with the Intel compiler, while the other
-used ``gcc``.  You could therefore just type:
-
-.. code-block:: console
-
-   $ spack load libelf %intel
-
-To identify just the one built with the Intel compiler.
-
-.. _cmd-spack-module-loads:
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-``spack module tcl loads``
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-In some cases, it is desirable to use a Spack-generated module, rather
-than relying on Spack's built-in user-environment modification
-capabilities. To translate a spec into a module name, use ``spack
-module tcl loads`` or ``spack module lmod loads`` depending on the
-module system desired.
-
-
-To load not just a module, but also all the modules it depends on, use
-the ``--dependencies`` option. This is not required for most modules
-because Spack builds binaries with RPATH support.  However, not all
-packages use RPATH to find their dependencies: this can be true in
-particular for Python extensions, which are currently *not* built with
-RPATH.
-
-Scripts to load modules recursively may be made with the command:
-
-.. code-block:: console
-
-    $ spack module tcl loads --dependencies <spec>
-
-An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
-
-.. code-block :: console
-
-    $ source <( spack module tcl loads --dependencies <spec> )
-
-
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Module Commands for Shell Scripts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Although Spack is flexible, the ``module`` command is much faster.
-This could become an issue when emitting a series of ``spack load``
-commands inside a shell script.  By adding the ``--dependencies`` flag,
-``spack module tcl loads`` may also be used to generate code that can be
-cut-and-pasted into a shell script.  For example:
-
-.. code-block:: console
-
-    $ spack module tcl loads --dependencies py-numpy git
-    # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
-    module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
-    # ncurses@6.0%gcc@4.9.3=linux-x86_64
-    module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
-    # zlib@1.2.8%gcc@4.9.3=linux-x86_64
-    module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
-    # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
-    module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
-    # readline@6.3%gcc@4.9.3=linux-x86_64
-    module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
-    # python@3.5.1%gcc@4.9.3=linux-x86_64
-    module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
-    # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
-    module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
-    # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
-    module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
-    # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
-    module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
-    # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
-    module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
-    # curl@7.47.1%gcc@4.9.3=linux-x86_64
-    module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
-    # autoconf@2.69%gcc@4.9.3=linux-x86_64
-    module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
-    # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
-    module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
-    # expat@2.1.0%gcc@4.9.3=linux-x86_64
-    module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
-    # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
-    module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
-
-The script may be further edited by removing unnecessary modules.
-
-
-^^^^^^^^^^^^^^^
-Module Prefixes
-^^^^^^^^^^^^^^^
-
-On some systems, modules are automatically prefixed with a certain
-string; ``spack module tcl loads`` needs to know about that prefix when it
-issues ``module load`` commands.  Add the ``--prefix`` option to your
-``spack module tcl loads`` commands if this is necessary.
-
-For example, consider the following on one system:
-
-.. code-block:: console
-
-    $ module avail
-    linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
-
-    $ spack module tcl loads antlr    # WRONG!
-    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
-    module load antlr-2.7.7-gcc-5.3.0-bdpl46y
-
-    $ spack module tcl loads --prefix linux-SuSE11-x86_64/ antlr
-    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
-    module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
+Neither of these is particularly pretty, easy to remember, or easy to
+type. Luckily, Spack offers many facilities for customizing the module
+scheme used at your site.
 
 -------------------------
 Module file customization
@@ -589,6 +394,32 @@ that are already in the LMod hierarchy.
    For hierarchies that are deeper than three layers ``lmod spider`` may have some issues.
    See `this discussion on the LMod project <https://github.com/TACC/Lmod/issues/114>`_.
 
+.. _customize-env-modifications:
+
+"""""""""""""""""""""""""""""""""""
+Customize environment modifications
+"""""""""""""""""""""""""""""""""""
+
+You can control which prefixes in a Spack package are added to environment
+variables with the ``prefix_inspections`` section; this section maps relative
+prefixes to the list of environment variables which should be updated with
+those prefixes.
+
+.. code-block:: yaml
+
+  modules:
+    prefix_inspections:
+      bin:
+        - PATH
+      lib:
+        - LIBRARY_PATH
+      '':
+        - CMAKE_PREFIX_PATH
+
+In this case, for a Spack package ``foo`` installed to ``/spack/prefix/foo``,
+the generated module file for ``foo`` would update ``PATH`` to contain
+``/spack/prefix/foo/bin``.
+
 """"""""""""""""""""""""""""""""""""
 Filter out environment modifications
 """"""""""""""""""""""""""""""""""""
@@ -697,3 +528,135 @@ subcommand is ``rm``:
    that are already existing will ask for a confirmation by default. If
    the command is used in a script it is possible though to pass the
    ``-y`` argument, that will skip this safety measure.
+
+
+.. _modules-in-shell-scripts:
+
+------------------------------------
+Using Spack modules in shell scripts
+------------------------------------
+
+The easiest To enable additional Spack commands for loading and unloading
+module files, and to add the correct path to ``MODULEPATH``, you need to
+source the appropriate setup file. Assuming Spack is installed in
+``$SPACK_ROOT``, run the appropriate command for your shell:
+
+.. code-block:: console
+
+   # For bash/zsh/sh
+   $ . $SPACK_ROOT/share/spack/setup-env.sh
+
+   # For tcsh/csh
+   $ source $SPACK_ROOT/share/spack/setup-env.csh
+
+   # For fish
+   $ . $SPACK_ROOT/share/spack/setup-env.fish
+
+If you want to have Spack's shell support available on the command line
+at any login you can put this source line in one of the files that are
+sourced at startup (like ``.profile``, ``.bashrc`` or ``.cshrc``). Be
+aware that the shell startup time may increase slightly as a result.
+
+.. _cmd-spack-module-loads:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+``spack module tcl loads``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In some cases, it is desirable to use a Spack-generated module, rather
+than relying on Spack's built-in user-environment modification
+capabilities. To translate a spec into a module name, use ``spack
+module tcl loads`` or ``spack module lmod loads`` depending on the
+module system desired.
+
+
+To load not just a module, but also all the modules it depends on, use
+the ``--dependencies`` option. This is not required for most modules
+because Spack builds binaries with RPATH support.  However, not all
+packages use RPATH to find their dependencies: this can be true in
+particular for Python extensions, which are currently *not* built with
+RPATH.
+
+Scripts to load modules recursively may be made with the command:
+
+.. code-block:: console
+
+    $ spack module tcl loads --dependencies <spec>
+
+An equivalent alternative using `process substitution <http://tldp.org/LDP/abs/html/process-sub.html>`_ is:
+
+.. code-block:: console
+
+    $ source <( spack module tcl loads --dependencies <spec> )
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Module Commands for Shell Scripts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although Spack is flexible, the ``module`` command is much faster.
+This could become an issue when emitting a series of ``spack load``
+commands inside a shell script.  By adding the ``--dependencies`` flag,
+``spack module tcl loads`` may also be used to generate code that can be
+cut-and-pasted into a shell script.  For example:
+
+.. code-block:: console
+
+    $ spack module tcl loads --dependencies py-numpy git
+    # bzip2@1.0.6%gcc@4.9.3=linux-x86_64
+    module load bzip2-1.0.6-gcc-4.9.3-ktnrhkrmbbtlvnagfatrarzjojmkvzsx
+    # ncurses@6.0%gcc@4.9.3=linux-x86_64
+    module load ncurses-6.0-gcc-4.9.3-kaazyneh3bjkfnalunchyqtygoe2mncv
+    # zlib@1.2.8%gcc@4.9.3=linux-x86_64
+    module load zlib-1.2.8-gcc-4.9.3-v3ufwaahjnviyvgjcelo36nywx2ufj7z
+    # sqlite@3.8.5%gcc@4.9.3=linux-x86_64
+    module load sqlite-3.8.5-gcc-4.9.3-a3eediswgd5f3rmto7g3szoew5nhehbr
+    # readline@6.3%gcc@4.9.3=linux-x86_64
+    module load readline-6.3-gcc-4.9.3-se6r3lsycrwxyhreg4lqirp6xixxejh3
+    # python@3.5.1%gcc@4.9.3=linux-x86_64
+    module load python-3.5.1-gcc-4.9.3-5q5rsrtjld4u6jiicuvtnx52m7tfhegi
+    # py-setuptools@20.5%gcc@4.9.3=linux-x86_64
+    module load py-setuptools-20.5-gcc-4.9.3-4qr2suj6p6glepnedmwhl4f62x64wxw2
+    # py-nose@1.3.7%gcc@4.9.3=linux-x86_64
+    module load py-nose-1.3.7-gcc-4.9.3-pwhtjw2dvdvfzjwuuztkzr7b4l6zepli
+    # openblas@0.2.17%gcc@4.9.3+shared=linux-x86_64
+    module load openblas-0.2.17-gcc-4.9.3-pw6rmlom7apfsnjtzfttyayzc7nx5e7y
+    # py-numpy@1.11.0%gcc@4.9.3+blas+lapack=linux-x86_64
+    module load py-numpy-1.11.0-gcc-4.9.3-mulodttw5pcyjufva4htsktwty4qd52r
+    # curl@7.47.1%gcc@4.9.3=linux-x86_64
+    module load curl-7.47.1-gcc-4.9.3-ohz3fwsepm3b462p5lnaquv7op7naqbi
+    # autoconf@2.69%gcc@4.9.3=linux-x86_64
+    module load autoconf-2.69-gcc-4.9.3-bkibjqhgqm5e3o423ogfv2y3o6h2uoq4
+    # cmake@3.5.0%gcc@4.9.3~doc+ncurses+openssl~qt=linux-x86_64
+    module load cmake-3.5.0-gcc-4.9.3-x7xnsklmgwla3ubfgzppamtbqk5rwn7t
+    # expat@2.1.0%gcc@4.9.3=linux-x86_64
+    module load expat-2.1.0-gcc-4.9.3-6pkz2ucnk2e62imwakejjvbv6egncppd
+    # git@2.8.0-rc2%gcc@4.9.3+curl+expat=linux-x86_64
+    module load git-2.8.0-rc2-gcc-4.9.3-3bib4hqtnv5xjjoq5ugt3inblt4xrgkd
+
+The script may be further edited by removing unnecessary modules.
+
+
+^^^^^^^^^^^^^^^
+Module Prefixes
+^^^^^^^^^^^^^^^
+
+On some systems, modules are automatically prefixed with a certain
+string; ``spack module tcl loads`` needs to know about that prefix when it
+issues ``module load`` commands.  Add the ``--prefix`` option to your
+``spack module tcl loads`` commands if this is necessary.
+
+For example, consider the following on one system:
+
+.. code-block:: console
+
+    $ module avail
+    linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y
+
+    $ spack module tcl loads antlr    # WRONG!
+    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
+    module load antlr-2.7.7-gcc-5.3.0-bdpl46y
+
+    $ spack module tcl loads --prefix linux-SuSE11-x86_64/ antlr
+    # antlr@2.7.7%gcc@5.3.0~csharp+cxx~java~python arch=linux-SuSE11-x86_64
+    module load linux-SuSE11-x86_64/antlr-2.7.7-gcc-5.3.0-bdpl46y

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,11 +92,11 @@ class Vim(AutotoolsPackage):
 
         if '+python' in spec:
             if 'python@3:' in self.spec:
-                configure_args.append("--enable-python3interp=yes")
+                configure_args.append("--enable-python3interp=dynamic")
                 configure_args.append("--enable-pythoninterp=no")
             else:
                 configure_args.append("--enable-python3interp=no")
-                configure_args.append("--enable-pythoninterp=yes")
+                configure_args.append("--enable-pythoninterp=dynamic")
         else:
             configure_args.append("--enable-python3interp=no")
 

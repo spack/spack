@@ -1,13 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-import glob
 import tarfile
-
-from spack import *
 
 
 class Minimd(MakefilePackage):
@@ -44,6 +40,10 @@ class Minimd(MakefilePackage):
                                  self.version.up_to(2)))
         inner_tar.extractall()
 
+        if spec.target.family == 'aarch64':
+            makefile = FileFilter('miniMD_ref/Makefile.openmpi')
+            makefile.filter('-mavx', '')
+
     def install(self, spec, prefix):
         # Manual Installation
         mkdirp(prefix.bin)
@@ -52,6 +52,4 @@ class Minimd(MakefilePackage):
         install('miniMD_ref/miniMD_mpi', prefix.bin)
         install('miniMD_ref/in.lj.miniMD', prefix.bin)
         install('miniMD_ref/README', prefix.doc)
-
-        for f in glob.glob('miniMD_ref/in.*'):
-            install(f, prefix.doc)
+        install('miniMD_ref/in.*', prefix.doc)

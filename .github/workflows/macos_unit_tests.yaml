@@ -11,38 +11,34 @@ on:
       - releases/**
 jobs:
   build:
-
     runs-on: macos-latest
     strategy:
       matrix:
-        python-version: [3.7]
-
+        python-version: [3.8]
     steps:
     - uses: actions/checkout@v2
-    - name: Setup Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Python packages
       run: |
           pip install --upgrade pip six setuptools
           pip install --upgrade codecov coverage
-          pip install --upgrade flake8 pep8-naming
+          pip install --upgrade flake8 pep8-naming mypy
     - name: Setup Homebrew packages
       run: |
-        brew update
-        brew upgrade
-        brew install gcc gnupg2 dash kcov
+        brew install dash fish gcc gnupg2 kcov
     - name: Run unit tests
       run: |
         git --version
-        git fetch -u origin develop:develop
+        . .github/workflows/setup_git.sh
         . share/spack/setup-env.sh
-        coverage run $(which spack) test
+        coverage run $(which spack) unit-test
         coverage combine
         coverage xml
-    - name: Upload to codecov.io
-      uses: codecov/codecov-action@v1
+    - uses: codecov/codecov-action@v1
       with:
         file: ./coverage.xml
         flags: unittests,macos

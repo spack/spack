@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -815,6 +815,7 @@ class IntelPackage(PackageBase):
             # Was supported only up to 2015.
             blacs_lib = 'libmkl_blacs'
         elif ('^mpich@2:' in spec_root or
+              '^cray-mpich' in spec_root or
               '^mvapich2' in spec_root or
               '^intel-mpi' in spec_root or
               '^intel-parallel-studio' in spec_root):
@@ -1016,6 +1017,15 @@ class IntelPackage(PackageBase):
         #     args = ()
 
         env.extend(EnvironmentModifications.from_sourcing_file(f, *args))
+
+        if self.spec.name in ('intel', 'intel-parallel-studio'):
+            # this package provides compilers
+            # TODO: fix check above when compilers are dependencies
+            env.set('CC', self.prefix.bin.icc)
+            env.set('CXX', self.prefix.bin.icpc)
+            env.set('FC', self.prefix.bin.ifort)
+            env.set('F77', self.prefix.bin.ifort)
+            env.set('F90', self.prefix.bin.ifort)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # NB: This function is overwritten by 'mpi' provider packages:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ import traceback
 import warnings
 from six import StringIO
 
-import llnl.util.cpu
+import archspec.cpu
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
@@ -128,8 +128,8 @@ def get_version():
         git = exe.which("git")
         if git:
             with fs.working_dir(spack.paths.prefix):
-                desc = git(
-                    "describe", "--tags", output=str, fail_on_error=False)
+                desc = git("describe", "--tags", "--match", "v*",
+                           output=str, error=os.devnull, fail_on_error=False)
 
             if git.returncode == 0:
                 match = re.match(r"v([^-]+)-([^-]+)-g([a-f\d]+)", desc)
@@ -281,7 +281,7 @@ class SpackArgumentParser(argparse.ArgumentParser):
   spack help --all       list all commands and options
   spack help <command>   help on a specific command
   spack help --spec      help on the package specification syntax
-  spack docs             open http://spack.rtfd.io/ in a browser
+  spack docs             open https://spack.rtfd.io/ in a browser
 """.format(help=section_descriptions['help']))
 
         # determine help from format above
@@ -664,7 +664,7 @@ def print_setup_info(*info):
     # print environment module system if available. This can be expensive
     # on clusters, so skip it if not needed.
     if 'modules' in info:
-        generic_arch = llnl.util.cpu.host().family
+        generic_arch = archspec.cpu.host().family
         module_spec = 'environment-modules target={0}'.format(generic_arch)
         specs = spack.store.db.query(module_spec)
         if specs:

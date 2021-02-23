@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Opennurbs(Package):
@@ -49,6 +46,4 @@ class Opennurbs(Package):
         mkdir(prefix.include)
         install('libopenNURBS.a', prefix.lib)
         install_tree('zlib', join_path(prefix.include, 'zlib'))
-        headers = glob.glob(join_path('.', '*.h'))
-        for h in headers:
-            install(h, prefix.include)
+        install('*.h', prefix.include)

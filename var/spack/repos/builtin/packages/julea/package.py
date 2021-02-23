@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class Julea(MesonPackage):
     variant('lmdb', default=True, description='Enable LMDB support')
     variant('mariadb', default=True, description='Enable MariaDB support')
     variant('mongodb', default=True, description='Enable MongoDB support')
+    variant('rocksdb', default=True, description='Enable RocksDB support')
     variant('sqlite', default=True, description='Enable SQLite support')
 
     depends_on('pkgconfig', type='build')
@@ -34,9 +35,10 @@ class Julea(MesonPackage):
     depends_on('libbson')
     # depends_on('libfabric')
 
-    depends_on('hdf5@1.12.0:', when='+leveldb')
+    depends_on('hdf5@1.12.0:', when='+hdf5')
     depends_on('leveldb', when='+leveldb')
     depends_on('lmdb', when='+lmdb')
     depends_on('mariadb-c-client', when='+mariadb')
     depends_on('mongo-c-driver', when='+mongodb')
+    depends_on('rocksdb', when='+rocksdb')
     depends_on('sqlite', when='+sqlite')

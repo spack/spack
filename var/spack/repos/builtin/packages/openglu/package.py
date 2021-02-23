@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,9 +31,10 @@ class Openglu(Package):
 
         packages:
           openglu:
-            paths:
-              openglu@1.3: /opt/opengl
             buildable: False
+            externals:
+            - spec: openglu@1.3
+              prefix: /opt/opengl
 
         In that case, /opt/opengl/ should contain these two folders:
 
@@ -46,9 +47,10 @@ class Openglu(Package):
 
         packages:
           openglu:
-            paths:
-              openglu@1.3: /usr/X11R6
             buildable: False
+            externals:
+            - spec: openglu@1.3
+              prefix: /usr/X11R6
 
         In that case, /usr/X11R6 should contain
 
@@ -59,8 +61,5 @@ class Openglu(Package):
 
     @property
     def libs(self):
-        for dir in ['lib64', 'lib']:
-            libs = find_libraries('libGLU', join_path(self.prefix, dir),
-                                  shared=True, recursive=False)
-            if libs:
-                return libs
+        return find_libraries(
+            'libGLU', self.prefix, shared=True, recursive=True)

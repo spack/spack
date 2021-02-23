@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Maven(Package):
@@ -18,8 +18,17 @@ class Maven(Package):
     version('3.6.0', sha256='6a1b346af36a1f1a491c1c1a141667c5de69b42e6611d3687df26868bc0f4637')
     version('3.5.0', sha256='beb91419245395bd69a4a6edad5ca3ec1a8b64e41457672dc687c173a495f034')
     version('3.3.9', sha256='6e3e9c949ab4695a204f74038717aa7b2689b1be94875899ac1b3fe42800ff82')
+    version('3.0.4', sha256='d35a876034c08cb7e20ea2fbcf168bcad4dff5801abad82d48055517513faa2f')
 
-    depends_on('java')
+    depends_on('java', type='run')
+
+    executables = ['^mvn$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'Apache Maven (\S+)', output)
+        return match.group(1) if match else None
 
     def install(self, spec, prefix):
         # install pre-built distribution

@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import re
+import sys
+
 import pytest
 
 import spack.repo
@@ -11,6 +12,7 @@ from spack.url import UndetectableVersionError
 from spack.main import SpackCommand
 from spack.cmd.url import name_parsed_correctly, version_parsed_correctly
 from spack.cmd.url import url_summary
+
 
 url = SpackCommand('url')
 
@@ -70,6 +72,11 @@ def test_url_with_no_version_fails():
 
 
 @pytest.mark.network
+@pytest.mark.skipif(
+    sys.version_info < (2, 7),
+    reason="Python 2.6 tests are run in a container, where "
+           "networking is super slow"
+)
 def test_url_list():
     out = url('list')
     total_urls = len(out.split('\n'))
@@ -100,6 +107,11 @@ def test_url_list():
 
 
 @pytest.mark.network
+@pytest.mark.skipif(
+    sys.version_info < (2, 7),
+    reason="Python 2.6 tests are run in a container, where "
+           "networking is super slow"
+)
 def test_url_summary():
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
@@ -126,6 +138,11 @@ def test_url_summary():
     assert out_correct_versions == correct_versions
 
 
+@pytest.mark.skipif(
+    sys.version_info < (2, 7),
+    reason="Python 2.6 tests are run in a container, where "
+           "networking is super slow"
+)
 def test_url_stats(capfd):
     with capfd.disabled():
         output = url('stats')

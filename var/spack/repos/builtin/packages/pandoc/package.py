@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class Pandoc(Package):
 
     homepage = "https://pandoc.org"
 
-    # The following installs the binaries for pandoc and pandoc-cireproc. The
+    # The following installs the binaries for pandoc and pandoc-citeproc. The
     # reason for installing binaries is that pandoc is a Haskell package and
     # the Haskell framework is not yet in Spack. See #1408 for a discussion of
     # the challenges with Haskell. Until the Haskell framework is in Spack this
@@ -26,7 +26,11 @@ class Pandoc(Package):
         url = "https://github.com/jgm/pandoc/releases/download/2.7.3/pandoc-2.7.3-macOS.zip"
         version('2.7.3', sha256='fb93800c90f3fab05dbd418ee6180d086b619c9179b822ddfecb608874554ff0')
 
-    depends_on('texlive')
+    variant('texlive', default=True, description='Use TeX Live to enable PDF output')
+
+    conflicts('target=aarch64:', msg='aarch64 is not supported.')
+
+    depends_on('texlive', when='+texlive')
 
     def install(self, spec, prefix):
         install_tree('.', prefix)

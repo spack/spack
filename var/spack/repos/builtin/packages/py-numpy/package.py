@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,20 +16,18 @@ class PyNumpy(PythonPackage):
     number capabilities"""
 
     homepage = "https://numpy.org/"
-    url      = "https://pypi.io/packages/source/n/numpy/numpy-1.19.1.zip"
+    pypi = "numpy/numpy-1.19.4.zip"
     git      = "https://github.com/numpy/numpy.git"
 
     maintainers = ['adamjstewart']
-    install_time_test_callbacks = ['install_test', 'import_module_test']
-
-    import_modules = [
-        'numpy', 'numpy.compat', 'numpy.core', 'numpy.distutils', 'numpy.doc',
-        'numpy.f2py', 'numpy.fft', 'numpy.lib', 'numpy.linalg', 'numpy.ma',
-        'numpy.matrixlib', 'numpy.polynomial', 'numpy.random', 'numpy.testing',
-        'numpy.distutils.command', 'numpy.distutils.fcompiler'
-    ]
 
     version('master', branch='master')
+    version('1.20.1', sha256='3bc63486a870294683980d76ec1e3efc786295ae00128f9ea38e2c6e74d5a60a')
+    version('1.20.0', sha256='3d8233c03f116d068d5365fed4477f2947c7229582dad81e5953088989294cec')
+    version('1.19.5', sha256='a76f502430dd98d7546e1ea2250a7360c065a5fdea52b2dffe8ae7180909b6f4')
+    version('1.19.4', sha256='141ec3a3300ab89c7f2b0775289954d193cc8edb621ea05f99db9cb181530512')
+    version('1.19.3', sha256='35bf5316af8dc7c7db1ad45bec603e5fb28671beb98ebd1d65e8059efcfd3b72')
+    version('1.19.2', sha256='0d310730e1e793527065ad7dde736197b705d0e4c9999775f212b03c44a8484c')
     version('1.19.1', sha256='b8456987b637232602ceb4d663cb34106f7eb780e247d51a260b84760fd8f491')
     version('1.19.0', sha256='76766cc80d6128750075378d3bb7812cf146415bd29b588616f72c943c00d598')
     version('1.18.5', sha256='34e96e9dae65c4839bd80012023aadd6ee2ccb73ce7fdf3074c62f301e63120b')
@@ -81,11 +79,12 @@ class PyNumpy(PythonPackage):
     variant('blas',   default=True, description='Build with BLAS support')
     variant('lapack', default=True, description='Build with LAPACK support')
 
-    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@1.16:')
-    depends_on('python@3.5:', type=('build', 'run'), when='@1.17:')
-    depends_on('python@3.6:', type=('build', 'run'), when='@1.19:')
-    depends_on('py-setuptools', type='build')
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'link', 'run'), when='@1.16:')
+    depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.17:')
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@1.19:')
+    depends_on('python@3.7:', type=('build', 'link', 'run'), when='@1.20:')
+    depends_on('py-setuptools', type=('build', 'run'))
     # Check pyproject.toml for updates to the required cython version
     depends_on('py-cython@0.29.13:', when='@1.18.0:', type='build')
     depends_on('py-cython@0.29.14:', when='@1.18.1:', type='build')
@@ -101,8 +100,23 @@ class PyNumpy(PythonPackage):
     # https://github.com/numpy/numpy/pull/13132
     patch('blas-lapack-order.patch', when='@1.15:1.16')
 
+    # Add Fujitsu Fortran compiler
+    patch('add_fj_compiler.patch', when='@1.19.3:1.19.5%fj')
+    patch('add_fj_compiler2.patch', when='@1.19.0:1.19.2%fj')
+    patch('add_fj_compiler3.patch', when='@1.14.0:1.18.5%fj')
+    patch('add_fj_compiler4.patch', when='@:1.13.3%fj')
+
+    patch('check_executables.patch', when='@1.20.0:')
+    patch('check_executables2.patch', when='@1.19.0:1.19.5')
+    patch('check_executables3.patch', when='@1.16.0:1.18.5')
+    patch('check_executables4.patch', when='@1.14.0:1.15.4')
+    patch('check_executables5.patch', when='@:1.13.3')
+
     # GCC 4.8 is the minimum version that works
     conflicts('%gcc@:4.7', msg='GCC 4.8+ required')
+
+    # NVHPC support added in https://github.com/numpy/numpy/pull/17344
+    conflicts('%nvhpc', when='@:1.19.999')
 
     def flag_handler(self, name, flags):
         # -std=c99 at least required, old versions of GCC default to -std=c90
@@ -297,21 +311,8 @@ class PyNumpy(PythonPackage):
 
         return args
 
-    def test(self):
-        # `setup.py test` is not supported.  Use one of the following
-        # instead:
-        #
-        # - `python runtests.py`              (to build and test)
-        # - `python runtests.py --no-build`   (to test installed numpy)
-        # - `>>> numpy.test()`           (run tests for installed numpy
-        #                                 from within an interpreter)
-        pass
-
+    @run_after('install')
+    @on_package_attributes(run_tests=True)
     def install_test(self):
-        # Change directories due to the following error:
-        #
-        # ImportError: Error importing numpy: you should not try to import
-        #       numpy from its source directory; please exit the numpy
-        #       source tree, and relaunch your python interpreter from there.
         with working_dir('spack-test', create=True):
             python('-c', 'import numpy; numpy.test("full", verbose=2)')

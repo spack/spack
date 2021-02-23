@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class SnapKorf(MakefilePackage):
@@ -30,9 +27,7 @@ class SnapKorf(MakefilePackage):
         for p in progs:
             install(p, prefix.bin)
 
-        files = glob.iglob('*.pl')
-        for file in files:
-            install(file, prefix.bin)
+        install('*.pl', prefix.bin)
 
         install_tree('Zoe', prefix.Zoe)
         install_tree('HMM', prefix.HMM)

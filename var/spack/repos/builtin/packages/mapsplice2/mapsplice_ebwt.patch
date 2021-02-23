@@ -1,0 +1,20 @@
+--- a/src/MapSplice/ebwt.h
++++ b/src/MapSplice/ebwt.h
+@@ -430,7 +430,7 @@ public:
+ 	     vector<uint32_t>& plens,
+ 	     uint32_t sztot,
+ 	     const RefReadInParams& refparams,
+-	     uint32_t seed,
++	     uint32_t seed = 0,
+ 	     int32_t __overrideOffRate = -1,
+ 	     int32_t __overrideIsaRate = -1,
+ 	     bool verbose = false,
+@@ -3942,7 +3942,7 @@ void Ebwt<TStr>::joinToDisk(
+ 	TStr& ret,
+ 	ostream& out1,
+ 	ostream& out2,
+-	uint32_t seed = 0)
++	uint32_t seed /* = 0 */ )
+ {
+ 	RandomSource rand; // reproducible given same seed
+ 	rand.init(seed);

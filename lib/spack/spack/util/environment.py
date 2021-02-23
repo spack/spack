@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -508,16 +508,16 @@ class EnvironmentModifications(object):
 
         for envmod in reversed(self.env_modifications):
             if type(envmod) == SetEnv:
-                tty.warn("Reversing `Set` environment operation may lose "
-                         "original value")
+                tty.debug("Reversing `Set` environment operation may lose "
+                          "original value")
                 rev.unset(envmod.name)
             elif type(envmod) == AppendPath:
                 rev.remove_path(envmod.name, envmod.value)
             elif type(envmod) == PrependPath:
                 rev.remove_path(envmod.name, envmod.value)
             elif type(envmod) == SetPath:
-                tty.warn("Reversing `SetPath` environment operation may lose "
-                         "original value")
+                tty.debug("Reversing `SetPath` environment operation may lose "
+                          "original value")
                 rev.unset(envmod.name)
             elif type(envmod) == AppendFlagsEnv:
                 rev.remove_flags(envmod.name, envmod.value)

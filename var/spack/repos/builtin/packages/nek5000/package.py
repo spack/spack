@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -35,6 +35,8 @@ class Nek5000(Package):
 
     # Dependencies
     depends_on('mpi', when="+mpi")
+
+    patch('add_fjfortran.patch', when='%fj')
 
     @run_before('install')
     def fortran_check(self):
@@ -91,6 +93,11 @@ class Nek5000(Package):
                 cc  = spec['mpi'].mpicc
             else:
                 filter_file(r'^#MPI=0', 'MPI=0', 'makenek')
+
+            # Make sure nekmpi wrapper uses srun when we know OpenMPI
+            # is not built with mpiexec
+            if '^openmpi~legacylaunchers' in spec:
+                filter_file(r'mpiexec -np', 'srun -n', 'nekmpi')
 
             if '+profiling' not in spec:
                 filter_file(r'^#PROFILING=0', 'PROFILING=0', 'makenek')

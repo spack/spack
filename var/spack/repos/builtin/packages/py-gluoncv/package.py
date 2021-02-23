@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class PyGluoncv(PythonPackage):
     depends_on('py-requests',    type=('build', 'run'))
     depends_on('py-matplotlib',  type=('build', 'run'))
     depends_on('py-portalocker', type=('build', 'run'))
-    depends_on('py-pillow',      type=('build', 'run'))
+    depends_on('pil',            type=('build', 'run'))
     depends_on('py-scipy',       type=('build', 'run'))
     depends_on('py-cython',      type='build')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,10 @@ class Spades(CMakePackage):
        standard isolates and single-cell MDA bacteria assemblies."""
 
     homepage = "http://cab.spbu.ru/software/spades/"
-    url      = "http://cab.spbu.ru/files/release3.10.1/SPAdes-3.10.1.tar.gz"
+    url      = "https://github.com/ablab/spades/releases/download/v3.15.0/SPAdes-3.15.0.tar.gz"
 
+    version('3.15.0', sha256='6719489fa4bed6dd96d78bdd4001a30806d5469170289085836711d1ffb8b28b')
+    version('3.14.1', sha256='d629b78f7e74c82534ac20f5b3c2eb367f245e6840a67b9ef6a76f6fac5323ca')
     version('3.13.0', sha256='c63442248c4c712603979fa70503c2bff82354f005acda2abc42dd5598427040')
     version('3.12.0', sha256='15b48a3bcbbe6a8ad58fd04ba5d3f1015990fbfd9bdf4913042803b171853ac7')
     version('3.11.1', sha256='3ab85d86bf7d595bd8adf11c971f5d258bbbd2574b7c1703b16d6639a725b474')

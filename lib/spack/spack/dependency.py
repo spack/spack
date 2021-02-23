@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,26 @@ all_deptypes = ('build', 'link', 'run', 'test')
 
 #: Default dependency type if none is specified
 default_deptype = ('build', 'link')
+
+
+def deptype_chars(*type_tuples):
+    """Create a string representing deptypes for many dependencies.
+
+    The string will be some subset of 'blrt', like 'bl ', 'b t', or
+    ' lr ' where each letter in 'blrt' stands for 'build', 'link',
+    'run', and 'test' (the dependency types).
+
+    For a single dependency, this just indicates that the dependency has
+    the indicated deptypes. For a list of dependnecies, this shows
+    whether ANY dpeendency in the list has the deptypes (so the deptypes
+    are merged).
+    """
+    types = set()
+    for t in type_tuples:
+        if t:
+            types.update(t)
+
+    return ''.join(t[0] if t in types else ' ' for t in all_deptypes)
 
 
 def canonical_deptype(deptype):
@@ -108,3 +128,8 @@ class Dependency(object):
                 self.patches[cond].extend(other.patches[cond])
             else:
                 self.patches[cond] = other.patches[cond]
+
+    def __repr__(self):
+        types = deptype_chars(self.type)
+        return '<Dependency: %s -> %s [%s]>' % (
+            self.pkg.name, self.spec, types)

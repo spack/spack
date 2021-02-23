@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,11 @@ class Qbox(MakefilePackage):
     depends_on('scalapack')
     depends_on('fftw')
     depends_on('xerces-c')
+    depends_on('python@:2.999', type='run')
+    depends_on('gnuplot', type='run')
+
+    # Change /usr/bin/python shebangs to /usr/bin/env python
+    patch('qbox-python-shebang-path.patch')
 
     build_directory = 'src'
 
@@ -64,9 +69,12 @@ class Qbox(MakefilePackage):
             ))))
         filter_file('$(TARGET)', 'spack', 'src/Makefile', string=True)
 
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', self.prefix.util)
+
     def install(self, spec, prefix):
-        mkdir(prefix.src)
-        install('src/qb', prefix.src)
-        install_tree('test', prefix)
-        install_tree('xml', prefix)
-        install_tree('util', prefix)
+        mkdir(prefix.bin)
+        install('src/qb', prefix.bin)
+        install_tree('test', prefix.test)
+        install_tree('xml', prefix.xml)
+        install_tree('util', prefix.util)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class Bart(MakefilePackage, CudaPackage):
     homepage = "https://mrirecon.github.io/bart/"
     url      = "https://github.com/mrirecon/bart/archive/v0.5.00.tar.gz"
 
+    version('0.6.00', sha256='dbbd33d1e3ed3324fe21f90a3b62cb51765fe369f21df100b46a32004928f18d')
     version('0.5.00', sha256='30eedcda0f0ef3808157542e0d67df5be49ee41e4f41487af5c850632788f643')
 
     # patch to fix build with MKL
@@ -23,7 +24,8 @@ class Bart(MakefilePackage, CudaPackage):
     patch('Makefile.patch')
 
     # patch to set path to bart
-    patch('bart_path.patch')
+    patch('bart_path-0.5.00.patch', when='@0.5.00')
+    patch('bart_path-0.6.00.patch', when='@0.6.00')
 
     depends_on('libpng')
     depends_on('fftw')

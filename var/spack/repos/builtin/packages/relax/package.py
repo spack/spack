@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Relax(CMakePackage):
 
     homepage = "https://twiki.cern.ch/twiki/bin/view/LCG/RELAX"
     url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/RELAX-1.tar.gz"
+
+    tags = ['hep']
 
     # The RELAX project stopped using a fixed release model since it moved to
     # ROOT 6, so any package checksum is a lie...

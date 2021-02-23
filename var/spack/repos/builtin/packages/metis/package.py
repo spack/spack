@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
-import glob
 import sys
 import os
 
@@ -17,19 +16,12 @@ class Metis(Package):
        multilevel recursive-bisection, multilevel k-way, and multi-constraint
        partitioning schemes."""
 
-    #
-    # The original metis website: http://glaros.dtc.umn.edu/gkhome/metis/metis/overview
-    # is down sometimes. This is a github mirror that provides metis 5.1.0
-    #
-
-    homepage = "https://github.com/scivision/METIS/"
-    url      = "https://github.com/scivision/METIS/raw/master/metis-5.1.0.tar.gz"
+    homepage = "http://glaros.dtc.umn.edu/gkhome/metis/metis/overview"
+    url      = "http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-5.1.0.tar.gz"
+    list_url = "http://glaros.dtc.umn.edu/gkhome/fsroot/sw/metis/OLD"
 
     version('5.1.0', sha256='76faebe03f6c963127dbb73c13eab58c9a3faeae48779f049066a21c087c5db2')
-    # For v4.0.3, use the original metis website since this version is not
-    # mirrored at the above github location.
-    version('4.0.3', url='http://glaros.dtc.umn.edu/gkhome/fetch/sw/metis/metis-4.0.3.tar.gz',
-            sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
+    version('4.0.3', sha256='5efa35de80703c1b2c4d0de080fafbcf4e0d363a21149a1ad2f96e0144841a55')
 
     variant('shared', default=True, description='Enables the build of shared libraries.')
     variant('gdb', default=False, description='Enables gdb support (version 5+).')
@@ -55,6 +47,11 @@ class Metis(Package):
 
     patch('install_gklib_defs_rename.patch', when='@5:')
     patch('gklib_nomisleadingindentation_warning.patch', when='@5: %gcc@6:')
+
+    def setup_build_environment(self, env):
+        # Ignore warnings/errors re unrecognized omp pragmas on %intel
+        if '%intel@14:' in self.spec:
+            env.append_flags('CFLAGS', '-diag-disable 3180')
 
     @when('@5:')
     def patch(self):
@@ -101,8 +98,7 @@ class Metis(Package):
         install('libmetis.a', prefix.lib)
 
         mkdir(prefix.include)
-        for h in glob.glob(join_path('Lib', '*.h')):
-            install(h, prefix.include)
+        install(join_path('Lib', '*.h'), prefix.include)
 
         mkdir(prefix.share)
         sharefiles = (('Graphs', '4elt.graph'), ('Graphs', 'metis.mesh'),
@@ -203,9 +199,7 @@ class Metis(Package):
             # install GKlib headers, which will be needed for ParMETIS
             gklib_dist = join_path(prefix.include, 'GKlib')
             mkdirp(gklib_dist)
-            hfiles = glob.glob(join_path(source_directory, 'GKlib', '*.h'))
-            for hfile in hfiles:
-                install(hfile, gklib_dist)
+            install(join_path(source_directory, 'GKlib', '*.h'), gklib_dist)
 
         if self.run_tests:
             # FIXME: On some systems, the installed binaries for METIS cannot
@@ -223,3 +217,9 @@ class Metis(Package):
             Executable(join_path(prefix.bin, 'gpmetis'))(graph, '2')
             graph = join_path(source_directory, 'graphs', 'metis.mesh')
             Executable(join_path(prefix.bin, 'mpmetis'))(graph, '2')
+
+    @run_after('install')
+    def darwin_fix(self):
+        # The shared library is not installed correctly on Darwin; fix this
+        if (sys.platform == 'darwin') and ('+shared' in self.spec):
+            fix_darwin_install_name(prefix.lib)

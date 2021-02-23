@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Bcftools(AutotoolsPackage):
@@ -99,8 +96,7 @@ class Bcftools(AutotoolsPackage):
 
         if spec.satisfies('@1.2'):
             mkdirp(self.prefix.libexec.bcftools)
-            for files in glob.glob('plugins/*.so'):
-                install(files, self.prefix.libexec.bcftools)
+            install('plugins/*.so', self.prefix.libexec.bcftools)
 
     @when('@1.2')
     def setup_run_environment(self, env):

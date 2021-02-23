@@ -1,9 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
+import re
 
 
 class Autoconf(AutotoolsPackage, GNUMirrorPackage):
@@ -12,10 +12,17 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
     homepage = 'https://www.gnu.org/software/autoconf/'
     gnu_mirror_path = 'autoconf/autoconf-2.69.tar.gz'
 
-    version('2.69', sha256='954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969')
+    version('2.70', sha256='f05f410fda74323ada4bdc4610db37f8dbd556602ba65bc843edb4d4d4a1b2b7')
+    version('2.69', sha256='954bd69b391edc12d6a4a51a2dd1476543da5c6bbf05a95b59dc0dd6fd4c2969',
+            preferred=True)
     version('2.62', sha256='83aa747e6443def0ebd1882509c53f5a2133f502ddefa21b3de141c433914bdd')
     version('2.59', sha256='9cd05c73c5fcb1f5ccae53dd6cac36bb8cb9c7b3e97ffae5a7c05c72594c88d8')
     version('2.13', sha256='f0611136bee505811e9ca11ca7ac188ef5323a8e2ef19cffd3edb3cf08fd791e')
+
+    # https://savannah.gnu.org/support/?110396
+    patch('https://git.savannah.gnu.org/cgit/autoconf.git/patch/?id=05972f49ee632cd98057a3caf82ebfb9574846da',
+          sha256='eaa3f69d927a853313a0b06e2117c51adab6377a2278549b05abc5df93643e16',
+          when='@2.70')
 
     # Note: m4 is not a pure build-time dependency of autoconf. m4 is
     # needed when autoconf runs, not only when autoconf is built.
@@ -24,12 +31,30 @@ class Autoconf(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['build-tools']
+
+    executables = [
+        '^autoconf$', '^autoheader$', '^autom4te$', '^autoreconf$',
+        '^autoscan$', '^autoupdate$', '^ifnames$'
+    ]
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'\(GNU Autoconf\)\s+(\S+)', output)
+        return match.group(1) if match else None
+
     def patch(self):
         # The full perl shebang might be too long; we have to fix this here
         # because autom4te is called during the build
-        filter_file('^#! @PERL@ -w',
-                    '#! /usr/bin/env perl',
-                    'bin/autom4te.in')
+        patched_file = 'bin/autom4te.in'
+
+        # We save and restore the modification timestamp of the file to prevent
+        # regeneration of the respective man page:
+        with keep_modification_time(patched_file):
+            filter_file('^#! @PERL@ -w',
+                        '#! /usr/bin/env perl',
+                        patched_file)
 
     @run_after('install')
     def filter_sbang(self):

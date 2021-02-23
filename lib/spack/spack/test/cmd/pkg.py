@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -55,18 +55,20 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('add', '.')
         git('config', 'user.email', 'testing@spack.io')
         git('config', 'user.name', 'Spack Testing')
-        git('commit', '-m', 'initial mock repo commit')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'initial mock repo commit')
 
         # add commit with pkg-a, pkg-b, pkg-c packages
         mkdirp('pkg-a', 'pkg-b', 'pkg-c')
         with open('pkg-a/package.py', 'w') as f:
             f.write(pkg_template.format(name='PkgA'))
-        with open('pkg-c/package.py', 'w') as f:
-            f.write(pkg_template.format(name='PkgB'))
         with open('pkg-b/package.py', 'w') as f:
+            f.write(pkg_template.format(name='PkgB'))
+        with open('pkg-c/package.py', 'w') as f:
             f.write(pkg_template.format(name='PkgC'))
         git('add', 'pkg-a', 'pkg-b', 'pkg-c')
-        git('commit', '-m', 'add pkg-a, pkg-b, pkg-c')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'add pkg-a, pkg-b, pkg-c')
 
         # remove pkg-c, add pkg-d
         with open('pkg-b/package.py', 'a') as f:
@@ -77,9 +79,10 @@ def mock_pkg_git_repo(tmpdir_factory):
             f.write(pkg_template.format(name='PkgD'))
         git('add', 'pkg-d')
         git('rm', '-rf', 'pkg-c')
-        git('commit', '-m', 'change pkg-b, remove pkg-c, add pkg-d')
+        git('-c', 'commit.gpgsign=false', 'commit',
+            '-m', 'change pkg-b, remove pkg-c, add pkg-d')
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         yield mock_repo_packages
 
 
@@ -125,6 +128,8 @@ def test_pkg_add(mock_pkg_git_repo):
                     git('status', '--short', output=str))
         finally:
             shutil.rmtree('pkg-e')
+            # Removing a package mid-run disrupts Spack's caching
+            spack.repo.path.repos[0]._fast_package_checker.invalidate()
 
     with pytest.raises(spack.main.SpackCommandError):
         pkg('add', 'does-not-exist')

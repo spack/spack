@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Minigmg(Package):
@@ -43,6 +40,4 @@ class Minigmg(Package):
         mkdir(prefix.bin)
         install('run.miniGMG', prefix.bin)
         mkdir(prefix.jobs)
-        files = glob.glob('job*')
-        for f in files:
-            install(f, prefix.jobs)
+        install('job*', prefix.jobs)

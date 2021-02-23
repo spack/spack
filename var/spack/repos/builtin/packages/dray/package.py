@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,9 @@ class Dray(Package, CudaPackage):
 
     maintainers = ['mclarsen', 'cyrush']
 
-    version('develop', branch='develop', submodules='True')
+    version('develop',  branch='develop', submodules='True', preferred=True)
+    version('0.1.4',  sha256='e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0')
+    version('0.1.3',  sha256='b2f624a072463189997343b1ed911cc34c9bb1b6c7f0c3e48efeb40c05dd0d92')
     version('0.1.2',  sha256='46937f20124b28dc78a634e8e063a3e7a3bbfd9f424ce2680b08417010c376da')
     version('0.1.1',  sha256='e5daa49ee3367c087f5028dc5a08655298beb318014c6f3f65ef4a08fcbe346c')
     version('0.1.0',  sha256='8b341138e1069361351e0a94478608c5af479cca76e2f97d556229aed45c0169')
@@ -231,8 +233,12 @@ class Dray(Package, CudaPackage):
         #######################
         if "+test" in spec:
             cfg.write(cmake_cache_entry("DRAY_ENABLE_TESTS", "ON"))
+            # we need this to control BLT tests
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "ON"))
         else:
             cfg.write(cmake_cache_entry("DRAY_ENABLE_TESTS", "OFF"))
+            # we need this to control BLT tests
+            cfg.write(cmake_cache_entry("ENABLE_TESTS", "OFF"))
 
         #######################
         # Utilities
@@ -251,7 +257,7 @@ class Dray(Package, CudaPackage):
             cfg.write(cmake_cache_entry("ENABLE_LOGGING", "OFF"))
 
         #######################
-        # Logging
+        # Status
         #######################
         if "+stats" in spec:
             cfg.write(cmake_cache_entry("ENABLE_STATS", "ON"))
@@ -285,34 +291,3 @@ class Dray(Package, CudaPackage):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname
-
-    def cmake_args(self):
-        spec = self.spec
-
-        options = []
-
-        if '+openmp' in spec:
-            options.extend([
-                '-DENABLE_OPENMP=On'])
-
-        if '+cuda' in spec:
-            options.extend([
-                '-DENABLE_CUDA=On',
-                '-DCUDA_TOOLKIT_ROOT_DIR=%s' % (spec['cuda'].prefix)])
-            if 'cuda_arch' in spec.variants:
-                cuda_value = spec.variants['cuda_arch'].value
-                cuda_arch = cuda_value[0]
-                options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch))
-        else:
-            options.extend(['-DENABLE_CUDA=OFF'])
-
-        options.extend(['-DRAJA_DIR=%s' % (spec['raja'].prefix)])
-        options.extend(['-DMFEM_DIR=%s' % (spec['mfem'].prefix)])
-        options.extend(['-DUMPIRE_DIR=%s' % (spec['umpire'].prefix)])
-        options.extend(['-DCONDUIT_DIR=%s' % (spec['conduit'].prefix)])
-        options.extend(['-DDRAY_ENABLE_TESTS=OFF'])
-        options.extend(['-DENABLE_LOGGING=OFF'])
-        options.extend(['-DENABLE_STATS=OFF'])
-        options.extend(['../src'])
-
-        return options

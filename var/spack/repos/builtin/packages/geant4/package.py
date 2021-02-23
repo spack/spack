@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,12 @@ class Geant4(CMakePackage):
     homepage = "http://geant4.cern.ch/"
     url = "https://gitlab.cern.ch/geant4/geant4/-/archive/v10.6.0/geant4-v10.6.0.tar.gz"
 
+    tags = ['hep']
+
     maintainers = ['drbenmorgan']
 
+    version('10.7.0', sha256='c991a139210c7f194720c900b149405090058c00beb5a0d2fac5c40c42a262d4')
+    version('10.6.3', sha256='bf96d6d38e6a0deabb6fb6232eb00e46153134da645715d636b9b7b4490193d3')
     version('10.6.2', sha256='e381e04c02aeade1ed8cdd9fdbe7dcf5d6f0f9b3837a417976b839318a005dbd')
     version('10.6.1', sha256='4fd64149ae26952672a81ce5579d3806fda4bd251d486897093ac57633a42b7e')
     version('10.6.0', sha256='eebe6a170546064ff81ab3b00f513ccd1d4122a026514982368d503ac55a4ee4')
@@ -43,6 +47,8 @@ class Geant4(CMakePackage):
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.8:', type='build', when='@10.6.0:')
 
+    depends_on('geant4-data@10.7.0', when='@10.7.0')
+    depends_on('geant4-data@10.6.3', when='@10.6.3')
     depends_on('geant4-data@10.6.2', when='@10.6.2')
     depends_on('geant4-data@10.6.1', when='@10.6.1')
     depends_on('geant4-data@10.6.0', when='@10.6.0')
@@ -58,17 +64,22 @@ class Geant4(CMakePackage):
     depends_on('python@3:', when='+python')
     extends('python', when='+python')
     conflicts('+python', when='@:10.6.1',
-              msg='Geant4 <= 10.6.1 cannont be built with Python bindings')
+              msg='Geant4 <= 10.6.1 cannot be built with Python bindings')
 
     for std in _cxxstd_values:
         # CLHEP version requirements to be reviewed
+        depends_on('clhep@2.4.4.0: cxxstd=' + std,
+                   when='@10.7.0: cxxstd=' + std)
+
         depends_on('clhep@2.3.3.0: cxxstd=' + std,
-                   when='@10.3.3: cxxstd=' + std)
+                   when='@10.3.3:10.6.99 cxxstd=' + std)
 
         # Spack only supports Xerces-c 3 and above, so no version req
-        depends_on('xerces-c cxxstd=' + std, when='cxxstd=' + std)
+        depends_on('xerces-c netaccessor=curl cxxstd=' + std, when='cxxstd=' + std)
 
         # Vecgeom specific versions for each Geant4 version
+        depends_on('vecgeom@1.1.8 cxxstd=' + std,
+                   when='@10.7.0: +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.5 cxxstd=' + std,
                    when='@10.6.0:10.6.99 +vecgeom cxxstd=' + std)
         depends_on('vecgeom@1.1.0 cxxstd=' + std,
@@ -84,6 +95,7 @@ class Geant4(CMakePackage):
 
     # Visualization driver dependencies
     depends_on("gl", when='+opengl')
+    depends_on("glu", when='+opengl')
     depends_on("glx", when='+opengl+x11')
     depends_on("libx11", when='+x11')
     depends_on("libxmu", when='+x11')
@@ -104,8 +116,7 @@ class Geant4(CMakePackage):
 
         # Core options
         options = [
-            '-DGEANT4_BUILD_CXXSTD=c++{0}'.format(
-                self.spec.variants['cxxstd'].value),
+            self.define_from_variant('GEANT4_BUILD_CXXSTD', 'cxxstd'),
             '-DGEANT4_USE_SYSTEM_CLHEP=ON',
             '-DGEANT4_USE_SYSTEM_EXPAT=ON',
             '-DGEANT4_USE_SYSTEM_ZLIB=ON',
@@ -113,6 +124,11 @@ class Geant4(CMakePackage):
             '-DGEANT4_USE_GDML=ON',
             '-DXERCESC_ROOT_DIR={0}'.format(spec['xerces-c'].prefix)
         ]
+
+        # Don't install the package cache file as Spack will set
+        # up CMAKE_PREFIX_PATH etc for the dependencies
+        if spec.version > Version('10.5.99'):
+            options.append('-DGEANT4_INSTALL_PACKAGE_CACHE=OFF')
 
         # Multithreading
         options.append(self.define_from_variant('GEANT4_BUILD_MULTITHREADED',

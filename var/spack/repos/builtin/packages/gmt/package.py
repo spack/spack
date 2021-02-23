@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,7 @@ class Gmt(Package):
     version('6.0.0', sha256='7a733e670f01d99f8fc0da51a4337320d764c06a68746621f83ccf2e3453bcb7')
     version('5.4.4', sha256='b593dfb101e6507c467619f3d2190a9f78b09d49fe2c27799750b8c4c0cd2da0')
     version('4.5.9', sha256='9b13be96ccf4bbd38c14359c05dfa7eeeb4b5f06d6f4be9c33d6c3ea276afc86',
-            url='ftp://ftp.soest.hawaii.edu/gmt/legacy/gmt-4.5.9.tar.bz2')
+            url='ftp://ftp.soest.hawaii.edu/gmt/legacy/gmt-4.5.9.tar.bz2', deprecated=True)
 
     variant('ghostscript', default=False, description='Ability to convert PostScript plots to PDF and rasters')
     variant('gdal', default=False, description='Ability to read and write numerous grid and image formats')
@@ -63,6 +63,12 @@ class Gmt(Package):
     # https://github.com/GenericMappingTools/gmt/pull/3603
     patch('regexp.patch', when='@6.1.0')
     patch('type.patch', when='@4.5.9')
+
+    executables = ['^gmt-config$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        return Executable(exe)('--version', output=str, error=str).rstrip()
 
     @when('@5:')
     def install(self, spec, prefix):

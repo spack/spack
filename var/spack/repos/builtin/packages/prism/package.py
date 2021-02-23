@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,8 @@ class Prism(MakefilePackage):
     build_directory = 'prism'
 
     depends_on('java', type=('build', 'run'))
+
+    patch('Makefile.patch', when='target=aarch64:')
 
     def setup_run_environment(self, env):
         env.set('PRISM_DIR', self.prefix)

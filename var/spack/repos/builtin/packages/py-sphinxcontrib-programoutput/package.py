@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,10 +11,7 @@ class PySphinxcontribProgramoutput(PythonPackage):
     into documents, helping you to keep your command examples up to date."""
 
     homepage = "https://sphinxcontrib-programoutput.readthedocs.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-programoutput/sphinxcontrib-programoutput-0.15.tar.gz"
-
-    # FIXME: These import tests don't work for some reason
-    # import_modules = ['sphinxcontrib', 'sphinxcontrib.programoutput']
+    pypi = "sphinxcontrib-programoutput/sphinxcontrib-programoutput-0.15.tar.gz"
 
     version('0.15', sha256='80dd5b4eab780a13ff2c23500cac3dbf0e04ef9976b409ef25a47c263ef8ab94')
     version('0.10', sha256='fdee94fcebb0d8fddfccac5c4fa560f6177d5340c4349ee447c890bea8857094')

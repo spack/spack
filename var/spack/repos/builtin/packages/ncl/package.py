@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -239,8 +239,7 @@ class Ncl(Package):
             self.spec['bzip2'].prefix.lib + '\n',
             # Enter local include search path(s) :
             # All other paths will be passed by the Spack wrapper.
-            join_path(self.spec['freetype'].prefix.include, 'freetype2') +
-            '\n',
+            self.spec['freetype'].headers.directories[0] + '\n',
             # Go back and make more changes or review?
             'n\n',
             # Save current configuration?

@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
-import os
 
 
 class PpopenMathVis(MakefilePackage):
@@ -23,9 +22,9 @@ class PpopenMathVis(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url = "file://{0}/ppohVIS_0.2.0.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('0.2.0', sha256='f816885cb9fab4802f9df55c1f1e7f8505867dc8862562bce26d193d6a0dc29d')
+    version('master', branch='MATH/VIS')
 
     depends_on('mpi')
 
@@ -36,6 +35,8 @@ class PpopenMathVis(MakefilePackage):
         makefile_in.filter('mpifrtpx', spec['mpi'].mpifc)
         makefile_in.filter('-Kfast', '-O3')
         makefile_in.filter(r'~/ppOpen-HPC/.*', prefix)
+        mkdirp('include')
+        mkdirp('lib')
 
     def install(self, spec, prefix):
         make('install')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Jemalloc(Package):
+class Jemalloc(AutotoolsPackage):
     """jemalloc is a general purpose malloc(3) implementation that emphasizes
        fragmentation avoidance and scalable concurrency support."""
     homepage = "http://www.canonware.com/jemalloc/"
@@ -24,22 +24,24 @@ class Jemalloc(Package):
 
     variant('stats', default=False, description='Enable heap statistics')
     variant('prof', default=False, description='Enable heap profiling')
-    variant('je', default=False, description='Prepend the public API functions with "je_"')
+    variant(
+        'jemalloc_prefix', default='none',
+        description='Prefix to prepend to all public APIs',
+        values=None,
+        multi=False
+    )
 
-    def install(self, spec, prefix):
-        configure_args = ['--prefix=%s' % prefix, ]
+    def configure_args(self):
+        spec = self.spec
+        args = []
 
         if '+stats' in spec:
-            configure_args.append('--enable-stats')
+            args.append('--enable-stats')
         if '+prof' in spec:
-            configure_args.append('--enable-prof')
-        if '+je' in spec:
-            configure_args.append('--with-jemalloc-prefix=je_')
+            args.append('--enable-prof')
 
-        configure(*configure_args)
+        je_prefix = spec.variants['jemalloc_prefix'].value
+        if je_prefix != 'none':
+            args.append('--with-jemalloc-prefix={0}'.format(je_prefix))
 
-        # Don't use -Werror
-        filter_file(r'-Werror=\S*', '', 'Makefile')
-
-        make()
-        make("install")
+        return args

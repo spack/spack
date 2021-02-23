@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyBintrees(PythonPackage):
     """
 
     homepage = "https://github.com/mozman/bintrees"
-    url      = "https://pypi.io/packages/source/b/bintrees/bintrees-2.0.7.zip"
+    pypi = "bintrees/bintrees-2.0.7.zip"
 
     version('2.0.7', sha256='60675e6602cef094abcd38bf4aecc067d78ae2d5e1645615c789724542d11270')
 

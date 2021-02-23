@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,7 @@ class AperturePhotometry(Package):
     homepage = "http://www.aperturephotometry.org/aptool/"
     url      = "http://www.aperturephotometry.org/aptool/wp-content/plugins/download-monitor/download.php?id=1"
 
+    version('2.8.4', '28ae136c708a3ebcb83632230e119a03ca1a65499006ab69dc76e21b4921f465', extension='tar.gz')
     version('2.8.2', 'cb29eb39a630dc5d17c02fb824c69571fe1870a910a6acf9115c5f76fd89dd7e', extension='tar.gz')
 
     depends_on('java')

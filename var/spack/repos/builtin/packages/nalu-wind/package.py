@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class NaluWind(CMakePackage):
             description='Build dependencies as shared libraries')
     variant('pic', default=True,
             description='Position independent code')
+    variant('test_tol', default='default',
+            description='Tolerance for regression tests')
     # Third party libraries
     variant('openfast', default=False,
             description='Compile with OpenFAST support')
@@ -35,6 +37,9 @@ class NaluWind(CMakePackage):
             description='Compile with Catalyst support')
     variant('fftw', default=False,
             description='Compile with FFTW support')
+
+    variant('wind-utils', default=False,
+            description='Build wind-utils')
 
     # Required dependencies
     depends_on('mpi')
@@ -114,7 +119,34 @@ class NaluWind(CMakePackage):
         else:
             options.append('-DENABLE_FFTW:BOOL=OFF')
 
+        if '+wind-utils' in spec:
+            options.append('-DENABLE_WIND_UTILS=ON')
+        else:
+            options.append('-DENABLE_WIND_UTILS=OFF')
+
         if 'darwin' in spec.architecture:
             options.append('-DCMAKE_MACOSX_RPATH:BOOL=ON')
 
+        if self.run_tests:
+            options.append('-DENABLE_TESTS:BOOL=ON')
+        else:
+            options.append('-DENABLE_TESTS:BOOL=OFF')
+
+        if self.spec.variants['test_tol'].value != 'default':
+            try:
+                test_tol = float(self.spec.variants['test_tol'].value)
+                if test_tol <= 0.0:
+                    raise ValueError
+                options.append('-DTEST_TOLERANCE:STRING={tol}'.format(
+                    tol=test_tol))
+            except ValueError:
+                print("Specified test_tol must be a positive float. "
+                      "Using the default.")
+
         return options
+
+    @run_before('cmake')
+    def add_submodules(self):
+        if self.run_tests or '+wind-utils' in self.spec:
+            git = which('git')
+            git('submodule', 'update', '--init', '--recursive')

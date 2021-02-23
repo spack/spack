@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from glob import glob
 
 
 class Bib2xhtml(Package):
@@ -18,8 +15,7 @@ class Bib2xhtml(Package):
         # Add the bst include files to the install directory
         bst_include = join_path(prefix.share, 'bib2xhtml')
         mkdirp(bst_include)
-        for bstfile in glob('html-*bst'):
-            install(bstfile, bst_include)
+        install('html-*bst', bst_include)
 
         # Install the script and point it at the user's favorite perl
         # and the bst include directory.

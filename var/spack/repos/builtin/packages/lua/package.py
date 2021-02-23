@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,7 @@ class Lua(Package):
 
     extendable = True
 
-    depends_on('ncurses')
+    depends_on('ncurses+termlib')
     depends_on('readline')
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
     depends_on('unzip', type='run')

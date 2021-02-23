@@ -1,0 +1,1239 @@
+From 931f610a2075301b26d3d811bdbf30e4394da614 Mon Sep 17 00:00:00 2001
+From: Harsh Bhatia <bhatia4@llnl.gov>
+Date: Sun, 28 Jun 2020 15:09:17 -0700
+Subject: [PATCH] fixes in v1.6.3
+
+---
+ gpu/impl/PQCodeDistances.cu              | 567 -----------------------------
+ gpu/impl/PQScanMultiPassNoPrecomputed.cu | 597 -------------------------------
+ gpu/test/Makefile                        |  10 +-
+ gpu/test/demo_ivfpq_indexing_gpu.cpp     |   1 +
+ 4 files changed, 8 insertions(+), 1167 deletions(-)
+ delete mode 100644 gpu/impl/PQCodeDistances.cu
+ delete mode 100644 gpu/impl/PQScanMultiPassNoPrecomputed.cu
+
+diff --git a/gpu/impl/PQCodeDistances.cu b/gpu/impl/PQCodeDistances.cu
+deleted file mode 100644
+index 817990b..0000000
+--- a/gpu/impl/PQCodeDistances.cu
++++ /dev/null
+@@ -1,567 +0,0 @@
+-/**
+- * Copyright (c) Facebook, Inc. and its affiliates.
+- *
+- * This source code is licensed under the MIT license found in the
+- * LICENSE file in the root directory of this source tree.
+- */
+-
+-
+-#include <faiss/gpu/impl/PQCodeDistances.cuh>
+-
+-#include <faiss/gpu/impl/BroadcastSum.cuh>
+-#include <faiss/gpu/impl/Distance.cuh>
+-#include <faiss/gpu/impl/L2Norm.cuh>
+-#include <faiss/gpu/utils/ConversionOperators.cuh>
+-#include <faiss/gpu/utils/DeviceDefs.cuh>
+-#include <faiss/gpu/utils/DeviceUtils.h>
+-#include <faiss/gpu/utils/Float16.cuh>
+-#include <faiss/gpu/utils/MatrixMult.cuh>
+-#include <faiss/gpu/utils/PtxUtils.cuh>
+-#include <faiss/gpu/utils/StaticUtils.h>
+-#include <faiss/gpu/utils/Transpose.cuh>
+-
+-namespace faiss { namespace gpu {
+-
+-template <typename T>
+-struct Converter {
+-};
+-
+-template <>
+-struct Converter<half> {
+-  inline static __device__ half to(float v) { return __float2half(v); }
+-};
+-
+-template <>
+-struct Converter<float> {
+-  inline static __device__ float to(float v) { return v; }
+-};
+-
+-// Kernel responsible for calculating distance from residual vector to
+-// each product quantizer code centroid
+-template <typename OutCodeT, int DimsPerSubQuantizer, bool L2Distance>
+-__global__ void
+-__launch_bounds__(288, 4)
+-pqCodeDistances(Tensor<float, 2, true> queries,
+-                int queriesPerBlock,
+-                Tensor<float, 2, true> coarseCentroids,
+-                Tensor<float, 3, true> pqCentroids,
+-                Tensor<int, 2, true> topQueryToCentroid,
+-                // (query id)(coarse)(subquantizer)(code) -> dist
+-                Tensor<OutCodeT, 4, true> outCodeDistances) {
+-  const auto numSubQuantizers = pqCentroids.getSize(0);
+-  const auto dimsPerSubQuantizer = pqCentroids.getSize(1);
+-  assert(DimsPerSubQuantizer == dimsPerSubQuantizer);
+-  const auto codesPerSubQuantizer = pqCentroids.getSize(2);
+-
+-  bool isLoadingThread = threadIdx.x >= codesPerSubQuantizer;
+-  int loadingThreadId = threadIdx.x - codesPerSubQuantizer;
+-
+-  extern __shared__ float smem[];
+-
+-  // Each thread calculates a single code
+-  float subQuantizerData[DimsPerSubQuantizer];
+-
+-  auto code = threadIdx.x;
+-  auto subQuantizer = blockIdx.y;
+-
+-  // Each thread will load the pq centroid data for the code that it
+-  // is processing
+-#pragma unroll
+-  for (int i = 0; i < DimsPerSubQuantizer; ++i) {
+-    subQuantizerData[i] = pqCentroids[subQuantizer][i][code].ldg();
+-  }
+-
+-  // Where we store our query vector
+-  float* smemQuery = smem;
+-
+-  // Where we store our residual vector; this is double buffered so we
+-  // can be loading the next one while processing the current one
+-  float* smemResidual1 = &smemQuery[DimsPerSubQuantizer];
+-  float* smemResidual2 = &smemResidual1[DimsPerSubQuantizer];
+-
+-  // Where we pre-load the coarse centroid IDs
+-  int* coarseIds = (int*) &smemResidual2[DimsPerSubQuantizer];
+-
+-  // Each thread is calculating the distance for a single code,
+-  // performing the reductions locally
+-
+-  // Handle multiple queries per block
+-  auto startQueryId = blockIdx.x * queriesPerBlock;
+-  auto numQueries = queries.getSize(0) - startQueryId;
+-  if (numQueries > queriesPerBlock) {
+-    numQueries = queriesPerBlock;
+-  }
+-
+-  for (int query = 0; query < numQueries; ++query) {
+-    auto queryId = startQueryId + query;
+-
+-    auto querySubQuantizer =
+-      queries[queryId][subQuantizer * DimsPerSubQuantizer].data();
+-
+-    // Load current query vector
+-    for (int i = threadIdx.x; i < DimsPerSubQuantizer; i += blockDim.x) {
+-      smemQuery[i] = querySubQuantizer[i];
+-    }
+-
+-    // Load list of coarse centroids found
+-    for (int i = threadIdx.x;
+-         i < topQueryToCentroid.getSize(1); i += blockDim.x) {
+-      coarseIds[i] = topQueryToCentroid[queryId][i];
+-    }
+-
+-    // We need coarseIds below
+-    // FIXME: investigate loading separately, so we don't need this
+-    __syncthreads();
+-
+-    // Preload first buffer of residual data
+-    if (isLoadingThread) {
+-      for (int i = loadingThreadId;
+-           i < DimsPerSubQuantizer;
+-           i += blockDim.x - codesPerSubQuantizer) {
+-        auto coarseId = coarseIds[0];
+-        // In case NaNs were in the original query data
+-        coarseId = coarseId == -1 ? 0 : coarseId;
+-        auto coarseCentroidSubQuantizer =
+-          coarseCentroids[coarseId][subQuantizer * dimsPerSubQuantizer].data();
+-
+-        if (L2Distance) {
+-          smemResidual1[i] = smemQuery[i] - coarseCentroidSubQuantizer[i];
+-        } else {
+-          smemResidual1[i] = coarseCentroidSubQuantizer[i];
+-        }
+-      }
+-    }
+-
+-    // The block walks the list for a single query
+-    for (int coarse = 0; coarse < topQueryToCentroid.getSize(1); ++coarse) {
+-      // Wait for smemResidual1 to be loaded
+-      __syncthreads();
+-
+-      if (isLoadingThread) {
+-        // Preload second buffer of residual data
+-        for (int i = loadingThreadId;
+-             i < DimsPerSubQuantizer;
+-             i += blockDim.x - codesPerSubQuantizer) {
+-          // FIXME: try always making this centroid id 0 so we can
+-          // terminate
+-          if (coarse != (topQueryToCentroid.getSize(1) - 1)) {
+-            auto coarseId = coarseIds[coarse + 1];
+-            // In case NaNs were in the original query data
+-            coarseId = coarseId == -1 ? 0 : coarseId;
+-
+-            auto coarseCentroidSubQuantizer =
+-              coarseCentroids[coarseId]
+-              [subQuantizer * dimsPerSubQuantizer].data();
+-
+-            if (L2Distance) {
+-              smemResidual2[i] = smemQuery[i] - coarseCentroidSubQuantizer[i];
+-            } else {
+-              smemResidual2[i] = coarseCentroidSubQuantizer[i];
+-            }
+-          }
+-        }
+-      } else {
+-        // These are the processing threads
+-        float dist = 0.0f;
+-
+-        constexpr int kUnroll = 4;
+-        constexpr int kRemainder = DimsPerSubQuantizer % kUnroll;
+-        constexpr int kRemainderBase = DimsPerSubQuantizer - kRemainder;
+-        float vals[kUnroll];
+-
+-        // Calculate residual - pqCentroid for each dim that we're
+-        // processing
+-
+-        // Unrolled loop
+-        if (L2Distance) {
+-#pragma unroll
+-          for (int i = 0; i < DimsPerSubQuantizer / kUnroll; ++i) {
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] = smemResidual1[i * kUnroll + j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] -= subQuantizerData[i * kUnroll + j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] *= vals[j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              dist += vals[j];
+-            }
+-          }
+-        } else {
+-          // Inner product: query slice against the reconstructed sub-quantizer
+-          // for this coarse cell (query o (centroid + subQCentroid))
+-#pragma unroll
+-          for (int i = 0; i < DimsPerSubQuantizer / kUnroll; ++i) {
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] = smemResidual1[i * kUnroll + j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] += subQuantizerData[i * kUnroll + j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              vals[j] *= smemQuery[i * kUnroll + j];
+-            }
+-
+-#pragma unroll
+-            for (int j = 0; j < kUnroll; ++j) {
+-              dist += vals[j];
+-            }
+-          }
+-        }
+-
+-        // Remainder loop
+-        if (L2Distance) {
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] = smemResidual1[kRemainderBase + j];
+-          }
+-
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] -= subQuantizerData[kRemainderBase + j];
+-          }
+-
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] *= vals[j];
+-          }
+-        } else {
+-          // Inner product
+-          // Inner product: query slice against the reconstructed sub-quantizer
+-          // for this coarse cell (query o (centroid + subQCentroid))
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] = smemResidual1[kRemainderBase + j];
+-          }
+-
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] += subQuantizerData[kRemainderBase + j];
+-          }
+-
+-#pragma unroll
+-          for (int j = 0; j < kRemainder; ++j) {
+-            vals[j] *= smemQuery[kRemainderBase + j];
+-          }
+-        }
+-
+-#pragma unroll
+-        for (int j = 0; j < kRemainder; ++j) {
+-          dist += vals[j];
+-        }
+-
+-        // We have the distance for our code; write it out
+-        outCodeDistances[queryId][coarse][subQuantizer][code] =
+-          Converter<OutCodeT>::to(dist);
+-      } // !isLoadingThread
+-
+-      // Swap residual buffers
+-      float* tmp = smemResidual1;
+-      smemResidual1 = smemResidual2;
+-      smemResidual2 = tmp;
+-    }
+-  }
+-}
+-
+-__global__ void
+-residualVector(Tensor<float, 2, true> queries,
+-               Tensor<float, 2, true> coarseCentroids,
+-               Tensor<int, 2, true> topQueryToCentroid,
+-               int numSubDim,
+-               // output is transposed:
+-               // (sub q)(query id)(centroid id)(sub dim)
+-               Tensor<float, 4, true> residual) {
+-  // block x is query id
+-  // block y is centroid id
+-  // thread x is dim
+-  auto queryId = blockIdx.x;
+-  auto centroidId = blockIdx.y;
+-
+-  int realCentroidId = topQueryToCentroid[queryId][centroidId];
+-
+-  for (int dim = threadIdx.x; dim < queries.getSize(1); dim += blockDim.x) {
+-    float q = queries[queryId][dim];
+-    float c = coarseCentroids[realCentroidId][dim];
+-
+-    residual[dim / numSubDim][queryId][centroidId][dim % numSubDim] =
+-      q - c;
+-  }
+-}
+-
+-void
+-runResidualVector(Tensor<float, 3, true>& pqCentroids,
+-                  Tensor<float, 2, true>& queries,
+-                  Tensor<float, 2, true>& coarseCentroids,
+-                  Tensor<int, 2, true>& topQueryToCentroid,
+-                  Tensor<float, 4, true>& residual,
+-                  cudaStream_t stream) {
+-  auto grid =
+-    dim3(topQueryToCentroid.getSize(0), topQueryToCentroid.getSize(1));
+-  auto block = dim3(std::min(queries.getSize(1), getMaxThreadsCurrentDevice()));
+-
+-  residualVector<<<grid, block, 0, stream>>>(
+-    queries, coarseCentroids, topQueryToCentroid, pqCentroids.getSize(1),
+-    residual);
+-
+-  CUDA_TEST_ERROR();
+-}
+-
+-void
+-runPQCodeDistancesMM(Tensor<float, 3, true>& pqCentroids,
+-                     Tensor<float, 2, true>& queries,
+-                     Tensor<float, 2, true>& coarseCentroids,
+-                     Tensor<int, 2, true>& topQueryToCentroid,
+-                     NoTypeTensor<4, true>& outCodeDistances,
+-                     bool useFloat16Lookup,
+-                     DeviceMemory& mem,
+-                     cublasHandle_t handle,
+-                     cudaStream_t stream) {
+-  // Calculate (q - c) residual vector
+-  // (sub q)(query id)(centroid id)(sub dim)
+-  DeviceTensor<float, 4, true> residual(
+-    mem,
+-    {pqCentroids.getSize(0),
+-        topQueryToCentroid.getSize(0),
+-        topQueryToCentroid.getSize(1),
+-        pqCentroids.getSize(1)},
+-    stream);
+-
+-  runResidualVector(pqCentroids, queries,
+-                    coarseCentroids, topQueryToCentroid,
+-                    residual, stream);
+-
+-  // Calculate ||q - c||^2
+-  DeviceTensor<float, 1, true> residualNorms(
+-    mem,
+-    {pqCentroids.getSize(0) *
+-        topQueryToCentroid.getSize(0) *
+-        topQueryToCentroid.getSize(1)},
+-    stream);
+-
+-  auto residualView2 = residual.view<2>(
+-    {pqCentroids.getSize(0) *
+-        topQueryToCentroid.getSize(0) *
+-        topQueryToCentroid.getSize(1),
+-        pqCentroids.getSize(1)});
+-
+-  runL2Norm(residualView2, true, residualNorms, true, stream);
+-
+-  // Perform a batch MM:
+-  // (sub q) x {(q * c)(sub dim) x (sub dim)(code)} =>
+-  // (sub q) x {(q * c)(code)}
+-  auto residualView3 = residual.view<3>(
+-    {pqCentroids.getSize(0),
+-        topQueryToCentroid.getSize(0) * topQueryToCentroid.getSize(1),
+-        pqCentroids.getSize(1)});
+-
+-  DeviceTensor<float, 3, true> residualDistance(
+-    mem,
+-    {pqCentroids.getSize(0),
+-        topQueryToCentroid.getSize(0) * topQueryToCentroid.getSize(1),
+-        pqCentroids.getSize(2)},
+-    stream);
+-
+-  runIteratedMatrixMult(residualDistance, false,
+-                        residualView3, false,
+-                        pqCentroids, false,
+-                        -2.0f, 0.0f,
+-                        handle,
+-                        stream);
+-
+-  // Sum ||q - c||^2 along rows
+-  auto residualDistanceView2 = residualDistance.view<2>(
+-    {pqCentroids.getSize(0) *
+-        topQueryToCentroid.getSize(0) *
+-        topQueryToCentroid.getSize(1),
+-        pqCentroids.getSize(2)});
+-
+-  runSumAlongRows(residualNorms, residualDistanceView2, false, stream);
+-
+-  Tensor<float, 4, true> outCodeDistancesF;
+-  DeviceTensor<float, 4, true> outCodeDistancesFloatMem;
+-
+-  if (useFloat16Lookup) {
+-    outCodeDistancesFloatMem = DeviceTensor<float, 4, true>(
+-      mem, {outCodeDistances.getSize(0),
+-          outCodeDistances.getSize(1),
+-          outCodeDistances.getSize(2),
+-          outCodeDistances.getSize(3)},
+-      stream);
+-
+-    outCodeDistancesF = outCodeDistancesFloatMem;
+-  } else {
+-    outCodeDistancesF = outCodeDistances.toTensor<float>();
+-  }
+-
+-  // Transpose -2(sub q)(q * c)(code) to -2(q * c)(sub q)(code) (which
+-  // is where we build our output distances)
+-  auto outCodeDistancesView = outCodeDistancesF.view<3>(
+-    {topQueryToCentroid.getSize(0) * topQueryToCentroid.getSize(1),
+-        outCodeDistances.getSize(2),
+-        outCodeDistances.getSize(3)});
+-
+-  runTransposeAny(residualDistance, 0, 1, outCodeDistancesView, stream);
+-
+-  // Calculate code norms per each sub-dim
+-  // (sub q)(sub dim)(code) is pqCentroids
+-  // transpose to (sub q)(code)(sub dim)
+-  DeviceTensor<float, 3, true> pqCentroidsTranspose(
+-    mem,
+-    {pqCentroids.getSize(0), pqCentroids.getSize(2), pqCentroids.getSize(1)},
+-    stream);
+-
+-  runTransposeAny(pqCentroids, 1, 2, pqCentroidsTranspose, stream);
+-
+-  auto pqCentroidsTransposeView = pqCentroidsTranspose.view<2>(
+-    {pqCentroids.getSize(0) * pqCentroids.getSize(2),
+-        pqCentroids.getSize(1)});
+-
+-  DeviceTensor<float, 1, true> pqCentroidsNorm(
+-    mem,
+-    {pqCentroids.getSize(0) * pqCentroids.getSize(2)},
+-    stream);
+-
+-  runL2Norm(pqCentroidsTransposeView, true, pqCentroidsNorm, true, stream);
+-
+-  // View output as (q * c)(sub q * code), and add centroid norm to
+-  // each row
+-  auto outDistancesCodeViewCols = outCodeDistancesView.view<2>(
+-    {topQueryToCentroid.getSize(0) * topQueryToCentroid.getSize(1),
+-        outCodeDistances.getSize(2) * outCodeDistances.getSize(3)});
+-
+-  runSumAlongColumns(pqCentroidsNorm, outDistancesCodeViewCols, stream);
+-
+-  if (useFloat16Lookup) {
+-    // Need to convert back
+-    auto outCodeDistancesH = outCodeDistances.toTensor<half>();
+-    convertTensor<float, half, 4>(stream,
+-                                  outCodeDistancesF,
+-                                  outCodeDistancesH);
+-  }
+-}
+-
+-void
+-runPQCodeDistances(Tensor<float, 3, true>& pqCentroids,
+-                   Tensor<float, 2, true>& queries,
+-                   Tensor<float, 2, true>& coarseCentroids,
+-                   Tensor<int, 2, true>& topQueryToCentroid,
+-                   NoTypeTensor<4, true>& outCodeDistances,
+-                   bool l2Distance,
+-                   bool useFloat16Lookup,
+-                   cudaStream_t stream) {
+-  const auto numSubQuantizers = pqCentroids.getSize(0);
+-  const auto dimsPerSubQuantizer = pqCentroids.getSize(1);
+-  const auto codesPerSubQuantizer = pqCentroids.getSize(2);
+-
+-  // FIXME: tune
+-  // Reuse of pq centroid data is based on both # of queries * nprobe,
+-  // and we should really be tiling in both dimensions
+-  constexpr int kQueriesPerBlock = 8;
+-
+-  auto grid = dim3(utils::divUp(queries.getSize(0), kQueriesPerBlock),
+-                   numSubQuantizers);
+-
+-  // Reserve one block of threads for double buffering
+-  // FIXME: probably impractical for large # of dims?
+-  auto loadingThreads = utils::roundUp(dimsPerSubQuantizer, kWarpSize);
+-  auto block = dim3(codesPerSubQuantizer + loadingThreads);
+-
+-  auto smem = (3 * dimsPerSubQuantizer) * sizeof(float)
+-    + topQueryToCentroid.getSize(1) * sizeof(int);
+-
+-#define RUN_CODE(DIMS, L2)                                              \
+-  do {                                                                  \
+-    if (useFloat16Lookup) {                                             \
+-      auto outCodeDistancesT = outCodeDistances.toTensor<half>();       \
+-                                                                        \
+-      pqCodeDistances<half, DIMS, L2><<<grid, block, smem, stream>>>(   \
+-        queries, kQueriesPerBlock,                                      \
+-        coarseCentroids, pqCentroids,                                   \
+-        topQueryToCentroid, outCodeDistancesT);                         \
+-    } else {                                                            \
+-      auto outCodeDistancesT = outCodeDistances.toTensor<float>();      \
+-                                                                        \
+-      pqCodeDistances<float, DIMS, L2><<<grid, block, smem, stream>>>(  \
+-        queries, kQueriesPerBlock,                                      \
+-        coarseCentroids, pqCentroids,                                   \
+-        topQueryToCentroid, outCodeDistancesT);                         \
+-    }                                                                   \
+-  } while (0)
+-
+-#define CODE_L2(DIMS)                           \
+-  do {                                          \
+-    if (l2Distance) {                           \
+-      RUN_CODE(DIMS, true);                     \
+-    } else {                                    \
+-      RUN_CODE(DIMS, false);                    \
+-    }                                           \
+-  } while (0)
+-
+-  switch (dimsPerSubQuantizer) {
+-    case 1:
+-      CODE_L2(1);
+-      break;
+-    case 2:
+-      CODE_L2(2);
+-      break;
+-    case 3:
+-      CODE_L2(3);
+-      break;
+-    case 4:
+-      CODE_L2(4);
+-      break;
+-    case 6:
+-      CODE_L2(6);
+-      break;
+-    case 8:
+-      CODE_L2(8);
+-      break;
+-    case 10:
+-      CODE_L2(10);
+-      break;
+-    case 12:
+-      CODE_L2(12);
+-      break;
+-    case 16:
+-      CODE_L2(16);
+-      break;
+-    case 20:
+-      CODE_L2(20);
+-      break;
+-    case 24:
+-      CODE_L2(24);
+-      break;
+-    case 28:
+-      CODE_L2(28);
+-      break;
+-    case 32:
+-      CODE_L2(32);
+-      break;
+-      // FIXME: larger sizes require too many registers - we need the
+-      // MM implementation working
+-    default:
+-      FAISS_THROW_MSG("Too many dimensions (>32) per subquantizer "
+-                      "not currently supported");
+-  }
+-
+-#undef RUN_CODE
+-#undef CODE_L2
+-
+-  CUDA_TEST_ERROR();
+-}
+-
+-} } // namespace
+diff --git a/gpu/impl/PQScanMultiPassNoPrecomputed.cu b/gpu/impl/PQScanMultiPassNoPrecomputed.cu
+deleted file mode 100644
+index a514694..0000000
+--- a/gpu/impl/PQScanMultiPassNoPrecomputed.cu
++++ /dev/null
+@@ -1,597 +0,0 @@
+-/**
+- * Copyright (c) Facebook, Inc. and its affiliates.
+- *
+- * This source code is licensed under the MIT license found in the
+- * LICENSE file in the root directory of this source tree.
+- */
+-
+-
+-#include <faiss/gpu/impl/PQScanMultiPassNoPrecomputed.cuh>
+-#include <faiss/gpu/GpuResources.h>
+-#include <faiss/gpu/impl/PQCodeDistances.cuh>
+-#include <faiss/gpu/impl/PQCodeLoad.cuh>
+-#include <faiss/gpu/impl/IVFUtils.cuh>
+-#include <faiss/gpu/utils/ConversionOperators.cuh>
+-#include <faiss/gpu/utils/DeviceTensor.cuh>
+-#include <faiss/gpu/utils/DeviceUtils.h>
+-#include <faiss/gpu/utils/Float16.cuh>
+-#include <faiss/gpu/utils/LoadStoreOperators.cuh>
+-#include <faiss/gpu/utils/NoTypeTensor.cuh>
+-#include <faiss/gpu/utils/StaticUtils.h>
+-
+-#include <faiss/gpu/utils/HostTensor.cuh>
+-
+-namespace faiss { namespace gpu {
+-
+-// This must be kept in sync with PQCodeDistances.cu
+-bool isSupportedNoPrecomputedSubDimSize(int dims) {
+-  switch (dims) {
+-    case 1:
+-    case 2:
+-    case 3:
+-    case 4:
+-    case 6:
+-    case 8:
+-    case 10:
+-    case 12:
+-    case 16:
+-    case 20:
+-    case 24:
+-    case 28:
+-    case 32:
+-      return true;
+-    default:
+-      // FIXME: larger sizes require too many registers - we need the
+-      // MM implementation working
+-      return false;
+-  }
+-}
+-
+-template <typename LookupT, typename LookupVecT>
+-struct LoadCodeDistances {
+-  static inline __device__ void load(LookupT* smem,
+-                                     LookupT* codes,
+-                                     int numCodes) {
+-    constexpr int kWordSize = sizeof(LookupVecT) / sizeof(LookupT);
+-
+-    // We can only use the vector type if the data is guaranteed to be
+-    // aligned. The codes are innermost, so if it is evenly divisible,
+-    // then any slice will be aligned.
+-    if (numCodes % kWordSize == 0) {
+-      // Load the data by float4 for efficiency, and then handle any remainder
+-      // limitVec is the number of whole vec words we can load, in terms
+-      // of whole blocks performing the load
+-      constexpr int kUnroll = 2;
+-      int limitVec = numCodes / (kUnroll * kWordSize * blockDim.x);
+-      limitVec *= kUnroll * blockDim.x;
+-
+-      LookupVecT* smemV = (LookupVecT*) smem;
+-      LookupVecT* codesV = (LookupVecT*) codes;
+-
+-      for (int i = threadIdx.x; i < limitVec; i += kUnroll * blockDim.x) {
+-        LookupVecT vals[kUnroll];
+-
+-#pragma unroll
+-        for (int j = 0; j < kUnroll; ++j) {
+-          vals[j] =
+-            LoadStore<LookupVecT>::load(&codesV[i + j * blockDim.x]);
+-        }
+-
+-#pragma unroll
+-        for (int j = 0; j < kUnroll; ++j) {
+-          LoadStore<LookupVecT>::store(&smemV[i + j * blockDim.x], vals[j]);
+-        }
+-      }
+-
+-      // This is where we start loading the remainder that does not evenly
+-      // fit into kUnroll x blockDim.x
+-      int remainder = limitVec * kWordSize;
+-
+-      for (int i = remainder + threadIdx.x; i < numCodes; i += blockDim.x) {
+-        smem[i] = codes[i];
+-      }
+-    } else {
+-      // Potential unaligned load
+-      constexpr int kUnroll = 4;
+-
+-      int limit = utils::roundDown(numCodes, kUnroll * blockDim.x);
+-
+-      int i = threadIdx.x;
+-      for (; i < limit; i += kUnroll * blockDim.x) {
+-        LookupT vals[kUnroll];
+-
+-#pragma unroll
+-        for (int j = 0; j < kUnroll; ++j) {
+-          vals[j] = codes[i + j * blockDim.x];
+-        }
+-
+-#pragma unroll
+-        for (int j = 0; j < kUnroll; ++j) {
+-          smem[i + j * blockDim.x] = vals[j];
+-        }
+-      }
+-
+-      for (; i < numCodes; i += blockDim.x) {
+-        smem[i] = codes[i];
+-      }
+-    }
+-  }
+-};
+-
+-template <int NumSubQuantizers, typename LookupT, typename LookupVecT>
+-__global__ void
+-pqScanNoPrecomputedMultiPass(Tensor<float, 2, true> queries,
+-                             Tensor<float, 3, true> pqCentroids,
+-                             Tensor<int, 2, true> topQueryToCentroid,
+-                             Tensor<LookupT, 4, true> codeDistances,
+-                             void** listCodes,
+-                             int* listLengths,
+-                             Tensor<int, 2, true> prefixSumOffsets,
+-                             Tensor<float, 1, true> distance) {
+-  const auto codesPerSubQuantizer = pqCentroids.getSize(2);
+-
+-  // Where the pq code -> residual distance is stored
+-  extern __shared__ char smemCodeDistances[];
+-  LookupT* codeDist = (LookupT*) smemCodeDistances;
+-
+-  // Each block handles a single query
+-  auto queryId = blockIdx.y;
+-  auto probeId = blockIdx.x;
+-
+-  // This is where we start writing out data
+-  // We ensure that before the array (at offset -1), there is a 0 value
+-  int outBase = *(prefixSumOffsets[queryId][probeId].data() - 1);
+-  float* distanceOut = distance[outBase].data();
+-
+-  auto listId = topQueryToCentroid[queryId][probeId];
+-  // Safety guard in case NaNs in input cause no list ID to be generated
+-  if (listId == -1) {
+-    return;
+-  }
+-
+-  unsigned char* codeList = (unsigned char*) listCodes[listId];
+-  int limit = listLengths[listId];
+-
+-  constexpr int kNumCode32 = NumSubQuantizers <= 4 ? 1 :
+-    (NumSubQuantizers / 4);
+-  unsigned int code32[kNumCode32];
+-  unsigned int nextCode32[kNumCode32];
+-
+-  // We double-buffer the code loading, which improves memory utilization
+-  if (threadIdx.x < limit) {
+-    LoadCode32<NumSubQuantizers>::load(code32, codeList, threadIdx.x);
+-  }
+-
+-  LoadCodeDistances<LookupT, LookupVecT>::load(
+-    codeDist,
+-    codeDistances[queryId][probeId].data(),
+-    codeDistances.getSize(2) * codeDistances.getSize(3));
+-
+-  // Prevent WAR dependencies
+-  __syncthreads();
+-
+-  // Each thread handles one code element in the list, with a
+-  // block-wide stride
+-  for (int codeIndex = threadIdx.x;
+-       codeIndex < limit;
+-       codeIndex += blockDim.x) {
+-    // Prefetch next codes
+-    if (codeIndex + blockDim.x < limit) {
+-      LoadCode32<NumSubQuantizers>::load(
+-        nextCode32, codeList, codeIndex + blockDim.x);
+-    }
+-
+-    float dist = 0.0f;
+-
+-#pragma unroll
+-    for (int word = 0; word < kNumCode32; ++word) {
+-      constexpr int kBytesPerCode32 =
+-        NumSubQuantizers < 4 ? NumSubQuantizers : 4;
+-
+-      if (kBytesPerCode32 == 1) {
+-        auto code = code32[0];
+-        dist = ConvertTo<float>::to(codeDist[code]);
+-
+-      } else {
+-#pragma unroll
+-        for (int byte = 0; byte < kBytesPerCode32; ++byte) {
+-          auto code = getByte(code32[word], byte * 8, 8);
+-
+-          auto offset =
+-            codesPerSubQuantizer * (word * kBytesPerCode32 + byte);
+-
+-          dist += ConvertTo<float>::to(codeDist[offset + code]);
+-        }
+-      }
+-    }
+-
+-    // Write out intermediate distance result
+-    // We do not maintain indices here, in order to reduce global
+-    // memory traffic. Those are recovered in the final selection step.
+-    distanceOut[codeIndex] = dist;
+-
+-    // Rotate buffers
+-#pragma unroll
+-    for (int word = 0; word < kNumCode32; ++word) {
+-      code32[word] = nextCode32[word];
+-    }
+-  }
+-}
+-
+-void
+-runMultiPassTile(Tensor<float, 2, true>& queries,
+-                 Tensor<float, 2, true>& centroids,
+-                 Tensor<float, 3, true>& pqCentroidsInnermostCode,
+-                 NoTypeTensor<4, true>& codeDistances,
+-                 Tensor<int, 2, true>& topQueryToCentroid,
+-                 bool useFloat16Lookup,
+-                 int bytesPerCode,
+-                 int numSubQuantizers,
+-                 int numSubQuantizerCodes,
+-                 thrust::device_vector<void*>& listCodes,
+-                 thrust::device_vector<void*>& listIndices,
+-                 IndicesOptions indicesOptions,
+-                 thrust::device_vector<int>& listLengths,
+-                 Tensor<char, 1, true>& thrustMem,
+-                 Tensor<int, 2, true>& prefixSumOffsets,
+-                 Tensor<float, 1, true>& allDistances,
+-                 Tensor<float, 3, true>& heapDistances,
+-                 Tensor<int, 3, true>& heapIndices,
+-                 int k,
+-                 faiss::MetricType metric,
+-                 Tensor<float, 2, true>& outDistances,
+-                 Tensor<long, 2, true>& outIndices,
+-                 cudaStream_t stream) {
+-  // We only support two metrics at the moment
+-  FAISS_ASSERT(metric == MetricType::METRIC_INNER_PRODUCT ||
+-               metric == MetricType::METRIC_L2);
+-
+-  bool l2Distance = metric == MetricType::METRIC_L2;
+-
+-  // Calculate offset lengths, so we know where to write out
+-  // intermediate results
+-  runCalcListOffsets(topQueryToCentroid, listLengths, prefixSumOffsets,
+-                     thrustMem, stream);
+-
+-  // Calculate residual code distances, since this is without
+-  // precomputed codes
+-  runPQCodeDistances(pqCentroidsInnermostCode,
+-                     queries,
+-                     centroids,
+-                     topQueryToCentroid,
+-                     codeDistances,
+-                     l2Distance,
+-                     useFloat16Lookup,
+-                     stream);
+-
+-  // Convert all codes to a distance, and write out (distance,
+-  // index) values for all intermediate results
+-  {
+-    auto kThreadsPerBlock = 256;
+-
+-    auto grid = dim3(topQueryToCentroid.getSize(1),
+-                     topQueryToCentroid.getSize(0));
+-    auto block = dim3(kThreadsPerBlock);
+-
+-    // pq centroid distances
+-    auto smem = useFloat16Lookup ? sizeof(half) : sizeof(float);
+-
+-    smem *= numSubQuantizers * numSubQuantizerCodes;
+-    FAISS_ASSERT(smem <= getMaxSharedMemPerBlockCurrentDevice());
+-
+-#define RUN_PQ_OPT(NUM_SUB_Q, LOOKUP_T, LOOKUP_VEC_T)                   \
+-    do {                                                                \
+-      auto codeDistancesT = codeDistances.toTensor<LOOKUP_T>();         \
+-                                                                        \
+-      pqScanNoPrecomputedMultiPass<NUM_SUB_Q, LOOKUP_T, LOOKUP_VEC_T>   \
+-        <<<grid, block, smem, stream>>>(                                \
+-          queries,                                                      \
+-          pqCentroidsInnermostCode,                                     \
+-          topQueryToCentroid,                                           \
+-          codeDistancesT,                                               \
+-          listCodes.data().get(),                                       \
+-          listLengths.data().get(),                                     \
+-          prefixSumOffsets,                                             \
+-          allDistances);                                                \
+-    } while (0)
+-
+-#define RUN_PQ(NUM_SUB_Q)                       \
+-    do {                                        \
+-      if (useFloat16Lookup) {                   \
+-        RUN_PQ_OPT(NUM_SUB_Q, half, Half8);     \
+-      } else {                                  \
+-        RUN_PQ_OPT(NUM_SUB_Q, float, float4);   \
+-      }                                         \
+-    } while (0)
+-
+-    switch (bytesPerCode) {
+-      case 1:
+-        RUN_PQ(1);
+-        break;
+-      case 2:
+-        RUN_PQ(2);
+-        break;
+-      case 3:
+-        RUN_PQ(3);
+-        break;
+-      case 4:
+-        RUN_PQ(4);
+-        break;
+-      case 8:
+-        RUN_PQ(8);
+-        break;
+-      case 12:
+-        RUN_PQ(12);
+-        break;
+-      case 16:
+-        RUN_PQ(16);
+-        break;
+-      case 20:
+-        RUN_PQ(20);
+-        break;
+-      case 24:
+-        RUN_PQ(24);
+-        break;
+-      case 28:
+-        RUN_PQ(28);
+-        break;
+-      case 32:
+-        RUN_PQ(32);
+-        break;
+-      case 40:
+-        RUN_PQ(40);
+-        break;
+-      case 48:
+-        RUN_PQ(48);
+-        break;
+-      case 56:
+-        RUN_PQ(56);
+-        break;
+-      case 64:
+-        RUN_PQ(64);
+-        break;
+-      case 96:
+-        RUN_PQ(96);
+-        break;
+-      default:
+-        FAISS_ASSERT(false);
+-        break;
+-    }
+-
+-#undef RUN_PQ
+-#undef RUN_PQ_OPT
+-  }
+-
+-  CUDA_TEST_ERROR();
+-
+-  // k-select the output in chunks, to increase parallelism
+-  runPass1SelectLists(prefixSumOffsets,
+-                      allDistances,
+-                      topQueryToCentroid.getSize(1),
+-                      k,
+-                      !l2Distance, // L2 distance chooses smallest
+-                      heapDistances,
+-                      heapIndices,
+-                      stream);
+-
+-  // k-select final output
+-  auto flatHeapDistances = heapDistances.downcastInner<2>();
+-  auto flatHeapIndices = heapIndices.downcastInner<2>();
+-
+-  runPass2SelectLists(flatHeapDistances,
+-                      flatHeapIndices,
+-                      listIndices,
+-                      indicesOptions,
+-                      prefixSumOffsets,
+-                      topQueryToCentroid,
+-                      k,
+-                      !l2Distance, // L2 distance chooses smallest
+-                      outDistances,
+-                      outIndices,
+-                      stream);
+-}
+-
+-void runPQScanMultiPassNoPrecomputed(Tensor<float, 2, true>& queries,
+-                                     Tensor<float, 2, true>& centroids,
+-                                     Tensor<float, 3, true>& pqCentroidsInnermostCode,
+-                                     Tensor<int, 2, true>& topQueryToCentroid,
+-                                     bool useFloat16Lookup,
+-                                     int bytesPerCode,
+-                                     int numSubQuantizers,
+-                                     int numSubQuantizerCodes,
+-                                     thrust::device_vector<void*>& listCodes,
+-                                     thrust::device_vector<void*>& listIndices,
+-                                     IndicesOptions indicesOptions,
+-                                     thrust::device_vector<int>& listLengths,
+-                                     int maxListLength,
+-                                     int k,
+-                                     faiss::MetricType metric,
+-                                     // output
+-                                     Tensor<float, 2, true>& outDistances,
+-                                     // output
+-                                     Tensor<long, 2, true>& outIndices,
+-                                     GpuResources* res) {
+-  constexpr int kMinQueryTileSize = 8;
+-  constexpr int kMaxQueryTileSize = 128;
+-  constexpr int kThrustMemSize = 16384;
+-
+-  int nprobe = topQueryToCentroid.getSize(1);
+-
+-  auto& mem = res->getMemoryManagerCurrentDevice();
+-  auto stream = res->getDefaultStreamCurrentDevice();
+-
+-  // Make a reservation for Thrust to do its dirty work (global memory
+-  // cross-block reduction space); hopefully this is large enough.
+-  DeviceTensor<char, 1, true> thrustMem1(
+-    mem, {kThrustMemSize}, stream);
+-  DeviceTensor<char, 1, true> thrustMem2(
+-    mem, {kThrustMemSize}, stream);
+-  DeviceTensor<char, 1, true>* thrustMem[2] =
+-    {&thrustMem1, &thrustMem2};
+-
+-  // How much temporary storage is available?
+-  // If possible, we'd like to fit within the space available.
+-  size_t sizeAvailable = mem.getSizeAvailable();
+-
+-  // We run two passes of heap selection
+-  // This is the size of the first-level heap passes
+-  constexpr int kNProbeSplit = 8;
+-  int pass2Chunks = std::min(nprobe, kNProbeSplit);
+-
+-  size_t sizeForFirstSelectPass =
+-    pass2Chunks * k * (sizeof(float) + sizeof(int));
+-
+-  // How much temporary storage we need per each query
+-  size_t sizePerQuery =
+-    2 * // streams
+-    ((nprobe * sizeof(int) + sizeof(int)) + // prefixSumOffsets
+-     nprobe * maxListLength * sizeof(float) + // allDistances
+-     // residual distances
+-     nprobe * numSubQuantizers * numSubQuantizerCodes * sizeof(float) +
+-     sizeForFirstSelectPass);
+-
+-  int queryTileSize = (int) (sizeAvailable / sizePerQuery);
+-
+-  if (queryTileSize < kMinQueryTileSize) {
+-    queryTileSize = kMinQueryTileSize;
+-  } else if (queryTileSize > kMaxQueryTileSize) {
+-    queryTileSize = kMaxQueryTileSize;
+-  }
+-
+-  // FIXME: we should adjust queryTileSize to deal with this, since
+-  // indexing is in int32
+-  FAISS_ASSERT(queryTileSize * nprobe * maxListLength <
+-         std::numeric_limits<int>::max());
+-
+-  // Temporary memory buffers
+-  // Make sure there is space prior to the start which will be 0, and
+-  // will handle the boundary condition without branches
+-  DeviceTensor<int, 1, true> prefixSumOffsetSpace1(
+-    mem, {queryTileSize * nprobe + 1}, stream);
+-  DeviceTensor<int, 1, true> prefixSumOffsetSpace2(
+-    mem, {queryTileSize * nprobe + 1}, stream);
+-
+-  DeviceTensor<int, 2, true> prefixSumOffsets1(
+-    prefixSumOffsetSpace1[1].data(),
+-    {queryTileSize, nprobe});
+-  DeviceTensor<int, 2, true> prefixSumOffsets2(
+-    prefixSumOffsetSpace2[1].data(),
+-    {queryTileSize, nprobe});
+-  DeviceTensor<int, 2, true>* prefixSumOffsets[2] =
+-    {&prefixSumOffsets1, &prefixSumOffsets2};
+-
+-  // Make sure the element before prefixSumOffsets is 0, since we
+-  // depend upon simple, boundary-less indexing to get proper results
+-  CUDA_VERIFY(cudaMemsetAsync(prefixSumOffsetSpace1.data(),
+-                              0,
+-                              sizeof(int),
+-                              stream));
+-  CUDA_VERIFY(cudaMemsetAsync(prefixSumOffsetSpace2.data(),
+-                              0,
+-                              sizeof(int),
+-                              stream));
+-
+-  int codeDistanceTypeSize = useFloat16Lookup ? sizeof(half) : sizeof(float);
+-
+-  int totalCodeDistancesSize =
+-    queryTileSize * nprobe * numSubQuantizers * numSubQuantizerCodes *
+-    codeDistanceTypeSize;
+-
+-  DeviceTensor<char, 1, true> codeDistances1Mem(
+-    mem, {totalCodeDistancesSize}, stream);
+-  NoTypeTensor<4, true> codeDistances1(
+-    codeDistances1Mem.data(),
+-    codeDistanceTypeSize,
+-    {queryTileSize, nprobe, numSubQuantizers, numSubQuantizerCodes});
+-
+-  DeviceTensor<char, 1, true> codeDistances2Mem(
+-    mem, {totalCodeDistancesSize}, stream);
+-  NoTypeTensor<4, true> codeDistances2(
+-    codeDistances2Mem.data(),
+-    codeDistanceTypeSize,
+-    {queryTileSize, nprobe, numSubQuantizers, numSubQuantizerCodes});
+-
+-  NoTypeTensor<4, true>* codeDistances[2] =
+-    {&codeDistances1, &codeDistances2};
+-
+-  DeviceTensor<float, 1, true> allDistances1(
+-    mem, {queryTileSize * nprobe * maxListLength}, stream);
+-  DeviceTensor<float, 1, true> allDistances2(
+-    mem, {queryTileSize * nprobe * maxListLength}, stream);
+-  DeviceTensor<float, 1, true>* allDistances[2] =
+-    {&allDistances1, &allDistances2};
+-
+-  DeviceTensor<float, 3, true> heapDistances1(
+-    mem, {queryTileSize, pass2Chunks, k}, stream);
+-  DeviceTensor<float, 3, true> heapDistances2(
+-    mem, {queryTileSize, pass2Chunks, k}, stream);
+-  DeviceTensor<float, 3, true>* heapDistances[2] =
+-    {&heapDistances1, &heapDistances2};
+-
+-  DeviceTensor<int, 3, true> heapIndices1(
+-    mem, {queryTileSize, pass2Chunks, k}, stream);
+-  DeviceTensor<int, 3, true> heapIndices2(
+-    mem, {queryTileSize, pass2Chunks, k}, stream);
+-  DeviceTensor<int, 3, true>* heapIndices[2] =
+-    {&heapIndices1, &heapIndices2};
+-
+-  auto streams = res->getAlternateStreamsCurrentDevice();
+-  streamWait(streams, {stream});
+-
+-  int curStream = 0;
+-
+-  for (int query = 0; query < queries.getSize(0); query += queryTileSize) {
+-    int numQueriesInTile =
+-      std::min(queryTileSize, queries.getSize(0) - query);
+-
+-    auto prefixSumOffsetsView =
+-      prefixSumOffsets[curStream]->narrowOutermost(0, numQueriesInTile);
+-
+-    auto codeDistancesView =
+-      codeDistances[curStream]->narrowOutermost(0, numQueriesInTile);
+-    auto coarseIndicesView =
+-      topQueryToCentroid.narrowOutermost(query, numQueriesInTile);
+-    auto queryView =
+-      queries.narrowOutermost(query, numQueriesInTile);
+-
+-    auto heapDistancesView =
+-      heapDistances[curStream]->narrowOutermost(0, numQueriesInTile);
+-    auto heapIndicesView =
+-      heapIndices[curStream]->narrowOutermost(0, numQueriesInTile);
+-
+-    auto outDistanceView =
+-      outDistances.narrowOutermost(query, numQueriesInTile);
+-    auto outIndicesView =
+-      outIndices.narrowOutermost(query, numQueriesInTile);
+-
+-    runMultiPassTile(queryView,
+-                     centroids,
+-                     pqCentroidsInnermostCode,
+-                     codeDistancesView,
+-                     coarseIndicesView,
+-                     useFloat16Lookup,
+-                     bytesPerCode,
+-                     numSubQuantizers,
+-                     numSubQuantizerCodes,
+-                     listCodes,
+-                     listIndices,
+-                     indicesOptions,
+-                     listLengths,
+-                     *thrustMem[curStream],
+-                     prefixSumOffsetsView,
+-                     *allDistances[curStream],
+-                     heapDistancesView,
+-                     heapIndicesView,
+-                     k,
+-                     metric,
+-                     outDistanceView,
+-                     outIndicesView,
+-                     streams[curStream]);
+-
+-    curStream = (curStream + 1) % 2;
+-  }
+-
+-  streamWait({stream}, streams);
+-}
+-
+-} } // namespace
+diff --git a/gpu/test/Makefile b/gpu/test/Makefile
+index 6836314..697e8eb 100644
+--- a/gpu/test/Makefile
++++ b/gpu/test/Makefile
+@@ -17,14 +17,18 @@ TESTS_BIN = $(TESTS_OBJ:.o=) $(CUDA_TESTS_OBJ:.o=)
+ 
+ # test_gpu_index.py test_pytorch_faiss.py
+ 
++build: $(TESTS_BIN)
++TestUtils.o: TestUtils.cpp
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $^ ../../libfaiss.a -Igtest/include -I../..
++
+ run: $(TESTS_BIN) $(CUDA_TESTS_BIN)
+ 	for t in $(TESTS_BIN) $(CUDA_TESTS_BIN); do ./$$t || exit; done
+ 
+ $(CUDA_TESTS_OBJ): %.o: %.cu gtest
+-	$(NVCC) $(NVCCFLAGS) -g -O3 -o $@ -c $< -Igtest/include
++	$(NVCC) $(NVCCFLAGS) -g -O3 -o $@ -c $< -Igtest/include -I../..
+ 
+ $(TESTS_OBJ): %.o: %.cpp gtest
+-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $< -Igtest/include
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $< -Igtest/include -I../..
+ 
+ $(TESTS_BIN): %: %.o TestUtils.o ../../libfaiss.a gtest/make/gtest.a
+ 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+@@ -33,7 +37,7 @@ demo_ivfpq_indexing_gpu: demo_ivfpq_indexing_gpu.o ../../libfaiss.a
+ 	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+ 
+ demo_ivfpq_indexing_gpu.o: demo_ivfpq_indexing_gpu.cpp
+-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $^
++	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(CPUFLAGS) -o $@ -c $^ -I../..
+ 
+ gtest/make/gtest.a: gtest
+ 	$(MAKE) -C gtest/make CXX="$(CXX)" CXXFLAGS="$(CXXFLAGS)" gtest.a
+diff --git a/gpu/test/demo_ivfpq_indexing_gpu.cpp b/gpu/test/demo_ivfpq_indexing_gpu.cpp
+index 852a43c..5fde30c 100644
+--- a/gpu/test/demo_ivfpq_indexing_gpu.cpp
++++ b/gpu/test/demo_ivfpq_indexing_gpu.cpp
+@@ -17,6 +17,7 @@
+ 
+ #include <faiss/gpu/StandardGpuResources.h>
+ #include <faiss/gpu/GpuIndexIVFPQ.h>
++#include <faiss/gpu/GpuCloner.h>
+ 
+ #include <faiss/gpu/GpuAutoTune.h>
+ #include <faiss/index_io.h>
+-- 
+1.8.3.1
+

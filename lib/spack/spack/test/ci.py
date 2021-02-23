@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,15 +53,8 @@ def test_urlencode_string():
     assert(s_enc == 'Spack+Test+Project')
 
 
-def has_gpg():
-    try:
-        gpg = spack.util.gpg.Gpg.gpg()
-    except spack.util.gpg.SpackGPGError:
-        gpg = None
-    return bool(gpg)
-
-
-@pytest.mark.skipif(not has_gpg(), reason='This test requires gpg')
+@pytest.mark.skipif(not spack.util.gpg.has_gpg(),
+                    reason='This test requires gpg')
 def test_import_signing_key(mock_gnupghome):
     signing_key_dir = spack_paths.mock_gpg_keys_path
     signing_key_path = os.path.join(signing_key_dir, 'package-signing-key')

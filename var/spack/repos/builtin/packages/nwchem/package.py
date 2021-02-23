@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,79 +11,54 @@ import os
 class Nwchem(Package):
     """High-performance computational chemistry software"""
 
-    homepage = "http://www.nwchem-sw.org"
-    url      = "http://www.nwchem-sw.org/images/Nwchem-6.6.revision27746-src.2015-10-20.tar.gz"
+    homepage = "https://nwchemgit.github.io"
+    url      = "https://github.com/nwchemgit/nwchem/releases/download/v7.0.2-release/nwchem-7.0.2-release.revision-b9985dfa-srconly.2020-10-12.tar.bz2"
 
     tags = ['ecp', 'ecp-apps']
 
+    version('7.0.2', sha256='9bf913b811b97c8ed51bc5a02bf1c8e18456d0719c0a82b2e71223a596d945a7',
+            url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.2-release/nwchem-7.0.2-release.revision-b9985dfa-srconly.2020-10-12.tar.bz2')
+    version('7.0.0', sha256='e3c6510627345be596f4079047e5e7b59e6c20599798ecfe122e3527f8ad6eb0',
+            url='https://github.com/nwchemgit/nwchem/releases/download/v7.0.0-release/nwchem-7.0.0-release.revision-2c9a1c7c-srconly.2020-02-26.tar.bz2')
     version('6.8.1', sha256='fd20f9ca1b410270a815e77e052ec23552f828526cd252709f798f589b2a6431',
             url='https://github.com/nwchemgit/nwchem/releases/download/6.8.1-release/nwchem-6.8.1-release.revision-v6.8-133-ge032219-srconly.2018-06-14.tar.bz2')
-    version('6.8', sha256='8401d9f4cce2f653a38639df61260b06be580ff0e1b8d77ed3262da159b372a6',
-            url='https://github.com/nwchemgit/nwchem/archive/v6.8-release.tar.gz')
 
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi')
     depends_on('scalapack')
-
-    depends_on('python@2.7:2.8', type=('build', 'link', 'run'))
-
-    # first hash is sha256 of the patch (required for URL patches),
-    # second is sha256 for the archive.
-    # patches for 6.6-27746:
-    urls_for_patches = {
-        '@6.6': [
-            ('http://www.nwchem-sw.org/images/Tddft_mxvec20.patch.gz',    'ae04d4754c25fc324329dab085d4cc64148c94118ee702a7e14fce6152b4a0c5', 'cdfa8a5ae7d6ee09999407573b171beb91e37e1558a3bfb2d651982a85f0bc8f'),
-            ('http://www.nwchem-sw.org/images/Tools_lib64.patch.gz',      'ef2eadef89c055c4651ea807079577bd90e1bc99ef6c89f112f1f0e7560ec9b4', '76b8d3e1b77829b683234c8307fde55bc9249b87410914b605a76586c8f32dae'),
-            ('http://www.nwchem-sw.org/images/Config_libs66.patch.gz',    '56f9c4bab362d82fb30d97564469e77819985a38e15ccaf04f647402c1ee248e', 'aa17f03cbb22ad7d883e799e0fddad1b5957f5f30b09f14a1a2caeeb9663cc07'),
-            ('http://www.nwchem-sw.org/images/Cosmo_meminit.patch.gz',    'f05f09ca235ad222fe47d880bfd05a1b88d0148b990ca8c7437fa231924be04b', '569c5ee528f3922ee60ca831eb20ec6591633a36f80efa76cbbe41cabeb9b624'),
-            ('http://www.nwchem-sw.org/images/Sym_abelian.patch.gz',      'e3470fb5786ab30bf2eda3bb4acc1e4c48fb5e640a09554abecf7d22b315c8fd', 'aa693e645a98dbafbb990e26145d65b100d6075254933f36326cf00bac3c29e0'),
-            ('http://www.nwchem-sw.org/images/Xccvs98.patch.gz',          '75540e0436c12e193ed0b644cff41f5036d78c101f14141846083f03ad157afa', '1c0b0f1293e3b9b05e9e51e7d5b99977ccf1edb4b072872c8316452f6cea6f13'),
-            ('http://www.nwchem-sw.org/images/Dplot_tolrho.patch.gz',     '8c30f92730d15f923ec8a623e3b311291eb2ba8b9d5a9884716db69a18d14f24', '2ebb1a5575c44eef4139da91f0e1e60057b2eccdba7f57a8fb577e840c326cbb'),
-            ('http://www.nwchem-sw.org/images/Driver_smalleig.patch.gz',  'a040df6f1d807402ce552ba6d35c9610d5efea7a9d6342bbfbf03c8d380a4058', 'dd65bfbae6b472b94c8ee81d74f6c3ece37c8fc8766ff7a3551d8005d44815b8'),
-            ('http://www.nwchem-sw.org/images/Ga_argv.patch.gz',          '6fcd3920978ab95083483d5ed538cd9a6f2a80c2cafa0c5c7450fa5621f0a314', '8a78cb2af14314b92be9d241b801e9b9fed5527b9cb47a083134c7becdfa7cf1'),
-            ('http://www.nwchem-sw.org/images/Raman_displ.patch.gz',      'ca4312cd3ed1ceacdc3a7d258bb05b7824c393bf44f44c28a789ebeb29a8dba4', '6a16f0f589a5cbb8d316f68bd2e6a0d46cd47f1c699a4b256a3973130061f6c3'),
-            ('http://www.nwchem-sw.org/images/Ga_defs.patch.gz',          'f8ac827fbc11f7d2a9d8ec840c6f79d4759ef782bd4d291f2e88ec81b1b230aa', 'c6f1a48338d196e1db22bcfc6087e2b2e6eea50a34d3a2b2d3e90cccf43742a9'),
-            ('http://www.nwchem-sw.org/images/Zgesvd.patch.gz',           'c333a94ceb2c35a490f24b007485ac6e334e153b03cfc1d093b6037221a03517', '4af592c047dc3e0bc4962376ae2c6ca868eb7a0b40a347ed9b88e887016ad9ed'),
-            ('http://www.nwchem-sw.org/images/Cosmo_dftprint.patch.gz',   '449d59983dc68c23b34e6581370b2fb3d5ea425b05c3182f0973e5b0e1a62651', 'd3b73431a68d6733eb7b669d471e18a83e03fa8e40c48e536fe8edecd99250ff'),
-            ('http://www.nwchem-sw.org/images/Txs_gcc6.patch.gz',         '1dab87f23b210e941c765f7dd7cc2bed06d292a2621419dede73f10ba1ca1bcd', '139692215718cd7414896470c0cc8b7817a73ece1e4ca93bf752cf1081a195af'),
-            ('http://www.nwchem-sw.org/images/Gcc6_optfix.patch.gz',      '8f8a5f8246bc1e42ef0137049acab4448a2e560339f44308703589adf753c148', '15cff43ab0509e0b0e83c49890032a848d6b7116bd6c8e5678e6c933f2d051ab'),
-            ('http://www.nwchem-sw.org/images/Util_gnumakefile.patch.gz', '173e17206a9099c3512b87e3f42441f5b089db82be1d2b306fe2a0070e5c8fad', '5dd82b9bd55583152295c999a0e4d72dd9d5c6ab7aa91117c2aae57a95a14ba1'),
-            ('http://www.nwchem-sw.org/images/Util_getppn.patch.gz',      'c4a23592fdcfb1fb6b65bc6c1906ac36f9966eec4899c4329bc8ce12015d2495', '8be418e1f8750778a31056f1fdf2a693fa4a12ea86a531f1ddf6f3620421027e'),
-            ('http://www.nwchem-sw.org/images/Gcc6_macs_optfix.patch.gz', 'ff33d5f1ccd33385ffbe6ce7a18ec1506d55652be6e7434dc8065af64c879aaa', 'fade16098a1f54983040cdeb807e4e310425d7f66358807554e08392685a7164'),
-            ('http://www.nwchem-sw.org/images/Notdir_fc.patch.gz',        '54c722fa807671d6bf1a056586f0923593319d09c654338e7dd461dcd29ff118', 'a6a233951eb254d8aff5b243ca648def21fa491807a66c442f59c437f040ee69')
-        ]
-    }
-    # Iterate over patches
-    for __condition, __urls in urls_for_patches.items():
-        for __url, __sha256, __archive_sha256 in __urls:
-            patch(__url, when=__condition, level=0, sha256=__sha256, archive_sha256=__archive_sha256)
+    depends_on('python@3:', when='@7:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8', when='@:6', type=('build', 'link', 'run'))
+    conflicts('%gcc@10:', when='@:6', msg='NWChem versions prior to 7.0.0 do not build with GCC 10')
 
     def install(self, spec, prefix):
         scalapack = spec['scalapack'].libs
         lapack = spec['lapack'].libs
         blas = spec['blas'].libs
-        # see http://www.nwchem-sw.org/index.php/Compiling_NWChem
+        # see https://nwchemgit.github.io/Compiling-NWChem.html
         args = []
         args.extend([
             'NWCHEM_TOP=%s' % self.stage.source_path,
             # NWCHEM is picky about FC and CC. They should NOT be full path.
-            # see http://www.nwchem-sw.org/index.php/Special:AWCforum/sp/id7524
+            # see https://nwchemgit.github.io/Special_AWCforum/sp/id7524
             'CC=%s' % os.path.basename(spack_cc),
             'FC=%s' % os.path.basename(spack_fc),
             'USE_MPI=y',
-            'MPI_LOC=%s' % spec['mpi'].prefix,
-            'USE_PYTHONCONFIG=y',
             'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
-            'PYTHONHOME=%s' % spec['python'].home,
             'BLASOPT=%s' % ((lapack + blas).ld_flags),
             'BLAS_LIB=%s' % blas.ld_flags,
             'LAPACK_LIB=%s' % lapack.ld_flags,
-            'USE_SCALAPACK=y',
-            'SCALAPACK=%s' % scalapack.ld_flags,
+            'SCALAPACK_LIB=%s' % scalapack.ld_flags,
             'NWCHEM_MODULES=all python',
-            'NWCHEM_LONG_PATHS=Y'  # by default NWCHEM_TOP is 64 char max
+            'NWCHEM_LONG_PATHS=Y',  # by default NWCHEM_TOP is 64 char max
+            'USE_NOIO=Y'  # skip I/O algorithms
         ])
+        if spec.version < Version('7.0.0'):
+            args.extend([
+                'PYTHONVERSION=%s' % spec['python'].version.up_to(2),
+                'PYTHONHOME=%s' % spec['python'].home,
+                'USE_PYTHONCONFIG=Y',
+            ])
 
         # TODO: query if blas/lapack/scalapack uses 64bit Ints
         # A flag to distinguish between 32bit and 64bit integers in linear
@@ -155,3 +130,11 @@ class Nwchem(Package):
             with open(".nwchemrc", 'w') as f:
                 f.write(nwchemrc)
             install(".nwchemrc", share_path)
+
+    def setup_run_environment(self, env):
+        env.set('NWCHEM_BASIS_LIBRARY', join_path(
+            self.prefix,
+            'share/nwchem/libraries/'))
+        env.set('NWCHEM_NWPW_LIBRARY', join_path(
+            self.prefix,
+            'share/nwchem/libraryps/'))

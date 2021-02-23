@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ import spack.stage
         ('configure',      'autotools'),
         ('CMakeLists.txt', 'cmake'),
         ('project.pro',    'qmake'),
+        ('pom.xml',        'maven'),
         ('SConstruct',     'scons'),
         ('waf',            'waf'),
         ('setup.py',       'python'),
@@ -23,6 +24,9 @@ import spack.stage
         ('WORKSPACE',      'bazel'),
         ('Makefile.PL',    'perlmake'),
         ('Build.PL',       'perlbuild'),
+        ('foo.gemspec',    'ruby'),
+        ('Rakefile',       'ruby'),
+        ('setup.rb',       'ruby'),
         ('GNUmakefile',    'makefile'),
         ('makefile',       'makefile'),
         ('Makefile',       'makefile'),

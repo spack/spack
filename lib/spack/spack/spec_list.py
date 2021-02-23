@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,7 +25,11 @@ def spec_ordering_key(s):
 
 class SpecList(object):
 
-    def __init__(self, name='specs', yaml_list=[], reference={}):
+    def __init__(self, name='specs', yaml_list=None, reference=None):
+        # Normalize input arguments
+        yaml_list = yaml_list or []
+        reference = reference or {}
+
         self.name = name
         self._reference = reference  # TODO: Do we need defensive copy here?
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,3 +20,7 @@ class CAres(CMakePackage):
     def url_for_version(self, version):
         url = "https://github.com/c-ares/c-ares/archive/cares-{0}.tar.gz"
         return url.format(version.underscored)
+
+    @property
+    def libs(self):
+        return find_libraries(['libcares'], root=self.prefix, recursive=True)

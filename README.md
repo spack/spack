@@ -4,7 +4,6 @@
 [![Linux Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
 [![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
 [![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
-[![Build Status](https://travis-ci.com/spack/spack.svg?branch=develop)](https://travis-ci.com/spack/spack)
 [![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
 [![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
 [![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
@@ -22,7 +21,7 @@ builds of the same package.  With Spack, you can build your software
 *all* the ways you want to.
 
 See the
-[Feature Overview](http://spack.readthedocs.io/en/latest/features.html)
+[Feature Overview](https://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
 To install spack and your first package, make sure you have Python.
@@ -35,14 +34,14 @@ Then:
 Documentation
 ----------------
 
-[**Full documentation**](http://spack.readthedocs.io/) is available, or
+[**Full documentation**](https://spack.readthedocs.io/) is available, or
 run `spack help` or `spack help --all`.
 
 Tutorial
 ----------------
 
 We maintain a
-[**hands-on tutorial**](http://spack.readthedocs.io/en/latest/tutorial.html).
+[**hands-on tutorial**](https://spack.readthedocs.io/en/latest/tutorial.html).
 It covers basic to advanced usage, packaging, developer features, and large HPC
 deployments.  You can do all of the exercises on your own laptop using a
 Docker container.
@@ -74,9 +73,9 @@ When you send your request, make ``develop`` the destination branch on the
 
 Your PR must pass Spack's unit tests and documentation tests, and must be
 [PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
-these guidelines with [Travis CI](https://travis-ci.org/spack/spack).  To
-run these tests locally, and for helpful tips on git, see our
-[Contribution Guide](http://spack.readthedocs.io/en/latest/contribution_guide.html).
+these guidelines with our CI process. To run these tests locally, and for 
+helpful tips on git, see our
+[Contribution Guide](https://spack.readthedocs.io/en/latest/contribution_guide.html).
 
 Spack's `develop` branch has the latest contributions. Pull requests
 should target `develop`, and users who want the latest package versions,
@@ -121,7 +120,7 @@ If you are referencing Spack in a publication, please cite the following paper:
 
  * Todd Gamblin, Matthew P. LeGendre, Michael R. Collette, Gregory L. Lee,
    Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
-   [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
+   [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
 License

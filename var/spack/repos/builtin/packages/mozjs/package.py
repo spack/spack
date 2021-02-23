@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,17 +25,24 @@ class Mozjs(AutotoolsPackage):
     depends_on('python@2.7.3:2.8', type='build')
     depends_on('nspr', when='@:27')
     depends_on('libffi@3.0.9:')
-    depends_on('readline')
+    depends_on('readline', when='@17.0.0:')
     depends_on('zlib@1.2.3')
 
     configure_directory = 'js/src'
     build_directory = 'js/src/spack-build'
 
     patch('perl-bug.patch')
+    # Note: According to https://github.com/apache/couchdb-pkg/tree/master/js/rpm/SOURCES
+    #       There is some patch for mozjs@1.8.5 to fix compile issue.
+    #       Patches required to fix the issue:https://bugzilla.mozilla.org/show_bug.cgi?id=638056
+    patch('Bug-638056-Avoid-The-cacheFlush-support-is-missing-o.patch',
+          sha256='b1c869a65f5ebc10741d4631cc2e1e166c6ed53035cfa56bede55a4c19b7b118', when='@1.8.5')
+    patch('fix-811665.patch',
+          sha256='2b298b8a693865b38e2b0d33277bb5ffe152c6ecf43648e85113fec586aa4752', when='@1.8.5')
 
     def configure_args(self):
         spec = self.spec
-        return [
+        config_args = [
             '--enable-readline',    # enables readline support in JS shell
             '--enable-threadsafe',  # enables support for multiple threads
             '--enable-system-ffi',
@@ -43,3 +50,8 @@ class Mozjs(AutotoolsPackage):
             '--with-system-nspr',
             '--with-nspr-prefix={0}'.format(spec['nspr'].prefix),
         ]
+        if spec.target.family == 'aarch64':
+            config_args.append('--host=aarch64-linux-gnu')
+        if spec.satisfies('@1.8.5'):
+            config_args.append('--disable-readline')
+        return config_args

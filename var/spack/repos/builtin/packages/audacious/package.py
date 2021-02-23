@@ -1,11 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
 class Audacious(AutotoolsPackage):
     """A lightweight and versatile audio player."""
 
@@ -22,8 +18,15 @@ class Audacious(AutotoolsPackage):
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
+    depends_on('gettext')
+    depends_on('iconv',    type='link')
     depends_on('glib')
     depends_on('qt')
+
+    def patch(self):
+        search_path_args = ' '.join(self.autoreconf_search_path_args)
+        search_path_str = '-I m4 {0}'.format(search_path_args)
+        filter_file('-I m4', search_path_str, 'autogen.sh')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')

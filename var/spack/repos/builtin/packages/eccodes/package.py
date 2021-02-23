@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Eccodes(CMakePackage):
 
     maintainers = ['skosukhin']
 
+    version('2.20.0', sha256='207a3d7966e75d85920569b55a19824673e8cd0b50db4c4dac2d3d52eacd7985')
+    version('2.19.1', sha256='9964bed5058e873d514bd4920951122a95963128b12f55aa199d9afbafdd5d4b')
+    version('2.18.0', sha256='d88943df0f246843a1a062796edbf709ef911de7269648eef864be259e9704e3')
     version('2.13.0', sha256='c5ce1183b5257929fc1f1c8496239e52650707cfab24f4e0e1f1a471135b8272')
     version('2.5.0', sha256='18ab44bc444168fd324d07f7dea94f89e056f5c5cd973e818c8783f952702e4e')
     version('2.2.0', sha256='1a4112196497b8421480e2a0a1164071221e467853486577c4f07627a702f4c3')
@@ -36,40 +39,35 @@ class Eccodes(CMakePackage):
     variant('memfs', default=False,
             description='Enable memory based access to definitions/samples')
     variant('python', default=False,
-            description='Enable the Python interface')
+            description='Enable the Python 2 interface')
     variant('fortran', default=False, description='Enable the Fortran support')
-    variant('examples', default=True,
-            description='Build the examples (part of the full test suite)')
-    variant('test', default=True, description='Enable the tests')
-    variant('build_type', default='RelWithDebInfo',
-            description='The build type to build',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'Production'))
-
-    # The building script tries to find an optional package valgrind when
-    # tests are enabled but the testing scripts don't use it.
-    # depends_on('valgrind', type='test', when='+test')
 
     depends_on('netcdf-c', when='+netcdf')
-    depends_on('openjpeg@1.5.0:1.5.999,2.1.0:2.1.999', when='jp2k=openjpeg')
+    # Cannot be built with openjpeg@2.0.x.
+    depends_on('openjpeg@1.5.0:1.5.999,2.1.0:2.3.999', when='jp2k=openjpeg')
+    # Additional constraint for older versions.
+    depends_on('openjpeg@:2.1.999', when='@:2.16 jp2k=openjpeg')
     depends_on('jasper', when='jp2k=jasper')
     depends_on('libpng', when='+png')
     depends_on('libaec', when='+aec')
-    # Can be built with Python2 or Python3.
+    # Can be built with Python 2 or Python 3.
     depends_on('python', when='+memfs', type='build')
-    # The interface works only for Python2.
-    # Python 3 support was added in 2.13.0:
+    # The interface is available only for Python 2.
+    # Python 3 interface is available as a separate packages:
     # https://confluence.ecmwf.int/display/ECC/Python+3+interface+for+ecCodes
-    depends_on('python@2.6:2.999', when='@:2.12+python',
+    depends_on('python@2.6:2.999', when='+python',
                type=('build', 'link', 'run'))
     depends_on('py-numpy', when='+python', type=('build', 'run'))
     extends('python', when='+python')
 
+    depends_on('cmake@3.6:', type='build')
+    depends_on('cmake@3.12:', when='@2.19:', type='build')
     conflicts('+openmp', when='+pthreads',
               msg='Cannot enable both POSIX threads and OMP')
 
-    # The following enforces linking against the specified JPEG2000 backend.
-    patch('enable_only_openjpeg.patch', when='jp2k=openjpeg')
-    patch('enable_only_jasper.patch', when='jp2k=jasper')
+    # Enforce linking against the specified JPEG2000 backend, see also
+    # https://github.com/ecmwf/eccodes/commit/2c10828495900ff3d80d1e570fe96c1df16d97fb
+    patch('openjpeg_jasper.patch', when='@:2.16')
 
     # CMAKE_INSTALL_RPATH must be a semicolon-separated list.
     patch('cmake_install_rpath.patch', when='@:2.10')
@@ -85,13 +83,21 @@ class Eccodes(CMakePackage):
                         ('+openmp', 'ECCODES_OMP_THREADS'),
                         ('+memfs', 'MEMFS'),
                         ('+python', 'PYTHON'),
-                        ('+fortran', 'FORTRAN'),
-                        ('+examples', 'EXAMPLES'),
-                        ('+test', 'TESTS'),
-                        ('+test', 'EXTRA_TESTS')]
+                        ('+fortran', 'FORTRAN')]
 
         args = ['-DENABLE_%s=%s' % (opt, 'ON' if var in self.spec else 'OFF')
                 for var, opt in var_opt_list]
+
+        args.extend(
+            ['-DENABLE_%s=%s' % (opt, 'ON' if self.run_tests else 'OFF')
+             for opt in ['TESTS',
+                         # Examples are not installed and are
+                         # just part of the test suite.
+                         'EXAMPLES']])
+
+        # Unconditionally disable the extended regression testing,
+        # which requires data downloads.
+        args.append('-DENABLE_EXTRA_TESTS=OFF')
 
         if '+netcdf' in self.spec:
             args.extend(['-DENABLE_NETCDF=ON',
@@ -104,12 +110,15 @@ class Eccodes(CMakePackage):
         else:
             args.append('-DENABLE_NETCDF=OFF')
 
-        if self.spec.variants['jp2k'].value == 'none':
-            args.append('-DENABLE_JPG=OFF')
-        else:
-            args.append('-DENABLE_JPG=ON')
+        jp2k = self.spec.variants['jp2k'].value
+        args.append('-DENABLE_JPG=' +
+                    ('OFF' if jp2k == 'none' else 'ON'))
+        args.append('-DENABLE_JPG_LIBJASPER=' +
+                    ('ON' if jp2k == 'jasper' else 'OFF'))
+        args.append('-DENABLE_JPG_LIBOPENJPEG=' +
+                    ('ON' if jp2k == 'openjpeg' else 'OFF'))
 
-        if self.spec.variants['jp2k'].value == 'openjpeg':
+        if jp2k == 'openjpeg':
             args.append('-DOPENJPEG_PATH=' + self.spec['openjpeg'].prefix)
 
         if '+png' in self.spec:
@@ -130,3 +139,8 @@ class Eccodes(CMakePackage):
             args.append('-DPYTHON_EXECUTABLE:FILEPATH=' + python.path)
 
         return args
+
+    def check(self):
+        # https://confluence.ecmwf.int/display/ECC/ecCodes+installation
+        with working_dir(self.build_directory):
+            ctest()

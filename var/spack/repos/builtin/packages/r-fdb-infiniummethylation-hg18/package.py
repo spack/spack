@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RFdbInfiniummethylationHg18(RPackage):
-    """Compiled HumanMethylation27 and HumanMethylation450 annotations"""
+    """Annotation package for Illumina Infinium DNA methylation probes
+
+    Compiled HumanMethylation27 and HumanMethylation450 annotations"""
 
     # This is a bioconductor package but there is no available git repository
     homepage = "http://bioconductor.org/packages/release/data/annotation/html/FDb.InfiniumMethylation.hg18.html"

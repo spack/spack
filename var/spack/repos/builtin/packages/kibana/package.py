@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class Kibana(Package):
 
     version('6.4.0', sha256='df2056105a08c206a1adf9caed09a152a53429a0f1efc1ba3ccd616092d78aee')
 
-    depends_on('jdk', type='run')
+    depends_on('java', type='run')
 
     def install(self, spec, prefix):
         install_tree('.', join_path(prefix, '.'))

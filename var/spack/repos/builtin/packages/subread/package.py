@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,7 +33,7 @@ class Subread(MakefilePackage):
                 )
                 if spec.target.family == 'aarch64':
                     filter_file('-mtune=core2', '', 'Makefile.Linux')
-                    if spec.satisfies('@1.6.2:1.6.4'):
+                    if spec.satisfies('@1.6.2:2.0.0'):
                         filter_file(
                             '-mtune=core2',
                             '',

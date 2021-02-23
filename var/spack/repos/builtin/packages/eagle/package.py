@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,13 @@ class Eagle(MakefilePackage):
 
         # add htslib link to ldflags
         filter_file('-lcurl', '-lcurl -lhts', 'Makefile', string=True)
+
+        # use spack C compiler
+        filter_file('CC=.*', 'CC={0}'.format(spack_cc), 'Makefile')
+
+        # remove march=native %fj
+        if self.spec.satisfies('%fj'):
+            filter_file('-march=native', '', 'Makefile', string=True)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

@@ -3,6 +3,7 @@ enable:
 tcl:
   mpileaks:
     suffixes:
+      '+opt': baz
       '+debug': foo
-      '~debug': bar
       '^mpich': foo
+      '~debug': bar

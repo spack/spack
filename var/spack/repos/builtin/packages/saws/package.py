@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,4 +16,7 @@ class Saws(AutotoolsPackage):
     git      = "https://bitbucket.org/saws/saws.git"
 
     version('develop', tag='master')
+    version('0.1.1', tag='v0.1.1')
     version('0.1.0', tag='v0.1.0')
+
+    depends_on('python', type='build')

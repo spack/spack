@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,14 +19,6 @@ class ScorecCore(CMakePackage):
     depends_on('mpi')
     depends_on('zoltan')
     depends_on('cmake@3.0:', type='build')
-
-    @property
-    def std_cmake_args(self):
-        # Default cmake RPATH options causes build failure on bg-q
-        if self.spec.satisfies('platform=bgq'):
-            return ['-DCMAKE_INSTALL_PREFIX:PATH={0}'.format(self.prefix)]
-        else:
-            return self._std_args(self)
 
     def cmake_args(self):
         options = []

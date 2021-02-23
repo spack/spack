@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,9 @@ class PpopenApplFem(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url = "file://{0}/ppohFEM_1.0.1.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('1.0.1', sha256='eea8837fa3eda284759b7ebf27c27cea8cbf9cf65cf37c62941700e1321aeb07')
+    version('master', branch='APPL/FEM')
 
     depends_on('mpi')
     depends_on('metis')
@@ -51,6 +51,7 @@ class PpopenApplFem(MakefilePackage):
         )
         makefile_in.filter('mpicc', spec['mpi'].mpicc)
         makefile_in.filter('mpif90', spec['mpi'].mpifc)
+        mkdirp(join_path('ppohFEM', 'bin'))
 
     def install(self, spec, prefix):
         for d in ['ppohFEM', 'app_flow', 'app_heat', 'app_struct']:

@@ -1,0 +1,27 @@
+commit 525b70302cea9b5850be9ee8d33b7660455082f2
+Author: Shintaro Iwasaki <siwasaki@anl.gov>
+Date:   Wed Apr 15 03:46:44 2020 +0000
+
+    [BOLT] disable futex and adaptive locks if unused
+    
+    On some architectures, including POWER 9, futex locks and/or adaptive locks are
+    not enabled by default, but BOLT assumed they are available, causing
+    compile-time errors on such a platform.  This patch fixes it.
+
+diff --git a/runtime/src/kmp_lock.cpp b/runtime/src/kmp_lock.cpp
+index 5dcc4ee..5cda629 100644
+--- a/runtime/src/kmp_lock.cpp
++++ b/runtime/src/kmp_lock.cpp
+@@ -219,8 +219,12 @@ KMP_DEFINE_LOCKS(tas)
+ KMP_DEFINE_LOCKS(ticket)
+ KMP_DEFINE_LOCKS(queuing)
+ KMP_DEFINE_LOCKS(drdpa)
++#if KMP_USE_FUTEX
+ KMP_DEFINE_LOCKS(futex)
++#endif
++#if KMP_USE_ADAPTIVE_LOCKS
+ KMP_DEFINE_LOCKS(adaptive)
++#endif
+ typedef kmp_abt_mutex_lock_t kmp_hle_lock_t;
+ KMP_DEFINE_LOCKS(hle)
+ typedef kmp_abt_mutex_lock_t kmp_rtm_lock_t;

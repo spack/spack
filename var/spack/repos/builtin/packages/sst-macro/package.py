@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,7 @@ class SstMacro(AutotoolsPackage):
 
     maintainers = ['jjwilke']
 
+    version('10.1.0', sha256='e15d99ce58d282fdff849af6de267746a4c89f3b8c5ab6c1e1e7b53a01127e73')
     version('10.0.0', sha256='064b732256f3bec9b553e00bcbc9a1d82172ec194f2b69c8797f585200b12566')
     version('master',  branch='master')
     version('develop', branch='devel')
@@ -37,6 +38,9 @@ class SstMacro(AutotoolsPackage):
     depends_on('mpi', when='+pdes_mpi')
     depends_on('sst-core@develop',   when='@develop+core')
     depends_on('sst-core@master',  when='@master+core')
+    depends_on('sst-core@10.1.0', when='@10.1.0+core')
+    depends_on('sst-core@10.0.0', when='@10.0.0+core')
+    depends_on('gettext')
 
     variant('pdes_threads', default=True,
             description='Enable thread-parallel PDES simulation')

@@ -1,23 +1,22 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
 
 
 class PyNbformat(PythonPackage):
     """The Jupyter Notebook format"""
 
     homepage = "https://github.com/jupyter/nbformat"
-    url      = "https://github.com/jupyter/nbformat/archive/4.1.0.tar.gz"
+    pypi = "nbformat/nbformat-5.0.7.tar.gz"
 
-    version('4.4.0', sha256='cfa7b2dbb81ab7a64492f09f2cb65d69a1d009fe5d6e18ee7bb94446b114ede3')
-    version('4.1.0', sha256='751e77b58b66319be3977f86cc23a459763bded466a0113bbe39f137ec747872')
-    version('4.0.1', sha256='5c46c21349f29379fa55bf19e4359afcd605fd4b5693a56807355874a2e87f78')
-    version('4.0.0', sha256='f0dc6c6b47b9b0dcda1dfb02dd99c0818eb709571690a688d4e38a3129d2e95b')
+    version('5.0.7', sha256='54d4d6354835a936bad7e8182dcd003ca3dc0cedfee5a306090e04854343b340')
+    version('4.4.0', sha256='f7494ef0df60766b7cabe0a3651556345a963b74dbc16bc7c18479041170d402')
+    version('4.1.0', sha256='dbf6c0ed0cb7c5a7184536368f1dd1ada2d48fd6f016e0f9e9b69236e28c0857')
+    version('4.0.1', sha256='5261c957589b9dfcd387c338d59375162ba9ca82c69e378961a1f4e641285db5')
+    version('4.0.0', sha256='daf9b990e96863d120aff123361156a316757757b81a8070eb6945e4a9774b2d')
 
     depends_on('py-ipython-genutils', type=('build', 'run'))
-    depends_on('py-traitlets', type=('build', 'run'))
-    depends_on('py-jsonschema', type=('build', 'run'))
+    depends_on('py-traitlets@4.1:', type=('build', 'run'))
+    depends_on('py-jsonschema@2.4.0:2.4.999,2.5.1:', type=('build', 'run'))
     depends_on('py-jupyter-core', type=('build', 'run'))

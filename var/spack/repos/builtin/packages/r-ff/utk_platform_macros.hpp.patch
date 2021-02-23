@@ -1,0 +1,11 @@
+--- spack-src/src/utk_platform_macros.hpp.bak	2017-04-09 00:25:51.000000000 +0900
++++ spack-src/src/utk_platform_macros.hpp	2020-08-26 09:43:04.464838833 +0900
+@@ -136,6 +136,8 @@
+     #define UTK__Arch_ARM_THUMB
+   #elif defined(__sh__)
+     #define UTK__Arch_SuperH
++  #elif defined(__aarch64__)
++    #define UTK__Arch_ARM64
+   #else
+     #error Architecture not supported.
+   #endif

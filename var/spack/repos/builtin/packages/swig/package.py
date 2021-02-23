@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     sourceforge_mirror_path = "swig/swig-3.0.12.tar.gz"
 
     version('master', git='https://github.com/swig/swig.git')
+    version('4.0.2', sha256='d53be9730d8d58a16bf0cbd1f8ac0c0c3e1090573168bfa151b01eb47fa906fc',
+            preferred=True)
     version('4.0.1', sha256='7a00b4d0d53ad97a14316135e2d702091cd5f193bb58bcfcd8bc59d41e7887a9')
     version('4.0.0', sha256='e8a39cd6437e342cdcbd5af27a9bf11b62dc9efec9248065debcb8276fcbb925')
     version('3.0.12', sha256='7cf9f447ae7ed1c51722efc45e7f14418d15d7a1e143ac9f09a668999f4fc94d')
@@ -35,14 +37,19 @@ class Swig(AutotoolsPackage, SourceforgePackage):
     version('1.3.40', sha256='1945b3693bcda6777bd05fef1015a0ad1a4604cde4a4a0a368b61ccfd143ac09')
     version('fortran', branch='master',
             git='https://github.com/swig-fortran/swig.git')
+    version('4.0.2-fortran', sha256='2d65ebe82274da294709254703f9ac2333fd39286b9375b0d89182385aac548e',
+            url='https://github.com/swig-fortran/swig/archive/v4.0.2+fortran.tar.gz')
 
     depends_on('pcre')
 
-    # Git repository does *not* include configure script
-    for _version in ['@fortran', '@master']:
+    _autoconf_versions = ['@master', '@fortran', '@4.0.2-fortran']
+
+    # Git releases do *not* include configure script
+    for _version in _autoconf_versions:
         depends_on('autoconf', type='build', when=_version)
         depends_on('automake', type='build', when=_version)
         depends_on('libtool', type='build', when=_version)
+        depends_on('yacc', type='build', when=_version)
     # Need newer 'automake' to support newer platforms
     for _target in ['ppc64le', 'aarch64']:
         depends_on('automake@1.15:', type='build', when='target={0}:'.format(_target))
@@ -56,7 +63,7 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         with working_dir(self.prefix.bin):
             os.symlink('swig', 'swig{0}'.format(self.spec.version.up_to(2)))
 
-    for _version in ['@fortran', '@master']:
+    for _version in _autoconf_versions:
         @when(_version)
         def autoreconf(self, spec, prefix):
             which('sh')('./autogen.sh')

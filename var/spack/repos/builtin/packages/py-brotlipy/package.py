@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyBrotlipy(PythonPackage):
     """Python binding to the Brotli library."""
 
     homepage = "https://github.com/python-hyper/brotlipy/"
-    url      = "https://pypi.io/packages/source/b/brotlipy/brotlipy-0.7.0.tar.gz"
+    pypi = "brotlipy/brotlipy-0.7.0.tar.gz"
 
     version('0.7.0', sha256='36def0b859beaf21910157b4c33eb3b06d8ce459c942102f16988cca6ea164df')
 

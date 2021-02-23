@@ -1,0 +1,27 @@
+# This patch removes the default(?) setting of passing -single_module
+# flag to the loader.  From what I can gather, only the Darwin loader
+# supports that, so this patch allows building on non-Darwin systems
+diff -Naur spack-src/src/Makefile.am spack-src.patched/src/Makefile.am
+--- spack-src/src/Makefile.am	2008-02-19 13:43:18.000000000 -0500
++++ spack-src.patched/src/Makefile.am	2020-12-02 11:11:52.780822127 -0500
+@@ -6,7 +6,7 @@
+ INCLUDES=-I$(top_srcdir)/include/
+ 
+ # Set LDFLAGS to alow the HDF-EOS library to use extern variables from HDF4
+-LDFLAGS=-Wl,-single_module
++#LDFLAGS=-Wl,-single_module
+ 
+ # Build HDF-EOS2
+ lib_LTLIBRARIES=libhdfeos.la
+diff -Naur spack-src/src/Makefile.in spack-src.patched/src/Makefile.in
+--- spack-src/src/Makefile.in	2009-05-19 12:12:34.000000000 -0400
++++ spack-src.patched/src/Makefile.in	2020-12-02 11:12:06.686234377 -0500
+@@ -126,7 +126,7 @@
+ INSTALL_STRIP_PROGRAM = @INSTALL_STRIP_PROGRAM@
+ 
+ # Set LDFLAGS to alow the HDF-EOS library to use extern variables from HDF4
+-LDFLAGS = -Wl,-single_module
++#LDFLAGS = -Wl,-single_module
+ LIBOBJS = @LIBOBJS@
+ LIBS = @LIBS@
+ LIBTOOL = @LIBTOOL@

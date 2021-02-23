@@ -1,0 +1,27 @@
+From: A Costa <agcosta@gis.net>
+Subject: manpage typo: transfering -> transferring
+Bug-Debian: http://bugs.debian.org/301914
+X-Debian-version: 2.31-2
+
+--- a/man/zip.1
++++ b/man/zip.1
+@@ -2756,7 +2756,7 @@
+ .I zip
+ handles some of the conversion internally.
+ When using Kermit to transfer zip files from VMS to MSDOS, type "set
+-file type block" on VMS.  When transfering from MSDOS to VMS, type
++file type block" on VMS.  When transferring from MSDOS to VMS, type
+ "set file type fixed" on VMS.  In both cases, type "set file type
+ binary" on MSDOS.
+ .LP
+--- a/zip.txt
++++ b/zip.txt
+@@ -1957,7 +1957,7 @@
+        be converted using Rahul Dhesi's BILF program.   This  version  of  zip
+        handles some of the conversion internally.  When using Kermit to trans-
+        fer zip files from VMS to MSDOS, type "set file  type  block"  on  VMS.
+-       When  transfering from MSDOS to VMS, type "set file type fixed" on VMS.
++       When transferring from MSDOS to VMS, type "set file type fixed" on VMS.
+        In both cases, type "set file type binary" on MSDOS.
+ 
+        Under some older VMS versions, zip may  hang  for  file  specifications

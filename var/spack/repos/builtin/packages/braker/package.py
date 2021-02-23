@@ -1,10 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-import os
 import glob
 
 
@@ -48,10 +46,7 @@ class Braker(Package):
             install_tree('example', prefix.example)
             with working_dir('scripts'):
                 install('helpMod.pm', prefix.lib)
-                files = glob.iglob('*.pl')
-                for file in files:
-                    if os.path.isfile(file):
-                        install(file, prefix.bin)
+                install('*.pl', prefix.bin)
 
     @run_after('install')
     def filter_sbang(self):

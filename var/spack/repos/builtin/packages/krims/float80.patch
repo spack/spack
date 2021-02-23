@@ -1,0 +1,13 @@
+--- spack-src/src/krims/DataFiles/ieee_convert.cc.old	2020-10-20 12:35:49.635656789 +0900
++++ spack-src/src/krims/DataFiles/ieee_convert.cc	2020-10-20 13:21:34.031342615 +0900
+@@ -24,8 +24,10 @@
+ 
+ #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ > 6)
+ #define FLOAT128 __float128
++#ifdef __x86_64__
+ #define FLOAT80 __float80
+ #endif
++#endif
+ 
+ // Useful resources:
+ //     https://en.wikipedia.org/wiki/Double-precision_floating-point_format

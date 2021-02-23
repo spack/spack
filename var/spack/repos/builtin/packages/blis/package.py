@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -124,10 +124,11 @@ class Blis(BlisBase):
     """
 
     homepage = "https://github.com/flame/blis"
-    url = "https://github.com/flame/blis/archive/0.4.0.tar.gz"
+    url = "https://github.com/flame/blis/archive/0.7.0.tar.gz"
     git = "https://github.com/flame/blis.git"
 
     version('master', branch='master')
+    version('0.7.0', sha256='7e345d666799e15bba570bd125f97042f17bf752a61dcf314486a6cd096d5f68')
     version('0.6.1', sha256='76b22f29b7789cf117c0873d2a6b2a6d61f903869168148f2e7306353c105c37')
     version('0.6.0', sha256='ad5765cc3f492d0c663f494850dafc4d72f901c332eb442f404814ff2995e5a9')
     version('0.5.0', sha256='1a004d69c139e8a0448c6a6007863af3a8c3551b8d9b8b73fe08e8009f165fa8')

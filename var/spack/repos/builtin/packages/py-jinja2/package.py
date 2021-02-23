@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,7 @@ class PyJinja2(PythonPackage):
     and an optional sandboxed environment."""
 
     homepage = "https://palletsprojects.com/p/jinja/"
-    url      = "https://pypi.io/packages/source/J/Jinja2/Jinja2-2.10.3.tar.gz"
-
-    import_modules = ['jinja2']
+    pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
 
     version('2.10.3', sha256='9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de')
     version('2.10.1', sha256='065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013')

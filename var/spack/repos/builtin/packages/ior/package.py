@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,9 @@ class Ior(AutotoolsPackage):
     homepage = "https://github.com/hpc/ior"
     url      = "https://github.com/hpc/ior/archive/3.2.1.tar.gz"
 
+    version('develop', git='https://github.com/hpc/ior.git', branch='master')
+    version('3.3.0', sha256='701f2167f81ef963e227d4c036c4a947a98b5642b7c14c87c8ae657849891528', preferred=True)
+    version('3.3.0rc1', sha256='0e42ebf5b5adae60625bf97989c8e2519d41ea2e3d18561d7d5b945625317aa5')
     version('3.2.1', sha256='ebcf2495aecb357370a91a2d5852cfd83bba72765e586bcfaf15fb79ca46d00e')
     version('3.2.0', sha256='91a766fb9c34b5780705d0997b71b236a1120da46652763ba11d9a8c44251852')
     version('3.0.1', sha256='0cbefbcdb02fb13ba364e102f9e7cc2dcf761698533dac25de446a3a3e81390d')

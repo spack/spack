@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,8 @@ class Evtgen(AutotoolsPackage):
 
     homepage = "https://evtgen.hepforge.org/"
     url      = "http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/MCGeneratorsTarFiles/evtgen-R01-07-00.tar.gz"
+
+    tags = ['hep']
 
     maintainers = ['vvolkl']
 
@@ -53,3 +55,6 @@ class Evtgen(AutotoolsPackage):
         # due to libext_shared depending on lib_shared
         make('lib_shared')
         make('all')
+
+    def setup_run_environment(self, env):
+        env.set("EVTGEN", self.prefix.share)

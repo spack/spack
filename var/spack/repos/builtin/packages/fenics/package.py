@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -61,7 +61,8 @@ class Fenics(CMakePackage):
     # FIXME: next line fixes concretization with petsc
     depends_on('hdf5+hl+fortran', when='+hdf5+petsc')
     depends_on('hdf5+hl', when='+hdf5~petsc')
-    depends_on('parmetis@4.0.2:^metis+real64', when='+parmetis')
+    depends_on('parmetis@4.0.2:', when='+parmetis')
+    depends_on('metis+real64', when='+parmetis')
     depends_on('scotch~metis', when='+scotch~mpi')
     depends_on('scotch+mpi~metis', when='+scotch+mpi')
     depends_on('petsc@3.4:', when='+petsc')

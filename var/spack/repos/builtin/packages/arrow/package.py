@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Arrow(CMakePackage):
+class Arrow(CMakePackage, CudaPackage):
     """A cross-language development platform for in-memory data.
 
     This package contains the C++ bindings.
@@ -34,12 +34,14 @@ class Arrow(CMakePackage):
     depends_on('zlib+pic')
     depends_on('zstd+pic')
     depends_on('thrift+pic', when='+parquet')
+    depends_on('orc', when='+orc')
 
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'FastDebug', 'Release'))
     variant('python', default=False, description='Build Python interface')
     variant('parquet', default=False, description='Build Parquet interface')
+    variant('orc', default=False, description='Build ORC support')
 
     root_cmakelists_dir = 'cpp'
 
@@ -59,10 +61,27 @@ class Arrow(CMakePackage):
             "-DARROW_WITH_BROTLI=OFF",
             "-DARROW_WITH_LZ4=OFF",
         ]
+
+        if self.spec.satisfies('+cuda'):
+            args.append('-DARROW_CUDA:BOOL=ON')
+        else:
+            args.append('-DARROW_CUDA:BOOL=OFF')
+
         if self.spec.satisfies('+python'):
             args.append("-DARROW_PYTHON:BOOL=ON")
+        else:
+            args.append('-DARROW_PYTHON:BOOL=OFF')
+
         if self.spec.satisfies('+parquet'):
             args.append("-DARROW_PARQUET:BOOL=ON")
+        else:
+            args.append("-DARROW_PARQUET:BOOL=OFF")
+
+        if self.spec.satisfies('+orc'):
+            args.append('-DARROW_ORC:BOOL=ON')
+        else:
+            args.append('-DARROW_ORC:BOOL=OFF')
+
         for dep in ('flatbuffers', 'rapidjson', 'snappy', 'zlib', 'zstd'):
             args.append("-D{0}_HOME={1}".format(dep.upper(),
                                                 self.spec[dep].prefix))

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -92,6 +92,9 @@ class Ceed(BundlePackage):
     depends_on('petsc@3.13.0:3.13.99~hdf5~superlu-dist',
                when='@3.0.0+petsc+quickbuild')
     depends_on('petsc@3.13.0:3.13.99+mpi+double~int64', when='@3.0.0+petsc~mfem')
+    # Coax concretizer to use version of hypre required by transitive
+    # dependencies (mfem, petsc)
+    depends_on('hypre@:2.18.2', when='@3.0.0+mfem')
     # The mfem petsc examples need the petsc variants +hypre, +suite-sparse,
     # and +mumps:
     depends_on('petsc@3.13.0:3.13.99+mpi+hypre+suite-sparse+mumps+double~int64',

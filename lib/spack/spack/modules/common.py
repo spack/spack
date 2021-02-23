@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -34,8 +34,10 @@ import datetime
 import inspect
 import os.path
 import re
+from typing import Optional  # novm
 
 import llnl.util.filesystem
+from llnl.util.lang import dedupe
 import llnl.util.tty as tty
 import spack.build_environment as build_environment
 import spack.error
@@ -173,12 +175,8 @@ def merge_config_rules(configuration, spec):
     # evaluated in order of appearance in the module file
     spec_configuration = module_specific_configuration.pop('all', {})
     for constraint, action in module_specific_configuration.items():
-        override = False
-        if constraint.endswith(':'):
-            constraint = constraint.strip(':')
-            override = True
         if spec.satisfies(constraint, strict=True):
-            if override:
+            if hasattr(constraint, 'override') and constraint.override:
                 spec_configuration = {}
             update_dictionary_extending_lists(spec_configuration, action)
 
@@ -442,7 +440,7 @@ class BaseConfiguration(object):
         for constraint, suffix in self.conf.get('suffixes', {}).items():
             if constraint in self.spec:
                 suffixes.append(suffix)
-        suffixes = sorted(set(suffixes))
+        suffixes = list(dedupe(suffixes))
         if self.hash:
             suffixes.append(self.hash)
         return suffixes
@@ -543,7 +541,7 @@ class BaseFileLayout(object):
     """
 
     #: This needs to be redefined
-    extension = None
+    extension = None  # type: Optional[str]
 
     def __init__(self, configuration):
         self.conf = configuration

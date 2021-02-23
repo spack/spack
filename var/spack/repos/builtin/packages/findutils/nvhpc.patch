@@ -1,0 +1,22 @@
+--- a/gl/lib/xalloc-oversized.h	2020-08-21 06:54:54.059327027 -0700
++++ b/gl/lib/xalloc-oversized.h	2020-08-21 06:55:41.122512071 -0700
+@@ -36,7 +36,7 @@
+    sizeof (ptrdiff_t) <= sizeof (size_t), so do not bother to test for
+    exactly-SIZE_MAX allocations on such hosts; this avoids a test and
+    branch when S is known to be 1.  */
+-#if 5 <= __GNUC__ || __has_builtin (__builtin_mul_overflow)
++#if ((5 <= __GNUC__ || __has_builtin (__builtin_mul_overflow)) && !defined __NVCOMPILER)
+ # define xalloc_oversized(n, s) \
+     ({ size_t __xalloc_size; __builtin_mul_overflow (n, s, &__xalloc_size); })
+ #else
+--- a/gl/lib/intprops.h	2020-08-21 06:55:49.065543300 -0700
++++ b/gl/lib/intprops.h	2020-08-21 06:58:10.362070878 -0700
+@@ -354,7 +354,7 @@
+ /* Store A <op> B into *R, where OP specifies the operation.
+    BUILTIN is the builtin operation, and OVERFLOW the overflow predicate.
+    See above for restrictions.  */
+-#if 5 <= __GNUC__ || __has_builtin (__builtin_add_overflow)
++#if ((5 <= __GNUC__ || __has_builtin (__builtin_add_overflow)) && !defined __NVCOMPILER)
+ # define _GL_INT_OP_WRAPV(a, b, r, op, builtin, overflow) builtin (a, b, r)
+ #elif 201112 <= __STDC_VERSION__ && !_GL__GENERIC_BOGUS
+ # define _GL_INT_OP_WRAPV(a, b, r, op, builtin, overflow) \

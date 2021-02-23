@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Libmonitor(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     version('master', branch='master')
+    version('2020.10.15', commit='36e5cb7ebeadfff01476b79ff04f6ec772ba831d')
     version('2019.05.31', commit='c9767087d52e58a719aa7f149136b101e499db44')
     version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166')
     version('2013.02.18', commit='4f2311e413fd90583263d6f20453bbe552ccfef3')
@@ -24,12 +25,12 @@ class Libmonitor(AutotoolsPackage):
     variant('hpctoolkit', default=False,
             description='Configure for HPCToolkit')
 
-    variant('bgq', default=False,
-            description='Configure for Blue Gene/Q')
-
     # Configure for Krell and OpenSpeedshop.
     variant('krellpatch', default=False,
             description="Build with openspeedshop based patch.")
+
+    variant('dlopen', default=True,
+            description='Override dlopen and dlclose')
 
     patch('libmonitorkrell-0000.patch', when='@2013.02.18+krellpatch')
     patch('libmonitorkrell-0001.patch', when='@2013.02.18+krellpatch')
@@ -58,21 +59,9 @@ class Libmonitor(AutotoolsPackage):
         if '+hpctoolkit' in self.spec:
             args.append('--enable-client-signals=%s' % self.signals)
 
-        # TODO: Spack has trouble finding cross-compilers; the +bgq variant
-        # manually specifies the appropriate compiler to build for BGQ (by
-        # setting that here, Spack's choice of CC is overridden).
-        # If the user manually defines an entry in compilers.yaml, the bgq
-        # variant should not be required if the user specifies the bgq
-        # architecture for the libmonitor package. See #8860
-        # TODO: users want to build this for the backend and dependents for the
-        # frontend. Spack ought to make that easy by finding the appropriate
-        # compiler for each if the root and libmonitor are designated to build
-        # on the frontend and backend, respectively. As of now though, there
-        # is an issue with compiler concretization such that spack will attempt
-        # to assign the compiler chosen for libmonitor to the root (unless the
-        # user specifies the compiler for each in addition to the arch).
-        # See #8859
-        if '+bgq' in self.spec:
-            args.append('CC=powerpc64-bgq-linux-gcc')
+        if '+dlopen' in self.spec:
+            args.append('--enable-dlfcn')
+        else:
+            args.append('--disable-dlfcn')
 
         return args

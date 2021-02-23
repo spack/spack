@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,7 +6,7 @@
 from spack import *
 import os
 import platform
-import glob
+import tempfile
 
 
 class Texlive(AutotoolsPackage):
@@ -152,8 +152,7 @@ class Texlive(AutotoolsPackage):
     def setup_texlive(self):
         if not self.spec.satisfies('@live'):
             mkdirp(self.prefix.tlpkg.TeXLive)
-            for files in glob.glob('texk/tests/TeXLive/*'):
-                install(files, self.prefix.tlpkg.TeXLive)
+            install('texk/tests/TeXLive/*', self.prefix.tlpkg.TeXLive)
 
             with working_dir('spack-build'):
                 make('texlinks')
@@ -175,6 +174,9 @@ class Texlive(AutotoolsPackage):
         else:
             pass
 
+    def setup_build_environment(self, env):
+        env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
+
     def setup_run_environment(self, env):
         env.prepend_path('PATH', join_path(self.prefix.bin, self.tex_arch()))
 
@@ -192,6 +194,11 @@ class Texlive(AutotoolsPackage):
 
     @when('@live')
     def install(self, spec, prefix):
+        # The binary install needs a profile file to be present
+        tmp_profile = tempfile.NamedTemporaryFile()
+        tmp_profile.write("selected_scheme {0}".format(
+            spec.variants['scheme']).encode())
+
         # Using texlive's mirror system leads to mysterious problems,
         # in lieu of being able to specify a repository as a variant, hardwire
         # a particular (slow, but central) one for now.
@@ -202,4 +209,6 @@ class Texlive(AutotoolsPackage):
         scheme = spec.variants['scheme'].value
         perl('./install-tl', '-scheme', scheme,
              '-repository', _repository,
-             '-portable', '-profile', '/dev/null')
+             '-portable', '-profile', tmp_profile.name)
+
+        tmp_profile.close()

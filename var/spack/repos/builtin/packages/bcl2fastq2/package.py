@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ class Bcl2fastq2(Package):
               msg='malloc.h/etc requirements break build on macs')
 
     depends_on('boost@1.54.0')
-    depends_on('cmake@2.8.9:')
+    depends_on('cmake@2.8.9:', type='build')
     depends_on('libxml2@2.7.8')
     depends_on('libxslt@1.1.26~crypto')
     depends_on('libgcrypt')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyTwine(PythonPackage):
     """Twine is a utility for publishing Python packages on PyPI."""
 
     homepage = "https://twine.readthedocs.io/"
-    url      = "https://pypi.io/packages/source/t/twine/twine-2.0.0.tar.gz"
+    pypi = "twine/twine-2.0.0.tar.gz"
 
     version('2.0.0', sha256='9fe7091715c7576df166df8ef6654e61bada39571783f2fd415bdcba867c6993')
 

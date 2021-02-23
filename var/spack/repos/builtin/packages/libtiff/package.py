@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,8 +10,9 @@ class Libtiff(AutotoolsPackage):
     """LibTIFF - Tag Image File Format (TIFF) Library and Utilities."""
 
     homepage = "http://www.simplesystems.org/libtiff/"
-    url      = "https://download.osgeo.org/libtiff/tiff-4.0.10.tar.gz"
+    url      = "https://download.osgeo.org/libtiff/tiff-4.1.0.tar.gz"
 
+    version('4.1.0',  sha256='5d29f32517dadb6dbcd1255ea5bbc93a2b54b94fbf83653b4d65c7d6775b8634')
     version('4.0.10', sha256='2c52d11ccaf767457db0c46795d9c7d1a8d8f76f68b0b800a3dfe45786b996e4')
     version('4.0.9',  sha256='6e7bdeec2c310734e734d19aae3a71ebe37a4d842e0e23dbb1b8921c0026cfcd')
     version('4.0.8',  sha256='59d7a5a8ccd92059913f246877db95a2918e6c04fb9d43fd74e5c3390dac2910')
@@ -22,3 +23,9 @@ class Libtiff(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('zlib')
     depends_on('xz')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('vl_cv_prog_cc_warnings="-Wall -W"',
+                        'vl_cv_prog_cc_warnings="-Wall"', 'configure')

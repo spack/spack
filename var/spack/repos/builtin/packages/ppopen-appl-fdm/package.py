@@ -1,9 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
 from spack import *
 
 
@@ -16,9 +15,9 @@ class PpopenApplFdm(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url      = "file://{0}/ppohFDM_0.3.1.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('0.3.1', sha256='5db7c28ef2df43c0ffa28e542d92320fe3c8cd7551aabe1de64647191ddf7d0b')
+    version('master', branch='APPL/FDM')
 
     # remove unused variable definition
     patch('unused.patch')

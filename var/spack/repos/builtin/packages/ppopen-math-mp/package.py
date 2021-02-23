@@ -1,11 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
 from spack import *
-import os
 
 
 class PpopenMathMp(MakefilePackage):
@@ -26,9 +25,9 @@ class PpopenMathMp(MakefilePackage):
     """
 
     homepage = "http://ppopenhpc.cc.u-tokyo.ac.jp/ppopenhpc/"
-    url = "file://{0}/ppohMATHMP_1.0.0.tar.gz".format(os.getcwd())
+    git = "https://github.com/Post-Peta-Crest/ppOpenHPC.git"
 
-    version('1.0.0', sha256='eb85a181286e4e7d071bd7c106fa547d38cfd16df87753e9d4e38da1a84a8f22')
+    version('master', branch='MATH/MP')
 
     depends_on('mpi')
 
@@ -44,6 +43,8 @@ class PpopenMathMp(MakefilePackage):
             makefile.write('FC_spack = {0}\n'.format(spec['mpi'].mpifc))
             makefile.write('FFLAGS_spack = {0}\n'.format(' '.join(flags)))
             makefile.write('AR_spack = ar cr\n')
+        mkdirp('include')
+        mkdirp('lib')
 
     def install(self, spec, prefix):
         for d in ['include', 'lib', 'doc', 'test']:

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,6 +36,16 @@ class Dcmtk(CMakePackage):
 
     variant('cxx11', default=False, description="Enable c++11 features")
     variant('stl', default=True, description="Use native STL implementation")
+
+    def patch(self):
+        # Backport 3.6.4
+        if self.spec.satisfies('@:3.6.3 %fj'):
+            filter_file(
+                'OFintegral_constant<size_t,-1>',
+                'OFintegral_constant<size_t,~OFstatic_cast(size_t,0)>',
+                'ofstd/include/dcmtk/ofstd/variadic/helpers.h',
+                string=True
+            )
 
     def cmake_args(self):
         args = ["-DDCMTK_WITH_OPENSSL={0}".format(

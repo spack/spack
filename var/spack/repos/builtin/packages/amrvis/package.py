@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Amrvis(MakefilePackage):
@@ -73,6 +70,17 @@ class Amrvis(MakefilePackage):
              placement='amrex')
 
     def edit(self, spec, prefix):
+        # libquadmath is only available x86_64 and powerle
+        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85440
+        if self.spec.target.family not in ['x86_64', 'ppc64le']:
+            comps = join_path('amrex', 'Tools', 'GNUMake', 'comps')
+            maks = [
+                join_path(comps, 'gnu.mak'),
+                join_path(comps, 'llvm.mak'),
+            ]
+            for mak in maks:
+                filter_file('-lquadmath', '', mak)
+
         # Set all available makefile options to values we want
         makefile = FileFilter('GNUmakefile')
         makefile.filter(
@@ -187,6 +195,4 @@ class Amrvis(MakefilePackage):
     def install(self, spec, prefix):
         # Install exe manually
         mkdirp(prefix.bin)
-        exes = glob.iglob('*.ex')
-        for exe in exes:
-            install(exe, prefix.bin)
+        install('*.ex', prefix.bin)

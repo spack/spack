@@ -1,10 +1,7 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-from glob import glob
 
 
 class Motioncor2(Package):
@@ -34,7 +31,6 @@ class Motioncor2(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-        for files in glob("MotionCor2_*"):
-            install(files, prefix.bin)
+        install('MotionCor2_*', prefix.bin)
         with working_dir(prefix.bin):
             symlink('MotionCor2_{0}'.format(spec.version), 'MotionCor2')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,10 +10,9 @@ class PyPytz(PythonPackage):
     """World timezone definitions, modern and historical."""
 
     homepage = "http://pythonhosted.org/pytz"
-    url      = "https://pypi.io/packages/source/p/pytz/pytz-2019.3.tar.gz"
+    pypi = "pytz/pytz-2019.3.tar.gz"
 
-    import_modules = ['pytz']
-
+    version('2020.1', sha256='c35965d010ce31b23eeb663ed3cc8c906275d6be1a34393a1d73a41febf4a048')
     version('2019.3', sha256='b02c06db6cf09c12dd25137e563b31700d3b80fcc4ad23abb7a315f2789819be')
     version('2019.1', sha256='d747dd3d23d77ef44c6a3526e274af6efeb0a6f1afd5a69ba4d5be4098c8e141')
     version('2018.4', sha256='c06425302f2cf668f1bba7a0a03f3c1d34d4ebeef2c72003da308b3947c7f749')

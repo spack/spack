@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,6 +31,12 @@ class Freetype(AutotoolsPackage):
               'support __builtin_shuffle)')
 
     patch('windows.patch', when='@2.9.1')
+
+    @property
+    def headers(self):
+        headers = find_headers('*', self.prefix.include, recursive=True)
+        headers.directories = [self.prefix.include.freetype2]
+        return headers
 
     def configure_args(self):
         args = ['--with-harfbuzz=no']

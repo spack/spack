@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,19 @@ from spack import *
 
 
 class RQuantreg(RPackage):
-    """Estimation and inference methods for models of conditional quantiles:
-        Linear and nonlinear parametric and non-parametric (total variation
-        penalized) models for conditional quantiles of a univariate response
-        and several methods for handling censored survival data. Portfolio
-        selection methods based on expected shortfall risk are also
-        included."""
+    """Quantile Regression
+
+    Estimation and inference methods for models of conditional quantiles:
+    Linear and nonlinear parametric and non-parametric (total variation
+    penalized) models  for conditional quantiles of a univariate response and
+    several methods for handling censored survival data.  Portfolio selection
+    methods based on expected shortfall risk are also now included."""
 
     homepage = "https://cloud.r-project.org/package=quantreg"
     url      = "https://cloud.r-project.org/src/contrib/quantreg_5.29.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/quantreg"
 
+    version('5.82', sha256='eac34e1e34d00a24ed7cb6981af258a3afc561843c00501de3206b4540548c07')
     version('5.51', sha256='df1330d245f66ee6d924b209bd4c15d44ff8cce52667959ec0d299975428bdb1')
     version('5.42.1', sha256='4cc2b0883c52694e58fcfde83e30e4a54be9f4d9cbcf6138f6498cc8e0b3ccab')
     version('5.40', sha256='86e310a235009ab85635dfb8803c175f80a35892e237db2525c4ef37a98936eb')
@@ -28,3 +30,4 @@ class RQuantreg(RPackage):
     depends_on('r-sparsem', type=('build', 'run'))
     depends_on('r-matrix', type=('build', 'run'))
     depends_on('r-matrixmodels', type=('build', 'run'))
+    depends_on('r-conquer', when='@5.82:', type=('build', 'run'))

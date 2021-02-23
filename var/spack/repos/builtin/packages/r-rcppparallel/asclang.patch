@@ -1,0 +1,12 @@
+diff -u -r -N a/src/Makevars.in b/src/Makevars.in
+--- a/src/Makevars.in	2020-08-06 09:31:48.000000000 +0900
++++ b/src/Makevars.in	2020-08-06 09:34:01.000000000 +0900
+@@ -87,6 +87,8 @@
+ 	cd tbb/src; \
+ 	if [ -n "$(shell echo $(CC) | grep clang)" ]; then \
+ 	   $(MAKE_CMD) stdver=@STDVER@ compiler=clang $(MAKE_ARGS); \
++	elif [ -n "$(shell echo $(CC) | grep fcc)" ]; then \
++	   $(MAKE_CMD) stdver=@STDVER@ compiler=clang $(MAKE_ARGS); \
+ 	elif [ -n "$(shell echo $(CC) | grep gcc)" ]; then \
+ 	   $(MAKE_CMD) stdver=@STDVER@ compiler=gcc $(MAKE_ARGS); \
+ 	else \
