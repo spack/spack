@@ -103,6 +103,7 @@ def test_match_spec_env(mock_packages, mutable_mock_env_path):
         env_spec = spack.cmd.matching_spec_from_env(
             spack.cmd.parse_specs(['a'])[0])
         assert env_spec.satisfies('foobar=baz')
+        assert env_spec.concrete
 
 
 @pytest.mark.usefixtures('config')
