@@ -647,11 +647,15 @@ class SpackSolverSetup(object):
         self.gen.fact(cond_fn(condition_id, pkg_name, dep_spec.name))
 
         # conditions that trigger the condition
-        conditions = self.spec_clauses(named_cond, body=True)
+        conditions = self.checked_spec_clauses(
+            named_cond, body=True, required_from=pkg_name
+        )
         for pred in conditions:
             self.gen.fact(require_fn(condition_id, pred.name, *pred.args))
 
-        imposed_constraints = self.spec_clauses(dep_spec)
+        imposed_constraints = self.checked_spec_clauses(
+            dep_spec, required_from=pkg_name
+        )
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if pred.name in ("node", "virtual_node"):
@@ -857,6 +861,20 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
+    def checked_spec_clauses(self, *args, **kwargs):
+        """Wrap a call to spec clauses into a try/except block that raise
+        a comprehensible error message in case of failure.
+        """
+        requestor = kwargs.pop('required_from', None)
+        try:
+            clauses = self.spec_clauses(*args, **kwargs)
+        except RuntimeError as exc:
+            msg = str(exc)
+            if requestor:
+                msg += ' [required from package "{0}"]'.format(requestor)
+            raise RuntimeError(msg)
+        return clauses
+
     def spec_clauses(self, spec, body=False, transitive=True):
         """Return a list of clauses for a spec mandates are true.
 
@@ -925,9 +943,14 @@ class SpackSolverSetup(object):
 
                 # validate variant value
                 reserved_names = spack.directives.reserved_names
-                if (not spec.virtual and vname not in reserved_names):
-                    variant_def = spec.package.variants[vname]
-                    variant_def.validate_or_raise(variant, spec.package)
+                if not spec.virtual and vname not in reserved_names:
+                    try:
+                        variant_def = spec.package.variants[vname]
+                    except KeyError:
+                        msg = 'variant "{0}" not found in package "{1}"'
+                        raise RuntimeError(msg.format(vname, spec.name))
+                    else:
+                        variant_def.validate_or_raise(variant, spec.package)
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 
