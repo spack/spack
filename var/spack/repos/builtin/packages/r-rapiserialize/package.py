@@ -18,7 +18,7 @@ class RRapiserialize(RPackage):
     src/main/serialize.c from R itself. The R Core group is the original
     author of the serialization code made available by this package."""
 
-    homepage = "https://cran.r-project.org/web/packages/RApiSerialize/index.html"
+    homepage = "https://cloud.r-project.org/web/packages/RApiSerialize/index.html"
     url      = "https://cloud.r-project.org/src/contrib/RApiSerialize_0.1.0.tar.gz"
 
     maintainers = ['dorton21']
