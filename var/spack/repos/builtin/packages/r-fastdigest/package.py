@@ -17,7 +17,7 @@ class RFastdigest(RPackage):
     high and scales linearly by object size;
     memory usage is constant and negligible."""
 
-    homepage = "https://cran.r-project.org/web/packages/fastdigest/index.html"
+    homepage = "https://cloud.r-project.org/web/packages/fastdigest/index.html"
     url      = "https://cloud.r-project.org/src/contrib/fastdigest_0.6-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/fastdigest"
 
