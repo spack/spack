@@ -47,8 +47,7 @@ class RPackage(PackageBase):
             name = self.cran.split('/')[0]
             return 'https://cloud.r-project.org/package=' + name
         elif self.bioc:
-            name = self.bioc.split('/')[0]
-            return 'https://bioconductor.org/packages/' + name
+            return 'https://bioconductor.org/packages/' + self.bioc
 
     @property
     def url(self):
@@ -68,8 +67,7 @@ class RPackage(PackageBase):
     @property
     def git(self):
         if self.bioc:
-            name = self.bioc.split('/')[0]
-            return 'https://git.bioconductor.org/packages/' + name
+            return 'https://git.bioconductor.org/packages/' + self.bioc
 
     def configure_args(self):
         """Arguments to pass to install via ``--configure-args``."""
