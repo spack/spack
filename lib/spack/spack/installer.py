@@ -1830,7 +1830,8 @@ def build_process(pkg, kwargs):
     # Send final metadata (environment, etc.) and mark as successful
     # (these two endpoints could possibly be combined?)
     if monitor:
-        monitor.send_final(pkg)
+        result = monitor.send_final(pkg)
+        tty.verbose(result.get('message'))
         monitor.update_build(pkg.spec, status="SUCCESS")
 
     # preserve verbosity across runs

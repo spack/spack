@@ -70,6 +70,9 @@ class SpackMonitorClient:
         self.spack_version = spack.main.get_version()
         self.capture_build_environment()
 
+        # We keey lookup of build_id by full_hash
+        self.build_ids = {}
+
     def capture_build_environment(self):
         """Use spack.environment._get_host_environment to capture the
         environment for the build. This is important because it's a unique
@@ -262,14 +265,30 @@ class SpackMonitorClient:
         """Create a new build, meaning sending the hash of the spec to be built,
         along with the build environment. These two sets of data uniquely can
         identify the build, and we will add objects (the binaries produced) to
-        it.
+        it. We return the build id to the calling client.
         """
-        current_spec = spec.full_hash()
+        full_hash = spec.full_hash()
+        return self.get_build_id(full_hash, return_response=True)
+
+    def get_build_id(self, full_hash, return_response=False):
+        """Retrieve a build id, either in the local cache, or query the server
+        """
+        if full_hash in self.build_ids:
+            return self.build_ids[full_hash]
 
         # Prepare build environment data (including spack version)
         data = self._get_build_environment()
-        data['full_hash'] = current_spec
-        return self.do_request("builds/new/", data=json.dumps(data))
+        data['full_hash'] = full_hash
+        response = self.do_request("builds/new/", data=json.dumps(data))
+
+        # Add the build id to the lookup
+        bid = self.build_ids[full_hash] = response['data']['build']['build_id']
+        self.build_ids[full_hash] = bid
+
+        # If the function is called directly, the user might want output
+        if return_response:
+            return response
+        return bid
 
     def update_build(self, spec, status="SUCCESS"):
         """update task will just update the relevant package to indicate a
@@ -278,12 +297,8 @@ class SpackMonitorClient:
         other statuses. This endpoint can take a general status to update just
         one
         """
-        # The current spec being installed
-        current_spec = spec.full_hash()
-        data = self._get_build_environment()
-        data['full_hash'] = current_spec
-        data['status'] = status
-
+        full_hash = spec.full_hash()
+        data = {"build_id": self.get_build_id(full_hash), "status": status}
         return self.do_request("builds/update/", data=json.dumps(data))
 
     def fail_task(self, spec):
@@ -309,8 +324,7 @@ class SpackMonitorClient:
         """
 
         # Prepare build environment data (including spack version)
-        data = self._get_build_environment()
-        data['full_hash'] = pkg.spec.full_hash()
+        data = {"build_id": self.get_build_id(pkg.spec.full_hash())}
 
         meta_dir = os.path.dirname(pkg.install_log_path)
         env_file = os.path.join(meta_dir, "spack-build-env.txt")
@@ -329,15 +343,14 @@ class SpackMonitorClient:
         to alert of the status of the stage. This includes parsing the package
         metadata folder for phase output and error files
         """
-        data = self._get_build_environment()
-        data['full_hash'] = pkg.spec.full_hash()
+        data = {"build_id": self.get_build_id(pkg.spec.full_hash())}
 
         # Send output specific to the phase (does this include error?)
         data.update({"status": status,
                      "output": read_file(phase_output_file),
                      "phase_name": phase_name})
 
-        return self.do_request("builds/phases/metadata/", data=json.dumps(data))
+        return self.do_request("builds/phases/update/", data=json.dumps(data))
 
     def _read_environment_file(self, filename):
         """Given an environment file, we want to read it, split by semicolons
