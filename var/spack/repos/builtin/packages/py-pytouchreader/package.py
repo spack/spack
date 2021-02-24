@@ -3,16 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import os
-
 from spack import *
 
 
 class PyPytouchreader(PythonPackage):
     """Python interface to interact with touch files."""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/hpc/PyModules"
-    git      = "ssh://bbpcode.epfl.ch/hpc/PyModules"
+    homepage = "https://bbpgitlab.epfl.ch/hpc/touchreader"
+    git      = "git@bbpgitlab.epfl.ch:hpc/touchreader.git"
 
     version('develop', get_full_repo=True)
     version('1.4.6', tag='v1.4.6', get_full_repo=True)
@@ -29,15 +27,3 @@ class PyPytouchreader(PythonPackage):
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))
-
-    build_directory = 'PyTouchReader'
-
-    @run_before('build')
-    def link_git(self):
-        """Link the git directory into the local directory
-
-        Needed for `setuptools_scm` to work.
-        """
-        with working_dir(self.build_directory):
-            if not os.path.exists('.git'):
-                os.symlink('../.git', '.git')
