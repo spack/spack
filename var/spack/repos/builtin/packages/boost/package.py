@@ -260,6 +260,11 @@ class Boost(Package):
     # See https://github.com/boostorg/python/pull/218
     patch('boost_218.patch', when='@1.63.0:1.67.99')
 
+    # Fix B2 bootstrap toolset during installation
+    # See https://github.com/spack/spack/issues/20757
+    # and https://github.com/spack/spack/pull/21408
+    patch("bootstrap-toolset.patch", when="@1.75:")
+
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
         if self.spec.satisfies('%nvhpc'):
