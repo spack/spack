@@ -131,6 +131,8 @@ class Openblas(MakefilePackage):
     conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
 
+    depends_on('perl', type='build')
+
     @property
     def parallel(self):
         # unclear whether setting `-j N` externally was supported before 0.3
