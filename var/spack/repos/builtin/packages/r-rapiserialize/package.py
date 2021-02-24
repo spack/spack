@@ -20,6 +20,7 @@ class RRapiserialize(RPackage):
 
     homepage = "https://cloud.r-project.org/web/packages/RApiSerialize/index.html"
     url      = "https://cloud.r-project.org/src/contrib/RApiSerialize_0.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RApiSerialize"
 
     maintainers = ['dorton21']
 
