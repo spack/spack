@@ -88,10 +88,10 @@ spack:
     - raja
     - rempi
     - scr
-    - slate ^openblas@0.3.5 threads=openmp ^cuda@10.2.89
+    - slate ^openblas@0.3.6 threads=openmp ^cuda@10.2.89
     - slepc
     - stc
-    - strumpack ~slate
+    - strumpack ~slate ^openblas@0.3.6 threads=openmp
     - sundials
     - superlu
     - superlu-dist
