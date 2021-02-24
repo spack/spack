@@ -5,6 +5,7 @@
 
 from spack import *
 import os
+import json
 
 
 class PyChainer(PythonPackage):
@@ -52,7 +53,6 @@ class PyChainer(PythonPackage):
         if "+mn" in self.spec:
             # Run test of ChainerMN
             test_dir = self.test_suite.current_test_data_dir
-            exe_name = join_path(test_dir, "run-test.sh")
 
             mnist_dir = join_path(
                 self.install_test_root, "examples", "chainermn", "mnist"
@@ -61,8 +61,6 @@ class PyChainer(PythonPackage):
             mpi_name = self.spec["mpi"].prefix.bin.mpirun
             python_exe = self.spec["python"].command.path
             opts = [
-                exe_name,
-                mpi_name,
                 "-n",
                 "4",
                 python_exe,
@@ -82,8 +80,16 @@ class PyChainer(PythonPackage):
                     env["LD_PRELOAD"] = lib_path
 
             self.run_test(
-                "sh",
+                mpi_name,
                 options=opts,
-                expected="ChainerMN Test Passed !",
                 work_dir=test_dir,
             )
+
+            # check results
+            json_open = open(join_path(test_dir, 'log'), 'r')
+            json_load = json.load(json_open)
+            v = {d.get('epoch'): d.get('main/accuracy') for d in json_load}
+            if 1 not in v or 20 not in v:
+                raise RuntimeError('Cannot found epoch 1 or epoch 20')
+            if abs(1.0 - v[1]) < abs(1.0 - v[20]):
+                raise RuntimeError('ChainerMN Test Failed !')
