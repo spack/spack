@@ -8,7 +8,6 @@ https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 """
 
 import base64
-import json
 import os
 import platform
 import re
@@ -17,12 +16,13 @@ try:
     from urllib.request import Request, urlopen
     from urllib.error import URLError
 except ImportError:
-    from urllib2 import urlopen, Request, URLError  # type: ignore
+    from urllib2 import urlopen, Request, URLError  # type: ignore  # novm
 
 import spack
 import spack.hash_types as ht
 import spack.main
 import spack.store
+import spack.util.spack_json as sjson
 import llnl.util.tty as tty
 from copy import deepcopy
 
@@ -143,7 +143,7 @@ class SpackMonitorClient:
         # If we have data, the request will be POST
         if data:
             if not isinstance(data, str):
-                data = json.dumps(data)
+                data = sjson.dump(data)
             data = data.encode('ascii')
 
         return Request(endpoint, data=data, headers=headers)
@@ -162,7 +162,7 @@ class SpackMonitorClient:
                 if self.authenticate_request(e):
                     request = self.prepare_request(
                         e.url,
-                        json.loads(request.data),
+                        sjson.load(request.data.decode('utf-8')),
                         self.headers
                     )
                     return self.issue_request(request, False)
@@ -193,7 +193,7 @@ class SpackMonitorClient:
 
         # A 200/201 response incidates success
         if response.code in [200, 201]:
-            return json.loads(response.read().decode('utf-8'))
+            return sjson.load(response.read().decode('utf-8'))
 
         return response
 
@@ -260,7 +260,7 @@ class SpackMonitorClient:
                 spec.concretize()
             as_dict = {"spec": spec.to_dict(hash=ht.full_hash),
                        "spack_version": self.spack_version}
-            response = self.do_request("specs/new/", data=json.dumps(as_dict))
+            response = self.do_request("specs/new/", data=sjson.dump(as_dict))
             configs[spec.package.name] = response.get('data', {})
         return configs
 
@@ -282,7 +282,7 @@ class SpackMonitorClient:
         # Prepare build environment data (including spack version)
         data = self._get_build_environment()
         data['full_hash'] = full_hash
-        response = self.do_request("builds/new/", data=json.dumps(data))
+        response = self.do_request("builds/new/", data=sjson.dump(data))
 
         # Add the build id to the lookup
         bid = self.build_ids[full_hash] = response['data']['build']['build_id']
@@ -302,7 +302,7 @@ class SpackMonitorClient:
         """
         full_hash = spec.full_hash()
         data = {"build_id": self.get_build_id(full_hash), "status": status}
-        return self.do_request("builds/update/", data=json.dumps(data))
+        return self.do_request("builds/update/", data=sjson.dump(data))
 
     def fail_task(self, spec):
         """Given a spec, mark it as failed. This means that Spack Monitor
@@ -339,7 +339,7 @@ class SpackMonitorClient:
                     "manifest": read_json(manifest_file)}
 
         data['metadata'] = metadata
-        return self.do_request("builds/metadata/", data=json.dumps(data))
+        return self.do_request("builds/metadata/", data=sjson.dump(data))
 
     def send_phase(self, pkg, phase_name, phase_output_file, status):
         """Given a package, phase name, and status, update the monitor endpoint
@@ -353,7 +353,7 @@ class SpackMonitorClient:
                      "output": read_file(phase_output_file),
                      "phase_name": phase_name})
 
-        return self.do_request("builds/phases/update/", data=json.dumps(data))
+        return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
     def _read_environment_file(self, filename):
         """Given an environment file, we want to read it, split by semicolons
@@ -372,7 +372,12 @@ class SpackMonitorClient:
         lines = [x for x in lines if x not in ['', '\n', ';'] and "SPACK_" in x]
         lines = [x.strip() for x in lines if "export " not in x]
         lines = [x.strip() for x in lines if "export " not in x]
-        return {x.split("=", 1)[0]: x.split("=", 1)[1] for x in lines}
+        result = {}
+
+        # Dictionary comprehentions require 2.7
+        for x in lines:
+            result[x.split("=", 1)[0]] = x.split("=", 1)[1]
+        return result
 
     def upload_specfile(self, filename):
         """Given a spec file (must be json) upload to the UploadSpec endpoint.
@@ -384,7 +389,7 @@ class SpackMonitorClient:
         # We load as json just to validate it
         spec = read_json(filename)
         data = {"spec": spec, "spack_verison": self.spack_version}
-        return self.do_request("specs/new/", data=json.dumps(data))
+        return self.do_request("specs/new/", data=sjson.dump(data))
 
 
 # Helper functions
@@ -421,4 +426,4 @@ def read_json(filename):
     """Read a file and load into json, if it exists. Otherwise return None"""
     if not os.path.exists(filename):
         return
-    return json.loads(read_file(filename))
+    return sjson.load(read_file(filename))
