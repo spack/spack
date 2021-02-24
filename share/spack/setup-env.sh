@@ -379,9 +379,9 @@ _sp_multi_pathadd MODULEPATH "$_sp_tcl_roots"
 
 # Add programmable tab completion for Bash
 #
-if test "$_sp_shell" = bash || test -n "${ZSH_VERSION:-}"; then
-    source $_sp_share_dir/spack-completion.bash
-fi
+# if test "$_sp_shell" = bash || test -n "${ZSH_VERSION:-}"; then
+#     source $_sp_share_dir/spack-completion.bash
+# fi
 
 # done: unset sentinel variable as we're no longer initializing
 unset _sp_initializing
