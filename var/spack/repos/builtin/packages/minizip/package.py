@@ -24,6 +24,7 @@ class Minizip(AutotoolsPackage):
 
     # error: implicit declaration of function 'mkdir' is invalid in C99
     patch('implicit.patch', when='%apple-clang@12:')
+    patch('implicit.patch', when='%gcc@7.3.0:')
 
     # statically link to libz.a
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/minizip.rb
@@ -36,6 +37,15 @@ class Minizip(AutotoolsPackage):
         make()
         with working_dir(self.configure_directory):
             make()
+
+    # Building a shared lib against a static one is not portable
+    # so we link against the PIC independent lib
+    def build(self, spec, prefix):
+        with working_dir(self.configure_directory):
+            makefile = FileFilter('Makefile')
+            makefile.filter('libz.a', 'libz.so')
+
+        make()
 
     # install minizip and miniunz
     @run_after('install')
