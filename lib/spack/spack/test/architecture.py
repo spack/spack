@@ -17,6 +17,7 @@ from spack.spec import Spec
 from spack.platforms.cray import Cray
 from spack.platforms.linux import Linux
 from spack.platforms.darwin import Darwin
+from spack.platforms.windows import Windows
 
 
 def test_dict_functions_for_architecture():
@@ -46,6 +47,8 @@ def test_platform():
         my_platform_class = Linux()
     elif 'Darwin' in py_platform.system():
         my_platform_class = Darwin()
+    elif 'Windows' in py_platform.system():
+        my_platform_class = Windows()
 
     assert str(output_platform_class) == str(my_platform_class)
 
