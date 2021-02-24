@@ -37,18 +37,16 @@ class N2p2(MakefilePackage):
     depends_on("doxygen", type="build", when="+doc")
     depends_on("texlive", type="build", when="+doc")
     depends_on("py-cython", type=("build", "run"))
-    depends_on("py-breathe", type=("build", "run"), when="+doc")
-    depends_on("py-sphinx", type=("build", "run"), when="+doc")
-    depends_on("py-sphinx-rtd-theme", type=("build", "run"), when="+doc")
+    depends_on("py-breathe", type="build", when="+doc")
+    depends_on("py-sphinx", type="build", when="+doc")
+    depends_on("py-sphinx-rtd-theme", type="build", when="+doc")
 
-    depends_on("py-breathe", type=("build", "run"), when="+doc")
-
-    depends_on("boost", type=("build", "run", "link"))
+    depends_on("boost", type="link")
     depends_on("lcov", type=("build", "run"))
     depends_on("py-pytest", type=("build", "run"))
-    depends_on("py-pytest-cov", type=("build", "run"))
-    depends_on("py-coverage@4.5.4", type=("build", "run"))
-    depends_on("py-packaging", type=("build", "run"))
+    depends_on("py-pytest-cov", type="run")
+    depends_on("py-coverage@4.5.4", type="run")
+    depends_on("py-packaging", type="run")
     depends_on("python", type=("build", "run"))
 
     test_requires_compiler = True
