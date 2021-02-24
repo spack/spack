@@ -116,6 +116,9 @@ class Openblas(MakefilePackage):
     patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11:0.3.12 %fj')
     patch('openblas_fujitsu2.patch', when='@0.3.10:0.3.12 %fj')
 
+    # Use /usr/bin/env perl in build scripts
+    patch('0001-use-usr-bin-env-perl.patch', when='@:0.3.13')
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
