@@ -347,7 +347,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         #
         # TODO: remove this when we do better concretization and don't
         # ignore build-only deps in hashes.
-        elif installed_spec == spec.copy(deps=('link', 'run')):
+        elif (installed_spec.copy(deps=('link', 'run')) ==
+              spec.copy(deps=('link', 'run'))):
+            # The directory layout prefix is based on the dag hash, so among
+            # specs with differing full-hash but matching dag-hash, only one
+            # may be installed. This means for example that for two instances
+            # that differ only in CMake version used to build, only one will
+            # be installed.
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():

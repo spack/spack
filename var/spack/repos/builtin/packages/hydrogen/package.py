@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Hydrogen(CMakePackage, CudaPackage):
+class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """Hydrogen: Distributed-memory dense and sparse-direct linear algebra
        and optimization library. Based on the Elemental library."""
 
@@ -64,11 +64,13 @@ class Hydrogen(CMakePackage, CudaPackage):
             description='Builds with support for FP16 precision data types')
 
     conflicts('~openmp', when='+omp_taskloops')
+    conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
 
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
+    depends_on('hwloc@2.3.0:', when='+rocm')
 
     # Note that #1712 forces us to enumerate the different blas variants
     depends_on('openblas', when='blas=openblas')
@@ -96,9 +98,15 @@ class Hydrogen(CMakePackage, CudaPackage):
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
 
     for arch in CudaPackage.cuda_arch_values:
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('aluminum amdgpu_target=%s' % val, when='+al +rocm amdgpu_target=%s' % val)
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')
@@ -110,6 +118,7 @@ class Hydrogen(CMakePackage, CudaPackage):
 
     depends_on('cuda', when='+cuda')
     depends_on('cub', when='^cuda@:10.99')
+    depends_on('hipcub', when='+rocm')
     depends_on('half', when='+half')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
@@ -143,8 +152,9 @@ class Hydrogen(CMakePackage, CudaPackage):
             '-DHydrogen_ENABLE_MPC:BOOL=%s'        % ('+mpfr' in spec),
             '-DHydrogen_GENERAL_LAPACK_FALLBACK=ON',
             '-DHydrogen_ENABLE_ALUMINUM=%s' % ('+al' in spec),
-            '-DHydrogen_ENABLE_CUB=%s' % ('+cuda' in spec),
+            '-DHydrogen_ENABLE_CUB=%s' % ('+cuda' in spec or '+rocm' in spec),
             '-DHydrogen_ENABLE_CUDA=%s' % ('+cuda' in spec),
+            '-DHydrogen_ENABLE_ROCM=%s' % ('+rocm' in spec),
             '-DHydrogen_ENABLE_TESTING=%s' % ('+test' in spec),
             '-DHydrogen_ENABLE_HALF=%s' % ('+half' in spec),
             '-DHydrogen_ENABLE_GPU_FP16=%s' % enable_gpu_fp16,
@@ -152,6 +162,18 @@ class Hydrogen(CMakePackage, CudaPackage):
 
         if '+cuda' in spec:
             args.append('-DCMAKE_CUDA_STANDARD=14')
+
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
+                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                )
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
         if self.spec.satisfies('%clang +openmp platform=darwin'):
