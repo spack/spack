@@ -17,7 +17,7 @@ try:
     from urllib.request import Request, urlopen
     from urllib.error import URLError
 except ImportError:
-    from urllib2 import urlopen, Request, URLError
+    from urllib2 import urlopen, Request, URLError  # noqa
 
 import spack
 import spack.hash_types as ht
