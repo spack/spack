@@ -49,7 +49,7 @@ class Xgboost(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in self.spec and 'cuda_arch=none' not in self.spec:
-            args.append(self.define('GPU_COMPUTE_VER',
-                self.spec.variants['cuda_arch'].value))
+            args.append(self.define(
+                'GPU_COMPUTE_VER', self.spec.variants['cuda_arch'].value))
 
         return args
