@@ -390,6 +390,7 @@ variant_not_default(Package, Variant, Value, 0)
     variant_set(Package, Variant, Value),
     node(Package).
 
+
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
 variant_default_value(Package, Variant, Value)

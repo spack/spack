@@ -1111,7 +1111,6 @@ class TestConcretize(object):
         with pytest.raises(RuntimeError, match='not found in package'):
             s.concretize()
 
-
     @pytest.mark.regression('21911')
     def test_variant_disjoint_set_default(self):
         s1 = Spec('dep-with-variants-disjoint').concretized()
