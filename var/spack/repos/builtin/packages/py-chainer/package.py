@@ -71,12 +71,15 @@ class PyChainer(PythonPackage):
                 test_dir,
             ]
             env["OMP_NUM_THREADS"] = "4"
-            lib_path = join_path(
-                "/usr", "lib", "FJSVtcs", "ple", "lib64", "libpmix.so"
-            )
 
-            if self.spec.satisfies("%fj") and os.path.exists(lib_path):
-                env["LD_PRELOAD"] = lib_path
+            # set LD_PRELOAD for Fugaku
+            if (self.spec.target == 'a64fx' and
+                self.spec['mpi'].name == 'fujitsu-mpi'):
+                lib_path = join_path(
+                    "/usr", "lib", "FJSVtcs", "ple", "lib64", "libpmix.so"
+                )
+                if os.path.exists(lib_path):
+                    env["LD_PRELOAD"] = lib_path
 
             self.run_test(
                 "sh",
