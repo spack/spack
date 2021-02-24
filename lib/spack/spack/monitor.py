@@ -13,8 +13,11 @@ import os
 import platform
 import re
 
-from urllib.request import Request, urlopen
-from urllib.error import URLError
+try:
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError
+except ImportError:
+    from urllib2 import urlopen, Request, URLError
 
 import spack
 import spack.hash_types as ht
