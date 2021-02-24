@@ -64,18 +64,18 @@ for %%x in (%*) do (
         )
     )
 :: h and V flags don't require further output parsing.
-:: Boolean operators do not exist for non integers in batch
+:: If we encounter, execute and exit
 if defined _sp_flags (
     if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
         if not defined _sp_subcommand (
-            python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
+            python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
             exit /B 0
         ) else (
-            python %spack% %_sp_subcommand% %_sp_flags% %_sp_args%
+            python "%spack%" %_sp_subcommand% %_sp_flags% %_sp_args%
             exit /B 0 )
     )
     if NOT "%_sp_flags%"=="%_sp_flags:-V=%" (
-        python %spack% %_sp_flags% %_sp_subcommand% %_sp_args%
+        python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
         exit /B 0
     )
 )
@@ -111,16 +111,8 @@ if "%_sp_subcommand%" == "cd" (
 ::#######################################################################
 
 :case_cd
-if "%_sp_flags%" == "" (
-    echo "do nothing"
-) else if NOT "%_sp_flags%"=="%_sp_flags:-h=%" (
-    python %spack% cd -h
-) else if NOT "%_sp_flags%"=="%_sp_flags:--help=%" (
-    python %spack% cd -h
-)
-
-FOR /F "tokens=* USEBACKQ" %%F IN (
-`python %spack% location %_sp_flags% %_sp_args%`) DO (
+ for /F "tokens=* USEBACKQ" %%F in (
+`python "%spack%" location %_sp_flags% %_sp_args%`) do (
     set "LOC=%%F"
 )
 for %%Z In ("%LOC%") do if EXIST %%~sZ\NUL (cd /d "%LOC%")
@@ -129,7 +121,6 @@ goto :end_switch
 :case_env
 if NOT "%_sp_args%"=="%_sp_args:deactivate=%" (
     if "%_sp_flags%" == "" (
-        @echo python "%spack%" env deactivate %_sp_flags% --bat %_sp_args:deactivate=%
         for /f "tokens=* USEBACKQ" %%I in (
             `call python "%spack%" env deactivate %_sp_flags% --bat %_sp_args:deactivate=%`
             ) do %%I
@@ -192,7 +183,7 @@ if NOT "%~2" == "" (
     set "_pa_new_path=%~2"
     )
 set "_pa_oldvalue=%_pa_varname%"
-for %%Z In ("%_pa_new_path%") do if EXIST %%~sZ\NUL (
+for %%Z in ("%_pa_new_path%") do if EXIST %%~sZ\NUL (
     if defined %_pa_oldvalue% (
         set "_pa_varname=%_pa_new_path%:%_pa_oldvalue%"
     ) else (
