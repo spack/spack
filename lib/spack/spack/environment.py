@@ -39,7 +39,6 @@ from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
-from spack.installer import PackageInstaller
 import spack.util.path
 
 #: environment variable used to indicate the active environment
@@ -461,6 +460,7 @@ def _get_host_environment():
         'arch_str': str(arch),
         'hostname': socket.gethostname()
     }
+
 
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
@@ -1414,6 +1414,8 @@ class Environment(object):
             args (Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
+        from spack.installer import PackageInstaller
+
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
