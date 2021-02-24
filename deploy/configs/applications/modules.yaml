@@ -78,6 +78,7 @@ modules:
       - steps
       - touchdetector
       - ultraliser
+      - unit-test-translator
     blacklist:
       - '%gcc'
       - '%intel'

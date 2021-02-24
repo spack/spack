@@ -71,4 +71,5 @@ spack:
     - synapsetool
     - touchdetector
     - ultraliser
+    - unit-test-translator
     # - zee
