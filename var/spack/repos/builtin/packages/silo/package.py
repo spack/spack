@@ -28,12 +28,14 @@ class Silo(AutotoolsPackage):
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
 
+    depends_on('mpi', when='+mpi')
     depends_on('hdf5@:1.10.999', when='@:4.10.2')
     depends_on('hdf5~mpi', when='~mpi')
-    depends_on('mpi', when='+mpi')
     depends_on('hdf5+mpi', when='+mpi')
-    depends_on('qt~framework@4.8:4.9', when='+silex')
+    depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
+    # Xmu dependency is required on Ubuntu 18-20
+    depends_on('libxmu', when='+silex')
     depends_on('readline')
     depends_on('zlib')
 
