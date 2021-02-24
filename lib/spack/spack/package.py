@@ -1070,7 +1070,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     @property
     def phase_log_files(self):
         """Find sorted phase log files written to the staging directory"""
-        log_files = glob.glob("%s/spack-build-*-out.txt" % self.stage.path)
+        logs_dir = os.path.join(self.stage.path, "spack-build-*-out.txt")
+        log_files = glob.glob(logs_dir)
         log_files.sort()
         return log_files
 
