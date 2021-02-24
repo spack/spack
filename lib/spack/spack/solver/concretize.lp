@@ -374,13 +374,13 @@ variant_value(Package, Variant, Value)
     variant_set(Package, Variant, Value).
 
 % prefer default values.
-variant_not_default(Package, Variant, Value, 1)
+variant_not_default(Package, Variant, Value, 2)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
     not variant_set(Package, Variant, Value),
     node(Package).
 
-variant_not_default(Package, Variant, Value, 0)
+variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
@@ -389,7 +389,6 @@ variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_set(Package, Variant, Value),
     node(Package).
-
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml

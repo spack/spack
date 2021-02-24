@@ -1110,3 +1110,18 @@ class TestConcretize(object):
         s = Spec(spec_str)
         with pytest.raises(RuntimeError, match='not found in package'):
             s.concretize()
+
+
+    @pytest.mark.regression('21911')
+    def test_variant_disjoint_set_default(self):
+        s1 = Spec('dep-with-variants-disjoint').concretized()
+        # Make sure the default works when left unspecified
+        assert 'foo=bar' in s1
+
+        s2 = Spec('dep-with-variants-disjoint foo=bar').concretized()
+        # Make sure the default works when explicitly specified
+        assert 'foo=bar' in s2
+
+        s3 = Spec('dep-with-variants-disjoint foo=baz').concretized()
+        # Make sure a non-default option works when explicitly specified
+        assert 'foo=baz' in s3
