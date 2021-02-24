@@ -42,10 +42,11 @@ class Asciidoc(AutotoolsPackage):
     @when('@:8.6.9')
     def install(self, spec, prefix):
         # Old release demands python2
-        python = which(spec['python'].command.path)
-        if os.path.isfile(str(python)):
+        mpythpath = spec['python'].command.path
+        if os.path.isfile(mpythpath):
             exes = ['asciidoc', 'a2x']
             for exe in exes:
                 fthfile = FileFilter(exe + '.py')
-                fthfile.filter('#!/usr/bin/env python', '#!/usr/bin/env python2.7')
-        make('install')
+                fthfile.filter('#!/usr/bin/env python', '#!' + mpythpath)
+
+            make('install')
