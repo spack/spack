@@ -16,12 +16,12 @@ class Asciidoc(AutotoolsPackage):
     git      = "https://github.com/asciidoc-py/asciidoc-py.git"
 
     version('master', branch='master')
-    version('9.1.0', sha256='fd499fcf51317b1aaf27336fb5e919c44c1f867f1ae6681ee197365d3065238b')
+    version('9.1.0', sha256='5056c20157349f8dc74f005b6e88ccbf1078c4e26068876f13ca3d1d7d045fe7')
     version('9.0.5', sha256='edc8328c3682a8568172656f6fc309b189f65219a49517966c7ea144cb25f8b2')
-    version('9.0.4', sha256='400368a43f3eee656d7f197382cd3554b50fb370ef2aea6534f431692a356c66')
-    version('9.0.3', sha256='d99c8be8e8a9232742253c2d87c547b2efd4bbd3f0c1e23ef14898ad0fff77c4')
-    version('9.0.2', sha256='185fd68e47034c4dd892e1d4ae64c81152bc049e9bdc7d1ad63f927d35810a3b')
-    version('8.6.9', sha256='78db9d0567c8ab6570a6eff7ffdf84eadd91f2dfc0a92a2d0105d323cab4e1f0')
+    version('9.0.4', sha256='fb0e683ae6a4baf34a8969c3af764ca729526196576729ee9275b9f39fd8b79c')
+    version('9.0.3', sha256='b6ef4accd7959f51b532ab4d3aaa211e15f18fd544c4c3cc3ed712f5590a50de')
+    version('9.0.2', sha256='93fbe32d56380afee2f26389d8ebfdf33de72536449d53308120d3c20d2c1e17')
+    version('8.6.9', sha256='45e95bed1e341980f7de0a66fdc467090956fe55d4625bdad8057cd926e0c6c6')
 
     depends_on('libxml2',     type=('build', 'run'))
     depends_on('libxslt',     type=('build', 'run'))
@@ -29,14 +29,6 @@ class Asciidoc(AutotoolsPackage):
     depends_on('docbook-xsl', type=('build', 'run'))
     depends_on('python@2.3.0:2.7.99', when='@:8.6.9')
     depends_on('python@3.5:',         when='@9.0.2:')
-
-    def url_for_version(self, version):
-        if version > Version('8.6.9'):
-            url = "https://github.com/asciidoc-py/asciidoc-py/releases/download/{0}/asciidoc-{0}.tar.gz"
-        else:
-            url = "http://downloads.sourceforge.net/project/asciidoc/asciidoc/{0}/asciidoc-{0}.tar.gz"
-
-        return url.format(version)
 
     @when('@:8.6.9')
     def install(self, spec, prefix):
