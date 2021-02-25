@@ -2278,6 +2278,8 @@ class Spec(object):
                 # If replacement is external then trim the dependencies
                 if replacement.external:
                     if (spec._dependencies):
+                        for dep in spec.dependencies():
+                            del dep._dependents[spec.name]
                         changed = True
                         spec._dependencies = DependencyMap()
                     replacement._dependencies = DependencyMap()
