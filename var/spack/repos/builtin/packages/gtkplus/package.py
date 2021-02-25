@@ -38,6 +38,8 @@ class Gtkplus(MesonPackage):
     depends_on('gdk-pixbuf@2.30.0:')
     depends_on('gobject-introspection@1.39.0:')
     depends_on('shared-mime-info')
+    depends_on('libxkbcommon')
+    depends_on('xrandr')
     depends_on('libepoxy', when='@3:')
     depends_on('libxi', when='@3:')
     depends_on('inputproto', when='@3:')
@@ -83,6 +85,7 @@ class Gtkplus(MesonPackage):
             '-Dgtk_doc=false',
             '-Dman=false',
             '-Dintrospection=true',
+            '-Dwayland_backend=false',
         ])
 
         return args
