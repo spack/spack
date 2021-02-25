@@ -20,7 +20,6 @@ class RCaretensemble(RPackage):
 
     version('2.0.1', sha256='7e595e604ce2d9d32afbc5404e6fcbcd7f80e687316e9ca3303aca3e44c3ef88')
 
-    extends('r')
     depends_on('r@3.2.0:', type=('build', 'run'))
     depends_on('r-pbapply', type=('build', 'run'))
     depends_on('r-ggplot2', type=('build', 'run'))
