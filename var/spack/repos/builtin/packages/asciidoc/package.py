@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Asciidoc(AutotoolsPackage):
@@ -43,10 +42,9 @@ class Asciidoc(AutotoolsPackage):
     def install(self, spec, prefix):
         # Old release demands python2
         mpythpath = spec['python'].command.path
-        if os.path.isfile(mpythpath):
-            exes = ['asciidoc', 'a2x']
-            for exe in exes:
-                fthfile = FileFilter(exe + '.py')
-                fthfile.filter('#!/usr/bin/env python', '#!' + mpythpath)
+        exes = ['asciidoc', 'a2x']
+        for exe in exes:
+            fthfile = FileFilter(exe + '.py')
+            fthfile.filter('#!/usr/bin/env python', '#!' + mpythpath)
 
-            make('install')
+        make('install')
