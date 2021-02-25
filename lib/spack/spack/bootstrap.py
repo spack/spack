@@ -75,8 +75,14 @@ def make_module_available(module, spec=None, install=False):
             tty.warn("Spec %s did not provide module %s" % (ispec, module))
             sys.path = sys.path[:-2]
 
+    def _raise_error(module_name, module_spec):
+        error_msg = 'cannot import module "{0}"'.format(module_name)
+        if module_spec:
+            error_msg += ' from spec "{0}'.format(module_spec)
+        raise ImportError(error_msg)
+
     if not install:
-        raise Exception  # TODO specify
+        _raise_error(module, spec)
 
     with system_python_context():
         # We will install for ourselves, using this python if needed
@@ -94,7 +100,7 @@ def make_module_available(module, spec=None, install=False):
         return
     except ImportError:
         sys.path = sys.path[:-2]
-        raise Exception  # TODO: specify
+        _raise_error(module, spec)
 
 
 def get_executable(exe, spec=None, install=False):
@@ -109,8 +115,7 @@ def get_executable(exe, spec=None, install=False):
     external. The ``install`` option should only be used with packages that
     install quickly (when using external python) or are guaranteed by Spack
     organization to be in a binary mirror (clingo)."""
-    # Easy, we found it externally
-    # TODO: Add to externals/database?
+    # Search the system first
     runner = spack.util.executable.which(exe)
     if runner:
         return runner
@@ -132,9 +137,15 @@ def get_executable(exe, spec=None, install=False):
         else:
             tty.warn('Exe %s not found in prefix %s' % (exe, ispec.prefix))
 
+    def _raise_error(executable, exe_spec):
+        error_msg = 'cannot find the executable "{0}"'.format(executable)
+        if exe_spec:
+            error_msg += ' from spec "{0}'.format(exe_spec)
+        raise RuntimeError(error_msg)
+
     # If we're not allowed to install this for ourselves, we can't find it
     if not install:
-        raise Exception  # TODO specify
+        _raise_error(exe, spec)
 
     with system_python_context():
         # We will install for ourselves, using this python if needed
@@ -153,7 +164,7 @@ def get_executable(exe, spec=None, install=False):
         ret.add_default_envmod(envmod)
         return ret
 
-    raise Exception  # TODO specify
+    _raise_error(exe, spec)
 
 
 @contextlib.contextmanager
