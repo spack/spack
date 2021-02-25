@@ -25,7 +25,7 @@ class Qgis(CMakePackage):
     version('3.12.1',   sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0',   sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
-    # 3.16.4 does not find PyQt5
+    # Last LTR 3.16.4 does not find PyQt5
     version('3.16.4',   sha256='a31b4aa9b54a47f5dce3d944c32b4609348fa2ffdd1b533bdffb935f62b7049f')
     version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839', preferred=True)
     version('3.10.7',   sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564')
