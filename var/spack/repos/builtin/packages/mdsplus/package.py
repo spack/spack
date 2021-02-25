@@ -11,8 +11,13 @@ class Mdsplus(AutotoolsPackage):
 
     parallel = False
 
-    version('stable', commit='83928a157ee0a5875135aeee0996634ecb802523',
+    version('stable_release-7-96-17', tag='stable_release-7-96-17',
             submodules=True)
+
+    variant('java', default=True,
+            description='build java libraries and applications')
+    variant('python', default=True,
+            description='install python module')
 
     # Autotools needed for building
     depends_on('autoconf', type='build')
@@ -30,9 +35,12 @@ class Mdsplus(AutotoolsPackage):
     depends_on('motif')
 
     # Language bindings
-    depends_on('java', type=('build', 'run'))
-    depends_on('python', type='run')
-    depends_on('py-numpy', type='run')
+    depends_on('java', type=('build', 'run'), when='+java')
+    depends_on('python', type='run', when='+python')
+    depends_on('py-numpy', type='run', when='+python')
+
+    def configure_args(self):
+        return self.enable_or_disable('java')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
@@ -40,4 +48,5 @@ class Mdsplus(AutotoolsPackage):
 
     def setup_run_environment(self, env):
         env.set('MDSPLUS_DIR', self.prefix)
-        env.prepend_path('PYTHONPATH', '{0}/python'.format(self.prefix))
+        if '+python' in self.spec:
+            env.prepend_path('PYTHONPATH', '{0}/python'.format(self.prefix))
