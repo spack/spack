@@ -21,5 +21,4 @@ class RPvclust(RPackage):
 
     version('2.2-0', sha256='7892853bacd413b5a921006429641ad308a344ca171b3081c15e4c522a8b0201')
 
-    extends('r')
     depends_on('r@2.10.0:', type=('build', 'run'))
