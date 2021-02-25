@@ -19,5 +19,4 @@ class RIslr(RPackage):
 
     version('1.2', sha256='b00f7a06d2fb646917e629cc2dbdab71c7de3eb17a8a4d06849901a299f1caad')
 
-    extends('r')
     depends_on('r@2.10:', type=('build', 'run'))
