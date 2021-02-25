@@ -19,7 +19,7 @@ import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.user_environment as uenv
 from spack.util.string import plural
-from spack.database import InstallStatuses
+from spack.spec_index import InstallStatus
 
 description = "list and search installed packages"
 section = "basic"
@@ -114,6 +114,12 @@ def setup_parser(subparser):
         help='show software in the internal bootstrap store'
     )
 
+    # TODO: define this as a common argument in arguments.py!
+    subparser.add_argument(
+        '--allarch', action='store_true',
+        help="list specs for all available architectures" +
+             " instead of default platform and OS")
+
     arguments.add_common_arguments(subparser, ['constraint'])
 
 
@@ -121,11 +127,11 @@ def query_arguments(args):
     # Set up query arguments.
     installed = []
     if not (args.only_missing or args.only_deprecated):
-        installed.append(InstallStatuses.INSTALLED)
+        installed.append(InstallStatus.INSTALLED())
     if (args.deprecated or args.only_deprecated) and not args.only_missing:
-        installed.append(InstallStatuses.DEPRECATED)
+        installed.append(InstallStatus.DEPRECATED())
     if (args.missing or args.only_missing) and not args.only_deprecated:
-        installed.append(InstallStatuses.MISSING)
+        installed.append(InstallStatus.MISSING())
 
     known = any
     if args.unknown:
@@ -137,7 +143,14 @@ def query_arguments(args):
     if args.implicit:
         explicit = False
 
-    q_args = {'installed': installed, 'known': known, "explicit": explicit}
+    for_all_architectures = args.allarch
+
+    q_args = dict(
+        installed=installed,
+        known=known,
+        explicit=explicit,
+        for_all_architectures=for_all_architectures,
+    )
 
     # Time window of installation
     for attribute in ('start_date', 'end_date'):

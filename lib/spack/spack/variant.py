@@ -122,6 +122,7 @@ class Variant(object):
         # Check and record the values that are not allowed
         not_allowed_values = [
             x for x in value
+            # TODO: avoid the multiple special-cases for '*' with a wrappper class.
             if x != '*' and self.single_value_validator(x) is False
         ]
         if not_allowed_values:

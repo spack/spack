@@ -16,6 +16,7 @@ import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.hash_types as ht
 import spack.package
+import spack.spec_index
 import spack.solver.asp as asp
 
 description = "concretize a specs using an ASP solver"
@@ -93,7 +94,8 @@ def solve(parser, args):
     if models < 0:
         tty.die("model count must be non-negative: %d")
 
-    specs = spack.cmd.parse_specs(args.specs)
+    merged = spack.spec_index.IndexLocation.LOCAL_AND_REMOTE()
+    specs = spack.cmd.parse_specs(args.specs, index_location=merged)
 
     # dump generated ASP program
     result = asp.solve(

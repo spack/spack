@@ -153,12 +153,13 @@ def parse_specs(args, **kwargs):
     concretize = kwargs.get('concretize', False)
     normalize = kwargs.get('normalize', False)
     tests = kwargs.get('tests', False)
+    index_location = kwargs.get('index_location', None)
 
     try:
         sargs = args
         if not isinstance(args, six.string_types):
             sargs = ' '.join(spack.util.string.quote(args))
-        specs = spack.spec.parse(sargs)
+        specs = spack.spec.parse(sargs, index_location=index_location)
         for spec in specs:
             if concretize:
                 spec.concretize(tests=tests)  # implies normalize

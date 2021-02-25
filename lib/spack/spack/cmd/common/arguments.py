@@ -13,6 +13,7 @@ import spack.dependency as dep
 import spack.environment as ev
 import spack.modules
 import spack.spec
+import spack.spec_index
 import spack.store
 from spack.util.pattern import Args
 
@@ -74,18 +75,33 @@ class ConstraintAction(argparse.Action):
         if env:
             kwargs['hashes'] = set(env.all_hashes())
 
-        # return everything for an empty query.
-        if not qspecs:
-            return spack.store.db.query(**kwargs)
+        location = kwargs.pop('location', None)
+        if location is None:
+            location = spack.spec_index.IndexLocation.LOCAL()
+        spec_index = location.spec_index_for()
+
+        # TODO: IndexQuery should be representable as a Spec. Start by:
+        # (1) Decouple spec parsing from concretization, and maintain a new field for
+        #     hash prefixes parsed from the Spec string!
+        # (2) Allow querying with *multiple* specs!
+        # (3) add *additional* fields from IndexQuery to Spec. do not change the spec
+        #     parsing yet.
+        # (4) replace IndexQuery with Spec in Database and SpecIndex.
+        # (5) separate DefinitelyAbstractSpec and DefinitelyConcreteSpec
+        kwargs['query_spec'] = qspecs or None
+        query = spack.spec_index.IndexQuery.from_query_args(**kwargs)
 
         # Return only matching stuff otherwise.
-        specs = {}
-        for spec in qspecs:
-            for s in spack.store.db.query(spec, **kwargs):
-                # This is fast for already-concrete specs
-                specs[s.dag_hash()] = s
+        output_specs = {}
+        for cs in spec_index.query(query):
+            s = cs.spec
+            assert s.concrete, s
+            # .dag_hash() is fast for already-concrete specs
+            if s.dag_hash() in output_specs:
+                continue
+            output_specs[s.dag_hash()] = s
 
-        return sorted(specs.values())
+        return sorted(output_specs.values())
 
 
 class SetParallelJobs(argparse.Action):

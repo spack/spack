@@ -19,6 +19,7 @@ import spack.environment as ev
 import spack.fetch_strategy
 import spack.paths
 import spack.report
+import spack.spec_index
 from spack.error import SpackError
 from spack.installer import PackageInstaller
 
@@ -310,13 +311,20 @@ environment variables:
     update_kwargs_from_args(args, kwargs)
 
     # 1. Abstract specs from cli
-    abstract_specs = spack.cmd.parse_specs(args.spec)
+    if args.use_cache:
+        if args.cache_only:
+            index_location = spack.spec_index.IndexLocation.REMOTE()
+        else:
+            index_location = spack.spec_index.IndexLocation.LOCAL_AND_REMOTE()
+    else:
+        index_location = spack.spec_index.IndexLocation.LOCAL()
+    abstract_specs = spack.cmd.parse_specs(args.spec, index_location=index_location)
     tests = get_tests(abstract_specs)
     kwargs['tests'] = tests
 
     try:
         specs = spack.cmd.parse_specs(
-            args.spec, concretize=True, tests=tests)
+            args.spec, concretize=True, tests=tests, index_location=index_location)
     except SpackError as e:
         tty.debug(e)
         reporter.concretization_report(e.message)

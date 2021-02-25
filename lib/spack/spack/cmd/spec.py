@@ -14,6 +14,7 @@ import spack
 import spack.cmd
 import spack.cmd.common.arguments as arguments
 import spack.spec
+import spack.spec_index
 import spack.store
 import spack.hash_types as ht
 
@@ -77,7 +78,8 @@ def spec(parser, args):
     if not args.specs:
         tty.die("spack spec requires at least one spec")
 
-    for spec in spack.cmd.parse_specs(args.specs):
+    index_location = spack.spec_index.IndexLocation.LOCAL_AND_REMOTE()
+    for spec in spack.cmd.parse_specs(args.specs, index_location=index_location):
         # With -y, just print YAML to output.
         if args.format:
             if spec.name in spack.repo.path or spec.virtual:
@@ -88,16 +90,15 @@ def spec(parser, args):
                 sys.stdout.write(spec.to_yaml(hash=ht.build_hash))
             else:
                 print(spec.to_json(hash=ht.build_hash))
-            continue
+        else:
+            with tree_context():
+                kwargs['hashes'] = False  # Always False for input spec
+                print("Input spec")
+                print("--------------------------------")
+                print(spec.tree(**kwargs))
 
-        with tree_context():
-            kwargs['hashes'] = False  # Always False for input spec
-            print("Input spec")
-            print("--------------------------------")
-            print(spec.tree(**kwargs))
-
-            kwargs['hashes'] = args.long or args.very_long
-            print("Concretized")
-            print("--------------------------------")
-            spec.concretize()
-            print(spec.tree(**kwargs))
+                kwargs['hashes'] = args.long or args.very_long
+                print("Concretized")
+                print("--------------------------------")
+                spec.concretize()
+                print(spec.tree(**kwargs))

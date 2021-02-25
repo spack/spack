@@ -383,15 +383,16 @@ class PatchCache(object):
         # update the index with per-package patch indexes
         pkg = spack.repo.get(pkg_fullname)
         partial_index = self._index_patches(pkg)
-        for sha256, package_to_patch in partial_index.items():
+        self._update_index(partial_index)
+
+    def _update_index(self, index):
+        for sha256, package_to_patch in index.items():
             p2p = self.index.setdefault(sha256, {})
             p2p.update(package_to_patch)
 
     def update(self, other):
         """Update this cache with the contents of another."""
-        for sha256, package_to_patch in other.index.items():
-            p2p = self.index.setdefault(sha256, {})
-            p2p.update(package_to_patch)
+        self._update_index(other.index)
 
     @staticmethod
     def _index_patches(pkg_class):

@@ -39,7 +39,6 @@ import spack.error
 import spack.util.crypto as crypto
 import spack.util.pattern as pattern
 import spack.util.url as url_util
-import spack.util.web as web_util
 from llnl.util.filesystem import (
     working_dir, mkdirp, temp_rename, temp_cwd, get_single_file)
 from spack.util.compression import decompressor_for, extension
@@ -509,6 +508,7 @@ class URLFetchStrategy(FetchStrategy):
         if not self.archive_file:
             raise NoArchiveFileError("Cannot call archive() before fetching.")
 
+        import spack.util.web as web_util
         web_util.push_to_url(
             self.archive_file,
             destination,
@@ -1176,6 +1176,7 @@ class S3FetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
+            import spack.util.web as web_util
             _, headers, stream = web_util.read_from_url(self.url)
 
             with open(basename, 'wb') as f:

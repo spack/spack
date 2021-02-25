@@ -18,6 +18,7 @@ import spack.mirror
 import spack.relocate
 import spack.repo
 import spack.spec
+import spack.spec_index
 import spack.store
 import spack.config
 import spack.repo
@@ -26,6 +27,7 @@ import spack.util.url as url_util
 
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
+from spack.spec_index import IndexQuery, InstallStatuses
 from spack.util.string import plural
 
 from spack.cmd import display_specs
@@ -257,7 +259,14 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     tty.debug('find_matching_specs: about to parse specs for {0}'.format(pkgs))
     specs = spack.cmd.parse_specs(pkgs)
     for spec in specs:
-        matching = spack.store.db.query(spec, hashes=hashes)
+        query = IndexQuery(query_specs=Spec(spec), installed=True)
+        matching = [
+            concretized_spec.spec
+            for concretized_spec in spack.spec_index.local_spec_index.query(query)
+            if (hashes is None) or (concretized_spec.spec.dag_hash() in hashes)
+            # This is necessary to account for incorrect queries during testing.
+            if (spec.name is None) or (spec.name == concretized_spec.spec.name)
+        ]
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matching) > 1:
@@ -295,22 +304,23 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     specs_from_cli = []
     has_errors = False
 
-    specs = bindist.update_cache_and_get_specs()
-    if not other_arch:
-        arch = spack.architecture.default_arch().to_spec()
-        specs = [s for s in specs if s.satisfies(arch)]
+    remote = spack.spec_index.IndexLocation.REMOTE()
+    qspecs = spack.cmd.parse_specs(pkgs, index_location=remote) or None
+    query = IndexQuery(query_specs=qspecs,
+                       installed=InstallStatuses.any_status(),
+                       for_all_architectures=other_arch)
+    specs = [
+        concretized_spec.spec
+        for concretized_spec in remote.spec_index_for().query(query)
+    ]
 
-    for pkg in pkgs:
-        matches = []
+    if qspecs is None:
+        return specs
+
+    for pkg, qspec in zip(pkgs, qspecs):
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
-        for spec in sorted(specs):
-            if pkg.startswith('/'):
-                pkghash = pkg.replace('/', '')
-                if spec.dag_hash().startswith(pkghash):
-                    matches.append(spec)
-            else:
-                if spec.satisfies(pkg):
-                    matches.append(spec)
+        matches = [s for s in specs if s.satisfies(qspec)]
+
         # For each pkg provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matches) > 1:
@@ -509,14 +519,16 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
-    specs = bindist.update_cache_and_get_specs()
-    if not args.allarch:
-        arch = spack.architecture.default_arch().to_spec()
-        specs = [s for s in specs if s.satisfies(arch)]
+    remote = spack.spec_index.IndexLocation.REMOTE()
+    qspecs = spack.cmd.parse_specs(args.specs, index_location=remote) or None
+    query = IndexQuery(query_specs=qspecs,
+                       installed=InstallStatuses.any_status(),
+                       for_all_architectures=args.allarch)
+    specs = [
+        concretized_spec.spec
+        for concretized_spec in remote.spec_index_for().query(query)
+    ]
 
-    if args.specs:
-        constraints = set(args.specs)
-        specs = [s for s in specs if any(s.satisfies(c) for c in constraints)]
     if sys.stdout.isatty():
         builds = len(specs)
         tty.msg("%s." % plural(builds, 'cached build'))

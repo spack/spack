@@ -5,7 +5,7 @@
 import pytest
 from spack.main import SpackCommand
 import spack.store
-from spack.database import InstallStatuses
+from spack.spec_index import InstallStatus
 
 install = SpackCommand('install')
 uninstall = SpackCommand('uninstall')
@@ -58,7 +58,7 @@ def test_deprecate_install(mock_packages, mock_archive, mock_fetch,
     deprecate('-y', '-i', 'libelf@0.8.10', 'libelf@0.8.13')
 
     non_deprecated = spack.store.db.query()
-    deprecated = spack.store.db.query(installed=InstallStatuses.DEPRECATED)
+    deprecated = spack.store.db.query(installed=InstallStatus.DEPRECATED())
     assert deprecated == to_deprecate
     assert len(non_deprecated) == 1
     assert non_deprecated[0].satisfies('libelf@0.8.13')
@@ -79,7 +79,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
 
     non_deprecated = spack.store.db.query()
     all_available = spack.store.db.query(installed=any)
-    deprecated = spack.store.db.query(installed=InstallStatuses.DEPRECATED)
+    deprecated = spack.store.db.query(installed=InstallStatus.DEPRECATED())
 
     assert all_available == all_installed
     assert sorted(all_available) == sorted(deprecated + non_deprecated)

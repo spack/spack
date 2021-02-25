@@ -4,146 +4,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import os
 import sys
-import platform
 
-import py
 import pytest
 
 import spack.binary_distribution as bindist
 import spack.config
+import spack.fetch_strategy
 import spack.hooks.sbang as sbang
 import spack.main
 import spack.mirror
 import spack.repo
+import spack.spec_index
 import spack.store
 import spack.util.gpg
 import spack.util.web as web_util
 
 from spack.directory_layout import YamlDirectoryLayout
 from spack.spec import Spec
+from spack.spec_index import ConcretizedSpec
 
 mirror_cmd = spack.main.SpackCommand('mirror')
 install_cmd = spack.main.SpackCommand('install')
 uninstall_cmd = spack.main.SpackCommand('uninstall')
 buildcache_cmd = spack.main.SpackCommand('buildcache')
-
-
-@pytest.fixture(scope='function')
-def cache_directory(tmpdir):
-    fetch_cache_dir = tmpdir.ensure('fetch_cache', dir=True)
-    fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
-    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
-
-    yield spack.config.caches
-
-    fetch_cache_dir.remove()
-    spack.config.caches = old_cache_path
-
-
-@pytest.fixture(scope='module')
-def mirror_dir(tmpdir_factory):
-    dir = tmpdir_factory.mktemp('mirror')
-    dir.ensure('build_cache', dir=True)
-    yield str(dir)
-    dir.join('build_cache').remove()
-
-
-@pytest.fixture(scope='function')
-def test_mirror(mirror_dir):
-    mirror_url = 'file://%s' % mirror_dir
-    mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
-    yield mirror_dir
-    mirror_cmd('rm', '--scope=site', 'test-mirror-func')
-
-
-@pytest.fixture(scope='module')
-def config_directory(tmpdir_factory):
-    tmpdir = tmpdir_factory.mktemp('test_configs')
-    # restore some sane defaults for packages and config
-    config_path = py.path.local(spack.paths.etc_path)
-    modules_yaml = config_path.join('spack', 'defaults', 'modules.yaml')
-    os_modules_yaml = config_path.join('spack', 'defaults', '%s' %
-                                       platform.system().lower(),
-                                       'modules.yaml')
-    packages_yaml = config_path.join('spack', 'defaults', 'packages.yaml')
-    config_yaml = config_path.join('spack', 'defaults', 'config.yaml')
-    repos_yaml = config_path.join('spack', 'defaults', 'repos.yaml')
-    tmpdir.ensure('site', dir=True)
-    tmpdir.ensure('user', dir=True)
-    tmpdir.ensure('site/%s' % platform.system().lower(), dir=True)
-    modules_yaml.copy(tmpdir.join('site', 'modules.yaml'))
-    os_modules_yaml.copy(tmpdir.join('site/%s' % platform.system().lower(),
-                                     'modules.yaml'))
-    packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
-    config_yaml.copy(tmpdir.join('site', 'config.yaml'))
-    repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
-    yield tmpdir
-    tmpdir.remove()
-
-
-@pytest.fixture(scope='function')
-def default_config(
-        tmpdir_factory, config_directory, monkeypatch,
-        install_mockery_mutable_config
-):
-    # This fixture depends on install_mockery_mutable_config to ensure
-    # there is a clear order of initialization. The substitution of the
-    # config scopes here is done on top of the substitution that comes with
-    # install_mockery_mutable_config
-    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
-    config_directory.copy(mutable_dir)
-
-    cfg = spack.config.Configuration(
-        *[spack.config.ConfigScope(name, str(mutable_dir))
-          for name in ['site/%s' % platform.system().lower(),
-                       'site', 'user']])
-
-    spack.config.config, old_config = cfg, spack.config.config
-
-    # This is essential, otherwise the cache will create weird side effects
-    # that will compromise subsequent tests if compilers.yaml is modified
-    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
-    njobs = spack.config.get('config:build_jobs')
-    if not njobs:
-        spack.config.set('config:build_jobs', 4, scope='user')
-    extensions = spack.config.get('config:template_dirs')
-    if not extensions:
-        spack.config.set('config:template_dirs',
-                         [os.path.join(spack.paths.share_path, 'templates')],
-                         scope='user')
-
-    mutable_dir.ensure('build_stage', dir=True)
-    build_stage = spack.config.get('config:build_stage')
-    if not build_stage:
-        spack.config.set('config:build_stage',
-                         [str(mutable_dir.join('build_stage'))], scope='user')
-    timeout = spack.config.get('config:connect_timeout')
-    if not timeout:
-        spack.config.set('config:connect_timeout', 10, scope='user')
-
-    yield spack.config.config
-
-    spack.config.config = old_config
-    mutable_dir.remove()
-
-
-@pytest.fixture(scope='function')
-def install_dir_default_layout(tmpdir):
-    """Hooks a fake install directory with a default layout"""
-    scheme = os.path.join(
-        '${architecture}',
-        '${compiler.name}-${compiler.version}',
-        '${name}-${version}-${hash}'
-    )
-    real_store, real_layout = spack.store.store, spack.store.layout
-    opt_dir = tmpdir.join('opt')
-    spack.store.store = spack.store.Store(str(opt_dir))
-    spack.store.layout = YamlDirectoryLayout(str(opt_dir), path_scheme=scheme)
-    try:
-        yield spack.store
-    finally:
-        spack.store.store = real_store
-        spack.store.layout = real_layout
 
 
 @pytest.fixture(scope='function')
@@ -174,7 +57,7 @@ else:
 @pytest.mark.requires_executables(*args)
 @pytest.mark.maybeslow
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_default_layout',
+    'mutable_default_config', 'cache_directory', 'install_dir_default_layout',
     'test_mirror'
 )
 def test_default_rpaths_create_install_default_layout(mirror_dir):
@@ -187,10 +70,12 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     # Install 'corge' without using a cache
     install_cmd('--no-cache', cspec.name)
 
+    cspec_str = ConcretizedSpec(cspec).spec_string_name_hash_only
+
     # Create a buildache
-    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec_str)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec_str)
 
     # Create mirror index
     mirror_url = 'file://{0}'.format(mirror_dir)
@@ -199,16 +84,17 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     buildcache_cmd('list', '-alv')
 
     # Uninstall the package and deps
-    uninstall_cmd('-y', '--dependents', gspec.name)
+    gspec_str = ConcretizedSpec(gspec).spec_string_name_hash_only
+    uninstall_cmd('-y', '--dependents', gspec_str)
 
     # Test installing from build caches
-    buildcache_cmd('install', '-au', cspec.name)
+    buildcache_cmd('install', '-au', cspec_str)
 
     # This gives warning that spec is already installed
-    buildcache_cmd('install', '-au', cspec.name)
+    buildcache_cmd('install', '-au', cspec_str)
 
     # Test overwrite install
-    buildcache_cmd('install', '-afu', cspec.name)
+    buildcache_cmd('install', '-afu', cspec_str)
 
     buildcache_cmd('keys', '-f')
     buildcache_cmd('list')
@@ -221,7 +107,7 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'mutable_default_config', 'cache_directory', 'install_dir_non_default_layout',
     'test_mirror'
 )
 def test_default_rpaths_install_nondefault_layout(mirror_dir):
@@ -243,7 +129,7 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_default_layout'
+    'mutable_default_config', 'cache_directory', 'install_dir_default_layout'
 )
 def test_relative_rpaths_create_default_layout(mirror_dir):
     """
@@ -273,7 +159,7 @@ def test_relative_rpaths_create_default_layout(mirror_dir):
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_default_layout',
+    'mutable_default_config', 'cache_directory', 'install_dir_default_layout',
     'test_mirror'
 )
 def test_relative_rpaths_install_default_layout(mirror_dir):
@@ -303,7 +189,7 @@ def test_relative_rpaths_install_default_layout(mirror_dir):
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'mutable_default_config', 'cache_directory', 'install_dir_non_default_layout',
     'test_mirror'
 )
 def test_relative_rpaths_install_nondefault(mirror_dir):
@@ -360,7 +246,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 @pytest.mark.maybeslow
 @pytest.mark.nomockstage
 @pytest.mark.usefixtures(
-    'default_config', 'cache_directory', 'install_dir_non_default_layout',
+    'mutable_default_config', 'cache_directory', 'install_dir_non_default_layout',
     'test_mirror'
 )
 def test_built_spec_cache(mirror_dir):
@@ -483,8 +369,19 @@ def test_generate_indices_exception(monkeypatch, capfd):
     assert expect in err
 
 
-@pytest.mark.usefixtures('mock_fetch', 'install_mockery')
-def test_update_sbang(tmpdir, test_mirror):
+class DoNothing(object):
+    def __call__(self):
+        pass
+
+
+@pytest.fixture(scope='function')
+def discard_checksum(monkeypatch):
+    monkeypatch.setattr(spack.fetch_strategy.URLFetchStrategy, 'check', DoNothing())
+
+
+@pytest.mark.db
+@pytest.mark.usefixtures('mock_fetch', 'mutable_default_config', 'discard_checksum')
+def test_update_sbang(tmpdir, test_mirror, mutable_database, patch_spec_indices):
     """Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme, triggering an update of the
     sbang.
@@ -496,7 +393,8 @@ def test_update_sbang(tmpdir, test_mirror):
     spec_str = 'old-sbang'
     # Concretize a package with some old-fashioned sbang lines.
     old_spec = Spec(spec_str).concretized()
-    old_spec_hash_str = '/{0}'.format(old_spec.dag_hash())
+    old_concretized = ConcretizedSpec(old_spec)
+    old_spec_hash_str = old_concretized.spec_string_name_hash_only
 
     # Need a fake mirror with *function* scope.
     mirror_dir = test_mirror
@@ -511,6 +409,10 @@ def test_update_sbang(tmpdir, test_mirror):
     # Need to force an update of the buildcache index
     buildcache_cmd('update-index', '-d', mirror_url)
 
+    entry = spack.spec_index.local_spec_index.lookup_ensuring_single_match(
+            old_concretized.into_hash())
+    patch_spec_indices.intern_concretized_spec(entry.concretized_spec, entry.record)
+
     # Uninstall the original package.
     uninstall_cmd('-y', old_spec_hash_str)
 
@@ -520,8 +422,7 @@ def test_update_sbang(tmpdir, test_mirror):
     s.layout = YamlDirectoryLayout(str(newtree_dir), path_scheme=scheme)
 
     with spack.store.use_store(s):
-        new_spec = Spec('old-sbang')
-        new_spec.concretize()
+        new_spec = Spec('old-sbang').concretized()
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache
@@ -551,4 +452,5 @@ def test_update_sbang(tmpdir, test_mirror):
         assert sbang_style_2_expected == \
             open(str(installed_script_style_2_path)).read()
 
+        patch_spec_indices.location = spack.spec_index.IndexLocation.LOCAL()
         uninstall_cmd('-y', '/%s' % new_spec.dag_hash())

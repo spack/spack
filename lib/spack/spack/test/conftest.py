@@ -10,8 +10,10 @@ import itertools
 import json
 import os
 import os.path
+import platform
 import shutil
 import tempfile
+import uuid
 import xml.etree.ElementTree
 
 import py
@@ -28,6 +30,8 @@ import spack.caches
 import spack.database
 import spack.directory_layout
 import spack.environment as ev
+import spack.fetch_strategy
+import spack.mirror
 import spack.package
 import spack.package_prefs
 import spack.paths
@@ -41,8 +45,10 @@ import spack.subprocess_context
 import spack.util.spack_yaml as syaml
 
 from spack.util.pattern import Bunch
+from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
+from spack.spec_index import GenericHashedPackageRecord, IndexEntry, IndexLocation
 
 
 @pytest.fixture(autouse=True)
@@ -579,6 +585,13 @@ def _store_dir_and_cache(tmpdir_factory):
     return store, cache
 
 
+@pytest.fixture(scope='function')
+def own_tmpdir(tmpdir_factory):
+    """Create a temporary directory that no other test has used."""
+    tmpdir = tmpdir_factory.mktemp(str(uuid.uuid4()))
+    return tmpdir
+
+
 @pytest.fixture(scope='session')
 def mock_store(tmpdir_factory, mock_repo_path, mock_configuration_scopes,
                _store_dir_and_cache):
@@ -712,7 +725,7 @@ def temporary_store(tmpdir):
 
 @pytest.fixture(scope='function')
 def install_mockery_mutable_config(
-        temporary_store, mutable_config, mock_packages
+        tmpdir, temporary_store, mutable_config, mock_packages, monkeypatch,
 ):
     """Hooks a fake install directory, DB, and stage directory into Spack.
 
@@ -720,6 +733,9 @@ def install_mockery_mutable_config(
     also need to modify configuration (and hence would want to use
     'mutable config'): 'install_mockery' does not support this.
     """
+    monkeypatch.setattr(
+        spack.store, 'store', spack.store.Store(str(tmpdir.join('opt'))))
+
     # We use a fake package, so temporarily disable checksumming
     with spack.config.override('config:checksum', False):
         yield
@@ -1234,3 +1250,254 @@ def mock_test_stage(mutable_config, tmpdir):
     mutable_config.set('config:test_stage', tmp_stage)
 
     yield tmp_stage
+
+
+@pytest.fixture(scope='module')
+def mirror_dir(tmpdir_factory):
+    dir = tmpdir_factory.mktemp('mirror')
+    dir.ensure('build_cache', dir=True)
+    yield str(dir)
+    dir.join('build_cache').remove()
+
+
+class MirrorCollection(object):
+    """Return a pre-constructed mirror in response to every request for mirrors."""
+    def __init__(self, inner):
+        self.inner = inner
+
+    def __call__(self, *args, **kwargs):
+        return [self.inner]
+
+
+class MirrorsForSpec(object):
+    """Return a pre-constructed mirror in response to every request for mirrors."""
+    def __init__(self, inner):
+        self.inner = inner
+
+    def __call__(self, spec, *args, **kwargs):
+        return [{
+            'spec': spec,
+            'mirror_url': self.inner.to_dict(),
+        }]
+
+
+class ReturnNumMirrors(object):
+    """Return a given integer to every call."""
+    def __init__(self, num):
+        assert isinstance(num, int), num
+        self.num = num
+
+    def __call__(self):
+        return self.num
+
+
+@pytest.fixture(scope='function')
+def test_mirror(mutable_default_config, monkeypatch, mirror_dir):
+    import spack.main
+    mirror_cmd = spack.main.SpackCommand('mirror')
+    mirror_url = 'file://%s' % mirror_dir
+    mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
+    inner = spack.mirror.Mirror(fetch_url=mirror_url, name='test-mirror-func')
+    monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__',
+                        ReturnNumMirrors(1))
+    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values',
+                        MirrorCollection(inner))
+    monkeypatch.setattr(spack.binary_distribution, 'get_mirrors_for_spec',
+                        MirrorsForSpec(inner))
+    yield mirror_dir
+    mirror_cmd('rm', '--scope=site', 'test-mirror-func')
+
+
+@pytest.fixture(scope='function')
+def cache_directory(tmpdir):
+    fetch_cache_dir = tmpdir.ensure('fetch_cache', dir=True)
+    fsc = spack.fetch_strategy.FsCache(str(fetch_cache_dir))
+    spack.config.caches, old_cache_path = fsc, spack.caches.fetch_cache
+
+    yield spack.config.caches
+
+    fetch_cache_dir.remove()
+    spack.config.caches = old_cache_path
+
+
+@pytest.fixture(scope='function')
+def install_dir_default_layout(tmpdir):
+    """Hooks a fake install directory with a default layout"""
+    scheme = os.path.join(
+        '${architecture}',
+        '${compiler.name}-${compiler.version}',
+        '${name}-${version}-${hash}'
+    )
+    real_store, real_layout = spack.store.store, spack.store.layout
+    opt_dir = tmpdir.join('opt')
+    spack.store.store = spack.store.Store(str(opt_dir))
+    spack.store.layout = YamlDirectoryLayout(str(opt_dir), path_scheme=scheme)
+    try:
+        yield spack.store
+    finally:
+        spack.store.store = real_store
+        spack.store.layout = real_layout
+
+
+@pytest.fixture(scope='module')
+def config_directory(tmpdir_factory):
+    tmpdir = tmpdir_factory.mktemp('test_configs')
+    # restore some sane defaults for packages and config
+    config_path = py.path.local(spack.paths.etc_path)
+    modules_yaml = config_path.join('spack', 'defaults', 'modules.yaml')
+    os_modules_yaml = config_path.join('spack', 'defaults', '%s' %
+                                       platform.system().lower(),
+                                       'modules.yaml')
+    packages_yaml = config_path.join('spack', 'defaults', 'packages.yaml')
+    config_yaml = config_path.join('spack', 'defaults', 'config.yaml')
+    repos_yaml = config_path.join('spack', 'defaults', 'repos.yaml')
+    tmpdir.ensure('site', dir=True)
+    tmpdir.ensure('user', dir=True)
+    tmpdir.ensure('site/%s' % platform.system().lower(), dir=True)
+    modules_yaml.copy(tmpdir.join('site', 'modules.yaml'))
+    os_modules_yaml.copy(tmpdir.join('site/%s' % platform.system().lower(),
+                                     'modules.yaml'))
+    packages_yaml.copy(tmpdir.join('site', 'packages.yaml'))
+    config_yaml.copy(tmpdir.join('site', 'config.yaml'))
+    repos_yaml.copy(tmpdir.join('site', 'repos.yaml'))
+    yield tmpdir
+    tmpdir.remove()
+
+
+@pytest.fixture(scope='function')
+def mutable_default_config(
+        tmpdir_factory, config_directory, monkeypatch,
+        install_mockery_mutable_config
+):
+    # This fixture depends on install_mockery_mutable_config to ensure
+    # there is a clear order of initialization. The substitution of the
+    # config scopes here is done on top of the substitution that comes with
+    # install_mockery_mutable_config
+    mutable_dir = tmpdir_factory.mktemp('mutable_config').join('tmp')
+    config_directory.copy(mutable_dir)
+
+    cfg = spack.config.Configuration(
+        *[spack.config.ConfigScope(name, str(mutable_dir))
+          for name in ['site/%s' % platform.system().lower(),
+                       'site', 'user']])
+
+    spack.config.config, old_config = cfg, spack.config.config
+
+    # This is essential, otherwise the cache will create weird side effects
+    # that will compromise subsequent tests if compilers.yaml is modified
+    monkeypatch.setattr(spack.compilers, '_cache_config_file', [])
+    njobs = spack.config.get('config:build_jobs')
+    if not njobs:
+        spack.config.set('config:build_jobs', 4, scope='user')
+    extensions = spack.config.get('config:template_dirs')
+    if not extensions:
+        spack.config.set('config:template_dirs',
+                         [os.path.join(spack.paths.share_path, 'templates')],
+                         scope='user')
+
+    mutable_dir.ensure('build_stage', dir=True)
+    build_stage = spack.config.get('config:build_stage')
+    if not build_stage:
+        spack.config.set('config:build_stage',
+                         [str(mutable_dir.join('build_stage'))], scope='user')
+    timeout = spack.config.get('config:connect_timeout')
+    if not timeout:
+        spack.config.set('config:connect_timeout', 10, scope='user')
+
+    yield spack.config.config
+
+    spack.config.config = old_config
+    mutable_dir.remove()
+
+
+
+class MockIndex(object):
+
+    @classmethod
+    def empty(cls):
+        return cls()
+
+    def __init__(self):
+        self.install_data = dict()
+        self.data = dict()
+        self.location = None
+
+    def lookup_ensuring_single_match(self, hash_prefix):
+        for chash in self.data.keys():
+            if chash in hash_prefix:
+                return IndexEntry(
+                    self.data[chash],
+                    self.install_data[chash],
+                )
+        raise Exception('should never get here', self)
+
+    def get_install_info(self, concretized_spec):
+        if self.location == IndexLocation.LOCAL():
+            try:
+                return self.install_data[concretized_spec.into_hash()]
+            except KeyError:
+                return None
+        return GenericHashedPackageRecord.from_mirror(None)
+
+    def query(self, query):
+        for cspec in self.data.values():
+            if query.matches(cspec, self):
+                yield cspec
+
+    def intern_concretized_spec(self, cspec, record):
+        self.install_data[cspec.into_hash()] = record
+        self.data[cspec.into_hash()] = cspec
+
+
+class MockIndexProvider(object):
+
+    def __init__(self, mock, status):
+        self.mock = mock
+        self.status = status
+
+    def _cmp_key(self):
+        return (self.status,)
+
+    # A lambda or inner method isn't pickleable for some reason, so we make
+    # ourselves callable in order to support the .spec_index_for() call.
+    def spec_index_for(self):
+        if self.mock.location is None:
+            if self.status == 'LOCAL':
+                return spack.spec_index.local_spec_index
+            if self.status == 'REMOTE':
+                return spack.spec_index.remote_spec_index
+            return spack.spec_index.merged_local_remote_spec_index
+        if self.status == self.mock.location.status:
+            return self.mock
+        if self.mock.location.status == 'LOCAL_AND_REMOTE':
+            return self.mock
+        if self.status == 'LOCAL_AND_REMOTE':
+            return self.mock
+        return MockIndex.empty()
+
+
+class MockMockProvider(object):
+
+    def __init__(self, mock):
+        self.mock = mock
+
+    def LOCAL(self):
+        return self('LOCAL')
+
+    def REMOTE(self):
+        return self('REMOTE')
+
+    def LOCAL_AND_REMOTE(self):
+        return self('LOCAL_AND_REMOTE')
+
+    def __call__(self, status):
+        return MockIndexProvider(self.mock, status)
+
+
+@pytest.fixture(scope='function')
+def patch_spec_indices(monkeypatch):
+    mock = MockIndex()
+    mock_provider = MockMockProvider(mock)
+    monkeypatch.setattr(
+        spack.spec_index, 'IndexLocation', mock_provider)
+    return mock

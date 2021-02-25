@@ -36,6 +36,8 @@ import shutil
 import six
 import sys
 import time
+from textwrap import dedent
+from typing import Optional  # novm
 
 from collections import defaultdict
 
@@ -483,7 +485,11 @@ def get_dependent_ids(spec):
     Returns:
         (list of str): list of package ids
     """
-    return [package_id(d.package) for d in spec.dependents()]
+    # NB: `package_id()` returns None if the package wasn't concrete. This can happen
+    # when a subtree of dependencies is excluded via variant, version, or
+    # hash selection.
+    # `filter(None, ...)` removes None values from the input.
+    return list(filter(None, (package_id(d.package) for d in spec.dependents())))
 
 
 def install_msg(name, pid):
@@ -573,6 +579,7 @@ def log(pkg):
 
 
 def package_id(pkg):
+    # type: (spack.package.PackageBase) -> Optional[str]
     """A "unique" package identifier for installation purposes
 
     The identifier is used to track build tasks, locks, install, and
@@ -585,8 +592,7 @@ def package_id(pkg):
         pkg (PackageBase): the package from which the identifier is derived
     """
     if not pkg.spec.concrete:
-        raise ValueError("Cannot provide a unique, readable id when "
-                         "the spec is not concretized.")
+        return None
 
     return "{0}-{1}-{2}".format(pkg.name, pkg.version, pkg.spec.dag_hash())
 
@@ -1431,7 +1437,9 @@ class PackageInstaller(object):
             # (i.e., if external or upstream) BUT flag it as installed since
             # some package likely depends on it.
             if not task.explicit:
-                if _handle_external_and_upstream(pkg, False):
+                if spec.concrete and not spec.external:
+                    pass
+                elif _handle_external_and_upstream(pkg, False):
                     self._flag_installed(pkg, task.dependents)
                     continue
 
@@ -1614,17 +1622,33 @@ class PackageInstaller(object):
                    request.install_args.get('install_package') and
                    request.pkg_id not in self.installed]
         if exists_errors or failed_explicits or missing:
+            all_error_messages = []
             for pkg_id, err in exists_errors:
-                tty.error('{0}: {1}'.format(pkg_id, err))
+                cur = '{0}: {1}'.format(pkg_id, err)
+                tty.error(cur)
+                all_error_messages.append(cur)
 
             for pkg_id, err in failed_explicits:
-                tty.error('{0}: {1}'.format(pkg_id, err))
+                cur = '{0}: {1}'.format(pkg_id, err)
+                tty.error(cur)
+                all_error_messages.append(cur)
 
             for pkg_id in missing:
-                tty.error('{0}: Package was not installed'.format(pkg_id))
+                cur = '{0}: Package was not installed'.format(pkg_id)
+                tty.error(cur)
+                all_error_messages.append(cur)
 
-            raise InstallError('Installation request failed.  Refer to '
-                               'reported errors for failing package(s).')
+            final_msg = dedent("""\
+                Installation request failed.
+                Refer to reported errors for failing package(s){0}
+                """).format(':\n' if all_error_messages else '.')
+            if all_error_messages:
+                joined_error_message = '\n+\n'.join(
+                    '({0}) {1}'.format(i + 1, err)
+                    for i, err in enumerate(all_error_messages))
+                final_msg = final_msg + joined_error_message
+
+            raise InstallError(final_msg)
 
 
 def build_process(pkg, kwargs):

@@ -21,13 +21,11 @@ filesystem.
 """
 
 import contextlib
-import datetime
 import os
 import six
 import socket
 import sys
-import time
-from typing import Dict  # novm
+from typing import Dict, Iterable, Optional  # novm
 
 try:
     import uuid
@@ -41,6 +39,7 @@ import llnl.util.tty as tty
 
 import spack.repo
 import spack.spec
+import spack.spec_index as si
 import spack.store
 import spack.util.lock as lk
 import spack.util.spack_json as sjson
@@ -56,7 +55,7 @@ def nullcontext(*args, **kwargs):
     yield
 
 
-# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: Provide an API to automatically retry a build after detecting and
 # TODO: clearing a failure.
 
 # DB goes in this directory underneath the root
@@ -95,22 +94,6 @@ _pkg_lock_timeout = None
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
 
-# Default list of fields written for each install record
-default_install_record_fields = [
-    'spec',
-    'ref_count',
-    'path',
-    'installed',
-    'explicit',
-    'installation_time',
-    'deprecated_for',
-]
-
-
-def _now():
-    """Returns the time since the epoch"""
-    return time.time()
-
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -122,116 +105,6 @@ def _autospec(function):
         return function(self, spec_like, *args, **kwargs)
 
     return converter
-
-
-class InstallStatus(str):
-    pass
-
-
-class InstallStatuses(object):
-    INSTALLED = InstallStatus('installed')
-    DEPRECATED = InstallStatus('deprecated')
-    MISSING = InstallStatus('missing')
-
-    @classmethod
-    def canonicalize(cls, query_arg):
-        if query_arg is True:
-            return [cls.INSTALLED]
-        elif query_arg is False:
-            return [cls.MISSING]
-        elif query_arg is any:
-            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
-        elif isinstance(query_arg, InstallStatus):
-            return [query_arg]
-        else:
-            try:  # Try block catches if it is not an iterable at all
-                if any(type(x) != InstallStatus for x in query_arg):
-                    raise TypeError
-            except TypeError:
-                raise TypeError(
-                    'installation query must be `any`, boolean, '
-                    'InstallStatus, or iterable of InstallStatus')
-            return query_arg
-
-
-class InstallRecord(object):
-    """A record represents one installation in the DB.
-
-    The record keeps track of the spec for the installation, its
-    install path, AND whether or not it is installed.  We need the
-    installed flag in case a user either:
-
-        a) blew away a directory, or
-        b) used spack uninstall -f to get rid of it
-
-    If, in either case, the package was removed but others still
-    depend on it, we still need to track its spec, so we don't
-    actually remove from the database until a spec has no installed
-    dependents left.
-
-    Args:
-        spec (Spec): spec tracked by the install record
-        path (str): path where the spec has been installed
-        installed (bool): whether or not the spec is currently installed
-        ref_count (int): number of specs that depend on this one
-        explicit (bool, optional): whether or not this spec was explicitly
-            installed, or pulled-in as a dependency of something else
-        installation_time (time, optional): time of the installation
-    """
-
-    def __init__(
-            self,
-            spec,
-            path,
-            installed,
-            ref_count=0,
-            explicit=False,
-            installation_time=None,
-            deprecated_for=None
-    ):
-        self.spec = spec
-        self.path = str(path) if path else None
-        self.installed = bool(installed)
-        self.ref_count = ref_count
-        self.explicit = explicit
-        self.installation_time = installation_time or _now()
-        self.deprecated_for = deprecated_for
-
-    def install_type_matches(self, installed):
-        installed = InstallStatuses.canonicalize(installed)
-        if self.installed:
-            return InstallStatuses.INSTALLED in installed
-        elif self.deprecated_for:
-            return InstallStatuses.DEPRECATED in installed
-        else:
-            return InstallStatuses.MISSING in installed
-
-    def to_dict(self, include_fields=default_install_record_fields):
-        rec_dict = {}
-
-        for field_name in include_fields:
-            if field_name == 'spec':
-                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
-            elif field_name == 'deprecated_for' and self.deprecated_for:
-                rec_dict.update({'deprecated_for': self.deprecated_for})
-            else:
-                rec_dict.update({field_name: getattr(self, field_name)})
-
-        return rec_dict
-
-    @classmethod
-    def from_dict(cls, spec, dictionary):
-        d = dict(dictionary.items())
-        d.pop('spec', None)
-
-        # Old databases may have "None" for path for externals
-        if 'path' not in d or d['path'] == 'None':
-            d['path'] = None
-
-        if 'installed' not in d:
-            d['installed'] = False
-
-        return InstallRecord(spec, **d)
 
 
 class ForbiddenLockError(SpackError):
@@ -288,7 +161,14 @@ _query_docstring = """
         """
 
 
-class Database(object):
+def _query_docvar(f):
+    if f.__doc__ is None:
+        f.__doc__ = ""
+    f.__doc__ += _query_docstring
+    return f
+
+
+class Database(si.InstallInfoProvider, si.SpecIndexable):
 
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}  # type: Dict[str, lk.Lock]
@@ -296,9 +176,15 @@ class Database(object):
     """Per-process failure (lock) objects for each install prefix."""
     _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
-    def __init__(self, root, db_dir=None, upstream_dbs=None,
-                 is_upstream=False, enable_transaction_locking=True,
-                 record_fields=default_install_record_fields):
+    def __init__(
+            self,
+            root,
+            db_dir=None,
+            upstream_dbs=None,
+            is_upstream=False,
+            enable_transaction_locking=True,
+            record_fields=si.InstallRecord.include_fields,
+    ):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -358,8 +244,7 @@ class Database(object):
         self.db_lock_timeout = (
             spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
         self.package_lock_timeout = (
-            spack.config.get('config:package_lock_timeout') or
-            _pkg_lock_timeout)
+            spack.config.get('config:package_lock_timeout') or _pkg_lock_timeout)
         tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
                   str(self.db_lock_timeout)))
         timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
@@ -657,7 +542,11 @@ class Database(object):
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(self, hash_key, data=None):
+    def query_by_spec_hash(
+            self,
+            hash_key,
+            data=None,
+    ):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
@@ -776,7 +665,7 @@ class Database(object):
                 # spec has its own copies of its dependency specs.
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
-                data[hash_key] = InstallRecord.from_dict(spec, rec)
+                data[hash_key] = si.InstallRecord.from_dict(spec, rec)
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -1064,7 +953,7 @@ class Database(object):
             return
 
         # Retrieve optional arguments
-        installation_time = installation_time or _now()
+        installation_time = installation_time or si.now()
 
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
@@ -1096,7 +985,7 @@ class Database(object):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
-            self._data[key] = InstallRecord(
+            self._data[key] = si.InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )
 
@@ -1120,7 +1009,7 @@ class Database(object):
             # If it is already there, mark it as installed and update
             # installation time
             self._data[key].installed = True
-            self._data[key].installation_time = _now()
+            self._data[key].installation_time = si.now()
 
         self._data[key].explicit = explicit
 
@@ -1324,7 +1213,13 @@ class Database(object):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
+    def _get_by_hash_local(
+            self,
+            dag_hash,
+            default=None,
+            installed=any,
+    ):
+
         # hash is a full hash and is in the data somewhere
         if dag_hash in self._data:
             rec = self._data[dag_hash]
@@ -1407,6 +1302,7 @@ class Database(object):
 
         return default
 
+    @_query_docvar
     def _query(
             self,
             query_spec=any,
@@ -1415,7 +1311,8 @@ class Database(object):
             explicit=any,
             start_date=None,
             end_date=None,
-            hashes=None
+            hashes=None,
+            for_all_architectures=False,
     ):
         """Run a query on the database."""
 
@@ -1436,50 +1333,29 @@ class Database(object):
 
         # Abstract specs require more work -- currently we test
         # against everything.
-        results = []
-        start_date = start_date or datetime.datetime.min
-        end_date = end_date or datetime.datetime.max
+        query = si.IndexQuery.from_query_args(
+            query_specs=query_spec,
+            known=known,
+            installed=installed,
+            explicit=explicit,
+            start_date=start_date,
+            end_date=end_date,
+            hashes=hashes,
+            for_all_architectures=for_all_architectures,
+        )
+        return [
+            rec.spec
+            for rec in self._data.values()
+            if query.matches(si.ConcretizedSpec(rec.spec), self)
+        ]
 
-        for key, rec in self._data.items():
-            if hashes is not None and rec.spec.dag_hash() not in hashes:
-                continue
-
-            if not rec.install_type_matches(installed):
-                continue
-
-            if explicit is not any and rec.explicit != explicit:
-                continue
-
-            if known is not any and spack.repo.path.exists(
-                    rec.spec.name) != known:
-                continue
-
-            if start_date or end_date:
-                inst_date = datetime.datetime.fromtimestamp(
-                    rec.installation_time
-                )
-                if not (start_date < inst_date < end_date):
-                    continue
-
-            if (query_spec is any or
-                rec.spec.satisfies(query_spec, strict=True)):
-                results.append(rec.spec)
-
-        return results
-
-    if _query.__doc__ is None:
-        _query.__doc__ = ""
-    _query.__doc__ += _query_docstring
-
+    @_query_docvar
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database."""
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
-    if query_local.__doc__ is None:
-        query_local.__doc__ = ""
-    query_local.__doc__ += _query_docstring
-
+    @_query_docvar
     def query(self, *args, **kwargs):
         """Query the Spack database including all upstream databases."""
         upstream_results = []
@@ -1496,9 +1372,33 @@ class Database(object):
 
         return sorted(results)
 
-    if query.__doc__ is None:
-        query.__doc__ = ""
-    query.__doc__ += _query_docstring
+    def get_install_info(self, concretized_spec):
+        # type: (si.ConcretizedSpec) -> Optional[si.GenericHashedPackageRecord]
+        chash = concretized_spec.spec.dag_hash()
+        try:
+            record = self._data[chash]
+        except KeyError:
+            return None
+        return si.GenericHashedPackageRecord.from_install_record(record)
+
+    def spec_index_query(self, query):
+        # type: (si.IndexQuery) -> Iterable[si.ConcretizedSpec]
+        return [
+            si.ConcretizedSpec(result)
+            for result in self.query(**query.to_query_args())
+        ]
+
+    def spec_index_lookup(self, hash_prefix):
+        # type: (si.PartialHash) -> Iterable[si.IndexEntry]
+        matching_specs = self.get_by_hash(hash_prefix.hash_prefix) or []
+        results = []
+        for spec in matching_specs:
+            _, record = self.query_by_spec_hash(spec.dag_hash())
+            if record:
+                results.append(si.IndexEntry(
+                    si.ConcretizedSpec(spec),
+                    si.GenericHashedPackageRecord.from_install_record(record)))
+        return results
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.

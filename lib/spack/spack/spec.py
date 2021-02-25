@@ -104,6 +104,7 @@ import spack.hash_types as ht
 import spack.parse
 import spack.provider_index
 import spack.repo
+import spack.spec_index
 import spack.solver
 import spack.store
 import spack.util.crypto
@@ -547,7 +548,8 @@ class CompilerSpec(object):
             # If there is one argument, it's either another CompilerSpec
             # to copy or a string to parse
             if isinstance(arg, six.string_types):
-                c = SpecParser().parse_compiler(arg)
+                local_index = spack.spec_index.IndexLocation.LOCAL()
+                c = SpecParser(index_location=local_index).parse_compiler(arg)
                 self.name = c.name
                 self.versions = c.versions
 
@@ -1022,9 +1024,16 @@ class Spec(object):
     #: Cache for spec's prefix, computed lazily in the corresponding property
     _prefix = None
 
-    def __init__(self, spec_like=None,
-                 normal=False, concrete=False, external_path=None,
-                 external_modules=None, full_hash=None):
+    def __init__(
+            self,
+            spec_like=None,
+            normal=False,
+            concrete=False,
+            external_path=None,
+            external_modules=None,
+            full_hash=None,
+            index_location=None,
+    ):
         """Create a new Spec.
 
         Arguments:
@@ -1094,8 +1103,10 @@ class Spec(object):
         # Build spec should be the actual build spec unless marked dirty.
         self._build_spec = None
 
+        if index_location is None:
+            index_location = spack.spec_index.IndexLocation.LOCAL()
         if isinstance(spec_like, six.string_types):
-            spec_list = SpecParser(self).parse(spec_like)
+            spec_list = SpecParser(self, index_location=index_location).parse(spec_like)
             if len(spec_list) > 1:
                 raise ValueError("More than one spec in string: " + spec_like)
             if len(spec_list) < 1:
@@ -1235,6 +1246,31 @@ class Spec(object):
         dspec = DependencySpec(self, spec, deptypes)
         self._dependencies[spec.name] = dspec
         spec._dependents[self.name] = dspec
+
+    def _reset_architecture(self):
+        self.architecture = None
+
+    def _reset_compiler(self):
+        self.compiler = None
+
+    def _reset_all_hashes(self):
+        self._hash = None
+        self._build_hash = None
+        self._full_hash = None
+        self._cmp_key_cache = None
+        self._normal = False
+        self._concrete = False
+
+    def without_hashes(self):
+        ret = self.copy()
+        ret._reset_all_hashes()
+        return ret
+
+    def without_architecture_or_compiler(self):
+        ret = self.copy()
+        ret._reset_architecture()
+        ret._reset_compiler()
+        return ret
 
     def _add_default_platform(self):
         """If a spec has an os or a target and no platform, give it
@@ -1470,6 +1506,7 @@ class Spec(object):
                 self.prefix = record.path
             else:
                 self.prefix = spack.store.layout.path_for_spec(self)
+        assert self._prefix is not None
         return self._prefix
 
     @prefix.setter
@@ -4392,7 +4429,7 @@ _lexer = SpecLexer()
 
 class SpecParser(spack.parse.Parser):
 
-    def __init__(self, initial_spec=None):
+    def __init__(self, initial_spec=None, index_location=None):
         """Construct a new SpecParser.
 
         Args:
@@ -4403,6 +4440,13 @@ class SpecParser(spack.parse.Parser):
         super(SpecParser, self).__init__(_lexer)
         self.previous = None
         self._initial = initial_spec
+        if not index_location:
+            index_location = spack.spec_index.IndexLocation.LOCAL()
+        self._index_location = index_location
+
+    @property
+    def _spec_index(self):
+        return self._index_location.spec_index_for()
 
     def do_parse(self):
         specs = []
@@ -4561,16 +4605,9 @@ class SpecParser(spack.parse.Parser):
         self.expect(ID)
 
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
-        if not matches:
-            raise NoSuchHashError(dag_hash)
 
-        if len(matches) != 1:
-            raise AmbiguousHashError(
-                "Multiple packages specify hash beginning '%s'."
-                % dag_hash, *matches)
-
-        return matches[0]
+        key = spack.spec_index.HashPrefix(dag_hash)
+        return self._spec_index.lookup_ensuring_single_match(key).concretized_spec.spec
 
     def spec(self, name):
         """Parse a spec out of the input. If a spec is supplied, initialize
@@ -4630,7 +4667,7 @@ class SpecParser(spack.parse.Parser):
                     spec._dup(hash_spec)
                     break
                 else:
-                    raise InvalidHashError(spec, hash_spec.dag_hash())
+                    raise InvalidHashError(spec, hash_spec, self.token.value)
 
             else:
                 break
@@ -4705,11 +4742,11 @@ class SpecParser(spack.parse.Parser):
                 "{0}: Identifier cannot contain '.'".format(id))
 
 
-def parse(string):
+def parse(string, index_location=None):
     """Returns a list of specs from an input string.
        For creating one spec, see Spec() constructor.
     """
-    return SpecParser().parse(string)
+    return SpecParser(index_location=index_location).parse(string)
 
 
 def save_dependency_spec_yamls(
@@ -4888,10 +4925,10 @@ class AmbiguousHashError(spack.error.SpecError):
 
 
 class InvalidHashError(spack.error.SpecError):
-    def __init__(self, spec, hash):
+    def __init__(self, spec, hash_spec, hash_token):
         super(InvalidHashError, self).__init__(
-            "The spec specified by %s does not match provided spec %s"
-            % (hash, spec))
+            "The spec %s specified by %s does not match provided spec %s"
+            % (hash_spec, hash_token, spec))
 
 
 class NoSuchHashError(spack.error.SpecError):

@@ -13,6 +13,7 @@ import tempfile
 import hashlib
 import glob
 from ordereddict_backport import OrderedDict
+from typing import Iterable, Optional  # novm
 
 from contextlib import closing
 import ruamel.yaml as yaml
@@ -35,8 +36,11 @@ import spack.util.gpg
 import spack.util.spack_json as sjson
 import spack.util.spack_yaml as syaml
 import spack.mirror
+import spack.spec_index as si
+import spack.store
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
 
@@ -48,7 +52,19 @@ _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
 
 
-class BinaryCacheIndex(object):
+def _rm_if_exists(path):
+    if os.path.isdir(path):
+        shutil.rmtree(path)
+
+
+def _binary_index_location():
+    """Share a merged BinaryCacheIndex for remote buildcaches, in the user's homedir."""
+    cache_root = os.path.join(misc_cache_location(), 'indices')
+    cache_root = spack.util.path.canonicalize_path(cache_root)
+    return cache_root
+
+
+class BinaryCacheIndex(si.InstallInfoProvider, si.SpecIndexable):
     """
     The BinaryCacheIndex tracks what specs are available on (usually remote)
     binary caches.
@@ -66,10 +82,8 @@ class BinaryCacheIndex(object):
     install that the cache is out of date, and we fetch directly?  Does it
     mean we should have paid the price to update the cache earlier?
     """
-
-    def __init__(self, cache_root=None):
-        self._cache_root = cache_root or default_binary_index_root
-        self._index_cache_root = os.path.join(self._cache_root, 'indices')
+    def __init__(self):
+        self._index_cache_root = _binary_index_location()
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = 'contents.json'
@@ -93,6 +107,30 @@ class BinaryCacheIndex(object):
         #           full hash, since the dag hash may match but we want to
         #           use the updated source if available)
         self._mirrors_for_spec = {}
+
+    def _all_mirror_infos(self):
+        self.update()
+        for mirror_infos in self._mirrors_for_spec.values():
+            for info in mirror_infos:
+                yield info
+
+    @llnl.util.lang.memoized
+    def _index_entries(self):
+        result = {}
+        for info in self._all_mirror_infos():
+            cspec = si.ConcretizedSpec(info['spec'])
+            mirror = spack.mirror.Mirror(info['mirror_url'])
+            record = si.GenericHashedPackageRecord.from_mirror(mirror)
+            entry = si.IndexEntry(cspec, record)
+            result[cspec.into_hash()] = entry
+        return result
+
+    @llnl.util.lang.memoized
+    def _all_concrete_specs(self):
+        return [
+            entry.concretized_spec
+            for entry in self._index_entries().values()
+        ]
 
     def _init_local_index_cache(self):
         if not self._index_file_cache:
@@ -183,18 +221,10 @@ class BinaryCacheIndex(object):
                         "spec": indexed_spec,
                     })
         finally:
-            shutil.rmtree(tmpdir)
+            _rm_if_exists(tmpdir)
 
     def get_all_built_specs(self):
-        spec_list = []
-        for dag_hash in self._mirrors_for_spec:
-            # in the absence of further information, all concrete specs
-            # with the same DAG hash are equivalent, so we can just
-            # return the first one in the list.
-            if len(self._mirrors_for_spec[dag_hash]) > 0:
-                spec_list.append(self._mirrors_for_spec[dag_hash][0]['spec'])
-
-        return spec_list
+        return [cspec.spec for cspec in self._all_concrete_specs()]
 
     def find_built_spec(self, spec):
         """Look in our cache for the built spec corresponding to ``spec``.
@@ -232,6 +262,35 @@ class BinaryCacheIndex(object):
             return None
 
         return self._mirrors_for_spec[find_hash]
+
+    @llnl.util.lang.memoized
+    def spec_index_lookup(self, hash_prefix):
+        # type: (si.PartialHash) -> Iterable[si.IndexEntry]
+        # TODO: generate some sort of trie mapping when `self.update()` is called, to
+        # avoid iterating over every entry here.
+        return [
+            entry
+            for chash, entry in self._index_entries().items()
+            if chash in hash_prefix
+        ]
+
+    def get_install_info(self, concretized_spec):
+        # type: (si.ConcretizedSpec) -> Optional[si.GenericHashedPackageRecord]
+        chash = concretized_spec.into_hash()
+        try:
+            entry = self._index_entries()[chash]
+        except KeyError:
+            return None
+        return entry.record
+
+    @llnl.util.lang.memoized
+    def spec_index_query(self, query):
+        # type: (si.IndexQuery) -> Iterable[si.ConcretizedSpec]
+        return [
+            concretized_spec
+            for concretized_spec in self._all_concrete_specs()
+            if query.matches(concretized_spec, self)
+        ]
 
     def update_spec(self, spec, found_list):
         """
@@ -442,11 +501,7 @@ class BinaryCacheIndex(object):
 
 def _binary_index():
     """Get the singleton store instance."""
-    cache_root = spack.config.get(
-        'config:binary_index_root', default_binary_index_root)
-    cache_root = spack.util.path.canonicalize_path(cache_root)
-
-    return BinaryCacheIndex(cache_root)
+    return BinaryCacheIndex()
 
 
 #: Singleton binary_index instance
@@ -612,6 +667,11 @@ def write_buildinfo_file(spec, workdir, rel=False):
     buildinfo['relocate_links'] = link_to_relocate
     buildinfo['prefix_to_hash'] = prefix_to_hash
     filename = buildinfo_file_name(workdir)
+
+    containing_dir = os.path.dirname(filename)
+    if not os.path.isdir(containing_dir):
+        return
+
     with open(filename, 'w') as outfile:
         outfile.write(syaml.dump(buildinfo, default_flow_style=True))
 
@@ -768,7 +828,7 @@ def generate_package_index(cache_prefix):
             cache_prefix, err)
         tty.warn(msg)
     finally:
-        shutil.rmtree(tmpdir)
+        _rm_if_exists(tmpdir)
 
 
 def generate_key_index(key_prefix, tmpdir=None):
@@ -833,7 +893,7 @@ def generate_key_index(key_prefix, tmpdir=None):
             tty.warn(msg)
         finally:
             if remove_tmpdir:
-                shutil.rmtree(tmpdir)
+                _rm_if_exists(tmpdir)
 
 
 def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
@@ -890,8 +950,11 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     temp_tarfile_name = tarball_name(spec, '.tar')
     temp_tarfile_path = os.path.join(tarfile_dir, temp_tarfile_name)
     with closing(tarfile.open(temp_tarfile_path, 'w')) as tar:
-        tar.add(name='%s' % spec.prefix,
-                arcname='.')
+        try:
+            tar.add(name='%s' % spec.prefix,
+                    arcname='.')
+        except OSError:
+            pass
     with closing(tarfile.open(temp_tarfile_path, 'r')) as tar:
         tar.extractall(workdir)
     os.remove(temp_tarfile_path)
@@ -905,17 +968,17 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         try:
             make_package_relative(workdir, spec, allow_root)
         except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
+            _rm_if_exists(workdir)
+            _rm_if_exists(tarfile_dir)
+            _rm_if_exists(tmpdir)
             tty.die(e)
     else:
         try:
             check_package_relocatable(workdir, spec, allow_root)
         except Exception as e:
-            shutil.rmtree(workdir)
-            shutil.rmtree(tarfile_dir)
-            shutil.rmtree(tmpdir)
+            _rm_if_exists(workdir)
+            _rm_if_exists(tarfile_dir)
+            _rm_if_exists(tmpdir)
             tty.die(e)
 
     # create gzip compressed tarball of the install prefix
@@ -923,7 +986,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
         tar.add(name='%s' % workdir,
                 arcname='%s' % os.path.basename(spec.prefix))
     # remove copy of install directory
-    shutil.rmtree(workdir)
+    _rm_if_exists(workdir)
 
     # get the sha256 checksum of the tarball
     checksum = checksum_tarball(tarfile_path)
@@ -988,7 +1051,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
             generate_package_index(url_util.join(
                 outdir, os.path.relpath(cache_prefix, tmpdir)))
     finally:
-        shutil.rmtree(tmpdir)
+        _rm_if_exists(tmpdir)
 
     return None
 
@@ -1216,7 +1279,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     """
     if os.path.exists(spec.prefix):
         if force:
-            shutil.rmtree(spec.prefix)
+            _rm_if_exists(spec.prefix)
         else:
             raise NoOverwriteException(str(spec.prefix))
 
@@ -1242,10 +1305,10 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
                 spack.util.gpg.verify(
                     '%s.asc' % specfile_path, specfile_path, suppress)
             except Exception as e:
-                shutil.rmtree(tmpdir)
+                _rm_if_exists(tmpdir)
                 raise e
         else:
-            shutil.rmtree(tmpdir)
+            _rm_if_exists(tmpdir)
             raise NoVerifyException(
                 "Package spec file failed signature verification.\n"
                 "Use spack buildcache keys to download "
@@ -1262,7 +1325,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
 
     # if the checksums don't match don't install
     if bchecksum['hash'] != checksum:
-        shutil.rmtree(tmpdir)
+        _rm_if_exists(tmpdir)
         raise NoChecksumException(
             "Package tarball failed checksum verification.\n"
             "It cannot be installed.")
@@ -1280,7 +1343,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     tty.debug(info %
               (old_relative_prefix, new_relative_prefix, rel))
 #    if (old_relative_prefix != new_relative_prefix and (rel)):
-#        shutil.rmtree(tmpdir)
+#        _rm_if_exists(tmpdir)
 #        msg = "Package tarball was created from an install "
 #        msg += "prefix with a different directory layout. "
 #        msg += "It cannot be relocated because it "
@@ -1315,7 +1378,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
     try:
         relocate_package(spec, allow_root)
     except Exception as e:
-        shutil.rmtree(spec.prefix)
+        _rm_if_exists(spec.prefix)
         raise e
     else:
         manifest_file = os.path.join(spec.prefix,
@@ -1325,7 +1388,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             spec_id = spec.format('{name}/{hash:7}')
             tty.warn('No manifest file in tarball for spec %s' % spec_id)
     finally:
-        shutil.rmtree(tmpdir)
+        _rm_if_exists(tmpdir)
         if os.path.exists(filename):
             os.remove(filename)
 
@@ -1560,7 +1623,7 @@ def push_keys(*mirrors, **kwargs):
                     generate_key_index(keys_url, tmpdir)
     finally:
         if remove_tmpdir:
-            shutil.rmtree(tmpdir)
+            _rm_if_exists(tmpdir)
 
 
 def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):

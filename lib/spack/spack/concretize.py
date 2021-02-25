@@ -417,6 +417,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
+        assert spec.architecture is not None, spec
         if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
@@ -501,9 +502,11 @@ class Concretizer(object):
                 if _proper_compiler_style(c, spec.architecture)).copy()
         except StopIteration:
             # No compiler with a satisfactory spec has a suitable arch
+            assert spec.architecture is not None, spec
             _compiler_concretization_failure(
                 other_compiler, spec.architecture)
 
+        assert spec.compiler is not None, spec
         assert spec.compiler.concrete
         return True  # things changed.
 
