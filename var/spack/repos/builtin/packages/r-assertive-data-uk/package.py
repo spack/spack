@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAssertiveDataUk(RPackage):
-    """FIXME: Put a proper description of your package here."""
+    """assertive.data.uk: Assertions to Check Properties of Strings"""
 
     homepage = "https://cloud.r-project.org/package=assertive.data.uk"
     url      = "https://cloud.r-project.org/src/contrib/assertive.data.uk_0.0-2.tar.gz"
