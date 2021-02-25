@@ -239,7 +239,7 @@ class Lock(object):
             self.LOCK_EX = win32con.LOCKFILE_EXCLUSIVE_LOCK  # exclusive lock
             self.LOCK_SH = 0  # shared lock, default
             self.LOCK_NB = win32con.LOCKFILE_FAIL_IMMEDIATELY  # non-blocking
-            self.win_overlapped = pywintypes.OVERLAPPED()
+            self.win_overlapped = None #pywintypes.OVERLAPPED()
         else:
             self.LOCK_EX = fcntl.LOCK_EX
             self.LOCK_SH = fcntl.LOCK_SH
