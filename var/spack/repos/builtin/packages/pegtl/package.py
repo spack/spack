@@ -27,19 +27,18 @@ class Pegtl(CMakePackage):
     patch('change_to_virtual_destructor.patch', when='@:2.4')
 
     def cmake_args(self):
-        spec = self.spec
 
         args = []
         if self.run_tests:
             args.extend([
                 '-DPEGTL_BUILD_EXAMPLES=ON',
                 '-DPEGTL_BUILD_TESTS=ON'
-          ])
+            ])
         else:
             args.extend([
                 '-DPEGTL_BUILD_EXAMPLES=OFF',
                 '-DPEGTL_BUILD_TESTS=OFF'
-          ])
+            ])
 
         return args
 
