@@ -36,8 +36,6 @@ class Mdsplus(AutotoolsPackage):
 
     # Language bindings
     depends_on('java', type=('build', 'run'), when='+java')
-    depends_on('python', type='run', when='+python')
-    depends_on('py-numpy', type='run', when='+python')
 
     def configure_args(self):
         return self.enable_or_disable('java')
