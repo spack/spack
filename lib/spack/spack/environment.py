@@ -159,7 +159,7 @@ def activate(
         #
     elif shell == 'bat':
         # TODO: Color
-        cmds += 'set SPACK_ENV=%s;\n' % env.path
+        cmds += 'set "SPACK_ENV=%s"\n' % env.path
         # TODO: despacktivate
         # TODO: prompt
     else:
@@ -235,6 +235,10 @@ def deactivate(shell='sh'):
         #
         # NOTE: Not changing fish_prompt (above) => no need to restore it here.
         #
+    elif shell == 'bat':
+        cmds += 'set "SPACK_ENV="\n'
+        # TODO: despacktivate
+        # TODO: Prompt
     else:
         cmds += 'if [ ! -z ${SPACK_ENV+x} ]; then\n'
         cmds += 'unset SPACK_ENV; export SPACK_ENV;\n'
@@ -259,7 +263,7 @@ def deactivate(shell='sh'):
         tty.warn('Could not fully deactivate view due to missing package '
                  'or repo, shell environment may be corrupt.')
 
-    tty.debug("Deactivated environmennt '%s'" % _active_environment.name)
+    tty.debug("Deactivated environment '%s'" % _active_environment.name)
     _active_environment = None
 
     return cmds
