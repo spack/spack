@@ -79,7 +79,8 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     # Enable builds with the NVIDIA compiler
     patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
-    conflicts('@5.32.0:', when='%nvhpc',
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    conflicts('@5.32.0:', when='%nvhpc@:20.11',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
     # Installing cpanm alongside the core makes it safe and simple for

@@ -39,7 +39,7 @@ class Zstd(MakefilePackage):
 
     def patch(self):
         # Remove flags not understood by the NVIDIA compilers
-        if self.spec.satisfies('%nvhpc'):
+        if self.spec.satisfies('%nvhpc@:20.11'):
             filter_file('-fvisibility=hidden', '', 'lib/Makefile')
             filter_file('-Wc++-compat', '', 'lib/Makefile', string=True)
             filter_file('-Wcast-align', '', 'lib/Makefile')
