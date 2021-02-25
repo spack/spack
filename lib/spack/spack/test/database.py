@@ -38,16 +38,6 @@ pytestmark = pytest.mark.db
 
 
 @pytest.fixture()
-def test_store(tmpdir):
-    real_store = spack.store.store
-    spack.store.store = spack.store.Store(str(tmpdir.join('test_store')))
-
-    yield
-
-    spack.store.store = real_store
-
-
-@pytest.fixture()
 def upstream_and_downstream_db(tmpdir_factory, gen_mock_layout):
     mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
     upstream_write_db = spack.database.Database(mock_db_root)
@@ -180,8 +170,8 @@ def test_add_to_upstream_after_downstream(upstream_and_downstream_db):
             spack.store.db = orig_db
 
 
-@pytest.mark.usefixtures('config')
-def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
+@pytest.mark.usefixtures('config', 'temporary_store')
+def test_cannot_write_upstream(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/']]
 
@@ -205,8 +195,8 @@ def test_cannot_write_upstream(tmpdir_factory, test_store, gen_mock_layout):
             upstream_dbs[0].add(spec, layouts[1])
 
 
-@pytest.mark.usefixtures('config')
-def test_recursive_upstream_dbs(tmpdir_factory, test_store, gen_mock_layout):
+@pytest.mark.usefixtures('config', 'temporary_store')
+def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
     roots = [str(tmpdir_factory.mktemp(x)) for x in ['a', 'b', 'c']]
     layouts = [gen_mock_layout(x) for x in ['/ra/', '/rb/', '/rc/']]
 

@@ -18,6 +18,8 @@ import archspec.cpu
 
 try:
     import clingo
+    # There may be a better way to detect this
+    clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
 
@@ -119,11 +121,11 @@ class AspFunction(AspObject):
     def symbol(self, positive=True):
         def argify(arg):
             if isinstance(arg, bool):
-                return str(arg)
+                return clingo.String(str(arg))
             elif isinstance(arg, int):
-                return arg
+                return clingo.Number(arg)
             else:
-                return str(arg)
+                return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
 
@@ -318,18 +320,26 @@ class PyclingoDriver(object):
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
-        solve_result = self.control.solve(
-            assumptions=self.assumptions,
-            on_model=on_model,
-            on_core=cores.append
-        )
+        solve_kwargs = {"assumptions": self.assumptions,
+                        "on_model": on_model,
+                        "on_core": cores.append}
+        if clingo_cffi:
+            solve_kwargs["on_unsat"] = cores.append
+        solve_result = self.control.solve(**solve_kwargs)
         timer.phase("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
 
         def stringify(x):
-            return x.string or str(x)
+            if clingo_cffi:
+                # Clingo w/ CFFI will throw an exception on failure
+                try:
+                    return x.string
+                except RuntimeError:
+                    return str(x)
+            else:
+                return x.string or str(x)
 
         if result.satisfiable:
             builder = SpecBuilder(specs)
@@ -647,11 +657,15 @@ class SpackSolverSetup(object):
         self.gen.fact(cond_fn(condition_id, pkg_name, dep_spec.name))
 
         # conditions that trigger the condition
-        conditions = self.spec_clauses(named_cond, body=True)
+        conditions = self.checked_spec_clauses(
+            named_cond, body=True, required_from=pkg_name
+        )
         for pred in conditions:
             self.gen.fact(require_fn(condition_id, pred.name, *pred.args))
 
-        imposed_constraints = self.spec_clauses(dep_spec)
+        imposed_constraints = self.checked_spec_clauses(
+            dep_spec, required_from=pkg_name
+        )
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if pred.name in ("node", "virtual_node"):
@@ -857,6 +871,20 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
+    def checked_spec_clauses(self, *args, **kwargs):
+        """Wrap a call to spec clauses into a try/except block that raise
+        a comprehensible error message in case of failure.
+        """
+        requestor = kwargs.pop('required_from', None)
+        try:
+            clauses = self.spec_clauses(*args, **kwargs)
+        except RuntimeError as exc:
+            msg = str(exc)
+            if requestor:
+                msg += ' [required from package "{0}"]'.format(requestor)
+            raise RuntimeError(msg)
+        return clauses
+
     def spec_clauses(self, spec, body=False, transitive=True):
         """Return a list of clauses for a spec mandates are true.
 
@@ -925,9 +953,14 @@ class SpackSolverSetup(object):
 
                 # validate variant value
                 reserved_names = spack.directives.reserved_names
-                if (not spec.virtual and vname not in reserved_names):
-                    variant_def = spec.package.variants[vname]
-                    variant_def.validate_or_raise(variant, spec.package)
+                if not spec.virtual and vname not in reserved_names:
+                    try:
+                        variant_def = spec.package.variants[vname]
+                    except KeyError:
+                        msg = 'variant "{0}" not found in package "{1}"'
+                        raise RuntimeError(msg.format(vname, spec.name))
+                    else:
+                        variant_def.validate_or_raise(variant, spec.package)
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 

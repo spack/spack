@@ -473,15 +473,19 @@ _spack_ci() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="generate rebuild"
+        SPACK_COMPREPLY="generate rebuild rebuild-index"
     fi
 }
 
 _spack_ci_generate() {
-    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies"
+    SPACK_COMPREPLY="-h --help --output-file --copy-to --optimize --dependencies --prune-dag --no-prune-dag --check-index-only"
 }
 
 _spack_ci_rebuild() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_ci_rebuild_index() {
     SPACK_COMPREPLY="-h --help"
 }
 
@@ -583,7 +587,7 @@ _spack_config() {
     then
         SPACK_COMPREPLY="-h --help --scope"
     else
-        SPACK_COMPREPLY="get blame edit list add remove rm update revert"
+        SPACK_COMPREPLY="get blame edit list add prefer-upstream remove rm update revert"
     fi
 }
 
@@ -625,6 +629,10 @@ _spack_config_add() {
     else
         SPACK_COMPREPLY=""
     fi
+}
+
+_spack_config_prefer_upstream() {
+    SPACK_COMPREPLY="-h --help --local"
 }
 
 _spack_config_remove() {
@@ -1128,7 +1136,7 @@ _spack_mirror() {
     then
         SPACK_COMPREPLY="-h --help -n --no-checksum --deprecated"
     else
-        SPACK_COMPREPLY="create add remove rm set-url list"
+        SPACK_COMPREPLY="create destroy add remove rm set-url list"
     fi
 }
 
@@ -1139,6 +1147,10 @@ _spack_mirror_create() {
     else
         _all_packages
     fi
+}
+
+_spack_mirror_destroy() {
+    SPACK_COMPREPLY="-h --help -m --mirror-name --mirror-url"
 }
 
 _spack_mirror_add() {

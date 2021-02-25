@@ -493,40 +493,39 @@ def test_update_sbang(tmpdir, test_mirror):
         '${name}', '${version}',
         '${architecture}-${compiler.name}-${compiler.version}-${hash}'
     )
-    # Save the original store and layout before we touch ANYTHING.
-    real_store, real_layout = spack.store.store, spack.store.layout
-
+    spec_str = 'old-sbang'
     # Concretize a package with some old-fashioned sbang lines.
-    sspec = Spec('old-sbang')
-    sspec.concretize()
+    old_spec = Spec(spec_str).concretized()
+    old_spec_hash_str = '/{0}'.format(old_spec.dag_hash())
 
     # Need a fake mirror with *function* scope.
     mirror_dir = test_mirror
+    mirror_url = 'file://{0}'.format(mirror_dir)
 
-    # Assumes all commands will concretize sspec the same way.
-    install_cmd('--no-cache', sspec.name)
+    # Assume all commands will concretize old_spec the same way.
+    install_cmd('--no-cache', old_spec.name)
 
     # Create a buildcache with the installed spec.
-    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir,
-                   '/%s' % sspec.dag_hash())
+    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir, old_spec_hash_str)
 
     # Need to force an update of the buildcache index
-    buildcache_cmd('update-index', '-d', 'file://%s' % mirror_dir)
+    buildcache_cmd('update-index', '-d', mirror_url)
 
     # Uninstall the original package.
-    uninstall_cmd('-y', '/%s' % sspec.dag_hash())
+    uninstall_cmd('-y', old_spec_hash_str)
 
-    try:
-        # New install tree locations...
-        # Too fine-grained to do be done in a fixture
-        newtree_dir = tmpdir.join('newtree')
-        spack.store.store = spack.store.Store(str(newtree_dir))
-        spack.store.layout = YamlDirectoryLayout(
-            str(newtree_dir), path_scheme=scheme
-        )
+    # Switch the store to the new install tree locations
+    newtree_dir = tmpdir.join('newtree')
+    s = spack.store.Store(str(newtree_dir))
+    s.layout = YamlDirectoryLayout(str(newtree_dir), path_scheme=scheme)
+
+    with spack.store.use_store(s):
+        new_spec = Spec('old-sbang')
+        new_spec.concretize()
+        assert new_spec.dag_hash() == old_spec.dag_hash()
 
         # Install package from buildcache
-        buildcache_cmd('install', '-a', '-u', '-f', sspec.name)
+        buildcache_cmd('install', '-a', '-u', '-f', new_spec.name)
 
         # Continue blowing away caches
         bindist.clear_spec_cache()
@@ -537,23 +536,19 @@ def test_update_sbang(tmpdir, test_mirror):
 #!/usr/bin/env python
 
 {1}
-        '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
+'''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
         sbang_style_2_expected = '''{0}
 #!/usr/bin/env python
 
 {1}
-        '''.format(sbang.sbang_shebang_line(), sspec.prefix.bin)
+'''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
 
-        installed_script_style_1_path = sspec.prefix.bin.join('sbang-style-1.sh')
+        installed_script_style_1_path = new_spec.prefix.bin.join('sbang-style-1.sh')
         assert sbang_style_1_expected == \
             open(str(installed_script_style_1_path)).read()
 
-        installed_script_style_2_path = sspec.prefix.bin.join('sbang-style-2.sh')
+        installed_script_style_2_path = new_spec.prefix.bin.join('sbang-style-2.sh')
         assert sbang_style_2_expected == \
             open(str(installed_script_style_2_path)).read()
 
-        uninstall_cmd('-y', '/%s' % sspec.dag_hash())
-
-    finally:
-        spack.store.store = real_store
-        spack.store.layout = real_layout
+        uninstall_cmd('-y', '/%s' % new_spec.dag_hash())
