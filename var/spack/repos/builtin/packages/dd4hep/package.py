@@ -49,7 +49,9 @@ class Dd4hep(CMakePackage):
     variant('hepmc3', default=False, description="Enable build with hepmc3")
     variant('lcio', default=False, description="Enable build with lcio")
     variant('edm4hep', default=True, description="Enable build with edm4hep")
-    variant('debug', default=False, description="Enable debug build")
+    variant('debug', default=False,
+            description="Enable debug build flag - adds extra info in"
+            " some places in addtion to the debug build type")
 
     depends_on('cmake @3.12:', type='build')
     depends_on('ninja', type='build')
@@ -58,7 +60,7 @@ class Dd4hep(CMakePackage):
     extends('python')
     depends_on('xerces-c', when='+xercesc')
     depends_on('geant4@10.2.2:', when='+geant4')
-    depends_on('assimp', when='+assimp')
+    depends_on('assimp@5.0.2:', when='+assimp')
     depends_on('hepmc3', when="+hepmc3")
     depends_on('lcio', when="+lcio")
     depends_on('edm4hep', when="+edm4hep")
@@ -75,8 +77,11 @@ class Dd4hep(CMakePackage):
             self.define_from_variant('DD4HEP_USE_GEANT4', 'geant4'),
             self.define_from_variant('DD4HEP_USE_LCIO', 'lcio'),
             self.define_from_variant('DD4HEP_USE_HEPMC3', 'hepmc3'),
-            self.define_from_variant('DD4HEP_LOAD_ASSIMP', 'assimp'),
             self.define_from_variant('DD4HEP_BUILD_DEBUG', 'debug'),
+            # Downloads assimp from github and builds it on the fly.
+            # However, with spack it is preferrable to have a proper external
+            # dependency, so we disable it.
+            self.define('DD4HEP_LOAD_ASSIMP', False),
             "-DCMAKE_CXX_STANDARD={0}".format(cxxstd),
             "-DBUILD_TESTING={0}".format(self.run_tests),
             "-DBOOST_ROOT={0}".format(spec['boost'].prefix),

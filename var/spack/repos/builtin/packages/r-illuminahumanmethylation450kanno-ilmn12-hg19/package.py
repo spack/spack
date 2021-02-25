@@ -7,7 +7,9 @@ from spack import *
 
 
 class RIlluminahumanmethylation450kannoIlmn12Hg19(RPackage):
-    """Manifests and annotation for Illumina's 450k array data."""
+    """Annotation for Illumina's 450k methylation arrays
+
+    Manifests and annotation for Illumina's 450k array data."""
 
     # This package is available via bioconductor but there is no available git
     # repository.

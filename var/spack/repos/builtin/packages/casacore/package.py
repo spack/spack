@@ -42,7 +42,7 @@ class Casacore(CMakePackage):
     depends_on('bison', type='build')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cfitsio@3.181:')
+    depends_on('cfitsio')
     depends_on('wcslib@4.20:+cfitsio')
     depends_on('fftw@3.0.0:~mpi precision=float,double', when='+fftw')
     # SOFA dependency suffers the same problem in CMakeLists.txt as readline;

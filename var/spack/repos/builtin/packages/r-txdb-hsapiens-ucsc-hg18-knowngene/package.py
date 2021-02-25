@@ -7,7 +7,9 @@ from spack import *
 
 
 class RTxdbHsapiensUcscHg18Knowngene(RPackage):
-    """Exposes an annotation databases generated from UCSC by exposing these as
+    """Annotation package for TxDb object(s)
+
+    Exposes an annotation databases generated from UCSC by exposing these as
     TxDb objects"""
 
     # This is a bioconductor package but ther is no available git repo

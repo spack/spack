@@ -20,6 +20,7 @@ class Gdal(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['adamjstewart']
+    import_modules = ['osgeo', 'osgeo.utils']
 
     version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
@@ -44,7 +45,7 @@ class Gdal(AutotoolsPackage):
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
     version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -562,5 +563,13 @@ class Gdal(AutotoolsPackage):
             fix_darwin_install_name(self.prefix.lib)
 
     def test(self):
+        """Attempts to import modules of the installed package."""
+
         if '+python' in self.spec:
-            PythonPackage.test(self)
+            # Make sure we are importing the installed modules,
+            # not the ones in the source directory
+            for module in self.import_modules:
+                self.run_test(self.spec['python'].command.path,
+                              ['-c', 'import {0}'.format(module)],
+                              purpose='checking import of {0}'.format(module),
+                              work_dir='spack-test')

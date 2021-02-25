@@ -26,6 +26,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
                          ' different GPU models. Enable this when building'
                          ' with cuda_arch=35 for a K20x instead of a K40'))
 
+    variant('opencl', default=False, description='Enable OpenCL backend')
+
     depends_on('blas')
     depends_on('lapack')
     depends_on('mpi', when='+mpi')
@@ -37,6 +39,8 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3.6:', type='build', when='+cuda')
 
     depends_on('hipblas', when='+rocm')
+
+    depends_on('opencl', when='+opencl')
 
     # We only support specific gpu archs for which we have parameter files
     # for optimal kernels. Note that we don't override the parent class arch
@@ -58,12 +62,16 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
         if arch not in dbcsr_amdgpu_targets:
             conflicts('+rocm', when='amdgpu_target={0}'.format(arch), msg=amd_msg)
 
-    conflicts('+cuda', when='+rocm', msg="CUDA and ROCm are mutually exclusive")
-    conflicts('+rocm', when='@:2.0', msg="ROCm support is available in DBCSR v2.1 and later")
+    accel_msg = "CUDA, ROCm and OpenCL support are mutually exlusive"
+    conflicts('+cuda', when='+rocm', msg=accel_msg)
+    conflicts('+cuda', when='+opencl', msg=accel_msg)
+    conflicts('+rocm', when='+opencl', msg=accel_msg)
 
     # Require openmp threading for OpenBLAS by making other options conflict
     conflicts('^openblas threads=pthreads', when='+openmp')
     conflicts('^openblas threads=none', when='+openmp')
+
+    conflicts('smm=blas', when='+opencl')
 
     generator = 'Ninja'
     depends_on('ninja@1.10:', type='build')
@@ -89,8 +97,6 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
             '-DLAPACK_LIBRARIES=%s' % (spec['lapack'].libs.joined(';')),
             '-DWITH_EXAMPLES=ON',
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('USE_HIP', 'rocm'),
-            self.define_from_variant('USE_CUDA', 'cuda'),
         ]
 
         if self.spec.satisfies('+cuda'):
@@ -107,7 +113,10 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
                     and self.spec.satisfies('+cuda_arch_35_k20x')):
                 gpuver = 'K20X'
 
-            args += ['-DWITH_GPU=%s' % gpuver]
+            args += [
+                '-DWITH_GPU=%s' % gpuver,
+                '-DUSE_ACCEL=cuda'
+            ]
 
         if self.spec.satisfies('+rocm'):
             amd_arch = self.spec.variants['amdgpu_target'].value[0]
@@ -116,7 +125,15 @@ class Dbcsr(CMakePackage, CudaPackage, ROCmPackage):
                 'gfx906': 'Mi50'
             }[amd_arch]
 
-            args += ['-DWITH_GPU={0}'.format(gpuver)]
+            args += [
+                '-DWITH_GPU={0}'.format(gpuver),
+                '-DUSE_ACCEL=hip'
+            ]
+
+        if self.spec.satisfies('+opencl'):
+            args += [
+                '-DUSE_ACCEL=opencl'
+            ]
 
         return args
 

@@ -14,7 +14,7 @@ class RRle(RPackage):
 
     homepage = "https://cloud.r-project.org/package=rle"
     url      = "https://cloud.r-project.org/src/contrib/rle_0.9.2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/rle"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/rle"
 
     version('0.9.2', sha256='803cbe310af6e882e27be61d37d660dbe5910ac1ee1eff61a480bcf724a04f69')
 

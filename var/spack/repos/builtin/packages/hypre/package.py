@@ -19,6 +19,8 @@ class Hypre(Package):
 
     maintainers = ['ulrikeyang', 'osborn9', 'balay']
 
+    test_requires_compiler = True
+
     version('develop', branch='master')
     version('2.20.0', sha256='5be77b28ddf945c92cde4b52a272d16fb5e9a7dc05e714fc5765948cba802c01')
     version('2.19.0', sha256='466b19d8a86c69989a237f6f03f20d35c0c63a818776d2cd071b0a084cffeba5')
@@ -175,6 +177,27 @@ class Hypre(Package):
                 sstruct('-in', 'test/sstruct.in.default', '-solver', '40',
                         '-rhsone')
             make("install")
+
+    @run_after('install')
+    def cache_test_sources(self):
+        srcs = ['src/examples']
+        self.cache_extra_test_sources(srcs)
+
+    def test(self):
+        """Perform smoke test on installed HYPRE package."""
+
+        if '+mpi' in self.spec:
+            examples_dir = join_path(self.install_test_root, 'src/examples')
+            with working_dir(examples_dir, create=False):
+                make("HYPRE_DIR=" + self.prefix, "bigint")
+
+                reason = "test: ensuring HYPRE examples run"
+                self.run_test('./ex5big', [], [], installed=True,
+                              purpose=reason, skip_missing=True, work_dir='.')
+                self.run_test('./ex15big', [], [], installed=True,
+                              purpose=reason, skip_missing=True, work_dir='.')
+
+                make("distclean")
 
     @property
     def headers(self):

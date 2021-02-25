@@ -18,6 +18,7 @@ class Adios2(CMakePackage):
     maintainers = ['ax3l', 'chuckatkins', 'williamfgc']
 
     version('master', branch='master')
+    version('2.7.1', sha256='c8e237fd51f49d8a62a0660db12b72ea5067512aa7970f3fcf80b70e3f87ca3e')
     version('2.7.0', sha256='4b5df1a1f92d7ff380416dec7511cfcfe3dc44da27e486ed63c3e6cffb173924')
     version('2.6.0', sha256='45b41889065f8b840725928db092848b8a8b8d1bfae1b92e72f8868d1c76216c')
     version('2.5.0', sha256='7c8ff3bf5441dd662806df9650c56a669359cb0185ea232ecb3578de7b065329')
@@ -98,14 +99,11 @@ class Adios2(CMakePackage):
     depends_on('bzip2', when='@2.4: +bzip2')
     depends_on('libpng@1.6:', when='@2.4: +png')
     depends_on('zfp@0.5.1:', when='+zfp')
-    depends_on('sz@:2.0.2.0', when='+sz')
+    depends_on('sz@2.0.2.0:', when='+sz')
 
     extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.5:',
-               when='@:2.4.0 +python',
-               type=('build', 'run'))
-    depends_on('python@3.5:', when='@2.5.0: +python',
-               type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.5:', when='@:2.4.0 +python', type=('build', 'run'))
+    depends_on('python@3.5:', when='@2.5.0: +python', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.5:', when='@:2.4.0', type='test')
     depends_on('python@3.5:', when='@2.5.0:', type='test')
     depends_on('py-numpy@1.6.1:', type=('build', 'run'), when='+python')
@@ -119,6 +117,10 @@ class Adios2(CMakePackage):
     # third-party dill library.
     # See https://github.com/ornladios/ADIOS2/pull/1899
     patch('2.5-fix-clear_cache.patch', when='@2.5.0')
+
+    # Fix an unnecessary python dependency when testing is disabled
+    # See https://github.com/ornladios/ADIOS2/pull/2596
+    patch('2.7-fix-python-test-deps.patch', when='@2.5.0:2.7.0')
 
     @when('%fj')
     def patch(self):
@@ -141,7 +143,6 @@ class Adios2(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
-            '-DADIOS2_BUILD_TESTING=OFF',
             '-DADIOS2_BUILD_EXAMPLES=OFF',
             '-DADIOS2_USE_MPI={0}'.format(
                 'ON' if '+mpi' in spec else 'OFF'),

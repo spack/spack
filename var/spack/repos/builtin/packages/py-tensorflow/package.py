@@ -15,7 +15,9 @@ class PyTensorflow(Package, CudaPackage):
     url      = "https://github.com/tensorflow/tensorflow/archive/v2.3.1.tar.gz"
 
     maintainers = ['adamjstewart', 'aweits']
+    import_modules = ['tensorflow']
 
+    version('2.4.1',  sha256='f681331f8fc0800883761c7709d13cda11942d4ad5ff9f44ad855e9dc78387e0')
     version('2.4.0',  sha256='26c833b7e1873936379e810a39d14700281125257ddda8cd822c89111db6f6ae')
     version('2.3.2',  sha256='21a703d2e68cd0677f6f9ce329198c24fd8203125599d791af9f1de61aadf31f')
     version('2.3.1',  sha256='ee534dd31a811f7a759453567257d1e643f216d8d55a25c32d2fbfff8153a1ac')
@@ -188,7 +190,7 @@ class PyTensorflow(Package, CudaPackage):
     depends_on('py-protobuf@3.0.0b2', type=('build', 'run'), when='@0.7.1:0.10')
     depends_on('py-protobuf@3.0.0a3', type=('build', 'run'), when='@0.6:0.7.0')
     depends_on('protobuf')
-    depends_on('flatbuffers+python@1.12.0:1.12.999', type=('build', 'run'), when='@2.4.0')
+    depends_on('flatbuffers+python@1.12.0:1.12.999', type=('build', 'run'), when='@2.4.0:')
     # tensorboard
     # tensorflow-estimator
     depends_on('py-termcolor@1.1.0:1.1.999', type=('build', 'run'), when='@2.4.0:')
@@ -296,9 +298,6 @@ class PyTensorflow(Package, CudaPackage):
     patch('contrib_cloud_1.1.patch', when='@1.1:1.3')
 
     phases = ['configure', 'build', 'install']
-
-    import_modules = PythonPackage.import_modules
-    test = PythonPackage.test
 
     # https://www.tensorflow.org/install/source
     def setup_build_environment(self, env):
@@ -789,3 +788,14 @@ def protobuf_deps():
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
         remove_linked_tree(tmp_path)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        # Make sure we are importing the installed modules,
+        # not the ones in the source directory
+        for module in self.import_modules:
+            self.run_test(self.spec['python'].command.path,
+                          ['-c', 'import {0}'.format(module)],
+                          purpose='checking import of {0}'.format(module),
+                          work_dir='spack-test')

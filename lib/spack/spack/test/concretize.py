@@ -304,7 +304,7 @@ class TestConcretize(object):
         barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
         mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
-        with spack.repo.swap(mock_repo):
+        with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
@@ -1125,3 +1125,15 @@ class TestConcretize(object):
         # dependency type declared to infer that the dependency holds.
         s = Spec('test-dep-with-imposed-conditions').concretized()
         assert 'c' not in s
+
+    @pytest.mark.parametrize('spec_str', [
+        'wrong-variant-in-conflicts',
+        'wrong-variant-in-depends-on'
+    ])
+    def test_error_message_for_inconsistent_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str)
+        with pytest.raises(RuntimeError, match='not found in package'):
+            s.concretize()
