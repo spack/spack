@@ -17,6 +17,7 @@ class Qgis(CMakePackage):
 
     maintainers = ['adamjstewart', 'Sinan81']
 
+    version('3.18.0',   sha256='09aa83ea7e193adec1f490feeaae8644fddbcbb964a858a1e8f740e665fa1563')
     version('3.14.16',  sha256='c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04')
     version('3.14.0',   sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
     version('3.12.3',   sha256='c2b53815f9b994e1662995d1f25f90628156b996758f5471bffb74ab29a95220')
@@ -24,6 +25,8 @@ class Qgis(CMakePackage):
     version('3.12.1',   sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0',   sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
     # Prefer latest long term release
+    # 3.16.4 does not find PyQt5
+    version('3.16.4',   sha256='a31b4aa9b54a47f5dce3d944c32b4609348fa2ffdd1b533bdffb935f62b7049f')
     version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839', preferred=True)
     version('3.10.7',   sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564')
     version('3.10.6',   sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
@@ -84,7 +87,7 @@ class Qgis(CMakePackage):
     depends_on('proj@4.4.0:')
     depends_on('py-psycopg2', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('py-pyqt4', when='@2')
-    depends_on('py-pyqt5@5.3:', when='@3')
+    depends_on('py-pyqt5@5.3: +qsci_api', when='@3')
     depends_on('py-requests', type=('build', 'run'))  # TODO: is build dependency necessary?
     depends_on('python@2.7:2.8', type=('build', 'run'), when='@2')
     depends_on('python@3.0.0:', type=('build', 'run'), when='@3')
@@ -96,6 +99,7 @@ class Qgis(CMakePackage):
     depends_on('qwt@5:')
     depends_on('qwtpolar')
     depends_on('sqlite@3.0.0: +column_metadata')
+    depends_on('protobuf', when='@3.16.4:')
 
     # Runtime python dependencies, not mentioned in install instructions
     depends_on('py-pyyaml', type='run')
@@ -135,27 +139,31 @@ class Qgis(CMakePackage):
         # qtwebkit module was removed from qt as of version 5.6
         # needs to be compiled as a separate package
         args.extend([
-                    '-DUSE_OPENCL=OFF',
-                    # cmake couldn't determine the following paths
-                    '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
-                    '-DPOSTGRESQL_PREFIX={0}'.format(
-                        self.spec['postgresql'].prefix),
-                    '-DQSCINTILLA_INCLUDE_DIR=' +
-                    self.spec['qscintilla'].prefix.include,
-                    '-DQSCINTILLA_LIBRARY=' + self.spec['qscintilla'].prefix +
-                    '/lib/libqscintilla2_qt5.so',
-                    '-DLIBZIP_INCLUDE_DIR=' +
-                    self.spec['libzip'].prefix.include,
-                    '-DLIBZIP_CONF_INCLUDE_DIR=' +
-                    self.spec['libzip'].prefix.lib.libzip.include,
-                    '-DGDAL_CONFIG_PREFER_PATH=' +
-                    self.spec['gdal'].prefix.bin,
-                    '-DGEOS_CONFIG_PREFER_PATH=' +
-                    self.spec['geos'].prefix.bin,
-                    '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
-                    '-DPOSTGRES_CONFIG_PREFER_PATH=' +
-                    self.spec['postgresql'].prefix.bin
-                    ])
+            '-DUSE_OPENCL=OFF',
+            # cmake couldn't determine the following paths
+            '-DEXPAT_LIBRARY={0}'.format(self.spec['expat'].libs),
+            '-DPOSTGRESQL_PREFIX={0}'.format(
+                self.spec['postgresql'].prefix),
+            '-DQSCINTILLA_INCLUDE_DIR=' +
+            self.spec['qscintilla'].prefix.include,
+            '-DQSCINTILLA_LIBRARY=' +
+            join_path(self.spec['qscintilla'].prefix.lib,
+                      'libqscintilla2_qt5.{0}'.format(dso_suffix)),
+            '-DLIBZIP_INCLUDE_DIR=' +
+            self.spec['libzip'].prefix.include,
+            '-DLIBZIP_CONF_INCLUDE_DIR=' +
+            self.spec['libzip'].prefix.lib.libzip.include,
+            '-DGDAL_CONFIG_PREFER_PATH=' +
+            self.spec['gdal'].prefix.bin,
+            '-DGDAL_LIBRARY=' +
+            join_path(self.spec['gdal'].prefix.lib,
+                      'libgdal.{0}'.format(dso_suffix)),
+            '-DGEOS_CONFIG_PREFER_PATH=' +
+            self.spec['geos'].prefix.bin,
+            '-DGSL_CONFIG_PREFER_PATH=' + self.spec['gsl'].prefix.bin,
+            '-DPOSTGRES_CONFIG_PREFER_PATH=' +
+            self.spec['postgresql'].prefix.bin
+        ])
 
         args.extend([
             '-DWITH_3D={0}'.format(
