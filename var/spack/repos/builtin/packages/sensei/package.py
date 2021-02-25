@@ -88,7 +88,7 @@ class Sensei(CMakePackage):
             self.define_from_variant('CMAKE_CXX_STANDARD', 'cxxstd'),
             self.define('CMAKE_C_STANDARD', 11),
             self.define('SENSEI_USE_EXTERNAL_pugixml', True),
-            self.define('CMAKE_POSITION_INDEPENDENT_CODE',True),
+            self.define('CMAKE_POSITION_INDEPENDENT_CODE', True),
             self.define_from_variant('ENABLE_SENSEI', 'sencore'),
             self.define_from_variant('ENABLE_ASCENT', 'ascent'),
             self.define_from_variant('ENABLE_VTKM', 'vtkm'),
