@@ -22,7 +22,6 @@ class RGgthemes(RPackage):
 
     version('4.2.0', sha256='5bb3fe94819fe2cce7865f07a6e6ea5c59d3996f78d1c0836ad406f69efb3367')
 
-    extends('r')
     depends_on('r@3.3.0:', type=('build', 'run'))
     depends_on('r-ggplot2@3.0.0:', type=('build', 'run'))
     depends_on('r-purrr', type=('build', 'run'))
