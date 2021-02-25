@@ -815,7 +815,7 @@ def setup_package(pkg, dirty, context='build'):
         # kludge to handle cray libsci being automatically loaded by PrgEnv
         # modules on cray platform. Module unload does no damage when
         # unnecessary
-        module('unload', 'cray-libsci')
+        #module('unload', 'cray-libsci')
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
