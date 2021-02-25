@@ -18,8 +18,12 @@ class BerkeleyDb(AutotoolsPackage):
     version('6.0.35', sha256='24421affa8ae436fe427ae4f5f2d1634da83d3d55a5ad6354a98eeedb825de55')
     version('5.3.28', sha256='e0a992d740709892e81f9d93f06daf305cf73fb81b545afe72478043172c3628')
 
+    variant('docs', default=False)
+
     configure_directory = 'dist'
     build_directory = 'build_unix'
+
+    patch("drop-docs.patch", when='~docs')
 
     def patch(self):
         # some of the docs are missing in 18.1.40
