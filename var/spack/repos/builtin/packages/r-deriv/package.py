@@ -17,5 +17,4 @@ class RDeriv(RPackage):
 
     version('4.1.2', sha256='c4b0c3f351f6df53778d48033460cf8674e7a7878fbc542085d66a9a78803ac9')
 
-    extends('r')
     depends_on('r', type=('build', 'run'))
