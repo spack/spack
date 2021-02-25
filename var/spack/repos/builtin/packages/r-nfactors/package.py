@@ -16,7 +16,6 @@ class RNfactors(RPackage):
 
     version('2.4.1',   sha256='028eb4ebd42a29f6a01297d728c7e353cabb37b46701639b4a52f17ba25a3eb6')
 
-    extends('r')
     depends_on('r@3.5.0:', type=('build', 'run'))
     depends_on('r-lattice', type=('build', 'run'))
     depends_on('r-mass', type=('build', 'run'))
