@@ -926,14 +926,14 @@ class TestConcretize(object):
         assert s.satisfies(expected)
 
     @pytest.mark.regression('20976')
-    @pytest.mark.parametrize('compiler,spec_str,expected', [
+    @pytest.mark.parametrize('compiler,spec_str,expected,xfailold', [
         ('gcc', 'external-common-python %clang',
-         '%clang ^external-common-openssl%gcc ^external-common-gdbm%clang'),
+         '%clang ^external-common-openssl%gcc ^external-common-gdbm%clang', False),
         ('clang', 'external-common-python',
-         '%clang ^external-common-openssl%clang ^external-common-gdbm%clang')
+         '%clang ^external-common-openssl%clang ^external-common-gdbm%clang', True)
     ])
     def test_compiler_in_nonbuildable_external_package(
-            self, compiler, spec_str, expected
+            self, compiler, spec_str, expected, xfailold
     ):
         """Check that the compiler of a non-buildable external package does not
            spread to other dependencies, unless no other commpiler is specified."""
@@ -949,6 +949,8 @@ class TestConcretize(object):
         spack.config.set('packages', packages_yaml)
 
         s = Spec(spec_str).concretized()
+        if xfailold and spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('This only works on the ASP-based concretizer')
         assert s.satisfies(expected)
         assert 'external-common-perl' not in [d.name for d in s.dependencies()]
 

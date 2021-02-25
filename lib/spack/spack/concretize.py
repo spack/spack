@@ -450,8 +450,7 @@ class Concretizer(object):
 
         # Find another spec that has a compiler, or the root if none do
         other_spec = spec if spec.compiler else find_spec(
-            spec, lambda x: x.compiler and (is_spec_buildable(x) or
-                                            spec.root.compiler is None), spec.root)
+            spec, lambda x: x.compiler, spec.root)
         other_compiler = other_spec.compiler
         assert other_spec
 
