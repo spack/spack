@@ -22,6 +22,7 @@ try:
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
+    clingo_cffi = False
 
 import llnl.util.lang
 import llnl.util.tty as tty
