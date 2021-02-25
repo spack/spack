@@ -22,7 +22,9 @@ class Hdf5(AutotoolsPackage):
 
     test_requires_compiler = True
 
-    # See https://github.com/spack/spack/pull/21900
+    # We rely on the *.la files to be removed and, therefore, do not try to make
+    # sure that they are correct. The following is a precaution against someone
+    # blindly changing the value to True, either here or in the baseclass.
     install_libtool_archives = False
 
     version('develop', branch='develop')
