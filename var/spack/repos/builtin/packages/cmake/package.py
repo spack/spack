@@ -241,7 +241,7 @@ class Cmake(Package):
         args.append('--')
 
         # Make sure to create an optimized release build
-        args.append('-DCMAKE_BUILD_TYPE=Release')
+        args.append('-DCMAKE_BUILD_TYPE=MinSizeRel')
 
         # Install CMake correctly, even if `spack install` runs
         # inside a ctest environment
