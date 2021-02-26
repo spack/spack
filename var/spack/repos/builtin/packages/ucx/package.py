@@ -115,8 +115,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
             config_args.append('--disable-params-check')
 
         # Activate SIMD based on properties of the target
-        if self.spec.target >= 'zen':
+        if 'avx' in self.spec.target:
             config_args.append('--with-avx')
+        else:
+            config_args.append('--without-avx')
 
         config_args.extend(self.enable_or_disable('optimizations'))
         config_args.extend(self.enable_or_disable('assertions'))
