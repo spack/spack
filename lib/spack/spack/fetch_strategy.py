@@ -638,8 +638,11 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         if os.path.exists(filename):
             os.remove(filename)
 
-        # Symlink to local cached archive.
-        os.symlink(path, filename)
+        if sys.platform == "win32":
+            shutil.copyfile(path, filename)
+        else:
+            # Symlink to local cached archive.
+            os.symlink(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
