@@ -76,7 +76,7 @@ class Warpx(CMakePackage):
     depends_on('mpi', when='+mpi')
     depends_on('openpmd-api@0.13.1:,dev', when='+openpmd')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='+psatd compute=openmp')
+    depends_on('pkgconfig', type='build', when='+psatd compute=omp')
     depends_on('rocfft', when='+psatd compute=hip')
     depends_on('llvm-openmp', when='%apple-clang compute=omp')
 
