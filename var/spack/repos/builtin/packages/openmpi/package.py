@@ -907,6 +907,10 @@ class Openmpi(AutotoolsPackage, CudaPackage):
 
     def configure_args(self):
         if self.spec.satisfies("+legacylaunchers schedulers=slurm"):
+            # Deleting the links to orterun avoids users running their applications via mpirun or
+            # mpiexec, and leaves srun as the only sensible choice (orterun is still present, but
+            # normal users don't know about that). See https://github.com/spack/spack/pull/10340
+            # for more details.
             tty.warn(
                 self.spec.format(
                     "The preferred way to run an application when Slurm is the scheduler is to "
