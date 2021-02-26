@@ -1604,6 +1604,8 @@ class Spec(object):
          """
         d = syaml.syaml_dict()
 
+        d['name'] = self.name
+
         if self.versions:
             d.update(self.versions.to_dict())
 
@@ -1654,7 +1656,13 @@ class Spec(object):
                  ) for name, dspec in sorted(deps.items())
             ])
 
-        return syaml.syaml_dict([(self.name, d)])
+        # Name is included in case this is replacing a virtual.
+        if self._build_spec:
+            d['build_spec'] = syaml.syaml_dict([
+                ('name', self.build_spec.name),
+                ('hash', self.build_spec._cached_hash(hash))])
+        print(d)
+        return d
 
     def to_dict(self, hash=ht.dag_hash):
         """Create a dictionary suitable for writing this spec to YAML or JSON.
@@ -2062,10 +2070,12 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
-        nodes = data['spec']
+        nodes = data
 
         # Read nodes out of list.  Root spec is the first element;
         # dependencies are the following elements.
+        # Naming the name breaks this.
+        # I'm not sure how/why this worked in the first place...
         dep_list = [Spec.from_node_dict(node) for node in nodes]
         if not dep_list:
             raise spack.error.SpecError("YAML spec contains no nodes.")
