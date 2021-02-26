@@ -243,7 +243,7 @@ def test_recursive_upstream_dbs(tmpdir_factory, gen_mock_layout):
 
 @pytest.mark.usefixtures('config')
 def test_upstream_db_construction_from_pointers(
-        tmpdir_factory, test_store, gen_mock_layout):
+        tmpdir_factory, mock_store, gen_mock_layout):
     """
     Ensures that an upstream database can be constructed
     from pointer files. Chained pointer files replaces the now
@@ -290,7 +290,7 @@ def test_upstream_db_construction_from_pointers(
 
 @pytest.mark.usefixtures('config')
 def test_upstream_db_construction_from_config(
-        tmpdir_factory, test_store, gen_mock_layout):
+        tmpdir_factory, mock_store, gen_mock_layout):
     """
     Ensures that an upstream database can be constructed
     from deprecated upstreams.yaml format. Assumes that
