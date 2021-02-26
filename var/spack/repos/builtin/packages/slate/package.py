@@ -59,21 +59,46 @@ class Slate(CMakePackage):
 
     make_hdr_file = 'make.inc'
 
+    #@run_after('install')
+    #def cache_test_sources(self):
+    #    ""Copy the example source files after the package is installed to an 
+    #        install test subdirectory for use during `spack test run`."""
+    #    self.cache_extra_test_sources([self.test_suite.current_test_data_dir])
+
     def test(self):
-        test_data_dir = self.test_suite.current_test_data_dir
+        #test_data_dir = self.test_suite.current_test_data_dir
+        self.run_test('cp', ['-R', self.test_suite.current_test_data_dir, self.install_test_root])
+        test_dir = join_path(self.install_test_root, 'slate')
         test_prog = 'slate04_blas'
 
-        config_args = [
-            'slate_dir = {0}'.format(self.prefix),
-            'scalapack_libs = {0}'.format(self.spec['scalapack'].libs.ld_flags)
-        ]
+        #config_args = [
+        #    'slate_dir = {0}'.format(self.prefix),
+        #    'scalapack_libs = {0}'.format(self.spec['scalapack'].libs.ld_flags)
+        #]
         # Write configuration options to make.inc file
-        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
-        with open(make_file_inc, 'w') as inc:
-            for option in config_args:
-                inc.write('{0}\n'.format(option))
+        #make_file_inc = join_path(self.test_dir, self.make_hdr_file)
+        #with open(make_file_inc, 'w') as inc:
+        #    for option in config_args:
+        #        inc.write('{0}\n'.format(option))
         reason_msg = 'test: slate smoke test'
-        with working_dir(test_data_dir, create=False):
+        with working_dir(test_dir, create=False):
+            #with open(self.make_hdr_file, 'w') as inc:
+            #    for option in config_args:
+            #        inc.write('{0}\n'.format(option))
+            with open('CMakeLists.txt', 'w') as mkfile:
+                mkfile.write('cmake_minimum_required(VERSION 3.13)\n\n')
+                mkfile.write('project(SlateSmokeTest LANGUAGES CXX)\n')
+                mkfile.write('find_package(slate REQUIRED)\n')
+                mkfile.write('find_package(MPI COMPONENTS CXX)\n')
+                mkfile.write('add_executable({0} {0}.cc)\n'.
+                             format(test_prog))
+                mkfile.write('target_link_libraries({0} '.format(test_prog) +
+                             'PUBLIC slate PUBLIC MPI::MPI_CXX)\n')
+            #make('all', parallel=False)
+            opts = self.std_cmake_args
+            opts += self.cmake_args()
+            opts += ['.']
+            self.run_test('cmake', opts, [], installed=False, work_dir='.')
             make('all', parallel=False)
             if '+mpi' in self.spec:
                 test_args = ['-n', '4', test_prog]
@@ -84,8 +109,8 @@ class Slate(CMakePackage):
                                       purpose=reason_msg, skip_missing=False,
                                       work_dir='.')
                         break
-            else
-                self.run_test(test_prog, [], installed=False,
+            else:
+                self.run_test(test_prog, installed=False,
                               purpose=reason_msg, skip_missing=False,
                               work_dir='.')
-            #make('clean')
+            make('clean')
