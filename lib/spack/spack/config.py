@@ -303,6 +303,11 @@ class SingleFileScope(ConfigScope):
             with open(tmp, 'w') as f:
                 syaml.dump_config(data_to_write, stream=f,
                                   default_flow_style=False)
+            # On Windows, os.rename will fail if the destination file
+            # already exists
+            if sys.platform == "win32":
+                if os.path.exists(self.path):
+                    os.remove(self.path)
             os.rename(tmp, self.path)
         except (yaml.YAMLError, IOError) as e:
             raise ConfigFileError(
