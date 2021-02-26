@@ -54,6 +54,10 @@ class Nlopt(CMakePackage):
         # On is default
         if '-shared' in spec:
             args.append('-DBUILD_SHARED_LIBS:Bool=OFF')
+            
+        # On is default
+        if '-octave' in spec:
+            args.append('-DNLOPT_OCTAVE:Bool=OFF')
 
         if '+cxx' in spec:
             args.append('-DNLOPT_CXX:BOOL=ON')
