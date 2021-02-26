@@ -149,6 +149,9 @@ class Paraview(CMakePackage, CudaPackage):
     # Broken H5Part with external parallel HDF5
     patch('h5part-parallel.patch', when='@5.7:5.7.999')
 
+    # Broken downstream FindMPI
+    patch('vtkm-findmpi-downstream.patch', when='@5.9.0')
+
     def url_for_version(self, version):
         _urlfmt  = 'http://www.paraview.org/files/v{0}/ParaView-v{1}{2}.tar.{3}'
         """Handle ParaView version-based custom URLs."""
