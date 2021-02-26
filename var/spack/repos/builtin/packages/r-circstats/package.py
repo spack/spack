@@ -12,7 +12,7 @@ class RCircstats(RPackage):
     Circular Statistics, from "Topics in Circular Statistics" (2001) S.
     Rao Jammalamadaka and A. SenGupta, World Scientific."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://cloud.r-project.org/package=CircStats"
     url      = "https://cloud.r-project.org/src/contrib/CircStats_0.2-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/CircStats"
 
