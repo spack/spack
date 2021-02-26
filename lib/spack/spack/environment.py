@@ -1387,6 +1387,21 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
+    def uninstalled_specs(self):
+        """Return a list of all uninstalled (and non-dev) specs."""
+        # Do the installed check across all specs within a single
+        # DB read transaction to reduce time spent in lock acquisition.
+        uninstalled_specs = []
+        with spack.store.db.read_transaction():
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
+                if not spec.package.installed or (
+                        spec.satisfies('dev_path=*') or
+                        spec.satisfies('^dev_path=*')
+                ):
+                    uninstalled_specs.append(spec)
+        return uninstalled_specs
+
     def install_all(self, args=None, **install_args):
         """Install all concretized specs in an environment.
 
@@ -1397,22 +1412,13 @@ class Environment(object):
             args (Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
+        tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
-        tty.debug('Assessing installation status of environment packages')
-        specs_to_install = []
-        with spack.store.db.read_transaction():
-            for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or (
-                        spec.satisfies('dev_path=*') or
-                        spec.satisfies('^dev_path=*')
-                ):
-                    # If it's a dev build it could need to be reinstalled
-                    specs_to_install.append(spec)
+        specs_to_install = self.uninstalled_specs()
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
