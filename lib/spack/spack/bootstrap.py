@@ -21,7 +21,11 @@ from spack.util.environment import EnvironmentModifications
 
 
 @contextlib.contextmanager
-def system_python_context():
+def spack_python_interpreter():
+    """Override the current configuration to set the interpreter under
+    which Spack is currently running as the only Python external spec
+    available.
+    """
     python_cls = type(spack.spec.Spec('python').package)
     python_prefix = os.path.dirname(os.path.dirname(sys.executable))
     externals = python_cls.determine_spec_details(
@@ -84,7 +88,7 @@ def make_module_available(module, spec=None, install=False):
     if not install:
         _raise_error(module, spec)
 
-    with system_python_context():
+    with spack_python_interpreter():
         # We will install for ourselves, using this python if needed
         # Concretize the spec
         spec.concretize()
@@ -147,7 +151,7 @@ def get_executable(exe, spec=None, install=False):
     if not install:
         _raise_error(exe, spec)
 
-    with system_python_context():
+    with spack_python_interpreter():
         # We will install for ourselves, using this python if needed
         # Concretize the spec
         spec.concretize()
@@ -180,5 +184,5 @@ def ensure_bootstrap_configuration():
         with spack.config.use_configuration(*config_scopes):
             with spack.repo.use_repositories(spack.paths.packages_path):
                 with spack.store.use_store(spack.paths.user_bootstrap_store):
-                    with system_python_context():
+                    with spack_python_interpreter():
                         yield

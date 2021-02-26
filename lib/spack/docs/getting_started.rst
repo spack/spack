@@ -137,7 +137,7 @@ on your system:
 .. code-block:: console
 
    $ spack external find cmake bison
-   ==> The following specs have been detected on this system and added to /home/culpo/.spack/packages.yaml
+   ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
    bison@3.0.4  cmake@3.19.4
 
 All the tools Spack needs for its own functioning are installed in a separate store, which lives
