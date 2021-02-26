@@ -91,6 +91,6 @@ class Mptensor(CMakePackage):
                 mpiexec = Executable(mpirun)
                 mpiexec("-n", "1", "tensor_test.out")
 
-                """ Test of mptensor has checker
-                    and checker is abort when check detect any errors. """
+                # Test of mptensor has checker
+                # and checker is abort when check detect any errors.
                 print("Test of mptensor PASSED !")
