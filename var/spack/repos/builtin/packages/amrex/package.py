@@ -84,6 +84,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
     depends_on('hypre', type='link', when='+hypre')
+    depends_on('petsc', type='link', when='+petsc')
     conflicts('%apple-clang')
     conflicts('%clang')
 
