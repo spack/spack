@@ -16,10 +16,10 @@ class Qscintilla(QMakePackage):
     url      = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.2/QScintilla_gpl-2.11.2.tar.gz"
 
     # Directory structure is changed in latest release, logic is lost
-    version('2.12.0', sha256='a4cc9e7d2130ecfcdb18afb43b813ef122473f6f35deff747415fbc2fe0c60ed', url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.6/QScintilla_src-2.12.0.tar.gz')
+    version('2.12.0', sha256='a4cc9e7d2130ecfcdb18afb43b813ef122473f6f35deff747415fbc2fe0c60ed', url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz')
 
     # Last standard release dates back to 2021/11/23
-    version('2.11.6', sha256='e7346057db47d2fb384467fafccfcb13aa0741373c5d593bc72b55b2f0dd20a7', preferred=True, url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.6/QScintilla_gpl-2.12.0.tar.gz')
+    version('2.11.6', sha256='e7346057db47d2fb384467fafccfcb13aa0741373c5d593bc72b55b2f0dd20a7', preferred=True, url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.6/QScintilla-2.11.6.tar.gz')
     version('2.11.2', sha256='029bdc476a069fda2cea3cd937ba19cc7fa614fb90578caef98ed703b658f4a1', url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.2/QScintilla_gpl-2.11.2.tar.gz')
     version('2.10.2', sha256='14b31d20717eed95ea9bea4cd16e5e1b72cee7ebac647cba878e0f6db6a65ed0', url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.10.2/QScintilla-2.10.2.tar.gz')
 
