@@ -49,6 +49,7 @@ class PyH5py(PythonPackage):
 
     # MPI dependencies
     depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
 

@@ -116,6 +116,9 @@ class Openblas(MakefilePackage):
     patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11:0.3.12 %fj')
     patch('openblas_fujitsu2.patch', when='@0.3.10:0.3.12 %fj')
 
+    # Use /usr/bin/env perl in build scripts
+    patch('0001-use-usr-bin-env-perl.patch', when='@:0.3.13')
+
     # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
     conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
 
@@ -130,6 +133,8 @@ class Openblas(MakefilePackage):
     conflicts('threads=pthreads', when='~locking', msg='Pthread support requires +locking')
     conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
+
+    depends_on('perl', type='build')
 
     @property
     def parallel(self):
