@@ -72,19 +72,28 @@ def substitute_config_variables(path):
     - $spack     The Spack instance's prefix
     - $user      The current user's username
     - $tempdir   Default temporary directory returned by tempfile.gettempdir()
+    - $env       The active Spack environment.
 
     These are substituted case-insensitively into the path, and users can
-    use either ``$var`` or ``${var}`` syntax for the variables.
-
+    use either ``$var`` or ``${var}`` syntax for the variables. $env is only
+    replaced if there is an active environment, and should only be used in
+    environment yaml files.
     """
-    # Look up replacements for re.sub in the replacements dict.
+    import spack.environment as ev  # break circular
+    env = ev.get_env({}, '')
+    if env:
+        replacements.update({'env': env.path})
+    else:
+        # If a previous invocation added env, remove it
+        replacements.pop('env', None)
+
+    # Look up replacements
     def repl(match):
         m = match.group(0).strip('${}')
         return replacements.get(m.lower(), match.group(0))
 
     # Replace $var or ${var}.
     return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
-
 
 def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
