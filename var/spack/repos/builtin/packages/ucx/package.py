@@ -62,8 +62,6 @@ class Ucx(AutotoolsPackage, CudaPackage):
             description='Enable XPMEM support')
     variant('cma', default=False,
             description="nable Cross Memory Attach")
-    variant('avx', default=False,
-            description="Enable AVX option")
     variant('rc', default=False,
             description="Compile with IB Reliable Connection support")
     variant('dc', default=False,
@@ -116,12 +114,15 @@ class Ucx(AutotoolsPackage, CudaPackage):
         else:
             config_args.append('--disable-params-check')
 
+        # Activate SIMD based on properties of the target
+        if self.spec.target >= 'zen':
+            config_args.append('--with-avx')
+
         config_args.extend(self.enable_or_disable('optimizations'))
         config_args.extend(self.enable_or_disable('assertions'))
         config_args.extend(self.enable_or_disable('logging'))
 
         config_args.extend(self.with_or_without('pic'))
-        config_args.extend(self.with_or_without('avx'))
         config_args.extend(self.with_or_without('rc'))
         config_args.extend(self.with_or_without('ud'))
         config_args.extend(self.with_or_without('dc'))
