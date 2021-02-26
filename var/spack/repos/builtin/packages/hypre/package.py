@@ -60,12 +60,6 @@ class Hypre(Package, CudaPackage):
     variant('openmp', default=False, description='Enable OpenMP support')
     variant('debug', default=False,
             description='Build debug instead of optimized version')
-    variant('cuda-uvm', default=False,
-            description="Enable CUDA UVM support")
-    variant('curand', default=False,
-            description="Enable CURAND integration")
-    variant('cub', default=False,
-            description="Enable CUB integration")
 
     # Patch to add ppc64le in config.guess
     patch('ibm-ppc64le.patch', when='@:2.11.1')
