@@ -83,6 +83,8 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
+    depends_on('hypre', type='link', when='+hypre')
+    depends_on('petsc', type='link', when='+petsc')
     conflicts('%apple-clang')
     conflicts('%clang')
 
@@ -134,45 +136,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             return ';'.join(str(x) for x in vf)
 
     #
-    # For versions <= 20.11
-    #
-    @when('@:20.11')
-    def cmake_args(self):
-        args = [
-            '-DUSE_XSDK_DEFAULTS=ON',
-            self.define_from_variant('DIM', 'dimensions'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('ENABLE_MPI', 'mpi'),
-            self.define_from_variant('ENABLE_OMP', 'openmp'),
-            '-DXSDK_PRECISION:STRING=%s' %
-            self.spec.variants['precision'].value.upper(),
-            self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
-            self.define_from_variant('ENABLE_FORTRAN_INTERFACES', 'fortran'),
-            self.define_from_variant('ENABLE_EB', 'eb'),
-            self.define_from_variant('ENABLE_LINEAR_SOLVERS',
-                                     'linear_solvers'),
-            self.define_from_variant('ENABLE_AMRDATA', 'amrdata'),
-            self.define_from_variant('ENABLE_PARTICLES', 'particles'),
-            self.define_from_variant('ENABLE_SUNDIALS', 'sundials'),
-            self.define_from_variant('ENABLE_HDF5', 'hdf5'),
-            self.define_from_variant('ENABLE_HYPRE', 'hypre'),
-            self.define_from_variant('ENABLE_PETSC', 'petsc'),
-            self.define_from_variant('ENABLE_CUDA', 'cuda'),
-        ]
-
-        if self.spec.satisfies('%fj'):
-            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
-
-        if '+cuda' in self.spec:
-            cuda_arch = self.spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
-
-        return args
-
-    #
     # For versions > 20.11
     #
-    @when('@20.12:')
+    @when('@20.12:,develop')
     def cmake_args(self):
         args = [
             '-DUSE_XSDK_DEFAULTS=ON',
@@ -210,5 +176,41 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DAMReX_GPU_BACKEND=HIP')
             targets = self.spec.variants['amdgpu_target'].value
             args.append('-DAMReX_AMD_ARCH=' + ';'.join(str(x) for x in targets))
+
+        return args
+
+    #
+    # For versions <= 20.11
+    #
+    @when('@:20.11')
+    def cmake_args(self):
+        args = [
+            '-DUSE_XSDK_DEFAULTS=ON',
+            self.define_from_variant('DIM', 'dimensions'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('ENABLE_MPI', 'mpi'),
+            self.define_from_variant('ENABLE_OMP', 'openmp'),
+            '-DXSDK_PRECISION:STRING=%s' %
+            self.spec.variants['precision'].value.upper(),
+            self.define_from_variant('XSDK_ENABLE_Fortran', 'fortran'),
+            self.define_from_variant('ENABLE_FORTRAN_INTERFACES', 'fortran'),
+            self.define_from_variant('ENABLE_EB', 'eb'),
+            self.define_from_variant('ENABLE_LINEAR_SOLVERS',
+                                     'linear_solvers'),
+            self.define_from_variant('ENABLE_AMRDATA', 'amrdata'),
+            self.define_from_variant('ENABLE_PARTICLES', 'particles'),
+            self.define_from_variant('ENABLE_SUNDIALS', 'sundials'),
+            self.define_from_variant('ENABLE_HDF5', 'hdf5'),
+            self.define_from_variant('ENABLE_HYPRE', 'hypre'),
+            self.define_from_variant('ENABLE_PETSC', 'petsc'),
+            self.define_from_variant('ENABLE_CUDA', 'cuda'),
+        ]
+
+        if self.spec.satisfies('%fj'):
+            args.append('-DCMAKE_Fortran_MODDIR_FLAG=-M')
+
+        if '+cuda' in self.spec:
+            cuda_arch = self.spec.variants['cuda_arch'].value
+            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         return args
