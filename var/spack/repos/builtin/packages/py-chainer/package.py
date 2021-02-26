@@ -88,7 +88,7 @@ class PyChainer(PythonPackage):
             # check results
             json_open = open(join_path(test_dir, 'log'), 'r')
             json_load = json.load(json_open)
-            v = {d.get('epoch'): d.get('main/accuracy') for d in json_load}
+            v = dict([(d.get('epoch'), d.get('main/accuracy')) for d in json_load])
             if 1 not in v or 20 not in v:
                 raise RuntimeError('Cannot found epoch 1 or epoch 20')
             if abs(1.0 - v[1]) < abs(1.0 - v[20]):
