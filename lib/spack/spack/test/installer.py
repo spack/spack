@@ -879,7 +879,8 @@ def test_install_failed(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert installer.build_requests[0].pkg_id in out
@@ -894,7 +895,8 @@ def test_install_failed_not_fast(install_mockery, monkeypatch, capsys):
     # Make sure the package is identified as failed
     monkeypatch.setattr(spack.database.Database, 'prefix_failed', _true)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
 
     out = str(capsys.readouterr())
     assert 'failed to install' in out
@@ -1046,7 +1048,9 @@ def test_install_lock_failures(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     out = capfd.readouterr()[0]
     expected = ['write locked', 'read locked', 'requeued']
     for exp, ln in zip(expected, out.split('\n')):
@@ -1077,7 +1081,9 @@ def test_install_lock_installed_requeue(install_mockery, monkeypatch, capfd):
     # Ensure don't continually requeue the task
     monkeypatch.setattr(inst.PackageInstaller, '_requeue_task', _requeued)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     assert b_pkg_id not in installer.installed
 
     out = capfd.readouterr()[0]
@@ -1113,7 +1119,9 @@ def test_install_read_locked_requeue(install_mockery, monkeypatch, capfd):
     const_arg = installer_args(['b'], {})
     installer = create_installer(const_arg)
 
-    installer.install()
+    with pytest.raises(inst.InstallError, match='request failed'):
+        installer.install()
+
     assert 'b' not in installer.installed
 
     out = capfd.readouterr()[0]
