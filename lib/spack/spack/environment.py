@@ -9,6 +9,7 @@ import re
 import sys
 import shutil
 import copy
+import platform
 import socket
 
 import six
@@ -442,6 +443,20 @@ def _write_yaml(data, str_or_file):
     filename = getattr(str_or_file, 'name', None)
     spack.config.validate(data, spack.schema.env.schema, filename)
     syaml.dump_config(data, str_or_file, default_flow_style=False)
+
+
+def get_host_environment_metadata():
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+    environ = _get_host_environment()
+    return {"host_os": environ['os'],
+            "platform": environ['platform'],
+            "host_target": environ['target'],
+            "hostname": environ['hostname'],
+            "spack_version": spack.main.get_version(),
+            "kernel_version": platform.version()}
 
 
 def _get_host_environment():

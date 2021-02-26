@@ -75,6 +75,7 @@ or refer to the full manual below.
    command_index
    package_list
    chain
+   analyze
    extensions
    pipelines
 

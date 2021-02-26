@@ -107,23 +107,7 @@ the dependencies"""
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
 
-    # Monitoring via https://github.com/spack/spack-monitor
-    monitor_group = subparser.add_mutually_exclusive_group()
-    monitor_group.add_argument(
-        '--monitor', action='store_true', dest='use_monitor', default=False,
-        help="interact with a montor server during builds.")
-    monitor_group.add_argument(
-        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
-        default=False, help="the monitoring server does not require auth.")
-    monitor_group.add_argument(
-        '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
-        default=False, help="continue the build if a request to monitor fails.")
-    monitor_group.add_argument(
-        '--monitor-host', dest='monitor_host', default="http://127.0.0.1",
-        help="If using a monitor, customize the host.")
-    monitor_group.add_argument(
-        '--monitor-prefix', dest='monitor_prefix', default="ms1",
-        help="The API prefix for the monitor service.")
+    monitor_group = spack.monitor.get_monitor_group(subparser)
 
     subparser.add_argument(
         '--include-build-deps', action='store_true', dest='include_build_deps',
@@ -244,6 +228,7 @@ def install_specs(cli_args, kwargs, specs):
 
 
 def install(parser, args, **kwargs):
+
     if args.help_cdash:
         parser = argparse.ArgumentParser(
             formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -261,7 +246,7 @@ environment variables:
         monitor = spack.monitor.get_client(
             host=args.monitor_host,
             prefix=args.monitor_prefix,
-            disable_auth=args.monitor_disable_auth
+            disable_auth=args.monitor_disable_auth,
         )
 
     reporter = spack.report.collect_info(

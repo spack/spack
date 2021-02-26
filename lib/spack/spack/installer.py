@@ -1296,6 +1296,7 @@ class PackageInstaller(object):
     def _setup_install_dir(self, pkg):
         """
         Create and ensure proper access controls for the install directory.
+        Write a small metadata file with the current spack environment.
 
         Args:
             pkg (Package): the package to be built and installed
@@ -1320,6 +1321,9 @@ class PackageInstaller(object):
 
             # Ensure the metadata path exists as well
             fs.mkdirp(spack.store.layout.metadata_path(pkg.spec), mode=perms)
+
+        # Always write host environment - we assume this can change
+        spack.store.layout.write_host_environment(pkg.spec)
 
     def _update_failed(self, task, mark=False, exc=None):
         """
@@ -1827,11 +1831,8 @@ def build_process(pkg, kwargs):
                     _hms(pkg._total_time)))
     _print_installed_pkg(pkg.prefix)
 
-    # Send final metadata (environment, etc.) and mark as successful
-    # (these two endpoints could possibly be combined?)
+    # Send final status that install is successful
     if monitor:
-        result = monitor.send_final(pkg)
-        tty.verbose(result.get('message'))
         monitor.update_build(pkg.spec, status="SUCCESS")
 
     # preserve verbosity across runs

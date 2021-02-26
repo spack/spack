@@ -9,7 +9,6 @@ https://github.com/spack/spack-monitor/blob/main/script/spackmoncli.py
 
 import base64
 import os
-import platform
 import re
 
 try:
@@ -55,6 +54,31 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
         tty.debug("spack-monitor server not found, continuing as allow_fail is True.")
 
 
+def get_monitor_group(subparser):
+    """Since the monitor group is shared between commands, we provide a common
+    function to generate the group for it. The user can pass the subparser, and
+    the group is added, and returned.
+    """
+    # Monitoring via https://github.com/spack/spack-monitor
+    monitor_group = subparser.add_mutually_exclusive_group()
+    monitor_group.add_argument(
+        '--monitor', action='store_true', dest='use_monitor', default=False,
+        help="interact with a montor server during builds.")
+    monitor_group.add_argument(
+        '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
+        default=False, help="the monitoring server does not require auth.")
+    monitor_group.add_argument(
+        '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
+        default=False, help="continue the build if a request to monitor fails.")
+    monitor_group.add_argument(
+        '--monitor-host', dest='monitor_host', default="http://127.0.0.1",
+        help="If using a monitor, customize the host.")
+    monitor_group.add_argument(
+        '--monitor-prefix', dest='monitor_prefix', default="ms1",
+        help="The API prefix for the monitor service.")
+    return monitor_group
+
+
 class SpackMonitorClient:
     """The SpackMonitorClient is a handle to interact with a spack monitor
     server. We require the host url, along with the prefix to discover the
@@ -63,6 +87,7 @@ class SpackMonitorClient:
     version is one of the fields to uniquely identify a spec, so we add it
     to the client on init.
     """
+
     def __init__(self, host=None, prefix="ms1", allow_fail=False):
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
@@ -76,32 +101,44 @@ class SpackMonitorClient:
         # We keey lookup of build_id by full_hash
         self.build_ids = {}
 
+    def load_build_environment(self, spec):
+        """If we are running an analyze command, we will need to load previously
+        used build environment metadata from install_environment.json to capture
+        what was done during the build.
+        """
+        if not hasattr(spec, "package") or not spec.package:
+            tty.die("A spec must have a package to load the environment.")
+
+        pkg_dir = os.path.dirname(spec.package.install_log_path)
+        env_file = os.path.join(pkg_dir, "install_environment.json")
+        build_environment = read_json(env_file)
+        if not build_environment:
+            tty.warning(
+                "install_environment.json not found in package folder. "
+                " This means that the current environment metadata will be used."
+            )
+        else:
+            self.build_environment = build_environment
+
     def capture_build_environment(self):
-        """Use spack.environment._get_host_environment to capture the
+        """Use spack.environment._get_host_environment_metadata to capture the
         environment for the build. This is important because it's a unique
         identifier, along with the spec, for a Build. It should look something
         like this:
 
-        {'target': 'skylake',
-         'os': 'ubuntu20.04',
+        {'host_os': 'ubuntu20.04',
          'platform': 'linux',
-         'arch': arch=linux-ubuntu20.04-skylake,
-         'architecture': arch=linux-ubuntu20.04-skylake,
-         'arch_str': 'linux-ubuntu20.04-skylake',
-         'hostname': 'superman-computer',
+         'host_target': 'skylake',
+         'hostname': 'vanessa-ThinkPad-T490s',
+         'spack_version': '0.16.1-1455-52d5b55b65',
          'kernel_version': '#73-Ubuntu SMP Mon Jan 18 17:25:17 UTC 2021'}
-        """
-        from spack.environment import _get_host_environment
-        self.build_environment = _get_host_environment()
-        self.build_environment['kernel_version'] = platform.version()
 
-    def _get_build_environment(self):
-        return {"host_os": self.build_environment['os'],
-                "platform": self.build_environment['platform'],
-                "host_target": self.build_environment['target'],
-                "hostname": self.build_environment['hostname'],
-                "kernel_version": self.build_environment['kernel_version'],
-                "spack_version": self.spack_version}
+        This is saved to a package install's metadata folder as
+        install_environment.json, and can be loaded by the monitor for uploading
+        data relevant to a later analysis.
+        """
+        from spack.environment import get_host_environment_metadata
+        self.build_environment = get_host_environment_metadata()
 
     def require_auth(self):
         """Require authentication, meaning that the token and username must
@@ -280,7 +317,7 @@ class SpackMonitorClient:
             return self.build_ids[full_hash]
 
         # Prepare build environment data (including spack version)
-        data = self._get_build_environment()
+        data = self.build_environment.copy()
         data['full_hash'] = full_hash
         response = self.do_request("builds/new/", data=sjson.dump(data))
 
@@ -310,36 +347,19 @@ class SpackMonitorClient:
         """
         return self.update_build(spec, status="FAILED")
 
-    def send_final(self, pkg):
-        """Given a metadata folder, usually .spack within the spack root
-        opt/<system>/<compiler>/<package>/.spack with the following:
+    def send_analyze_metadata(self, pkg, metadata):
+        """Given a dictionary of analyzers (with key as analyzer type, and
+        value as the data) upload the analyzer output to Spack Monitor.
+        Spack Monitor should either have a known understanding of the analyzer,
+        or if not (the key is not recognized), it's assumed to be a dictionary
+        of objects/files, each with attributes to be updated. E.g.,
 
-             'spack-configure-args.txt',
-             'spack-build-env.txt',
-             'spec.yaml',
-             'archived-files',
-             'spack-build-out.txt',
-             'install_manifest.json',
-             'repos'
-
-        read in all metadata files except for phase and output (which are sent
-        as they are generated with the phase) and send to the monitor server.
+        {"analyzer-name": {"object-file-path": {"feature1": "value1"}}}
         """
-
         # Prepare build environment data (including spack version)
-        data = {"build_id": self.get_build_id(pkg.spec.full_hash())}
-
-        meta_dir = os.path.dirname(pkg.install_log_path)
-        env_file = os.path.join(meta_dir, "spack-build-env.txt")
-        config_file = os.path.join(meta_dir, "spack-configure-args.txt")
-        manifest_file = os.path.join(meta_dir, "install_manifest.json")
-
-        metadata = {"environ": self._read_environment_file(env_file),
-                    "config": read_file(config_file),
-                    "manifest": read_json(manifest_file)}
-
-        data['metadata'] = metadata
-        return self.do_request("builds/metadata/", data=sjson.dump(data))
+        data = {"build_id": self.get_build_id(pkg.spec.full_hash()),
+                "metadata": metadata}
+        return self.do_request("analyze/builds/", data=sjson.dump(data))
 
     def send_phase(self, pkg, phase_name, phase_output_file, status):
         """Given a package, phase name, and status, update the monitor endpoint
@@ -354,30 +374,6 @@ class SpackMonitorClient:
                      "phase_name": phase_name})
 
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
-
-    def _read_environment_file(self, filename):
-        """Given an environment file, we want to read it, split by semicolons
-        and new lines, and then parse down to the subset of SPACK_* variables.
-        We assume that all spack prefix variables are not secrets, and unlike
-        the install_manifest.json, we don't (at least to start) parse the values
-        to remove path prefixes specific to user systems.
-        """
-        if not os.path.exists(filename):
-            return
-        content = read_file(filename)
-
-        # Filter down to lines, not export statements. I'm only using multiple
-        # lines because of the length limit.
-        lines = re.split("(;|\n)", content)
-        lines = [x for x in lines if x not in ['', '\n', ';'] and "SPACK_" in x]
-        lines = [x.strip() for x in lines if "export " not in x]
-        lines = [x.strip() for x in lines if "export " not in x]
-        result = {}
-
-        # Dictionary comprehentions require 2.7
-        for x in lines:
-            result[x.split("=", 1)[0]] = x.split("=", 1)[1]
-        return result
 
     def upload_specfile(self, filename):
         """Given a spec file (must be json) upload to the UploadSpec endpoint.
@@ -420,6 +416,20 @@ def read_file(filename):
     with open(filename, 'r') as fd:
         content = fd.read()
     return content
+
+
+def write_file(content, filename):
+    """write content to file"""
+    with open(filename, 'w') as fd:
+        fd.writelines(content)
+    return content
+
+
+def write_json(obj, filename):
+    """Write a json file, if the output directory exists."""
+    if not os.path.exists(os.path.dirname(filename)):
+        return
+    return write_file(sjson.dump(obj), filename)
 
 
 def read_json(filename):
