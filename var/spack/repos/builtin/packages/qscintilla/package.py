@@ -13,7 +13,7 @@ class Qscintilla(QMakePackage):
     """
 
     homepage = "https://www.riverbankcomputing.com/software/qscintilla/intro"
-    url      = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.11.2/QScintilla_gpl-2.11.2.tar.gz"
+    url      = "https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz"
 
     # Directory structure is changed in latest release, logic is lost
     version('2.12.0', sha256='a4cc9e7d2130ecfcdb18afb43b813ef122473f6f35deff747415fbc2fe0c60ed', url='https://www.riverbankcomputing.com/static/Downloads/QScintilla/2.12.0/QScintilla_src-2.12.0.tar.gz')
