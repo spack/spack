@@ -36,6 +36,5 @@ lib/spack/spack/test/.cache
 .pydevproject
 
 # VSCode files
-.vs
 .vscode
 .devcontainer
