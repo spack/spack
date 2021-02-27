@@ -31,11 +31,11 @@ class PyPyprecice(PythonPackage):
     # Import module as a test
     import_modules = ["precice"]
 
+    # Older versions of the bindings checked versions via pip. This patch
+    # removes the pip dependency.
+    # See also https://github.com/spack/spack/pull/19558
     patch("deactivate-version-check-via-pip.patch", when="@:2.1.1.1")
 
-    variant("mpi", default=True, description="Enables MPI support")
-
-    depends_on("mpi", when="+mpi")
     depends_on("precice", when="@develop")
     depends_on("precice@2.2.0", when="@2.2.0.1:2.2.0.99")
     depends_on("precice@2.1.1", when="@2.1.1.1:2.1.1.99")
@@ -46,12 +46,13 @@ class PyPyprecice(PythonPackage):
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
+    # py-wheel dependency is specified in pyproject.toml of pyprecice
     depends_on("py-wheel", type="build")
     depends_on("py-numpy", type=("build", "run"))
-    depends_on("py-mpi4py", type=("build", "run"), when="+mpi")
+    depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type=("build"))
 
-    phases = ['install_lib', 'build_ext', 'install']
+    phases = ['build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
         return [
@@ -60,5 +61,9 @@ class PyPyprecice(PythonPackage):
         ]
 
     def install(self, spec, prefix):
+        # Older versions of the bindings had a non-standard installation routine
+        # See also https://github.com/spack/spack/pull/19558#discussion_r513123239
         if self.version <= Version("2.1.1.1"):
             self.setup_py("install", "--prefix={0}".format(prefix))
+        else:
+            super.install(spec, prefix)
