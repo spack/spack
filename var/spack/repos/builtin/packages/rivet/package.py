@@ -64,7 +64,7 @@ class Rivet(AutotoolsPackage):
 
     variant('hepmc', default='2', values=('2', '3'),
             description="HepMC version to link against")
-            
+
     conflicts('hepmc=3', when='@:2.99', msg='HepMC support was added in 3.0')
 
     # According to A. Buckley (main Rivet developer):
@@ -161,7 +161,7 @@ class Rivet(AutotoolsPackage):
             flags.append('-faligned-new')
             return (None, None, flags)
         return (flags, None, None)
-        
+
     def configure_args(self):
         args = []
         if self.spec.variants['hepmc'] == '2':
