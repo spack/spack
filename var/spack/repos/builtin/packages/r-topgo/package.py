@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTopgo(RPackage):
-    """Enrichment Analysis for Gene Ontology.
+    """Enrichment Analysis for Gene Ontology
 
        topGO package provides tools for testing GO terms while accounting for
        the topology of the GO graph. Different test statistics and different
@@ -17,6 +17,7 @@ class RTopgo(RPackage):
     homepage = "https://bioconductor.org/packages/topGO"
     git      = "https://git.bioconductor.org/packages/topGO.git"
 
+    version('2.42.0', commit='3a33cf53883de45bda506953303e1809ab982adc')
     version('2.36.0', commit='c2f6c187b41c4aa44cc92ac781fdd878491a4019')
     version('2.34.0', commit='44cb5eaba515b365b7b2a8c22df0a45883db6b4d')
     version('2.32.0', commit='78ce3068fc06ae38d55219759fa177e2fcb3f596')

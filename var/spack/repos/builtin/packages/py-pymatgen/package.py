@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyPymatgen(PythonPackage):
     analysis code powering the Materials Project."""
 
     homepage = "http://www.pymatgen.org/"
-    url      = "https://pypi.io/packages/source/p/pymatgen/pymatgen-4.7.2.tar.gz"
+    pypi = "pymatgen/pymatgen-4.7.2.tar.gz"
 
     version('4.7.2', sha256='e439b78cc3833a03963c3c3efe349d8a0e52a1550c8a05c56a89aa1b86657436')
     version('4.6.2', sha256='f34349090c6f604f7d402cb09cd486830b38523639d7160d7fd282d504036a0e')

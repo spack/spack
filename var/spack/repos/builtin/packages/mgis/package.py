@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,16 +18,18 @@ class Mgis(CMakePackage):
     """
 
     homepage = "https://thelfer.github.io/mgis/web/index.html"
-    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.1.tar.gz"
+    url      = "https://github.com/thelfer/MFrontGenericInterfaceSupport/archive/MFrontGenericInterfaceSupport-1.2.tar.gz"
     git      = "https://github.com/thelfer/MFrontGenericInterfaceSupport.git"
     maintainers = ['thelfer']
 
     # development branches
     version("master", branch="master")
+    version("rliv-1.2", branch="rliv-1.2")
     version("rliv-1.1", branch="rliv-1.1")
     version("rliv-1.0", branch="rliv-1.0")
 
     # released version
+    version('1.2',   sha256='ed82ab91cbe17c00ef36578dbfcb4d1817d4c956619b7cccbea3e3f1a3b31940')
     version('1.1',   sha256='06593d7a052678deaee87ef60b2213db7545c5be9823f261d3388b3978a0b7a5')
     version('1.0.1', sha256='6102621455bc5d9b1591cd33e93b2e15a9572d2ce59ca6dfa30ba57ae1265c08')
     version('1.0', sha256='279c98da00fa6855edf29c2b8f8bad6e7732298dc62ef67d028d6bbeaac043b3')
@@ -44,9 +46,11 @@ class Mgis(CMakePackage):
             values=('Debug', 'Release'))
 
     # dependencies
+    depends_on('tfel@3.4.0', when="@1.2")
     depends_on('tfel@3.3.0', when="@1.1")
     depends_on('tfel@3.2.1', when="@1.0.1")
     depends_on('tfel@3.2.0', when="@1.0")
+    depends_on('tfel@rliv-3.4', when="@rliv-1.2")
     depends_on('tfel@rliv-3.3', when="@rliv-1.1")
     depends_on('tfel@rliv-3.2', when="@rliv-1.0")
     depends_on('tfel@master', when="@master")
@@ -56,6 +60,8 @@ class Mgis(CMakePackage):
     def cmake_args(self):
 
         args = []
+
+        args.append("-DUSE_EXTERNAL_COMPILER_FLAGS=ON")
 
         for i in ['c', 'fortran', 'python']:
             if '+' + i  in self.spec:

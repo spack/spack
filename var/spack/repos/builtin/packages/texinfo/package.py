@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Texinfo(AutotoolsPackage, GNUMirrorPackage):
     # that uses the global locale.
     # Ref: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=902771
     patch('update_locale_handling.patch', when='@6.3:')
+
+    patch('nvhpc.patch', when='%nvhpc')
 
     @classmethod
     def determine_version(cls, exe):

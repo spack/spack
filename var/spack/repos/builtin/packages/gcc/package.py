@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,6 +98,9 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     variant('bootstrap',
             default=False,
             description='add --enable-bootstrap flag for stage3 build')
+    variant('graphite',
+            default=False,
+            description='Enable Graphite loop optimizations (requires ISL)')
 
     depends_on('flex', type='build', when='@master')
 
@@ -112,13 +115,14 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     #   GCC 5.4 https://github.com/spack/spack/issues/6902#issuecomment-433072097
     #   GCC 7.3 https://github.com/spack/spack/issues/6902#issuecomment-433030376
     #   GCC 9+  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86724
-    depends_on('isl@0.14', when='@5.0:5.2')
-    depends_on('isl@0.15', when='@5.3:5.9')
-    depends_on('isl@0.15:0.18', when='@6:8.9')
-    depends_on('isl@0.15:0.20', when='@9:9.9')
-    depends_on('isl@0.15:', when='@10:')
+    depends_on('isl@0.14', when='@5.0:5.2 +graphite')
+    depends_on('isl@0.15', when='@5.3:5.9 +graphite')
+    depends_on('isl@0.15:0.18', when='@6:8.9 +graphite')
+    depends_on('isl@0.15:0.20', when='@9:9.9 +graphite')
+    depends_on('isl@0.15:', when='@10: +graphite')
     depends_on('zlib', when='@6:')
     depends_on('zstd', when='@10:')
+    depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
     depends_on('binutils~libiberty', when='+binutils', type=('build', 'link', 'run'))
@@ -270,7 +274,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     patch('sys_ustat-4.9.patch', when='@4.9')
 
     # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=95005
-    patch('zstd.patch', when='@10:')
+    patch('zstd.patch', when='@10')
 
     build_directory = 'spack-build'
 
@@ -489,6 +493,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
         # More info at: https://gcc.gnu.org/install/configure.html
         for dep_str in ('mpfr', 'gmp', 'mpc', 'isl'):
             if dep_str not in spec:
+                options.append('--without-{0}'.format(dep_str))
                 continue
 
             dep_spec = spec[dep_str]

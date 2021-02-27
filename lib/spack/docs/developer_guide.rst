@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -363,11 +363,12 @@ Developer commands
 ``spack doc``
 ^^^^^^^^^^^^^
 
-^^^^^^^^^^^^^^
-``spack test``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
+``spack unit-test``
+^^^^^^^^^^^^^^^^^^^
 
-See the :ref:`contributor guide section <cmd-spack-test>` on ``spack test``.
+See the :ref:`contributor guide section <cmd-spack-unit-test>` on
+``spack unit-test``.
 
 .. _cmd-spack-python:
 
@@ -395,20 +396,42 @@ other Spack modules:
    True
    >>>
 
-You can also run a single command:
+If you prefer using an IPython interpreter, given that IPython is installed
+you can specify the interpreter with ``-i``:
+
+.. code-block:: console
+
+   $ spack python -i ipython
+   Python 3.8.3 (default, May 19 2020, 18:47:26) 
+   Type 'copyright', 'credits' or 'license' for more information
+   IPython 7.17.0 -- An enhanced Interactive Python. Type '?' for help.
+
+
+   Spack version 0.16.0
+   Python 3.8.3, Linux x86_64
+
+   In [1]:
+
+
+With either interpreter you can run a single command:
 
 .. code-block:: console
 
    $ spack python -c 'import distro; distro.linux_distribution()'
-   ('Fedora', '25', 'Workstation Edition')
+   ('Ubuntu', '18.04', 'Bionic Beaver')
+
+   $ spack python -i ipython -c 'import distro; distro.linux_distribution()'
+   Out[1]: ('Ubuntu', '18.04', 'Bionic Beaver')
 
 or a file:
 
 .. code-block:: console
 
    $ spack python ~/test_fetching.py
+   $ spack python -i ipython ~/test_fetching.py
 
-just like you would with the normal ``python`` command.
+just like you would with the normal ``python`` command. 
+
 
 .. _cmd-spack-url:
 
@@ -620,13 +643,6 @@ for a major release, the steps to make the release are as follows:
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.13.0
    <https://github.com/spack/spack/commit/8eeb64096c98b8a43d1c587f13ece743c864fba9>`_
 
-#. Update the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-.. TODO: We should get rid of this step in some future release.
-
 #. Update ``CHANGELOG.md`` with major highlights in bullet form. Use
    proper markdown formatting, like `this example from 0.15.0
    <https://github.com/spack/spack/commit/d4bf70d9882fcfe88507e9cb444331d7dd7ba71c>`_.
@@ -720,13 +736,6 @@ release:
 
 #. Bump the version in ``lib/spack/spack/__init__.py``. See `this example from 0.14.1
    <https://github.com/spack/spack/commit/ff0abb9838121522321df2a054d18e54b566b44a>`_.
-
-#. Updaate the release version lists in these files to include the new version:
-
-   * ``lib/spack/spack/schema/container.py``
-   * ``lib/spack/spack/container/images.json``
-
-   **TODO**: We should get rid of this step in some future release.
 
 #. Update ``CHANGELOG.md`` with a list of bugfixes. This is typically just a
    summary of the commits you cherry-picked onto the release branch. See

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class IntelMpi(IntelPackage):
     homepage = "https://software.intel.com/en-us/intel-mpi-library"
 
     version('2019.8.254', sha256='fa163b4b79bd1b7509980c3e7ad81b354fc281a92f9cf2469bf4d323899567c0',
-            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16814/l_mpi_2019.8.254.tgz') 
+            url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16814/l_mpi_2019.8.254.tgz')
     version('2019.7.217', sha256='90383b0023f84ac003a55d8bb29dbcf0c639f43a25a2d8d8698a16e770ac9c07',
             url='http://registrationcenter-download.intel.com/akdlm/irc_nas/tec/16546/l_mpi_2019.7.217.tgz')
     version('2019.6.166', sha256='119be69f1117c93a9e5e9b8b4643918e55d2a55a78ad9567f77d16cdaf18cd6e',

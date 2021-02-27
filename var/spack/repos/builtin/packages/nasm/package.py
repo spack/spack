@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,3 +26,11 @@ class Nasm(AutotoolsPackage):
 
     conflicts('%intel@:14', when='@2.14:',
               msg="Intel 14 has immature C11 support")
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file(r'CFLAGS="\$pa_add_cflags__old_cflags -Werror=.*"',
+                        'CFLAGS="$pa_add_cflags__old_cflags"', 'configure')
+            filter_file(r'CFLAGS="\$pa_add_flags__old_flags -Werror=.*"',
+                        'CFLAGS="$pa_add_flags__old_flags"', 'configure')

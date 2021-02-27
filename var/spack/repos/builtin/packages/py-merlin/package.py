@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyMerlin(PythonPackage):
     """Merlin Workflow for HPC."""
 
     homepage = "https://github.com/LLNL/merlin"
-    url      = "https://pypi.io/packages/source/m/merlin/merlin-1.4.1.tar.gz"
+    pypi = "merlin/merlin-1.4.1.tar.gz"
     git      = "https://github.com/LLNL/merlin.git"
 
     version('1.7.5', sha256='1994c1770ec7fc9da216f9d0ca8214684dcc0daa5fd55337b96e308b2e68daaa')
@@ -21,9 +21,6 @@ class PyMerlin(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
-
-    depends_on('py-pytest', type='test')
-
     depends_on('py-cached-property', type=('build', 'run'))
     depends_on('py-celery@5.0.0+redis+sqlalchemy', when="@1.7.5:", type=('build', 'run'))
     depends_on('py-celery@4.3.0:4.999+redis+sqlalchemy', when="@:1.7.4", type=('build', 'run'))

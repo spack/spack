@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,7 +39,6 @@ class Ipopt(AutotoolsPackage):
     depends_on('metis@4.0:', when='+metis')
 
     patch('ipopt_ppc_build.patch', when='arch=ppc64le')
-    patch('ipopt_aarch64_build.patch', when='arch=aarch64')
 
     flag_handler = build_system_flags
     build_directory = 'spack-build'

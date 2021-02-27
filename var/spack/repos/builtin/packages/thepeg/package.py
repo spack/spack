@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,8 @@ class Thepeg(AutotoolsPackage):
 
     homepage = "http://home.thep.lu.se/~leif/ThePEG/"
     url      = "https://thepeg.hepforge.org/downloads/?f=ThePEG-2.2.1.tar.bz2"
+
+    tags = ['hep']
 
     # The commented out versions exist, but may need patches
     # and/or recipe changes
@@ -52,6 +54,8 @@ class Thepeg(AutotoolsPackage):
     patch('thepeg-1.9.0.patch', when='@1.9.0', level=0)
     patch('thepeg-1.9.2.patch', when='@1.9.2', level=0)
     patch('thepeg-2.1.1.patch', when='@2.1.1:2.2.1', level=0)
+
+    force_autoreconf = True
 
     depends_on('gsl')
     depends_on('lhapdf')

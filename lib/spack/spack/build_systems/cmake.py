@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,11 +8,12 @@ import inspect
 import os
 import platform
 import re
+from typing import List  # novm
 
 import spack.build_environment
 from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
-from spack.directives import depends_on, variant
+from spack.directives import depends_on, variant, conflicts
 from spack.package import PackageBase, InstallError, run_after
 
 # Regex to extract the primary generator from the CMake generator
@@ -74,7 +75,7 @@ class CMakePackage(PackageBase):
     #: system base class
     build_system_class = 'CMakePackage'
 
-    build_targets = []
+    build_targets = []  # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']
@@ -93,6 +94,13 @@ class CMakePackage(PackageBase):
     variant('build_type', default='RelWithDebInfo',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
+    # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
+    variant('ipo', default=False,
+            description='CMake interprocedural optimization')
+    # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
+    conflicts('+ipo', when='^cmake@:3.8',
+              msg='+ipo is not supported by CMake < 3.9')
 
     depends_on('cmake', type='build')
 
@@ -147,12 +155,21 @@ class CMakePackage(PackageBase):
         except KeyError:
             build_type = 'RelWithDebInfo'
 
+        try:
+            ipo = pkg.spec.variants['ipo'].value
+        except KeyError:
+            ipo = False
+
         define = CMakePackage.define
         args = [
             '-G', generator,
             define('CMAKE_INSTALL_PREFIX', pkg.prefix),
             define('CMAKE_BUILD_TYPE', build_type),
         ]
+
+        # CMAKE_INTERPROCEDURAL_OPTIMIZATION only exists for CMake >= 3.9
+        if pkg.spec.satisfies('^cmake@3.9:'):
+            args.append(define('CMAKE_INTERPROCEDURAL_OPTIMIZATION', ipo))
 
         if primary_generator == 'Unix Makefiles':
             args.append(define('CMAKE_VERBOSE_MAKEFILE', True))
@@ -309,13 +326,20 @@ class CMakePackage(PackageBase):
                                                                libs_flags))
 
     @property
+    def build_dirname(self):
+        """Returns the directory name to use when building the package
+
+        :return: name of the subdirectory for building the package
+        """
+        return 'spack-build-%s' % self.spec.dag_hash(7)
+
+    @property
     def build_directory(self):
         """Returns the directory to use when building the package
 
         :return: directory where to build the package
         """
-        dirname = 'spack-build-%s' % self.spec.dag_hash(7)
-        return os.path.join(self.stage.path, dirname)
+        return os.path.join(self.stage.path, self.build_dirname)
 
     def cmake_args(self):
         """Produces a list containing all the arguments that must be passed to

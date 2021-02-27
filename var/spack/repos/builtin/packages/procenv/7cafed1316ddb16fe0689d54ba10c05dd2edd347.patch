@@ -1,0 +1,34 @@
+From 7cafed1316ddb16fe0689d54ba10c05dd2edd347 Mon Sep 17 00:00:00 2001
+From: Lukas Maerdian <lukas.maerdian@canonical.com>
+Date: Mon, 10 Aug 2020 15:11:23 +0200
+Subject: [PATCH] Fix GCC-10 build when used with -Werror=format-overflow=
+ (Fixes #15)
+
+Process names have a maximum length of 16 bytes and the buffer used has a
+length of 16 bytes, but the compiler is picky about writing and arbirary
+string into that small buffer. Tell the compiler to write max. 15 chars +
+'\0', to make it happy.
+https://stackoverflow.com/questions/23534263/what-is-the-maximum-allowed-limit-on-the-length-of-a-process-name
+---
+ src/platform/linux/platform.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/platform/linux/platform.c b/src/platform/linux/platform.c
+index a392bc0..49ea36c 100644
+--- a/src/platform/linux/platform.c
++++ b/src/platform/linux/platform.c
+@@ -1263,12 +1263,12 @@ handle_proc_branch_linux (void)
+ 
+ 			if ((p=strstr (buffer, "Name:")) == buffer) {
+ 				p += 1+strlen ("Name:"); /* jump over tab char */
+-				sprintf (name, "%s", p);
++				sprintf (name, "%.15s", p);
+ 			}
+ 
+ 			if ((p=strstr (buffer, "PPid:")) == buffer) {
+ 				p += 1+strlen ("PPid:"); /* jump over tab char */
+-				sprintf (ppid, "%s", p);
++				sprintf (ppid, "%.15s", p);
+ 
+ 				/* got all we need now */
+ 				break;

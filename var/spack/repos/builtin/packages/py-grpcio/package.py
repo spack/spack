@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyGrpcio(PythonPackage):
     """HTTP/2-based RPC framework."""
 
     homepage = "https://grpc.io/"
-    url      = "https://pypi.io/packages/source/g/grpcio/grpcio-1.32.0.tar.gz"
+    pypi = "grpcio/grpcio-1.32.0.tar.gz"
 
     version('1.32.0', sha256='01d3046fe980be25796d368f8fc5ff34b7cf5e1444f3789a017a7fe794465639')
     version('1.30.0', sha256='e8f2f5d16e0164c415f1b31a8d9a81f2e4645a43d1b261375d6bab7b0adf511f')
@@ -32,6 +32,8 @@ class PyGrpcio(PythonPackage):
         env.set('GRPC_PYTHON_BUILD_SYSTEM_OPENSSL', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_ZLIB', True)
         env.set('GRPC_PYTHON_BUILD_SYSTEM_CARES', True)
+        # https://github.com/grpc/grpc/pull/24449
+        env.set('GRPC_BUILD_WITH_BORING_SSL_ASM', '')
 
         for dep in self.spec.dependencies(deptype='link'):
             query = self.spec[dep.name]

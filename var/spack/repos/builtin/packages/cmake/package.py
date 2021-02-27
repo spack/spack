@@ -1,7 +1,8 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 
 
@@ -10,20 +11,32 @@ class Cmake(Package):
     tools designed to build, test and package software.
     """
     homepage = 'https://www.cmake.org'
-    url = 'https://github.com/Kitware/CMake/releases/download/v3.15.5/cmake-3.15.5.tar.gz'
+    url = 'https://github.com/Kitware/CMake/releases/download/v3.19.0/cmake-3.19.0.tar.gz'
     maintainers = ['chuckatkins']
+
+    tags = ['build-tools']
 
     executables = ['^cmake$']
 
+    version('3.19.5',   sha256='c432296eb5dec6d71eae15d140f6297d63df44e9ffe3e453628d1dc8fc4201ce')
+    version('3.19.4',   sha256='7d0232b9f1c57e8de81f38071ef8203e6820fe7eec8ae46a1df125d88dbcc2e1')
+    version('3.19.3',   sha256='3faca7c131494a1e34d66e9f8972ff5369e48d419ea8ceaa3dc15b4c11367732')
+    version('3.19.2',   sha256='e3e0fd3b23b7fb13e1a856581078e0776ffa2df4e9d3164039c36d3315e0c7f0')
+    version('3.19.1',   sha256='1d266ea3a76ef650cdcf16c782a317cb4a7aa461617ee941e389cb48738a3aba')
+    version('3.19.0',   sha256='fdda688155aa7e72b7c63ef6f559fca4b6c07382ea6dca0beb5f45aececaf493')
+    version('3.18.6',   sha256='124f571ab70332da97a173cb794dfa09a5b20ccbb80a08e56570a500f47b6600')
+    version('3.18.5',   sha256='080bf24b0f73f4bf3ec368d2be1aa59369b9bb1cd693deeb6f18fe553ca74ab4')
     version('3.18.4',   sha256='597c61358e6a92ecbfad42a9b5321ddd801fc7e7eca08441307c9138382d4f77')
     version('3.18.3',   sha256='2c89f4e30af4914fd6fb5d00f863629812ada848eee4e2d29ec7e456d7fa32e5')
     version('3.18.2',   sha256='5d4e40fc775d3d828c72e5c45906b4d9b59003c9433ff1b36a1cb552bbd51d7e')
     version('3.18.1',   sha256='c0e3338bd37e67155b9d1e9526fec326b5c541f74857771b7ffed0c46ad62508')
     version('3.18.0',   sha256='83b4ffcb9482a73961521d2bafe4a16df0168f03f56e6624c419c461e5317e29')
+    version('3.17.5',   sha256='8c3083d98fd93c1228d5e4e40dbff2dd88f4f7b73b9fa24a2938627b8bc28f1a')
     version('3.17.4',   sha256='86985d73d0a63ec99c236aab5287316e252164f33d7c4cb160954a980c71f36f')
     version('3.17.3',   sha256='0bd60d512275dc9f6ef2a2865426a184642ceb3761794e6b65bff233b91d8c40')
     version('3.17.1',   sha256='3aa9114485da39cbd9665a0bfe986894a282d5f0882b1dea960a739496620727')
     version('3.17.0',   sha256='b74c05b55115eacc4fa2b77a814981dbda05cdc95a53e279fe16b7b272f00847')
+    version('3.16.9',   sha256='1708361827a5a0de37d55f5c9698004c035abb1de6120a376d5d59a81630191f')
     version('3.16.8',   sha256='177434021132686cb901fea7db9fa2345efe48d566b998961594d5cc346ac588')
     version('3.16.7',   sha256='5f49c95a2933b1800f14840f3a389f4cef0b19093985a35053b43f38ec21358f')
     version('3.16.6',   sha256='6f6ff1a197851b0fa8412ff5de602e6717a4eb9509b2c385b08589c4e7a16b62')
@@ -90,6 +103,10 @@ class Cmake(Package):
     version('3.0.2',    sha256='6b4ea61eadbbd9bec0ccb383c29d1f4496eacc121ef7acf37c7a24777805693e')
     version('2.8.10.2', sha256='ce524fb39da06ee6d47534bbcec6e0b50422e18b62abc4781a4ba72ea2910eb1')
 
+    variant('build_type', default='Release',
+            description='CMake build type',
+            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+
     # Revert the change that introduced a regression when parsing mpi link
     # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
     patch('cmake-revert-findmpi-link-flag-list.patch', when='@3.15.0')
@@ -117,6 +134,8 @@ class Cmake(Package):
               msg='CMake does not compile with GCC on macOS yet, '
                   'please use %apple-clang. '
                   'See: https://gitlab.kitware.com/cmake/cmake/-/issues/21135')
+
+    conflicts('%nvhpc')
 
     # Really this should conflict since it's enabling or disabling openssl for
     # CMake's internal copy of curl.  Ideally we'd want a way to have the
@@ -162,6 +181,11 @@ class Cmake(Package):
     # The Fujitsu compiler requires the '--linkfortran' option
     # to combine C++ and Fortran programs.
     patch('fujitsu_add_linker_option.patch', when='%fj')
+
+    # Remove -A from the C++ flags we use when CXX_EXTENSIONS is OFF
+    # Should be fixed in 3.19.
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
+    patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
 
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
@@ -220,8 +244,8 @@ class Cmake(Package):
         # Now for CMake arguments to pass after the initial bootstrap
         args.append('--')
 
-        # Make sure to create an optimized release build
-        args.append('-DCMAKE_BUILD_TYPE=Release')
+        args.append('-DCMAKE_BUILD_TYPE={0}'.format(
+            self.spec.variants['build_type'].value))
 
         # Install CMake correctly, even if `spack install` runs
         # inside a ctest environment
@@ -243,7 +267,7 @@ class Cmake(Package):
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         # Some tests fail, takes forever
         make('test')
 
@@ -255,3 +279,12 @@ class Cmake(Package):
                 filter_file('mpcc_r)', 'mpcc_r mpifcc)', f, string=True)
                 filter_file('mpc++_r)', 'mpc++_r mpiFCC)', f, string=True)
                 filter_file('mpifc)', 'mpifc mpifrt)', f, string=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        spec_vers_str = 'version {0}'.format(self.spec.version)
+
+        for exe in ['ccmake', 'cmake', 'cpack', 'ctest']:
+            reason = 'test version of {0} is {1}'.format(exe, spec_vers_str)
+            self.run_test(exe, ['--version'], [spec_vers_str],
+                          installed=True, purpose=reason, skip_missing=True)

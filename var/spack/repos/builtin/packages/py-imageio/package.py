@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyImageio(PythonPackage):
     cross-platform, runs on Python 2.7 and 3.4+, and is easy to install."""
 
     homepage = "http://imageio.github.io/"
-    url      = "https://pypi.io/packages/source/i/imageio/imageio-2.3.0.tar.gz"
+    pypi = "imageio/imageio-2.3.0.tar.gz"
 
     version('2.5.0', sha256='42e65aadfc3d57a1043615c92bdf6319b67589e49a0aae2b985b82144aceacad')
     version('2.4.1', sha256='16b8077bc8a5fa7a58b3e744f7ecbb156d8c088132df31e0f4f546c98de3514a')

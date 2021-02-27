@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureKeyvaultSecrets(PythonPackage):
     """Microsoft Azure Key Vault Secrets Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python/tree/master/sdk/keyvault/azure-keyvault-secrets"
-    url      = "https://pypi.io/packages/source/a/azure-keyvault-secrets/azure-keyvault-secrets-4.1.0.zip"
+    pypi = "azure-keyvault-secrets/azure-keyvault-secrets-4.1.0.zip"
 
     version('4.1.0', sha256='4f3bfac60e025e01dd1c1998b73649d45d706975356c0cf147174cf5a6ddf8be')
 

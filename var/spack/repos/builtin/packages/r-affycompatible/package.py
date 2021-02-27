@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycompatible(RPackage):
-    """Affymetrix GeneChip software compatibility.
+    """Affymetrix GeneChip software compatibility
 
        This package provides an interface to Affymetrix chip annotation and
        sample attribute files. The package allows an easy way for users to
@@ -19,6 +19,7 @@ class RAffycompatible(RPackage):
     homepage = "https://bioconductor.org/packages/AffyCompatible"
     git      = "https://git.bioconductor.org/packages/AffyCompatible.git"
 
+    version('1.50.0', commit='3b12d12bd6d1a9f0d45e012817231d137d47089e')
     version('1.44.0', commit='98a27fbe880551fd32a5febb6c7bde0807eac476')
     version('1.42.0', commit='699303cc20f292591e2faa12e211c588efb9eaa8')
     version('1.40.0', commit='44838bdb5e8c26afbd898c49ed327ddd1a1d0301')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -14,6 +14,8 @@ class Fastjet(AutotoolsPackage):
 
     homepage = "http://fastjet.fr/"
     url      = "http://fastjet.fr/repo/fastjet-3.3.3.tar.gz"
+
+    tags = ['hep']
 
     maintainers = ['drbenmorgan', 'vvolkl']
 
@@ -50,6 +52,9 @@ class Fastjet(AutotoolsPackage):
 
     variant('shared', default=True, description='Builds a shared version of the library')
     variant('auto-ptr', default=False, description='Use auto_ptr')
+    variant('atlas', default=False, description='Patch to make random generator thread_local')
+
+    patch('atlas.patch', when='+atlas', level=0)
 
     def configure_args(self):
         extra_args = ["--enable-allplugins"]

@@ -22,6 +22,6 @@ lmod:
       unset:
         - BAR
 
-  'platform=test target=x86':
+  'platform=test target=core2':
     load:
       - 'foo/bar'

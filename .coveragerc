@@ -4,7 +4,9 @@
 parallel = True
 concurrency = multiprocessing
 branch = True
-source = lib
+source =
+     bin
+     lib
 omit =
      lib/spack/spack/test/*
      lib/spack/docs/*

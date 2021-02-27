@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class Datatransferkit(CMakePackage):
     maintainers = ['Rombur']
 
     version('master', branch='master', submodules=True)
-    version('3.1-rc2', branch='3.1-rc2', submodules=True)
+    version('3.1-rc2', commit='1abc1a43b33dffc7a16d7497b4185d09d865e36a', submodules=True)
 
     variant('openmp', default=False, description='enable OpenMP backend')
     variant('serial', default=True, description='enable Serial backend (default)')

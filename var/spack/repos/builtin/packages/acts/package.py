@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,8 +33,16 @@ class Acts(CMakePackage, CudaPackage):
     git      = "https://github.com/acts-project/acts.git"
     maintainers = ['HadrienG2']
 
+    tags = ['hep']
+
     # Supported Acts versions
     version('master', branch='master')
+    version('5.00.0', commit='df77b91a7d37b8db6ed028a4d737014b5ad86bb7')
+    version('4.01.0', commit='c383bf434ef69939b47e840e0eac0ba632e6af9f')
+    version('4.00.0', commit='ed64b4b88d366b63adc4a8d1afe5bc97aa5751eb')
+    version('3.00.0', commit='e20260fccb469f4253519d3f0ddb3191b7046db3')
+    version('2.00.0', commit='8708eae2b2ccdf57ab7b451cfbba413daa1fc43c')
+    version('1.02.1', commit='f6ebeb9a28297ba8c54fd08b700057dd4ff2a311')
     version('1.02.0', commit='e69b95acc9a264e63aded7d1714632066e090542')
     version('1.01.0', commit='836fddd02c3eff33825833ff97d6abda5b5c20a0')
     version('1.00.0', commit='ec9ce0bcdc837f568d42a12ddf3fc9c80db62f5d')
@@ -96,6 +104,7 @@ class Acts(CMakePackage, CudaPackage):
     variant('identification', default=False, description='Build the Identification plugin')
     variant('json', default=False, description='Build the Json plugin')
     variant('legacy', default=False, description='Build the Legacy package')
+    # FIXME: Cannot build ONNX plugin as Spack doesn't have an ONNX runtime
     # FIXME: Cannot build SyCL plugin yet as Spack doesn't have SyCL support
     variant('tgeo', default=False, description='Build the TGeo plugin')
 
@@ -107,19 +116,19 @@ class Acts(CMakePackage, CudaPackage):
     # Build dependencies
     # FIXME: Use spack's autodiff package once there is one
     depends_on('boost @1.62:1.69.99 +program_options +test', when='@:0.10.3')
-    depends_on('boost @1.69: +filesystem +program_options +test', when='@0.10.4:')
-    depends_on('cmake @3.11:', type='build')
-    depends_on('dd4hep @1.10:', when='+dd4hep')
-    depends_on('dd4hep @1.10: +geant4', when='+dd4hep +geant4')
-    depends_on('eigen @3.2.9:', type='build')
+    depends_on('boost @1.71: +filesystem +program_options +test', when='@0.10.4:')
+    depends_on('cmake @3.14:', type='build')
+    depends_on('dd4hep @1.11:', when='+dd4hep')
+    depends_on('dd4hep @1.11: +geant4', when='+dd4hep +geant4')
+    depends_on('eigen @3.3.7:', type='build')
     depends_on('geant4', when='+geant4')
-    depends_on('hepmc3@3.1:', when='+hepmc3')
-    depends_on('heppdt', when='+hepmc3')
-    depends_on('intel-tbb', when='+examples')
+    depends_on('hepmc3 @3.2.1:', when='+hepmc3')
+    depends_on('heppdt', when='+hepmc3 @:4.0')
+    depends_on('intel-tbb @2020.1:', when='+examples')
     depends_on('nlohmann-json @3.2.0:', when='@0.14: +json')
     depends_on('pythia8', when='+pythia8')
     depends_on('root @6.10: cxxstd=14', when='+tgeo @:0.8.0')
-    depends_on('root @6.10: cxxstd=17', when='+tgeo @0.8.1:')
+    depends_on('root @6.20: cxxstd=17', when='+tgeo @0.8.1:')
 
     # Some variant combinations do not make sense
     conflicts('+autodiff', when='@:1.01')
@@ -139,6 +148,7 @@ class Acts(CMakePackage, CudaPackage):
     conflicts('+pythia8', when='@:0.22')
     conflicts('+pythia8', when='-examples')
     conflicts('+tgeo', when='-identification')
+    conflicts('%gcc@:7', when='@0.23:')
 
     def cmake_args(self):
         spec = self.spec

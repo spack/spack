@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,4 +21,25 @@ class LibcapNg(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('attr',     type='build')
-    depends_on('python',   type=('build', 'run'))
+    depends_on('swig',     type='build')
+    depends_on('python@2.7:',   type=('build', 'link', 'run'), when='+python')
+
+    variant('python', default=True, description='Enable python')
+
+    extends('python', when='+python')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('+python'):
+            env.set('PYTHON', self.spec['python'].command.path)
+
+    def configure_args(self):
+        args = []
+        spec = self.spec
+        if spec.satisfies('+python'):
+            if spec.satisfies('^python@3:'):
+                args.extend(['--without-python', '--with-python3'])
+            else:
+                args.extend(['--with-python', '--without-python3'])
+        else:
+            args.extend(['--without-python', '--without-python3'])
+        return args

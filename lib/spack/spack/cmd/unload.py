@@ -1,12 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
 import os
-
-import llnl.util.tty as tty
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -53,17 +51,12 @@ def unload(parser, args):
         specs = spack.store.db.query(hashes=hashes)
 
     if not args.shell:
-        msg = [
-            "This command works best with Spack's shell support",
-            ""
-        ] + spack.cmd.common.shell_init_instructions + [
-            'Or, if you want to use `spack unload` without initializing',
-            'shell support, you can run one of these:',
-            '',
-            '    eval `spack unload --sh %s`   # for bash/sh' % args.specs,
-            '    eval `spack unload --csh %s`  # for csh/tcsh' % args.specs,
-        ]
-        tty.msg(*msg)
+        specs_str = ' '.join(args.specs) or "SPECS"
+
+        spack.cmd.common.shell_init_instructions(
+            "spack unload",
+            "    eval `spack unload {sh_arg}` %s" % specs_str,
+        )
         return 1
 
     env_mod = spack.util.environment.EnvironmentModifications()

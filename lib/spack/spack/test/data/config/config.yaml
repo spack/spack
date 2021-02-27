@@ -13,5 +13,7 @@ config:
   verify_ssl: true
   checksum: true
   dirty: false
+  concretizer: {0}
   module_roots:
-    tcl:    $spack/share/spack/modules
+    tcl: {1}
+    lmod: {2}

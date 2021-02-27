@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -235,8 +235,9 @@ def find(parser, args):
     if args.json:
         cmd.display_specs_as_json(results, deps=args.deps)
     else:
-        if env:
-            display_env(env, args, decorator)
+        if not args.format:
+            if env:
+                display_env(env, args, decorator)
         if sys.stdout.isatty() and args.groups:
             tty.msg("%s" % plural(len(results), 'installed package'))
         cmd.display_specs(

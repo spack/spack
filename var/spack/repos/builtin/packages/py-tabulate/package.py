@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyTabulate(PythonPackage):
     """Pretty-print tabular data"""
 
     homepage = "https://bitbucket.org/astanin/python-tabulate"
-    url      = "https://pypi.io/packages/source/t/tabulate/tabulate-0.8.6.tar.gz"
+    pypi = "tabulate/tabulate-0.8.6.tar.gz"
 
     version('0.8.7', sha256='db2723a20d04bcda8522165c73eea7c300eda74e0ce852d9022e0159d7895007')
     version('0.8.6', sha256='5470cc6687a091c7042cee89b2946d9235fe9f6d49c193a4ae2ac7bf386737c8')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,13 +12,6 @@ class Mercurial(PythonPackage):
 
     homepage = "https://www.mercurial-scm.org"
     url      = "https://www.mercurial-scm.org/release/mercurial-5.3.tar.gz"
-
-    import_modules = [
-        'hgext', 'hgext3rd', 'mercurial', 'hgext.convert', 'hgext.fsmonitor',
-        'hgext.highlight', 'hgext.largefiles', 'hgext.zeroconf',
-        'hgext.fsmonitor.pywatchman', 'mercurial.hgweb',
-        'mercurial.httpclient', 'mercurial.pure'
-    ]
 
     version('5.3',   sha256='e57ff61d6b67695149dd451922b40aa455ab02e01711806a131a1e95c544f9b9')
     version('5.1.2', sha256='15af0b090b23649e0e53621a88dde97b55a734d7cb08b77d3df284db70d44e2e')

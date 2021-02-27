@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,7 +26,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-i', '--ignore-dependencies', action='store_true', dest='ignore_deps',
         help="don't try to install dependencies of requested packages")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '--keep-prefix', action='store_true',
         help="do not remove the install prefix if installation fails")
@@ -39,6 +39,13 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--drop-in', type=str, dest='shell', default=None,
         help="drop into a build environment in a new shell, e.g. bash, zsh")
+    subparser.add_argument(
+        '--test', default=None,
+        choices=['root', 'all'],
+        help="""If 'root' is chosen, run package tests during
+installation for top-level packages (but skip tests for dependencies).
+if 'all' is chosen, run package tests during installation for all
+packages. If neither are chosen, don't run tests for any packages.""")
     arguments.add_common_arguments(subparser, ['spec'])
 
     stop_group = subparser.add_mutually_exclusive_group()
@@ -91,13 +98,24 @@ def dev_build(self, args):
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
+
+    tests = False
+    if args.test == 'all':
+        tests = True
+    elif args.test == 'root':
+        tests = [spec.name for spec in specs]
+
     package.do_install(
+        tests=tests,
         make_jobs=args.jobs,
         keep_prefix=args.keep_prefix,
         install_deps=not args.ignore_deps,
         verbose=not args.quiet,
         dirty=args.dirty,
         stop_before=args.before,
+        skip_patch=args.skip_patch,
         stop_at=args.until)
 
     # drop into the build environment of the package?

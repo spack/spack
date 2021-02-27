@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Powertop(AutotoolsPackage):
     version('2.9', sha256='aa7fb7d8e9a00f05e7d8a7a2866d85929741e0d03a5bf40cab22d2021c959250')
 
     depends_on('libnl')
+    depends_on('ncurses', type='link')
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.prefix.sbin)

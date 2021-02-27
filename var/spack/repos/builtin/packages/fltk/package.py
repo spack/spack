@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -51,3 +51,15 @@ class Fltk(Package):
         configure(*options)
         make()
         make('install')
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('OPTIM="-Wall -Wunused -Wno-format-y2k $OPTIM"',
+                        'OPTIM="-Wall $OPTIM"', 'configure', string=True)
+            filter_file('OPTIM="-Os $OPTIM"', 'OPTIM="-O2 $OPTIM"',
+                        'configure', string=True)
+            filter_file('CXXFLAGS="$CXXFLAGS -fvisibility=hidden"',
+                        'CXXFLAGS="$CXXFLAGS"', 'configure', string=True)
+            filter_file('OPTIM="$OPTIM -fvisibility=hidden"',
+                        'OPTIM="$OPTIM"', 'configure', string=True)

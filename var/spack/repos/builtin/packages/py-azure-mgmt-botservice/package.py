@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtBotservice(PythonPackage):
     """Microsoft Azure Bot Service Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-botservice/azure-mgmt-botservice-0.2.0.zip"
+    pypi = "azure-mgmt-botservice/azure-mgmt-botservice-0.2.0.zip"
 
     version('0.2.0', sha256='b21d8858e69aa16d25b908c40116a1f773c127ec4dd602cbb8542ebf39a55d83')
 

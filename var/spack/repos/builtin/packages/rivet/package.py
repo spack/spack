@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,7 @@ class Rivet(AutotoolsPackage):
     tags = ['hep']
 
     version('3.1.3',  sha256='53ddce41705b9c22b2eaa90603f6659aa9bf46c466d8772ca9dbe4430972e021')
+    version('3.1.2',  sha256='c041d09644f4eae7c212d82237033267fbc1583dfbb4e3e67377f86cece9577a')
     version('3.1.1',  sha256='7c98b26af5f859bc65200499d15765e4b056b4cf233b34176f27a7e6bc4cf9b1')
     version('3.1.0',  sha256='4e156daee5eb10bd1573ef32d4a6a6df74788cd9180fc977db93ef4cb281000c')
     version('3.0.2',  sha256='9624d6cdcad77eafde40312cf6a1c97f4263f22faf9244b198c140b2c256d2f3')
@@ -95,6 +96,7 @@ class Rivet(AutotoolsPackage):
     depends_on('yoda@1.7.7', when='@3.0.1')
     depends_on('yoda@1.8.0', when='@3.1.0')
     depends_on('yoda@1.8.2', when='@3.1.1')
+    depends_on('yoda@1.8.3', when='@3.1.2')
     depends_on('yoda@1.8.5', when='@3.1.3')
 
     # The following versions were not a part of LCG stack

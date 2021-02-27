@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyIlluminaUtils(PythonPackage):
     data (for CASAVA 1.8+)."""
 
     homepage = "https://github.com/meren/illumina-utils"
-    url      = "https://pypi.io/packages/source/i/illumina-utils/illumina-utils-2.2.tar.gz"
+    pypi = "illumina-utils/illumina-utils-2.2.tar.gz"
 
     version('2.3', sha256='0e8407b91d530d9a53d8ec3c83e60f25e7f8f80d06ce17b8e4f57a02d3262441')
     version('2.2', sha256='6039c72d077c101710fe4fdbfeaa30caa1c3c2c84ffa6295456927d82def8e6d')

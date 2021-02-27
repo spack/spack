@@ -1,0 +1,11 @@
+--- a/Makefile.in	2020-08-06 15:35:59.461116401 -0700
++++ b/Makefile.in	2020-08-06 15:36:13.010162558 -0700
+@@ -532,7 +532,7 @@
+ 		libpkgconf/personality.c	\
+ 		libpkgconf/parser.c
+ 
+-libpkgconf_la_LDFLAGS = -no-undefined -version-info 3:0:0 -export-symbols-regex '^pkgconf_'
++libpkgconf_la_LDFLAGS = -no-undefined -version-info 3:0:0
+ dist_man_MANS = \
+ 	man/pkgconf.1		\
+ 	man/pkg.m4.7		\

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,7 +102,7 @@ def test_load_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     install('mpileaks')
 
     out = load('mpileaks', fail_on_error=False)
-    assert "To initialize spack's shell commands" in out
+    assert "To set up shell support" in out
 
 
 def test_unload(install_mockery, mock_fetch, mock_archive, mock_packages,
@@ -135,4 +135,4 @@ def test_unload_fails_no_shell(install_mockery, mock_fetch, mock_archive,
     os.environ[uenv.spack_loaded_hashes_var] = mpileaks_spec.dag_hash()
 
     out = unload('mpileaks', fail_on_error=False)
-    assert "To initialize spack's shell commands" in out
+    assert "To set up shell support" in out

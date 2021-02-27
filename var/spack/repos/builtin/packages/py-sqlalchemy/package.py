@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PySqlalchemy(PythonPackage):
     """The Python SQL Toolkit and Object Relational Mapper"""
 
     homepage = 'http://www.sqlalchemy.org/'
-    url      = "https://pypi.io/packages/source/S/SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
+    pypi = "SQLAlchemy/SQLAlchemy-1.3.9.tar.gz"
 
     version('1.3.19', sha256='3bba2e9fbedb0511769780fe1d63007081008c5c2d7d715e91858c94dbaa260e')
     version('1.3.9', sha256='272a835758908412e75e87f75dd0179a51422715c125ce42109632910526b1fd')
@@ -21,9 +21,6 @@ class PySqlalchemy(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest@2.5.2:3.9.0,3.9.3:', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-pytest-xdist', type='test')
 
     variant('backend', description='Python modules for database access',
             values=any_combination_of('mysql', 'pymysql', 'postgresql'))

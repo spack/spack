@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,14 +18,18 @@ class Superlu(Package):
     variant('pic',    default=True,
             description='Build with position independent code')
 
+    depends_on('tcsh', type='build')
     depends_on('cmake', when='@5.2.1:', type='build')
     depends_on('blas')
+
+    test_requires_compiler = True
 
     # CMake installation method
     def install(self, spec, prefix):
         cmake_args = [
             '-Denable_blaslib=OFF',
-            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].libs.joined())
+            '-DBLAS_blas_LIBRARY={0}'.format(spec['blas'].libs.joined()),
+            '-DCMAKE_INSTALL_LIBDIR={0}'.format(self.prefix.lib)
         ]
 
         if '+pic' in spec:
@@ -93,3 +97,77 @@ class Superlu(Package):
         install_tree('lib', prefix.lib)
         mkdir(prefix.include)
         install(join_path('SRC', '*.h'), prefix.include)
+
+    examples_src_dir = 'EXAMPLE'
+    make_hdr_file = 'make.inc'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources(self.examples_src_dir)
+
+    def _generate_make_hdr_for_test(self):
+        config_args = []
+
+        # Define make.inc file
+        config_args.extend([
+            'SuperLUroot = {0}'.format(self.prefix),
+            'SUPERLULIB = {0}/libsuperlu.a'.format(self.prefix.lib),
+            'BLASLIB    = {0}'.format(self.spec['blas'].libs.ld_flags),
+            'TMGLIB     = libtmglib.a',
+            'LIBS       = $(SUPERLULIB) $(BLASLIB)',
+            'ARCH       = ar',
+            'ARCHFLAGS  = cr',
+            'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
+            'CC         = {0}'.format(self.compiler.cc),
+            'FORTRAN    = {0}'.format(self.compiler.fc),
+            'LOADER     = {0}'.format(self.compiler.cc),
+            'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
+            'NOOPTS     = -O0'
+        ])
+
+        return config_args
+
+    # Pre-cmake configuration
+    @when('@4.3')
+    def _generate_make_hdr_for_test(self):
+        config_args = []
+
+        # Define make.inc file
+        config_args.extend([
+            'PLAT       = _x86_64',
+            'SuperLUroot = {0}'.format(self.prefix),
+            'SUPERLULIB = {0}/libsuperlu_{1}.a'.format(self.prefix.lib,
+                                                       self.spec.version),
+            'BLASLIB    = {0}'.format(self.spec['blas'].libs.ld_flags),
+            'TMGLIB     = libtmglib.a',
+            'LIBS       = $(SUPERLULIB) $(BLASLIB)',
+            'ARCH       = ar',
+            'ARCHFLAGS  = cr',
+            'RANLIB     = {0}'.format('ranlib' if which('ranlib') else 'echo'),
+            'CC         = {0}'.format(self.compiler.cc),
+            'FORTRAN    = {0}'.format(self.compiler.fc),
+            'LOADER     = {0}'.format(self.compiler.cc),
+            'CFLAGS     = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DPRNTlevel=0 -DAdd_',
+            'NOOPTS     = -O0'
+        ])
+
+        return config_args
+
+    def test(self):
+        config_args = self._generate_make_hdr_for_test()
+
+        # Write configuration options to make.inc file
+        make_file_inc = join_path(self.install_test_root, self.make_hdr_file)
+        with open(make_file_inc, 'w') as inc:
+            for option in config_args:
+                inc.write('{0}\n'.format(option))
+
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        with working_dir(test_dir, create=False):
+            make('HEADER={0}'.format(self.prefix.include), 'superlu',
+                 parallel=False)
+            self.run_test('./superlu', purpose='Smoke test for superlu',
+                          work_dir='.')
+            make('clean')

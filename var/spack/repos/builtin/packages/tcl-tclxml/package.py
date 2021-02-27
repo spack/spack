@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,14 +26,17 @@ class TclTclxml(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('libxslt')
 
+    # Results in C99 build error
+    conflicts('%apple-clang@12:')
+
     def configure_args(self):
         return [
             '--exec-prefix={0}'.format(
                 self.prefix),
-            '--with-tcl={0}/lib'.format(
-                self.spec['tcl'].prefix),
-            '--with-xml2-config={0}/bin/xml2-config'.format(
-                self.spec['libxml2'].prefix),
-            '--with-xslt-config={0}/bin/xslt-config'.format(
-                self.spec['libxslt'].prefix),
+            '--with-tcl={0}'.format(
+                self.spec['tcl'].libs.directories[0]),
+            '--with-xml2-config={0}'.format(
+                self.spec['libxml2'].prefix.bin.join('xml2-config')),
+            '--with-xslt-config={0}'.format(
+                self.spec['libxslt'].prefix.bin.join('xslt-config')),
         ]

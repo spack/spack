@@ -1,42 +1,29 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-
-
 class Opencv(CMakePackage, CudaPackage):
-    """OpenCV is released under a BSD license and hence it's free for both
-    academic and commercial use. It has C++, C, Python and Java interfaces and
-    supports Windows, Linux, Mac OS, iOS and Android. OpenCV was designed for
-    computational efficiency and with a strong focus on real-time applications.
-    Written in optimized C/C++, the library can take advantage of multi-core
-    processing. Enabled with OpenCL, it can take advantage of the hardware
-    acceleration of the underlying heterogeneous compute platform. Adopted all
-    around the world, OpenCV has more than 47 thousand people of user community
-    and estimated number of downloads exceeding 9 million. Usage ranges from
-    interactive art, to mines inspection, stitching maps on the web or through
-    advanced robotics.
-    """
+    """OpenCV (Open Source Computer Vision Library) is an open source computer
+    vision and machine learning software library."""
 
-    homepage = 'http://opencv.org/'
-    url      = 'https://github.com/Itseez/opencv/archive/3.1.0.tar.gz'
+    homepage = 'https://opencv.org/'
+    url      = 'https://github.com/opencv/opencv/archive/4.5.0.tar.gz'
     git      = 'https://github.com/opencv/opencv.git'
 
+    maintainers = ['bvanessen', 'adamjstewart']
+
     version('master', branch='master')
-    version('4.2.0', sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
-    version('4.1.2', sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
-    version('4.1.1', sha256='5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217')
-    version('4.1.0-openvino', sha256='58764d2487c6fb4cd950fb46483696ae7ae28e257223d6e44e162caa22ee9e5c')
-    version('4.1.0',          sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7')
-    version('4.0.1-openvino', sha256='8cbe32d12a70decad7a8327eb4fba46016a9c47ff3ba6e114d27b450f020716f')
-    version('4.0.1',          sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
-    version('4.0.0-openvino', sha256='aa910078ed0b7e17bd10067e04995c131584a6ed6d0dcc9ca44a292aa8e296fc')
-    version('4.0.0',          sha256='3787b3cc7b21bba1441819cb00c636911a846c0392ddf6211d398040a1e4886c')
-    version('3.4.6',          sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d')
-    version('3.4.5',          sha256='0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e')
-    version('3.4.4',          sha256='a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746')
+    version('4.5.0',    sha256='dde4bf8d6639a5d3fe34d5515eab4a15669ded609a1d622350c7ff20dace1907')
+    version('4.2.0',    sha256='9ccb2192d7e8c03c58fee07051364d94ed7599363f3b0dce1c5e6cc11c1bb0ec')
+    version('4.1.2',    sha256='385dd0a9c25e67ef0dd60e022d2a2d7b17e2f36819cf3cb46aa8cdff5c5282c9')
+    version('4.1.1',    sha256='5de5d96bdfb9dad6e6061d70f47a0a91cee96bb35afb9afb9ecb3d43e243d217')
+    version('4.1.0',    sha256='8f6e4ab393d81d72caae6e78bd0fd6956117ec9f006fba55fcdb88caf62989b7')
+    version('4.0.1',    sha256='7b86a0ee804244e0c407321f895b15e4a7162e9c5c0d2efc85f1cadec4011af4')
+    version('4.0.0',    sha256='3787b3cc7b21bba1441819cb00c636911a846c0392ddf6211d398040a1e4886c')
+    version('3.4.12',   sha256='c8919dfb5ead6be67534bf794cb0925534311f1cd5c6680f8164ad1813c88d13')
+    version('3.4.6',    sha256='e7d311ff97f376b8ee85112e2b536dbf4bdf1233673500175ed7cf21a0089f6d')
+    version('3.4.5',    sha256='0c57d9dd6d30cbffe68a09b03f4bebe773ee44dc8ff5cd6eaeb7f4d5ef3b428e')
+    version('3.4.4',    sha256='a35b00a71d77b484f73ec485c65fe56c7a6fa48acd5ce55c197aef2e13c78746')
     version('3.4.3',    sha256='4eef85759d5450b183459ff216b4c0fa43e87a4f6aa92c8af649f89336f002ec')
     version('3.4.1',    sha256='f1b87684d75496a1054405ae3ee0b6573acaf3dad39eaf4f1d66fdd7e03dc852')
     version('3.4.0',    sha256='678cc3d2d1b3464b512b084a8cca1fad7de207c7abdf2caa1fed636c13e916da')
@@ -54,54 +41,57 @@ class Opencv(CMakePackage, CudaPackage):
     # Standard variants
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('lapack', default=True, description='Include Lapack library support')
+    variant('lapack', default=False, description='Include Lapack library support')
     variant('powerpc', default=False, description='Enable PowerPC for GCC')
     variant('vsx', default=False, description='Enable POWER8 and above VSX (64-bit little-endian)')
     variant('fast-math', default=False,
             description='Enable -ffast-math (not recommended for GCC 4.6.x)')
 
     # OpenCV modules
-    variant('calib3d', default=True, description='calib3d module')
+    variant('calib3d', default=False, description='calib3d module')
     variant('core', default=True, description='Include opencv_core module into the OpenCV build')
     variant('cudacodec', default=False, description='Enable video encoding/decoding with CUDA')
-    variant('dnn', default=True, description='Build DNN support')
-    variant('features2d', default=True, description='features2d module')
-    variant('flann', default=True, description='flann module')
-    variant('highgui', default=True, description='Include opencv_highgui module into the OpenCV build')
-    variant('imgproc', default=True, description='Include opencv_imgproc module into the OpenCV build')
-    variant('java', default=True,
+    variant('dnn', default=False, description='Build DNN support')
+    variant('features2d', default=False, description='features2d module')
+    variant('flann', default=False, description='flann module')
+    variant('highgui', default=False, description='Include opencv_highgui module into the OpenCV build')
+    variant('imgcodecs', default=False, description='Include opencv_imgcodecs module into the OpenCV build')
+    variant('imgproc', default=False, description='Include opencv_imgproc module into the OpenCV build')
+    variant('java', default=False,
             description='Activates support for Java')
-    variant('ml', default=True, description='Build ML support')
-    variant('python', default=True,
+    variant('ml', default=False, description='Build ML support')
+    variant('python', default=False,
             description='Enables the build of Python extensions')
-    variant('stitching', default=True, description='stitching module')
-    variant('superres', default=True, description='superres module')
-    variant('ts', default=True, description='Include opencv_ts module into the OpenCV build')
-    variant('video', default=True, description='video module')
-    variant('videostab', default=True, description='videostab module')
-    variant('videoio', default=True, description='videoio module')
+    variant('stitching', default=False, description='stitching module')
+    variant('superres', default=False, description='superres module')
+    variant('ts', default=False, description='Include opencv_ts module into the OpenCV build')
+    variant('video', default=False, description='video module')
+    variant('videostab', default=False, description='videostab module')
+    variant('videoio', default=False, description='videoio module')
 
     # Optional 3rd party components
-    variant('eigen', default=True, description='Activates support for eigen')
-    variant('ipp', default=True, description='Activates support for IPP')
-    variant('ipp_iw', default=True, description='Build IPP IW from source')
-    variant('jasper', default=True, description='Activates support for JasPer')
-    variant('jpeg', default=True, description='Include JPEG support')
-    variant('opencl', default=True, description='Include OpenCL Runtime support')
-    variant('opencl_svm', default=True, description='Include OpenCL Shared Virtual Memory support')
-    variant('openclamdfft', default=True, description='Include OpenCL AMD OpenCL FFT library support')
-    variant('openclamdblas', default=True, description='Include OpenCL AMD OpenCL BLAS library support')
-    variant('openmp', default=True, description='Activates support for OpenMP threads')
-    variant('pthreads_pf', default=True, description='Use pthreads-based parallel_for')
-    variant('png', default=True, description='Include PNG support')
+    variant('eigen', default=False, description='Activates support for eigen')
+    variant('ipp', default=False, description='Activates support for IPP')
+    variant('ipp_iw', default=False, description='Build IPP IW from source')
+    variant('jasper', default=False, description='Activates support for JasPer')
+    variant('jpeg', default=False, description='Include JPEG support')
+    variant('opencl', default=False, description='Include OpenCL Runtime support')
+    variant('opencl_svm', default=False, description='Include OpenCL Shared Virtual Memory support')
+    variant('openclamdfft', default=False, description='Include OpenCL AMD OpenCL FFT library support')
+    variant('openclamdblas', default=False, description='Include OpenCL AMD OpenCL BLAS library support')
+    variant('openmp', default=False, description='Activates support for OpenMP threads')
+    variant('pthreads_pf', default=False, description='Use pthreads-based parallel_for')
+    variant('png', default=False, description='Include PNG support')
     variant('qt', default=False, description='Activates support for QT')
-    variant('gtk', default=True, description='Activates support for GTK')
-    variant('tiff', default=True, description='Include TIFF support')
-    variant('vtk', default=True, description='Activates support for VTK')
-    variant('zlib', default=True, description='Build zlib from source')
+    variant('gtk', default=False, description='Activates support for GTK')
+    variant('tiff', default=False, description='Include TIFF support')
+    variant('vtk', default=False, description='Activates support for VTK')
+    variant('zlib', default=False, description='Build zlib from source')
 
     variant('contrib', default=False, description='Adds in code from opencv_contrib.')
-    contrib_vers = ['4.1.0', '4.1.1', '4.2.0']
+    contrib_vers = [
+        '3.4.12', '4.0.0', '4.0.1', '4.1.0', '4.1.1', '4.1.2', '4.2.0', '4.5.0'
+    ]
     for cv in contrib_vers:
         resource(name="contrib",
                  git='https://github.com/opencv/opencv_contrib.git',
@@ -151,11 +141,15 @@ class Opencv(CMakePackage, CudaPackage):
     # TODO For Cuda >= 10, make sure 'dynlink_nvcuvid.h' or 'nvcuvid.h'
     # exists, otherwise build will fail
     # See https://github.com/opencv/opencv_contrib/issues/1786
-    conflicts('cuda@10:', when='+cudacodec')
-    conflicts('cuda', when='~contrib', msg='cuda support requires +contrib')
+    conflicts('^cuda@10:', when='+cudacodec')
+    conflicts('^cuda', when='~contrib', msg='cuda support requires +contrib')
 
     # IPP is provided x86_64 only
     conflicts('+ipp', when="arch=aarch64:")
+
+    # Module opencv_calib3d disabled because opencv_flann dependency
+    # can't be resolved!
+    conflicts('+calib3d', when='~flann')
 
     extends('python', when='+python')
 
@@ -193,6 +187,8 @@ class Opencv(CMakePackage, CudaPackage):
                 'ON' if '+flann' in spec else 'OFF')),
             '-DBUILD_opencv_highgui:BOOL={0}'.format((
                 'ON' if '+highgui' in spec else 'OFF')),
+            '-DBUILD_opencv_imgcodecs:BOOL={0}'.format((
+                'ON' if '+imgcodecs' in spec else 'OFF')),
             '-DBUILD_opencv_imgproc:BOOL={0}'.format((
                 'ON' if '+imgproc' in spec else 'OFF')),
             '-DBUILD_opencv_java:BOOL={0}'.format((

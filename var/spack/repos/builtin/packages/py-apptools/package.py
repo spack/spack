@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyApptools(PythonPackage):
     that is commonly needed by many applications."""
 
     homepage = "https://docs.enthought.com/apptools"
-    url      = "https://pypi.io/packages/source/a/apptools/apptools-4.5.0.tar.gz"
+    pypi = "apptools/apptools-4.5.0.tar.gz"
 
     version('4.5.0', sha256='260ae0e2a86cb2df2fede631ab6ac8ece694a58a1def78cd015c890c57140582')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,9 +12,7 @@ class PyBabel(PythonPackage):
     emphasis on web-based applications."""
 
     homepage = "http://babel.pocoo.org/en/latest/"
-    url      = "https://pypi.io/packages/source/B/Babel/Babel-2.7.0.tar.gz"
-
-    import_modules = ['babel', 'babel.localtime', 'babel.messages']
+    pypi = "Babel/Babel-2.7.0.tar.gz"
 
     version('2.7.0', sha256='e86135ae101e31e2c8ec20a4e0c5220f4eed12487d5cf3f78be7e98d3a57fc28')
     version('2.6.0', sha256='8cba50f48c529ca3fa18cf81fa9403be176d374ac4d60738b839122dfaaa3d23')
@@ -24,5 +22,3 @@ class PyBabel(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-pytz@2015.7:', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
-    depends_on('py-freezegun', type='test')

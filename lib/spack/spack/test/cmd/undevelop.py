@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ env = SpackCommand('env')
 concretize = SpackCommand('concretize')
 
 
-def test_undevelop(tmpdir, mock_packages, mutable_mock_env_path):
+def test_undevelop(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')
     with envdir.as_cwd():
@@ -35,11 +35,11 @@ env:
             after = spack.spec.Spec('mpich').concretized()
 
     # Removing dev spec from environment changes concretization
-    assert before.satisfies('dev_path=any')
-    assert not after.satisfies('dev_path=any')
+    assert before.satisfies('dev_path=*')
+    assert not after.satisfies('dev_path=*')
 
 
-def test_undevelop_nonexistent(tmpdir, mock_packages, mutable_mock_env_path):
+def test_undevelop_nonexistent(tmpdir, config, mock_packages, mutable_mock_env_path):
     # setup environment
     envdir = tmpdir.mkdir('env')
     with envdir.as_cwd():

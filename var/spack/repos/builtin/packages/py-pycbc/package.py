@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyPycbc(PythonPackage):
     the flagship analysis of LIGO and Virgo data."""
 
     homepage = "https://pycbc.org/"
-    url      = "https://pypi.io/packages/source/P/PyCBC/PyCBC-1.14.1.tar.gz"
+    pypi = "PyCBC/PyCBC-1.14.1.tar.gz"
 
     version('1.14.1', sha256='4b0a309cb6209837aaebbd691413a286dd7200ccf4b977ffed1462a65ac35dc0')
 
@@ -38,3 +38,5 @@ class PyPycbc(PythonPackage):
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-ligo-segments', type=('build', 'run'))
     depends_on('py-weave@0.16.0:', when='^python@:2', type=('build', 'run'))
+
+    patch('for_aarch64.patch', when='@:1.14.1 target=aarch64:')

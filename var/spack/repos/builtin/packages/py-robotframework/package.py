@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,3 @@ class PyRobotframework(PythonPackage):
     version('3.2.1', sha256='9805faa0990125ff2c9689b673448d5f47e78470e7a8e95af1606a775fa8379f')
 
     depends_on('py-setuptools', type=('build', 'run'))
-    depends_on('py-enum34', type='test')
-    depends_on('py-ipaddress', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-unittest2', type='test')

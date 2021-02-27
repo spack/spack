@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,8 @@ class CandleBenchmarks(Package):
 
     variant('mpi', default=True, description='Build with MPI support')
 
-    extends('python@2.7:')
+    extends('python')
+    depends_on('python@2.7:')
     depends_on('py-theano +gpu', type=('build', 'run'))
     depends_on('py-keras', type=('build', 'run'))
     depends_on('py-matplotlib +image@:2.2.3', type=('build', 'run'))

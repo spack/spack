@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,18 +9,15 @@ class PyTorchvision(PythonPackage):
     architectures, and common image transformations for computer vision."""
 
     homepage = "https://github.com/pytorch/vision"
-    url      = "https://github.com/pytorch/vision/archive/v0.7.0.tar.gz"
+    url      = "https://github.com/pytorch/vision/archive/v0.8.2.tar.gz"
     git      = "https://github.com/pytorch/vision.git"
 
     maintainers = ['adamjstewart']
-    import_modules = [
-        'torchvision', 'torchvision.datasets', 'torchvision.models',
-        'torchvision.transforms', 'torchvision.ops',
-        'torchvision.models.segmentation',
-        'torchvision.models.detection'
-    ]
 
     version('master', branch='master')
+    version('0.8.2', sha256='9a866c3c8feb23b3221ce261e6153fc65a98ce9ceaa71ccad017016945c178bf')
+    version('0.8.1', sha256='c46734c679c99f93e5c06654f4295a05a6afe6c00a35ebd26a2cce507ae1ccbd')
+    version('0.8.0', sha256='b5f040faffbfc7bac8d4687d8665bd1196937334589b3fb5fcf15bb69ca25391')
     version('0.7.0', sha256='fa0a6f44a50451115d1499b3f2aa597e0092a07afce1068750260fa7dd2c85cb')
     version('0.6.1', sha256='8173680a976c833640ecbd0d7e6f0a11047bf8833433e2147180efc905e48656')
     version('0.6.0', sha256='02de11b3abe6882de4032ce86dab9c7794cbc84369b44d04e667486580f0f1f7')
@@ -46,10 +43,14 @@ class PyTorchvision(PythonPackage):
     depends_on('py-six', when='@:0.5', type=('build', 'run'))
 
     # https://github.com/pytorch/vision#installation
+    depends_on('py-torch@master', when='@master', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.7.1', when='@0.8.2', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.7.0', when='@0.8.1', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.7.0', when='@0.8.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.6.0', when='@0.7.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.1', when='@0.6.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.5.0', when='@0.6.0', type=('build', 'link', 'run'))
-    depends_on('py-torch@1.4.0', when='@0.5.0', type=('build', 'link', 'run'))
+    depends_on('py-torch@1.4.1', when='@0.5.0', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.1', when='@0.4.2', type=('build', 'link', 'run'))
     depends_on('py-torch@1.3.0', when='@0.4.1', type=('build', 'link', 'run'))
     depends_on('py-torch@1.2.0', when='@0.4.0', type=('build', 'link', 'run'))
@@ -65,7 +66,6 @@ class PyTorchvision(PythonPackage):
 
     # Many of the datasets require additional dependencies to use.
     # These can be installed after the fact.
-    depends_on('py-scipy', type='test')
 
     depends_on('ffmpeg@3.1:', when='@0.4.2:')
 
@@ -93,5 +93,10 @@ class PyTorchvision(PythonPackage):
         if '+cuda' in self.spec['py-torch']:
             env.set('FORCE_CUDA', 1)
             env.set('CUDA_HOME', self.spec['cuda'].prefix)
+            pytorch_cuda_arch = ';'.join(
+                '{0:.1f}'.format(float(i) / 10.0) for i in
+                self.spec['py-torch'].variants['cuda_arch'].value
+            )
+            env.set('TORCH_CUDA_ARCH_LIST', pytorch_cuda_arch)
         else:
             env.set('FORCE_CUDA', 0)

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,7 @@ class Veloc(CMakePackage):
     depends_on('mpi')
     depends_on('er')
     depends_on('axl')
+    depends_on('openssl')  # Relies on the OpenSSL crypto library for checksums
     depends_on('pdsh', when='@master')
     depends_on('cmake@3.9:', type='build')
 

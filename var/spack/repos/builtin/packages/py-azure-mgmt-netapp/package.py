@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtNetapp(PythonPackage):
     """Microsoft Azure NetApp Files Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-netapp/azure-mgmt-netapp-0.11.0.zip"
+    pypi = "azure-mgmt-netapp/azure-mgmt-netapp-0.11.0.zip"
 
     version('0.11.0', sha256='621a76b06c97e858d49b68953e66eb718ac24f91aa6bf090f32a335a38f02305')
     version('0.8.0',  sha256='67df7c7391c2179423a95927a639492c3a177bff8f3a80e4b2d666a86e2d6f6d')

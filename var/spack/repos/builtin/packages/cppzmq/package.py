@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,3 +25,10 @@ class Cppzmq(CMakePackage):
     depends_on('cmake@3.0.0:', type='build')
     depends_on('libzmq')
     depends_on('libzmq@4.2.2', when='@4.2.2:4.2.3')
+
+    def cmake_args(self):
+        args = []
+        # https://github.com/zeromq/cppzmq/issues/422
+        # https://github.com/zeromq/cppzmq/pull/288
+        args.append('-DCPPZMQ_BUILD_TESTS=OFF')
+        return args

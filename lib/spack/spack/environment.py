@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
+from spack.installer import PackageInstaller
+import spack.util.path
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -467,7 +469,7 @@ class ViewDescriptor(object):
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
         self.base = base_path
-        self.root = root
+        self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
         self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
@@ -554,11 +556,20 @@ class ViewDescriptor(object):
             # that cannot be resolved or have repos that have been removed
             # we always regenerate the view from scratch. We must first make
             # sure the root directory exists for the very first time though.
-            root = self.root
-            if not os.path.isabs(root):
-                root = os.path.normpath(os.path.join(self.base, self.root))
+            root = os.path.normpath(
+                self.root if os.path.isabs(self.root) else os.path.join(
+                    self.base, self.root)
+            )
             fs.mkdirp(root)
-            with fs.replace_directory_transaction(root):
+
+            # The tempdir for the directory transaction must be in the same
+            # filesystem mount as the view for symlinks to work. Provide
+            # dirname(root) as the tempdir for the
+            # replace_directory_transaction because it must be on the same
+            # filesystem mount as the view itself. Otherwise it may be
+            # impossible to construct the view in the tempdir even when it can
+            # be constructed in-place.
+            with fs.replace_directory_transaction(root, os.path.dirname(root)):
                 view = self.view()
 
                 view.clean()
@@ -684,7 +695,7 @@ class Environment(object):
                 else:
                     self.spec_lists[name] = user_specs
 
-        spec_list = config_dict(self.yaml).get(user_speclist_name)
+        spec_list = config_dict(self.yaml).get(user_speclist_name, [])
         user_specs = SpecList(user_speclist_name, [s for s in spec_list if s],
                               self.spec_lists.copy())
         self.spec_lists[user_speclist_name] = user_specs
@@ -706,10 +717,11 @@ class Environment(object):
             self.views = {}
         # Retrieve the current concretization strategy
         configuration = config_dict(self.yaml)
-        self.concretization = configuration.get('concretization')
+        # default concretization to separately
+        self.concretization = configuration.get('concretization', 'separately')
 
         # Retrieve dev-build packages:
-        self.dev_specs = configuration['develop']
+        self.dev_specs = configuration.get('develop', {})
         for name, entry in self.dev_specs.items():
             # spec must include a concrete version
             assert Spec(entry['spec']).version.concrete
@@ -1336,21 +1348,21 @@ class Environment(object):
 
         # if spec and all deps aren't dev builds, we don't need to overwrite it
         if not any(spec.satisfies(c)
-                   for c in ('dev_path=any', '^dev_path=any')):
+                   for c in ('dev_path=*', '^dev_path=*')):
             return False
 
         # if any dep needs overwrite, or any dep is missing and is a dev build
         # then overwrite this package
         if any(
             self._spec_needs_overwrite(dep) or
-            ((not dep.package.installed) and dep.satisfies('dev_path=any'))
+            ((not dep.package.installed) and dep.satisfies('dev_path=*'))
             for dep in spec.traverse(root=False)
         ):
             return True
 
         # if it's not a direct dev build and its dependencies haven't
         # changed, it hasn't changed.
-        # We don't merely check satisfaction (spec.satisfies('dev_path=any')
+        # We don't merely check satisfaction (spec.satisfies('dev_path=*')
         # because we need the value of the variant in the next block of code
         dev_path_var = spec.variants.get('dev_path', None)
         if not dev_path_var:
@@ -1371,24 +1383,7 @@ class Environment(object):
 
         return ret
 
-    def install(self, user_spec, concrete_spec=None, **install_args):
-        """Install a single spec into an environment.
-
-        This will automatically concretize the single spec, but it won't
-        affect other as-yet unconcretized specs.
-        """
-        concrete = self.concretize_and_add(user_spec, concrete_spec)
-
-        self._install(concrete, **install_args)
-
-    def _install(self, spec, **install_args):
-        # "spec" must be concrete
-        package = spec.package
-
-        install_args['overwrite'] = install_args.get(
-            'overwrite', []) + self._get_overwrite_specs()
-        package.do_install(**install_args)
-
+    def _install_log_links(self, spec):
         if not spec.external:
             # Make sure log directory exists
             log_path = self.log_path
@@ -1402,38 +1397,76 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
-    def install_all(self, args=None):
+    def uninstalled_specs(self):
+        """Return a list of all uninstalled (and non-dev) specs."""
+        # Do the installed check across all specs within a single
+        # DB read transaction to reduce time spent in lock acquisition.
+        uninstalled_specs = []
+        with spack.store.db.read_transaction():
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
+                if not spec.package.installed or (
+                        spec.satisfies('dev_path=*') or
+                        spec.satisfies('^dev_path=*')
+                ):
+                    uninstalled_specs.append(spec)
+        return uninstalled_specs
+
+    def install_all(self, args=None, **install_args):
         """Install all concretized specs in an environment.
 
         Note: this does not regenerate the views for the environment;
         that needs to be done separately with a call to write().
 
+        Args:
+            args (Namespace): argparse namespace with command arguments
+            install_args (dict): keyword install arguments
         """
-
+        tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
-        specs_to_install = []
-        with spack.store.db.read_transaction():
-            for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or (
-                        spec.satisfies('dev_path=any') or
-                        spec.satisfies('^dev_path=any')
-                ):
-                    # If it's a dev build it could need to be reinstalled
-                    specs_to_install.append(spec)
+        specs_to_install = self.uninstalled_specs()
 
+        if not specs_to_install:
+            tty.msg('All of the packages are already installed')
+            return
+
+        tty.debug('Processing {0} uninstalled specs'
+                  .format(len(specs_to_install)))
+
+        install_args['overwrite'] = install_args.get(
+            'overwrite', []) + self._get_overwrite_specs()
+
+        installs = []
         for spec in specs_to_install:
             # Parse cli arguments and construct a dictionary
-            # that will be passed to Package.do_install API
+            # that will be passed to the package installer
             kwargs = dict()
+            if install_args:
+                kwargs.update(install_args)
             if args:
                 spack.cmd.install.update_kwargs_from_args(args, kwargs)
 
-            self._install(spec, **kwargs)
+            installs.append((spec.package, kwargs))
+
+        try:
+            builder = PackageInstaller(installs)
+            builder.install()
+        finally:
+            # Ensure links are set appropriately
+            for spec in specs_to_install:
+                if spec.package.installed:
+                    try:
+                        self._install_log_links(spec)
+                    except OSError as e:
+                        tty.warn('Could not install log links for {0}: {1}'
+                                 .format(spec.name, str(e)))
+
+            with self.write_transaction():
+                self.regenerate_views()
 
     def all_specs(self):
         """Return all specs, even those a user spec would shadow."""
@@ -1481,6 +1514,67 @@ class Environment(object):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
+
+    def matching_spec(self, spec):
+        """
+        Given a spec (likely not concretized), find a matching concretized
+        spec in the environment.
+
+        The matching spec does not have to be installed in the environment,
+        but must be concrete (specs added with `spack add` without an
+        intervening `spack concretize` will not be matched).
+
+        If there is a single root spec that matches the provided spec or a
+        single dependency spec that matches the provided spec, then the
+        concretized instance of that spec will be returned.
+
+        If multiple root specs match the provided spec, or no root specs match
+        and multiple dependency specs match, then this raises an error
+        and reports all matching specs.
+        """
+        # Root specs will be keyed by concrete spec, value abstract
+        # Dependency-only specs will have value None
+        matches = {}
+
+        for user_spec, concretized_user_spec in self.concretized_specs():
+            if concretized_user_spec.satisfies(spec):
+                matches[concretized_user_spec] = user_spec
+            for dep_spec in concretized_user_spec.traverse(root=False):
+                if dep_spec.satisfies(spec):
+                    # Don't overwrite the abstract spec if present
+                    # If not present already, set to None
+                    matches[dep_spec] = matches.get(dep_spec, None)
+
+        if not matches:
+            return None
+        elif len(matches) == 1:
+            return list(matches.keys())[0]
+
+        root_matches = dict((concrete, abstract)
+                            for concrete, abstract in matches.items()
+                            if abstract)
+
+        if len(root_matches) == 1:
+            return root_matches[0][1]
+
+        # More than one spec matched, and either multiple roots matched or
+        # none of the matches were roots
+        # If multiple root specs match, it is assumed that the abstract
+        # spec will most-succinctly summarize the difference between them
+        # (and the user can enter one of these to disambiguate)
+        match_strings = []
+        fmt_str = '{hash:7}  ' + spack.spec.default_format
+        for concrete, abstract in matches.items():
+            if abstract:
+                s = 'Root spec %s\n  %s' % (abstract, concrete.format(fmt_str))
+            else:
+                s = 'Dependency spec\n  %s' % concrete.format(fmt_str)
+            match_strings.append(s)
+        matches_str = '\n'.join(match_strings)
+
+        msg = ("{0} matches multiple specs in the environment {1}: \n"
+               "{2}".format(str(spec), self.name, matches_str))
+        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be
