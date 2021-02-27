@@ -66,4 +66,3 @@ class PyChemHorton(PythonPackage):
                 f.write('include_dirs = {0}\n'.format(val['include_dirs']))
                 if key == 'libint':
                     f.write('extra_compile_args = -DLIBINT2_MAX_AM_ERI=7')
-
