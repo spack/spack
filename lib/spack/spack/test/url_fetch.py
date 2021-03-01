@@ -53,12 +53,8 @@ def test_urlfetchstrategy_sans_url(use_curl):
     """Ensure constructor with no URL fails."""
     with spack.config.override('config:use_curl', use_curl):
         with pytest.raises(ValueError):
-            if use_curl:
-                with fs.CurlFetchStrategy(None):
-                    pass
-            else:
-                with fs.URLFetchStrategy(None):
-                    pass
+            with fs.URLFetchStrategy(None):
+                pass
 
 
 @pytest.mark.parametrize('use_curl', [True, False])
@@ -68,10 +64,7 @@ def test_urlfetchstrategy_bad_url(tmpdir, use_curl):
     with spack.config.override('config:locks', sys.platform != "win32"):
         with spack.config.override('config:use_curl', use_curl):
             with pytest.raises(fs.FailedDownloadError):
-                if use_curl:
-                    fetcher = fs.CurlFetchStrategy(url='file:///does-not-exist')
-                else:
-                    fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
+                fetcher = fs.URLFetchStrategy(url='file:///does-not-exist')
                 assert fetcher is not None
 
                 with Stage(fetcher, path=testpath) as stage:
@@ -84,9 +77,9 @@ def test_fetch_options(tmpdir, mock_archive):
     testpath = str(tmpdir)
     with spack.config.override('config:locks', sys.platform != "win32"):
         with spack.config.override('config:use_curl', True):
-            fetcher = fs.CurlFetchStrategy(url=mock_archive.url,
-                                           fetch_options={'cookie': 'True',
-                                                          'timeout': 10})
+            fetcher = fs.URLFetchStrategy(url=mock_archive.url,
+                                          fetch_options={'cookie': 'True',
+                                                         'timeout': 10})
             assert fetcher is not None
 
             with Stage(fetcher, path=testpath) as stage:
@@ -101,10 +94,7 @@ def test_archive_file_errors(tmpdir, mock_archive, use_curl):
     testpath = str(tmpdir)
     with spack.config.override('config:locks', sys.platform != "win32"):
         with spack.config.override('config:use_curl', use_curl):
-            if use_curl:
-                fetcher = fs.CurlFetchStrategy(url=mock_archive.url)
-            else:
-                fetcher = fs.URLFetchStrategy(url=mock_archive.url)
+            fetcher = fs.URLFetchStrategy(url=mock_archive.url)
             assert fetcher is not None
             with pytest.raises(fs.FailedDownloadError):
                 with Stage(fetcher, path=testpath) as stage:
@@ -196,10 +186,7 @@ def test_from_list_url(mock_packages, config, spec, url, digest, use_curl):
         specification = Spec(spec).concretized()
         pkg = spack.repo.get(specification)
         fetch_strategy = fs.from_list_url(pkg)
-        if use_curl:
-            assert isinstance(fetch_strategy, fs.CurlFetchStrategy)
-        else:
-            assert isinstance(fetch_strategy, fs.URLFetchStrategy)
+        assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == url
         assert fetch_strategy.digest == digest
         assert fetch_strategy.extra_options == {}
@@ -217,10 +204,7 @@ def test_from_list_url_unspecified(mock_packages, config, use_curl):
         spec = Spec('url-list-test @2.0.0').concretized()
         pkg = spack.repo.get(spec)
         fetch_strategy = fs.from_list_url(pkg)
-        if use_curl:
-            assert isinstance(fetch_strategy, fs.CurlFetchStrategy)
-        else:
-            assert isinstance(fetch_strategy, fs.URLFetchStrategy)
+        assert isinstance(fetch_strategy, fs.URLFetchStrategy)
         assert os.path.basename(fetch_strategy.url) == 'foo-2.0.0.tar.gz'
         assert fetch_strategy.digest is None
         assert fetch_strategy.extra_options == {}
@@ -260,15 +244,16 @@ def test_url_with_status_bar(tmpdir, mock_archive, monkeypatch, capfd):
 
     monkeypatch.setattr(sys.stdout, 'isatty', is_true)
     monkeypatch.setattr(tty, 'msg_enabled', is_true)
-
     with spack.config.override('config:locks', sys.platform != "win32"):
-        fetcher = fs.CurlFetchStrategy(mock_archive.url)
-        with Stage(fetcher, path=testpath) as stage:
-            assert fetcher.archive_file is None
-            stage.fetch()
+        with spack.config.override('config:use_curl', True):
+            fetcher = fs.URLFetchStrategy(mock_archive.url)
 
-        status = capfd.readouterr()[1]
-        assert '##### 100' in status
+            with Stage(fetcher, path=testpath) as stage:
+                assert fetcher.archive_file is None
+                stage.fetch()
+
+            status = capfd.readouterr()[1]
+            assert '##### 100' in status
 
 
 @pytest.mark.parametrize('use_curl', [True, False])
@@ -277,10 +262,7 @@ def test_url_extra_fetch(tmpdir, mock_archive, use_curl):
     with spack.config.override('config:locks', sys.platform != "win32"):
         with spack.config.override('config:use_curl', use_curl):
             testpath = str(tmpdir)
-            if use_curl:
-                fetcher = fs.CurlFetchStrategy(mock_archive.url)
-            else:
-                fetcher = fs.URLFetchStrategy(mock_archive.url)
+            fetcher = fs.URLFetchStrategy(mock_archive.url)
             with Stage(fetcher, path=testpath) as stage:
                 assert fetcher.archive_file is None
                 stage.fetch()
@@ -303,17 +285,11 @@ def test_candidate_urls(pkg_factory, url, urls, version, expected, use_curl):
     """
     with spack.config.override('config:use_curl', use_curl):
         pkg = pkg_factory(url, urls)
-        if use_curl:
-            f = fs._from_merged_attrs(fs.CurlFetchStrategy, pkg, version)
-        else:
-            f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+        f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.candidate_urls == expected
         assert f.extra_options == {}
         pkg = pkg_factory(url, urls, fetch_options={'timeout': 60})
-        if use_curl:
-            f = fs._from_merged_attrs(fs.CurlFetchStrategy, pkg, version)
-        else:
-            f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
+        f = fs._from_merged_attrs(fs.URLFetchStrategy, pkg, version)
         assert f.extra_options == {'timeout': 60}
 
 
@@ -334,10 +310,10 @@ def test_missing_curl(tmpdir, monkeypatch):
     with spack.config.override('config:locks', sys.platform != "win32"):
         testpath = str(tmpdir)
         url = 'http://github.com/spack/spack'
-        fetcher = fs.CurlFetchStrategy(url=url)
-        assert fetcher is not None
-        with pytest.raises(TypeError, match='object is not callable'):
-            with Stage(fetcher, path=testpath) as stage:
-                out = stage.fetch()
-
-            assert err_fmt.format('curl') in out
+        with spack.config.override('config:use_curl', True):
+            fetcher = fs.URLFetchStrategy(url=url)
+            assert fetcher is not None
+            with pytest.raises(TypeError, match='object is not callable'):
+                with Stage(fetcher, path=testpath) as stage:
+                    out = stage.fetch()
+                assert err_fmt.format('curl') in out

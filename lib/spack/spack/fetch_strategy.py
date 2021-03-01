@@ -262,11 +262,21 @@ class URLFetchStrategy(FetchStrategy):
 
         self.expand_archive = kwargs.get('expand', True)
         self.extra_options = kwargs.get('fetch_options', {})
+        self._curl = None
 
         self.extension = kwargs.get('extension', None)
 
         if not self.url:
             raise ValueError("URLFetchStrategy requires a url for fetching.")
+
+    @property
+    def curl(self):
+        if not self._curl:
+            try:
+                self._curl = which('curl', required=True)
+            except CommandNotFoundError as exc:
+                tty.error(str(exc))
+        return self._curl
 
     def source_id(self):
         return self.digest
@@ -289,6 +299,7 @@ class URLFetchStrategy(FetchStrategy):
         if self.archive_file:
             tty.debug('Already downloaded {0}'.format(self.archive_file))
             return
+
         url = None
         errors = []
         for url in self.candidate_urls:
@@ -311,15 +322,32 @@ class URLFetchStrategy(FetchStrategy):
 
     def _existing_url(self, url):
         tty.debug('Checking existence of {0}'.format(url))
-        # Telling urllib to check if url is accessible
-        try:
-            url, headers, response = web_util.read_from_url(url)
-        except web_util.SpackWebError:
-            msg = "Urllib fetch failed to verify url {0}".format(url)
-            raise FailedDownloadError(url, msg)
-        return (response.getcode() is None or response.getcode() == 200)
+        if spack.config.get('config:use_curl'):
+            curl = self.curl
+            # Telling curl to fetch the first byte (-r 0-0) is supposed to be
+            # portable.
+            curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
+            if not spack.config.get('config:verify_ssl'):
+                curl_args.append('-k')
+            _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
+            return curl.returncode == 0
+        else:
+            # Telling urllib to check if url is accessible
+            try:
+                url, headers, response = web_util.read_from_url(url)
+            except web_util.SpackWebError:
+                msg = "Urllib fetch failed to verify url {0}".format(url)
+                raise FailedDownloadError(url, msg)
+            return (response.getcode() is None or response.getcode() == 200)
 
     def _fetch_from_url(self, url):
+        if spack.config.get('config:use_curl'):
+            return self._fetch_curl(url)
+        else:
+            return self._fetch_urllib(url)
+
+    @_needs_stage
+    def _fetch_urllib(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -351,7 +379,6 @@ class URLFetchStrategy(FetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
         return partial_file, save_file
 
-    @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -584,7 +611,7 @@ class CurlFetchStrategy(FetchStrategy):
         _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
         return curl.returncode == 0
 
-    def _fetch_from_url(self, url):
+    def _fetch_curl(self, url):
         save_file = None
         partial_file = None
         if self.stage.save_filename:
@@ -773,7 +800,7 @@ class CurlFetchStrategy(FetchStrategy):
            No-op if this stage checks code out of a repository."""
         if not self.digest:
             raise NoDigestError(
-                "Attempt to check CurlFetchStrategy with no digest.")
+                "Attempt to check URLFetchStrategy with no digest.")
 
         checker = crypto.Checker(self.digest)
         if not checker.check(self.archive_file):
@@ -789,7 +816,7 @@ class CurlFetchStrategy(FetchStrategy):
         """
         if not self.archive_file:
             raise NoArchiveFileError(
-                "Tried to reset CurlFetchStrategy before fetching",
+                "Tried to reset URLFetchStrategy before fetching",
                 "Failed on reset() for URL %s" % self.url)
 
         # Remove everything but the archive from the stage
@@ -1455,12 +1482,8 @@ def stable_target(fetcher):
     """Returns whether the fetcher target is expected to have a stable
        checksum. This is only true if the target is a preexisting archive
        file."""
-    if spack.config.get('config:use_curl'):
-        if isinstance(fetcher, CurlFetchStrategy) and fetcher.cachable:
-            return True
-    else:
-        if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
-            return True
+    if isinstance(fetcher, URLFetchStrategy) and fetcher.cachable:
+        return True
     return False
 
 
@@ -1471,8 +1494,6 @@ def from_url(url):
        TODO: make this return appropriate fetch strategies for other
              types of URLs.
     """
-    if spack.config.get('config:use_curl'):
-        return CurlFetchStrategy(url)
     return URLFetchStrategy(url)
 
 
@@ -1543,12 +1564,8 @@ def _check_version_attributes(fetcher, pkg, version):
 def _extrapolate(pkg, version):
     """Create a fetcher from an extrapolated URL for this version."""
     try:
-        if spack.config.get('config:use_curl'):
-            return CurlFetchStrategy(pkg.url_for_version(version),
-                                     fetch_options=pkg.fetch_options)
-        else:
-            return URLFetchStrategy(pkg.url_for_version(version),
-                                    fetch_options=pkg.fetch_options)
+        return URLFetchStrategy(pkg.url_for_version(version),
+                                fetch_options=pkg.fetch_options)
     except spack.package.NoURLError:
         msg = ("Can't extrapolate a URL for version %s "
                "because package %s defines no URLs")
@@ -1674,12 +1691,8 @@ def from_list_url(pkg):
                         args.get('checksum'))
 
                 # construct a fetcher
-                if spack.config.get('config:use_curl'):
-                    return CurlFetchStrategy(url_from_list, checksum,
-                                             fetch_options=pkg.fetch_options)
-                else:
-                    return URLFetchStrategy(url_from_list, checksum,
-                                            fetch_options=pkg.fetch_options)
+                return URLFetchStrategy(url_from_list, checksum,
+                                        fetch_options=pkg.fetch_options)
             except KeyError as e:
                 tty.debug(e)
                 tty.msg("Cannot find version %s in url_list" % pkg.version)
