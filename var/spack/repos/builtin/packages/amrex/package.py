@@ -169,7 +169,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DAMReX_CUDA_ERROR_CAPTURE_THIS=ON')
             args.append('-DAMReX_CUDA_ERROR_CROSS_EXECUTION_SPACE_CALL=ON')
             cuda_arch = self.spec.variants['cuda_arch'].value
-            args.append('-DCUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
+            args.append('-DAMReX_CUDA_ARCH=' + self.get_cuda_arch_string(cuda_arch))
 
         if '+rocm' in self.spec:
             args.append('-DCMAKE_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc))
