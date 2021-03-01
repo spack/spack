@@ -15,7 +15,7 @@ class PyPyprecice(PythonPackage):
     homepage = "https://www.precice.org"
     git = "https://github.com/precice/python-bindings.git"
     url = "https://github.com/precice/python-bindings/archive/v2.0.0.1.tar.gz"
-    maintainers = ["ajaust", "BenjaminRueth"]
+    maintainers = ["ajaust", "BenjaminRodenberg"]
 
     # Always prefer final version of release candidate
     version("develop", branch="develop")
@@ -65,5 +65,3 @@ class PyPyprecice(PythonPackage):
         # See also https://github.com/spack/spack/pull/19558#discussion_r513123239
         if self.version <= Version("2.1.1.1"):
             self.setup_py("install", "--prefix={0}".format(prefix))
-        else:
-            super.install(spec, prefix)
