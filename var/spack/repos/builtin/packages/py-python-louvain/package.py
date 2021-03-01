@@ -16,5 +16,6 @@ class PyPythonLouvain(PythonPackage):
 
     version('0.15', sha256='2a856edfbe29952a60a5538a84bb78cca18f6884a88b9325e85a11c8dd4917eb')
 
+    depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-networkx', type=('build', 'run'))
