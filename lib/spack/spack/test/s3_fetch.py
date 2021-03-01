@@ -16,7 +16,7 @@ import spack.stage as spack_stage
 @pytest.mark.parametrize('use_curl', [True, False])
 def test_s3fetchstrategy_sans_url(use_curl):
     """Ensure constructor with no URL fails."""
-    with spack_config.override('config:use_curl', True):
+    with spack_config.override('config:use_curl', use_curl):
         with pytest.raises(ValueError):
             spack_fs.S3FetchStrategy(None)
 
@@ -27,7 +27,7 @@ def test_s3fetchstrategy_bad_url(tmpdir, use_curl):
     testpath = str(tmpdir)
 
     with spack_config.override('config:locks', sys.platform != "win32"):
-        with spack_config.override('config:use_curl', True):
+        with spack_config.override('config:use_curl', use_curl):
             fetcher = spack_fs.S3FetchStrategy(url='file:///does-not-exist')
             assert fetcher is not None
 
@@ -45,7 +45,7 @@ def test_s3fetchstrategy_downloaded(tmpdir, use_curl):
     archive = os.path.join(testpath, 's3.tar.gz')
 
     with spack_config.override('config:locks', sys.platform != "win32"):
-        with spack_config.override('config:use_curl', True):
+        with spack_config.override('config:use_curl', use_curl):
             class Archived_S3FS(spack_fs.S3FetchStrategy):
                 @property
                 def archive_file(self):
