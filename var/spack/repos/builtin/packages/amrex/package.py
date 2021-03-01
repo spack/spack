@@ -18,6 +18,7 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['mic84', 'asalmgren']
 
     version('develop', branch='development')
+    version('21.03', sha256='6307bf75c80c2076bf5bd1cff4d12483280a32b5175fe117f32eed9c89cd1ac5')
     version('21.02', sha256='4a7ef997c43f9f03f1b06dd1aafa01218773a3265a5c1811f77eb4521b5e75b3')
     version('21.01', sha256='59de3ed429347ee6a7ad4f09c0c431248f2e081f59c301db37cacb36993622f4')
     version('20.12', sha256='a8ba1d605780250da77619939582ce44b33cd286f2dbcc0dfd5cdbaf209140a5')
@@ -83,7 +84,9 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.17:', type='build', when='^cuda @11:')
     depends_on('hdf5@1.10.4: +mpi', when='+hdf5')
     depends_on('rocrand', type='build', when='+rocm')
-    depends_on('hypre', type='link', when='+hypre')
+    depends_on('hypre@2.18.2:', type='link', when='@:21.02 +hypre')
+    depends_on('hypre@2.19.0:', type='link', when='@21.03: ~cuda +hypre')
+    depends_on('hypre@2.20.0:', type='link', when='@21.03: +cuda +hypre')
     depends_on('petsc', type='link', when='+petsc')
     conflicts('%apple-clang')
     conflicts('%clang')
