@@ -1695,28 +1695,28 @@ def build_process(pkg, kwargs):
 
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path
-                with log_output(pkg.log_path, echo, True,
-                                env=unmodified_env) as logger:
+#                with log_output(pkg.log_path, echo, True,
+#                                env=unmodified_env) as logger:
 
                     # Debug this child process from here
                     # ForkablePdb(logger._saved_stdout,
                     #             logger._saved_stderr).set_trace()
 
-                    for phase_name, phase_attr in zip(
-                            pkg.phases, pkg._InstallPhase_phases):
+                for phase_name, phase_attr in zip(
+                        pkg.phases, pkg._InstallPhase_phases):
 
-                        with logger.force_echo():
-                            inner_debug_level = tty.debug_level()
-                            tty.set_debug(debug_level)
-                            tty.msg("{0} Executing phase: '{1}'"
-                                    .format(pre, phase_name))
-                            tty.set_debug(inner_debug_level)
+                        # with logger.force_echo():
+                        #     inner_debug_level = tty.debug_level()
+                        #     tty.set_debug(debug_level)
+                        #     tty.msg("{0} Executing phase: '{1}'"
+                        #             .format(pre, phase_name))
+                        #     tty.set_debug(inner_debug_level)
 
                         # Redirect stdout and stderr to daemon pipe
-                        phase = getattr(pkg, phase_attr)
-                        phase(pkg.spec, pkg.prefix)
+                    phase = getattr(pkg, phase_attr)
+                    phase(pkg.spec, pkg.prefix)
 
-            echo = logger.echo
+#            echo = logger.echo
             log(pkg)
 
         # Run post install hooks before build stage is removed.
