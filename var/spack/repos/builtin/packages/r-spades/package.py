@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSpades(RPackage):
-    """Develop and Run Spatially Explicit Discrete Event Simulation Modelsi
+    """Develop and Run Spatially Explicit Discrete Event Simulation Models
 
     Metapackage for implementing a variety of event-based models, with a
     focus on spatially explicit models. These include raster-based,
