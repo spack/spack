@@ -39,7 +39,7 @@ import spack.store
 import spack.util.debug
 import spack.util.executable as exe
 import spack.util.path
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 from spack.error import SpackError
 
 #: names of profile statistics
@@ -555,9 +555,14 @@ class SpackCommand(object):
 
         out = StringIO()
         try:
-            with log_output(out):
-                self.returncode = _invoke_command(
-                    self.command, self.parser, args, unknown)
+            if sys.platform == 'win32':
+                with winlog(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
+            else:
+                with log_output(out):
+                    self.returncode = _invoke_command(
+                        self.command, self.parser, args, unknown)
 
         except SystemExit as e:
             self.returncode = e.code
