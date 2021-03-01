@@ -13,9 +13,9 @@ class Virtuoso(AutotoolsPackage):
     Application Server Platform"""
 
     homepage = "https://github.com/openlink/virtuoso-opensource"
-    url      = "https://github.com/openlink/virtuoso-opensource/archive/v7.2.5.1.tar.gz"
+    git      = "https://github.com/openlink/virtuoso-opensource.git"
 
-    version('7.2.5.1', sha256='3e4807e94098b8265f8cf00867d1215bb1e9d0d274878e59a420742d2de471c2')
+    version('2021.02.09', commit='3ff1d4b3de3977337baf909c264968b9f70b7d2c')
 
     variant('dbpedia-vad', default=False, description='DBpedia vad package')
     variant('demo-vad', default=False, description='Demo vad package')
@@ -39,13 +39,13 @@ class Virtuoso(AutotoolsPackage):
 
     # Fix fail to include <rpc/types.h> problem
     # https://github.com/openlink/virtuoso-opensource/commit/52b6f8ebe108c1ed86fb840305c5f5a9677228f5
-    patch('virt_rpc.patch')
+    #patch('virt_rpc.patch')
 
     # support openssl@1.1.1
     # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
     # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
     # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
-    patch('virt_openssl.patch')
+    #patch('virt_openssl.patch')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
