@@ -36,7 +36,6 @@ import shutil
 import six
 import sys
 import time
-
 from collections import defaultdict
 
 import llnl.util.filesystem as fs
@@ -53,7 +52,7 @@ import spack.repo
 import spack.store
 
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, winlog
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
@@ -1426,6 +1425,7 @@ class PackageInstaller(object):
         exists_errors = []
 
         while self.build_pq:
+
             task = self._pop_task()
             if task is None:
                 continue
@@ -1555,6 +1555,7 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
+
                 if pkg.spec.dag_hash() in task.request.overwrite:
                     rec, _ = self._check_db(pkg.spec)
                     if rec and rec.installed:
@@ -1745,48 +1746,69 @@ def build_process(pkg, kwargs):
 
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path, and provide the phase for logging
-                for i, (phase_name, phase_attr) in enumerate(zip(
-                        pkg.phases, pkg._InstallPhase_phases)):
+                if sys.platform != 'win32':
+                    for i, (phase_name, phase_attr) in enumerate(zip(
+                            pkg.phases, pkg._InstallPhase_phases)):
 
-                    # Keep a log file for each phase
-                    log_dir = os.path.dirname(pkg.log_path)
-                    log_file = "spack-build-%02d-%s-out.txt" % (
-                        i + 1, phase_name.lower()
-                    )
-                    log_file = os.path.join(log_dir, log_file)
+                        # Keep a log file for each phase
+                        log_dir = os.path.dirname(pkg.log_path)
+                        log_file = "spack-build-%02d-%s-out.txt" % (
+                            i + 1, phase_name.lower()
+                        )
+                        log_file = os.path.join(log_dir, log_file)
 
-                    try:
-                        # DEBUGGING TIP - to debug this section, insert an IPython
-                        # embed here, and run the sections below without log capture
-                        with log_output(log_file, echo, True,
-                                        env=unmodified_env) as logger:
+                        try:
+                            # DEBUGGING TIP - to debug this section, insert an IPython
+                            # embed here, and run the sections below without log capture
+                            with log_output(log_file, echo, True,
+                                            env=unmodified_env) as logger:
 
-                            with logger.force_echo():
-                                inner_debug_level = tty.debug_level()
-                                tty.set_debug(debug_level)
-                                tty.msg("{0} Executing phase: '{1}'"
-                                        .format(pre, phase_name))
-                                tty.set_debug(inner_debug_level)
+                                with logger.force_echo():
+                                    inner_debug_level = tty.debug_level()
+                                    tty.set_debug(debug_level)
+                                    tty.msg("{0} Executing phase: '{1}'"
+                                            .format(pre, phase_name))
+                                    tty.set_debug(inner_debug_level)
+
+                                # Redirect stdout and stderr to daemon pipe
+                                phase = getattr(pkg, phase_attr)
+
+                                # Catch any errors to report to logging
+
+                                phase(pkg.spec, pkg.prefix)
+                                spack.hooks.on_phase_success(pkg, phase_name, log_file)
+
+                        except BaseException:
+                            combine_phase_logs(pkg.phase_log_files, pkg.log_path)
+                            spack.hooks.on_phase_error(pkg, phase_name, log_file)
+                            raise
+
+                        # We assume loggers share echo True/False
+                        echo = logger.echo
+
+                    # After log, we can get all output/error files from the package stage
+                    combine_phase_logs(pkg.phase_log_files, pkg.log_path)
+                    log(pkg)
+                else:
+                    with winlog(pkg.log_path, True, True,
+                                env=unmodified_env) as logger:
+
+                        for phase_name, phase_attr in zip(
+                                pkg.phases, pkg._InstallPhase_phases):
+
+                            # with logger.force_echo():
+                            #    inner_debug_level = tty.debug_level()
+                            #    tty.set_debug(debug_level)
+                            #    tty.msg("{0} Executing phase: '{1}'"
+                            #            .format(pre, phase_name))
+                            #    tty.set_debug(inner_debug_level)
 
                             # Redirect stdout and stderr to daemon pipe
                             phase = getattr(pkg, phase_attr)
-
-                            # Catch any errors to report to logging
-
                             phase(pkg.spec, pkg.prefix)
-                            spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
-                    except BaseException:
-                        combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-                        spack.hooks.on_phase_error(pkg, phase_name, log_file)
-                        raise
-
-                    # We assume loggers share echo True/False
-                    echo = logger.echo
-
-            # After log, we can get all output/error files from the package stage
-            combine_phase_logs(pkg.phase_log_files, pkg.log_path)
-            log(pkg)
+                        # echo = logger.echo
+                        log(pkg)
 
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
