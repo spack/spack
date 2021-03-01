@@ -95,7 +95,7 @@ class Abinit(AutotoolsPackage):
     # conflicts('+elpa', when='+scalapack')
 
     patch('rm_march_settings.patch')
-    patch('fix_for_fujitsu.patch', level=0, when='%fj')
+    patch('fix_for_fujitsu.patch', when='%fj')
 
     def configure_args(self):
 
