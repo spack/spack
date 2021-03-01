@@ -13,7 +13,7 @@ class PyCythonBbox(PythonPackage):
     from Faster-RCNN. Thanks RBG!"""
 
     homepage = "https://github.com/samson-wang/cython_bbox.git"
-    pypi = "cython_bbox/cython_bbox-0.1.3.tar.gz"
+    pypi = "cython-bbox/cython_bbox-0.1.3.tar.gz"
 
     version('0.1.3', sha256='82e2d887534ecc10d3507489a05b11259f3baacd29eee37e6d8c97e1ffb16554')
     depends_on('py-setuptools', type='build')
