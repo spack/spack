@@ -157,7 +157,7 @@ cran and bioc attributes
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 Much like the ``pypi`` attribute for python packages, due to the fact that R
-packages are obtained from specific repositories, it is possible to setup shortcut
+packages are obtained from specific repositories, it is possible to set up shortcut
 attributes that can be used to set ``homepage``, ``url``, ``list_url``, and
 ``git``. For example, the following ``cran`` attribute:
 
