@@ -132,7 +132,7 @@ def activate(
     if use_env_repo:
         spack.repo.path.put_first(_active_environment.repo)
 
-    tty.debug("Using environmennt '%s'" % _active_environment.name)
+    tty.debug("Using environment '%s'" % _active_environment.name)
 
     # Construct the commands to run
     cmds = ''
