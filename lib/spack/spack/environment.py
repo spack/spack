@@ -622,8 +622,8 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
 
-                # Make paths absolute in case since we might save the environment
-                # file in self.path instead of init_file_path.
+                # Make develop paths absolute in case the environment is
+                # relocated from init_file to self.path
                 if hasattr(f, 'name') and f.name.endswith('.yaml'):
                     env_dir = os.path.abspath(os.path.dirname(f.name))
                     for name, entry in self.dev_specs.items():
