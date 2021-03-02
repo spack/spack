@@ -16,5 +16,4 @@ class RTictoc(RPackage):
 
     version('1.0', sha256='47da097c1822caa2d8e262381987cfa556ad901131eb96109752742526b2e2fe')
 
-    extends('r')
     depends_on('r@3.0.3:', type=('build', 'run'))
