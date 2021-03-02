@@ -14,5 +14,3 @@ class RRviennacl(RPackage):
     list_url = "https://cloud.r-project.org/src/contrib/Archive/RViennaCL"
 
     version('1.7.1.8', sha256='adcc74537337582153d5b11d281e391e91a7f3afae116aa1b9a034ffd11b0252')
-
-    extends('r')
