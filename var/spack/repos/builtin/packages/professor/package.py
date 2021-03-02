@@ -25,4 +25,4 @@ class Professor(Package):
 
     def install(self, spec, prefix):
         make()
-        make('PREFIX={0}'.format(prefix),"install")
+        make('PREFIX={0}'.format(prefix), "install")
