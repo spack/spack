@@ -11,7 +11,7 @@ class RAssertiveMatrices(RPackage):
 
     homepage = "https://cloud.r-project.org/package=assertive.matrices"
     url      = "https://cloud.r-project.org/src/contrib/assertive.matrices_0.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertive.matrices"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.matrices"
 
     version('0.0-2', sha256='3462a7a7e11d7cc24180330d48cc3067cf92eab1699b3e4813deec66d99f5e9b')
 
