@@ -202,7 +202,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % os.path.relpath(build_dir, start=envdir))
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -328,7 +328,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % os.path.relpath(build_dir, start=envdir))
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
