@@ -15,10 +15,6 @@ class PyAzuremlDataprepRslex(Package):
 
     homepage = "http://aka.ms/data-prep-sdk"
 
-    for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
-                 if str(x.family) != 'x86_64']):
-        conflicts('target={0}:'.format(t), msg='py-azureml-dataprep-rslex is available x86_64 only')
-
     if sys.platform == 'darwin':
         version('1.9.0-py3.9', sha256='9bdaa31d129dac19ee20d5a3aad1726397e90d8d741b4f6de4554040800fefe8', expand=False,
                 url='https://pypi.io/packages/cp39/a/azureml_dataprep_rslex/azureml_dataprep_rslex-1.9.0-cp39-cp39-macosx_10_9_x86_64.whl')
@@ -72,6 +68,10 @@ class PyAzuremlDataprepRslex(Package):
     depends_on('python@3.7.0:3.7.999', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
     depends_on('python@3.6.0:3.6.999', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
     depends_on('python@3.5.0:3.5.999', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
+
+    for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
+                 if str(x.family) != 'x86_64']):
+        conflicts('target={0}:'.format(t), msg='py-azureml-dataprep-rslex is available x86_64 only')
 
     def install(self, spec, prefix):
         pip = which('pip')
