@@ -621,6 +621,14 @@ class Environment(object):
                     self._set_user_specs_from_lockfile()
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
+
+                # Make paths absolute in case since we might save the environment
+                # file in self.path instead of init_file_path.
+                if hasattr(f, 'name') and f.name.endswith('.yaml'):
+                    env_dir = os.path.abspath(os.path.dirname(f.name))
+                    for name, entry in self.dev_specs.items():
+                        self.dev_specs[name]['path'] = os.path.normpath(
+                            os.path.join(env_dir, entry['path']))
         else:
             with lk.ReadTransaction(self.txlock):
                 self._read()
