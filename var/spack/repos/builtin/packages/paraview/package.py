@@ -384,4 +384,13 @@ class Paraview(CMakePackage, CudaPackage):
         if '%intel' in spec and spec.version >= Version('5.6'):
             cmake_args.append('-DPARAVIEW_ENABLE_MOTIONFX:BOOL=OFF')
 
+        # Encourage Paraview to use the correct Python libs
+        if spec.satisfies('+python') or spec.satisfies('+python3'):
+            pylibdirs = spec['python'].libs.directories
+            cmake_args.append(
+                "-DCMAKE_INSTALL_RPATH={0}".format(
+                    ":".join(self.rpath + pylibdirs)
+                )
+            )
+
         return cmake_args
