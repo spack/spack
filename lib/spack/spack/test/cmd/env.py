@@ -2115,9 +2115,9 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
     out = env('activate', '--sh', 'test')
     viewdir_bin = os.path.join(viewdir, 'bin')
 
-    assert ("export PATH=" % viewdir_bin in out) or \
-           ("export PATH='" % viewdir_bin in out) or \
-           ('export PATH="' % viewdir_bin in out)
+    assert "export PATH={0}".format(viewdir_bin) in out or \
+           "export PATH='{0}".format(viewdir_bin) in out or \
+           'export PATH="{0}'.format(viewdir_bin) in out
 
 
 def test_concretize_user_specs_together():
