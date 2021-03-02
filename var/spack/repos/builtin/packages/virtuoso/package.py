@@ -15,7 +15,7 @@ class Virtuoso(AutotoolsPackage):
     homepage = "https://github.com/openlink/virtuoso-opensource"
     git      = "https://github.com/openlink/virtuoso-opensource.git"
 
-    version('2021.02.09', commit='3ff1d4b3de3977337baf909c264968b9f70b7d2c')
+    version('7.2.5.1-dev', commit='3ff1d4b3de3977337baf909c264968b9f70b7d2c')
 
     variant('dbpedia-vad', default=False, description='DBpedia vad package')
     variant('demo-vad', default=False, description='Demo vad package')
@@ -36,16 +36,6 @@ class Virtuoso(AutotoolsPackage):
     depends_on('gperf')
     depends_on('readline')
     depends_on('openssl@0.9.8:1.1.99')
-
-    # Fix fail to include <rpc/types.h> problem
-    # https://github.com/openlink/virtuoso-opensource/commit/52b6f8ebe108c1ed86fb840305c5f5a9677228f5
-    #patch('virt_rpc.patch')
-
-    # support openssl@1.1.1
-    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
-    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
-    # https://github.com/openlink/virtuoso-opensource/commit/713fa25b14457aa5127fac071830a2d20f4f968c
-    #patch('virt_openssl.patch')
 
     def autoreconf(self, spec, prefix):
         bash = which('bash')
