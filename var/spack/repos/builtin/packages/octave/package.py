@@ -169,8 +169,8 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
             mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
             config_args.extend([
                 mkl_re.sub(r'\g<1>gf\g<2>',
-                    '--with-blas={0}'.format(spec['blas'].libs.ld_flags)
-                ),
+                           '--with-blas={0}'.format(
+                               spec['blas'].libs.ld_flags)),
                 '--with-lapack'
             ])
         else:
