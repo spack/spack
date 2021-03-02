@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import archspec
 
 from spack import *
 
@@ -67,6 +68,10 @@ class PyAzuremlDataprepRslex(Package):
     depends_on('python@3.7.0:3.7.999', when='@1.9.0-py3.7,1.8.0-py3.7', type=('build', 'run'))
     depends_on('python@3.6.0:3.6.999', when='@1.9.0-py3.6,1.8.0-py3.6', type=('build', 'run'))
     depends_on('python@3.5.0:3.5.999', when='@1.9.0-py3.5,1.8.0-py3.5', type=('build', 'run'))
+
+    for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
+                 if str(x.family) != 'x86_64']):
+        conflicts('target={0}:'.format(t), msg='py-azureml-dataprep-rslex is available x86_64 only')
 
     def install(self, spec, prefix):
         pip = which('pip')
