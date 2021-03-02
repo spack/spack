@@ -27,6 +27,8 @@ class Libxc(AutotoolsPackage, CudaPackage):
     conflicts('+shared +cuda', msg='Only ~shared supported with +cuda')
     conflicts('+cuda', when='@:4', msg='CUDA support only in libxc 5.0.0 and above')
 
+    depends_on('perl', type='build')
+
     patch('0001-Bugfix-avoid-implicit-pointer-cast-to-make-libxc-com.patch', when='@5.0.0')
     patch('0002-Mark-xc_erfcx-a-GPU_FUNCTION.patch', when='@5.0.0')
 

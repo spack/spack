@@ -413,33 +413,18 @@ def ci_rebuild(args):
             else:
                 buildcache_mirror_url = remote_mirror_url
 
-            try:
-                spack_ci.push_mirror_contents(
-                    env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
-                    cdash_build_id, sign_binaries)
-            except Exception as inst:
-                # If the mirror we're pushing to is on S3 and there's some
-                # permissions problem, for example, we can't just target
-                # that exception type here, since users of the
-                # `spack ci rebuild' may not need or want any dependency
-                # on boto3.  So we use the first non-boto exception type
-                # in the heirarchy:
-                #     boto3.exceptions.S3UploadFailedError
-                #     boto3.exceptions.Boto3Error
-                #     Exception
-                #     BaseException
-                #     object
-                err_msg = 'Error msg: {0}'.format(inst)
-                if 'Access Denied' in err_msg:
-                    tty.msg('Permission problem writing to mirror')
-                tty.msg(err_msg)
+            # Create buildcache in either the main remote mirror, or in the
+            # per-PR mirror, if this is a PR pipeline
+            spack_ci.push_mirror_contents(
+                env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
+                cdash_build_id, sign_binaries)
 
             # Create another copy of that buildcache in the per-pipeline
             # temporary storage mirror (this is only done if either artifacts
             # buildcache is enabled or a temporary storage url prefix is set)
-            spack_ci.push_mirror_contents(env, job_spec, job_spec_yaml_path,
-                                          pipeline_mirror_url, cdash_build_id,
-                                          sign_binaries)
+            spack_ci.push_mirror_contents(
+                env, job_spec, job_spec_yaml_path, pipeline_mirror_url,
+                cdash_build_id, sign_binaries)
 
             # Relate this build to its dependencies on CDash (if enabled)
             if enable_cdash:

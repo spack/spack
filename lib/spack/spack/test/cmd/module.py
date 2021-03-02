@@ -23,7 +23,7 @@ def ensure_module_files_are_there(
 ):
     """Generate module files for module tests."""
     module = spack.main.SpackCommand('module')
-    with spack.store.use_store(mock_store):
+    with spack.store.use_store(str(mock_store)):
         with spack.config.use_configuration(*mock_configuration_scopes):
             with spack.repo.use_repositories(mock_repo_path):
                 module('tcl', 'refresh', '-y')

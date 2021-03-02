@@ -249,6 +249,8 @@ class Openmpi(AutotoolsPackage):
         default=False,
         description='Do not remove mpirun/mpiexec when building with slurm'
     )
+    # Variants to use internal packages
+    variant('internal-hwloc', default=False, description='Use internal hwloc')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -262,20 +264,20 @@ class Openmpi(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
     depends_on('m4',       type='build', when='@develop')
-    depends_on('perl',     type='build', when='@develop')
 
+    depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
     depends_on('libevent@2.0:', when='@4:')
 
-    depends_on('hwloc@2.0:', when='@4:')
+    depends_on('hwloc@2.0:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
     # See #7483 for context.
-    depends_on('hwloc@:1.999', when='@:3.999.9999')
+    depends_on('hwloc@:1.999', when='@:3.999.999 ~internal-hwloc')
 
-    depends_on('hwloc +cuda', when='+cuda')
+    depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
@@ -683,7 +685,7 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('@4.0.0:'):
             config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
-        if spec.satisfies('@1.5.2:'):
+        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # Java support
         if spec.satisfies('@1.7.4:'):

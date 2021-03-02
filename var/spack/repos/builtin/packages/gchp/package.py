@@ -17,6 +17,9 @@ class Gchp(CMakePackage):
 
     version('13.0.0-rc.0', git='https://github.com/geoschem/GCHP.git',
             commit='4bd15316faf4e5f06517d3a6b1df1986b1126d90',  submodules=True)
+
+    patch('for_aarch64.patch', when='target=aarch64:')
+
     # NOTE: Post-13.0.0-rc.0 versions will have fix that
     # allows these ESMF variants to be enabled
     depends_on('esmf@8.0.1: -lapack -pio -pnetcdf -xerces')

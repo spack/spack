@@ -553,7 +553,7 @@ class Configuration(object):
 
         If ``scope`` is ``None`` or not provided, return the merged contents
         of all of Spack's configuration scopes.  If ``scope`` is provided,
-        return only the confiugration as specified in that scope.
+        return only the configuration as specified in that scope.
 
         This off the top-level name from the YAML section.  That is, for a
         YAML config file that looks like this::

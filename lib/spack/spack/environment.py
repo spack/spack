@@ -1397,6 +1397,21 @@ class Environment(object):
                     os.remove(build_log_link)
                 os.symlink(spec.package.build_log_path, build_log_link)
 
+    def uninstalled_specs(self):
+        """Return a list of all uninstalled (and non-dev) specs."""
+        # Do the installed check across all specs within a single
+        # DB read transaction to reduce time spent in lock acquisition.
+        uninstalled_specs = []
+        with spack.store.db.read_transaction():
+            for concretized_hash in self.concretized_order:
+                spec = self.specs_by_hash[concretized_hash]
+                if not spec.package.installed or (
+                        spec.satisfies('dev_path=*') or
+                        spec.satisfies('^dev_path=*')
+                ):
+                    uninstalled_specs.append(spec)
+        return uninstalled_specs
+
     def install_all(self, args=None, **install_args):
         """Install all concretized specs in an environment.
 
@@ -1407,22 +1422,13 @@ class Environment(object):
             args (Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
+        tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
         # DB read transaction to reduce time spent in this case.
-        tty.debug('Assessing installation status of environment packages')
-        specs_to_install = []
-        with spack.store.db.read_transaction():
-            for concretized_hash in self.concretized_order:
-                spec = self.specs_by_hash[concretized_hash]
-                if not spec.package.installed or (
-                        spec.satisfies('dev_path=*') or
-                        spec.satisfies('^dev_path=*')
-                ):
-                    # If it's a dev build it could need to be reinstalled
-                    specs_to_install.append(spec)
+        specs_to_install = self.uninstalled_specs()
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
@@ -1508,6 +1514,67 @@ class Environment(object):
         """Tuples of (user spec, concrete spec) for all concrete specs."""
         for s, h in zip(self.concretized_user_specs, self.concretized_order):
             yield (s, self.specs_by_hash[h])
+
+    def matching_spec(self, spec):
+        """
+        Given a spec (likely not concretized), find a matching concretized
+        spec in the environment.
+
+        The matching spec does not have to be installed in the environment,
+        but must be concrete (specs added with `spack add` without an
+        intervening `spack concretize` will not be matched).
+
+        If there is a single root spec that matches the provided spec or a
+        single dependency spec that matches the provided spec, then the
+        concretized instance of that spec will be returned.
+
+        If multiple root specs match the provided spec, or no root specs match
+        and multiple dependency specs match, then this raises an error
+        and reports all matching specs.
+        """
+        # Root specs will be keyed by concrete spec, value abstract
+        # Dependency-only specs will have value None
+        matches = {}
+
+        for user_spec, concretized_user_spec in self.concretized_specs():
+            if concretized_user_spec.satisfies(spec):
+                matches[concretized_user_spec] = user_spec
+            for dep_spec in concretized_user_spec.traverse(root=False):
+                if dep_spec.satisfies(spec):
+                    # Don't overwrite the abstract spec if present
+                    # If not present already, set to None
+                    matches[dep_spec] = matches.get(dep_spec, None)
+
+        if not matches:
+            return None
+        elif len(matches) == 1:
+            return list(matches.keys())[0]
+
+        root_matches = dict((concrete, abstract)
+                            for concrete, abstract in matches.items()
+                            if abstract)
+
+        if len(root_matches) == 1:
+            return root_matches[0][1]
+
+        # More than one spec matched, and either multiple roots matched or
+        # none of the matches were roots
+        # If multiple root specs match, it is assumed that the abstract
+        # spec will most-succinctly summarize the difference between them
+        # (and the user can enter one of these to disambiguate)
+        match_strings = []
+        fmt_str = '{hash:7}  ' + spack.spec.default_format
+        for concrete, abstract in matches.items():
+            if abstract:
+                s = 'Root spec %s\n  %s' % (abstract, concrete.format(fmt_str))
+            else:
+                s = 'Dependency spec\n  %s' % concrete.format(fmt_str)
+            match_strings.append(s)
+        matches_str = '\n'.join(match_strings)
+
+        msg = ("{0} matches multiple specs in the environment {1}: \n"
+               "{2}".format(str(spec), self.name, matches_str))
+        raise SpackEnvironmentError(msg)
 
     def removed_specs(self):
         """Tuples of (user spec, concrete spec) for all specs that will be

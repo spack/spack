@@ -165,3 +165,24 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           flags: unittests,linux,clingo
+  clingo-cffi:
+    # Test for the clingo based solver (using clingo-cffi)
+    runs-on: ubuntu-latest
+    container: spack/github-actions:clingo-cffi
+    steps:
+      - name: Run unit tests
+        run: |
+          whoami && echo PWD=$PWD && echo HOME=$HOME && echo SPACK_TEST_SOLVER=$SPACK_TEST_SOLVER
+          python3 -c "import clingo; print(hasattr(clingo.Symbol, '_rep'), clingo.__version__)"
+          git clone https://github.com/spack/spack.git && cd spack
+          git fetch origin ${{ github.ref }}:test-branch
+          git checkout test-branch
+          . share/spack/setup-env.sh
+          spack compiler find
+          spack solve mpileaks%gcc
+          coverage run $(which spack) unit-test -v
+          coverage combine
+          coverage xml
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: unittests,linux,clingo

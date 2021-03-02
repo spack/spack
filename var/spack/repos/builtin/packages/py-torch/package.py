@@ -186,6 +186,13 @@ class PyTorch(PythonPackage, CudaPackage):
         headers.directories = [root]
         return headers
 
+    @when('@1.5.0:')
+    def patch(self):
+        # https://github.com/pytorch/pytorch/issues/52208
+        filter_file('torch_global_deps PROPERTIES LINKER_LANGUAGE C',
+                    'torch_global_deps PROPERTIES LINKER_LANGUAGE CXX',
+                    'caffe2/CMakeLists.txt')
+
     def setup_build_environment(self, env):
         def enable_or_disable(variant, keyword='USE', var=None, newer=False):
             """Set environment variable to enable or disable support for a
