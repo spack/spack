@@ -2119,6 +2119,7 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
            ("export PATH='" % viewdir_bin in out) or \
            ('export PATH="' % viewdir_bin in out)
 
+
 def test_concretize_user_specs_together():
     e = ev.create('coconcretization')
     e.concretization = 'together'
