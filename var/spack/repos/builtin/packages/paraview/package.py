@@ -124,11 +124,15 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('netcdf-c')
     depends_on('pegtl')
     depends_on('protobuf@3.4:')
-    depends_on('pugixml')
     depends_on('libxml2')
     depends_on('lz4')
     depends_on('lzma')
     depends_on('zlib')
+
+    # Older builds of pugi export their symbols differently,
+    # and pre-5.9 is unable to handle that.
+    depends_on('pugixml@:1.10', when='@:5.8.99')
+    depends_on('pugixml', when='@5.9:')
 
     # Can't contretize with python2 and py-setuptools@45.0.0:
     depends_on('py-setuptools@:44.99.99', when='+python')
