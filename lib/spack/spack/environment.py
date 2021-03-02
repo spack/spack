@@ -1044,8 +1044,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = path if os.path.isabs(path) else os.path.join(
-                self.path, path)
+            abspath = os.path.normpath(os.path.join(self.path, path))
 
             stage = spec.package.stage
             stage.steal_source(abspath)
