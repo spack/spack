@@ -9,9 +9,9 @@ from spack import *
 class RReams(RPackage):
     """reams: Resampling-Based Adaptive Model Selection"""
 
-    homepage = "https://www.example.com"
+    homepage = "https://cloud.r-project.org/package=reams"
     url      = "https://cloud.r-project.org/src/contrib/reams_0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/reams"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/reams"
 
     version('0.1', sha256='ac24ea875b24bd18152afd87538b1f807f442cf2bd1c6ac1a365cf543c88181e')
 
