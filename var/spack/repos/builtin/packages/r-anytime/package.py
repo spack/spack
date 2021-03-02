@@ -14,7 +14,7 @@ class RAnytime(RPackage):
 
     homepage = "https://cloud.r-project.org/package=anytime"
     url      = "https://cloud.r-project.org/src/contrib/anytime_0.3.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/anytime"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/anytime"
 
     version('0.3.9', sha256='1096c15249ac70997a8a41c37eeb2a6d38530621abeae05d3dcd96a8acc7574a')
 
