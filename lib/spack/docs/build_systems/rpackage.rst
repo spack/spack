@@ -130,7 +130,7 @@ out. To get around this, add the archive directory as a ``list_url``.
 Bioconductor packages
 ^^^^^^^^^^^^^^^^^^^^^
 
-Bioconductor packages are setup in a similar way to CRAN packages, but there
+Bioconductor packages are set up in a similar way to CRAN packages, but there
 are some very important distinctions. Bioconductor packages can be found at:
 https://bioconductor.org/. Bioconductor packages are R packages and so follow
 the same packaging scheme as CRAN packages. What is different is that
