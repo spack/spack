@@ -12,7 +12,7 @@ class RPheatmap(RPackage):
 
     homepage = "https://cloud.r-project.org/package=pheatmap"
     url      = "https://cloud.r-project.org/src/contrib/pheatmap_1.0.12.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pheatmap"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pheatmap"
 
     version('1.0.12', sha256='579d96ee0417203b85417780eca921969cda3acc210c859bf9dfeff11539b0c1')
 
