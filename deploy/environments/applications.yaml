@@ -41,7 +41,7 @@ spack:
     - neurodamus-thalamus+coreneuron%intel^coreneuron+knl
     - parquet-converters
     - placement-algorithm
-    - psp-validation
+    - psp-validation%gcc ^neuron%intel
     - py-basalt@0.2.9
     - py-bbp-analysis-framework
     - py-bbp-workflow
