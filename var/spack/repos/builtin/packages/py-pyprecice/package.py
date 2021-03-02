@@ -28,9 +28,6 @@ class PyPyprecice(PythonPackage):
     version("2.0.0.2", sha256="5f055d809d65ec2e81f4d001812a250f50418de59990b47d6bcb12b88da5f5d7")
     version("2.0.0.1", sha256="96eafdf421ec61ad6fcf0ab1d3cf210831a815272984c470b2aea57d4d0c9e0e")
 
-    # Import module as a test
-    import_modules = ["precice"]
-
     # Older versions of the bindings checked versions via pip. This patch
     # removes the pip dependency.
     # See also https://github.com/spack/spack/pull/19558
@@ -46,8 +43,6 @@ class PyPyprecice(PythonPackage):
 
     depends_on("python@3:", type=("build", "run"))
     depends_on("py-setuptools", type="build")
-    # py-wheel dependency is specified in pyproject.toml of pyprecice
-    depends_on("py-wheel", type="build")
     depends_on("py-numpy", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type=("build"))
