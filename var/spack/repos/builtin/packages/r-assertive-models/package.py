@@ -11,7 +11,7 @@ class RAssertiveModels(RPackage):
 
     homepage = "https://cloud.r-project.org/package=assertive.models"
     url      = "https://cloud.r-project.org/src/contrib/assertive.models_0.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertive.models"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.models"
 
     version('0.0-2', sha256='b9a6d8786f352d53371dbe8c5f2f2a62a7866e30313f268e69626d5c3691c42e')
 
