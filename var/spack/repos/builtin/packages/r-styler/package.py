@@ -15,7 +15,6 @@ class RStyler(RPackage):
 
     version('1.3.2', sha256='3fcf574382c607c2147479bad4f9fa8b823f54fb1462d19ec4a330e135a44ff1')
 
-    extends('r')
     depends_on('r-backports@1.1.0:', type=('build', 'run'))
     depends_on('r-cli@1.1.0:', type=('build', 'run'))
     depends_on('r-magrittr@1.0.1:', type=('build', 'run'))
