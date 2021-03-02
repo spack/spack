@@ -11,7 +11,7 @@ class RAssertiveSets(RPackage):
 
     homepage = "https://cloud.r-project.org/package=assertive.sets"
     url      = "https://cloud.r-project.org/src/contrib/assertive.sets_0.0-3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/assertive.sets"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.sets"
 
     version('0.0-3', sha256='876975a16ed911ea1ad12da284111c6eada6abfc0118585033abc0edb5801bb3')
 
