@@ -246,9 +246,18 @@ environment variables:
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
+            if args.test == 'all' or args.run_tests:
+                tests = True
+            elif args.test == 'root':
+                tests = [spec.name for spec in env.user_specs]
+            else:
+                tests = False
+
+            kwargs['tests'] = tests
+
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize()
+                    concretized_specs = env.concretize(tests=tests)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -300,11 +309,14 @@ environment variables:
 
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
-    tests = False
+
     if args.test == 'all' or args.run_tests:
         tests = True
     elif args.test == 'root':
         tests = [spec.name for spec in abstract_specs]
+    else:
+        tests = False
+
     kwargs['tests'] = tests
 
     try:
