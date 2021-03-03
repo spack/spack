@@ -586,9 +586,38 @@ def test_list_highest():
 
 
 def test_strict_inequalities():
-    assert Version('2') < Version('>2')
-    assert Version('<2') < Version('2')
-    assert ver('2') < ver('2.*')
-    assert ver('2.*') in ver('2')
-    assert ver('3') not in ver('2.*')
-    assert ver('2') in ver('2.*')
+    # (0) !2 => :!2!:
+    assert Version('2') < Version('2').negated()
+    assert Version('2').negated() < Version('2')
+    assert Version('2').negated() > Version('2')
+    assert Version('2').negated() != Version('2')
+    assert Version('2').negated() != Version('2.1')
+    assert Version('2') not in Version('2').negated()
+    assert Version('3') in Version('2').negated()
+
+    # (1) 2:!3
+    assert Version('2') < ver('2:!3')
+    assert Version('3') > ver('2:!3')
+
+    assert ver('2:!3') in Version('2')
+    assert ver('2:!3') not in Version('3')
+    assert Version('3') not in ver('2:!3')
+    assert Version('2') in ver('2:!3')
+
+    # (2) 2!:3
+    assert Version('2') < ver('2!:3')
+    assert Version('3') > ver('2!:3')
+
+    assert ver('2!:3') not in Version('2')
+    assert ver('2!:3') in Version('3')
+    assert Version('3') in ver('2!:3')
+    assert Version('2') not in ver('2!:3')
+
+    # (3) 2!:!3
+    assert Version('2') < ver('2!:!3')
+    assert Version('3') > ver('2!:!3')
+
+    assert ver('2!:!3') in Version('2')
+    assert ver('2!:!3') not in Version('3')
+    assert Version('3') not in ver('2!:!3')
+    assert Version('2') not in ver('2!:!3')

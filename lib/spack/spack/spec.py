@@ -177,7 +177,7 @@ _separators = '[\\%s]' % '\\'.join(color_formats.keys())
 
 #: Versionlist constant so we don't have to build a list
 #: every time we call str()
-_any_version = vn.VersionList([':'])
+_any_version = vn.VersionList.parse(':')
 
 default_format = '{name}{@version}'
 default_format += '{%compiler.name}{@compiler.version}{compiler_flags}'
