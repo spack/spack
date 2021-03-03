@@ -7,6 +7,8 @@ set PATH=%spackinstdir%\scripts\;%spackinstdir%\@PYTHON_DIR@\;%PATH%
 
 "%spackinstdir%\@PYTHON_DIR@\python.exe" "%spackinstdir%\scripts\haspywin.py"
 set SPACK_ROOT=%CD%\@SPACK_DIR@\
+set "EDITOR=notepad"
+DOSKEY spacktivate=spack env activate $*
 
 
 @echo **********************************************************************
