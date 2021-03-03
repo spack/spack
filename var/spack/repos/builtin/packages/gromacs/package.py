@@ -1,7 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import os
 
 
 class Gromacs(CMakePackage):
@@ -23,6 +25,8 @@ class Gromacs(CMakePackage):
     maintainers = ['junghans', 'marvinbernhardt']
 
     version('master', branch='master')
+    version('2021', sha256='efa78ab8409b0f5bf0fbca174fb8fbcf012815326b5c71a9d7c385cde9a8f87b')
+    version('2020.5', sha256='7b6aff647f7c8ee1bf12204d02cef7c55f44402a73195bd5f42cf11850616478')
     version('2020.4', sha256='5519690321b5500c7951aaf53ff624042c3edd1a5f5d6dd1f2d802a3ecdbf4e6')
     version('2020.3', sha256='903183691132db14e55b011305db4b6f4901cc4912d2c56c131edfef18cc92a9')
     version('2020.2', sha256='7465e4cd616359d84489d919ec9e4b1aaf51f0a4296e693c249e83411b7bd2f3')
@@ -60,6 +64,7 @@ class Gromacs(CMakePackage):
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencl', default=False, description='Enable OpenCL support')
+    variant('sycl', default=False, description='Enable SYCL support')
     variant('nosuffix', default=False, description='Disable default suffixes')
     variant('build_type', default='RelWithDebInfo',
             description='The build type to build',
@@ -68,10 +73,14 @@ class Gromacs(CMakePackage):
     variant('mdrun_only', default=False,
             description='Enables the build of a cut-down version'
             ' of libgromacs and/or the mdrun program')
+    conflicts('+mdrun_only', when='@2021:',
+              msg='mdrun-only build option was removed for GROMACS 2021.')
     variant('openmp', default=True,
             description='Enables OpenMP at configure time')
-    variant('double_precision', default=False,
-            description='GMX_RELAXED_DOUBLE_PRECISION for Fujitsu PRIMEHPC')
+    variant('relaxed_double_precision', default=False,
+            description='GMX_RELAXED_DOUBLE_PRECISION, use only for Fujitsu PRIMEHPC')
+    conflicts('+relaxed_double_precision', when='@2021:',
+              msg='GMX_RELAXED_DOUBLE_PRECISION option removed for GROMACS 2021.')
     variant('hwloc', default=True,
             description='Use the hwloc portable hardware locality library')
     variant('lapack', default=False,
@@ -94,20 +103,28 @@ class Gromacs(CMakePackage):
     depends_on('plumed+mpi', when='+plumed+mpi')
     depends_on('plumed~mpi', when='+plumed~mpi')
     depends_on('fftw-api@3')
-    depends_on('mkl', when='fft=mkl')
     depends_on('cmake@2.8.8:3.99.99', type='build')
     depends_on('cmake@3.4.3:3.99.99', type='build', when='@2018:')
-    depends_on('cmake@3.13.0:3.99.99', type='build', when='@master')
-    depends_on('cmake@3.13.0:3.99.99', type='build', when='%fj')
+    depends_on('cmake@3.9.6:3.99.99', type='build', when='@2020')
+    depends_on('cmake@3.13.0:3.99.99', type='build', when='@2021:')
+    depends_on('cmake@3.16.0:3.99.99', type='build', when='@master')
+    depends_on('cmake@3.16.0:3.99.99', type='build', when='%fj')
     depends_on('cuda', when='+cuda')
+    depends_on('sycl', when='+sycl')
     depends_on('lapack', when='+lapack')
     depends_on('blas', when='+blas')
 
-    # TODO: openmpi constraint; remove when concretizer is fixed
-    depends_on('hwloc@:1.999', when='@:3.0.0')
+    depends_on('hwloc', when='+hwloc')
 
     patch('gmxDetectCpu-cmake-3.14.patch', when='@2018:2019.3^cmake@3.14.0:')
     patch('gmxDetectSimd-cmake-3.14.patch', when='@:2017.99^cmake@3.14.0:')
+
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs_mpi'))
+    filter_compiler_wrappers(
+        '*.cmake',
+        relative_root=os.path.join('share', 'cmake', 'gromacs'))
 
     def patch(self):
         if '+plumed' in self.spec:
@@ -121,11 +138,37 @@ class Gromacs(CMakePackage):
 
         options = []
 
-        if self.spec.satisfies('@2020:'):
-            options.append('-DGMX_INSTALL_LEGACY_API=ON')
-
         if '+mpi' in self.spec:
             options.append('-DGMX_MPI:BOOL=ON')
+            if self.version < Version('2020'):
+                # Ensures gmxapi builds properly
+                options.extend([
+                    '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                    '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                    '-DCMAKE_Fortran_COMPILER=%s' % self.spec['mpi'].mpifc,
+                ])
+            elif self.version == Version('2021'):
+                # Work around https://gitlab.com/gromacs/gromacs/-/issues/3896
+                # Ensures gmxapi builds properly
+                options.extend([
+                    '-DCMAKE_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                    '-DCMAKE_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx,
+                ])
+            else:
+                options.extend([
+                    '-DCMAKE_C_COMPILER=%s' % spack_cc,
+                    '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
+                    '-DMPI_C_COMPILER=%s' % self.spec['mpi'].mpicc,
+                    '-DMPI_CXX_COMPILER=%s' % self.spec['mpi'].mpicxx
+                ])
+        else:
+            options.extend([
+                '-DCMAKE_C_COMPILER=%s' % spack_cc,
+                '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
+                '-DGMX_MPI:BOOL=OFF'])
+
+        if self.spec.satisfies('@2020:'):
+            options.append('-DGMX_INSTALL_LEGACY_API=ON')
 
         if '+double' in self.spec:
             options.append('-DGMX_DOUBLE:BOOL=ON')
@@ -135,16 +178,27 @@ class Gromacs(CMakePackage):
 
         if '~shared' in self.spec:
             options.append('-DBUILD_SHARED_LIBS:BOOL=OFF')
+            options.append('-DGMXAPI:BOOL=OFF')
 
         if '+hwloc' in self.spec:
             options.append('-DGMX_HWLOC:BOOL=ON')
         else:
             options.append('-DGMX_HWLOC:BOOL=OFF')
 
-        if '+cuda' in self.spec or '+opencl' in self.spec:
-            options.append('-DGMX_GPU:BOOL=ON')
+        if self.version >= Version('2021'):
+            if '+cuda' in self.spec:
+                options.append('-DGMX_GPU:STRING=CUDA')
+            elif '+opencl' in self.spec:
+                options.append('-DGMX_GPU:STRING=OpenCL')
+            elif '+sycl' in self.spec:
+                options.append('-DGMX_GPU:STRING=SYCL')
+            else:
+                options.append('-DGMX_GPU:STRING=OFF')
         else:
-            options.append('-DGMX_GPU:BOOL=OFF')
+            if '+cuda' in self.spec or '+opencl' in self.spec:
+                options.append('-DGMX_GPU:BOOL=ON')
+            else:
+                options.append('-DGMX_GPU:BOOL=OFF')
 
         if '+cuda' in self.spec:
             options.append('-DCUDA_TOOLKIT_ROOT_DIR:STRING=' +
@@ -192,8 +246,8 @@ class Gromacs(CMakePackage):
         elif target == 'mic_knl':
             # Intel KNL
             options.append('-DGMX_SIMD=AVX_512_KNL')
-        elif target.vendor == 'GenuineIntel':
-            # Other Intel architectures
+        else:
+            # Other architectures
             simd_features = [
                 ('sse2', 'SSE2'),
                 ('sse4_1', 'SSE4.1'),
@@ -208,13 +262,16 @@ class Gromacs(CMakePackage):
                 ('avx512', 'AVX_512') in simd_features):
                 simd_features.remove(('avx512', 'AVX_512'))
 
+            feature_set = False
             for feature, flag in reversed(simd_features):
                 if feature in target:
                     options.append('-DGMX_SIMD:STRING={0}'.format(flag))
+                    feature_set = True
                     break
-        else:
-            # Fall back to this for unknown microarchitectures
-            options.append('-DGMX_SIMD:STRING=None')
+
+            # Fall back
+            if not feature_set:
+                options.append('-DGMX_SIMD:STRING=None')
 
         # Use the 'rtdscp' assembly instruction only on
         # appropriate architectures
@@ -222,20 +279,17 @@ class Gromacs(CMakePackage):
             'GMX_USE_RDTSCP', str(target.family) in ('x86_64', 'x86')
         ))
 
-        if '+mdrun_only' in self.spec:
-            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=ON')
-        else:
-            options.append('-DGMX_BUILD_MDRUN_ONLY:BOOL=OFF')
+        if self.spec.satisfies('@:2020'):
+            options.append(
+                self.define_from_variant('GMX_BUILD_MDRUN_ONLY', 'mdrun_only'))
 
-        if '~openmp' in self.spec:
-            options.append('-DGMX_OPENMP:BOOL=OFF')
-        else:
-            options.append('-DGMX_OPENMP:BOOL=ON')
+        options.append(self.define_from_variant('GMX_OPENMP', 'openmp'))
 
-        if '+double_precision' in self.spec:
-            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=ON')
-        else:
-            options.append('-DGMX_RELAXED_DOUBLE_PRECISION:BOOL=OFF')
+        if self.spec.satisfies('@:2020'):
+            options.append(
+                self.define_from_variant(
+                    'GMX_RELAXED_DOUBLE_PRECISION',
+                    'relaxed_double_precision'))
 
         if '+cycle_subcounters' in self.spec:
             options.append('-DGMX_CYCLE_SUBCOUNTERS:BOOL=ON')

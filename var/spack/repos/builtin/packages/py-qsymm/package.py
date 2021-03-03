@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyQsymm(PythonPackage):
     constraints and finds the full symmetry group of your Hamiltonian."""
 
     homepage = "https://gitlab.kwant-project.org/qt/qsymm"
-    url = "https://pypi.io/packages/source/q/qsymm/qsymm-1.2.7.tar.gz"
+    pypi = "qsymm/qsymm-1.2.7.tar.gz"
     git = "https://gitlab.kwant-project.org/qt/qsymm.git"
 
     # Add a list of GitHub accounts to notify when the
@@ -27,5 +27,4 @@ class PyQsymm(PythonPackage):
     depends_on('py-scipy@0.19:', type=('build', 'run'))
     depends_on('py-sympy@1.1:', type=('build', 'run'))
     depends_on('py-tinyarray', type=('build', 'run'))
-    depends_on('py-pytest', type='test')
     depends_on('py-pytest-runner', type='build')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,20 +26,14 @@ class Miniamr(MakefilePackage):
     version('1.4.1', sha256='dd8e8d9fd0768cb4f2c5d7fe6989dfa6bb95a8461f04deaccdbb50b0dd51e97a')
     version('1.4.0', sha256='f0b959c90416288c5ab51ed86b6ba49bc8a319006c2a74a070c94133267edc6f')
 
-    variant('mpi', default=True, description='Build with MPI support')
-
-    depends_on('mpi', when="+mpi")
+    depends_on('mpi')
 
     @property
     def build_targets(self):
         targets = []
-        if '+mpi' in self.spec:
-            targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
-            targets.append('LD={0}'.format(self.spec['mpi'].mpicc))
-            targets.append('LDLIBS=-lm')
-        else:
-            targets.append('CC={0}'.format(self.compiler.cc))
-            targets.append('LD={0}'.format(self.compiler.cc))
+        targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+        targets.append('LD={0}'.format(self.spec['mpi'].mpicc))
+        targets.append('LDLIBS=-lm')
         targets.append('--directory=ref')
 
         return targets

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,7 +89,7 @@ def test_query_arguments():
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag1(parser, specs):
 
-    args = parser.parse_args(['--tags', 'tag1'])
+    args = parser.parse_args(['--tag', 'tag1'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 2
@@ -100,7 +100,7 @@ def test_tag1(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2'])
+    args = parser.parse_args(['--tag', 'tag2'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 1
@@ -110,7 +110,7 @@ def test_tag2(parser, specs):
 @pytest.mark.db
 @pytest.mark.usefixtures('database', 'mock_display')
 def test_tag2_tag3(parser, specs):
-    args = parser.parse_args(['--tags', 'tag2', '--tags', 'tag3'])
+    args = parser.parse_args(['--tag', 'tag2', '--tag', 'tag3'])
     spack.cmd.find.find(parser, args)
 
     assert len(specs) == 0

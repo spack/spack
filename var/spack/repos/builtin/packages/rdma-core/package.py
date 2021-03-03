@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,7 @@ class RdmaCore(CMakePackage):
     homepage = "https://github.com/linux-rdma/rdma-core"
     url      = "https://github.com/linux-rdma/rdma-core/releases/download/v17.1/rdma-core-17.1.tar.gz"
 
+    version('33.1', sha256='d179b102bec551ce62265ed463d1095fb2ae9baff604261ad63327fcd20650e5')
     version('32.0', sha256='8197e20a59990b9b06a2e4c83f4a96802fc080ec1669392b643b59b6023931fc')
     version('31.0', sha256='51ae9a3ab81cd6834436813fafc310c8b7007feae9d09a53fdd5c169e648d50b')
     version('30.0', sha256='23e1bd2d7b38149a1621ee577a3428ac652e305adb8e0eee923cbe71356a9bf9')

@@ -1,0 +1,31 @@
+diff --git a/pydmd/dmdbase.py b/pydmd/dmdbase.py
+index 17f3662..778a6b8 100644
+--- a/pydmd/dmdbase.py
++++ b/pydmd/dmdbase.py
+@@ -201,7 +201,7 @@ class DMDBase(object):
+         else:
+             input_shapes = [np.asarray(x).shape for x in X]
+ 
+-            if len(set(input_shapes)) is not 1:
++            if len(set(input_shapes)) != 1:
+                 raise ValueError('Snapshots have not the same dimension.')
+ 
+             snapshots_shape = input_shapes[0]
+@@ -235,7 +235,7 @@ class DMDBase(object):
+         https://arxiv.org/pdf/1502.03854.pdf
+         """
+         # Do not perform tlsq
+-        if tlsq_rank is 0:
++        if tlsq_rank == 0:
+             return X, Y
+ 
+         V = np.linalg.svd(np.append(X, Y, axis=0), full_matrices=False)[-1]
+@@ -269,7 +269,7 @@ class DMDBase(object):
+         U, s, V = np.linalg.svd(X, full_matrices=False)
+         V = V.conj().T
+ 
+-        if svd_rank is 0:
++        if svd_rank == 0:
+             omega = lambda x: 0.56 * x ** 3 - 0.95 * x ** 2 + 1.82 * x + 1.43
+             beta = np.divide(*sorted(X.shape))
+             tau = np.median(s) * omega(beta)

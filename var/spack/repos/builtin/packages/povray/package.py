@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,7 +63,16 @@ class Povray(AutotoolsPackage):
     depends_on('libpng@1.2.5:', when='+libpng')
     depends_on('jpeg', when='+jpeg')
     depends_on('libtiff@3.6.1:', when='+libtiff')
+    depends_on('mkl', when='+mkl')
     depends_on('openexr@1.2:', when='+openexr')
+
+    # MKL conflicts
+    conflicts('+mkl', when='target=aarch64:',
+              msg='Intel MKL only runs on x86')
+    conflicts('+mkl', when='target=ppc64:',
+              msg='Intel MKL only runs on x86')
+    conflicts('+mkl', when='target=ppc64le:',
+              msg='Intel MKL only runs on x86')
 
     # This patch enables prebuild.sh to be invoked from any directory
     # (it immediately cds to the directory containing prebuild.sh)
@@ -138,3 +147,11 @@ class Povray(AutotoolsPackage):
         extra_args.append('--without-x')
 
         return extra_args
+
+    def test(self):
+        povs = find(self.prefix.share, 'biscuit.pov')[0]
+        copy(povs, '.')
+        self.run_test('povray', options=['biscuit.pov'],
+                      purpose="test: render sample file",
+                      expected=['POV-Ray finished']
+                      )

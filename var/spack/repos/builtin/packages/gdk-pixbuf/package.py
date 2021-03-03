@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,7 +21,7 @@ class GdkPixbuf(Package):
     version('2.40.0', sha256='1582595099537ca8ff3b99c6804350b4c058bb8ad67411bbaae024ee7cead4e6')
     version('2.38.2', sha256='73fa651ec0d89d73dd3070b129ce2203a66171dfc0bd2caa3570a9c93d2d0781')
     version('2.38.0', sha256='dd50973c7757bcde15de6bcd3a6d462a445efd552604ae6435a0532fbbadae47')
-    version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa')
+    version('2.31.2', sha256='9e467ed09894c802499fb2399cd9a89ed21c81700ce8f27f970a833efb1e47aa', deprecated=True)
 
     variant('x11', default=False, description="Enable X11 support")
 

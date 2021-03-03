@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyMarkdown(PythonPackage):
     """
 
     homepage = "https://pythonhosted.org/Markdown/"
-    url      = "https://pypi.io/packages/source/m/markdown/Markdown-2.6.11.tar.gz"
+    pypi = "markdown/Markdown-2.6.11.tar.gz"
 
     version('3.1.1', sha256='2e50876bcdd74517e7b71f3e7a76102050edec255b3983403f1a63e7c8a41e7a')
     version('2.6.11', sha256='a856869c7ff079ad84a3e19cd87a64998350c2b94e9e08e44270faef33400f81')

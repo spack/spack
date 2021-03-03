@@ -1,4 +1,4 @@
-.. Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -441,8 +441,8 @@ Environments can include files with either relative or absolute
 paths. Inline configurations take precedence over included
 configurations, so you don't have to change shared configuration files
 to make small changes to an individual Environment. Included configs
-listed later will have higher precedence, as the included configs are
-applied in order.
+listed earlier will have higher precedence, as the included configs are
+applied in reverse order.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Manually Editing the Specs List

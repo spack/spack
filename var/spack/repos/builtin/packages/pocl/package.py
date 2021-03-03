@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Pocl(CMakePackage):
     git      = "https://github.com/pocl/pocl.git"
 
     version("master", branch="master")
+    version('1.6', sha256='b0a4c0c056371b6f0db726b88fbb76bbee94948fb2abd4dbc8d958f7c42f766c')
     version('1.5', sha256='4fcf4618171727d165fc044d465a66e3119217bb4577a97374f94fcd8aed330e')
     version('1.4', sha256='ec237faa83bb1c803fbdf7c6e83d8a2ad68b6f0ed1879c3aa16c0e1dcc478742')
     version('1.3', sha256='6527e3f47fab7c21e96bc757c4ae3303901f35e23f64642d6da5cc4c4fcc915a')
@@ -31,6 +32,9 @@ class Pocl(CMakePackage):
     version('0.12', sha256='5160d7a59721e6a7d0fc85868381c0afceaa7c07b9956c9be1e3b51e80c29f76')
     version('0.11', sha256='24bb801fb87d104b66faaa95d1890776fdeabb37ad1b12fb977281737c7f29bb')
     version('0.10', sha256='e9c38f774a77e61f66d850b705a5ba42d49356c40e75733db4c4811e091e5088')
+
+    conflicts('@:1.5', when='target=a64fx',
+              msg='a64fx is supported by pocl v1.6 and above.')
 
     # This is Github's pocl/pocl#373
     patch("uint.patch", when="@:0.13")
@@ -51,7 +55,8 @@ class Pocl(CMakePackage):
     # enabled by default, and also because they fail to build for us
     # (see #1616)
     # These are the supported LLVM versions
-    depends_on("llvm +clang @6.0:10.0", when="@master")
+    depends_on("llvm +clang @6.0:11.0", when="@master")
+    depends_on("llvm +clang +shared_libs @6.0:11.0", when="@1.6")
     depends_on("llvm +clang @6.0:10.0", when="@1.5")
     depends_on("llvm +clang @6.0:9.0", when="@1.4")
     depends_on("llvm +clang @5.0:8.0", when="@1.3")

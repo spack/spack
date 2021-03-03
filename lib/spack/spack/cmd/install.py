@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,7 @@ def update_kwargs_from_args(args, kwargs):
         'dirty': args.dirty,
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
+        'include_build_deps': args.include_build_deps,
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
@@ -106,6 +107,11 @@ the dependencies"""
         help="only install package from binary mirrors")
 
     subparser.add_argument(
+        '--include-build-deps', action='store_true', dest='include_build_deps',
+        default=False, help="""include build deps when installing from cache,
+which is useful for CI pipeline troubleshooting""")
+
+    subparser.add_argument(
         '--no-check-signature', action='store_true',
         dest='unsigned', default=False,
         help="do not check signatures of binary packages")
@@ -120,7 +126,7 @@ remote spec matches that of the local spec""")
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
@@ -255,7 +261,7 @@ environment variables:
             reporter.specs = specs
 
             tty.msg("Installing environment {0}".format(env.name))
-            with reporter:
+            with reporter('build'):
                 env.install_all(args, **kwargs)
 
             tty.debug("Regenerating environment views for {0}"
@@ -281,6 +287,9 @@ environment variables:
 
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
+
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
 
     # Parse cli arguments and construct a dictionary
     # that will be passed to the package installer

@@ -1,3 +1,8 @@
+% Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+% Spack Project Developers. See the top-level COPYRIGHT file for details.
+%
+% SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 %=============================================================================-
 % Display Results
 %
@@ -24,4 +29,4 @@
 #show compiler_weight/2.
 #show node_target_match/2.
 #show node_target_weight/2.
-#show external_spec/2.
+#show external_spec_selected/3.

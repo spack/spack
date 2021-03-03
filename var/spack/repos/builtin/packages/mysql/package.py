@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -81,7 +81,7 @@ class Mysql(CMakePackage):
     # 8.0.19+
     depends_on('boost@1.70.0 cxxstd=98', type='build', when='@8.0.19: cxxstd=98')
     depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=11')
-    depends_on('boost@1.70.0 cxxstd=11', type='build', when='@8.0.19: cxxstd=14')
+    depends_on('boost@1.70.0 cxxstd=14', type='build', when='@8.0.19: cxxstd=14')
     depends_on('boost@1.70.0 cxxstd=17', type='build', when='@8.0.19: cxxstd=17')
     # 8.0.16--8.0.18
     depends_on('boost@1.69.0 cxxstd=98', type='build', when='@8.0.16:8.0.18 cxxstd=98')

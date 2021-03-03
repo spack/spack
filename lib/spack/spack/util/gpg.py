@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -115,7 +115,7 @@ if not cached_property:
         return result
 
 
-class GpgConstants(object):
+class _GpgConstants(object):
     @cached_property
     def target_version(self):
         return spack.version.Version('2')
@@ -244,7 +244,7 @@ class GpgConstants(object):
                 pass
 
 
-GpgConstants = GpgConstants()
+GpgConstants = _GpgConstants()
 
 
 def ensure_gpg(reevaluate=False):
@@ -382,7 +382,7 @@ def gpg(*args, **kwargs):
     return get_global_gpg_instance()(*args, **kwargs)
 
 
-gpg.name = 'gpg'
+gpg.name = 'gpg'  # type: ignore[attr-defined]
 
 
 @functools.wraps(Gpg.create)

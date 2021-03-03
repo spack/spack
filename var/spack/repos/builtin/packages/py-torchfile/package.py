@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyTorchfile(PythonPackage):
     including torch.Tensors is preserved."""
 
     homepage = "https://github.com/bshillingford/python-torchfile"
-    url      = "https://pypi.io/packages/source/t/torchfile/torchfile-0.1.0.tar.gz"
+    pypi = "torchfile/torchfile-0.1.0.tar.gz"
     # license = "BSD-3-Clause"
 
     version('0.1.0', sha256='a53dfe134b737845a9f2cb24fe0585317874f965932cebdb0439d13c8da4136e')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyUrllib3(PythonPackage):
     more."""
 
     homepage = "https://urllib3.readthedocs.io/"
-    url = "https://pypi.io/packages/source/u/urllib3/urllib3-1.25.6.tar.gz"
+    pypi = "urllib3/urllib3-1.25.6.tar.gz"
 
     version('1.25.6', sha256='9a107b99a5393caf59c7aa3c1249c16e6879447533d0887f4336dde834c7be86')
     version('1.25.3', sha256='dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232')
@@ -21,9 +21,6 @@ class PyUrllib3(PythonPackage):
 
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
-    depends_on('py-pytest', type='test')
-    depends_on('py-mock', type='test')
-    depends_on('py-tornado', type='test')
 
     variant('secure', default=False, description='Add SSL/TLS support')
     depends_on('py-pyopenssl@0.14:', when='+secure')

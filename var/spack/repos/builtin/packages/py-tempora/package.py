@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyTempora(PythonPackage):
     """Objects and routines pertaining to date and time (tempora) """
 
     homepage = "https://github.com/jaraco/tempora"
-    url      = "https://pypi.io/packages/source/t/tempora/tempora-1.14.1.tar.gz"
+    pypi = "tempora/tempora-1.14.1.tar.gz"
 
     version('1.14.1', sha256='cb60b1d2b1664104e307f8e5269d7f4acdb077c82e35cd57246ae14a3427d2d6')
 

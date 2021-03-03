@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,13 +56,13 @@ class VtkM(CMakePackage, CudaPackage):
     variant("tbb", default=(sys.platform == 'darwin'), description="build TBB support")
     variant("hip", default=False, description="build hip support")
 
-    # it doesn't look like spack has a amd gpu abstraction
+    # it doesn't look like spack has an amd gpu abstraction
+    # Going to have to restrict our set to ones that Kokkos supports
     amdgpu_targets = (
-        'gfx701', 'gfx801', 'gfx802', 'gfx803',
-        'gfx900', 'gfx906', 'gfx908', 'gfx1010',
-        'gfx1011', 'gfx1012'
+        'gfx900', 'gfx906', 'gfx908'
     )
-    variant('amdgpu_target', default='none', multi=True, values=amdgpu_targets)
+
+    variant('amdgpu_target', default='none', multi=True, values=('none',) + amdgpu_targets)
     conflicts("+hip", when="amdgpu_target=none")
 
     depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
@@ -72,12 +72,13 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
-    depends_on("kokkos@3.1:+hip", when="+hip")
+    for amdgpu_value in amdgpu_targets:
+        depends_on("kokkos@develop +rocm amdgpu_target=%s" % amdgpu_value, when="amdgpu_target=%s" % amdgpu_value)
+
     depends_on("rocm-cmake@3.7:", when="+hip")
     depends_on("hip@3.7:", when="+hip")
 
     conflicts("+hip", when="+cuda")
-    conflicts("~shared", when="~pic")
 
     def cmake_args(self):
         spec = self.spec
@@ -161,6 +162,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # hip support
             if "+hip" in spec:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
                 options.append("-DVTKm_ENABLE_HIP:BOOL=ON")
 
                 archs = ",".join(self.spec.variants['amdgpu_target'].value)

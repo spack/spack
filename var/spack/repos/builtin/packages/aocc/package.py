@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -56,7 +56,7 @@ class Aocc(Package):
 
     @run_before('install')
     def abort_without_license_agreed(self):
-        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf' 
+        license_url = 'http://developer.amd.com/wordpress/media/files/AOCC_EULA.pdf'
         install_example = "spack install aocc +license-agreed"
         if not self.spec.variants['license-agreed'].value:
             raise InstallError("\n\n\nNOTE:\nUse +license-agreed " +

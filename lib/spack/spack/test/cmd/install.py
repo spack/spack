@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -629,10 +629,11 @@ def test_cache_only_fails(tmpdir, mock_fetch, install_mockery, capfd):
     # libelf from cache fails to install, which automatically removes the
     # the libdwarf build task
     with capfd.disabled():
-        out = install('--cache-only', 'libdwarf')
+        out = install('--cache-only', 'libdwarf', fail_on_error=False)
 
     assert 'Failed to install libelf' in out
     assert 'Skipping build of libdwarf' in out
+    assert 'was not installed' in out
 
     # Check that failure prefix locks are still cached
     failure_lock_prefixes = ','.join(spack.store.db._prefix_failures.keys())

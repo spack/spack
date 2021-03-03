@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -66,4 +66,7 @@ class Bowtie2(MakefilePackage):
 
     @property
     def install_targets(self):
-        return ['PREFIX={0}'.format(self.prefix), 'install']
+        if self.spec.satisfies('@:2.3.9'):
+            return ['prefix={0}'.format(self.prefix), 'install']
+        else:
+            return ['PREFIX={0}'.format(self.prefix), 'install']

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -445,9 +445,8 @@ class Rust(Package):
                     ),
                     sha256=rust_sha256,
                     destination='spack_bootstrap_stage',
-                    when='@{version} platform={platform} target={target}'\
-                    .format(
-                        version=rust_version,
+                    when='@{ver} platform={platform} target={target}'.format(
+                        ver=rust_version,
                         platform=rust_arch['platform'],
                         target=rust_arch['target']
                     )

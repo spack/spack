@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,8 +11,7 @@ YAML format preserves DAG information in the spec.
 import ast
 import inspect
 import os
-
-from collections import Iterable, Mapping
+import sys
 
 import pytest
 
@@ -27,6 +26,12 @@ from spack import repo
 from spack.spec import Spec, save_dependency_spec_yamls
 from spack.util.spack_yaml import syaml_dict
 from spack.util.mock_package import MockPackageMultiRepo
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Iterable, Mapping  # novm
+else:
+    from collections import Iterable, Mapping
 
 
 def check_yaml_round_trip(spec):
@@ -125,8 +130,13 @@ def test_to_record_dict(mock_packages, config):
             assert record[key] == value
 
 
+@pytest.mark.parametrize("hash_type", [
+    ht.dag_hash,
+    ht.build_hash,
+    ht.full_hash
+])
 def test_ordered_read_not_required_for_consistent_dag_hash(
-        config, mock_packages
+        hash_type, config, mock_packages
 ):
     """Make sure ordered serialization isn't required to preserve hashes.
 
@@ -143,15 +153,15 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         #
         # Dict & corresponding YAML & JSON from the original spec.
         #
-        spec_dict = spec.to_dict()
-        spec_yaml = spec.to_yaml()
-        spec_json = spec.to_json()
+        spec_dict = spec.to_dict(hash=hash_type)
+        spec_yaml = spec.to_yaml(hash=hash_type)
+        spec_json = spec.to_json(hash=hash_type)
 
         #
         # Make a spec with reversed OrderedDicts for every
         # OrderedDict in the original.
         #
-        reversed_spec_dict = reverse_all_dicts(spec.to_dict())
+        reversed_spec_dict = reverse_all_dicts(spec.to_dict(hash=hash_type))
 
         #
         # Dump to YAML and JSON
@@ -185,11 +195,13 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
             reversed_json_string
         )
 
-        # TODO: remove this when build deps are in provenance.
-        spec = spec.copy(deps=('link', 'run'))
+        # Strip spec if we stripped the yaml
+        spec = spec.copy(deps=hash_type.deptype)
+
         # specs are equal to the original
         assert spec == round_trip_yaml_spec
         assert spec == round_trip_json_spec
+
         assert spec == round_trip_reversed_yaml_spec
         assert spec == round_trip_reversed_json_spec
         assert round_trip_yaml_spec == round_trip_reversed_yaml_spec
@@ -199,16 +211,18 @@ def test_ordered_read_not_required_for_consistent_dag_hash(
         assert spec.dag_hash() == round_trip_json_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_yaml_spec.dag_hash()
         assert spec.dag_hash() == round_trip_reversed_json_spec.dag_hash()
-        # full_hashes are equal
-        spec.concretize()
-        round_trip_yaml_spec.concretize()
-        round_trip_json_spec.concretize()
-        round_trip_reversed_yaml_spec.concretize()
-        round_trip_reversed_json_spec.concretize()
-        assert spec.full_hash() == round_trip_yaml_spec.full_hash()
-        assert spec.full_hash() == round_trip_json_spec.full_hash()
-        assert spec.full_hash() == round_trip_reversed_yaml_spec.full_hash()
-        assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
+
+        # full_hashes are equal if we round-tripped by build_hash or full_hash
+        if hash_type in (ht.build_hash, ht.full_hash):
+            spec.concretize()
+            round_trip_yaml_spec.concretize()
+            round_trip_json_spec.concretize()
+            round_trip_reversed_yaml_spec.concretize()
+            round_trip_reversed_json_spec.concretize()
+            assert spec.full_hash() == round_trip_yaml_spec.full_hash()
+            assert spec.full_hash() == round_trip_json_spec.full_hash()
+            assert spec.full_hash() == round_trip_reversed_yaml_spec.full_hash()
+            assert spec.full_hash() == round_trip_reversed_json_spec.full_hash()
 
 
 @pytest.mark.parametrize("module", [
@@ -310,7 +324,7 @@ def test_save_dependency_spec_yamls_subset(tmpdir, config):
     b = mock_repo.add_package('b', [d, e], [default, default])
     mock_repo.add_package('a', [b, c], [default, default])
 
-    with repo.swap(mock_repo):
+    with repo.use_repositories(mock_repo):
         spec_a = Spec('a')
         spec_a.concretize()
         b_spec = spec_a['b']

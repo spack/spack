@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,9 @@ class Sundials(CMakePackage):
     # Versions
     # ==========================================================================
     version('develop', branch='develop')
+    version('5.7.0', sha256='8d6dd094feccbb8d6ecc41340ec16a65fabac82ed4415023f6d7c1c2390ea2f3')
+    version('5.6.1', sha256='16b77999ec7e7f2157aa1d04ca1de4a2371ca8150e056d24951d0c58966f2a83')
+    version('5.6.0', sha256='95e4201912e150f29c6f6f7625de763385e2073dae7f929c4a544561ea29915d')
     version('5.5.0', sha256='2a755e89aab96d2ff096a4e30bf00bb162e80be20e9e99f424dccfb249098237')
     version('5.4.0', sha256='04d8a2ebe02cdaeef5a9e22ff7e3146bb563d8400f65772b6c7af80001413ffa')
     version('5.3.0', sha256='88dff7e11a366853d8afd5de05bf197a8129a804d9d4461fb64297f1ef89bca7')
@@ -123,6 +126,10 @@ class Sundials(CMakePackage):
     variant('generic-math', default=True,
             description='Use generic (std-c) math libraries on unix systems')
 
+    # Monitoring
+    variant('monitoring', default=False,
+            description='Build with simulation monitoring capabilities')
+
     # ==========================================================================
     # Conflicts
     # ==========================================================================
@@ -139,6 +146,7 @@ class Sundials(CMakePackage):
     conflicts('+superlu-dist',  when='@:4.1.0')
     conflicts('+f2003',         when='@:4.1.0')
     conflicts('+trilinos',      when='@:4.1.0')
+    conflicts('+monitoring',    when='@:5.5.0')
 
     # External libraries incompatible with 64-bit indices
     conflicts('+lapack', when='@3.0.0: +int64')
@@ -260,6 +268,11 @@ class Sundials(CMakePackage):
         # generic (std-c) math libraries
         args.extend([
             '-DUSE_GENERIC_MATH=%s' % on_off('+generic-math')
+        ])
+
+        # Monitoring
+        args.extend([
+            '-DSUNDIALS_BUILD_WITH_MONITORING=%s' % on_off('+monitoring')
         ])
 
         # parallelism

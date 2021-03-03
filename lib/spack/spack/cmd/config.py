@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ import spack.environment as ev
 import spack.schema.packages
 import spack.util.spack_yaml as syaml
 from spack.util.editor import editor
+import spack.store
+import spack.repo
 
 description = "get and set configuration options"
 section = "config"
@@ -71,6 +73,16 @@ def setup_parser(subparser):
     add_parser.add_argument(
         '-f', '--file',
         help="file from which to set all config values"
+    )
+
+    prefer_upstream_parser = sp.add_parser(
+        'prefer-upstream',
+        help='set package preferences from upstream')
+
+    prefer_upstream_parser.add_argument(
+        '--local', action='store_true', default=False,
+        help="Set packages preferences based on local installs, rather "
+             "than upstream."
     )
 
     remove_parser = sp.add_parser('remove', aliases=['rm'],
@@ -431,6 +443,79 @@ def config_revert(args):
         tty.msg(msg.format(cfg_file))
 
 
+def config_prefer_upstream(args):
+    """Generate a packages config based on the configuration of all upstream
+    installs."""
+
+    scope = args.scope
+    if scope is None:
+        scope = spack.config.default_modify_scope('packages')
+
+    all_specs = set(spack.store.db.query(installed=True))
+    local_specs = set(spack.store.db.query_local(installed=True))
+    pref_specs = local_specs if args.local else all_specs - local_specs
+
+    conflicting_variants = set()
+
+    pkgs = {}
+    for spec in pref_specs:
+        # Collect all the upstream compilers and versions for this package.
+        pkg = pkgs.get(spec.name, {
+            'version': [],
+            'compiler': [],
+        })
+        pkgs[spec.name] = pkg
+
+        # We have no existing variant if this is our first added version.
+        existing_variants = pkg.get('variants',
+                                    None if not pkg['version'] else '')
+
+        version = spec.version.string
+        if version not in pkg['version']:
+            pkg['version'].append(version)
+
+        compiler = str(spec.compiler)
+        if compiler not in pkg['compiler']:
+            pkg['compiler'].append(compiler)
+
+        # Get and list all the variants that differ from the default.
+        variants = []
+        for var_name, variant in spec.variants.items():
+            if (var_name in ['patches']
+                    or var_name not in spec.package.variants):
+                continue
+
+            if variant.value != spec.package.variants[var_name].default:
+                variants.append(str(variant))
+        variants.sort()
+        variants = ' '.join(variants)
+
+        if spec.name not in conflicting_variants:
+            # Only specify the variants if there's a single variant
+            # set across all versions/compilers.
+            if existing_variants is not None and existing_variants != variants:
+                conflicting_variants.add(spec.name)
+                pkg.pop('variants', None)
+            elif variants:
+                pkg['variants'] = variants
+
+    if conflicting_variants:
+        tty.warn(
+            "The following packages have multiple conflicting upstream "
+            "specs. You may have to specify, by "
+            "concretized hash, which spec you want when building "
+            "packages that depend on them:\n - {0}"
+            .format("\n - ".join(sorted(conflicting_variants))))
+
+    # Simply write the config to the specified file.
+    existing = spack.config.get('packages', scope=scope)
+    new = spack.config.merge_yaml(existing, pkgs)
+    spack.config.set('packages', new, scope)
+    config_file = spack.config.config.get_config_filename(scope, section)
+
+    tty.msg("Updated config at {0}".format(config_file))
+
+
 def config(parser, args):
     action = {
         'get': config_get,
@@ -441,6 +526,7 @@ def config(parser, args):
         'rm': config_remove,
         'remove': config_remove,
         'update': config_update,
-        'revert': config_revert
+        'revert': config_revert,
+        'prefer-upstream': config_prefer_upstream,
     }
     action[args.config_command](args)

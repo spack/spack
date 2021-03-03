@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -82,7 +82,9 @@ class TestConcretizePreferences(object):
          {'debug': True, 'opt': True, 'shared': False, 'static': False}),
         # Check a multivalued variant with multiple values set
         ('multivalue-variant', ['foo=bar,baz', 'fee=bar'],
-         {'foo': ('bar', 'baz'), 'fee': 'bar'})
+         {'foo': ('bar', 'baz'), 'fee': 'bar'}),
+        ('singlevalue-variant', ['fum=why'],
+         {'fum': 'why'})
     ])
     def test_preferred_variants(
             self, package_name, variant_value, expected_results

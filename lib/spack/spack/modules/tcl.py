@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ non-hierarchical modules.
 """
 import os.path
 import string
+from typing import Dict, Any  # novm
 
 import llnl.util.tty as tty
 
@@ -24,7 +25,7 @@ def configuration():
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}
+configuration_registry = {}  # type: Dict[str, Any]
 
 
 def make_configuration(spec):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Xsdktrilinos(CMakePackage):
     depends_on('hypre@xsdk-0.2.0~internal-superlu', when='@xsdk-0.2.0+hypre')
     depends_on('hypre@develop~internal-superlu', when='@develop+hypre')
     depends_on('petsc@xsdk-0.2.0+mpi~complex', when='@xsdk-0.2.0+petsc')
-    depends_on('petsc@develop+mpi~complex', when='@develop+petsc')
+    depends_on('petsc@main+mpi~complex', when='@develop+petsc')
     depends_on('trilinos@12.6.4', when='@12.6.4')
     depends_on('trilinos@12.8.1', when='@12.8.1')
     depends_on('trilinos@xsdk-0.2.0', when='@xsdk-0.2.0')

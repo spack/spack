@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -42,7 +42,7 @@ class Casacore(CMakePackage):
     depends_on('bison', type='build')
     depends_on('blas')
     depends_on('lapack')
-    depends_on('cfitsio@3.181:')
+    depends_on('cfitsio')
     depends_on('wcslib@4.20:+cfitsio')
     depends_on('fftw@3.0.0:~mpi precision=float,double', when='+fftw')
     # SOFA dependency suffers the same problem in CMakeLists.txt as readline;

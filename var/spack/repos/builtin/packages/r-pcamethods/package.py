@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RPcamethods(RPackage):
-    """A collection of PCA methods.
+    """A collection of PCA methods
 
        Provides Bayesian PCA, Probabilistic PCA, Nipals PCA, Inverse Non-Linear
        PCA and the conventional SVD PCA. A cluster based method for missing
@@ -22,6 +22,7 @@ class RPcamethods(RPackage):
     homepage = "https://bioconductor.org/packages/pcaMethods"
     git      = "https://git.bioconductor.org/packages/pcaMethods.git"
 
+    version('1.82.0', commit='d500b3363308f1f8ca70625c5cd10cce59b27641')
     version('1.76.0', commit='5db995330ced37dfd5ddad6ad1d90b4815d3127a')
     version('1.74.0', commit='1b8f0a5cdfe3664119d0d7e926a2e0fe7320133c')
     version('1.72.0', commit='1bb8c7d056645e62ee5179f6bb30b6594ebf3bfd')

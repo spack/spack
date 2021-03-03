@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Caliper(CMakePackage):
     git      = "https://github.com/LLNL/Caliper.git"
 
     version('master')
+    version('2.5.0', tag='v2.5.0')
     version('2.4.0', tag='v2.4.0')
     version('2.3.0', tag='v2.3.0')
     version('2.2.0', tag='v2.2.0')
@@ -53,6 +54,8 @@ class Caliper(CMakePackage):
             description='Enable sampling support on Linux')
     variant('sosflow', default=False,
             description='Enable SOSflow support')
+    variant('fortran', default=False,
+            description='Enable Fortran support')
 
     depends_on('adiak@0.1:0.99', when='@2.2: +adiak')
 
@@ -98,7 +101,8 @@ class Caliper(CMakePackage):
             '-DWITH_LIBPFM=%s'   % ('On' if '+libpfm'   in spec else 'Off'),
             '-DWITH_SOSFLOW=%s'  % ('On' if '+sosflow'  in spec else 'Off'),
             '-DWITH_SAMPLER=%s'  % ('On' if '+sampler'  in spec else 'Off'),
-            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off')
+            '-DWITH_MPI=%s'      % ('On' if '+mpi'      in spec else 'Off'),
+            '-DWITH_FORTRAN=%s'  % ('On' if '+fortran'  in spec else 'Off')
         ]
 
         if '+papi' in spec:

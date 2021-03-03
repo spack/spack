@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Mpich(AutotoolsPackage):
     executables = ['^mpichversion$']
 
     version('develop', submodules=True)
+    version('3.4.1', sha256='8836939804ef6d492bcee7d54abafd6477d2beca247157d92688654d13779727')
+    version('3.4',   sha256='ce5e238f0c3c13ab94a64936060cff9964225e3af99df1ea11b130f20036c24b')
     version('3.3.2', sha256='4bfaf8837a54771d3e4922c84071ef80ffebddbb6971a006038d91ee7ef959b9')
     version('3.3.1', sha256='fe551ef29c8eea8978f679484441ed8bb1d943f6ad25b63c235d4b9243d551e5')
     version('3.3',   sha256='329ee02fe6c3d101b6b30a7b6fb97ddf6e82b28844306771fa9dd8845108fa0b')
@@ -51,15 +53,16 @@ class Mpich(AutotoolsPackage):
     )
     variant(
         'device',
-        default='ch3',
+        default='ch4',
         description='''Abstract Device Interface (ADI)
-implementation. The ch4 device is currently in experimental state''',
+implementation. The ch4 device is in experimental state for versions
+before 3.4.''',
         values=('ch3', 'ch4'),
         multi=False
     )
     variant(
         'netmod',
-        default='tcp',
+        default='ofi',
         description='''Network module. Only single netmod builds are
 supported. For ch3 device configurations, this presumes the
 ch3:nemesis communication channel. ch3:sock is not supported by this
@@ -184,6 +187,9 @@ spack package at this time.''',
     conflicts('+pci', when='@:3.2~hydra')
     conflicts('+libxml2', when='@:3.2~hydra')
 
+    # see https://github.com/pmodels/mpich/pull/5031
+    conflicts('%clang@:7', when='@3.4:')
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
@@ -305,6 +311,10 @@ spack package at this time.''',
         # Cray MPIs always have cray in the module name, e.g. "cray-mpich"
         external_modules = self.spec.external_modules
         if external_modules and 'cray' in external_modules[0]:
+            # This is intended to support external MPICH instances registered
+            # by Spack on Cray machines prior to a879c87; users defining an
+            # external MPICH entry for Cray should generally refer to the
+            # "cray-mpich" package
             env.set('MPICC', spack_cc)
             env.set('MPICXX', spack_cxx)
             env.set('MPIF77', spack_fc)

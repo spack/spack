@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,13 @@ class Hdf5(AutotoolsPackage):
     list_depth = 3
     git      = "https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git"
     maintainers = ['lrknox']
+
+    test_requires_compiler = True
+
+    # We rely on the *.la files to be removed and, therefore, do not try to make
+    # sure that they are correct. The following is a precaution against someone
+    # blindly changing the value to True, either here or in the baseclass.
+    install_libtool_archives = False
 
     version('develop', branch='develop')
 
@@ -65,7 +72,7 @@ class Hdf5(AutotoolsPackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compaitibility.
-    variant('api', default='none', description='choose api compatibility', values=('v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+    variant('api', default='none', description='choose api compatibility', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
     conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
     conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
@@ -227,39 +234,27 @@ class Hdf5(AutotoolsPackage):
             msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
+    def with_or_without_szip(self, activated):
+        return '--{0}-szlib'.format('with' if activated else 'without')
+
     def configure_args(self):
         # Always enable this option. This does not actually enable any
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        extra_args = ['--enable-unsupported']
-        extra_args += ['--enable-symbols=yes']
+        extra_args = ['--enable-unsupported',
+                      '--enable-symbols=yes',
+                      '--with-zlib']
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
         extra_args += self.enable_or_disable('fortran')
         extra_args += self.enable_or_disable('java')
+        extra_args += self.with_or_without('szip')
 
         api = self.spec.variants['api'].value
         if api != 'none':
             extra_args.append('--with-default-api-version=' + api)
-
-        if '+szip' in self.spec:
-            szip_spec = self.spec['szip']
-            # The configure script of HDF5 accepts a comma-separated tuple of
-            # two paths: the first one points to the directory with include
-            # files, the second one points to the directory with library files.
-            # If the second path is not specified, the configure script assumes
-            # that it equals to prefix/lib. However, the correct directory
-            # might be prefix/lib64. It is not a problem when the building is
-            # done with Spack's compiler wrapper but it makes the Libtool
-            # files (*.la) invalid, which makes it problematic to use the
-            # installed library outside of Spack environment.
-            extra_args.append('--with-szlib=%s,%s' %
-                              (szip_spec.headers.directories[0],
-                               szip_spec.libs.directories[0]))
-        else:
-            extra_args.append('--without-szlib')
 
         if self.spec.satisfies('@1.10:'):
             if '+debug' in self.spec:
@@ -306,8 +301,6 @@ class Hdf5(AutotoolsPackage):
             if '+fortran' in self.spec:
                 extra_args.append('FC=%s' % self.spec['mpi'].mpifc)
 
-        extra_args.append('--with-zlib=%s' % self.spec['zlib'].prefix)
-
         return extra_args
 
     @run_after('configure')
@@ -321,6 +314,15 @@ class Hdf5(AutotoolsPackage):
                 lambda m: 'postdeps="%s"' % ' '.join(
                     arg for arg in m.group(1).split(' ') if arg != '-l'),
                 'libtool')
+
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for HDF5"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -426,5 +428,4 @@ HDF5 version {version} {version}
         self._test_example()
 
         # Run existing install check
-        # TODO: Restore once address built vs. installed state
-        # self._check_install()
+        self._check_install()

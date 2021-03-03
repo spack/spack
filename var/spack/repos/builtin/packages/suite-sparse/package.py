@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -119,8 +119,8 @@ class SuiteSparse(Package):
         # SuiteSparse defaults to using '-fno-common -fexceptions' in
         # CFLAGS, but not all compilers use the same flags for these
         # optimizations
-        if any([x in spec
-                for x in ('%apple-clang', '%clang', '%gcc', '%intel')]):
+        if any([x in spec for x in
+                ('%apple-clang', '%clang', '%gcc', '%intel', '%fj')]):
             make_args += ['CFLAGS+=-fno-common -fexceptions']
         elif '%pgi' in spec:
             make_args += ['CFLAGS+=--exceptions']

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -102,12 +102,14 @@ class Scotch(Package):
             '-DCOMMON_RANDOM_FIXED_SEED',
             '-DSCOTCH_DETERMINISTIC',
             '-DSCOTCH_RENAME',
-            '-DIDXSIZE64',  # SCOTCH_Idx typedef: indices for addressing
         ]
 
-        # SCOTCH_Num typedef: size of integers in arguments
         if '+int64' in self.spec:
+            # SCOTCH_Num typedef: size of integers in arguments
             cflags.append('-DINTSIZE64')
+            cflags.append('-DIDXSIZE64')  # SCOTCH_Idx typedef: indices for addressing
+        else:
+            cflags.append('-DIDXSIZE32')  # SCOTCH_Idx typedef: indices for addressing
 
         if self.spec.satisfies('platform=darwin'):
             cflags.extend([

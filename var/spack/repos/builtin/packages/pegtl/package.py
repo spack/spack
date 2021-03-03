@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,3 +25,25 @@ class Pegtl(CMakePackage):
 
     # Ref: https://github.com/taocpp/PEGTL/blob/master/src/example/pegtl/json_classes.hpp
     patch('change_to_virtual_destructor.patch', when='@:2.4')
+
+    def cmake_args(self):
+
+        args = []
+        if self.run_tests:
+            args.extend([
+                '-DPEGTL_BUILD_EXAMPLES=ON',
+                '-DPEGTL_BUILD_TESTS=ON'
+            ])
+        else:
+            args.extend([
+                '-DPEGTL_BUILD_EXAMPLES=OFF',
+                '-DPEGTL_BUILD_TESTS=OFF'
+            ])
+
+        return args
+
+    @run_after('build')
+    @on_package_attributes(run_tests=True)
+    def check(self):
+        with working_dir(self.build_directory):
+            make('test', parallel=False)
