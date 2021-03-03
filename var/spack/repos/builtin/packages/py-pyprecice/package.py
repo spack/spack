@@ -47,7 +47,7 @@ class PyPyprecice(PythonPackage):
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-cython@0.29:", type=("build"))
 
-    phases = ['install_lib','build_ext', 'install']
+    phases = ['install_lib', 'build_ext', 'install']
 
     def build_ext_args(self, spec, prefix):
         return [
