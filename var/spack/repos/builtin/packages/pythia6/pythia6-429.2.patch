@@ -1,0 +1,21 @@
+--- src/pystrf.f.orig	2014-05-14 18:12:02.000000001 +0200
++++ src/pystrf.f	2014-05-14 18:10:23.000000001 +0200
+@@ -805,7 +805,9 @@
+  
+ C...Closed string: random initial breakup flavour, pT and vertex.
+       ELSE
+-        KFL(3)=INT(1D0+(2D0+PARJ(2))*PYR(0))*(-1)**INT(PYR(0)+0.5D0)
++        RNDM1=PYR(0)
++        RNDM2=PYR(0)
++        KFL(3)=INT(1D0+(2D0+PARJ(2))*RNDM1)*(-1)**INT(RNDM2+0.5D0)
+         IBMO=0
+   770   CALL PYKFDI(KFL(3),0,KFL(1),KDUMP)
+ C.. Closed string: first vertex diq attempt => enforced second
+--- rootinterface/pythia6_common_address.c.orig	2020-11-12 14:07:37.000000000 +0100
++++ rootinterface/pythia6_common_address.c	2020-11-12 14:08:54.000000000 +0100
+@@ -1,4 +1,5 @@
+ // declaration of PYTHIA6 common clocks
++# include <string.h>
+ #ifndef WIN32
+ # define pyjets pyjets_
+ # define pydat1 pydat1_
