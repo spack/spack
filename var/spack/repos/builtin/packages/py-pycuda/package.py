@@ -25,7 +25,7 @@ class PyPycuda(PythonPackage):
         configure_args = [
             '--no-use-shipped-boost',
             '--boost-inc-dir={0}'.format(self.spec['boost'].prefix.include),
-            '--boost-lib-dir={0}'.format(self.spec['boost'].prefix.lib),
+            '--boost-lib-dir={0}'.format(self.spec['boost'].libs.directories[0]),
             '--boost-python-libname={0}'.format(boostlib)
         ]
         python('configure.py', *configure_args)
