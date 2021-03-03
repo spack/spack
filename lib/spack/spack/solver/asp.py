@@ -22,6 +22,7 @@ try:
     clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
+    clingo_cffi = False
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -38,6 +39,7 @@ import spack.spec
 import spack.package
 import spack.package_prefs
 import spack.repo
+import spack.bootstrap
 import spack.variant
 import spack.version
 
@@ -246,7 +248,20 @@ class PyclingoDriver(object):
             asp (file-like): optional stream to write a text-based ASP program
                 for debugging or verification.
         """
-        assert clingo, "PyclingoDriver requires clingo with Python support"
+        global clingo
+        if not clingo:
+            # TODO: Find a way to vendor the concrete spec
+            # in a cross-platform way
+            with spack.bootstrap.ensure_bootstrap_configuration():
+                generic_target = archspec.cpu.host().family
+                spec_str = 'clingo-bootstrap@spack+python target={0}'.format(
+                    str(generic_target)
+                )
+                clingo_spec = spack.spec.Spec(spec_str)
+                clingo_spec._old_concretize()
+                spack.bootstrap.make_module_available(
+                    'clingo', spec=clingo_spec, install=True)
+                import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
 
