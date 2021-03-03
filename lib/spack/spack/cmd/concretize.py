@@ -17,10 +17,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--test', default=None,
         choices=['root', 'all'],
-        help="""If 'root' is chosen, run package tests during
-installation for top-level packages (but skip tests for dependencies).
-if 'all' is chosen, run package tests during installation for all
-packages. If neither are chosen, don't run tests for any packages.""")
+        help="""Concretize with test dependencies. When 'root' is chosen, test
+dependencies are only added for the environment's root specs. When 'all' is
+chosen, test dependencies are enabled for all packages in the environment.""")
 
 
 def concretize(parser, args):
