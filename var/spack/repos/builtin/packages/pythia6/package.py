@@ -44,7 +44,7 @@ class Pythia6(CMakePackage):
             description='Build extra (non OEM) code to allow use by Root.')
     variant('sft', default=False,
             description='Apply extra patch provided by CERN EP-SFT group')
-            
+
     conflicts('+sft', when='~root')
 
     # The maximum number of particles (NMXHEP) supported by the arrays
