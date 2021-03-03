@@ -3,59 +3,51 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-# ispc requires <gnu/stubs-32.h>, e.g. from
-# glibc-devel.i686 (CentoOS) or libc6-dev-i386 and g++-multilib (Ubuntu)
-
+import os
+import platform
 
 from spack import *
 
 
-class Ispc(CMakePackage):
-    """Intel Implicit SPMD Program Compiler
+class Ispc(Package):
+    """ispc is a compiler for a variant of the C programming language, with
+    extensions for single program, multiple data programming mainly aimed
+    at CPU SIMD platforms."""
 
-    An open-source compiler for high-performance SIMD programming on the CPU"""
+    homepage = "https://github.com/ispc/ispc/"
+    url      = "https://github.com/ispc/ispc/releases/download/v1.10.0/ispc-v1.10.0b-linux.tar.gz"
 
-    homepage = "https://ispc.github.io"
-    url      = "https://github.com/ispc/ispc/tarball/v1.14.1"
-    maintainers = ['aumuell']
+    version('1.14.1', sha256='8cc0dae16b3ac244aa05e8b1db1dadf35aeb8d67916aaee6b66efb813b8e9174')
+    version('1.13.0', sha256='8ab1189bd5db596b3eee9d9465d3528b6626a7250675d67102761bb0d284cd21')
+    version('1.12.0', sha256='7a2bdd5fff5c1882639cfbd66bca31dbb68c7177f3013e80b0813a37fe0fdc23')
+    version('1.11.0', sha256='dae7d1abf950dea722fe3c535e4fa43a29c0b67b14d66e566ab2fa760ee82f38')
+    version('1.10.0', sha256='453211ade91c33826f4facb1336114831adbd35196d016e09d589a6ad8699aa3')
 
-    version('1.14.1', sha256='ca12f26dafbc4ef9605487d03a2156331c1351a4ffefc9bab4d896a466880794')
-    version('1.14.0', sha256='1ed72542f56738c632bb02fb0dd56ad8aec3e2487839ebbc0def8334f305a4c7')
-    version('1.13.0', sha256='aca595508b51dd1ff065c406a3fd7c93822320c510077dd4d97a2b98a23f097a')
-    version('1.12.0', sha256='d9633001825f82ce6fa3f525bdd948db81e56461829e828fac110b41e40225dc')
+    def url_for_version(self, version):
+        url = "https://github.com/ispc/ispc/releases/download/v{0}/ispc-v{0}{2}-{1}.tar.gz"
 
+        system = platform.system()
+        if system == 'Darwin':
+            checksums = {
+                Version('1.14.1'): '50d5ba0268cd22a310eaf6ab4e00121bf83cc301396c6180e0fc1b897b40743c',
+                Version('1.13.0'): '0dc7eaf3335b299e262f052fb96f0ad5a4e04a41492f399b690ca788e0fd304b',
+                Version('1.12.0'): 'e6c917b964e43218c422b46c9a6c71b876d88d0791da2ee3732b20a2e209c018',
+                Version('1.11.0'): '5205e0fca11361f8527d3489ee1503fd79ab8511db6399830c052ccf210cc3b7',
+                Version('1.10.0'): '2b2e2499549ce09a6597b6b645e387953de84544ecb44307e7ee960c9b742a89'
+            }
+            self.versions[version] = {'checksum': checksums[version]}
+            if self.spec.satisfies('@1.11.0:'):
+                return url.format(version, 'macOS', '')
+            else:
+                return url.format(version, 'osx', '')
+        else:  # linux
+            if self.spec.satisfies('@1.13.0:'):
+                suffix = ''
+            else:
+                suffix = 'b'
+            return url.format(version, 'linux', suffix)
 
-    depends_on('python', type='build')
-    depends_on('bison', type='build')
-    depends_on('flex', type='build')
-    depends_on('ncurses', type='link')
-    depends_on('zlib', type='link')
-    depends_on('llvm~libcxx')
-    depends_on('llvm@10:', when='@1.14:')
-    depends_on('llvm@10:10.999', when='@1.13:1.13.999')
-    depends_on('llvm@8:8.999', when='@1.12:1.12.999')
-
-    patch('don-t-assume-that-ncurses-zlib-are-system-libraries.patch',
-          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc',
-          when='@1.13:')
-
-    patch('fix-linking-against-llvm-10.patch', when='@1.13:1.13.999',
-          sha256='d3ccf547d3ba59779fd375e10417a436318f2200d160febb9f830a26f0daefdc')
-
-    def patch(self):
-        if self.spec.satisfies("@1.13:"):
-            filter_file(
-                r'\(bit 32 64\)',
-                '(bit 64)',
-                'cmake/GenerateBuiltins.cmake'
-            )
-
-    def cmake_args(self):
-        args = []
-        args.append('-DARM_ENABLED=FALSE')
-        args.append('-DISPC_NO_DUMPS=ON')  # otherwise, LLVM needs patching
-        args.append('-DISPC_INCLUDE_EXAMPLES=OFF')
-        args.append('-DISPC_INCLUDE_TESTS=OFF')
-        args.append('-DISPC_INCLUDE_UTILS=OFF')
-        return args
+    def install(self, spec, prefix):
+        for d in ['bin', 'examples']:
+            if os.path.isdir(d):
+                install_tree(d, join_path(self.prefix, d))
