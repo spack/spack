@@ -622,13 +622,9 @@ class Environment(object):
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
 
-                # Make develop paths absolute in case the environment is
-                # relocated from init_file to self.path
                 if hasattr(f, 'name') and f.name.endswith('.yaml'):
-                    env_dir = os.path.abspath(os.path.dirname(f.name))
-                    for name, entry in self.dev_specs.items():
-                        self.dev_specs[name]['path'] = os.path.normpath(
-                            os.path.join(env_dir, entry['path']))
+                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
+                    self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):
                 self._read()
@@ -644,6 +640,27 @@ class Environment(object):
                                                             with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def _rewrite_relative_paths_on_relocation(self, init_file_dir):
+        """When initializing the environment from a manifest file and we plan
+           to store the environment in a different directory, we have to rewrite
+           relative paths to absolute ones."""
+        if init_file_dir == self.path:
+            return
+
+        for name, entry in self.dev_specs.items():
+            dev_path = entry['path']
+            expanded_path = os.path.normpath(os.path.join(
+                init_file_dir, entry['path']))
+
+            # Skip if the expanded path is the same (e.g. when absolute)
+            if dev_path == expanded_path:
+                continue
+
+            tty.debug("Expanding develop path for {0} to {1}".format(
+                name, expanded_path))
+
+            self.dev_specs[name]['path'] = expanded_path
 
     def _re_read(self):
         """Reinitialize the environment object if it has been written (this

@@ -2373,3 +2373,51 @@ spack:
             e.clear()
             e.write()
     assert os.path.exists(str(spack_lock))
+
+
+def test_relative_dev_paths_are_expanded(tmpdir):
+    build_folder = tmpdir.join('build_folder')
+    init_env = tmpdir.join('init_env')
+    dest_env = tmpdir.join('dest_env')
+
+    fs.mkdirp(build_folder)
+    fs.mkdirp(init_env)
+    fs.mkdirp(dest_env)
+
+    raw_yaml = """
+spack:
+  specs:
+  - mypkg1
+  - mypkg2
+  develop:
+    mypkg1:
+      path: ../build_folder
+      spec: mypkg@main
+    mypkg2:
+      path: /some/other/path
+      spec: mypkg@main
+"""
+    spack_yaml = init_env.join('spack.yaml')
+    spack_yaml.write(raw_yaml)
+
+    # Create new environment in different directory; should rewrite rel paths
+    env('create', '-d', str(dest_env), str(spack_yaml))
+    with ev.Environment(str(dest_env)) as e:
+        assert e.dev_specs['mypkg1']['path'] == build_folder
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+    # Create new environment in var/share/environments; should rewrite rel paths
+    env('create', 'named_env', str(spack_yaml))
+    with ev.read('named_env') as e:
+        assert e.dev_specs['mypkg1']['path'] == build_folder
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+    # "Create" environment in original directory; should not rewrite rel paths
+    with ev.Environment(str(init_env), str(spack_yaml)) as e:
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+    env('create', '-d', str(init_env), str(spack_yaml))
+    with ev.Environment(str(init_env)) as e:
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
