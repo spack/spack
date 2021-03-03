@@ -7,17 +7,17 @@ stages: [generate, build]
     - spack --version
     - cd share/spack/gitlab/cloud_e4s_pipelines/stacks/e4s
     - spack env activate --without-view .
-    - spack -d ci generate --check-index-only
+    - spack ci generate --check-index-only
       --output-file "${CI_PROJECT_DIR}/jobs_scratch_dir/e4s_pipeline.yml"
   artifacts:
     paths:
       - "${CI_PROJECT_DIR}/jobs_scratch_dir/e4s_pipeline.yml"
-  tags: ["spack", "public", "medium"]
+  tags: ["spack", "public", "medium", "x86_64"]
+  interruptible: true
 
 e4s-pr-generate:
   only:
   - /^github\/pr[\d]+_.*$/
-  - move-pr-stack-into-spack
   extends: .generate
   before_script:
     - export SPACK_PR_BRANCH=${CI_COMMIT_REF_NAME}
@@ -33,7 +33,6 @@ e4s-develop-generate:
 e4s-pr-build:
   only:
   - /^github\/pr[\d]+_.*$/
-  - move-pr-stack-into-spack
   stage: build
   trigger:
     include:
