@@ -4684,11 +4684,7 @@ class SpecParser(spack.parse.Parser):
 
             # @:!1.2.3!: (@!=1.2.3) (not equal to)
             if self.accept(GT_COLON):
-                return vn.VersionRange(
-                    end, end,
-                    includes_left_endpoint=False,
-                    includes_right_endpoint=False,
-                )
+                return vn.VersionRange.from_single_version(end.negated())
 
             # @:!1.2.3: => @: (all versions, which is often unexpected)
             if self.accept(COLON):
@@ -4697,11 +4693,7 @@ class SpecParser(spack.parse.Parser):
                     "A @:!{0}: is the same as @: (all versions)!".format(end))
 
             # @:!1.2.3 => @<1.2.3
-            return vn.VersionRange(
-                None, end,
-                includes_left_endpoint=True,
-                includes_right_endpoint=False,
-            )
+            return vn.VersionRange(start=vn.Version.wildcard(), end=end.negated())
 
         # @:( \epsilon | 1.2.3( !: | : | \epsilon ))
         if self.accept(COLON):
@@ -4722,11 +4714,7 @@ class SpecParser(spack.parse.Parser):
                     "A @:{0}: is the same as @: (all versions)!".format(end))
 
             # @:1.2.3 \epsilon => @<=1.2.3
-            return vn.VersionRange(
-                None, end,
-                includes_left_endpoint=True,
-                includes_right_endpoint=True,
-            )
+            return vn.VersionRange(start=vn.Version.wildcard(), end=end)
 
         # @1.2.3( !:!1.2.3 | :!1.2.3 | !:1.2.3 | !: | :1.2.3 | : | \epsilon )
         if self.accept(ID):
@@ -4736,38 +4724,22 @@ class SpecParser(spack.parse.Parser):
             if self.accept(LT_GT_COLON):
                 assert self.accept(ID)
                 end = self.token.value
-                return vn.VersionRange(
-                    start, end,
-                    includes_left_endpoint=False,
-                    includes_right_endpoint=False,
-                )
+                return vn.VersionRange(start=start.negated(), end=end.negated())
 
             # @1.2.3:!1.2.3
             if self.accept(LT_COLON):
                 assert self.accept(ID)
                 end = self.token.value
-                return vn.VersionRange(
-                    start, end,
-                    includes_left_endpoint=True,
-                    includes_right_endpoint=False,
-                )
+                return vn.VersionRange(start=start, end=end.negated())
 
             # @1.2.3!:(1.2.3 | \epsilon)
             if self.accept(GT_COLON):
                 # @1.2.3!:1.2.3
                 if self.accept(ID):
                     end = self.token.value
-                    return vn.VersionRange(
-                        start, end,
-                        includes_left_endpoint=False,
-                        includes_right_endpoint=True,
-                    )
+                    return vn.VersionRange(start=start.negated(), end=end)
                 # @1.2.3!:
-                return vn.VersionRange(
-                    start, None,
-                    includes_left_endpoint=False,
-                    includes_right_endpoint=True,
-                )
+                return vn.VersionRange(start=start.negated(), end=Version.wildcard())
 
             # @1.2.3:( 1.2.3 | \epsilon )
             if self.accept(COLON):
@@ -4777,11 +4749,7 @@ class SpecParser(spack.parse.Parser):
                         self.push_tokens([self.token])
                     else:
                         end = self.token.value
-                return vn.VersionRange(
-                    start, end,
-                    includes_left_endpoint=True,
-                    includes_right_endpoint=True,
-                )
+                return vn.VersionRange(start=start, end=end)
 
         if start:
             # No colon, but there was a version.
@@ -4795,11 +4763,7 @@ class SpecParser(spack.parse.Parser):
             start = vn.Version(start)
         if end:
             end = vn.Version(end)
-        return vn.VersionRange(
-            start, end,
-            includes_left_endpoint=True,
-            includes_right_endpoint=True,
-        )
+        return vn.VersionRange(start=start, end=end)
 
     def version_list(self):
         vlist = []

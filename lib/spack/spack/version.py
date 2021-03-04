@@ -82,16 +82,23 @@ def coerce_versions(a, b):
 
     if ta == tb:
         return (a, b)
-    if order.index(ta) > order.index(tb):
-        if ta == WildcardVersion:
-            assert isinstance(b, UnsignedVersion), b
-            return (a, b)
-        if ta == VersionRange:
-            assert isinstance(b, Version), b
-            return (a, VersionRange.from_single_version(b))
-        assert isinstance(b, (Version, VersionRange)), b
-        return (a, VersionList.from_version_or_range(b))
-    return coerce_versions(b, a)
+    if order.index(ta) < order.index(tb):
+        if ta == UnsignedVersion:
+            assert isinstance(a, WildcardVersion), a
+            return (b, a)
+        assert not isinstance(a, WildcardVersion), a
+        if tb == VersionRange:
+            assert isinstance(a, Version), a
+            return (VersionRange.from_single_version(a), b)
+        assert isinstance(a, (Version, VersionRange)), a
+        assert isinstance(b, VersionList), b
+        return (VersionList.from_version_or_range(a), b)
+
+    def flipped(inp):
+        # type: (Tuple[Any, Any]) -> Tuple[Any, Any]
+        a, b = inp
+        return b, a
+    return flipped(coerce_versions(*flipped((a, b))))
 
 
 def _coercing_factory(method, coerce_logic=False):
@@ -515,6 +522,34 @@ class UnsignedVersion(
         # Store the separators from the original version string as well.
         self.separators = tuple(SEGMENT_REGEX.split(string)[1:])
 
+    @memoized
+    def _components(self):
+        # type: () -> Tuple[Tuple[int, ...], Optional[str]]
+        tag = None    # type: Optional[str]
+        numbers = []  # type: List[int]
+        for i, c in enumerate(self.version):
+            if not isinstance(c, int):
+                # If we have a string tag, we know it must be at the end.
+                assert isinstance(c, str), c
+                assert i == (len(self.version) - 1), (i, self.version)
+                assert tag is None, tag
+                tag = c
+                continue
+            numbers.append(c)
+        return tuple(numbers), tag
+
+    @property
+    def version_components(self):
+        # type: () -> Tuple[int, ...]
+        numbers, _tag = self._components()
+        return numbers
+
+    @property
+    def tag(self):
+        # type: () -> Optional[str]
+        _numbers, tag = self._components()
+        return tag
+
     @property
     def concrete_version(self):
         # type: () -> Optional[UnsignedVersion]
@@ -663,14 +698,24 @@ class UnsignedVersion(
            That is, NO versions v exist such that:
            (self < v < other and v not in self).
         """
-        if len(self.version) != len(other.version):
+        if len(self.version_components) > len(other.version_components):
+            # 1.0 !<| 1
             return False
-
-        sl = self.version[-1]
-        ol = other.version[-1]
-        if isinstance(sl, int) and isinstance(ol, int):
-            return ol - sl == 1
-        return False
+        if len(self.version_components) < len(other.version_components):
+            shared_prefix = other.version_components[:len(self.version_components)]
+            if self.version_components != shared_prefix:
+                # 1 !<| 2.0
+                return False
+            unshared_suffix = other.version_components[len(self.version_components):]
+            assert bool(unshared_suffix), unshared_suffix
+            # 1 <| 1.0
+            return all(x == 0 for x in unshared_suffix)
+        assert len(self.version_components) == len(other.version_components)
+        # 1.1 <| 1.2
+        assert len(self.version_components) > 0, self
+        sl = self.version_components[-1]
+        ol = other.version_components[-1]
+        return (ol - sl) == 1
 
     @coerced_logic
     def is_successor(self, other):
@@ -680,18 +725,14 @@ class UnsignedVersion(
     @coerced_logic
     def satisfies(self, other):
         # type: (UnsignedVersion) -> bool
-        """A Version 'satisfies' another if it is at least as specific and has
-        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
-        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
-        a suitable compiler.
-        """
-        return ((len(other.version) <= len(self.version)) and
-                (self in other))
+        # return self in other
+        raise NotImplementedError(self)
 
     @coerced_logic
     def overlaps(self, other):
         # type: (UnsignedVersion) -> bool
-        return self in other or other in self
+        # return self in other or other in self
+        raise NotImplementedError(self)
 
     @coerced_logic
     def __contains__(self, other):
@@ -938,53 +979,107 @@ class Version(
     @coerced_logic
     def is_predecessor(self, other):
         # type: (Version) -> bool
-        if self.polarity == other.polarity:
-            return self.unsigned_form.is_predecessor(
-                other.unsigned_form)                        # type: ignore[arg-type]
-        if self.polarity:
-            assert not other.polarity
-            return other.unsigned_form in self.unsigned_form  # type: ignore[operator]
-        return False
+        return (
+            # 1 <| 1.0
+            (self.polarity and other.polarity and
+             self.unsigned_form.is_predecessor(other.unsigned_form)) or
+            # !1.0 !<| !1
+            # !1.0 <| 1
+            # !1.0 <| 1.0
+            # !1 <| 1.0
+            (other.polarity and not self.polarity and
+             (self.unsigned_form == other.unsigned_form or
+              self.unsigned_form.is_predecessor(other.unsigned_form) or
+              self.unsigned_form.is_successor(other.unsigned_form))
+             ) or
+            # 1.0 <| !1.0
+            # 1.0 !<| !1
+            # 1 !<| !1.0
+            (self.polarity and not other.polarity and
+             self.unsigned_form == other.unsigned_form)
+        )
 
     @coerced_logic
     def is_successor(self, other):
         # type: (Version) -> bool
-        if self.polarity == other.polarity:
-            return self.unsigned_form.is_successor(
-                other.unsigned_form)                        # type: ignore[arg-type]
-        if other.polarity:
-            assert not self.polarity
-            return self.unsigned_form in other.unsigned_form  # type: ignore[operator]
-        return False
+        return other.is_predecessor(self)
 
     @coerced_logic
     def satisfies(self, other):
         # type: (Version) -> bool
-        return (
-            self.unsigned_form.satisfies(
-                other.unsigned_form) ^                      # type: ignore[arg-type]
-            self.polarity ^ other.polarity)
+        """A Version 'satisfies' another if it is at least as specific and has
+        a common prefix.  e.g., we want gcc@4.7.3 to satisfy a request for
+        gcc@4.7 so that when a user asks to build with gcc@4.7, we can find
+        a suitable compiler.
+        """
+        return self in other
 
     @coerced_logic
     def overlaps(self, other):
         # type: (Version) -> bool
-        return (
-            self.unsigned_form.overlaps(
-                other.unsigned_form) ^                      # type: ignore[arg-type]
-            self.polarity ^ other.polarity)
+        return self in other or other in self
+        # return (not self < other) or (not self > other)
 
     @coerced_logic
     def __contains__(self, other):
         # type: (Version) -> bool
+        # return not (other < self or other > self)
         return (
-            (other.unsigned_form in self.unsigned_form) ^   # type: ignore[operator]
-            self.polarity ^ other.polarity)
+            # 1 \in 1
+            # 1.0 \in 1
+            (self.polarity and other.polarity and
+             other.unsigned_form in self.unsigned_form) or
+            # !1 \in !1.0
+            # !1 \in !1
+            (not self.polarity and not other.polarity and
+             self.unsigned_form in other.unsigned_form) or
+            # +* \in !* (unless * == *)
+            (not self.polarity and other.polarity)
+        )
 
     @coerced_logic
     def __lt__(self, other):                                # type: ignore[has-type]
         # type: (Version) -> bool
-        return ((self.unsigned_form < other.unsigned_form) ^
-                self.polarity ^ other.polarity)
+        return (
+            # 2 < 3
+            # 1 !< 1.0 (successor)
+            # 1 < 1.1
+            # !2 !< !3
+            (self.polarity and
+             other.polarity and
+             self.unsigned_form < other.unsigned_form) or
+            # !* < +*
+            (other.polarity and not self.polarity and
+             (self.unsigned_form == other.unsigned_form or
+              self.unsigned_form < other.unsigned_form or
+              self.unsigned_form > other.unsigned_form)
+             ) or
+            # ???
+            (self.polarity and not other.polarity and
+             self.unsigned_form == other.unsigned_form)
+        )
+
+    @coerced_logic
+    def __gt__(self, other):
+        # type: (Version) -> bool
+        return (
+            # 3 > 2
+            # 1.0 !> 1 (successor)
+            # 1.1 > 1
+            # !3 !> !2
+            (self.polarity and
+             other.polarity and
+             self.unsigned_form > other.unsigned_form) or
+            # !* < +*
+            (other.polarity and not self.polarity and
+             (self.unsigned_form == other.unsigned_form or
+              self.unsigned_form < other.unsigned_form or
+              self.unsigned_form > other.unsigned_form)
+             ) or
+            # ???
+            (self.polarity and not other.polarity and
+             self.unsigned_form == other.unsigned_form)
+        )
 
     @coerced_equals
     def __eq__(self, other):
@@ -1010,12 +1105,6 @@ class Version(
     def __ge__(self, other):
         # type: (Version) -> bool
         return self == other or self > other
-
-    @coerced_logic
-    def __gt__(self, other):
-        # type: (Version) -> bool
-        return ((self.unsigned_form > other.unsigned_form) ^
-                self.polarity ^ other.polarity)
 
     def __hash__(self):
         # type: () -> int
@@ -1064,32 +1153,23 @@ def _endpoint_only(fun):
 class _VersionEndpoint(Span['_VersionEndpoint']):
     value = None                                            # type: Version
     location = None                                         # type: str
-    includes_endpoint = None                                # type: bool
 
     _valid_endpoint_locations = frozenset([
         'left', 'right',
     ])                                                  # type: ClassVar[FrozenSet[str]]
 
-    def __init__(self, value, location, includes_endpoint):
-        # type: (Optional[Version], str, bool) -> None
+    def __init__(self, value, location):
+        # type: (Version, str, bool) -> None
         assert isinstance(value, Version), value
         assert location in self._valid_endpoint_locations, location
-        assert isinstance(includes_endpoint, bool)
-
-        # We arbitrarily decide this is a nonsensical state, consistent with
-        # VersionRange.__init__().
-        if value.is_wildcard:
-            assert includes_endpoint, (
-                "infinite (None) value is incompatible with includes_endpoint=False")
 
         self.value = value
         self.location = location
-        self.includes_endpoint = includes_endpoint
 
     def __repr__(self):
         # type: () -> str
-        return ("_VersionEndpoint(value={0!r}, location={1!r}, includes_endpoint={2!r})"
-                .format(self.value, self.location, self.includes_endpoint))
+        return ("_VersionEndpoint(value={0!r}, location={1!r})"
+                .format(self.value, self.location))
 
     def __str__(self):
         # type: () -> str
@@ -1105,92 +1185,51 @@ class _VersionEndpoint(Span['_VersionEndpoint']):
 
     def __hash__(self):
         # type: () -> int
-        return hash((self.value, self.location, self.includes_endpoint))
+        return hash((self.value, self.location))
 
-    def _contains_impl(self, other, strict_equal):
-        # type: (_VersionEndpoint, bool) -> bool
-        # (1) Infinite endpoints.
-        if self.value.is_wildcard:
-            return True
-        if other.value.is_wildcard:
-            return False
-        # (2) Containing endpoints.
-        matched_endpoint = False
-        if strict_equal:
-            if self.value == other.value:
-                matched_endpoint = True
-        else:
-            if other.value in self.value:
-                matched_endpoint = True
-        if matched_endpoint:
-            if self.includes_endpoint:
-                if self.location == other.location:
-                    return True
-                if other.includes_endpoint:
-                    return True
-        # (3) Separate endpoints.
-        if (self.location == 'left') and (self.value < other.value):
-            return True
-        if (self.location == 'right') and (self.value > other.value):
-            return True
-        # (4) Otherwise, no.
-        return False
-
-    @_endpoint_only
     def __contains__(self, other):
         # type: (_VersionEndpoint) -> bool
-        return self._contains_impl(other, strict_equal=False)
-
-    @_endpoint_only
-    def contains_strict(self, other):
-        # type: (_VersionEndpoint) -> bool
-        return self._contains_impl(other, strict_equal=True)
+        # raise NotImplementedError(self)
+        # return not (other < self or other > self)
+        if self.location == 'right':
+            return (other.value < self.value or
+                    other.value in self.value)
+        assert self.location == 'left', self
+        return (other.value > self.value or
+                other.value in self.value)
 
     def lowest(self):
         # type: () -> Optional[Version]
-        if self.location == 'left' and not self.value.is_wildcard:
-            if self.includes_endpoint:
-                return self.value
-            return self.value.negated()
+        if self.location == 'left':
+            return self.value.lowest()
         return None
 
     def highest(self):
         # type: () -> Optional[Version]
-        if self.location == 'right' and not self.value.is_wildcard:
-            if self.includes_endpoint:
-                return self.value
-            return self.value.negated()
+        if self.location == 'right':
+            return self.value.highest()
         return None
 
     def __eq__(self, other):
         # type: (Any) -> bool
         if not isinstance(other, _VersionEndpoint):
             return NotImplemented
-        return (self.value == other.value and
-                self.location == other.location and
-                self.includes_endpoint == other.includes_endpoint)
+        return (self.value == other.value and self.location == other.location)
 
     # TODO: consider @memoized since we impl __hash__?
     @_endpoint_only
     def __lt__(self, other):
         # type: (_VersionEndpoint) -> bool
-        # (1) Infinite endpoints.
-        if self.location == 'right':                        # <
-            if other.location == 'left':                    # >
-                return True
-            return False
-        if other.location == 'right':                       # <
-            return False
-        # (2) Containing endpoints.
-        if other.value in self.value:
-            if self.includes_endpoint and not other.includes_endpoint:
-                return True
-            if self.value in other.value:
-                if self.value == other.value:
-                    return False
-            return True
-        # (3) Unequal endpoints.
+        assert not (
+            self.location == 'right' or other.location == 'right'), (self, other)
         return self.value < other.value
+
+    @_endpoint_only
+    def __gt__(self, other):
+        # type: (_VersionEndpoint) -> bool
+        assert not (
+            self.location == 'left' or other.location == 'left'), (self, other)
+        return self.value > other.value
 
     def __ne__(self, other):
         # type: (Any) -> bool
@@ -1208,33 +1247,10 @@ class _VersionEndpoint(Span['_VersionEndpoint']):
         # type: (_VersionEndpoint) -> bool
         return self == other or self < other
 
-    @_endpoint_only
-    def __gt__(self, other):
-        # type: (_VersionEndpoint) -> bool
-        # (1) Infinite endpoints.
-        if self.location == 'left':                        # >
-            if other.location == 'right':                  # <
-                return True
-            return False
-        if other.location == 'left':                       # >
-            return False
-        # (2) Containing endpoints.
-        if other.value in self.value:
-            if self.includes_endpoint and not other.includes_endpoint:
-                return True
-            if self.value in other.value:
-                assert self.value == other.value
-                return False
-            return True
-        # (3) Unequal endpoints.
-        return self.value > other.value
-
 
 class _EndpointContainment(object):
     low_contained = None          # type: bool
-    low_contained_strict = None   # type: bool
     high_contained = None         # type: bool
-    high_contained_strict = None  # type: bool
 
     def __init__(
             self,
@@ -1250,26 +1266,18 @@ class _EndpointContainment(object):
         assert (isinstance(other_high, _VersionEndpoint) and
                 other_high.location == 'right')
         self.low_contained = ((other_low in self_low) and (other_low in self_high))
-        self.low_contained_strict = ((self_low.contains_strict(other_low)) and
-                                     (self_high.contains_strict(other_low)))
         self.high_contained = ((other_high in self_low) and (other_high in self_low))
-        self.high_contained_strict = ((self_low.contains_strict(other_high)) and
-                                      (self_high.contains_strict(other_high)))
+        # import pdb; pdb.set_trace()
 
 
 class VersionRange(VersionPredicate['VersionRange']):
     start = None                    # type: Version
     end = None                      # type: Version
-    includes_left_endpoint = None   # type: bool
-    includes_right_endpoint = None  # type: bool
 
     @classmethod
     def from_single_version(cls, version):
         # type: (Version) -> VersionRange
-        new_version = Version(version.unsigned_form)
-        return cls(start=new_version, end=new_version,
-                   includes_left_endpoint=version.polarity,
-                   includes_right_endpoint=version.polarity)
+        return cls(start=version, end=version)
 
     @classmethod
     def parse(cls, string):
@@ -1283,14 +1291,12 @@ class VersionRange(VersionPredicate['VersionRange']):
                 assert not string.endswith(':'), string
                 # :!<x>
                 version = Version.parse(string[2:])
-                return VersionRange(start=Version.wildcard(), end=version,
-                                    includes_right_endpoint=False)
+                return VersionRange(start=Version.wildcard(), end=version.negated())
             if string.endswith(':'):
                 # :
                 # We ban :!<x>: and :<x>:.
                 assert string == ':', string
-                return VersionRange(start=Version.wildcard(),
-                                    end=Version.wildcard())
+                return VersionRange(start=Version.wildcard(), end=Version.wildcard())
             # :<x>
             version = Version.parse(string[1:])
             return VersionRange(start=Version.wildcard(), end=version)
@@ -1298,13 +1304,12 @@ class VersionRange(VersionPredicate['VersionRange']):
             if string.endswith('!:'):
                 # <x>!:
                 version = Version.parse(string[:-2])
-                return VersionRange(start=version, end=Version.wildcard(),
-                                    includes_left_endpoint=False)
+                return VersionRange(start=version.negated(), end=Version.wildcard())
             # <x>:
             version = Version.parse(string[:-1])
             return VersionRange(start=version, end=Version.wildcard())
-        # <x>:<x>
         if ':' in string:
+            # <x>:<x> | <x>!:<x> | <x>:!<x> | <x>!:!<x>
             start, end = tuple(string.split(':'))
             return VersionRange(start=Version.parse(start), end=Version.parse(end))
         # <x>
@@ -1315,39 +1320,25 @@ class VersionRange(VersionPredicate['VersionRange']):
             self,
             start,                                 # type: Optional[Union[str, Version]]
             end,                                   # type: Optional[Union[str, Version]]
-            includes_left_endpoint=True,           # type: bool
-            includes_right_endpoint=True,          # type: bool
     ):
         if isinstance(start, string_types):
             start = Version.parse(start)
-        elif isinstance(start, Version):
-            assert start.polarity, start
         elif start is None:
             start = Version.wildcard()
+        assert isinstance(start, Version), start
+
         if isinstance(end, string_types):
             end = Version.parse(end)
-        elif isinstance(end, Version):
-            assert end.polarity, end
         elif end is None:
             end = Version.wildcard()
-
-        if not start.is_wildcard and not end.is_wildcard and end < start:
-            raise ValueError("Invalid Version range: {0}: end must be before start"
-                             .format(self))
+        assert isinstance(end, Version), end
 
         self.start = start
         self.end = end
 
-        self.includes_left_endpoint = includes_left_endpoint
-        self.includes_right_endpoint = includes_right_endpoint
-
-        # We don't enforce this anywhere except implicitly when parsing
-        # a version string, but it is an assumption we have made so far, so we
-        # might as well check it.
-        if start.is_wildcard:
-            assert includes_left_endpoint, self
-        if end.is_wildcard:
-            assert includes_right_endpoint, self
+        if start.polarity and end.polarity and end < start:
+            raise ValueError("Invalid Version range: {0}: end must be before start"
+                             .format(self))
 
     def lowest(self):
         # type: () -> Optional[Version]
@@ -1356,7 +1347,7 @@ class VersionRange(VersionPredicate['VersionRange']):
     @memoized
     def _low_endpoint(self):
         # type: () -> _VersionEndpoint
-        return _VersionEndpoint(self.start, 'left', self.includes_left_endpoint)
+        return _VersionEndpoint(self.start, 'left')
 
     def highest(self):
         # type: () -> Optional[Version]
@@ -1365,7 +1356,7 @@ class VersionRange(VersionPredicate['VersionRange']):
     @memoized
     def _high_endpoint(self):
         # type: () -> _VersionEndpoint
-        return _VersionEndpoint(self.end, 'right', self.includes_right_endpoint)
+        return _VersionEndpoint(self.end, 'right')
 
     @memoized
     def _endpoint_containment(self, other):
@@ -1387,15 +1378,17 @@ class VersionRange(VersionPredicate['VersionRange']):
         """
         return self._low_endpoint() < other._low_endpoint()
 
+    @coerced_logic
+    def __gt__(self, other):
+        # type: (VersionRange) -> bool
+        return self._high_endpoint() > other._high_endpoint()
+
     @coerced_equals
     def __eq__(self, other):
         # type: (Any) -> bool
         if not isinstance(other, VersionRange):
             return NotImplemented
-        return (self.start == other.start and
-                self.end == other.end and
-                self.includes_left_endpoint == other.includes_left_endpoint and
-                self.includes_right_endpoint == other.includes_right_endpoint)
+        return (self.start == other.start and self.end == other.end)
 
     @coerced_equals
     def __ne__(self, other):
@@ -1414,14 +1407,9 @@ class VersionRange(VersionPredicate['VersionRange']):
         # type: (VersionRange) -> bool
         return self == other or self > other
 
-    @coerced_logic
-    def __gt__(self, other):
-        # type: (VersionRange) -> bool
-        return self._high_endpoint() > other._high_endpoint()
-
     def _is_single_version(self):
         # type: () -> bool
-        return (self.includes_left_endpoint and self.includes_right_endpoint and
+        return (self.start.polarity and self.end.polarity and
                 self.start == self.end and
                 not self.start.is_wildcard and
                 not self.end.is_wildcard)
@@ -1467,14 +1455,13 @@ class VersionRange(VersionPredicate['VersionRange']):
         Note further that overlaps() is a symmetric operation, while
         satisfies() is not.
         """
-        containment = self._endpoint_containment(other)
-        return containment.low_contained or containment.high_contained
+        return self in other
 
     @coerced_logic
     def overlaps(self, other):
         # type: (VersionRange) -> bool
         containment = self._endpoint_containment(other)
-        return containment.low_contained_strict or containment.high_contained_strict
+        return containment.low_contained or containment.high_contained
 
     @coerced
     def union(self, other):
@@ -1543,58 +1530,53 @@ class VersionRange(VersionPredicate['VersionRange']):
         return VersionList.empty()
 
     def __hash__(self):
-        return hash((
-            self.start,
-            self.end,
-            self.includes_left_endpoint,
-            self.includes_right_endpoint,
-        ))
+        return hash((self.start, self.end))
 
     def __str__(self):
         # ( :!<x>!: | <x> | : )
         if self.start == self.end:
-            assert self.includes_left_endpoint == self.includes_right_endpoint, self
             if self.start.is_wildcard or self.end.is_wildcard:
-                # :
                 assert self.start.is_wildcard and self.end.is_wildcard, self.end
-                return ':'
+                if self.start.polarity:
+                    # :
+                    return ':'
+                assert not self.end.polarity, self.end
+                # :!<x>!:
+                return ":!{0}!:".format(self.start.unsigned_form)
             # <x>
-            if self.includes_left_endpoint:
-                return str(self.start)
-            # :!<x>!:
-            return ":!{0}!:".format(self.start)
+            return str(self.start.unsigned_form)
         # ( :!<x> | :<x> )
         if self.start.is_wildcard:
             # Checked that self.start == self.end above.
             assert not self.end.is_wildcard, self.end
-            assert self.includes_left_endpoint, self
+            assert self.start.polarity, self
             # :<x>
-            if self.includes_right_endpoint:
-                return ':{0}'.format(self.end)
+            if self.end.polarity:
+                return ':{0}'.format(self.end.unsigned_form)
             # :!<x>
-            return ':!{0}'.format(self.end)
+            return ':!{0}'.format(self.end.unsigned_form)
         # ( <x>: | <x>!: )
         if self.end.is_wildcard:
             assert not self.start.is_wildcard, self.start
-            assert self.includes_right_endpoint, self
+            assert self.end.polarity, self
             # <x>:
-            if self.includes_left_endpoint:
-                return '{0}:'.format(self.start)
+            if self.start.polarity:
+                return '{0}:'.format(self.start.unsigned_form)
             # <x>!:
-            return '{0}!:'.format(self.start)
+            return '{0}!:'.format(self.start.unsigned_form)
         # {0}!:!{1} => {0} < x < {1}
-        if (not self.includes_left_endpoint and
-            not self.includes_right_endpoint):
-            return '{0}!:!{1}'.format(self.start, self.end)
+        if (not self.start.polarity and
+            not self.end.polarity):
+            return '{0}!:!{1}'.format(self.start.unsigned_form, self.end.unsigned_form)
         # {0}:!{1} => {0} <= x < {1}
-        if not self.includes_right_endpoint:
-            return '{0}:!{1}'.format(self.start, self.end)
+        if not self.end.polarity:
+            return '{0}:!{1}'.format(self.start.unsigned_form, self.end.unsigned_form)
         # {0}!:{1} => {0} < x <= {1}
-        if not self.includes_left_endpoint:
-            return '{0}!:{1}'.format(self.start, self.end)
+        if not self.start.polarity:
+            return '{0}!:{1}'.format(self.start.unsigned_form, self.end.unsigned_form)
         # {0}:{1} => {0} <= x <= {1}
-        assert self.includes_left_endpoint and self.includes_right_endpoint
-        return "{0}:{1}".format(self.start, self.end)
+        assert self.start.polarity and self.end.polarity
+        return "{0}:{1}".format(self.start.unsigned_form, self.end.unsigned_form)
 
 
 class VersionList(VersionPredicate['VersionList']):

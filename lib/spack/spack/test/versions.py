@@ -261,23 +261,15 @@ def test_version_ranges():
     assert_in('1.5', VersionRange('1.5', '1.6'))
     assert_in('1.6', VersionRange('1.5', '1.6'))
 
-    assert VersionRange('1.5', '1.6') not in VersionRange('1.5', '1.6',
-                                                          includes_right_endpoint=False)
-    assert VersionRange('1.5', '1.6') not in VersionRange('1.5', '1.6',
-                                                          includes_left_endpoint=False)
-    assert VersionRange('1.5', '1.6') < VersionRange('1.5', '1.6',
-                                                     includes_right_endpoint=False)
-    assert VersionRange('1.5', '1.6') < VersionRange('1.5', '1.6',
-                                                     includes_left_endpoint=False)
+    assert VersionRange.parse('1.5:1.6') not in VersionRange.parse('1.5:!1.6')
+    assert VersionRange.parse('1.5:1.6') not in VersionRange.parse('1.5!:1.6')
+    assert VersionRange.parse('1.5:1.6') < VersionRange.parse('1.5:!1.6')
+    assert VersionRange.parse('1.5:1.6') < VersionRange.parse('1.5!:1.6')
 
-    assert_in('1.5', VersionRange('1.5', '1.6',
-                                  includes_right_endpoint=False))
-    assert_not_in('1.6', VersionRange('1.5', '1.6',
-                                      includes_right_endpoint=False))
-    assert_not_in('1.5', VersionRange('1.5', '1.6',
-                                      includes_left_endpoint=False))
-    assert_in('1.6', VersionRange('1.5', '1.6',
-                                  includes_left_endpoint=False))
+    assert_in('1.5', VersionRange.parse('1.5:!1.6'))
+    assert_not_in('1.6', VersionRange.parse('1.5:!1.6'))
+    assert_not_in('1.5', VersionRange.parse('1.5!:1.6'))
+    assert_in('1.6', VersionRange.parse('1.5!:1.6'))
 
 
 def test_contains():
