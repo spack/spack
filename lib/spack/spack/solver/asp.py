@@ -1407,13 +1407,6 @@ class SpackSolverSetup(object):
             self.preferred_variants(pkg)
             self.preferred_targets(pkg)
 
-        # Inject dev_path from environment
-        env = ev.active_environment()
-        if env:
-            for spec in sorted(specs):
-                for dep in spec.traverse():
-                    _develop_specs_from_env(dep, env)
-
         self.gen.h1('Spec Constraints')
         for spec in sorted(specs):
             self.gen.h2('Spec: %s' % str(spec))
@@ -1637,8 +1630,9 @@ class SpecBuilder(object):
         for s in self._specs.values():
             spack.spec.Spec.ensure_external_path_if_external(s)
 
-        for s in self._specs.values():
-            _develop_specs_from_env(s, ev.active_environment())
+        env = ev.active_environment()
+        if env:
+            _process_dev_specs(self._specs.values(), env)
 
         for s in self._specs.values():
             s._mark_concrete()
@@ -1649,20 +1643,39 @@ class SpecBuilder(object):
         return self._specs
 
 
-def _develop_specs_from_env(spec, env):
-    dev_info = env.dev_specs.get(spec.name, {}) if env else {}
-    if not dev_info:
+def _process_dev_specs(specs, env):
+    # Do a quick return when we have no develop specs.
+    if len(env.dev_specs) == 0:
         return
 
-    path = os.path.normpath(os.path.join(env.path, dev_info['path']))
+    # Keep track of what dev specs are used, so we can show a warning when a
+    # dev spec does not match a concrete environment spec.
+    dev_spec_used = [False for _ in env.dev_specs]
 
-    if 'dev_path' in spec.variants:
-        assert spec.variants['dev_path'].value == path
-    else:
+    for spec in specs:
+        # Get the first matching dev spec
+        is_dev = lambda dev_info: spack.spec.Spec(dev_info['spec']).satisfies(spec)
+        idx = next((i for i, d in enumerate(env.dev_specs) if is_dev(d)), None)
+
+        # No matching dev_spec means this spec is not developed
+        if idx is None:
+            continue
+
+        # Configure the spec
+        dev_spec_used[idx] = True
+        dev_info = env.dev_specs[idx]
+        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
         spec.variants.setdefault(
             'dev_path', spack.variant.SingleValuedVariant('dev_path', path)
         )
-    spec.constrain(dev_info['spec'])
+
+    # Warn if we have unused specs
+    for i, used in enumerate(dev_spec_used):
+        if used:
+            continue
+
+        tty.warn("Development spec {0} is ignored, because it does not match any "
+                 "concrete spec in the environment".format(env.dev_specs[i]['spec']))
 
 
 #

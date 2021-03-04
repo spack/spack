@@ -1534,9 +1534,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # should this attempt to download the source and set one? This
             # probably only happens for source repositories which are
             # referenced by branch name rather than tag or commit ID.
-            env = spack.environment.active_environment()
-            from_local_sources = env and env.is_develop(self.spec)
-            if not self.spec.external and not from_local_sources:
+
+            # Do not warn for external packages and packages built from local
+            # sources.
+            if not self.spec.external and 'dev_path' not in self.spec.variants:
                 message = 'Missing a source id for {s.name}@{s.version}'
                 tty.warn(message.format(s=self))
             hash_content.append(''.encode('utf-8'))
