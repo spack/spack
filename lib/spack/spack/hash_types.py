@@ -29,7 +29,7 @@ class SpecHashDescriptor(object):
 
 #: Default Hash descriptor, used by Spec.dag_hash() and stored in the DB.
 dag_hash = SpecHashDescriptor(deptype=('link', 'run'), package_hash=False,
-                              attr='_hash')
+                              attr='_dag_hash')
 
 
 #: Hash descriptor that includes build dependencies.

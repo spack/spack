@@ -1646,22 +1646,26 @@ class Spec(object):
         if hash.package_hash:
             d['package_hash'] = self.package.content_hash()
 
+        # Note: Depends on key sort.
         deps = self.dependencies_dict(deptype=hash.deptype)
+
         if deps:
-            d['dependencies'] = syaml.syaml_dict([
-                (name,
-                 syaml.syaml_dict([
-                     ('hash', dspec.spec._cached_hash(hash)),
-                     ('type', sorted(str(s) for s in dspec.deptypes))])
-                 ) for name, dspec in sorted(deps.items())
-            ])
+            deps_list = []
+            for name, dspec in sorted(deps.items()):
+                name_tuple = ('name', name)
+                hash_tuple = (hash.attr, dspec.spec._cached_hash(hash))
+                type_tuple = ('type', sorted(str(s) for s in dspec.deptypes))
+                deps_list.append(syaml.syaml_dict([name_tuple, 
+                                                   hash_tuple, 
+                                                   type_tuple]))
+            d['dependencies'] = deps_list
 
         # Name is included in case this is replacing a virtual.
         if self._build_spec:
             d['build_spec'] = syaml.syaml_dict([
                 ('name', self.build_spec.name),
-                ('hash', self.build_spec._cached_hash(hash))])
-        print(d)
+                (hash.attr, self.build_spec._cached_hash(hash))
+                ])
         return d
 
     def to_dict(self, hash=ht.dag_hash):
@@ -1730,17 +1734,34 @@ class Spec(object):
 
         """
         node_list = []
+        hash_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
-            node_list.append(s.node_dict_with_hashes(hash))
-
-        return syaml.syaml_dict([('spec', node_list)])
+            spec_hash = s.node_dict_with_hashes(hash)[hash.attr]
+            if spec_hash not in hash_list:
+                node_list.append(s.node_dict_with_hashes(hash))
+                hash_list.append(spec_hash)
+            if s._build_spec:
+                bspec_hash = s.build_spec.node_dict_with_hashes(hash)[hash.attr]
+                node_list.append(s.build_spec.node_dict_with_hashes(hash))
+                hash_list.append(bspec_hash)
+                bdeps = s.build_spec.dependencies_dict(deptype=hash.deptype)
+                if bdeps:
+                    for dep in bdeps.values():
+                        bdep_hash = dep.spec.node_dict_with_hashes(hash)[hash.attr]
+                        if bdep_hash not in hash_list:
+                            node_list.append(dep.spec.node_dict_with_hashes(hash))
+                            hash_list.append(bdep_hash)
+        d = syaml.syaml_dict([('spec', node_list)])
+        #print(d)
+        return d
+        #return syaml.syaml_dict([('spec', node_list)])
 
     def node_dict_with_hashes(self, hash=ht.dag_hash):
         """ Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
         node = self.to_node_dict(hash)
-        node[self.name]['hash'] = self.dag_hash()
+        node[hash.attr] = self.dag_hash()
 
         # full_hash and build_hash are lazily computed -- but if we write
         # a spec out, we want them to be included. This is effectively
@@ -1764,9 +1785,9 @@ class Spec(object):
                 not self._hashes_final)                     # lazily compute
 
             if write_full_hash:
-                node[self.name]['full_hash'] = self.full_hash()
+                node['_full_hash'] = self.full_hash()
             if write_build_hash:
-                node[self.name]['build_hash'] = self.build_hash()
+                node['_build_hash'] = self.build_hash()
 
         return node
 
@@ -1804,9 +1825,15 @@ class Spec(object):
 
     @staticmethod
     def from_node_dict(node):
-        name = next(iter(node))
-        node = node[name]
-
+        print(node)
+        if 'name' in node.keys():
+            # New format
+            name = node['name']
+        else:
+            node_name = next(iter(node))
+            name = node_name
+            node = node[name]
+        print(node)
         spec = Spec()
         spec.name = name
         spec.namespace = node.get('namespace', None)
@@ -1839,6 +1866,9 @@ class Spec(object):
                 )
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
+
+        elif 'build_spec' in node:
+            pass
 
         spec.external_path = None
         spec.external_modules = None
@@ -1882,6 +1912,7 @@ class Spec(object):
     @staticmethod
     def dependencies_from_node_dict(node):
         name = next(iter(node))
+        #name = node['name']
         node = node[name]
         if 'dependencies' not in node:
             return
@@ -2070,7 +2101,7 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
-        nodes = data
+        nodes = data['spec']
 
         # Read nodes out of list.  Root spec is the first element;
         # dependencies are the following elements.
@@ -2084,12 +2115,18 @@ class Spec(object):
 
         for node in nodes:
             # get dependency dict from the node.
-            name = next(iter(node))
-
-            if 'dependencies' not in node[name]:
-                continue
-
-            yaml_deps = node[name]['dependencies']
+            name_node = next(iter(node))
+            if isinstance(name_node, str):
+                # Old Format
+                name = name_node
+                if 'dependencies' not in node[name]:
+                    continue
+                yaml_deps = node[name]['dependencies']
+            else:
+                name = node['name']
+                if 'dependencies' not in node:
+                    continue
+                yaml_deps = node['dependencies']
             for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
                 deps[name]._add_dependency(deps[dname], dtypes)
 

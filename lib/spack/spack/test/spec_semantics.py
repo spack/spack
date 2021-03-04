@@ -1053,6 +1053,43 @@ class TestSpecSematics(object):
                 spec['splice-t'].full_hash())
         assert out2.spliced
 
+    @pytest.mark.parametrize('transitive', [True, False])
+    def test_splice_dict(self, transitive):
+        spec = Spec('splice-t')
+        dep = Spec('splice-h+foo')
+        spec.concretize()
+        dep.concretize()
+        out = spec.splice(dep, transitive)
+        out_dict = out.to_dict()
+        assert 'spec' in out_dict.keys()
+        print(out_dict['spec'])
+        t_exists = False
+        h_exists = False
+        z_exists = False
+        for node in out_dict['spec']:
+            if node['name'] == 'splice-t':
+                t_exists = True
+            if node['name'] == 'splice-h':
+                h_exists = True
+            if node['name'] == 'splice-z':
+                z_exists = True
+        assert t_exists
+        assert h_exists
+        assert z_exists
+        t_bspec_exists = False
+        h_bspec_exists = False
+        z_bspec_exists = False
+        for node in out_dict['spec']:
+            if node['name'] == 'splice-t' and 'build_spec' in node.keys():
+                t_bspec_exists = True
+            if node['name'] == 'splice-h' and 'build_spec' in node.keys():
+                h_bspec_exists = True
+            if node['name'] == 'splice-z' and 'build_spec' in node.keys():
+                z_bspec_exists = True
+        assert t_bspec_exists
+        assert h_bspec_exists != transitive
+        assert not z_bspec_exists
+
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),
         ('libelf target=haswell', 'target=haswell', True),
