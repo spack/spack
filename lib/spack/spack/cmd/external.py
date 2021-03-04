@@ -100,7 +100,7 @@ def _generate_pkg_config(external_pkg_entries):
             }]
        }
     """
-
+    
     pkg_dict = syaml.syaml_dict()
     pkg_dict['externals'] = []
     for e in external_pkg_entries:
@@ -213,7 +213,7 @@ def _get_predefined_externals():
 
 def _update_pkg_config(scope, pkg_to_entries, not_buildable):
     predefined_external_specs = _get_predefined_externals()
-
+    
     pkg_to_cfg, all_new_specs = {}, []
     for pkg_name, ext_pkg_entries in pkg_to_entries.items():
         new_entries = list(
@@ -244,6 +244,8 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
     for pkg in packages_to_check:
         if hasattr(pkg, 'executables'):
             for exe in pkg.executables:
+                if sys.platform == 'win32':
+                    exe = exe.replace('$', '\.exe$')
                 exe_pattern_to_pkgs[exe].append(pkg)
 
     pkg_to_found_exes = defaultdict(set)
@@ -274,7 +276,7 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
             # prefix, and a package implementation can return multiple specs
             # for one prefix, but without additional details (e.g. about the
             # naming scheme which differentiates them), the spec won't be
-            # usable.
+            # usable.          
             specs = _convert_to_iterable(
                 pkg.determine_spec_details(prefix, exes_in_prefix))
 
