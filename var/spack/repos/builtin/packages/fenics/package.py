@@ -93,7 +93,7 @@ class Fenics(CMakePackage):
     # package dependencies
     depends_on('python@3.5:', type=('build', 'run'), when='+python')
     depends_on('eigen@3.2.0:')
-    depends_on('pkgconfig')
+    depends_on('pkgconfig', type='build')
     depends_on('zlib', when='+zlib')
 
     for ver in dolfin_versions:
