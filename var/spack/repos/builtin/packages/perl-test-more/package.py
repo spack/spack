@@ -7,9 +7,8 @@ from spack import *
 
 
 class PerlTestMore(PerlPackage):
-    """Test2 - Framework for writing test tools that all work together
-    Test2 is a new testing framework produced by forking Test::Builder,
-    completely refactoring it, adding many new features and capabilities"""
+    """Test2 is a new testing framework produced by forking Test::Builder,
+    completely refactoring it, adding many new features and capabilities."""
 
     homepage = "https://github.com/Test-More/test-more"
     url      = "https://github.com/Test-More/test-more/archive/v1.302183.tar.gz"
