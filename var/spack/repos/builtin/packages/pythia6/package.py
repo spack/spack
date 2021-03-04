@@ -42,10 +42,6 @@ class Pythia6(CMakePackage):
     # the Pythia6 library.
     variant('root', default=False,
             description='Build extra (non OEM) code to allow use by Root.')
-    variant('sft', default=False,
-            description='Apply extra patch provided by CERN EP-SFT group')
-
-    conflicts('+sft', when='~root')
 
     # The maximum number of particles (NMXHEP) supported by the arrays
     # in the /HEPEVT/ COMMON block may need tweaking if pythia6 is
@@ -137,7 +133,7 @@ class Pythia6(CMakePackage):
     # majority of cases. If your case is different, platform- or
     # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
-    patch('pythia6-429.2.patch', level=1, when='+sft')
+    patch('pythia6-root.patch', level=1, when='+root')
 
     def patch(self):
         # Use our provided CMakeLists.txt. The Makefile provided with
