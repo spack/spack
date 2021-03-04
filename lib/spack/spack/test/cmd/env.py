@@ -2441,3 +2441,14 @@ def test_rewrite_rel_dev_path_create_original_dir(tmpdir):
     with ev.Environment(str(init_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == '../build_folder'
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
+    """Relative develop paths should not be rewritten when --keep-relative is
+       passed to create"""
+    _, _, _, spack_yaml = _setup_develop_packages(tmpdir)
+    env('create', '--keep-relative', 'named_env', str(spack_yaml))
+    with ev.read('named_env') as e:
+        print(e.dev_specs)
+        assert e.dev_specs['mypkg1']['path'] == '../build_folder'
+        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
