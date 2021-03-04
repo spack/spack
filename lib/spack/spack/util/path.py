@@ -95,6 +95,7 @@ def substitute_config_variables(path):
     # Replace $var or ${var}.
     return re.sub(r'(\$\w+\b|\$\{\w+\})', repl, path)
 
+
 def substitute_path_variables(path):
     """Substitute config vars, expand environment vars, expand user home."""
     path = substitute_config_variables(path)
