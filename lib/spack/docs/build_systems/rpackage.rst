@@ -163,7 +163,7 @@ attributes that can be used to set ``homepage``, ``url``, ``list_url``, and
 
 .. code-block:: python
 
-   cran = 'caret/caret_6.0-86.tar.gz'
+   cran = 'caret'
 
 is equivalent to:
 
