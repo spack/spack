@@ -12,6 +12,7 @@ class PyBbpWorkflow(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/nse/bbp-workflow'
     git      = 'ssh://bbpcode.epfl.ch/nse/bbp-workflow'
 
+    version('2.1.8', tag='bbp-workflow-v2.1.8')
     version('2.1.7', tag='bbp-workflow-v2.1.7')
     version('2.1.6', tag='bbp-workflow-v2.1.6')
     version('2.1.3', tag='bbp-workflow-v2.1.3')
@@ -27,6 +28,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-dask+diagnostics', type='run')
     depends_on('py-distributed', type='run')
     depends_on('py-xarray', type='run')
+    depends_on('py-zarr', type='run')
     depends_on('py-notebook', type='run')
 
     depends_on('py-docutils', type='run')  # rdflib plugins pull this from python-daemon
@@ -38,4 +40,5 @@ class PyBbpWorkflow(PythonPackage):
     def setup_run_environment(self, env):
         env.prepend_path('PATH', self.spec['py-distributed'].prefix.bin)
         env.prepend_path('PATH', self.spec['py-notebook'].prefix.bin)
+        env.prepend_path('PATH', self.spec['py-ipython'].prefix.bin)
         env.prepend_path('PATH', self.spec['py-luigi'].prefix.bin)
