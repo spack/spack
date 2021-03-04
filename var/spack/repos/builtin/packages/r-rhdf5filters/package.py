@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import archspec
 from spack import *
 
 
@@ -18,3 +19,7 @@ class RRhdf5filters(RPackage):
 
     depends_on('r-rhdf5lib', type=('build', 'run'))
     depends_on('gmake', type='build')
+
+    for t in set([str(x.family) for x in archspec.cpu.TARGETS.values()
+                 if str(x.family) != 'x86_64']):
+        conflicts('target={0}:'.format(t), msg='r-rhdf5filters is available x86_64 only')
