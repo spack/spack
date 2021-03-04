@@ -18,7 +18,7 @@ oneAPI packages in Spack
 ========================
 
 Spack can install and use the Intel oneAPI products. You may either
-use spack to install the oneAPI tools or use the `Intel-provided
+use spack to install the oneAPI tools or use the `Intel
 installers`_. After installation, you may use the tools directly, or
 use Spack to build packages with the tools.
 
@@ -169,9 +169,8 @@ Debug notes
      $ spack --debug -v install intel-mpi
 
   The ``--debug`` option can also be useful while installing client
-  packages `(see below) <Using Intel tools in Spack to install client
-  packages_>`_ to confirm the integration of the Intel tools in Spack, notably
-  MKL and MPI.
+  packages to confirm the integration of the Intel tools in Spack,
+  notably MKL and MPI.
 
 * If an installation error occurs, Spack will normally clean up and remove a
   partially installed target directory. You can direct Spack to keep it using
@@ -198,9 +197,8 @@ providers.  The relevant virtual packages for Intel are ``blas``,
 
 
 
-"""""""""""""""""""""""""""""""""""""""""""""""
 Tips for configuring client packages to use MKL
-"""""""""""""""""""""""""""""""""""""""""""""""
+===============================================
 
 * To use MKL as provider for BLAS, LAPACK, or ScaLAPACK:
 
@@ -264,4 +262,4 @@ Tips for configuring client packages to use MKL
 
 
 .. _`Intel installers`: https://software.intel.com/content/www/us/en/develop/documentation/installation-guide-for-intel-oneapi-toolkits-linux/top.html
-.. _``Spack package list`: https://spack.readthedocs.io/en/latest/package_list.html#intel-oneapi-ccl
+.. _`Spack package list`: https://spack.readthedocs.io/en/latest/package_list.html#intel-oneapi-ccl
