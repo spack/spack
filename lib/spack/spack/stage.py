@@ -14,7 +14,6 @@ import shutil
 import stat
 import sys
 from sys import platform as _platform
-import ctypes
 import tempfile
 from six import string_types
 from six import iteritems
@@ -65,7 +64,10 @@ def _create_stage_root(path):
 
     err_msg = 'Cannot create stage root {0}: Access to {1} is denied'
 
-    user_uid = getuid()
+    if _platform != "win32":
+        user_uid = os.getuid()
+    else:
+        user_uid = win32api.GetUserName()
 
     # Obtain lists of ancestor and descendant paths of the $user node, if any.
     group_paths, user_node, user_paths = partition_path(path,
