@@ -13,6 +13,7 @@ import os
 import shutil
 import stat
 import sys
+from sys import platform as _platform
 import ctypes
 import tempfile
 from six import string_types

@@ -480,7 +480,8 @@ def _set_variables_for_single_module(pkg, module):
     m.configure = Executable('./configure')
 
     m.meson = Executable('meson')
-    m.cmake = Executable('cmake')
+    # m.cmake = Executable('cmake')
+    m.cmake = Executable('cmake.exe')
     m.ctest = MakeExecutable('ctest', jobs)
 
     # Standard CMake arguments
@@ -836,8 +837,6 @@ def modifications_from_dependencies(spec, context):
 def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
                        input_multiprocess_fd):
 
-    print("OK")
-
     context = kwargs.get('context', 'build')
 
     try:
@@ -855,6 +854,7 @@ def _setup_pkg_and_run(serialized_pkg, function, kwargs, child_pipe,
             kwargs['unmodified_env'] = os.environ.copy()
             setup_package(pkg, dirty=kwargs.get('dirty', False),
                           context=context)
+
         return_value = function(pkg, kwargs)
         child_pipe.send(return_value)
 
@@ -957,11 +957,7 @@ def start_build_process(pkg, function, kwargs):
             args=(serialized_pkg, function, kwargs, child_pipe,
                   input_multiprocess_fd))
 
-        print("OK1")
-
         p.start()
-
-        print("OK2")
 
     except InstallError as e:
         e.pkg = pkg
