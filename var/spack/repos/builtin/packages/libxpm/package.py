@@ -22,7 +22,7 @@ class Libxpm(AutotoolsPackage, XorgPackage):
     depends_on('gettext')
     depends_on('libx11')
 
-    depends_on('xproto', type='build')
+    depends_on('xproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
 

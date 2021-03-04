@@ -10,10 +10,11 @@ class Migraphx(CMakePackage):
     """ AMD's graph optimization engine."""
 
     homepage = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX"
-    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-3.5.0.tar.gz"
+    url = "https://github.com/ROCmSoftwarePlatform/AMDMIGraphX/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='b8b845249626e9169353dbfa2530db468972a7569b248c8118ff19e029a12e55')
     version('3.10.0', sha256='eda22b9af286afb7806e6b5d5ebb0d612dce87c9bad64ba5176fda1c2ed9c9b7')
     version('3.9.0', sha256='7649689e06522302c07b39abb88bdcc3d4de18a7559d4f6a9e238e92b2074032')
     version('3.8.0', sha256='08fa991349a2b95364b0a69be7960580c3e3fde2fda0f0c67bc41429ea2d67a0')
@@ -40,13 +41,14 @@ class Migraphx(CMakePackage):
     depends_on('py-pybind11', type='build')
     depends_on('msgpack-c', type='link')
     depends_on('half@1.12.0', type='link')
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('miopen-hip@' + ver, type='link', when='@' + ver)
-        if ver in ['3.9.0', '3.10.0']:
+        if ver in ['3.9.0', '3.10.0', '4.0.0']:
             depends_on('nlohmann-json')
 
     def cmake_args(self):

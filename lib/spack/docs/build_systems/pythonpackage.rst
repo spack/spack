@@ -23,20 +23,11 @@ can be overridden:
 * ``build_ext``
 * ``build_clib``
 * ``build_scripts``
-* ``clean``
 * ``install``
 * ``install_lib``
 * ``install_headers``
 * ``install_scripts``
 * ``install_data``
-* ``sdist``
-* ``register``
-* ``bdist``
-* ``bdist_dumb``
-* ``bdist_rpm``
-* ``bdist_wininst``
-* ``upload``
-* ``check``
 
 These are all standard ``setup.py`` commands and can be found by running:
 
@@ -55,7 +46,7 @@ If for whatever reason you need to run more phases, simply modify your
 
 .. code-block:: python
 
-   phases = ['build_ext', 'install', 'bdist']
+   phases = ['build_ext', 'install']
 
 
 Each phase provides a function ``<phase>`` that runs:

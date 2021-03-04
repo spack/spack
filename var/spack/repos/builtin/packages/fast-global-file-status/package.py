@@ -12,11 +12,15 @@ class FastGlobalFileStatus(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/FastGlobalFileStatus"
     url = 'https://github.com/LLNL/FastGlobalFileStatus/files/2271592/fastglobalfilestatus-1.1.tar.gz'
+    git = "https://github.com/LLNL/FastGlobalFileStatus.git"
+    maintainers = ['lee218llnl']
 
+    version('master', branch='master')
     version('1.1', sha256='e6fba4a0b7f055899fa0e05d93a435c7f1f2ec1158b9a6647dc8d2bcf9c2e164')
 
     depends_on('mrnet')
-    depends_on('mount-point-attributes')
+    # we depend on mpa@master for bug fixes since mpa 1.1
+    depends_on('mount-point-attributes@master')
     depends_on('mpi')
     depends_on('openssl')
     depends_on('elf')

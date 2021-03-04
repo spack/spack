@@ -18,7 +18,7 @@ class Libxvmc(AutotoolsPackage, XorgPackage):
     depends_on('libxext')
     depends_on('libxv')
 
-    depends_on('xextproto', type='build')
-    depends_on('videoproto', type='build')
+    depends_on('xextproto')
+    depends_on('videoproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

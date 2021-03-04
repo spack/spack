@@ -16,6 +16,7 @@ class RocmGdb(AutotoolsPackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('4.0.0', sha256='b90291b0a8409fe66d8a65d2731dcb87b9f5a22bac9ce3ffbab726eb129ba13d')
     version('3.10.0', sha256='05455cb47dd42404ee8bba047def6a6846a7e877e7a7db8dcffc7100d5ba16f0')
     version('3.9.0', sha256='0765c96439c0efa145418d210d865b9faed463466d7522274959cc4476a37097')
     version('3.8.0', sha256='a7c11dc30c952587c616bf7769bad603c3bf80522afc8b73ccda5b78d27bed41')
@@ -27,12 +28,12 @@ class RocmGdb(AutotoolsPackage):
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libunwind', type='build')
-    depends_on('expat', type='build')
-    depends_on('python', type='build')
+    depends_on('expat', type=('build', 'link'))
+    depends_on('python', type=('build', 'link'))
     depends_on('zlib', type='link')
     depends_on('babeltrace@1.2.4', type='link')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-dbgapi@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type='link', when='@' + ver)
 

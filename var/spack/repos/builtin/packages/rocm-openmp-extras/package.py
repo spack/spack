@@ -15,30 +15,35 @@ compute_url = 'https://github.com/RadeonOpenCompute'
 
 aomp = [
     "377ab59b685a73b3f95fba95f5e028678ec5aafabc4177b7f0ffb78da095d679",
-    "808fca9bdefb109d5bcbbc9f5b59c564a6d422488869e986516f2a7233eda235"
+    "808fca9bdefb109d5bcbbc9f5b59c564a6d422488869e986516f2a7233eda235",
+    "aa75455cf1d333419e5310117678e5789c5222f7cb05b05e3dfacef855c55d84"
 ]
 
 devlib = [
     "c99f45dacf5967aef9a31e3731011b9c142446d4a12bac69774998976f2576d7",
-    "bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc"
+    "bca9291385d6bdc91a8b39a46f0fd816157d38abb1725ff5222e6a0daa0834cc",
+    "d0aa495f9b63f6d8cf8ac668f4dc61831d996e9ae3f15280052a37b9d7670d2a"
 ]
 
 llvm = [
     "1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1",
-    "8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370"
+    "8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370",
+    "aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69"
 ]
 
 flang = [
     "5d113f44fb173bd0d5704b282c5cebbb2aa642c7c29f188764bfa1daa58374c9",
-    "3990d39ff1c908b150f464f0653a123d94be30802f9cad6af18fbb560c4b412e"
+    "3990d39ff1c908b150f464f0653a123d94be30802f9cad6af18fbb560c4b412e",
+    "f3e19699ce4ac404f41ffe08ef4546e31e2e741d8deb403b5477659e054275d5"
 ]
 
 extras = [
     "830a37cf1c6700f81fc00749206a37e7cda4d2867bbdf489e9e2d81f52d06b3d",
-    "5d98d34aff97416d8b5b9e16e7cf474580f8de8a73bd0e549c4440a3c5df4ef5"
+    "5d98d34aff97416d8b5b9e16e7cf474580f8de8a73bd0e549c4440a3c5df4ef5",
+    "51cc8a7c5943e1d9bc657fc9b9797f45e3ce6a4e544d3d3a967c7cd0185a0510"
 ]
 
-versions = ['3.9.0', '3.10.0']
+versions = ['3.9.0', '3.10.0', '4.0.0']
 versions_dict = dict()
 components = ['aomp', 'devlib', 'llvm', 'flang', 'extras']
 component_hashes = [aomp, devlib, llvm, flang, extras]
@@ -54,9 +59,10 @@ class RocmOpenmpExtras(Package):
     """OpenMP support for ROCm LLVM."""
 
     homepage = tools_url + "/aomp"
-    url = tools_url + "/aomp/archive/rocm-uc-3.10.0.tar.gz"
+    url = tools_url + "/aomp/archive/rocm-4.0.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala', 'estewart08']
+    version('4.0.0', sha256=versions_dict['4.0.0']['aomp'])
     version('3.10.0', sha256=versions_dict['3.10.0']['aomp'])
     version('3.9.0', sha256=versions_dict['3.9.0']['aomp'])
 
@@ -69,7 +75,7 @@ class RocmOpenmpExtras(Package):
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libffi', type=('build', 'link'))
 
-    for ver in ['3.9.0', '3.10.0']:
+    for ver in ['3.9.0', '3.10.0', '4.0.0']:
         depends_on('hsakmt-roct@' + ver, type=('build', 'run'), when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type=('build', 'run'),
@@ -79,10 +85,16 @@ class RocmOpenmpExtras(Package):
         depends_on('llvm-amdgpu@' + ver, type=('build', 'run'),
                    when='@' + ver)
 
+        # tag changed to 'rocm-' in 4.0.0
+        if ver == '3.9.0' or ver == '3.10.0':
+            tag = 'rocm-uc-'
+        else:
+            tag = 'rocm-'
+
         resource(
             name='rocm-device-libs',
             url=compute_url +
-            '/ROCm-Device-Libs/archive/rocm-uc-' + ver + '.tar.gz',
+            '/ROCm-Device-Libs/archive/' + tag + ver + '.tar.gz',
             sha256=versions_dict[ver]['devlib'],
             expand=True,
             destination='rocm-openmp-extras',
@@ -91,7 +103,7 @@ class RocmOpenmpExtras(Package):
 
         resource(
             name='flang',
-            url=tools_url + '/flang/archive/rocm-uc-' + ver + '.tar.gz',
+            url=tools_url + '/flang/archive/' + tag + ver + '.tar.gz',
             sha256=versions_dict[ver]['flang'],
             expand=True,
             destination='rocm-openmp-extras',
@@ -100,7 +112,7 @@ class RocmOpenmpExtras(Package):
 
         resource(
             name='aomp-extras',
-            url=tools_url + '/aomp-extras/archive/rocm-uc-' + ver + '.tar.gz',
+            url=tools_url + '/aomp-extras/archive/' + tag + ver + '.tar.gz',
             sha256=versions_dict[ver]['extras'],
             expand=True,
             destination='rocm-openmp-extras',
@@ -228,6 +240,7 @@ class RocmOpenmpExtras(Package):
 
         # flang1 and flang2 symlink needed for build of flang-runtime
         # libdevice symlink to rocm-openmp-extras for runtime
+        # libdebug symlink to rocm-openmp-extras for runtime
         if not (os.path.islink((os.path.join(bin_dir, 'flang1')))):
             os.symlink(os.path.join(omp_bin_dir, 'flang1'),
                        os.path.join(bin_dir, 'flang1'))
@@ -237,6 +250,9 @@ class RocmOpenmpExtras(Package):
         if not (os.path.islink((os.path.join(lib_dir, 'libdevice')))):
             os.symlink(os.path.join(omp_lib_dir, 'libdevice'),
                        os.path.join(lib_dir, 'libdevice'))
+        if not (os.path.islink((os.path.join(llvm_prefix, 'lib-debug')))):
+            os.symlink(os.path.join(openmp_extras_prefix, 'lib-debug'),
+                       os.path.join(llvm_prefix, 'lib-debug'))
 
         # Set cmake args
         components = dict()

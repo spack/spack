@@ -52,6 +52,7 @@ class Magma(CMakePackage, CudaPackage):
     patch('magma-2.3.0-gcc-4.8.patch', when='@2.3.0%gcc@:4.8')
     patch('magma-2.5.0.patch', when='@2.5.0')
     patch('magma-2.5.0-cmake.patch', when='@2.5.0')
+    patch('cmake-W.patch', when='@2.5.0:%nvhpc')
 
     def cmake_args(self):
         spec = self.spec

@@ -18,8 +18,11 @@ import archspec.cpu
 
 try:
     import clingo
+    # There may be a better way to detect this
+    clingo_cffi = hasattr(clingo.Symbol, '_rep')
 except ImportError:
     clingo = None  # type: ignore
+    clingo_cffi = False
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -36,8 +39,15 @@ import spack.spec
 import spack.package
 import spack.package_prefs
 import spack.repo
+import spack.bootstrap
 import spack.variant
 import spack.version
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
 
 
 class Timer(object):
@@ -64,7 +74,7 @@ class Timer(object):
 def issequence(obj):
     if isinstance(obj, string_types):
         return False
-    return isinstance(obj, (collections.Sequence, types.GeneratorType))
+    return isinstance(obj, (Sequence, types.GeneratorType))
 
 
 def listify(args):
@@ -113,11 +123,11 @@ class AspFunction(AspObject):
     def symbol(self, positive=True):
         def argify(arg):
             if isinstance(arg, bool):
-                return str(arg)
+                return clingo.String(str(arg))
             elif isinstance(arg, int):
-                return arg
+                return clingo.Number(arg)
             else:
-                return str(arg)
+                return clingo.String(str(arg))
         return clingo.Function(
             self.name, [argify(arg) for arg in self.args], positive=positive)
 
@@ -204,19 +214,6 @@ class Result(object):
                 *sorted(str(symbol) for symbol in core))
 
 
-def _normalize(body):
-    """Accept an AspAnd object or a single Symbol and return a list of
-    symbols.
-    """
-    if isinstance(body, clingo.Symbol):
-        args = [body]
-    elif hasattr(body, 'symbol'):
-        args = [body.symbol()]
-    else:
-        raise TypeError("Invalid typee: ", type(body))
-    return args
-
-
 def _normalize_packages_yaml(packages_yaml):
     normalized_yaml = copy.copy(packages_yaml)
     for pkg_name in packages_yaml:
@@ -251,7 +248,20 @@ class PyclingoDriver(object):
             asp (file-like): optional stream to write a text-based ASP program
                 for debugging or verification.
         """
-        assert clingo, "PyclingoDriver requires clingo with Python support"
+        global clingo
+        if not clingo:
+            # TODO: Find a way to vendor the concrete spec
+            # in a cross-platform way
+            with spack.bootstrap.ensure_bootstrap_configuration():
+                generic_target = archspec.cpu.host().family
+                spec_str = 'clingo-bootstrap@spack+python target={0}'.format(
+                    str(generic_target)
+                )
+                clingo_spec = spack.spec.Spec(spec_str)
+                clingo_spec._old_concretize()
+                spack.bootstrap.make_module_available(
+                    'clingo', spec=clingo_spec, install=True)
+                import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
 
@@ -274,19 +284,14 @@ class PyclingoDriver(object):
 
     def fact(self, head):
         """ASP fact (a rule without a body)."""
-        symbols = _normalize(head)
-        self.out.write("%s.\n" % ','.join(str(a) for a in symbols))
+        symbol = head.symbol() if hasattr(head, 'symbol') else head
 
-        atoms = {}
-        for s in symbols:
-            atoms[s] = self.backend.add_atom(s)
+        self.out.write("%s.\n" % str(symbol))
 
-        self.backend.add_rule(
-            [atoms[s] for s in symbols], [], choice=self.cores
-        )
+        atom = self.backend.add_atom(symbol)
+        self.backend.add_rule([atom], [], choice=self.cores)
         if self.cores:
-            for s in symbols:
-                self.assumptions.append(atoms[s])
+            self.assumptions.append(atom)
 
     def solve(
             self, solver_setup, specs, dump=None, nmodels=0,
@@ -330,18 +335,26 @@ class PyclingoDriver(object):
         def on_model(model):
             models.append((model.cost, model.symbols(shown=True, terms=True)))
 
-        solve_result = self.control.solve(
-            assumptions=self.assumptions,
-            on_model=on_model,
-            on_core=cores.append
-        )
+        solve_kwargs = {"assumptions": self.assumptions,
+                        "on_model": on_model,
+                        "on_core": cores.append}
+        if clingo_cffi:
+            solve_kwargs["on_unsat"] = cores.append
+        solve_result = self.control.solve(**solve_kwargs)
         timer.phase("solve")
 
         # once done, construct the solve result
         result.satisfiable = solve_result.satisfiable
 
         def stringify(x):
-            return x.string or str(x)
+            if clingo_cffi:
+                # Clingo w/ CFFI will throw an exception on failure
+                try:
+                    return x.string
+                except RuntimeError:
+                    return str(x)
+            else:
+                return x.string or str(x)
 
         if result.satisfiable:
             builder = SpecBuilder(specs)
@@ -659,11 +672,15 @@ class SpackSolverSetup(object):
         self.gen.fact(cond_fn(condition_id, pkg_name, dep_spec.name))
 
         # conditions that trigger the condition
-        conditions = self.spec_clauses(named_cond, body=True)
+        conditions = self.checked_spec_clauses(
+            named_cond, body=True, required_from=pkg_name
+        )
         for pred in conditions:
             self.gen.fact(require_fn(condition_id, pred.name, *pred.args))
 
-        imposed_constraints = self.spec_clauses(dep_spec)
+        imposed_constraints = self.checked_spec_clauses(
+            dep_spec, required_from=pkg_name
+        )
         for pred in imposed_constraints:
             # imposed "node"-like conditions are no-ops
             if pred.name in ("node", "virtual_node"):
@@ -869,6 +886,20 @@ class SpackSolverSetup(object):
                     self.gen.fact(fn.compiler_version_flag(
                         compiler.name, compiler.version, name, flag))
 
+    def checked_spec_clauses(self, *args, **kwargs):
+        """Wrap a call to spec clauses into a try/except block that raise
+        a comprehensible error message in case of failure.
+        """
+        requestor = kwargs.pop('required_from', None)
+        try:
+            clauses = self.spec_clauses(*args, **kwargs)
+        except RuntimeError as exc:
+            msg = str(exc)
+            if requestor:
+                msg += ' [required from package "{0}"]'.format(requestor)
+            raise RuntimeError(msg)
+        return clauses
+
     def spec_clauses(self, spec, body=False, transitive=True):
         """Return a list of clauses for a spec mandates are true.
 
@@ -937,9 +968,14 @@ class SpackSolverSetup(object):
 
                 # validate variant value
                 reserved_names = spack.directives.reserved_names
-                if (not spec.virtual and vname not in reserved_names):
-                    variant_def = spec.package.variants[vname]
-                    variant_def.validate_or_raise(variant, spec.package)
+                if not spec.virtual and vname not in reserved_names:
+                    try:
+                        variant_def = spec.package.variants[vname]
+                    except KeyError:
+                        msg = 'variant "{0}" not found in package "{1}"'
+                        raise RuntimeError(msg.format(vname, spec.name))
+                    else:
+                        variant_def.validate_or_raise(variant, spec.package)
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 

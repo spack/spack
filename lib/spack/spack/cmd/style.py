@@ -10,18 +10,18 @@ import os
 import sys
 import argparse
 
+from llnl.util.filesystem import working_dir
+import llnl.util.tty as tty
+
+import spack.paths
+from spack.util.executable import which
+
 if sys.version_info < (3, 0):
     from itertools import izip_longest  # novm
 
     zip_longest = izip_longest
 else:
     from itertools import zip_longest  # novm
-
-from llnl.util.filesystem import working_dir
-import llnl.util.tty as tty
-
-import spack.paths
-from spack.util.executable import which
 
 
 description = (
@@ -162,10 +162,7 @@ def setup_parser(subparser):
 
 
 def rewrite_and_print_output(
-    output,
-    args,
-    re_obj=re.compile(r"^(.+):([0-9]+):"),
-    replacement=r"{0}:{1}:",
+    output, args, re_obj=re.compile(r"^(.+):([0-9]+):"), replacement=r"{0}:{1}:"
 ):
     """rewrite ouput with <file>:<line>: format to respect path args"""
     if args.root_relative or re_obj is None:
@@ -176,8 +173,7 @@ def rewrite_and_print_output(
         def cwd_relative(path):
             return replacement.format(
                 os.path.relpath(
-                    os.path.join(spack.paths.prefix, path.group(1)),
-                    os.getcwd(),
+                    os.path.join(spack.paths.prefix, path.group(1)), os.getcwd()
                 ),
                 *list(path.groups()[1:])
             )
@@ -185,12 +181,7 @@ def rewrite_and_print_output(
         for line in output.split("\n"):
             if not line:
                 continue
-            print(
-                re_obj.sub(
-                    cwd_relative,
-                    line,
-                )
-            )
+            print(re_obj.sub(cwd_relative, line))
 
 
 def print_style_header(file_list, args):
@@ -251,18 +242,15 @@ def run_mypy(file_list, args):
         return 1
 
     print_tool_header("mypy")
+    mpy_args = ["--package", "spack", "--package", "llnl"]
+    # not yet, need other updates to enable this
+    # if any([is_package(f) for f in file_list]):
+    #     mpy_args.extend(["--package", "packages"])
 
-    returncode = 0
-    output = ""
-    # run in chunks of 100 at a time to avoid line length limit
-    # filename parameter in config *does not work* for this reliably
-    for chunk in grouper(file_list, 100):
-        chunk = filter(lambda e: e is not None, chunk)
+    output = mypy_cmd(*mpy_args, fail_on_error=False, output=str)
+    returncode = mypy_cmd.returncode
 
-        output = mypy_cmd(*chunk, fail_on_error=False, output=str)
-        returncode |= mypy_cmd.returncode
-
-        rewrite_and_print_output(output, args)
+    rewrite_and_print_output(output, args)
 
     if returncode == 0:
         tty.msg("mypy checks were clean")

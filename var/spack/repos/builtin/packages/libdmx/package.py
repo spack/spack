@@ -18,7 +18,7 @@ class Libdmx(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxext')
 
-    depends_on('xextproto', type='build')
-    depends_on('dmxproto@2.2.99.1:', type='build')
+    depends_on('xextproto')
+    depends_on('dmxproto@2.2.99.1:')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

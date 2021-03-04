@@ -21,5 +21,5 @@ class XcbUtilErrors(AutotoolsPackage):
 
     depends_on('libxcb@1.4:')
 
-    depends_on('xcb-proto', type='build')
+    depends_on('xcb-proto')
     depends_on('pkgconfig', type='build')

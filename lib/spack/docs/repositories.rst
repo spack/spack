@@ -9,7 +9,7 @@
 Package Repositories
 =============================
 
-Spack comes with over 1,000 built-in package recipes in
+Spack comes with thousands of built-in package recipes in
 ``var/spack/repos/builtin/``.  This is a **package repository** -- a
 directory that Spack searches when it needs to find a package by name.
 You may need to maintain packages for restricted, proprietary or

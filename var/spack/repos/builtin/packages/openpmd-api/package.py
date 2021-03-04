@@ -10,13 +10,17 @@ class OpenpmdApi(CMakePackage):
     """API for easy reading and writing of openPMD files"""
 
     homepage = "http://www.openPMD.org"
+    url      = "https://github.com/openPMD/openPMD-api/archive/0.13.2.tar.gz"
     git      = "https://github.com/openPMD/openPMD-api.git"
 
     maintainers = ['ax3l']
 
     version('dev', branch='dev')
-    version('0.13.0',  tag='0.13.0')        # C++14 required
-    version('0.12.0',  tag='0.12.0-alpha')  # C++11 up until here
+    version('0.13.2', sha256='2e5170d41bb7b2c0608ec833eee7f9adf8175b46734743f6e46dcce6f6685fb0')
+    version('0.13.1', sha256='81ff79419982eb1b0865d1736f73f950f5d4c356d3c78200ceeab7f54dc07fd7')
+    version('0.13.0', sha256='97c2e43d80ee5c5288f278bd54f0dcb40e7f48a575b278fcef9660214b779bb0')  # C++14 required
+    # C++11 up until here
+    version('0.12.0',  tag='0.12.0-alpha')
     version('0.11.1',  tag='0.11.1-alpha')
 
     variant('shared', default=True,
@@ -58,42 +62,33 @@ class OpenpmdApi(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             # variants
-            '-DopenPMD_USE_MPI:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DopenPMD_USE_HDF5:BOOL={0}'.format(
-                'ON' if '+hdf5' in spec else 'OFF'),
-            '-DopenPMD_USE_ADIOS1:BOOL={0}'.format(
-                'ON' if '+adios1' in spec else 'OFF'),
-            '-DopenPMD_USE_ADIOS2:BOOL={0}'.format(
-                'ON' if '+adios2' in spec else 'OFF'),
-            '-DopenPMD_USE_PYTHON:BOOL={0}'.format(
-                'ON' if '+python' in spec else 'OFF'),
+            self.define_from_variant('openPMD_USE_MPI', 'mpi'),
+            self.define_from_variant('openPMD_USE_HDF5', 'hdf5'),
+            self.define_from_variant('openPMD_USE_ADIOS1', 'adios1'),
+            self.define_from_variant('openPMD_USE_ADIOS2', 'adios2'),
+            self.define_from_variant('openPMD_USE_PYTHON', 'python'),
             # tests and examples
-            '-DBUILD_TESTING:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_EXAMPLES:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define('BUILD_EXAMPLES', self.run_tests)
         ]
 
         # switch internally shipped third-party libraries for spack
         if spec.satisfies('+python'):
-            args.append('-DopenPMD_USE_INTERNAL_PYBIND11:BOOL=OFF')
-            if spec.version >= Version('0.13.0'):
-                args.append('-DPython_ROOT_DIR:FILEPATH={0}'.format(
-                            self.spec['python'].prefix))
-            else:
-                args.append('-DPYTHON_EXECUTABLE:FILEPATH={0}'.format(
-                            self.spec['python'].command.path))
+            py_exe_define = 'Python_EXECUTABLE' \
+                if spec.version >= Version('0.13.0') else 'PYTHON_EXECUTABLE'
+            args += [
+                self.define(py_exe_define, self.spec['python'].command.path),
+                self.define('openPMD_USE_INTERNAL_PYBIND11', False)
+            ]
 
-        args.extend([
-            '-DopenPMD_USE_INTERNAL_JSON:BOOL=OFF',
-            '-DopenPMD_USE_INTERNAL_VARIANT:BOOL=OFF'
-        ])
+        args += [
+            self.define('openPMD_USE_INTERNAL_JSON', False),
+            self.define('openPMD_USE_INTERNAL_VARIANT', False)
+        ]
         if self.run_tests:
-            args.append('-DopenPMD_USE_INTERNAL_CATCH:BOOL=OFF')
+            args.append(self.define('openPMD_USE_INTERNAL_CATCH', False))
 
         return args
 

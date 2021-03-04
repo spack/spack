@@ -26,11 +26,13 @@ class Mesa(MesonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
+    depends_on('cmake', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
     depends_on('expat')
+    depends_on('zlib@1.2.3:')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -71,7 +73,7 @@ class Mesa(MesonPackage):
     depends_on('libxext', when='+glx')
     depends_on('libxt',  when='+glx')
     depends_on('xrandr', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
 
     # Require at least 1 front-end
     # TODO: Add egl to this conflict once made available

@@ -19,6 +19,6 @@ class Rstart(AutotoolsPackage, XorgPackage):
 
     version('1.0.5', sha256='5271c0c2675b4ad09aace7edddfdd137af10fc754afa6260d8eb5d0bba7098c7')
 
-    depends_on('xproto', type='build')
+    depends_on('xproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -25,6 +25,8 @@ class Automake(AutotoolsPackage, GNUMirrorPackage):
 
     build_directory = 'spack-build'
 
+    tags = ['build-tools']
+
     executables = ['^automake$']
 
     @classmethod

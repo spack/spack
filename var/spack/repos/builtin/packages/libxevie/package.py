@@ -17,8 +17,8 @@ class Libxevie(AutotoolsPackage, XorgPackage):
     depends_on('libx11')
     depends_on('libxext')
 
-    depends_on('xproto', type='build')
-    depends_on('xextproto', type='build')
-    depends_on('evieext', type='build')
+    depends_on('xproto')
+    depends_on('xextproto')
+    depends_on('evieext')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

@@ -21,6 +21,20 @@ class Flatbuffers(CMakePackage):
 
     variant('shared', default=True,
             description='Build shared instead of static libraries')
+    variant('python', default=False,
+            description='Build with python support')
+
+    depends_on('py-setuptools', when='+python', type='build')
+    depends_on('python@3.6:', when='+python', type=('build', 'run'))
+    extends('python', when='+python')
+
+    @run_after('install')
+    def python_install(self):
+        if '+python' in self.spec:
+            pydir = join_path(self.stage.source_path, 'python')
+            with working_dir(pydir):
+                setup_py('install', '--prefix=' + prefix,
+                         '--single-version-externally-managed', '--root=/')
 
     def cmake_args(self):
         args = []
