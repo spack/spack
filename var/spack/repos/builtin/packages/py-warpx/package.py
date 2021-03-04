@@ -38,4 +38,7 @@ class PyWarpx(PythonPackage):
     depends_on('warpx +lib +mpi +shared', type=('build', 'link'), when='+mpi')
 
     def setup_build_environment(self, env):
-        env.set('PYWARPX_LIB_DIR', self.spec['warpx'].prefix.lib)
+        if find(self.spec['warpx'].prefix.lib64, 'libwarpx.3d.so'):
+            env.set('PYWARPX_LIB_DIR', self.spec['warpx'].prefix.lib64)
+        else:
+            env.set('PYWARPX_LIB_DIR', self.spec['warpx'].prefix.lib)
