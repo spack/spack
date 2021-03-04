@@ -343,8 +343,7 @@ class RPackageTemplate(PackageTemplate):
         )
 
         if cran:
-            url = '/'.join([r_name, cran.group(2)])
-
+            url = r_name
             self.url_line = '    cran     = "{url}"'
 
         bioc = re.search(

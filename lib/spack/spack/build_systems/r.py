@@ -44,24 +44,24 @@ class RPackage(PackageBase):
     @property
     def homepage(self):
         if self.cran:
-            name = self.cran.split('/')[0]
-            return 'https://cloud.r-project.org/package=' + name
+            return 'https://cloud.r-project.org/package=' + self.cran
         elif self.bioc:
             return 'https://bioconductor.org/packages/' + self.bioc
 
     @property
     def url(self):
         if self.cran:
-            distfile = self.cran.split('/')[1]
-            return 'https://cloud.r-project.org/src/contrib/' + distfile
+            return (
+                'https://cloud.r-project.org/src/contrib/'
+                + self.cran + '_1.2.3.tar.gz'
+            )
 
     @property
     def list_url(self):
         if self.cran:
-            name = self.cran.split('/')[0]
             return (
                 'https://cloud.r-project.org/src/contrib/Archive/'
-                + name + '/'
+                + self.cran + '/'
             )
 
     @property
