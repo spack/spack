@@ -2375,20 +2375,20 @@ spack:
     assert os.path.exists(str(spack_lock))
 
 
-def test_relative_dev_paths_are_expanded(tmpdir):
-    build_folder = tmpdir.join('build_folder')
+def _setup_develop_packages(tmpdir):
+    """Sets up a structure ./init_env/spack.yaml, ./build_folder, ./dest_env
+       where spack.yaml has a relative develop path to build_folder"""
     init_env = tmpdir.join('init_env')
+    build_folder = tmpdir.join('build_folder')
     dest_env = tmpdir.join('dest_env')
 
-    fs.mkdirp(str(build_folder))
     fs.mkdirp(str(init_env))
+    fs.mkdirp(str(build_folder))
     fs.mkdirp(str(dest_env))
 
     raw_yaml = """
 spack:
-  specs:
-  - mypkg1
-  - mypkg2
+  specs: ['mypkg1', 'mypkg2']
   develop:
     mypkg1:
       path: ../build_folder
@@ -2400,23 +2400,43 @@ spack:
     spack_yaml = init_env.join('spack.yaml')
     spack_yaml.write(raw_yaml)
 
-    # Create new environment in different directory; should rewrite rel paths
+    return init_env, build_folder, dest_env, spack_yaml
+
+
+def test_rewrite_rel_dev_path_new_dir(tmpdir):
+    """Relative develop paths should be rewritten for new environments in
+       a different directory from the original manifest file"""
+    _, build_folder, dest_env, spack_yaml = _setup_develop_packages(tmpdir)
+
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
-    # Create new environment in var/share/environments; should rewrite rel paths
+
+def test_rewrite_rel_dev_path_named_env(tmpdir):
+    """Relative develop paths should by default be rewritten for new named
+       environment"""
+    _, build_folder, _, spack_yaml = _setup_develop_packages(tmpdir)
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
-    # "Create" environment in original directory; should not rewrite rel paths
+
+def test_rewrite_rel_dev_path_original_dir(tmpdir):
+    """Relative devevelop paths should not be rewritten when initializing an
+       environment with root path set to the same directory"""
+    init_env, _, _, spack_yaml = _setup_develop_packages(tmpdir)
     with ev.Environment(str(init_env), str(spack_yaml)) as e:
         assert e.dev_specs['mypkg1']['path'] == '../build_folder'
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
 
+
+def test_rewrite_rel_dev_path_create_original_dir(tmpdir):
+    """Relative develop paths should not be rewritten when creating an
+       environment in the original directory"""
+    init_env, _, _, spack_yaml = _setup_develop_packages(tmpdir)
     env('create', '-d', str(init_env), str(spack_yaml))
     with ev.Environment(str(init_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == '../build_folder'
