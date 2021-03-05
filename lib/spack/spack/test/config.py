@@ -16,6 +16,7 @@ import pytest
 import spack.paths
 import spack.config
 import spack.main
+import spack.environment
 import spack.schema.compilers
 import spack.schema.config
 import spack.schema.env
@@ -267,7 +268,12 @@ def test_write_list_in_memory(mock_low_high_config):
     assert config == repos_high['repos'] + repos_low['repos']
 
 
-def test_substitute_config_variables(mock_low_high_config):
+class MockEnv(object):
+    def __init__(self, path):
+        self.path = path
+
+
+def test_substitute_config_variables(mock_low_high_config, monkeypatch):
     prefix = spack.paths.prefix.lstrip('/')
 
     assert os.path.join(
@@ -297,6 +303,33 @@ def test_substitute_config_variables(mock_low_high_config):
     assert os.path.join(
         '/foo/bar/baz', prefix, 'foo/bar/baz'
     ) != spack_path.canonicalize_path('/foo/bar/baz/${spack/foo/bar/baz/')
+
+    # $env replacement is a no-op when no environment is active
+    assert spack_path.canonicalize_path(
+        '/foo/bar/baz/$env'
+    ) == '/foo/bar/baz/$env'
+
+    # Fake an active environment and $env is replaced properly
+    fake_env_path = '/quux/quuux'
+    monkeypatch.setattr(spack.environment, 'get_env',
+                        lambda x, y: MockEnv(fake_env_path))
+    assert spack_path.canonicalize_path(
+        '$env/foo/bar/baz'
+    ) == os.path.join(fake_env_path, 'foo/bar/baz')
+
+    # relative paths without source information are relative to cwd
+    assert spack_path.canonicalize_path(
+        'foo/bar/baz'
+    ) == os.path.abspath('foo/bar/baz')
+
+    # relative paths with source information are relative to the file
+    spack.config.set(
+        'config:module_roots', {'lmod': 'foo/bar/baz'}, scope='low')
+    spack.config.config.clear_caches()
+    path = spack.config.get('config:module_roots:lmod')
+    assert spack_path.canonicalize_path(path) == os.path.normpath(
+        os.path.join(mock_low_high_config.scopes['low'].path,
+                     'foo/bar/baz'))
 
 
 packages_merge_low = {
