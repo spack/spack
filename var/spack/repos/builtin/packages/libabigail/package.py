@@ -14,8 +14,13 @@ class Libabigail(AutotoolsPackage):
 
     version('1.8', sha256='1cbf260b894ccafc61b2673ba30c020c3f67dbba9dfa88dca3935dff661d665c')
 
-    depends_on('doxygen', type='build')
+    variant('docs', default=False, description='build documentation')
+    
     depends_on('elfutils', type=('build', 'link'))
     depends_on('libdwarf')
     depends_on('libxml2')
-    depends_on('py-sphinx', type='build')
+
+    # Documentation dependencies    
+    depends_on('doxygen', type="build", when="+docs")
+    depends_on('py-sphinx', type='build', when="+docs")
+
