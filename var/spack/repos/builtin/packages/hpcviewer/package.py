@@ -38,6 +38,9 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
+        ('2021.03', 'aarch64'): '1b1f7f51a319a159aa96dee21b2cd77ee23b01df263ea122980fa1567e4dab8d',
+        ('2021.03', 'ppc64le'): '8fc4683a9e61263ac78fe35391930b0cdc8e84dd50f8d41dcd0c6d8072b02937',
+        ('2021.03', 'x86_64'):  '40b4453fe662b896a853d869486b481ded0d29abdf5e50aab2d8f3bdf8940b04',
         ('2021.01', 'aarch64'): 'fe797a1c97943f7509c36a570198291e674cd4a793c1d6538a2761d66542dc52',
         ('2021.01', 'ppc64le'): 'ba4035de2ae208280c3744000ea08d2d7f8c31bd7095f722e442ddc289648063',
         ('2021.01', 'x86_64'):  '99eba4e1c613203c4658f2874d0e79e1620db7a22ac7dcb810801886ba9f8a79',
