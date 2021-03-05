@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Casacore(CMakePackage):
@@ -21,6 +22,8 @@ class Casacore(CMakePackage):
     version('3.1.0', sha256='a6adf2d77ad0d6f32995b1e297fd88d31ded9c3e0bb8f28966d7b35a969f7897')
     version('3.0.0', sha256='6f0e68fd77b5c96299f7583a03a53a90980ec347bff9dfb4c0abb0e2933e6bcb')
     version('2.4.1', sha256='58eccc875053b2c6fe44fe53b6463030ef169597ec29926936f18d27b5087d63')
+
+    depends_on('cmake@3.7.1:', type='build')
 
     variant('openmp', default=False, description='Build OpenMP support')
     variant('shared', default=True, description='Build shared libraries')
@@ -73,3 +76,7 @@ class Casacore(CMakePackage):
 
         args.append('-DBUILD_TESTING=OFF')
         return args
+
+    def patch(self):
+        # Rely on CMake ability to find hdf5, available since CMake 3.7.X
+        os.remove('cmake/FindHDF5.cmake')

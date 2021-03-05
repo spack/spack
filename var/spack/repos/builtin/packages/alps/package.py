@@ -54,3 +54,30 @@ class Alps(CMakePackage):
         args.append('Boost_ROOT_DIR=' + self.spec['boost'].prefix)
         args.append("-DCMAKE_CXX_FLAGS={0}".format(self.compiler.cxx98_flag))
         return args
+
+    def _single_test(self, target, exename, dataname, opts=[]):
+        troot = self.prefix.tutorials
+        copy_tree(join_path(troot, target), target)
+
+        if target == 'dmrg-01-dmrg':
+            test_dir = self.test_suite.current_test_data_dir
+            copy(join_path(test_dir, dataname), target)
+
+        self.run_test('parameter2xml',
+                      options=[dataname, 'SEED=123456'],
+                      work_dir=target
+                      )
+        options = []
+        options.extend(opts)
+        options.extend(['--write-xml', '{0}.in.xml'.format(dataname)])
+        self.run_test(exename,
+                      options=options,
+                      expected=['Finished with everything.'],
+                      work_dir=target
+                      )
+
+    def test(self):
+        self._single_test('mc-02-susceptibilities', 'spinmc', 'parm2a',
+                          ['--Tmin', '10'])
+        self._single_test('ed-01-sparsediag', 'sparsediag', 'parm1a')
+        self._single_test('dmrg-01-dmrg', 'dmrg', 'spin_one_half')

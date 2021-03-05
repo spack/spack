@@ -111,6 +111,53 @@ environment*, especially for ``PATH``.  Only software that comes with
 the system, or that you know you wish to use with Spack, should be
 included.  This procedure will avoid many strange build errors.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Optional: Bootstrapping clingo
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack supports using clingo as an external solver to compute which software
+needs to be installed. If you have a default compiler supporting C++14 Spack
+can automatically bootstrap this tool from sources the first time it is
+needed:
+
+.. code-block:: console
+
+   $ spack solve zlib
+   [+] /usr (external bison-3.0.4-wu5pgjchxzemk5ya2l3ddqug2d7jv6eb)
+   [+] /usr (external cmake-3.19.4-a4kmcfzxxy45mzku4ipmj5kdiiz5a57b)
+   [+] /usr (external python-3.6.9-x4fou4iqqlh5ydwddx3pvfcwznfrqztv)
+   ==> Installing re2c-1.2.1-e3x6nxtk3ahgd63ykgy44mpuva6jhtdt
+   [ ... ]
+   ==> Optimization: [0, 0, 0, 0, 0, 1, 0, 0, 0]
+   zlib@1.2.11%gcc@10.1.0+optimize+pic+shared arch=linux-ubuntu18.04-broadwell
+
+If you want to speed-up bootstrapping, you may try to search for ``cmake`` and ``bison``
+on your system:
+
+.. code-block:: console
+
+   $ spack external find cmake bison
+   ==> The following specs have been detected on this system and added to /home/spack/.spack/packages.yaml
+   bison@3.0.4  cmake@3.19.4
+
+All the tools Spack needs for its own functioning are installed in a separate store, which lives
+under the ``${HOME}/.spack`` directory. The software installed there can be queried with:
+
+.. code-block:: console
+
+   $ spack find --bootstrap
+   ==> Showing internal bootstrap store at "/home/spack/.spack/bootstrap/store"
+   ==> 3 installed packages
+   -- linux-ubuntu18.04-x86_64 / gcc@10.1.0 ------------------------
+   clingo-bootstrap@spack  python@3.6.9  re2c@1.2.1
+
+In case it's needed the bootstrap store can also be cleaned with:
+
+.. code-block:: console
+
+   $ spack clean -b
+   ==> Removing software in "/home/spack/.spack/bootstrap/store"
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 Optional: Alternate Prefix
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

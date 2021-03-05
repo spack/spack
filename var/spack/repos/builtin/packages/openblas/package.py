@@ -43,6 +43,7 @@ class Openblas(MakefilePackage):
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
+    variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
 
     variant('locking', default=True, description='Build with thread safety')
     variant(
@@ -302,6 +303,9 @@ class Openblas(MakefilePackage):
         # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
         if self.spec.satisfies('@0.3.13:'):
             make_defs.append('RANLIB=ranlib')
+
+        if self.spec.satisfies('+bignuma'):
+            make_defs.append('BIGNUMA=1')
 
         return make_defs
 
