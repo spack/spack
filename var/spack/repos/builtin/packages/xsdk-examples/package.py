@@ -21,7 +21,7 @@ class XsdkExamples(CMakePackage):
 
     variant('cuda', default=False, description='Compile CUDA examples')
 
-    depends_on('xsdk+cuda ^mfem+cuda', when='+cuda')
+    depends_on('xsdk+cuda', when='+cuda')
     depends_on('xsdk@0.6.0', when='@0.2.0')
     depends_on('xsdk@0.5.0', when='@0.1.0')
 
