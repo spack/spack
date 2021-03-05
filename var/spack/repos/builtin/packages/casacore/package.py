@@ -78,5 +78,5 @@ class Casacore(CMakePackage):
         return args
 
     def patch(self):
+        # Rely on CMake ability to find hdf5, available since CMake 3.7.X
         os.remove('cmake/FindHDF5.cmake')
-        return
