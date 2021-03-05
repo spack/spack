@@ -21,7 +21,7 @@ class Hpctoolkit(AutotoolsPackage):
 
     version('develop', branch='develop')
     version('master',  branch='master')
-    # version('2021.02.10', commit='9eea97d9aaff38f6460f25957cd1588093fb19c7')
+    version('2021.03.01', commit='68a051044c952f0f4dac459d9941875c700039e7')
     version('2020.08.03', commit='d9d13c705d81e5de38e624254cf0875cce6add9a')
     version('2020.07.21', commit='4e56c780cffc53875aca67d6472a2fb3678970eb')
     version('2020.06.12', commit='ac6ae1156e77d35596fea743ed8ae768f7222f19')
@@ -59,31 +59,30 @@ class Hpctoolkit(AutotoolsPackage):
 
     variant('rocm', default=False,
             description='Support ROCM on AMD GPUs, requires ROCM as '
-            'external packages (2021.02.10 or later).')
+            'external packages (2021.03.01 or later).')
 
     boost_libs = (
         '+atomic +chrono +date_time +filesystem +system +thread +timer'
         ' +graph +regex +shared +multithreaded visibility=global'
     )
 
-    depends_on('binutils@:2.34 +libiberty', type='link', when='@2021.00:')
-    depends_on('binutils@:2.34 +libiberty~nls', type='link', when='@2020.04:2020.99')
+    depends_on('binutils +libiberty', type='link', when='@2021.00:')
+    depends_on('binutils +libiberty~nls', type='link', when='@2020.04:2020.99')
     depends_on('binutils@:2.33.1 +libiberty~nls', type='link', when='@:2020.03.99')
     depends_on('boost' + boost_libs)
     depends_on('bzip2+shared', type='link')
-    depends_on('dyninst@9.3.2:')
+    depends_on('dyninst@10.2.0:', when='@2021.00:')
+    depends_on('dyninst@9.3.2:', when='@:2020.99')
     depends_on('elfutils+bzip2+xz~nls', type='link')
     depends_on('gotcha@1.0.3:')
     depends_on('intel-tbb+shared')
     depends_on('libdwarf')
     depends_on('libmonitor+hpctoolkit~dlopen', when='@2021.00:')
-    depends_on('libmonitor+hpctoolkit', when='@:2020.99')
-    depends_on('libunwind@1.4: +xz+pic', when='@2020.09.00:')
-    depends_on('libunwind@1.4: +xz', when='@:2020.08.99')
+    depends_on('libmonitor+hpctoolkit+dlopen', when='@:2020.99')
+    depends_on('libunwind@1.4: +xz+pic')
     depends_on('mbedtls+pic')
     depends_on('xerces-c transcoder=iconv')
-    depends_on('xz+pic', type='link', when='@2020.09.00:')
-    depends_on('xz', type='link', when='@:2020.08.99')
+    depends_on('xz+pic', type='link')
     depends_on('zlib+shared')
 
     depends_on('cuda', when='+cuda')
@@ -99,14 +98,20 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('%gcc@:4.7.99', when='^dyninst@10.0.0:',
               msg='hpctoolkit requires gnu gcc 4.8.x or later')
 
-    conflicts('%gcc@:4.99.99', when='@2020.03.01:',
+    conflicts('%gcc@:4.99.99', when='@2020.03:2020.99',
               msg='hpctoolkit requires gnu gcc 5.x or later')
+
+    conflicts('%gcc@:6.99.99', when='@2021.00:',
+              msg='hpctoolkit requires gnu gcc 7.x or later')
 
     conflicts('+cuda', when='@:2019.99.99',
               msg='cuda requires 2020.03.01 or later')
 
     conflicts('+rocm', when='@:2020.99.99',
-              msg='rocm requires 2021.02.10 or later')
+              msg='rocm requires 2021.03.01 or later')
+
+    conflicts('^binutils@2.35:2.35.1',
+              msg='avoid binutils 2.35 and 2.35.1 (spews errors)')
 
     flag_handler = AutotoolsPackage.build_system_flags
 
