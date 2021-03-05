@@ -123,6 +123,7 @@ o  dyninst
 o  libelf
 '''
 
+
 def test_topo_sort_filtered(mock_packages):
     """Test topo sort gives correct order when filtering link deps."""
     s = Spec('both-link-and-build-dep-a').normalized()
