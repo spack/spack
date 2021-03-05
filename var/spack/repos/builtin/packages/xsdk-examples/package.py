@@ -50,9 +50,12 @@ class XsdkExamples(CMakePackage):
             '-DGINKGO_INCLUDE_DIR=%s' % spec['ginkgo'].prefix.include,
             '-DGINKGO_LIBRARY_DIR=%s' % spec['ginkgo'].prefix.include.lib,
             # allow use of default `find_package(Ginkgo)`
-            '-DCMAKE_PREFIX_PATH=%s/cmake' % spec['ginkgo'].prefix.include.lib,
-            '-DENABLE_CUDA=%s' % on_off('+cuda')
+            '-DCMAKE_PREFIX_PATH=%s/cmake' % spec['ginkgo'].prefix.include.lib
         ]
+        if '+cuda' in spec:
+            args.extend([
+                '-DENABLE_CUDA=ON'
+            ])
         if 'trilinos' in spec:  # if trilinos variant was activated for xsdk
             args.extend([
                 '-DTRILINOS_DIR_PATH=%s' % spec['trilinos'].prefix,
