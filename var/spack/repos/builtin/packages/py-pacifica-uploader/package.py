@@ -15,5 +15,6 @@ class PyPacificaUploader(PythonPackage):
     version('0.3.1', sha256='adda18b28f01f0b1e6fbaf927fec9b8cf07c86f1b74185bed2a624e8a4597578')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('python@3:', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))

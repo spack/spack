@@ -15,5 +15,6 @@ class PyPacificaDownloader(PythonPackage):
     version('0.4.1', sha256='11da2032a07ca7bb06fed38dc8d7c4c57267ff98c5fd925271083e18dd85d9f4')
 
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
     depends_on('py-requests', type=('build', 'run'))
-    depends_on('python@3:', type=('build', 'run'))
+    depends_on('python', type=('build', 'run'))
