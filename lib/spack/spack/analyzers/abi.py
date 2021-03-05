@@ -4,6 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+import spack.boostrap
+import archspec.cpu
+
 from .base import AnalyzerBase
 
 class LibabigailAnalyzer(AnalyzerBase):
@@ -14,6 +17,16 @@ class LibabigailAnalyzer(AnalyzerBase):
         
     def __init__(self, spec): 
         super().__init__(spec)
+
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            generic_target = archspec.cpu.host().family
+            spec_str = 'libabigail target={0}'.format(
+                str(generic_target)
+            )
+            spec = spack.spec.Spec(spec_str)
+            spec._old_concretize()
+            spack.bootstrap.make_module_available(
+                'libabigail', spec=spec, install=True)
        
     def run(self):
         """Given a directory name, return the json file to save the result to
