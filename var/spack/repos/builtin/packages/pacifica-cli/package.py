@@ -21,4 +21,3 @@ class PacificaCli(PythonPackage):
     depends_on('py-pacifica-downloader@0.4.1:', type=('build', 'run'))
     depends_on('py-pacifica-namespace', type=('build', 'run'))
     depends_on('py-pager', type=('build', 'run'))
-    depends_on('python', type=('build', 'run'))

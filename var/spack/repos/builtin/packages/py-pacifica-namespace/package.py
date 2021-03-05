@@ -16,4 +16,3 @@ class PyPacificaNamespace(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
-    depends_on('python', type=('build', 'run'))
