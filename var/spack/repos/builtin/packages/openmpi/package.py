@@ -306,6 +306,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('openpbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
+    depends_on('openssh', type='run')
+
     # CUDA support was added in 1.7
     conflicts('+cuda', when='@:1.6')
     # PMI support was added in 1.5.5
