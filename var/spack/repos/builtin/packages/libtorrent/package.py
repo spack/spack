@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Libtorrent(AutotoolsPackage):
     """LibTorrent is a BitTorrent library written in C++,
