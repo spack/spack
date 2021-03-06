@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Libasr(AutotoolsPackage):
     """libasr is a free, simple and portable asynchronous resolver library."""
