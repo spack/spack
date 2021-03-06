@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Libuinputplus(CMakePackage):
     """A c++ wrapper around libuinput."""
