@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Args(CMakePackage):
     """A simple header-only C++ argument parser library. Supposed to be
