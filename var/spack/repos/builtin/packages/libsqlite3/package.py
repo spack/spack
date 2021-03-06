@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-
 class Libsqlite3(AutotoolsPackage):
     """sqlite3 is a slick embedded SQL server written in C."""
 
