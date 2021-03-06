@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Libapreq2(AutotoolsPackage):
     """httpd-apreq is subproject of the Apache HTTP Server Project
