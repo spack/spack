@@ -89,6 +89,22 @@ analyzer implemented yet:
     $ ls opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/
     spack-analyzer-environment-variables.json  spack-analyzer-install-files.json
 
+If you want to run a specific analyzer, ask for it with `--analyzer`. Here we run
+spack analyze on libabigail (already installed) _using_ libabigail1
+
+.. code-block:: console
+
+    $ spack analyze --analyzer abigail libabigail
+
+You can now see the abigail results in the analyze folder!
+
+    $ ls opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/
+    spack-analyzer-environment-variables.json  spack-analyzer-install-files.json  spack-analyzer-libabigail-wget.xml
+
+
+It is currently flat (not compressed) xml, and will eventually be gzipped when libabigail supports it.
+
+
 ----------------------
 Monitoring An Analysis
 ----------------------

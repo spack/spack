@@ -11,18 +11,21 @@ import llnl.util.tty as tty
 
 import os
 
+
 class AnalyzerBase:
 
-    def __init__(self, spec):
+    def __init__(self, spec, monitor=None, dirname=None):
         """An Analyzer is intended to run on one spec install, so the spec
         with its associated package is required on init. The child analyzer
-        class should define an init function that super's the init here, and 
+        class should define an init function that super's the init here, and
         also check that the analyzer has all dependencies that it
         needs. If an analyzer subclass does not have dependencies, it does not
-        need to define an init. An Analyzer should not be allowed to proceed 
+        need to define an init. An Analyzer should not be allowed to proceed
         if one or more dependencies are missing.
         """
         self.spec = spec
+        self.monitor = monitor
+        self.dirname = dirname
 
         # An analyzer cannot be run if the spec isn't associated with a package
         if not hasattr(spec, "package") or not spec.package:
@@ -38,8 +41,8 @@ class AnalyzerBase:
         """
         raise NotImplementedError
 
-    def get_outfile(self, dirname):
+    def get_outfile(self, dirname=None, outfile=None):
         """Given a directory name, return the json file to save the result to
         """
-        dirname = dirname or self.meta_dir
-        return os.path.join(dirname, 'analyze', self.outfile)
+        dirname = dirname or self.dirname or self.meta_dir
+        return os.path.join(dirname, 'analyze', outfile or self.outfile)

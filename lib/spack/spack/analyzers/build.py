@@ -37,10 +37,10 @@ class EnvironmentVariablesAnalyzer(AnalyzerBase):
 
     def run(self):
         """Given a directory name, return the json file to save the result to
-        """        
+        """
         env_file = os.path.join(self.meta_dir, "spack-build-env.txt")
         return {self.name: self._read_environment_file(env_file)}
- 
+
     def _read_environment_file(self, filename):
         """Given an environment file, we want to read it, split by semicolons
         and new lines, and then parse down to the subset of SPACK_* variables.

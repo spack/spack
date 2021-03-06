@@ -12,7 +12,7 @@ from __future__ import absolute_import
 
 import llnl.util.tty as tty
 from .abi import LibabigailAnalyzer
-from .build import ( 
+from .build import (
     InstallFilesAnalyzer,
     EnvironmentVariablesAnalyzer,
     ConfigArgsAnalyzer
@@ -39,6 +39,7 @@ analyzer_types = {
     'abigail': LibabigailAnalyzer,
 }
 
+
 def list_all():
     """A helper function to list all analyzers and their descriptions
     """
@@ -59,7 +60,8 @@ def create_package_analyze_dir(spec):
     if not os.path.exists(analyze_dir):
         tty.debug("Creating directory for analyze %s" % analyze_dir)
         os.mkdir(analyze_dir)
-    
+
+
 def get_analyzer(name):
     """Courtesy function to retrieve an analyzer, and exit on error if it
     does not exist.

@@ -107,7 +107,7 @@ the dependencies"""
         '--cache-only', action='store_true', dest='cache_only', default=False,
         help="only install package from binary mirrors")
 
-    monitor_group = spack.monitor.get_monitor_group(subparser)
+    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
 
     subparser.add_argument(
         '--include-build-deps', action='store_true', dest='include_build_deps',

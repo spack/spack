@@ -3,13 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import argparse
-import os
-import shutil
 import sys
-import textwrap
 
-import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 import spack.analyzers
@@ -21,7 +16,6 @@ import spack.fetch_strategy
 import spack.monitor
 import spack.paths
 import spack.report
-from spack.error import SpackError
 
 
 description = "analyze installed packages"
@@ -29,37 +23,12 @@ section = "extensions"
 level = "short"
 
 
-def update_kwargs_from_args(args, kwargs):
-    """Parse cli arguments and construct a dictionary
-    that will be passed to the analyzer function."""
-
-    kwargs.update({
-        'verbose': args.verbose,
-        'use_monitor': args.use_monitor,
-        'use_monitor': args.outfile,
-        'full_hash_match': args.full_hash_match,
-    })
-
-    kwargs.update({
-        'install_deps': ('dependencies' in args.things_to_install),
-        'install_package': ('package' in args.things_to_install)
-    })
-
-    if hasattr(args, 'setup'):
-        setups = set()
-        for arglist_s in args.setup:
-            for arg in [x.strip() for x in arglist_s.split(',')]:
-                setups.add(arg)
-        kwargs['setup'] = setups
-        tty.msg('Setup={0}'.format(kwargs['setup']))
-
-
 def setup_parser(subparser):
     subparser.add_argument(
         '--overwrite', action='store_true',
         help="re-analyze even if the output file already exists.")
 
-    monitor_group = spack.monitor.get_monitor_group(subparser)
+    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
 
     subparser.add_argument(
         '-o', '--outdir', default=None,
@@ -105,18 +74,21 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
     for name in analyzers:
 
         # Instantiate the analyzer with the spec
-        analyzer = spack.analyzers.get_analyzer(name)(spec)
+        analyzer = spack.analyzers.get_analyzer(name)(spec, monitor, outdir)
 
         # Run the analyzer to get a json result - results are returned as
         # a dictionary with a key corresponding to the analyzer type, so
         # we can just update the data
         result = analyzer.run()
-        data.update(result)
 
-        # Save the result to file in the .analyze folder
-        outfile = analyzer.get_outfile(outdir)   
-        if result[analyzer.name]:
-            spack.monitor.write_json(result[analyzer.name], outfile)
+        # Any analyzer that generates some speicial format can save on its own
+        if not hasattr(analyzer, "saves_internally"):
+            data.update(result)
+
+            # Save the result to file in the .analyze folder
+            outfile = analyzer.get_outfile(outdir)
+            if result[analyzer.name]:
+                spack.monitor.write_json(result[analyzer.name], outfile)
 
     # Here we need to send result to the monitor
     if monitor:
@@ -135,6 +107,8 @@ def analyze(parser, args, **kwargs):
 
     # Get an disambiguate spec (we should only have one)
     specs = spack.cmd.parse_specs(args.spec)
+    if not specs:
+        tty.die("You must provide one or more specs to analyze.")
     spec = spack.cmd.disambiguate_spec(specs[0], env)
 
     # The user wants to monitor builds using github.com/spack/spack-monitor
@@ -145,6 +119,6 @@ def analyze(parser, args, **kwargs):
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
         )
-     
+
     # Run the analysis
     analyze_spec(spec, args.analyzers, args.outdir, monitor)
