@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Brynet(CMakePackage):
     """Header Only Cross platform high performance TCP network library
