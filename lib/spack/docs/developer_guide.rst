@@ -443,6 +443,7 @@ work. For example:
 
         # install extra dependencies, do extra preparation and checks here
 
+
 At the end of the init, you will have available to you:
 
  - **self.spec**: the spec object
@@ -454,8 +455,8 @@ At the end of the init, you will have available to you:
 Saving Analyzer Results
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-The analyzer will have ``save_result`` called, with the result object generated,
-to save it to the filesystem, and if the user has added the ``--monitor`` flag,
+The analyzer will have ``save_result`` called, with the result object generated
+to save it to the filesystem, and if the user has added the ``--monitor`` flag
 to upload it to a monitor server. If your result follows an accepted result
 format and you don't need to parse it further, you don't need to add this 
 function to your class. However, if your result data is large or otherwise

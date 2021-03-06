@@ -5,6 +5,7 @@
 
 
 import spack
+import spack.error
 import spack.bootstrap
 import spack.binary_distribution
 import spack.package
@@ -39,6 +40,7 @@ class LibabigailAnalyzer(AnalyzerBase):
             # libabigail won't install lib/bin/share without docs
             spec = spack.spec.Spec("libabigail+docs")
             spec.concretize()
+
             self.abidw = spack.bootstrap.get_executable(
                 "abidw", spec=spec, install=True)
 
@@ -56,10 +58,13 @@ class LibabigailAnalyzer(AnalyzerBase):
 
             outfile = "spack-analyzer-libabigail-%s.xml" % os.path.basename(obj)
             outfile = self.get_outfile(self.dirname, outfile=outfile)
-            self.abidw(obj, "--out-file", outfile)
-            result[obj] = outfile
+            # Sometimes libabigail segfaults and dumps
+            try:
+                self.abidw(obj, "--out-file", outfile)
+                result[obj] = outfile
+            except spack.error.SpackError:
+                tty.warn("Issue running abidw for %s" % obj)
 
-        # not written yet
         return {self.name: result}
 
     def save_result(self, result, outdir=None, monitor=None):
