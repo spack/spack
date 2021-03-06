@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class Fullock(AutotoolsPackage):
     """FULLOCK is a lock library provided by Yahoo! JAPAN,
