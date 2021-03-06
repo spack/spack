@@ -101,7 +101,6 @@ You can now see the abigail results in the analyze folder!
     $ ls opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/
     spack-analyzer-environment-variables.json  spack-analyzer-install-files.json  spack-analyzer-libabigail-wget.xml
 
-
 It is currently flat (not compressed) xml, and will eventually be gzipped when libabigail supports it.
 
 
@@ -143,3 +142,15 @@ If your server doesn't have authentication, you can skip it:
 .. code-block:: console
 
     $ spack analyze --monitor --monitor-disable-auth wget
+    
+Regardless of your choice, when you run analyze on an installed package (whether
+it was installed with ``--monitor`` or not, you'll see the results generating as they did
+before, and a message that the monitor server was pinged:
+
+.. code-block:: console
+
+    $ spack analyze --monitor wget
+    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-install-files.json
+    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-environment-variables.json
+    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-install-files.json
+    ==> Sending result for wget bin/wget to monitor.

@@ -1796,6 +1796,8 @@ def build_process(pkg, kwargs):
                     )
                     log_file = os.path.join(log_dir, log_file)
 
+                    # DEBUGGING TIP - to debug this section, insert an IPython
+                    # embed here, and run the sections below without log capture
                     with log_output(log_file, echo, True,
                                     env=unmodified_env) as logger:
 

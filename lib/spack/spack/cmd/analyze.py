@@ -68,31 +68,20 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
         monitor.load_build_environment(spec)
         monitor.new_configuration([spec])
 
-    # Save data as we go for the monitor
-    data = {}
-
     for name in analyzers:
 
         # Instantiate the analyzer with the spec
-        analyzer = spack.analyzers.get_analyzer(name)(spec, monitor, outdir)
+        analyzer = spack.analyzers.get_analyzer(name)(spec)
 
         # Run the analyzer to get a json result - results are returned as
         # a dictionary with a key corresponding to the analyzer type, so
         # we can just update the data
         result = analyzer.run()
 
-        # Any analyzer that generates some speicial format can save on its own
-        if not hasattr(analyzer, "saves_internally"):
-            data.update(result)
-
-            # Save the result to file in the .analyze folder
-            outfile = analyzer.get_outfile(outdir)
-            if result[analyzer.name]:
-                spack.monitor.write_json(result[analyzer.name], outfile)
-
-    # Here we need to send result to the monitor
-    if monitor:
-        monitor.send_analyze_metadata(spec.package, data)
+        # Send the result. We do them separately because:
+        # 1. each analyzer might have differently organized output
+        # 2. the size of a result can be large
+        analyzer.save_result(result, outdir, monitor)
 
 
 def analyze(parser, args, **kwargs):

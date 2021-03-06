@@ -22,6 +22,7 @@ import spack.hash_types as ht
 import spack.main
 import spack.store
 import spack.util.spack_json as sjson
+import spack.util.spack_yaml as syaml
 import llnl.util.tty as tty
 from copy import deepcopy
 
@@ -307,18 +308,26 @@ class SpackMonitorClient:
         identify the build, and we will add objects (the binaries produced) to
         it. We return the build id to the calling client.
         """
-        full_hash = spec.full_hash()
-        return self.get_build_id(full_hash, return_response=True)
+        return self.get_build_id(spec, return_response=True)
 
-    def get_build_id(self, full_hash, return_response=False):
+    def get_build_id(self, spec, return_response=False, spec_exists=True):
         """Retrieve a build id, either in the local cache, or query the server
         """
+        full_hash = spec.full_hash()
         if full_hash in self.build_ids:
             return self.build_ids[full_hash]
 
         # Prepare build environment data (including spack version)
         data = self.build_environment.copy()
         data['full_hash'] = full_hash
+
+        # If we allow the spec to not exist (meaning we create it) we need to
+        # include the full spec.yaml here
+        if not spec_exists:
+            meta_dir = os.path.dirname(spec.package.install_log_path)
+            spec_file = os.path.join(meta_dir, "spec.yaml")
+            data['spec'] = syaml.load(read_file(spec_file))
+
         response = self.do_request("builds/new/", data=sjson.dump(data))
 
         # Add the build id to the lookup
@@ -337,8 +346,7 @@ class SpackMonitorClient:
         other statuses. This endpoint can take a general status to update just
         one
         """
-        full_hash = spec.full_hash()
-        data = {"build_id": self.get_build_id(full_hash), "status": status}
+        data = {"build_id": self.get_build_id(spec), "status": status}
         return self.do_request("builds/update/", data=sjson.dump(data))
 
     def fail_task(self, spec):
@@ -357,7 +365,8 @@ class SpackMonitorClient:
         {"analyzer-name": {"object-file-path": {"feature1": "value1"}}}
         """
         # Prepare build environment data (including spack version)
-        data = {"build_id": self.get_build_id(pkg.spec.full_hash()),
+        # Since the build might not have been generated, we include the spec
+        data = {"build_id": self.get_build_id(pkg.spec, spec_exists=False),
                 "metadata": metadata}
         return self.do_request("analyze/builds/", data=sjson.dump(data))
 
@@ -366,7 +375,7 @@ class SpackMonitorClient:
         to alert of the status of the stage. This includes parsing the package
         metadata folder for phase output and error files
         """
-        data = {"build_id": self.get_build_id(pkg.spec.full_hash())}
+        data = {"build_id": self.get_build_id(pkg.spec)}
 
         # Send output specific to the phase (does this include error?)
         data.update({"status": status,

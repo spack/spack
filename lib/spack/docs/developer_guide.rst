@@ -251,6 +251,22 @@ Unit tests
   This is a fake package hierarchy used to mock up packages for
   Spack's test suite.
 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Analysis and Monitoring Modules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:mod:`spack.monitor`
+  Contains :class:`SpackMonitor <spack.monitor.SpackMonitor>`. This is accessed
+  from the ``spack install`` and ``spack analyze`` commands to send build
+  and package metadada up to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server. 
+
+
+:mod:`spack.analyzers`
+  A module folder with a :class:`AnalyzerBase <spack.analyzers.AnalyzerBase>`
+  that provides base functions to run, save, and (optionally) upload analysis
+  results to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server.
+
+
 ^^^^^^^^^^^^^
 Other Modules
 ^^^^^^^^^^^^^
@@ -298,6 +314,195 @@ Conceptually, packages are overloaded.  They contain:
 -------------
 Stage objects
 -------------
+
+
+.. _writing-analyzers:
+
+-----------------
+Writing analyzers
+-----------------
+
+To write an analyzer, you can either include it in one of the files in the
+analyzers module folder (e.g., if it's associated with an application
+binary interface, ABI, you might add it to ``abi.py``) or you can add a new file.
+Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.AnalyzerBase>`,
+and you can look at other analyzers in that folder for examples. The guide
+here will tell you about the basic functions needed.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+Analyzer Output Directory
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+By default, when you run ``spack analyze`` an analyzer output folder will
+be created in the spec's package directory for results:
+
+.. code-block:: console
+
+    .spack/
+      analyzers
+      
+Result files will be written here, typically as json, so they could be uploaded
+in a future interaction with a monitor.
+
+^^^^^^^^^^^^^^^^^
+Analyzer Metadata
+^^^^^^^^^^^^^^^^^
+
+Your analyzer is required to have the class attributes ``name``, ``outfile``,
+and ``description``. These are printed to the user with they ask for
+``spack analyze --list-analyzers``.  Here is an example:
+
+
+.. code-block:: python
+
+    class LibabigailAnalyzer(AnalyzerBase):
+
+        name = "libabigail"
+        outfile = "spack-analyzer-libabigail.json"
+        description = "Application Binary Interface (ABI) features for objects"
+
+
+This means that the name and output file should be unique for your analyzer.
+This is enforced for the next step, where you have to add your analyzer in 
+the lookup in ``spack/analyzers/__init__.py`` to each of ``__all__`` and
+``analyzer_types``:
+
+.. code-block:: python
+
+    __all__ = [
+        'LibabigailAnalyzer',
+        'InstallFilesAnalyzer',
+        'EnvironmentVariablesAnalyzer',
+        'ConfigArgsAnalyzer'
+    ]
+
+    # "all" cannot be an analyzer type
+    analyzer_types = {
+
+        # Build analyzers are generally just uploading metadata that exists
+        'install_files': InstallFilesAnalyzer,
+        'environment_variables': EnvironmentVariablesAnalyzer,
+        'config_args': ConfigArgsAnalyzer,
+
+        # Abi Analyzers need to generate features for objects
+        'abigail': LibabigailAnalyzer,
+    }
+
+Note that "all" cannot be an analyzer type, as this key is used to indicate
+that the user wants to run all analyzers.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+An analyzer run Function
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The core of an analyzer is it's ``run()`` function, which should accept no
+arguments. You can assume your analyzer has the package spec of interest at ``self.spec``
+and it's up to the run function to generate whatever analysis data you need,
+and then return the object with a key as the analyzer name. The result data
+should be a list of objects, each with a name, ``analyzer_name``, ``install_file``,
+and one of ``value`` or ``binary_value``. The install file should be for a relative
+path, and not the absolute path. For example, let's say we extract a metric called
+``metric`` for ``bin/wget`` using our analyzer ``thebest-analyzer``. 
+We might have data that looks like this:
+
+.. code-block:: python
+
+    result = {"name": "metric", "analyzer_name": "thebest-analyzer", "value": "1", "install_file": "bin/wget"}
+
+
+We'd then return it as follows - note that they key is the analyzer name at ``self.name``.
+
+.. code-block:: python
+
+    return {self.name: result}
+
+This will save the complete result to the analyzer metadata folder, as described
+previously. If you want support for adding a different kind of metadata (e.g.,
+not associated with an install file) then the monitor server would need to be updated
+to support this first. For the analyzers in ``build.py`` that support ``config_args``,
+``install_files``, and ``environment``, these are parsed differently to create matching
+objects in the database or otherwise update the build.
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^
+An analyzer init Function
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you don't need any extra dependencies or checks, you can skip defining an analyzer
+init function, as the base class will handle it. Typically, it will accept
+a spec, and an optional output directory (if the user does not want the default
+metadata folder for analyzer results). The analyzer init function should call
+it's parent init, and then do any extra checks or validation that are required to
+work. For example:
+
+.. code-block:: python
+
+    def __init__(self, spec, dirname=None):
+        super().__init__(spec, dirname)
+
+        # install extra dependencies, do extra preparation and checks here
+
+At the end of the init, you will have available to you:
+
+ - **self.spec**: the spec object
+ - **self.dirname**: an optional directory name the user as provided at init to save
+ - **self.meta_dir**: the analyzer metadata directory, where we save by default
+
+
+^^^^^^^^^^^^^^^^^^^^^^^
+Saving Analyzer Results
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The analyzer will have ``save_result`` called, with the result object generated,
+to save it to the filesystem, and if the user has added the ``--monitor`` flag,
+to upload it to a monitor server. If your result follows an accepted result
+format and you don't need to parse it further, you don't need to add this 
+function to your class. However, if your result data is large or otherwise
+needs additional parsing, you can define it. As an example, the Libabigail
+analyzer saves *.xml files to the analyzer metadata folder in ``run()``,
+as they are either binaries, or as xml (text) would usually be too big to pass in one request.
+For this reason, the files are saved during ``run()`` and the filenames added
+to the result object, and then when the result object is passed back into
+``save_result()``, we skip saving to the filesystem, and instead read the file
+and send each one (separately) to the monitor:
+
+
+.. code-block:: python
+
+    def save_result(self, result, outdir=None, monitor=None):
+        """Abi results are saved to individual files, so each one needs to be
+        read and uploaded. Result here should be the lookup generated in run(),
+        the key is the analyzer name, and each value is the result file.
+        We currently upload the entire xml as text because libabigail can't
+        easily read gzipped xml, but this will be updated when it can.
+        """
+        if not monitor:
+            return
+
+        name = self.spec.package.name
+
+        # We've already saved the results to file during run
+        for obj, filename in result.get(self.name, {}).items():
+
+            # Don't include the prefix            
+
+            rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
+            content = spack.monitor.read_file(filename)
+
+            # A result needs an analyzer, value or binary_value, and name
+            data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
+            tty.info("Sending result for %s %s to monitor." % (name, rel_path))
+            monitor.send_analyze_metadata(self.spec.package, {"libabigail": [data]})
+
+
+Notice that this function, if you define it, requires a result object (generated by
+``run()``, an output directory (if needed), and a monitor (if you want to send).
+Also notice that since we already saved these files to the analyzer metadata folder,
+we return early if a monitor isn't defined, because this function serves to send 
+results to the monitor. If you haven't saved anything to the analyzer metadata folder
+yet, you might want to do that here.
+
 
 .. _writing-commands:
 

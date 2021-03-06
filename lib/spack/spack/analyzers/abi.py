@@ -5,6 +5,7 @@
 
 
 import spack
+import spack.bootstrap
 import spack.binary_distribution
 import spack.package
 import spack.repo
@@ -21,18 +22,16 @@ class LibabigailAnalyzer(AnalyzerBase):
     name = "libabigail"
     outfile = "spack-analyzer-libabigail.json"
     description = "Application Binary Interface (ABI) features for objects"
-    saves_internally = True
 
-    def __init__(self, spec, monitor=None, dirname=None):
+    def __init__(self, spec, dirname=None):
         """init for an analyzer is where we want to ensure that we have all
         needed dependencies. For the abigail analyzer, this means Libabigail.
         Since the output for libabigail is one file per object, we communicate
         with the monitor multiple times.
         """
-        super().__init__(spec, monitor, dirname)
+        super().__init__(spec, dirname)
 
         # This doesn't seem to work to import on the module level
-        import spack.bootstrap
         tty.debug("Preparing to use Libabigail, will install if missing.")
 
         with spack.bootstrap.ensure_bootstrap_configuration():
@@ -44,9 +43,13 @@ class LibabigailAnalyzer(AnalyzerBase):
                 "abidw", spec=spec, install=True)
 
     def run(self):
-        """Given a directory name, return the json file to save the result to
+        """Run libabigail, and save results to filename. This run function differs
+        in that we write as we generate and then return a lookup of files.
         """
         manifest = spack.binary_distribution.get_buildfile_manifest(self.spec)
+
+        # This result will store a path to each file
+        result = {}
 
         # Generate an output file for each binary or object
         for obj in manifest.get("binary_to_relocate_fullpath", []):
@@ -54,7 +57,32 @@ class LibabigailAnalyzer(AnalyzerBase):
             outfile = "spack-analyzer-libabigail-%s.xml" % os.path.basename(obj)
             outfile = self.get_outfile(self.dirname, outfile=outfile)
             self.abidw(obj, "--out-file", outfile)
-            # TODO need to send to monitor here
+            result[obj] = outfile
 
         # not written yet
-        return {self.name: {}}
+        return {self.name: result}
+
+    def save_result(self, result, outdir=None, monitor=None):
+        """Abi results are saved to individual files, so each one needs to be
+        read and uploaded. Result here should be the lookup generated in run(),
+        the key is the analyzer name, and each value is the result file.
+        We currently upload the entire xml as text because libabigail can't
+        easily read gzipped xml, but this will be updated when it can.
+        """
+        if not monitor:
+            return
+
+        name = self.spec.package.name
+
+        # We've already saved the results to file during run
+        for obj, filename in result.get(self.name, {}).items():
+
+            # Don't include the prefix
+
+            rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
+            content = spack.monitor.read_file(filename)
+
+            # A result needs an analyzer, value or binary_value, and name
+            data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
+            tty.info("Sending result for %s %s to monitor." % (name, rel_path))
+            monitor.send_analyze_metadata(self.spec.package, {"libabigail": [data]})

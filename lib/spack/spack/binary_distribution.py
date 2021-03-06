@@ -553,14 +553,12 @@ def read_buildinfo_file(prefix):
 
 def get_buildfile_manifest(spec):
     """
-    Return a data structure with information about a build, including:
-      text_to_relocate
-      binary_to_relocate
-      binary_to_fullpath
-      link_to_relocate
-      other: doesn't fit any of previous checks (and should not be relocated)
-    We blacklist docs (man) and metadata (.spack). This can be used to find a
-    particular kind of file in spack, or to generate the build metadata.
+    Return a data structure with information about a build, including
+    text_to_relocate, binary_to_relocate, binary_to_relocate_fullpath
+    link_to_relocate, and other, which means it doesn't fit any of previous
+    checks (and should not be relocated). We blacklist docs (man) and
+    metadata (.spack). This can be used to find a particular kind of file
+    in spack, or to generate the build metadata.
     """
     data = {"text_to_relocate": [], "binary_to_relocate": [],
             "link_to_relocate": [], "other": [],
