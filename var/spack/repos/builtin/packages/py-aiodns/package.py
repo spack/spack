@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
+
 
 class PyAiodns(PythonPackage):
     """Simple DNS resolver for asyncio.It provides a simple way for
