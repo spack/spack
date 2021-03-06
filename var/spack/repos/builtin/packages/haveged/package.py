@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+
 class Haveged(AutotoolsPackage):
     """A Linux entropy source using the HAVEGE algorithm."""
 
