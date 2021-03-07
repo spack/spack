@@ -1548,7 +1548,7 @@ _spack_test_run() {
 }
 
 _spack_test_list() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help -a --all"
 }
 
 _spack_test_find() {
