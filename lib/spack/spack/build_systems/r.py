@@ -84,6 +84,7 @@ class RPackage(PackageBase):
         config_vars = self.configure_vars()
 
         args = [
+            '--vanilla',
             'CMD',
             'INSTALL'
         ]
