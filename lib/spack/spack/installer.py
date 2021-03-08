@@ -31,12 +31,13 @@ import copy
 import glob
 import heapq
 import itertools
+import io
 import os
 import shutil
 import six
 import sys
 import time
-
+import tempfile
 from collections import defaultdict
 
 import llnl.util.filesystem as fs
@@ -52,7 +53,7 @@ import spack.repo
 import spack.store
 
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output
+from llnl.util.tty.log import log_output, logwin32_output
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
@@ -1695,29 +1696,54 @@ def build_process(pkg, kwargs):
 
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path
-#                with log_output(pkg.log_path, echo, True,
-#                                env=unmodified_env) as logger:
+                if sys.platform == 'win32':
+                    with logwin32_output(pkg.log_path, echo, True,
+                                    env=unmodified_env) as logger:
+
+                        # Debug this child process from here
+                        # ForkablePdb(logger._saved_stdout,
+                        #             logger._saved_stderr).set_trace()
+
+                       for phase_name, phase_attr in zip(
+                                pkg.phases, pkg._InstallPhase_phases):
+
+                            #with logger.force_echo():
+                            #    inner_debug_level = tty.debug_level()
+                            #    tty.set_debug(debug_level)
+                            #    tty.msg("{0} Executing phase: '{1}'"
+                            #            .format(pre, phase_name))
+                            #    tty.set_debug(inner_debug_level)
+
+                            # Redirect stdout and stderr to daemon pipe
+                            phase = getattr(pkg, phase_attr)
+                            phase(pkg.spec, pkg.prefix)
+
+                       #echo = logger.echo
+                       log(pkg)
+                else:
+                    with log_output(pkg.log_path, echo, True,
+                                env=unmodified_env) as logger:
 
                     # Debug this child process from here
                     # ForkablePdb(logger._saved_stdout,
                     #             logger._saved_stderr).set_trace()
 
-                for phase_name, phase_attr in zip(
-                        pkg.phases, pkg._InstallPhase_phases):
+                        for phase_name, phase_attr in zip(
+                                pkg.phases, pkg._InstallPhase_phases):
 
-                        # with logger.force_echo():
-                        #     inner_debug_level = tty.debug_level()
-                        #     tty.set_debug(debug_level)
-                        #     tty.msg("{0} Executing phase: '{1}'"
-                        #             .format(pre, phase_name))
-                        #     tty.set_debug(inner_debug_level)
+                            with logger.force_echo():
+                                inner_debug_level = tty.debug_level()
+                                tty.set_debug(debug_level)
+                                tty.msg("{0} Executing phase: '{1}'"
+                                        .format(pre, phase_name))
+                                tty.set_debug(inner_debug_level)
 
-                        # Redirect stdout and stderr to daemon pipe
-                    phase = getattr(pkg, phase_attr)
-                    phase(pkg.spec, pkg.prefix)
+                            # Redirect stdout and stderr to daemon pipe
+                            phase = getattr(pkg, phase_attr)
+                            phase(pkg.spec, pkg.prefix)
 
-#            echo = logger.echo
-            log(pkg)
+                        echo = logger.echo
+                        log(pkg)
 
         # Run post install hooks before build stage is removed.
         spack.hooks.post_install(pkg.spec)
