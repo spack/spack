@@ -12,6 +12,7 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy"
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
+    version('2.1.0', tag='bluepy-v2.1.0')
     version('2.0.0', tag='bluepy-v2.0.0')
     version('0.16.0', tag='bluepy-v0.16.0')
     version('0.14.15', tag='bluepy-v0.14.15')
@@ -62,7 +63,13 @@ class PyBluepy(PythonPackage):
     depends_on('py-libsonata@0.1.6:', type='run', when='^python@3.6:')
     depends_on('py-libsonata@0.1.3:0.1.4', type='run', when='^python@:3.5.99')
 
-    depends_on('brion+python@3.1.0:', type='run')
+    # brion changed package name in 3.3.0 and brion bump in bluepy==2.1.0
+    depends_on('brion+python@3.1.0:3.2.0', type='run', when='@:2.0.9')
+    depends_on('brion+python@3.3.0:', type='run', when='@2.1.0:')
+
+    # TODO: explicit dependency with hdf5 to avoid limitation of concretizer
+    depends_on('hdf5~mpi')
+
     depends_on('py-bluepy-configfile@0.1.11:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-pylru@1.2:', type='run')
