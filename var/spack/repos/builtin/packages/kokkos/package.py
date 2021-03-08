@@ -16,7 +16,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     test_requires_compiler = True
 
-    maintainers = ['jciesko']
+    maintainers = ['jjwilke']
 
     version('master',  branch='master')
     version('develop', branch='develop')
