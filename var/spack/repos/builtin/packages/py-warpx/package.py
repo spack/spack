@@ -36,9 +36,11 @@ class PyWarpx(PythonPackage):
     depends_on('py-wheel', type='build')
     depends_on('warpx +lib ~mpi +shared', type=('build', 'link'), when='~mpi')
     depends_on('warpx +lib +mpi +shared', type=('build', 'link'), when='+mpi')
+    depends_on('cmake@3.15.0:', type='build')
 
-    def setup_build_environment(self, env):
-        if find(self.spec['warpx'].prefix.lib64, 'libwarpx.3d.so'):
-            env.set('PYWARPX_LIB_DIR', self.spec['warpx'].prefix.lib64)
-        else:
-            env.set('PYWARPX_LIB_DIR', self.spec['warpx'].prefix.lib)
+    @property
+    def libs(self):
+        shared = '+shared' in self.spec
+        return find_libraries(
+            ['libwarpx.3d'], root=self.prefix, recursive=True, shared=shared
+        )
