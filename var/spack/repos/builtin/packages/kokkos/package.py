@@ -326,6 +326,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         cmake_path = join_path(self.install_test_root,
                                self.test_script_relative_path, 'out')
         if not os.path.exists(cmake_path):
+            print('Skipping smoke tests: {0} is missing'.format(cmake_path))
             return
         self.build_tests()
         self.run_tests()
