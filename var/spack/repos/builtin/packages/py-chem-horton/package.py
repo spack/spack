@@ -25,7 +25,7 @@ class PyChemHorton(PythonPackage):
     # adds "args += ['--single-version-externally-managed', '--root=/']"
     # This conflicts with the present setuptools version (required by python2).
     # So, it's hacked to run-dep here.
-    # depends_on('py-setuptools@:44.1.0',   type='run')
+    depends_on('py-setuptools@:44.1.0',   type='run')
     # depends_on('py-nose@1.1.2:',        type=('test'))
     depends_on('py-numpy@1.9.1:1.16', type=('build', 'run'))
     depends_on('py-scipy@0.11.0:1.2.3', type=('build', 'run'))
