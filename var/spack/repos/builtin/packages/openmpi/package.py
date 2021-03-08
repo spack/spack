@@ -264,8 +264,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
     depends_on('m4',       type='build', when='@develop')
-    depends_on('perl',     type='build', when='@develop')
 
+    depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
     depends_on('libevent@2.0:', when='@4:')

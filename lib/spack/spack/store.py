@@ -196,6 +196,16 @@ def _store():
     config_dict = spack.config.get('config')
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get('config:install_hash_length')
+
+    # Check that the user is not trying to install software into the store
+    # reserved by Spack to bootstrap its own dependencies, since this would
+    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
+    # user installed software)
+    if spack.paths.user_bootstrap_store == root:
+        msg = ('please change the install tree root "{0}" in your '
+               'configuration [path reserved for Spack internal use]')
+        raise ValueError(msg.format(root))
+
     return Store(root=root,
                  unpadded_root=unpadded_root,
                  projections=projections,

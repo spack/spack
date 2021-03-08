@@ -76,6 +76,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
     version('1.0.1e', sha256='f74f15e8c8ff11aa3d5bb5f276d202ec18d7246e95f961db76054199c69c1ae3', deprecated=True)
 
     variant('systemcerts', default=True, description='Use system certificates')
+    variant('docs', default=False, description='Install docs and manpages')
 
     depends_on('zlib')
 
@@ -137,8 +138,10 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.run_tests:
             make('test', parallel=False)  # 'VERBOSE=1'
 
+        install_tgt = 'install' if self.spec.satisfies('+docs') else 'install_sw'
+
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        make('install', parallel=False)
+        make(install_tgt, parallel=False)
 
     @run_after('install')
     def link_system_certs(self):
@@ -156,6 +159,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
         pkg_dir = join_path(self.prefix, 'etc', 'openssl')
 
+        mkdirp(pkg_dir)
+
         for directory in system_dirs:
             sys_cert = join_path(directory, 'cert.pem')
             pkg_cert = join_path(pkg_dir, 'cert.pem')
@@ -170,7 +175,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             # We symlink the whole directory instead of all files because
             # the directory contents might change without Spack noticing.
             if os.path.isdir(sys_certs) and not os.path.islink(pkg_certs):
-                os.rmdir(pkg_certs)
+                if os.path.isdir(pkg_certs):
+                    os.rmdir(pkg_certs)
                 os.symlink(sys_certs, pkg_certs)
 
     def patch(self):
