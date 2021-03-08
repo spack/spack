@@ -12,10 +12,13 @@ import errno
 import multiprocessing
 import os
 import re
+import io
 import select
 import sys
+import ctypes
 import traceback
 import signal
+import tempfile
 from contextlib import contextmanager
 from six import string_types
 from six import StringIO
@@ -662,6 +665,80 @@ class log_output(object):
         finally:
             sys.stdout.write(xoff)
             sys.stdout.flush()
+
+
+class logwin32_output:
+    def __init__(self, file_like=None, echo=False, debug=0, buffer=False, env=None):
+        self.file_like = file_like
+        self.echo = echo
+        self.debug = debug
+        self.buffer = buffer
+        self.env = env 
+        self._active = False  # used to prevent re-entry
+        # this part needed for libc.fflush and that is needed to capture libc output
+        if sys.version_info < (3, 5):
+            self.libc = ctypes.CDLL(ctypes.util.find_library('c'))
+        else:
+            if hasattr(sys, 'gettotalrefcount'): # debug build
+                self.libc = ctypes.CDLL('ucrtbased')
+            else:
+                self.libc = ctypes.CDLL('api-ms-win-crt-stdio-l1-1-0')
+
+    def __enter__(self):
+        if self._active:
+            raise RuntimeError("Can't re-enter the same log_output!")
+        if self.file_like is None:
+            raise RuntimeError(
+                "file argument must be set by either __init__ or __call__")
+        self.original_stdout_fd = sys.stdout.fileno()
+        self.original_stderr_fd = sys.stderr.fileno()
+
+        # Save a copy of the original stdout fd in saved_stdout_fd
+        self.saved_stdout_fd = os.dup(self.original_stdout_fd)
+        self.saved_stderr_fd = os.dup(self.original_stderr_fd)
+        # Create a temporary file and redirect stdout to it
+        self.tfile = tempfile.TemporaryFile(mode='w+b')
+        self.tfile2 = tempfile.TemporaryFile(mode='w+b')
+        self._redirect_stdout(self.tfile.fileno())
+        self._redirect_stderr(self.tfile2.fileno())
+        self.active = True
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._redirect_stdout(self.saved_stdout_fd)
+        self._redirect_stderr(self.saved_stderr_fd)
+        # Copy contents of temporary file to the given stream
+        self.log_file = open(self.file_like,"wb+")
+        self.tfile.flush()
+        self.tfile.seek(0, io.SEEK_SET)
+        self.log_file.write(self.tfile.read())
+        self.tfile2.flush()
+        self.tfile2.seek(0, io.SEEK_SET)
+        self.log_file.write(self.tfile2.read())
+        self.log_file.close()
+        with open(self.file_like, 'r') as fin:
+                print(fin.read())
+        
+        self.tfile.close()
+        os.close(self.saved_stdout_fd)
+     
+        # return this log_output object so that the user can do things
+        # like temporarily echo some ouptut.
+        self._active = False  # safe to enter again
+        return self
+
+    def _redirect_stdout(self, to_fd):
+        self.libc.fflush(None) 
+        sys.stdout.close()
+        os.dup2(to_fd, self.original_stdout_fd)
+        sys.stdout = io.TextIOWrapper(os.fdopen(self.original_stdout_fd, 'wb'))
+
+    def _redirect_stderr(self, to_fd):
+        self.libc.fflush(None) 
+        sys.stderr.close()
+        os.dup2(to_fd, self.original_stderr_fd)
+        sys.stderr = io.TextIOWrapper(os.fdopen(self.original_stderr_fd, 'wb'))
+
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
