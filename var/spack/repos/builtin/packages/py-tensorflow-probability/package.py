@@ -24,7 +24,6 @@ class PyTensorflowProbability(Package):
             url='https://github.com/tensorflow/probability/archive/0.8.0.tar.gz')
 
     extends('python')
-
     depends_on('py-setuptools', type='build')
 
     depends_on('py-six@1.10.0:', type=('build', 'run'))
@@ -76,6 +75,10 @@ class PyTensorflowProbability(Package):
 
         bazel(*args)
 
-        setup_py('install', '--prefix={0}'.format(prefix),
-                 '--single-version-externally-managed', '--root=/')
+        with working_dir(join_path('bazel-bin',
+                                   'pip_pkg.runfiles',
+                                   'tensorflow_probability')):
+            setup_py('install', '--prefix={0}'.format(prefix),
+                     '--single-version-externally-managed', '--root=/')
+
         remove_linked_tree(self.tmp_path)
