@@ -33,27 +33,27 @@ class PyDmTree(PythonPackage):
         env['HOME'] = self.tmp_path
         args = [
             # Don't allow user or system .bazelrc to override build settings
-            """'--nohome_rc',\n""",
-            """'--nosystem_rc',\n""",
+            "'--nohome_rc',\n",
+            "'--nosystem_rc',\n",
             # Bazel does not work properly on NFS, switch to /tmp
-            """'--output_user_root={0}',\n""".format(self.tmp_path),
-            """'build',\n""",
+            "'--output_user_root={0}',\n".format(self.tmp_path),
+            "'build',\n",
             # Spack logs don't handle colored output well
-            """'--color=no',\n""",
-            """'--jobs={0}',\n""".format(make_jobs),
+            "'--color=no',\n",
+            "'--jobs={0}',\n".format(make_jobs),
             # Enable verbose output for failures
-            """'--verbose_failures',\n""",
+            "'--verbose_failures',\n",
             # Show (formatted) subcommands being executed
-            """'--subcommands=pretty_print',\n""",
-            """'--spawn_strategy=local',\n""",
+            "'--subcommands=pretty_print',\n",
+            "'--spawn_strategy=local',\n",
             # Ask bazel to explain what it's up to
             # Needs a filename as argument
-            """'--explain=explainlogfile.txt',\n""",
+            "'--explain=explainlogfile.txt',\n",
             # Increase verbosity of explanation,
-            """'--verbose_explanations',\n""",
+            "'--verbose_explanations',\n",
             # bazel uses system PYTHONPATH instead of spack paths
-            """'--action_env', 'PYTHONPATH={0}',\n""".format(env['PYTHONPATH']),
+            "'--action_env', 'PYTHONPATH={0}',\n".format(env['PYTHONPATH']),
         ]
-        filter_file("""'build',""",
-                    " ".join(args),
-                    "setup.py")
+        filter_file("'build',",
+                    ' '.join(args),
+                    'setup.py')

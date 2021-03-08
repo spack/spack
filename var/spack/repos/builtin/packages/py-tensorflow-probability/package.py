@@ -25,6 +25,8 @@ class PyTensorflowProbability(Package):
 
     extends('python')
 
+    depends_on('py-setuptools', type='build')
+
     depends_on('py-six@1.10.0:', type=('build', 'run'))
     depends_on('py-numpy@1.13.3:', type=('build', 'run'))
     depends_on('py-decorator', type=('build', 'run'))
