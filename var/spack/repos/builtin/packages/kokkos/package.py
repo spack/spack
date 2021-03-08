@@ -66,6 +66,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                'Whether HPX supports asynchronous dispath'],
         'profiling': [True,
                       'Create bindings for profiling tools'],
+        'tuning': [False,
+                   'Create bindings for tuning tools'],
         'profiling_load_print': [False,
                                  'Print which profiling tools got loaded'],
         'qthread': [False, 'Eenable the QTHREAD library'],
