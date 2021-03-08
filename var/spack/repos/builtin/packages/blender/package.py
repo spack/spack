@@ -89,7 +89,8 @@ class Blender(CMakePackage):
     depends_on('opensubdiv+openmp', when='+opensubdiv')
     depends_on('opensubdiv@3.4.3:', when='@2.92.0:+opensubdiv')
     
-    depends_on('cuda@10.1.0:10.1.999', when='+cycles', type=('link','run'))
+    #depends_on('cuda@10.1.0:10.1.999', when='+cycles', type=('link','run'))
+    depends_on('cuda@11.0:', when='@2.92.0:+cycles', type=('link','run'))
     # FIXME: The version of GCC should probably be the version of GCC that is actually
     # compiling blender, not hardcoding the version that the package creater is using. 
 #     depends_on('gcc@7.4.0', when='+cycles', type=('run'))
