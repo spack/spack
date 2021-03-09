@@ -53,12 +53,13 @@ def check_spec(abstract, concrete):
 
 
 def check_concretize(abstract_spec):
-    abstract = Spec(abstract_spec)
-    concrete = abstract.concretized()
-    assert not abstract.concrete
-    assert concrete.concrete
-    check_spec(abstract, concrete)
-    return concrete
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        abstract = Spec(abstract_spec)
+        concrete = abstract.concretized()
+        assert not abstract.concrete
+        assert concrete.concrete
+        check_spec(abstract, concrete)
+        return concrete
 
 
 @pytest.fixture(
@@ -1096,6 +1097,8 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
+    @pytest.mark.skipif(sys.platform == "win32",
+                        reason='Not supported on Windows (yet)')
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
         {'add_variant': True, 'delete_variant': False},
