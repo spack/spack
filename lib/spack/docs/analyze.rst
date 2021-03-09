@@ -62,7 +62,7 @@ an analysis for. The package must be installed. Let's walk through an example
 with zlib. We first ask to analyze it. However, since we have more than one
 install, we are asked to disambiguate:
 
-.. code-block:: consle
+.. code-block:: console
 
     $ spack analyze zlib
     ==> Error: zlib matches multiple packages.
