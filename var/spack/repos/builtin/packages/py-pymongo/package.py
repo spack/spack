@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,8 +15,7 @@ class PyPymongo(PythonPackage):
 
     PyMongo supports MongoDB 2.6, 3.0, 3.2, 3.4, 3.6, 4.0 and 4.2."""
 
-    homepage = "https://pypi.org/project/pymongo/"
-    url      = "https://pypi.io/packages/source/p/pymongo/pymongo-3.9.0.tar.gz"
+    pypi = "pymongo/pymongo-3.9.0.tar.gz"
 
     version('3.9.0', sha256='4249c6ba45587b959292a727532826c5032d59171f923f7f823788f413c2a5a3')
     version('3.6.0', sha256='c6de26d1e171cdc449745b82f1addbc873d105b8e7335097da991c0fc664a4a8')

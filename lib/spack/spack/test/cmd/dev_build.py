@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -89,7 +89,7 @@ def test_dev_build_until_last_phase(tmpdir, mock_packages, install_mockery):
     assert os.path.exists(str(tmpdir))
 
 
-def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
+def test_dev_build_before_until(tmpdir, mock_packages, install_mockery, capsys):
     spec = spack.spec.Spec('dev-build-test-install@0.0.0 dev_path=%s' % tmpdir)
     spec.concretize()
 
@@ -103,13 +103,18 @@ def test_dev_build_before_until(tmpdir, mock_packages, install_mockery):
 
         bad_phase = 'phase_that_does_not_exist'
         not_allowed = 'is not a valid phase'
-        out = dev_build('-u', bad_phase, 'dev-build-test-install@0.0.0')
+        not_installed = 'was not installed'
+        out = dev_build('-u', bad_phase, 'dev-build-test-install@0.0.0',
+                        fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
+        assert not_installed in out
 
-        out = dev_build('-b', bad_phase, 'dev-build-test-install@0.0.0')
+        out = dev_build('-b', bad_phase, 'dev-build-test-install@0.0.0',
+                        fail_on_error=False)
         assert bad_phase in out
         assert not_allowed in out
+        assert not_installed in out
 
 
 def print_spack_cc(*args):

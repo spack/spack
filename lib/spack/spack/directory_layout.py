@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,6 +7,7 @@ import os
 import shutil
 import glob
 import tempfile
+import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
@@ -14,6 +15,7 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
 from spack.error import SpackError
 
@@ -119,9 +121,17 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
-                    return
-                os.rmdir(path)
+                try:
+                    os.rmdir(path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # already deleted, continue with parent
+                        pass
+                    elif e.errno == errno.ENOTEMPTY:
+                        # directory wasn't empty, done
+                        return
+                    else:
+                        raise e
             path = os.path.dirname(path)
 
 
@@ -233,7 +243,9 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
+            spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
@@ -335,7 +347,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         #
         # TODO: remove this when we do better concretization and don't
         # ignore build-only deps in hashes.
-        elif installed_spec == spec.copy(deps=('link', 'run')):
+        elif (installed_spec.copy(deps=('link', 'run')) ==
+              spec.copy(deps=('link', 'run'))):
+            # The directory layout prefix is based on the dag hash, so among
+            # specs with differing full-hash but matching dag-hash, only one
+            # may be installed. This means for example that for two instances
+            # that differ only in CMake version used to build, only one will
+            # be installed.
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ class PyNltk(PythonPackage):
     natural language processing."""
 
     homepage = "https://www.nltk.org/"
-    url      = "https://pypi.io/packages/source/n/nltk/nltk-3.5.zip"
+    pypi = "nltk/nltk-3.5.zip"
 
     version('3.5', sha256='845365449cd8c5f9731f7cb9f8bd6fd0767553b9d53af9eb1b3abf7700936b35')
 

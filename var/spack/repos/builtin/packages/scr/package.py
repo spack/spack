@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,6 +50,8 @@ class Scr(CMakePackage):
 
     variant('libyogrt', default=True,
             description="Build SCR with libyogrt for get_time_remaining.")
+    depends_on('libyogrt scheduler=slurm', when="+libyogrt resource_manager=SLURM")
+    depends_on('libyogrt scheduler=lsf', when="+libyogrt resource_manager=LSF")
     depends_on('libyogrt', when="+libyogrt")
 
     # MySQL not yet in spack

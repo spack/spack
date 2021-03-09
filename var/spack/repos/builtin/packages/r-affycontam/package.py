@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffycontam(RPackage):
-    """structured corruption of affymetrix cel file data.
+    """structured corruption of affymetrix cel file data
 
        structured corruption of cel file data to demonstrate QA
        effectiveness"""
@@ -15,6 +15,7 @@ class RAffycontam(RPackage):
     homepage = "https://bioconductor.org/packages/affyContam"
     git      = "https://git.bioconductor.org/packages/affyContam.git"
 
+    version('1.48.0', commit='88387a2ad4be4234d36710c65f2ca3a5b06b67da')
     version('1.42.0', commit='8a5e94a5ae8c2ecfafa6177b84a6e8ab07e14fbe')
     version('1.40.0', commit='dfd5fd6ae04941dddbda03f656540b71b2fbc614')
     version('1.38.0', commit='84651e8eade61619afefc83bb290047da101a5bc')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyPyperf(PythonPackage):
     analyze benchmarks.
     """
 
-    homepage = "https://pypi.python.org/pypi/pyperf"
+    homepage = "https://github.com/vstinner/pyperf"
     url = "https://github.com/vstinner/pyperf/archive/1.5.1.tar.gz"
 
     version('1.6.1', sha256='fbe793f6f2e036ab4dcca105b5c5aa34fd331dd881e7a3e158e5e218c63cfc32')

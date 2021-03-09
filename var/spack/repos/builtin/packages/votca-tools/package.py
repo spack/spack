@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,8 @@ class VotcaTools(CMakePackage):
 
     version('master', branch='master')
     version('stable', branch='stable')
+    version('1.6.4', sha256='aa79ef4617a80ba3ca063932d5ee0d5767c0285b4b613abd373ad3c986ab9f4c')
+    version('1.6.3', sha256='b4ba63861f4342070d81309992f76c4cc798dffeab894bff64799881e75b3cc2')
     version('1.6.2', sha256='1b31e0dd7550b80b963e6714d671f3516d68ebc1e75068a5d827a6e8b4f1759a')
     version('1.6.1', sha256='3e8f51d484cb3fdfbeb851aab387807ba4c40aecef8317c90182da68ad282dcc')
     version('1.6', sha256='cfd0fedc80fecd009f743b5df47777508d76bf3ef294a508a9f11fbb42efe9a5')
@@ -38,7 +40,7 @@ class VotcaTools(CMakePackage):
 
     depends_on("cmake@2.8:", type='build')
     depends_on("expat")
-    depends_on("fftw")
+    depends_on("fftw-api@3")
     depends_on("gsl", when="@1.4:1.4.9999")
     depends_on("eigen@3.3:", when="@stable,1.5:")
     depends_on("boost")

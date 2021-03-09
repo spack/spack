@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -133,6 +133,7 @@ class Pythia6(CMakePackage):
     # majority of cases. If your case is different, platform- or
     # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
+    patch('pythia6-root.patch', level=1, when='+root')
 
     def patch(self):
         # Use our provided CMakeLists.txt. The Makefile provided with

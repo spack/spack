@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyAiofiles(PythonPackage):
     handling local disk files in asyncio applications."""
 
     homepage = "https://github.com/Tinche/aiofiles"
-    url      = "https://pypi.io/packages/source/a/aiofiles/aiofiles-0.5.0.tar.gz"
+    pypi = "aiofiles/aiofiles-0.5.0.tar.gz"
 
     version('0.5.0', sha256='98e6bcfd1b50f97db4980e182ddd509b7cc35909e903a8fe50d8849e02d815af')
 

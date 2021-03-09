@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtPolicyinsights(PythonPackage):
     """Microsoft Azure Policy Insights Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-policyinsights/azure-mgmt-policyinsights-0.5.0.zip"
+    pypi = "azure-mgmt-policyinsights/azure-mgmt-policyinsights-0.5.0.zip"
 
     version('0.5.0', sha256='ed229e3845c477e88dde413825d4fba0d38b3a5ffab4e694c7d0da995f3db0f3')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Cgdb(AutotoolsPackage):
     # Required dependency
     depends_on('ncurses')
     depends_on('readline')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('texinfo', type='build')
 
     def configure_args(self):
         spec = self.spec

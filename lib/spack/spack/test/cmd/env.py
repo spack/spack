@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -137,6 +137,19 @@ def test_concretize():
     e.concretize()
     env_specs = e._get_environment_specs()
     assert any(x.name == 'mpileaks' for x in env_specs)
+
+
+def test_env_uninstalled_specs(install_mockery, mock_fetch):
+    e = ev.create('test')
+    e.add('cmake-client')
+    e.concretize()
+    assert any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.install_all()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    e.add('mpileaks')
+    e.concretize()
+    assert not any(s.name == 'cmake-client' for s in e.uninstalled_specs())
+    assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
 
 
 def test_env_install_all(install_mockery, mock_fetch):
@@ -330,7 +343,7 @@ def test_env_status_broken_view(
         # switch to a new repo that doesn't include the installed package
         # test that Spack detects the missing package and warns the user
         new_repo = MockPackageMultiRepo()
-        with spack.repo.swap(new_repo):
+        with spack.repo.use_repositories(new_repo):
             output = env('status')
             assert 'In environment test' in output
             assert 'Environment test includes out of date' in output
@@ -351,7 +364,7 @@ def test_env_activate_broken_view(
     # switch to a new repo that doesn't include the installed package
     # test that Spack detects the missing package and fails gracefully
     new_repo = MockPackageMultiRepo()
-    with spack.repo.swap(new_repo):
+    with spack.repo.use_repositories(new_repo):
         with pytest.raises(SpackCommandError):
             env('activate', '--sh', 'test')
 
@@ -929,7 +942,7 @@ def test_read_old_lock_and_write_new(tmpdir):
     y = mock_repo.add_package('y', [], [])
     mock_repo.add_package('x', [y], [build_only])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x = Spec('x')
         x.concretize()
 
@@ -960,7 +973,7 @@ def test_read_old_lock_creates_backup(tmpdir):
     mock_repo = MockPackageMultiRepo()
     y = mock_repo.add_package('y', [], [])
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y = Spec('y')
         y.concretize()
 
@@ -997,7 +1010,7 @@ def test_indirect_build_dep():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         x_spec = Spec('x')
         x_concretized = x_spec.concretized()
 
@@ -1038,7 +1051,7 @@ def test_store_different_build_deps():
         pass
     setattr(mock_repo, 'dump_provenance', noop)
 
-    with spack.repo.swap(mock_repo):
+    with spack.repo.use_repositories(mock_repo):
         y_spec = Spec('y ^z@3')
         y_concretized = y_spec.concretized()
 
@@ -2160,6 +2173,40 @@ def test_env_write_only_non_default():
         yaml = f.read()
 
     assert yaml == ev.default_manifest_yaml
+
+
+@pytest.mark.regression('20526')
+def test_env_write_only_non_default_nested(tmpdir):
+    # setup an environment file
+    # the environment includes configuration because nested configs proved the
+    # most difficult to avoid writing.
+    filename = 'spack.yaml'
+    filepath = str(tmpdir.join(filename))
+    contents = """\
+env:
+  specs:
+  - matrix:
+    - [mpileaks]
+  packages:
+    mpileaks:
+      compiler: [gcc]
+  view: true
+"""
+
+    # create environment with some structure
+    with open(filepath, 'w') as f:
+        f.write(contents)
+    env('create', 'test', filepath)
+
+    # concretize
+    with ev.read('test') as e:
+        concretize()
+        e.write()
+
+        with open(e.manifest_path, 'r') as f:
+            manifest = f.read()
+
+    assert manifest == contents
 
 
 @pytest.fixture

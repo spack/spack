@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,8 +21,8 @@ class Flecsi(CMakePackage):
     git      = 'https://github.com/laristra/flecsi.git'
 
     version('devel', branch='devel', submodules=False, preferred=False)
-    version('1', branch='1', submodules=False, preferred=True)
-    version('1.4', branch='1.4', submodules=False, preferred=False)
+    version('1', branch='1', submodules=False, preferred=False)
+    version('1.4', branch='1.4', submodules=False, preferred=True)
 
     variant('build_type', default='Release',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
@@ -43,7 +43,7 @@ class Flecsi(CMakePackage):
             description='Enable documentation')
     variant('coverage', default=False,
             description='Enable coverage build')
-    variant('hdf5', default=False,
+    variant('hdf5', default=True,
             description='Enable HDF5 Support')
     variant('caliper', default=False,
             description='Enable Caliper Support')
@@ -56,26 +56,28 @@ class Flecsi(CMakePackage):
     variant('cinch', default=False,
             description='Enable External Cinch')
 
-    depends_on('cmake@3.12:',  type='build')
+    depends_on('cmake@3.12:')
     # Requires cinch > 1.0 due to cinchlog installation issue
     depends_on('cinch@1.01:', type='build', when='+cinch')
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
     depends_on('mpi', when='backend=hpx')
-    depends_on('legion@ctrl-rep+shared+mpi+hdf5 build_type=Debug', when='backend=legion +debug_backend +hdf5')
-    depends_on('legion@ctrl-rep+shared+mpi build_type=Debug', when='backend=legion +debug_backend ~hdf5')
-    depends_on('legion@ctrl-rep+shared+mpi+hdf5 build_type=Release', when='backend=legion ~debug_backend +hdf5')
-    depends_on('legion@ctrl-rep+shared+mpi build_type=Release', when='backend=legion ~debug_backend ~hdf5')
-    depends_on('hpx@1.3.0 cxxstd=14 malloc=system build_type=Debug', when='backend=hpx +debug_backend')
-    depends_on('hpx@1.3.0 cxxstd=14 malloc=system build_type=Release', when='backend=hpx ~debug_backend')
-    depends_on('boost@1.70.0: cxxstd=14 +program_options')
+    depends_on('legion+shared+mpi', when='backend=legion')
+    depends_on('legion+hdf5', when='backend=legion +hdf5')
+    depends_on('legion build_type=Debug', when='backend=legion +debug_backend')
+    depends_on('hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128', when='backend=hpx')
+    depends_on('hpx build_type=Debug', when='backend=hpx +debug_backend')
+    depends_on('boost@1.70.0: cxxstd=17 +program_options')
     depends_on('metis@5.1.0:')
     depends_on('parmetis@4.0.3:')
-    depends_on('hdf5+mpi', when='+hdf5')
-    depends_on('caliper', when='+caliper')
+    depends_on('googletest@1.8.1+gmock')
+    depends_on('hdf5+hl+mpi', when='+hdf5')
+    depends_on('caliper@2.0.1~adiak', when='+caliper')
     depends_on('graphviz', when='+graphviz')
     depends_on('python@3.0:', when='+tutorial')
+    depends_on('doxygen', when='+doxygen')
     depends_on('llvm', when='+flecstan')
+    depends_on('pfunit@3.0:3.99')
 
     conflicts('+tutorial', when='backend=hpx')
     # conflicts('+hdf5', when='backend=hpx')
@@ -101,6 +103,10 @@ class Flecsi(CMakePackage):
             options.append('-DENABLE_MPI=ON')
         elif spec.variants['backend'].value == 'hpx':
             options.append('-DFLECSI_RUNTIME_MODEL=hpx')
+            options.append('-DENABLE_MPI=ON')
+            options.append('-DHPX_IGNORE_CMAKE_BUILD_TYPE_COMPATIBILITY=ON')
+        elif spec.variants['backend'].value == 'charmpp':
+            options.append('-DFLECSI_RUNTIME_MODEL=charmpp')
             options.append('-DENABLE_MPI=ON')
         else:
             options.append('-DFLECSI_RUNTIME_MODEL=serial')

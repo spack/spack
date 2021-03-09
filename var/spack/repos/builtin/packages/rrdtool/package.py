@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,5 +22,7 @@ class Rrdtool(AutotoolsPackage):
     depends_on('perl-extutils-makemaker')
 
     def configure_args(self):
-        args = ['LDFLAGS=-lintl']
+        args = ['LDFLAGS=-lintl',
+                "--with-systemdsystemunitdir=" +
+                self.spec['rrdtool'].prefix.lib.systemd.system]
         return args

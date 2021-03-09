@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.13', sha256='79197543b17cc314b7e43f7a33148c308b0807cd6381ee77f77e15acf3e6459e')
     version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
     version('0.3.11', sha256='bc4617971179e037ae4e8ebcd837e46db88422f7b365325bd7aba31d1921a673')
     version('0.3.10', sha256='0484d275f87e9b8641ff2eecaa9df2830cbe276ac79ad80494822721de6e1693')
@@ -42,7 +43,9 @@ class Openblas(MakefilePackage):
     variant('pic', default=True, description='Build position independent code')
     variant('shared', default=True, description='Build shared libraries')
     variant('consistent_fpcsr', default=False, description='Synchronize FP CSR between threads (x86/x86_64 only)')
+    variant('bignuma', default=False, description='Enable experimental support for up to 1024 CPUs/Cores and 128 numa nodes')
 
+    variant('locking', default=True, description='Build with thread safety')
     variant(
         'threads', default='none',
         description='Multithreading support',
@@ -108,20 +111,31 @@ class Openblas(MakefilePackage):
           when='@0.3.8:0.3.10 %apple-clang@12.0.0:')
 
     # Add conditions to f_check to determine the Fujitsu compiler
+    # See https://github.com/xianyi/OpenBLAS/pull/3010
+    # UPD: the patch has been merged starting version 0.3.13
     patch('openblas_fujitsu.patch', when='@:0.3.10 %fj')
-    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11: %fj')
-    patch('openblas_fujitsu2.patch', when='@0.3.10: %fj')
+    patch('openblas_fujitsu_v0.3.11.patch', when='@0.3.11:0.3.12 %fj')
+    patch('openblas_fujitsu2.patch', when='@0.3.10:0.3.12 %fj')
 
-    # See https://github.com/spack/spack/issues/19932
-    conflicts('%gcc@:8.2.99', when='@0.3.11:')
+    # Use /usr/bin/env perl in build scripts
+    patch('0001-use-usr-bin-env-perl.patch', when='@:0.3.13')
+
+    # See https://github.com/spack/spack/issues/19932#issuecomment-733452619
+    conflicts('%gcc@7.0.0:7.3.99,8.0.0:8.2.99', when='@0.3.11:')
+
+    # See https://github.com/xianyi/OpenBLAS/issues/3074
+    conflicts('%gcc@:10.1.99', when='@0.3.13 target=ppc64le:')
 
     # See https://github.com/spack/spack/issues/3036
     conflicts('%intel@16', when='@0.2.15:0.2.19')
     conflicts('+consistent_fpcsr', when='threads=none',
               msg='FPCSR consistency only applies to multithreading')
 
+    conflicts('threads=pthreads', when='~locking', msg='Pthread support requires +locking')
     conflicts('threads=openmp', when='%apple-clang', msg="Apple's clang does not support OpenMP")
     conflicts('threads=openmp @:0.2.19', when='%clang', msg='OpenBLAS @:0.2.19 does not support OpenMP with clang!')
+
+    depends_on('perl', type='build')
 
     @property
     def parallel(self):
@@ -249,6 +263,13 @@ class Openblas(MakefilePackage):
         if self.spec.satisfies('@0.2.16'):
             make_defs += ['BUILD_LAPACK_DEPRECATED=1']
 
+        # serial, but still thread-safe version
+        if self.spec.satisfies('@0.3.7:'):
+            if '+locking' in self.spec:
+                make_defs += ['USE_LOCKING=1']
+            else:
+                make_defs += ['USE_LOCKING=0']
+
         # Add support for multithreading
         if self.spec.satisfies('threads=openmp'):
             make_defs += ['USE_OPENMP=1', 'USE_THREAD=1']
@@ -273,6 +294,18 @@ class Openblas(MakefilePackage):
         # Prevent errors in `as` assembler from newer instructions
         if self.spec.satisfies('%gcc@:4.8.4'):
             make_defs.append('NO_AVX2=1')
+
+        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+        if self.spec.satisfies('%fj'):
+            make_defs.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
+
+        # Newer versions of openblas will try to find ranlib in the compiler's
+        # prefix, for instance, .../lib/spack/env/gcc/ranlib, which will fail.
+        if self.spec.satisfies('@0.3.13:'):
+            make_defs.append('RANLIB=ranlib')
+
+        if self.spec.satisfies('+bignuma'):
+            make_defs.append('BIGNUMA=1')
 
         return make_defs
 

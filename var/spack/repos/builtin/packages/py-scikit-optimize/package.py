@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyScikitOptimize(PythonPackage):
        The library is built on top of NumPy, SciPy and Scikit-Learn."""
 
     homepage = "https://scikit-optimize.github.io"
-    url      = "https://pypi.io/packages/source/s/scikit-optimize/scikit-optimize-0.5.2.tar.gz"
+    pypi = "scikit-optimize/scikit-optimize-0.5.2.tar.gz"
 
     version('0.5.2', sha256='1d7657a4b8ef9aa6d81e49b369c677c584e83269f11710557741d3b3f8fa0a75')
 
@@ -28,4 +28,3 @@ class PyScikitOptimize(PythonPackage):
     depends_on('py-scikit-learn@0.19.1:', type=('build', 'run'))
 
     depends_on('py-matplotlib',   when='+plots')
-    depends_on('py-pytest@3.3.0:', type='test')

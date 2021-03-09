@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,9 @@ class Libgcrypt(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libgcrypt/index.html"
     url      = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.5.tar.bz2"
 
+    version('1.9.1', sha256='c5a67a8b9b2bd370fb415ed1ee31c7172e5683076493cf4a3678a0fbdf0265d9')
+    version('1.8.7', sha256='03b70f028299561b7034b8966d7dd77ef16ed139c43440925fe8782561974748')
+    version('1.8.6', sha256='0cba2700617b99fc33864a0c16b1fa7fdf9781d9ed3509f5d767178e5fd7b975')
     version('1.8.5', sha256='3b4a2a94cb637eff5bdebbcaf46f4d95c4f25206f459809339cdada0eb577ac3')
     version('1.8.4', sha256='f638143a0672628fde0cad745e9b14deb85dffb175709cacc1f4fe24b93f2227')
     version('1.8.1', sha256='7a2875f8b1ae0301732e878c0cca2c9664ff09ef71408f085c50e332656a78b3')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -69,10 +69,12 @@ class PackageInstallContext(object):
             self.serialized_pkg = serialize(pkg)
         else:
             self.pkg = pkg
+        self.spack_working_dir = spack.main.spack_working_dir
         self.test_state = TestState()
 
     def restore(self):
         self.test_state.restore()
+        spack.main.spack_working_dir = self.spack_working_dir
         if _serialize:
             return pickle.load(self.serialized_pkg)
         else:
@@ -91,18 +93,21 @@ class TestState(object):
             self.config = spack.config.config
             self.platform = spack.architecture.platform
             self.test_patches = store_patches()
-
-            # TODO: transfer spack.store.store? note that you should not
-            # transfer spack.store.store and spack.store.db: 'db' is a
-            # shortcut that accesses the store (so transferring both can
-            # create an inconsistency). Some tests set 'db' directly, and
-            # others set 'store'
+            self.store_token = spack.store.store.serialize()
 
     def restore(self):
         if _serialize:
             spack.repo.path = spack.repo._path(self.repo_dirs)
             spack.config.config = self.config
             spack.architecture.platform = self.platform
+
+            new_store = spack.store.Store.deserialize(self.store_token)
+            spack.store.store = new_store
+            spack.store.root = new_store.root
+            spack.store.unpadded_root = new_store.unpadded_root
+            spack.store.db = new_store.db
+            spack.store.layout = new_store.layout
+
             self.test_patches.restore()
 
 

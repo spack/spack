@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -179,6 +179,19 @@ def parse_specs(args, **kwargs):
             msg += e.long_message
 
         raise spack.error.SpackError(msg)
+
+
+def matching_spec_from_env(spec):
+    """
+    Returns a concrete spec, matching what is available in the environment.
+    If no matching spec is found in the environment (or if no environment is
+    active), this will return the given spec but concretized.
+    """
+    env = spack.environment.get_env({}, cmd_name)
+    if env:
+        return env.matching_spec(spec) or spec.concretized()
+    else:
+        return spec.concretized()
 
 
 def elide_list(line_list, max_num=10):
@@ -435,7 +448,7 @@ def display_specs(specs, args=None, **kwargs):
     out = ''
     if groups:
         for specs in iter_groups(specs, indent, all_headers):
-            out += format_list(specs)
+            output.write(format_list(specs))
     else:
         out = format_list(sorted(specs))
 

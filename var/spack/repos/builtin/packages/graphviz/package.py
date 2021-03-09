@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,18 +18,12 @@ class Graphviz(AutotoolsPackage):
 
     homepage = 'http://www.graphviz.org'
     git      = 'https://gitlab.com/graphviz/graphviz.git'
+    url      = 'https://gitlab.com/graphviz/graphviz/-/archive/2.46.0/graphviz-2.46.0.tar.bz2'
 
-    # This commit hash is tag='stable_release_2.44.1'
-    version('2.44.1', commit='771bc4dbff3e6f358fa75cdc7774a413ccacad51')
-    # This commit hash is tag='stable_release_2.42.2'
-    version('2.42.2', commit='da4c2ec6f24ca1b6d1752c6b5bc4389e55682147')
-    # This commit hash is tag='stable_release_2.40.1'
-    version('2.40.1', commit='67cd2e5121379a38e0801cc05cce5033f8a2a609')
-
-    conflicts('%gcc@:5.9',
-              when='@2.40.1+qt ^qt@5:',
-              msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
-              'suppport')
+    version('2.46.0', sha256='1b11684fd5488940b45bf4624393140da6032abafae08f33dc3e986cffd55d71')
+    version('2.44.1', sha256='0f8f3fbeaddd474e0a270dc9bb0e247a1ae4284ae35125af4adceffae5c7ae9b')
+    version('2.42.4', sha256='a1ca0c4273d96bbf32fbfcbb784c8da2e38da13e7d2bbf9b24fe94ae45e79c4c')
+    version('2.38.0', sha256='c1b1e326b5d1f45b0ce91edd7acc68e80ff6be6b470008766e4d466aafc9801f')
 
     # Language bindings
     language_bindings = ['java']
@@ -45,6 +39,8 @@ class Graphviz(AutotoolsPackage):
                 'bindings'.format(lang))
 
     # Feature variants
+    variant('doc', default=False,
+            description='Build and install graphviz documentation')
     variant('expat', default=False,
             description='Build with Expat support (enables HTML-like labels)')
     variant('gts', default=False,
@@ -76,7 +72,7 @@ class Graphviz(AutotoolsPackage):
     patch('https://raw.githubusercontent.com/easybuilders/easybuild-easyconfigs/master/easybuild/easyconfigs/g/Graphviz/Graphviz-2.40.1_icc_vmalloc.patch',
           sha256='813e6529e79161a18b0f24a969b7de22f8417b2e942239e658b5402884541bc2',
           when='@:2.40%intel')
-    patch('ps2pdf.patch')
+    patch('ps2pdf.patch', when='@:2.45')
     patch('implicit.patch', level=0, when='@:2.44.0')
 
     if not MACOS_VERSION:
@@ -92,6 +88,9 @@ class Graphviz(AutotoolsPackage):
         depends_on('swig', when=('+' + lang))
 
     # Feature dependencies
+    depends_on('zlib')
+    depends_on('groff', type='build', when='+doc')
+    depends_on('ghostscript', type='build', when='+doc')
     depends_on('expat', when='+expat')
     depends_on('libgd', when='+libgd')
     depends_on('fontconfig', when='+libgd')
@@ -106,21 +105,24 @@ class Graphviz(AutotoolsPackage):
     depends_on('libpng', when='+pangocairo')
     depends_on('pango', when='+pangocairo')
     depends_on('poppler+glib', when='+poppler')
-    depends_on('zlib')
     depends_on('qt', when='+qt')
     depends_on('libx11', when="+x")
 
-    # Build dependencies
-    depends_on('pkgconfig', type='build')
-    # The following are needed when building from git
+    # Build dependencies (graphviz binaries don't include configure file)
     depends_on('automake', type='build')
     depends_on('autoconf', type='build')
     depends_on('bison', type='build')
     depends_on('flex', type='build')
     depends_on('libtool', type='build')
-    # required to build docs
-    depends_on('groff', type='build')
-    depends_on('ghostscript', type='build')
+    depends_on('pkgconfig', type='build')
+
+    conflicts('~doc',
+              when='@:2.45',
+              msg='graphviz always builds documentation below version 2.46')
+    conflicts('%gcc@:5.9',
+              when='@2.40.1+qt ^qt@5:',
+              msg='graphviz-2.40.1 needs gcc-6 or greater to compile with QT5 '
+              'suppport')
 
     parallel = False
 
@@ -169,5 +171,9 @@ class Graphviz(AutotoolsPackage):
 
         args.append('--{0}-gtk'.format(
             "with" if "+gtkplus" in spec else "without"))
+
+        if spec.version >= Version('2.46'):
+            args.append('--{0}-man-pdfs'.format(
+                'enable' if '+doc' in spec else 'disable'))
 
         return args

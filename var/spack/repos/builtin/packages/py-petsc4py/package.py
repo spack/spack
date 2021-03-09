@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,13 @@ class PyPetsc4py(PythonPackage):
     """
 
     homepage = "https://gitlab.com/petsc/petsc4py"
-    url      = "https://pypi.io/packages/source/p/petsc4py/petsc4py-3.14.0.tar.gz"
-    git      = "https://gitlab.com/petsc/petsc4py.git"
+    pypi = "petsc4py/petsc4py-3.14.0.tar.gz"
+    git      = "https://gitlab.com/petsc/petsc.git"
 
     maintainers = ['dalcinl', 'balay']
 
-    version('develop', branch='master')
+    version('main', branch='main')
+    version('3.14.1', sha256='f5f8daf3a4cd1dfc945876b0d83a05b25f3c54e08046312eaa3e3036b24139c0')
     version('3.14.0', sha256='33ac9fb55a541e4c1deabd6e2144da96d5ae70e70c830a55de558000cf3f0ec5')
     version('3.13.0', sha256='0e11679353c0c2938336a3c8d1a439b853e20d3bccd7d614ad1dbea3ec5cb31f')
     version('3.12.0', sha256='4c94a1dbbf244b249436b266ac5fa4e67080d205420805deab5ec162b979df8d')
@@ -31,7 +32,10 @@ class PyPetsc4py(PythonPackage):
 
     variant('mpi', default=True,  description='Activates MPI support')
 
-    depends_on('py-cython', type='build', when='@develop')
+    patch('ldshared.patch', when='@:99')
+    patch('ldshared-dev.patch', when='@main')
+
+    depends_on('py-cython', type='build', when='@main')
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
@@ -39,8 +43,9 @@ class PyPetsc4py(PythonPackage):
 
     depends_on('petsc+mpi', when='+mpi')
     depends_on('petsc~mpi', when='~mpi')
-    depends_on('petsc@develop', when='@develop')
-    depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
+    depends_on('petsc@main', when='@main')
+    depends_on('petsc@3.14.2:3.14.99', when='@3.14.1:3.14.99')
+    depends_on('petsc@3.14.0:3.14.1', when='@3.14.0')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
     depends_on('petsc@3.11:3.11.99', when='@3.11:3.11.99')
@@ -50,3 +55,11 @@ class PyPetsc4py(PythonPackage):
     depends_on('petsc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('petsc@3.7:3.7.99', when='@3.7:3.7.99')
     depends_on('petsc@3.6:3.6.99', when='@3.6:3.6.99')
+
+    @property
+    def build_directory(self):
+        import os
+        if self.spec.satisfies('@main'):
+            return os.path.join(self.stage.source_path, 'src', 'binding', 'petsc4py')
+        else:
+            return self.stage.source_path

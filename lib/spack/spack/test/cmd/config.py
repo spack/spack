@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,9 @@ import spack.config
 import spack.environment as ev
 import spack.main
 import spack.util.spack_yaml as syaml
+import spack.spec
+import spack.database
+import spack.store
 
 config = spack.main.SpackCommand('config')
 env = spack.main.SpackCommand('env')
@@ -645,3 +648,50 @@ def check_config_updated(data):
     assert isinstance(data['install_tree'], dict)
     assert data['install_tree']['root'] == '/fake/path'
     assert data['install_tree']['projections'] == {'all': '{name}-{version}'}
+
+
+def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
+                                mutable_config, gen_mock_layout, monkeypatch):
+    """Check that when a dependency package is recorded as installed in
+       an upstream database that it is not reinstalled.
+    """
+
+    mock_db_root = str(tmpdir_factory.mktemp('mock_db_root'))
+    prepared_db = spack.database.Database(mock_db_root)
+
+    upstream_layout = gen_mock_layout('/a/')
+
+    for spec in [
+            'hdf5 +mpi',
+            'hdf5 ~mpi',
+            'boost+debug~icu+graph',
+            'dependency-install',
+            'patch']:
+        dep = spack.spec.Spec(spec)
+        dep.concretize()
+        prepared_db.add(dep, upstream_layout)
+
+    downstream_db_root = str(
+        tmpdir_factory.mktemp('mock_downstream_db_root'))
+    db_for_test = spack.database.Database(
+        downstream_db_root, upstream_dbs=[prepared_db])
+    monkeypatch.setattr(spack.store, 'db', db_for_test)
+
+    output = config('prefer-upstream')
+    scope = spack.config.default_modify_scope('packages')
+    cfg_file = spack.config.config.get_config_filename(scope, 'packages')
+    packages = syaml.load(open(cfg_file))['packages']
+
+    # Make sure only the non-default variants are set.
+    assert packages['boost'] == {
+        'compiler': ['gcc@4.5.0'],
+        'variants': '+debug +graph',
+        'version': ['1.63.0']}
+    assert packages['dependency-install'] == {
+        'compiler': ['gcc@4.5.0'], 'version': ['2.0']}
+    # Ensure that neither variant gets listed for hdf5, since they conflict
+    assert packages['hdf5'] == {
+        'compiler': ['gcc@4.5.0'], 'version': ['2.3']}
+
+    # Make sure a message about the conflicting hdf5's was given.
+    assert '- hdf5' in output

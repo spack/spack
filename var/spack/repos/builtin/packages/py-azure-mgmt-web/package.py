@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtWeb(PythonPackage):
     """Microsoft Azure Web Apps Management Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-web/azure-mgmt-web-0.47.0.zip"
+    pypi = "azure-mgmt-web/azure-mgmt-web-0.47.0.zip"
 
     version('0.47.0', sha256='789a328e2a60df48a82452ca6fbc1a7b4adf3c38d4701d278efe4e81cf21cce8')
 

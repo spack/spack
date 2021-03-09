@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyGpytorch(PythonPackage):
     process models with ease."""
 
     homepage = "https://gpytorch.ai/"
-    url      = "https://pypi.io/packages/source/g/gpytorch/gpytorch-1.2.1.tar.gz"
+    pypi = "gpytorch/gpytorch-1.2.1.tar.gz"
 
     maintainers = ['adamjstewart']
 

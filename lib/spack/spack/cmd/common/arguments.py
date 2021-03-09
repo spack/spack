@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -250,8 +250,8 @@ def very_long():
 @arg
 def tags():
     return Args(
-        '-t', '--tags', action='append',
-        help='filter a package query by tags')
+        '-t', '--tag', action='append', dest='tags', metavar='TAG',
+        help='filter a package query by tag (multiple use allowed)')
 
 
 @arg
@@ -275,6 +275,13 @@ def no_checksum():
     return Args(
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
+
+
+@arg
+def deprecated():
+    return Args(
+        '--deprecated', action='store_true', default=False,
+        help='fetch deprecated versions without warning')
 
 
 def add_cdash_args(subparser, add_help):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -98,9 +98,8 @@ def location(parser, args):
                 print(spack.repo.path.dirname_for_package_name(spec.name))
 
             else:
-                # These versions need concretized specs.
-                spec.concretize()
-                pkg = spack.repo.get(spec)
+                spec = spack.cmd.matching_spec_from_env(spec)
+                pkg = spec.package
 
                 if args.stage_dir:
                     print(pkg.stage.path)

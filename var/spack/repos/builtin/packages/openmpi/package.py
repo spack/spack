@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,9 +24,9 @@ class Openmpi(AutotoolsPackage):
     application developers and computer science researchers.
     """
 
-    homepage = "http://www.open-mpi.org"
-    url = "https://www.open-mpi.org/software/ompi/v4.0/downloads/openmpi-4.0.0.tar.bz2"
-    list_url = "http://www.open-mpi.org/software/ompi/"
+    homepage = "https://www.open-mpi.org"
+    url = "https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.0.tar.bz2"
+    list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
     maintainers = ['hppritcha']
@@ -36,15 +36,18 @@ class Openmpi(AutotoolsPackage):
     version('master', branch='master')
 
     # Current
-    version('4.0.5', sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
+    version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
+
+    # Still supported
+    version('4.0.5', preferred=True, sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
     version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
     version('4.0.2', sha256='900bf751be72eccf06de9d186f7b1c4b5c2fa9fa66458e53b77778dffdfe4057')  # libmpi.so.40.20.2
     version('4.0.1', sha256='cce7b6d20522849301727f81282201d609553103ac0b09162cf28d102efb9709')  # libmpi.so.40.20.1
     version('4.0.0', sha256='2f0b8a36cfeb7354b45dda3c5425ef8393c9b04115570b615213faaa3f97366b')  # libmpi.so.40.20.0
 
-    # Still supported
-    version('3.1.6', preferred=True, sha256='50131d982ec2a516564d74d5616383178361c2f08fdd7d1202b80bdf66a0d279')  # libmpi.so.40.10.4
+    # Retired
+    version('3.1.6', sha256='50131d982ec2a516564d74d5616383178361c2f08fdd7d1202b80bdf66a0d279')  # libmpi.so.40.10.4
     version('3.1.5', sha256='fbf0075b4579685eec8d56d34d4d9c963e6667825548554f5bf308610af72133')  # libmpi.so.40.10.4
     version('3.1.4', sha256='17a69e0054db530c7dc119f75bd07d079efa147cf94bf27e590905864fe379d6')  # libmpi.so.40.10.4
     version('3.1.3', sha256='8be04307c00f51401d3fb9d837321781ea7c79f2a5a4a2e5d4eaedc874087ab6')  # libmpi.so.40.10.3
@@ -58,7 +61,6 @@ class Openmpi(AutotoolsPackage):
     version('3.0.1', sha256='663450d1ee7838b03644507e8a76edfb1fba23e601e9e0b5b2a738e54acd785d')  # libmpi.so.40.00.1
     version('3.0.0', sha256='f699bff21db0125d8cccfe79518b77641cd83628725a1e1ed3e45633496a82d7')  # libmpi.so.40.00.0
 
-    # Retired
     version('2.1.6', sha256='98b8e1b8597bbec586a0da79fcd54a405388190247aa04d48e8c40944d4ca86e')  # libmpi.so.20.10.3
     version('2.1.5', sha256='b807ccab801f27c3159a5edf29051cd3331d3792648919f9c4cee48e987e7794')  # libmpi.so.20.10.3
     version('2.1.4', sha256='3e03695ca8bd663bc2d89eda343c92bb3d4fc79126b178f5ddcb68a8796b24e2')  # libmpi.so.20.10.3
@@ -73,6 +75,7 @@ class Openmpi(AutotoolsPackage):
     version('2.0.1', sha256='fed74f4ae619b7ebcc18150bb5bdb65e273e14a8c094e78a3fea0df59b9ff8ff')  # libmpi.so.20.0.1
     version('2.0.0', sha256='08b64cf8e3e5f50a50b4e5655f2b83b54653787bd549b72607d9312be44c18e0')  # libmpi.so.20.0.0
 
+    # Ancient
     version('1.10.7', sha256='a089ece151fec974905caa35b0a59039b227bdea4e7933069e94bee4ed0e5a90')  # libmpi.so.12.0.7
     version('1.10.6', sha256='65606184a084a0eda6102b01e5a36a8f02d3195d15e91eabbb63e898bd110354')  # libmpi.so.12.0.6
     version('1.10.5', sha256='a95fa355ed3a905c7c187bc452529a9578e2d6bae2559d8197544ab4227b759e')  # libmpi.so.12.0.5
@@ -106,7 +109,6 @@ class Openmpi(AutotoolsPackage):
     version('1.6.1', sha256='077240dd1ab10f0caf26931e585db73848e9815c7119b993f91d269da5901e3a')  # libmpi.so.1.0.3
     version('1.6',   sha256='6e0d8b336543fb9ab78c97d364484923167857d30b266dfde1ccf60f356b9e0e')  # libmpi.so.1.0.3
 
-    # Ancient
     version('1.5.5', sha256='660e6e49315185f88a87b6eae3d292b81774eab7b29a9b058b10eb35d892ff23')  # libmpi.so.1.0.3
     version('1.5.4', sha256='81126a95a51b8af4bb0ad28790f852c30d22d989713ec30ad22e9e0a79587ef6')  # libmpi.so.1.0.2
     version('1.5.3', sha256='70745806cdbe9b945d47d9fa058f99e072328e41e40c0ced6dd75220885c5263')  # libmpi.so.1.0.1
@@ -247,6 +249,8 @@ class Openmpi(AutotoolsPackage):
         default=False,
         description='Do not remove mpirun/mpiexec when building with slurm'
     )
+    # Variants to use internal packages
+    variant('internal-hwloc', default=False, description='Use internal hwloc')
 
     provides('mpi')
     provides('mpi@:2.2', when='@1.6.5')
@@ -260,18 +264,20 @@ class Openmpi(AutotoolsPackage):
     depends_on('automake', type='build', when='@develop')
     depends_on('libtool',  type='build', when='@develop')
     depends_on('m4',       type='build', when='@develop')
-    depends_on('perl',     type='build', when='@develop')
 
+    depends_on('perl',     type='build')
     depends_on('pkgconfig', type='build')
 
-    depends_on('hwloc@2.0:', when='@4:')
+    depends_on('libevent@2.0:', when='@4:')
+
+    depends_on('hwloc@2.0:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
     # See #7483 for context.
-    depends_on('hwloc@:1.999', when='@:3.999.9999')
+    depends_on('hwloc@:1.999', when='@:3.999.999 ~internal-hwloc')
 
-    depends_on('hwloc +cuda', when='+cuda')
+    depends_on('hwloc +cuda', when='+cuda ~internal-hwloc')
     depends_on('java', when='+java')
     depends_on('sqlite', when='+sqlite3@:1.11')
     depends_on('zlib', when='@3.0.0:')
@@ -442,15 +448,16 @@ class Openmpi(AutotoolsPackage):
 
             # Get the appropriate compiler
             match = re.search(r'\bC compiler absolute: (\S+)', output)
-            compiler_spec = get_spack_compiler_spec(
-                os.path.dirname(match.group(1)))
-            if compiler_spec:
-                variants += "%" + str(compiler_spec)
+            if match:
+                compiler_spec = get_spack_compiler_spec(
+                    os.path.dirname(match.group(1)))
+                if compiler_spec:
+                    variants += "%" + str(compiler_spec)
             results.append(variants)
         return results
 
     def url_for_version(self, version):
-        url = "http://www.open-mpi.org/software/ompi/v{0}/downloads/openmpi-{1}.tar.bz2"
+        url = "https://download.open-mpi.org/release/open-mpi/v{0}/openmpi-{1}.tar.bz2"
         return url.format(version.up_to(2), version)
 
     @property
@@ -674,8 +681,11 @@ class Openmpi(AutotoolsPackage):
         if spec.satisfies('+lustre'):
             lustre_opt = '--with-lustre={0}'.format(spec['lustre'].prefix)
             config_args.append(lustre_opt)
+        # external libevent
+        if spec.satisfies('@4.0.0:'):
+            config_args.append('--with-libevent={0}'.format(spec['libevent'].prefix))
         # Hwloc support
-        if spec.satisfies('@1.5.2:'):
+        if '~internal-hwloc' in spec and spec.satisfies('@1.5.2:'):
             config_args.append('--with-hwloc={0}'.format(spec['hwloc'].prefix))
         # Java support
         if spec.satisfies('@1.7.4:'):

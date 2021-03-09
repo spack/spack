@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ import time
 import traceback
 import six
 import types
+from typing import Optional, List, Dict, Any, Callable  # novm
 
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
@@ -253,8 +254,9 @@ class PackageMeta(
     """
     phase_fmt = '_InstallPhase_{0}'
 
-    _InstallPhase_run_before = {}
-    _InstallPhase_run_after = {}
+    # These are accessed only through getattr, by name
+    _InstallPhase_run_before = {}  # type: Dict[str, List[Callable]]
+    _InstallPhase_run_after = {}  # type: Dict[str, List[Callable]]
 
     def __new__(cls, name, bases, attr_dict):
         """
@@ -555,7 +557,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: A list or set of build time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
-    build_time_test_callbacks = None
+    build_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default, packages are not virtual
     #: Virtual packages override this attribute
@@ -567,7 +569,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
     #: A list or set of install time test functions to be called when tests
     #: are executed or 'None' if there are no such test functions.
-    install_time_test_callbacks = None
+    install_time_test_callbacks = None  # type: Optional[List[str]]
 
     #: By default we build in parallel.  Subclasses can override this.
     parallel = True
@@ -589,19 +591,19 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: List of prefix-relative file paths (or a single path). If these do
     #: not exist after install, or if they exist but are not files,
     #: sanity checks fail.
-    sanity_check_is_file = []
+    sanity_check_is_file = []  # type: List[str]
 
     #: List of prefix-relative directory paths (or a single path). If
     #: these do not exist after install, or if they exist but are not
     #: directories, sanity checks will fail.
-    sanity_check_is_dir = []
+    sanity_check_is_dir = []  # type: List[str]
 
     #: List of glob expressions. Each expression must either be
     #: absolute or relative to the package source path.
     #: Matching artifacts found at the end of the build process will be
     #: copied in the same directory tree as _spack_build_logfile and
     #: _spack_build_envfile.
-    archive_files = []
+    archive_files = []  # type: List[str]
 
     #: Boolean. Set to ``True`` for packages that require a manual download.
     #: This is currently used by package sanity tests and generation of a
@@ -609,7 +611,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     manual_download = False
 
     #: Set of additional options used when fetching package versions.
-    fetch_options = {}
+    fetch_options = {}  # type: Dict[str, Any]
 
     #
     # Set default licensing information
@@ -627,12 +629,12 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: looking for a license. All file paths must be relative to the
     #: installation directory. More complex packages like Intel may require
     #: multiple licenses for individual components. Defaults to the empty list.
-    license_files = []
+    license_files = []  # type: List[str]
 
     #: List of strings. Environment variables that can be set to tell the
     #: software where to look for a license if it is not in the usual location.
     #: Defaults to the empty list.
-    license_vars = []
+    license_vars = []  # type: List[str]
 
     #: String. A URL pointing to license setup instructions for the software.
     #: Defaults to the empty string.
@@ -644,9 +646,18 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: index of patches by sha256 sum, built lazily
     _patches_by_hash = None
 
+    #: Package homepage where users can find more information about the package
+    homepage = None  # type: str
+
+    #: Default list URL (place to find available versions)
+    list_url = None  # type: str
+
+    #: Link depth to which list_url should be searched for new versions
+    list_depth = 0
+
     #: List of strings which contains GitHub usernames of package maintainers.
     #: Do not include @ here in order not to unnecessarily ping the users.
-    maintainers = []
+    maintainers = []  # type: List[str]
 
     #: List of attributes to be excluded from a package's hash.
     metadata_attrs = ['homepage', 'url', 'urls', 'list_url', 'extendable',
@@ -680,13 +691,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             msg = "a package can have either a 'url' or a 'urls' attribute"
             msg += " [package '{0.name}' defines both]"
             raise ValueError(msg.format(self))
-
-        # Set a default list URL (place to find available versions)
-        if not hasattr(self, 'list_url'):
-            self.list_url = None
-
-        if not hasattr(self, 'list_depth'):
-            self.list_depth = 0
 
         # init internal variables
         self._stage = None
@@ -1305,7 +1309,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             tty.debug('No fetch required for {0}: package has no code.'
                       .format(self.name))
 
-        start_time = time.time()
         checksum = spack.config.get('config:checksum')
         fetch = self.stage.managed_by_spack
         if checksum and fetch and self.version not in self.versions:
@@ -1327,8 +1330,34 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                 raise FetchError("Will not fetch %s" %
                                  self.spec.format('{name}{@version}'), ck_msg)
 
+        deprecated = spack.config.get('config:deprecated')
+        if not deprecated and self.versions.get(
+                self.version, {}).get('deprecated', False):
+            tty.warn("{0} is deprecated and may be removed in a future Spack "
+                     "release.".format(
+                         self.spec.format('{name}{@version}')))
+
+            # Ask the user whether to install deprecated version if we're
+            # interactive, but just fail if non-interactive.
+            dp_msg = ("If you are willing to be a maintainer for this version "
+                      "of the package, submit a PR to remove `deprecated=False"
+                      "`, or use `--deprecated` to skip this check.")
+            ignore_deprecation = False
+            if sys.stdout.isatty():
+                ignore_deprecation = tty.get_yes_or_no("  Fetch anyway?",
+                                                       default=False)
+
+                if ignore_deprecation:
+                    tty.debug("Fetching deprecated version. {0}".format(
+                        dp_msg))
+
+            if not ignore_deprecation:
+                raise FetchError("Will not fetch {0}".format(
+                    self.spec.format('{name}{@version}')), dp_msg)
+
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
+        start_time = time.time()
         self.stage.fetch(mirror_only, err_msg=err_msg)
         self._fetch_time = time.time() - start_time
 
@@ -1375,7 +1404,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If there are no patches, note it.
         if not patches and not has_patch_fun:
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Construct paths to special files in the archive dir used to
@@ -1393,10 +1422,10 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         # If this file exists, then we already applied all the patches.
         if os.path.isfile(good_file):
-            tty.debug('Already patched {0}'.format(self.name))
+            tty.msg('Already patched {0}'.format(self.name))
             return
         elif os.path.isfile(no_patches_file):
-            tty.debug('No patches needed for {0}'.format(self.name))
+            tty.msg('No patches needed for {0}'.format(self.name))
             return
 
         # Apply all the patches for specs that match this one
@@ -1405,7 +1434,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     patch.apply(self.stage)
-                tty.debug('Applied patch {0}'.format(patch.path_or_url))
+                tty.msg('Applied patch {0}'.format(patch.path_or_url))
                 patched = True
             except spack.error.SpackError as e:
                 tty.debug(e)
@@ -1419,7 +1448,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             try:
                 with fsys.working_dir(self.stage.source_path):
                     self.patch()
-                tty.debug('Ran patch() for {0}'.format(self.name))
+                tty.msg('Ran patch() for {0}'.format(self.name))
                 patched = True
             except spack.multimethod.NoSuchMethodError:
                 # We are running a multimethod without a default case.
@@ -1429,7 +1458,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
                     # directive, AND the patch function didn't apply, say
                     # no patches are needed.  Otherwise, we already
                     # printed a message for each patch.
-                    tty.debug('No patches needed for {0}'.format(self.name))
+                    tty.msg('No patches needed for {0}'.format(self.name))
             except spack.error.SpackError as e:
                 tty.debug(e)
 
@@ -1497,9 +1526,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         hash_content.extend(':'.join((p.sha256, str(p.level))).encode('utf-8')
                             for p in self.spec.patches)
         hash_content.append(package_hash(self.spec, content))
-        return base64.b32encode(
+        b32_hash = base64.b32encode(
             hashlib.sha256(bytes().join(
                 sorted(hash_content))).digest()).lower()
+
+        # convert from bytes if running python 3
+        if sys.version_info[0] >= 3:
+            b32_hash = b32_hash.decode('utf-8')
+
+        return b32_hash
 
     def _has_make_target(self, target):
         """Checks to see if 'target' is a valid target in a Makefile.
@@ -1761,7 +1796,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             work_dir (str or None): path to the smoke test directory
         """
         wdir = '.' if work_dir is None else work_dir
-        with fsys.working_dir(wdir):
+        with fsys.working_dir(wdir, create=True):
             try:
                 runner = which(exe)
                 if runner is None and skip_missing:
@@ -2591,7 +2626,7 @@ class BundlePackage(PackageBase):
     """General purpose bundle, or no-code, package class."""
     #: There are no phases by default but the property is required to support
     #: post-install hooks (e.g., for module generation).
-    phases = []
+    phases = []  # type: List[str]
     #: This attribute is used in UI queries that require to know which
     #: build-system class we are using
     build_system_class = 'BundlePackage'

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,3 +28,9 @@ class Kmod(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = which("bash")
         bash('autogen.sh')
+
+    def configure_args(self):
+        args = ["--with-bashcompletiondir=" +
+                join_path(self.spec['kmod'].prefix, 'share',
+                          'bash-completion', 'completions')]
+        return args

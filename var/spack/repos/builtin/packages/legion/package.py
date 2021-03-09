@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,8 @@ class Legion(CMakePackage):
     homepage = "http://legion.stanford.edu/"
     url      = "https://github.com/StanfordLegion/legion/tarball/legion-17.02.0"
     git      = "https://github.com/StanfordLegion/legion.git"
+
+    maintainers = ['streichler']
 
     version('master', branch='master')
     version('ctrl-rep', branch='control_replication')

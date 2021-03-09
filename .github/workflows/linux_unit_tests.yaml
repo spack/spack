@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        concretizer: ['original', 'clingo']
 
     steps:
     - uses: actions/checkout@v2
@@ -50,16 +51,23 @@ jobs:
           mkdir -p ${KCOV_ROOT}/build
           cd ${KCOV_ROOT}/build && cmake -Wno-dev ${KCOV_ROOT}/kcov-${KCOV_VERSION} && cd -
           make -C ${KCOV_ROOT}/build && sudo  make -C ${KCOV_ROOT}/build install
+    - name: Bootstrap clingo from sources
+      if: ${{ matrix.concretizer == 'clingo' }}
+      run: |
+          . share/spack/setup-env.sh
+          spack external find --not-buildable cmake bison
+          spack -v solve zlib
     - name: Run unit tests
       env:
           COVERAGE: true
+          SPACK_TEST_SOLVER: ${{ matrix.concretizer }}
       run: |
           share/spack/qa/run-unit-tests
           coverage combine
           coverage xml
     - uses: codecov/codecov-action@v1
       with:
-        flags: unittests,linux
+        flags: unittests,linux,${{ matrix.concretizer }}
   shell:
     runs-on: ubuntu-latest
     steps:
@@ -103,6 +111,7 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         flags: shelltests,linux
+
   centos6:
     # Test for Python2.6 run on Centos 6
     runs-on: ubuntu-latest
@@ -117,15 +126,40 @@ jobs:
           git fetch origin ${{ github.ref }}:test-branch
           git checkout test-branch
           share/spack/qa/run-unit-tests
-  clingo:
-    # Test for the clingo based solver
+
+  rhel8-platform-python:
     runs-on: ubuntu-latest
-    container: spack/github-actions:clingo
+    container: registry.access.redhat.com/ubi8/ubi
+    steps:
+    - name: Install dependencies
+      run: |
+          dnf install -y \
+              bzip2 curl file gcc-c++ gcc gcc-gfortran git gnupg2 gzip \
+              make patch tcl unzip which xz
+    - uses: actions/checkout@v2
+    - name: Setup repo and non-root user
+      run: |
+          git --version
+          git fetch --unshallow
+          . .github/workflows/setup_git.sh
+          useradd spack-test
+          chown -R spack-test .
+    - name: Run unit tests
+      env:
+          SPACK_PYTHON: /usr/libexec/platform-python
+      shell: runuser -u spack-test -- bash {0}
+      run: |
+          source share/spack/setup-env.sh
+          spack unit-test -k 'not svn and not hg' -x --verbose
+  clingo-cffi:
+    # Test for the clingo based solver (using clingo-cffi)
+    runs-on: ubuntu-latest
+    container: spack/github-actions:clingo-cffi
     steps:
       - name: Run unit tests
         run: |
           whoami && echo PWD=$PWD && echo HOME=$HOME && echo SPACK_TEST_SOLVER=$SPACK_TEST_SOLVER
-          which clingo && clingo --version
+          python3 -c "import clingo; print(hasattr(clingo.Symbol, '_rep'), clingo.__version__)"
           git clone https://github.com/spack/spack.git && cd spack
           git fetch origin ${{ github.ref }}:test-branch
           git checkout test-branch

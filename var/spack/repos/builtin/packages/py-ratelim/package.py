@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyRatelim(PythonPackage):
     """Makes it easy to respect rate limits."""
 
     homepage = "https://github.com/themiurgo/ratelim"
-    url      = "https://pypi.io/packages/source/r/ratelim/ratelim-0.1.6.tar.gz"
+    pypi = "ratelim/ratelim-0.1.6.tar.gz"
 
     version('0.1.6', sha256='826d32177e11f9a12831901c9fda6679fd5bbea3605910820167088f5acbb11d')
 

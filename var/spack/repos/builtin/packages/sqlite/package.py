@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,9 @@ class Sqlite(AutotoolsPackage):
     """
     homepage = "https://www.sqlite.org"
 
+    version('3.34.0', sha256='bf6db7fae37d51754737747aaaf413b4d6b3b5fbacd52bdb2d0d6e5b2edd9aee')
     version('3.33.0', sha256='106a2c48c7f75a298a7557bcc0d5f4f454e5b43811cc738b7ca294d6956bbb15')
+    version('3.32.03', sha256='a31507123c1c2e3a210afec19525fd7b5bb1e19a6a34ae5b998fbd7302568b66')
     version('3.31.1', sha256='62284efebc05a76f909c580ffa5c008a7d22a1287285d68b7825a2b6b51949ae')
     version('3.30.1', sha256='8c5a50db089bd2a1b08dbc5b00d2027602ca7ff238ba7658fabca454d4298e60')
     version('3.30.0', sha256='e0a8cf4c7a87455e55e10413d16f358ca121ccec687fe1301eac95e2d340fc58')

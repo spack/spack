@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Precice(CMakePackage):
     maintainers = ['fsimonis', 'MakisH']
 
     version('develop', branch='develop')
+    version('2.2.0', sha256='f8c4e0810dcaeb6a40a0fcab64b95c899f0121c968e0730416d4d2a97d39d0c4')
     version('2.1.1', sha256='729b7c24a7a61b3953bb70d96a954ad3a85729a29a35a288b59ba25661117064')
     version('2.1.0', sha256='1e6432724f70d0c6c05fdd645e0026754edbc547719a35bf1d3c12a779b1d00e')
     version('2.0.2', sha256='72864480f32696e7b6da94fd404ef5cd6586e2e1640613e46b75f1afac8569ed')
@@ -42,9 +43,11 @@ class Precice(CMakePackage):
 
     depends_on('cmake@3.5:', type='build')
     depends_on('cmake@3.10.2:', type='build', when='@1.4:')
+    depends_on('pkgconfig', type='build', when='@2.2:')
     depends_on('boost@1.60.0:')
     depends_on('boost@1.65.1:', when='@1.4:')
     depends_on('boost@:1.72.99', when='@:2.0.2')
+    depends_on('boost@:1.74.99', when='@:2.1.1')
     depends_on('eigen@3.2:')
     depends_on('eigen@:3.3.7', type='build', when='@:1.5')  # bug in prettyprint
     depends_on('libxml2')
@@ -60,13 +63,12 @@ class Precice(CMakePackage):
     depends_on('py-numpy@:1.16', when='@:1.9+python', type=('build', 'run'))
     depends_on('py-numpy@1.17:', when='@2:+python', type=('build', 'run'))
 
-    # We require C++11 compiler support as well as
-    # library support for time manipulators (N2071, N2072)
+    # We require C++14 compiler support
     conflicts('%gcc@:4')
-    conflicts('%apple-clang@:4')
+    conflicts('%apple-clang@:5')
     conflicts('%clang@:3.7')
-    conflicts('%intel@:14')
-    conflicts('%pgi@:14')
+    conflicts('%intel@:16')
+    conflicts('%pgi@:17.3')
 
     def cmake_args(self):
         """Populate cmake arguments for precice."""

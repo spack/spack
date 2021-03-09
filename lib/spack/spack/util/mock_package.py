@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@
 import ordereddict_backport
 
 import spack.util.naming
+import spack.provider_index
 from spack.dependency import Dependency
 from spack.spec import Spec
 from spack.version import Version
@@ -80,6 +81,8 @@ class MockPackageMultiRepo(object):
 
     def __init__(self):
         self.spec_to_pkg = {}
+        self.namespace = ''
+        self.full_namespace = 'spack.pkg.mock'
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -101,6 +104,9 @@ class MockPackageMultiRepo(object):
         import collections
         Repo = collections.namedtuple('Repo', ['namespace'])
         return Repo('mockrepo')
+
+    def __contains__(self, item):
+        return item in self.spec_to_pkg
 
     def add_package(self, name, dependencies=None, dependency_types=None,
                     conditions=None):
@@ -168,3 +174,7 @@ class MockPackageMultiRepo(object):
         self.spec_to_pkg["mockrepo." + name] = mock_package
 
         return mock_package
+
+    @property
+    def provider_index(self):
+        return spack.provider_index.ProviderIndex()

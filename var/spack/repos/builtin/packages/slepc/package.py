@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,9 @@ class Slepc(Package):
 
     maintainers = ['joseeroman', 'balay']
 
-    version('master', branch='master')
+    version('main', branch='main')
+    version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
+    version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')
     version('3.14.0', sha256='37f8bb270169d1d3f5d43756ac8929d56204e596bd7a78a7daff707513472e46')
     version('3.13.4', sha256='ddc9d58e1a4413218f4e67ea3b255b330bd389d67f394403a27caedf45afa496')
     version('3.13.3', sha256='23d179c22b4b2f22d29fa0ac0a62f5355a964d3bc245a667e9332347c5aa8f81')
@@ -52,7 +54,7 @@ class Slepc(Package):
     depends_on('python@2.6:2.8,3.4:', type='build', when='@3.11:')
 
     # Cannot mix release and development versions of SLEPc and PETSc:
-    depends_on('petsc@develop', when='@develop')
+    depends_on('petsc@main', when='@main')
     depends_on('petsc@3.14:3.14.99', when='@3.14:3.14.99')
     depends_on('petsc@3.13:3.13.99', when='@3.13:3.13.99')
     depends_on('petsc@3.12:3.12.99', when='@3.12:3.12.99')
@@ -95,7 +97,7 @@ class Slepc(Package):
 
         if '+arpack' in spec:
             options.extend([
-                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix.lib,
+                '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
             if spec.satisfies('@:3.12.99'):
                 arpackopt = '--with-arpack-flags'
@@ -123,6 +125,10 @@ class Slepc(Package):
             make('test', parallel=False)
 
         make('install', parallel=False)
+
+    def setup_run_environment(self, env):
+        # set SLEPC_DIR in the module file
+        env.set('SLEPC_DIR', self.prefix)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         # set up SLEPC_DIR for everyone using SLEPc package

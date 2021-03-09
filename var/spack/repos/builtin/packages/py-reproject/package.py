@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,7 +17,7 @@ class PyReproject(PythonPackage):
     astropy-healpix package."""
 
     homepage = 'https://reproject.readthedocs.io/'
-    url = 'https://pypi.io/packages/source/r/reproject/reproject-0.7.1.tar.gz'
+    pypi = 'reproject/reproject-0.7.1.tar.gz'
 
     version('0.7.1', sha256='95c0fa49e6b4e36455b91fa09ad1b71b230c990ad91d948af67ea3509a1a4ccb')
 

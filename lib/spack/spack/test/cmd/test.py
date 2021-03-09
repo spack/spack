@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -181,3 +181,15 @@ def test_test_help_cdash(mock_test_stage):
     """Make sure `spack test --help-cdash` describes CDash arguments"""
     out = spack_test('run', '--help-cdash')
     assert 'CDash URL' in out
+
+
+def test_list_all(mock_packages):
+    """make sure `spack test list --all` returns all packages with tests"""
+    pkgs = spack_test("list", "--all").strip().split()
+    assert set(pkgs) == set([
+        "printing-package",
+        "py-extension1",
+        "py-extension2",
+        "test-error",
+        "test-fail",
+    ])

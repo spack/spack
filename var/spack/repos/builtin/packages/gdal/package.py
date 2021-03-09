@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,9 @@ class Gdal(AutotoolsPackage):
     list_depth = 1
 
     maintainers = ['adamjstewart']
+    import_modules = ['osgeo', 'osgeo.utils']
 
-    import_modules = [
-        'osgeo', 'osgeo.gdal', 'osgeo.ogr', 'osgeo.osr',
-        'osgeo.gdal_array', 'osgeo.gdalconst'
-    ]
-
+    version('3.2.1',  sha256='6c588b58fcb63ff3f288eb9f02d76791c0955ba9210d98c3abd879c770ae28ea')
     version('3.2.0',  sha256='b051f852600ffdf07e337a7f15673da23f9201a9dbb482bd513756a3e5a196a6')
     version('3.1.4',  sha256='7b82486f71c71cec61f9b237116212ce18ef6b90f068cbbf9f7de4fc50b576a8')
     version('3.1.3',  sha256='161cf55371a143826f1d76ce566db1f0a666496eeb4371aed78b1642f219d51d')
@@ -48,7 +45,7 @@ class Gdal(AutotoolsPackage):
     version('2.3.0',  sha256='6f75e49aa30de140525ccb58688667efe3a2d770576feb7fbc91023b7f552aa2')
     version('2.1.2',  sha256='b597f36bd29a2b4368998ddd32b28c8cdf3c8192237a81b99af83cc17d7fa374')
     version('2.0.2',  sha256='90f838853cc1c07e55893483faa7e923e4b4b1659c6bc9df3538366030a7e622')
-    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042')
+    version('1.11.5', sha256='d4fdc3e987b9926545f0a514b4328cd733f2208442f8d03bde630fe1f7eff042', deprecated=True)
 
     variant('libtool',   default=True,  description='Use libtool to build the library')
     variant('libz',      default=True,  description='Include libz support')
@@ -146,6 +143,10 @@ class Gdal(AutotoolsPackage):
     depends_on('proj@:6', when='+proj @2.5:2.999')
     depends_on('proj@6:', when='+proj @3:')
     depends_on('perl', type=('build', 'run'), when='+perl')
+    # see gdal_version_and_min_supported_python_version
+    # in swig/python/osgeo/__init__.py
+    depends_on('python@3.6:', type=('build', 'link', 'run'), when='@3.3:+python')
+    depends_on('python@2.0:', type=('build', 'link', 'run'), when='@3.2:+python')
     depends_on('python', type=('build', 'link', 'run'), when='+python')
     # swig/python/setup.py
     depends_on('py-setuptools', type='build', when='+python')
@@ -169,6 +170,8 @@ class Gdal(AutotoolsPackage):
     conflicts('+mdb', when='~java', msg='MDB driver requires Java')
 
     executables = ['^gdal-config$']
+
+    import_modules = PythonPackage.import_modules
 
     @classmethod
     def determine_version(cls, exe):
@@ -554,15 +557,19 @@ class Gdal(AutotoolsPackage):
                 install('*.jar', prefix)
 
     @run_after('install')
-    @on_package_attributes(run_tests=True)
-    def import_module_test(self):
-        if '+python' in self.spec:
-            with working_dir('spack-test', create=True):
-                for module in self.import_modules:
-                    python('-c', 'import {0}'.format(module))
-
-    @run_after('install')
     def darwin_fix(self):
         # The shared library is not installed correctly on Darwin; fix this
         if 'platform=darwin' in self.spec:
             fix_darwin_install_name(self.prefix.lib)
+
+    def test(self):
+        """Attempts to import modules of the installed package."""
+
+        if '+python' in self.spec:
+            # Make sure we are importing the installed modules,
+            # not the ones in the source directory
+            for module in self.import_modules:
+                self.run_test(self.spec['python'].command.path,
+                              ['-c', 'import {0}'.format(module)],
+                              purpose='checking import of {0}'.format(module),
+                              work_dir='spack-test')

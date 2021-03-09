@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class GobjectIntrospection(Package):
     # version 1.48.0 build fails with glib 2.49.4
     depends_on("glib@2.48.1", when="@1.48.0")
     depends_on("python")
-    depends_on("cairo")
+    depends_on("cairo+gobject")
     depends_on("bison", type="build")
     depends_on("flex", type="build")
     depends_on("pkgconfig", type="build")

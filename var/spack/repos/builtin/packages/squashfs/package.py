@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,7 +24,7 @@ class Squashfs(MakefilePackage):
     variant('lzo', default=False, description='Enable LZO compression support')
     variant('xz', default=False, description='Enable xz compression support')
     variant('zstd', default=False, description='Enable Zstandard/zstd support')
-    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'), 
+    variant('default_compression', default='gzip', values=('gzip', 'lz4', 'lzo', 'xz', 'zstd'),
             multi=False, description='Default compression algorithm')
 
     conflicts('squashfs~gzip default_compression=gzip', msg='Cannot set default compression to missing algorithm')
@@ -43,6 +43,11 @@ class Squashfs(MakefilePackage):
     depends_on('lzo', when='+lzo')
     depends_on('xz', when='+xz')
     depends_on('zstd', when='+zstd')
+
+    # patch from
+    # https://github.com/plougher/squashfs-tools/commit/fe2f5da4b0f8994169c53e84b7cb8a0feefc97b5.patch
+    patch('gcc-10.patch', when="%gcc@10:")
+    patch('gcc-10.patch', when="%clang@11:")
 
     def build(self, spec, prefix):
         with working_dir('squashfs-tools'):

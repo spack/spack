@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,6 +53,10 @@ class Mumps(Package):
 
     patch('examples.patch', when='@5.1.1%clang^spectrum-mpi')
     patch('gfortran8.patch', when='@5.1.2')
+    # The following patches src/Makefile to fix some dependency
+    # issues in lib[cdsz]mumps.so
+    patch('mumps.src-makefile.5.2.patch', when='@5.2.0 +shared')
+    patch('mumps.src-makefile.5.3.patch', when='@5.3.0: +shared')
 
     def write_makefile_inc(self):
         if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
@@ -74,6 +78,10 @@ class Mumps(Package):
                          lapack_blas.ld_flags if not shared else '']
 
         orderings = ['-Dpord']
+        # All of the lib[cdsz]mumps.* libs depend on mumps_common
+        extra_libs4mumps = ['-L$(topdir)/lib', '-lmumps_common']
+        # and mumps_common depends on pord
+        extra_libs4mumps += ['-L$(topdir)/PORD/lib', '-lpord']
 
         if '+ptscotch' in self.spec or '+scotch' in self.spec:
             makefile_conf.extend([
@@ -131,6 +139,10 @@ class Mumps(Package):
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
+        # The mumps.src-makefile.patch wants us to set these PIC variables
+        makefile_conf.append('FC_PIC_FLAG={0}'.format(fpic))
+        makefile_conf.append('CC_PIC_FLAG={0}'.format(cpic))
+
         opt_level = '3' if using_xl else ''
 
         if '+int64' in self.spec:
@@ -143,8 +155,7 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
                         fpic,
-                        '-fdefault-integer-8' if using_gcc
-                                              else '-i8'),  # noqa
+                        '-fdefault-integer-8' if using_gcc else '-i8'),  # noqa
                 ])
 
             makefile_conf.extend([
@@ -178,6 +189,8 @@ class Mumps(Package):
                  "FC = {0}".format(spack_fc),
                  "FL = {0}".format(spack_fc),
                  "MUMPS_TYPE = seq"])
+            # For sequential MUMPS, we need to link to a fake MPI lib
+            extra_libs4mumps += ['-L$(topdir)/libseq', '-lmpiseq']
 
         # TODO: change the value to the correct one according to the
         # compiler possible values are -DAdd_, -DAdd__ and/or -DUPPER
@@ -228,8 +241,8 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'LIBEXT=.so',
                     'AR=link_cmd() { $(FL) -%s -Wl,-soname '
-                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                    (build_shared_flag, prefix.lib, inject_libs),
+                    '-Wl,$(notdir $@) -o "$$@" %s; }; link_cmd ' %
+                    (build_shared_flag, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of
@@ -247,6 +260,10 @@ class Mumps(Package):
                 'RANLIB = ranlib'
             ])
 
+        # The mumps.src-makefile.patch wants EXTRA_LIBS4MUMPS defined
+        makefile_conf.extend([
+            'EXTRA_LIBS4MUMPS = {0}'.format(' '.join(extra_libs4mumps))
+        ])
         makefile_inc_template = join_path(
             os.path.dirname(self.module.__file__), 'Makefile.inc')
         with open(makefile_inc_template, "r") as fh:
@@ -256,6 +273,15 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         self.write_makefile_inc()

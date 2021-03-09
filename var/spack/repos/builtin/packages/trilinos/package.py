@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -271,7 +271,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
     conflicts('+muelu', when='~teuchos')
-    conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
     conflicts('+phalanx', when='~sacado')
@@ -292,7 +291,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+tpetra', when='~teuchos')
     conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
-    conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
 
     conflicts('+dtk', when='~boost')
@@ -333,6 +331,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='@develop')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -398,7 +397,6 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
-    conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')

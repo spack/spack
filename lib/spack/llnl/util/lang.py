@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,11 +9,16 @@ import multiprocessing
 import os
 import re
 import functools
-import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
 import sys
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Hashable, MutableMapping  # novm
+else:
+    from collections import Hashable, MutableMapping
 
 
 # Ignore emacs backups when listing modules
@@ -189,7 +194,7 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, Hashable):
             # Not hashable, so just call the function.
             return func(*args)
 
@@ -264,7 +269,7 @@ def key_ordering(cls):
 
 
 @key_ordering
-class HashableMap(collections.MutableMapping):
+class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
 
@@ -671,6 +676,13 @@ def uniq(sequence):
             uniq_list.append(element)
             last = element
     return uniq_list
+
+
+def star(func):
+    """Unpacks arguments for use with Multiprocessing mapping functions"""
+    def _wrapper(args):
+        return func(*args)
+    return _wrapper
 
 
 class Devnull(object):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ test_args = [
     '-Wl,--end-group',
     '-Xlinker', '-rpath', '-Xlinker', '/third/rpath',
     '-Xlinker', '-rpath', '-Xlinker', '/fourth/rpath',
+    '-Wl,--rpath,/fifth/rpath', '-Wl,--rpath', '-Wl,/sixth/rpath',
     '-llib3', '-llib4',
     'arg5', 'arg6']
 
@@ -45,11 +46,13 @@ test_library_paths = [
 
 test_wl_rpaths = [
     '-Wl,-rpath,/first/rpath', '-Wl,-rpath,/second/rpath',
-    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath']
+    '-Wl,-rpath,/third/rpath', '-Wl,-rpath,/fourth/rpath',
+    '-Wl,-rpath,/fifth/rpath', '-Wl,-rpath,/sixth/rpath']
 
 test_rpaths = [
     '-rpath', '/first/rpath', '-rpath', '/second/rpath',
-    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath']
+    '-rpath', '/third/rpath', '-rpath', '/fourth/rpath',
+    '-rpath', '/fifth/rpath', '-rpath', '/sixth/rpath']
 
 test_args_without_paths = [
     'arg1',
@@ -347,15 +350,15 @@ def test_ccld_deps_isystem():
     with set_env(SPACK_INCLUDE_DIRS='xinc:yinc:zinc',
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
-        mytest_args = test_args + ['-isystemfooinc']
+        mytest_args = test_args + ['-isystem', 'fooinc']
         check_args(
             cc, mytest_args,
             [real_cc] +
             test_include_paths +
-            ['-isystemfooinc',
-             '-isystemxinc',
-             '-isystemyinc',
-             '-isystemzinc'] +
+            ['-isystem', 'fooinc',
+             '-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',
@@ -429,20 +432,20 @@ def test_ccld_with_system_dirs_isystem():
                  SPACK_RPATH_DIRS='xlib:ylib:zlib',
                  SPACK_LINK_DIRS='xlib:ylib:zlib'):
 
-        sys_path_args = ['-isystem/usr/include',
+        sys_path_args = ['-isystem', '/usr/include',
                          '-L/usr/local/lib',
                          '-Wl,-rpath,/usr/lib64',
-                         '-isystem/usr/local/include',
+                         '-isystem', '/usr/local/include',
                          '-L/lib64/']
         check_args(
             cc, sys_path_args + test_args,
             [real_cc] +
             test_include_paths +
-            ['-isystemxinc',
-             '-isystemyinc',
-             '-isystemzinc'] +
-            ['-isystem/usr/include',
-             '-isystem/usr/local/include'] +
+            ['-isystem', 'xinc',
+             '-isystem', 'yinc',
+             '-isystem', 'zinc'] +
+            ['-isystem', '/usr/include',
+             '-isystem', '/usr/local/include'] +
             test_library_paths +
             ['-Lxlib',
              '-Lylib',

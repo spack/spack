@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class Root(CMakePackage):
     # Development version (when more recent than production).
 
     # Production version
+    version('6.22.06', sha256='c4688784a7e946cd10b311040b6cf0b2f75125a7520e04d1af0b746505911b57')
     version('6.22.02', sha256='89784afa9c9047e9da25afa72a724f32fa8aa646df267b7731e4527cc8a0c340')
     version('6.22.00', sha256='efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed')
     version('6.20.08', sha256='d02f224b4908c814a99648782b927c353d44db79dea2cadea86138c1afc23ae9')
@@ -250,7 +251,8 @@ class Root(CMakePackage):
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')
     depends_on('libxml2',   when='+xml')
-    depends_on('xrootd@:4.99.99',    when='+xrootd')
+    depends_on('xrootd',          when='+xrootd')
+    depends_on('xrootd@:4.99.99', when='@:6.22.03 +xrootd')
 
     # ###################### Conflicts ######################
 

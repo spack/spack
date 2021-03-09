@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,7 @@ import os
 import os.path
 from subprocess import PIPE
 from subprocess import check_call
+from typing import List  # novm
 
 import llnl.util.tty as tty
 import llnl.util.filesystem as fs
@@ -61,7 +62,7 @@ class AutotoolsPackage(PackageBase):
 
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.build`
     #: phase
-    build_targets = []
+    build_targets = []  # type: List[str]
     #: Targets for ``make`` during the :py:meth:`~.AutotoolsPackage.install`
     #: phase
     install_targets = ['install']
@@ -75,7 +76,7 @@ class AutotoolsPackage(PackageBase):
     #: Set to true to force the autoreconf step even if configure is present
     force_autoreconf = False
     #: Options to be passed to autoreconf when using the default implementation
-    autoreconf_extra_args = []
+    autoreconf_extra_args = []  # type: List[str]
 
     #: If False deletes all the .la files in the prefix folder
     #: after the installation. If True instead it installs them.

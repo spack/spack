@@ -1,0 +1,66 @@
+--- a/src/sgeutils/fsl_sub	2017-04-24 05:19:14.000000000 -0500
++++ b/src/sgeutils/fsl_sub	2020-11-15 17:42:28.100657607 -0600
+@@ -80,7 +80,7 @@
+ # "NONE". Note that a user can unset SGE_ROOT if they don't want the
+ # cluster to be used.
+ ###########################################################################
+-METHOD=SGE
++METHOD=NONE
+ unset module
+ if [ "x$SGE_ROOT" = "x" ] ; then
+ 	METHOD=NONE
+@@ -141,7 +141,9 @@
+ 
+ usage ()
+ {
+-  cat <<EOF
++  case $METHOD in
++    SGE)
++      cat <<EOF
+ 
+ $command V1.1 - wrapper for job control system such as SGE
+ 
+@@ -186,7 +188,23 @@
+ bigmem.q:   This queue is like the verylong.q but has no memory limits.
+ 
+ EOF
++      ;;
++    NONE)
++      cat <<EOF
+ 
++$command V1.1 - wrapper for job control system such as SGE
++
++Usage: $command [options] <command>
++
++$command gzip *.img *.hdr
++
++  -t <filename>         Specify a task file of commands to execute in parallel
++  -l <logdirname>       Where to output logfiles
++  -v                    Verbose mode.
++
++EOF
++      ;;
++  esac
+   exit 1
+ }
+ 
+@@ -195,8 +213,17 @@
+   usage
+ fi
+ 
+-set -- `getopt T:q:a:p:M:j:t:z:N:R:Fvm:l:s: $*`
+-result=$?
++case $METHOD in
++  SGE)
++    set -- `getopt T:q:a:p:M:j:t:z:N:R:Fvm:l:s: $*`
++    result=$?
++    ;;
++  NONE)
++    set -- `getopt t:vl: $*`
++    result=$?
++    ;;
++esac
++
+ if [ $result != 0 ] ; then
+   echo "What? Your arguments make no sense!"
+ fi

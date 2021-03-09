@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,7 +18,10 @@ class QuantumEspresso(Package):
     maintainers = ['naromero77']
 
     version('develop', branch='develop')
-    version('6.6', sha256='924656cb083f52e5d2fe71ade05881389dac64b45316f1bdd6dee1c6170a672c', preferred=True)
+    version('6.7', sha256='fe0ce74ff736b10d2a20c9d59025c01f88f86b00d229c123b1791f1edd7b4315',
+            url='https://gitlab.com/QEF/q-e/-/archive/qe-6.7MaX-Release/q-e-qe-6.7MaX-Release.tar.gz'
+            )
+    version('6.6', sha256='924656cb083f52e5d2fe71ade05881389dac64b45316f1bdd6dee1c6170a672c')
     version('6.5', sha256='258b2a8a6280e86dad779e5c56356d8b35dc96d12ff33dabeee914bc03d6d602')
     version('6.4.1', sha256='b0d7e9f617b848753ad923d8c6ca5490d5d82495f82b032b71a0ff2f2e9cfa08')
     version('6.4', sha256='781366d03da75516fdcf9100a1caadb26ccdd1dedd942a6f8595ff0edca74bfe')
@@ -29,6 +32,20 @@ class QuantumEspresso(Package):
     version('6.0.0', sha256='bc77d9553bf5a9253ae74058dffb1d6e5fb61093188e78d3b8d8564755136f19')
     version('5.4',   sha256='e3993fccae9cea04a5c6492e8b961a053a63727051cb5c4eb6008f62cda8f335')
     version('5.3',   sha256='3b26038efb9e3f8ac7a2b950c31d8c29169a3556c0b68c299eb88a4be8dc9048')
+
+    resource(name='environ',
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.1',
+             when='@6.3:6.4.99 +environ',
+             destination='.'
+             )
+
+    resource(name='environ',
+             git='https://github.com/environ-developers/Environ.git',
+             tag='v1.0',
+             when='@6.2.1:6.2.99 +environ',
+             destination='.'
+             )
 
     variant('mpi', default=True, description='Builds with mpi support')
     variant('openmp', default=False, description='Enables openMP support')
@@ -57,6 +74,11 @@ class QuantumEspresso(Package):
     # https://github.com/QMCPACK/qmcpack/tree/develop/external_codes/quantum_espresso
     variant('qmcpack', default=False,
             description='Build QE-to-QMCPACK wave function converter')
+
+    variant('environ', default=False,
+            description='Enables support for introducing environment effects '
+            'into atomistic first-principles simulations.'
+            'See http://quantum-environ.org/about.html')
 
     # Dependencies
     depends_on('blas')
@@ -179,6 +201,9 @@ class QuantumEspresso(Package):
     conflicts('@5.3:', when='%gcc@8 target=a64fx',
               msg='Internal compiler error with gcc8 and a64fx')
 
+    conflicts('@6.5:', when='+environ',
+              msg='6.4.x is the latest QE series supported by Environ')
+
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
@@ -201,6 +226,16 @@ class QuantumEspresso(Package):
     patch('https://gitlab.com/QEF/q-e/-/commit/cf1fedefc20d39f5cd7551ded700ea4c77ad6e8f.diff',
           sha256='8f179663a8d031aff9b1820a32449942281195b6e7b1ceaab1f729651b43fa58',
           when='+patch@6.6')
+    # QE 6.5 INTENT(OUT) without settig value in tetra_weights_only(..., ef):
+    # For Fujitsu compiler
+    patch('https://gitlab.com/QEF/q-e/-/commit/8f096b53e75026701c681c508e2c24a9378c0950.diff',
+          sha256='f4f1cce4182b57ac797c8f6ec8460fe375ee96385fcd8f6a61e1460bc957eb67',
+          when='+patch@6.5')
+    # QE 6.5 Fix INTENT
+    # For Fujitsu compiler
+    patch('https://gitlab.com/QEF/q-e/-/commit/c2a86201ed72693ffa50cc99b22f5d3365ae2c2b.diff',
+          sha256='b2dadc0bc008a3ad4b74ae85cc380dd2b63f2ae43a634e6f9d8db8077efcea6c',
+          when='+patch@6.5')
     # QE 6.3 requires multiple patches to fix MKL detection
     # There may still be problems on Mac with MKL detection
     patch('https://gitlab.com/QEF/q-e/commit/0796e1b7c55c9361ecb6515a0979280e78865e36.diff',
@@ -219,8 +254,27 @@ class QuantumEspresso(Package):
           sha256='b1aa3179ee1c069964fb9c21f3b832aebeae54947ce8d3cc1a74e7b154c3c10f',
           when='+patch@6.4.1:6.5.0')
 
+    # QE 6.4.1 Fix intent for Fujitsu compiler
+    patch('fj-intent.6.4.1.patch', when='+patch@6.4.1')
+    # QE 6.4.1 Fix intent
+    patch('https://gitlab.com/QEF/q-e/-/commit/c2a86201ed72693ffa50cc99b22f5d3365ae2c2b.diff',
+          sha256='b2dadc0bc008a3ad4b74ae85cc380dd2b63f2ae43a634e6f9d8db8077efcea6c',
+          when='+patch@6.4.1')
+
+    # QE 6.4.1 Small fixes for XLF compilation
+    patch('https://gitlab.com/QEF/q-e/-/commit/cf088926d68792cbaea48960c222e336a3965df6.diff',
+          sha256='bbceba1fb08d01d548d4393bbcaeae966def13f75884268a0f84448457b8eaa3',
+          when='+patch@6.4.1:6.5.0')
+
     # Configure updated to work with NVIDIA compilers
     patch('nvhpc.patch', when='@6.5 %nvhpc')
+
+    # Configure updated to work with Fujitsu compilers
+    patch('fj.6.5.patch', when='@6.5+patch %fj')
+    patch('fj.6.6.patch', when='@6.6:6.7+patch %fj')
+
+    # extlibs_makefile updated to work with fujitsu compilers
+    patch('fj-fox.patch', when='+patch %fj')
 
     # Spurious problems running in parallel the Makefile
     # generated by the configure
@@ -322,6 +376,8 @@ class QuantumEspresso(Package):
             else:
                 scalapack_option = 'yes'
             options.append('--with-scalapack={0}'.format(scalapack_option))
+            scalapack_lib = spec['scalapack'].libs
+            options.append('SCALAPACK_LIBS={0}'.format(scalapack_lib.ld_flags))
 
         if '+elpa' in spec:
 
@@ -372,6 +428,19 @@ class QuantumEspresso(Package):
             make('all', 'epw')
         else:
             make('all')
+
+        if '+environ' in spec:
+            addsonpatch = Executable('./install/addsonpatch.sh')
+            environpatch = Executable('./Environ/patches/environpatch.sh')
+            makedeps = Executable('./install/makedeps.sh')
+
+            addsonpatch('Environ', 'Environ/src', 'Modules', '-patch')
+
+            environpatch('-patch')
+
+            makedeps()
+
+            make('pw')
 
         if 'platform=darwin' in spec:
             mkdirp(prefix.bin)
