@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import glob
 import os
+import sys
 from argparse import Namespace
 
 import pytest
@@ -60,9 +61,10 @@ def env_deactivate():
 
 
 def test_add():
-    e = ev.create('test')
-    e.add('mpileaks')
-    assert Spec('mpileaks') in e.user_specs
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('test')
+        e.add('mpileaks')
+        assert Spec('mpileaks') in e.user_specs
 
 
 def test_env_add_virtual():
@@ -134,11 +136,12 @@ def test_env_remove(capfd):
 
 
 def test_concretize():
-    e = ev.create('test')
-    e.add('mpileaks')
-    e.concretize()
-    env_specs = e._get_environment_specs()
-    assert any(x.name == 'mpileaks' for x in env_specs)
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('test')
+        e.add('mpileaks')
+        e.concretize()
+        env_specs = e._get_environment_specs()
+        assert any(x.name == 'mpileaks' for x in env_specs)
 
 
 def test_env_uninstalled_specs(install_mockery, mock_fetch):
@@ -154,14 +157,17 @@ def test_env_uninstalled_specs(install_mockery, mock_fetch):
     assert any(s.name == 'mpileaks' for s in e.uninstalled_specs())
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_install_all(install_mockery, mock_fetch):
-    e = ev.create('test')
-    e.add('cmake-client')
-    e.concretize()
-    e.install_all()
-    env_specs = e._get_environment_specs()
-    spec = next(x for x in env_specs if x.name == 'cmake-client')
-    assert spec.package.installed
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('test')
+        e.add('cmake-client')
+        e.concretize()
+        e.install_all()
+        env_specs = e._get_environment_specs()
+        spec = next(x for x in env_specs if x.name == 'cmake-client')
+        assert spec.package.installed
 
 
 def test_env_install_single_spec(install_mockery, mock_fetch):
@@ -282,7 +288,8 @@ env:
     a = spack.repo.path.get_pkg_class('a')
     assert a.installed, 'Expected a to be installed'
 
-
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_remove_after_concretize():
     e = ev.create('test')
 
@@ -368,7 +375,8 @@ def test_environment_status(capsys, tmpdir):
                     with capsys.disabled():
                         assert 'in current directory' in env('status')
 
-
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_status_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
     install_mockery
@@ -389,7 +397,8 @@ def test_env_status_broken_view(
         assert 'In environment test' in output
         assert 'Environment test includes out of date' not in output
 
-
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_activate_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
     install_mockery
@@ -409,28 +418,30 @@ def test_env_activate_broken_view(
 
 
 def test_to_lockfile_dict():
-    e = ev.create('test')
-    e.add('mpileaks')
-    e.concretize()
-    context_dict = e._to_lockfile_dict()
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('test')
+        e.add('mpileaks')
+        e.concretize()
+        context_dict = e._to_lockfile_dict()
 
-    e_copy = ev.create('test_copy')
+        e_copy = ev.create('test_copy')
 
-    e_copy._read_lockfile_dict(context_dict)
-    assert e.specs_by_hash == e_copy.specs_by_hash
+        e_copy._read_lockfile_dict(context_dict)
+        assert e.specs_by_hash == e_copy.specs_by_hash
 
 
 def test_env_repo():
-    e = ev.create('test')
-    e.add('mpileaks')
-    e.write()
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('test')
+        e.add('mpileaks')
+        e.write()
 
-    with ev.read('test'):
-        concretize()
+        with ev.read('test'):
+            concretize()
 
-    package = e.repo.get('mpileaks')
-    assert package.name == 'mpileaks'
-    assert package.namespace == 'builtin.mock'
+        package = e.repo.get('mpileaks')
+        assert package.name == 'mpileaks'
+        assert package.namespace == 'builtin.mock'
 
 
 def test_user_removed_spec():
@@ -443,28 +454,29 @@ env:
   - libelf
 """)
 
-    before = ev.create('test', initial_yaml)
-    before.concretize()
-    before.write()
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        before = ev.create('test', initial_yaml)
+        before.concretize()
+        before.write()
 
-    # user modifies yaml externally to spack and removes hypre
-    with open(before.manifest_path, 'w') as f:
-        f.write("""\
-env:
-  specs:
-  - mpileaks
-  - libelf
-""")
+        # user modifies yaml externally to spack and removes hypre
+        with open(before.manifest_path, 'w') as f:
+            f.write("""\
+    env:
+      specs:
+      - mpileaks
+      - libelf
+    """)
 
-    after = ev.read('test')
-    after.concretize()
-    after.write()
+        after = ev.read('test')
+        after.concretize()
+        after.write()
 
-    env_specs = after._get_environment_specs()
-    read = ev.read('test')
-    env_specs = read._get_environment_specs()
+        env_specs = after._get_environment_specs()
+        read = ev.read('test')
+        env_specs = read._get_environment_specs()
 
-    assert not any(x.name == 'hypre' for x in env_specs)
+        assert not any(x.name == 'hypre' for x in env_specs)
 
 
 def test_init_from_lockfile(tmpdir):
@@ -476,21 +488,22 @@ env:
   - hypre
   - libelf
 """)
-    e1 = ev.create('test', initial_yaml)
-    e1.concretize()
-    e1.write()
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e1 = ev.create('test', initial_yaml)
+        e1.concretize()
+        e1.write()
 
-    e2 = ev.Environment(str(tmpdir), e1.lock_path)
+        e2 = ev.Environment(str(tmpdir), e1.lock_path)
 
-    for s1, s2 in zip(e1.user_specs, e2.user_specs):
-        assert s1 == s2
+        for s1, s2 in zip(e1.user_specs, e2.user_specs):
+            assert s1 == s2
 
-    for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
-        assert h1 == h2
-        assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
+        for h1, h2 in zip(e1.concretized_order, e2.concretized_order):
+            assert h1 == h2
+            assert e1.specs_by_hash[h1] == e2.specs_by_hash[h2]
 
-    for s1, s2 in zip(e1.concretized_user_specs, e2.concretized_user_specs):
-        assert s1 == s2
+        for s1, s2 in zip(e1.concretized_user_specs, e2.concretized_user_specs):
+            assert s1 == s2
 
 
 def test_init_from_yaml(tmpdir):
@@ -502,20 +515,23 @@ env:
   - hypre
   - libelf
 """)
-    e1 = ev.create('test', initial_yaml)
-    e1.concretize()
-    e1.write()
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e1 = ev.create('test', initial_yaml)
+        e1.concretize()
+        e1.write()
 
-    e2 = ev.Environment(str(tmpdir), e1.manifest_path)
+        e2 = ev.Environment(str(tmpdir), e1.manifest_path)
 
-    for s1, s2 in zip(e1.user_specs, e2.user_specs):
-        assert s1 == s2
+        for s1, s2 in zip(e1.user_specs, e2.user_specs):
+            assert s1 == s2
 
-    assert not e2.concretized_order
-    assert not e2.concretized_user_specs
-    assert not e2.specs_by_hash
+        assert not e2.concretized_order
+        assert not e2.concretized_user_specs
+        assert not e2.specs_by_hash
 
 
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 @pytest.mark.usefixtures('config')
 def test_env_view_external_prefix(
         tmpdir_factory, mutable_database, mock_packages
@@ -601,14 +617,15 @@ env:
     mpileaks:
       version: [2.2]
 """
-    _env_create('test', StringIO(test_config))
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
 
-    e = ev.read('test')
-    with e:
-        e.concretize()
+        e = ev.read('test')
+        with e:
+            e.concretize()
 
-    assert any(x.satisfies('mpileaks@2.2')
-               for x in e._get_environment_specs())
+        assert any(x.satisfies('mpileaks@2.2')
+                   for x in e._get_environment_specs())
 
 
 def test_with_config_bad_include(env_deactivate, capfd):
@@ -619,18 +636,19 @@ spack:
   - /no/such/directory
   - no/such/file.yaml
 """
-    _env_create(env_name, StringIO(test_config))
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create(env_name, StringIO(test_config))
 
-    e = ev.read(env_name)
-    with pytest.raises(SystemExit):
-        with e:
-            e.concretize()
+        e = ev.read(env_name)
+        with pytest.raises(SystemExit):
+            with e:
+                e.concretize()
 
-    out, err = capfd.readouterr()
+        out, err = capfd.readouterr()
 
-    assert 'missing include' in err
-    assert '/no/such/directory' in err
-    assert 'no/such/file.yaml' in err
+        assert 'missing include' in err
+        assert '/no/such/directory' in err
+        assert 'no/such/file.yaml' in err
 
 
 def test_env_with_include_config_files_same_basename():
@@ -642,37 +660,37 @@ def test_env_with_include_config_files_same_basename():
             specs:
                 [libelf, mpileaks]
             """
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
+        e = ev.read('test')
 
-    _env_create('test', StringIO(test_config))
-    e = ev.read('test')
+        fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+        with open(os.path.join(
+                e.path,
+                './path/to/included-config.yaml'), 'w') as f:
+            f.write("""\
+            packages:
+              libelf:
+                  version: [0.8.10]
+            """)
 
-    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
-    with open(os.path.join(
-            e.path,
-            './path/to/included-config.yaml'), 'w') as f:
-        f.write("""\
-        packages:
-          libelf:
-              version: [0.8.10]
-        """)
+        fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+        with open(os.path.join(
+                e.path,
+                './second/path/to/include-config.yaml'), 'w') as f:
+            f.write("""\
+            packages:
+              mpileaks:
+                  version: [2.2]
+            """)
 
-    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
-    with open(os.path.join(
-            e.path,
-            './second/path/to/include-config.yaml'), 'w') as f:
-        f.write("""\
-        packages:
-          mpileaks:
-              version: [2.2]
-        """)
+        with e:
+            e.concretize()
 
-    with e:
-        e.concretize()
+        environment_specs = e._get_environment_specs(False)
 
-    environment_specs = e._get_environment_specs(False)
-
-    assert(environment_specs[0].satisfies('libelf@0.8.10'))
-    assert(environment_specs[1].satisfies('mpileaks@2.2'))
+        assert(environment_specs[0].satisfies('libelf@0.8.10'))
+        assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
 def test_env_with_included_config_file():
@@ -683,21 +701,22 @@ env:
   specs:
   - mpileaks
 """
-    _env_create('test', StringIO(test_config))
-    e = ev.read('test')
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
+        e = ev.read('test')
 
-    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
-        f.write("""\
+        with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+            f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-    with e:
-        e.concretize()
+        with e:
+            e.concretize()
 
-    assert any(x.satisfies('mpileaks@2.2')
-               for x in e._get_environment_specs())
+        assert any(x.satisfies('mpileaks@2.2')
+                   for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_scope():
@@ -710,23 +729,24 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    _env_create('test', StringIO(test_config))
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
 
-    e = ev.read('test')
+        e = ev.read('test')
 
-    fs.mkdirp(config_scope_path)
-    with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
-        f.write("""\
+        fs.mkdirp(config_scope_path)
+        with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
+            f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-    with e:
-        e.concretize()
+        with e:
+            e.concretize()
 
-    assert any(x.satisfies('mpileaks@2.2')
-               for x in e._get_environment_specs())
+        assert any(x.satisfies('mpileaks@2.2')
+                   for x in e._get_environment_specs())
 
 
 def test_env_with_included_config_var_path():
@@ -739,23 +759,24 @@ env:
   - mpileaks
 """ % config_var_path
 
-    _env_create('test', StringIO(test_config))
-    e = ev.read('test')
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
+        e = ev.read('test')
 
-    config_real_path = substitute_path_variables(config_var_path)
-    fs.mkdirp(os.path.dirname(config_real_path))
-    with open(config_real_path, 'w') as f:
-        f.write("""\
+        config_real_path = substitute_path_variables(config_var_path)
+        fs.mkdirp(os.path.dirname(config_real_path))
+        with open(config_real_path, 'w') as f:
+            f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-    with e:
-        e.concretize()
+        with e:
+            e.concretize()
 
-    assert any(x.satisfies('mpileaks@2.2')
-               for x in e._get_environment_specs())
+        assert any(x.satisfies('mpileaks@2.2')
+                   for x in e._get_environment_specs())
 
 
 def test_env_config_precedence():
@@ -769,11 +790,12 @@ env:
   specs:
   - mpileaks
 """
-    _env_create('test', StringIO(test_config))
-    e = ev.read('test')
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
+        e = ev.read('test')
 
-    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
-        f.write("""\
+        with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+            f.write("""\
 packages:
   mpileaks:
     version: [2.2]
@@ -781,18 +803,19 @@ packages:
     version: [0.8.11]
 """)
 
-    with e:
-        e.concretize()
+        with e:
+            e.concretize()
 
-    # ensure included scope took effect
-    assert any(
-        x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
+        # ensure included scope took effect
+        assert any(
+            x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
 
-    # ensure env file takes precedence
-    assert any(
-        x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
+        # ensure env file takes precedence
+        assert any(
+            x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
 
-
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_included_config_precedence():
     test_config = """\
 env:
@@ -802,18 +825,19 @@ env:
   specs:
   - mpileaks
 """
-    _env_create('test', StringIO(test_config))
-    e = ev.read('test')
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _env_create('test', StringIO(test_config))
+        e = ev.read('test')
 
-    with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
-        f.write("""\
+        with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
+            f.write("""\
 packages:
   libelf:
     version: [0.8.10]  # this should override libelf version below
 """)
 
-    with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
-        f.write("""\
+        with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
+            f.write("""\
 packages:
   mpileaks:
     version: [2.2]
@@ -821,14 +845,14 @@ packages:
     version: [0.8.12]
 """)
 
-    with e:
-        e.concretize()
+        with e:
+            e.concretize()
 
-    assert any(
-        x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
+        assert any(
+            x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
 
-    assert any(
-        [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
+        assert any(
+            [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
 
 
 def test_bad_env_yaml_format(tmpdir):
@@ -974,31 +998,32 @@ def create_v1_lockfile_dict(roots, all_specs):
 def test_read_old_lock_and_write_new(tmpdir):
     build_only = ('build',)
 
-    mock_repo = MockPackageMultiRepo()
-    y = mock_repo.add_package('y', [], [])
-    mock_repo.add_package('x', [y], [build_only])
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        mock_repo = MockPackageMultiRepo()
+        y = mock_repo.add_package('y', [], [])
+        mock_repo.add_package('x', [y], [build_only])
 
     with spack.repo.use_repositories(mock_repo):
-        x = Spec('x')
-        x.concretize()
+            x = Spec('x')
+            x.concretize()
 
-        y = x['y']
+            y = x['y']
 
-        test_lockfile_dict = create_v1_lockfile_dict([x], [x, y])
+            test_lockfile_dict = create_v1_lockfile_dict([x], [x, y])
 
-        test_lockfile_path = str(tmpdir.join('test.lock'))
-        with open(test_lockfile_path, 'w') as f:
-            sjson.dump(test_lockfile_dict, stream=f)
+            test_lockfile_path = str(tmpdir.join('test.lock'))
+            with open(test_lockfile_path, 'w') as f:
+                sjson.dump(test_lockfile_dict, stream=f)
 
-        _env_create('test', test_lockfile_path, with_view=False)
+            _env_create('test', test_lockfile_path, with_view=False)
 
-        e = ev.read('test')
-        hashes = set(e._to_lockfile_dict()['concrete_specs'])
-        # When the lockfile is rewritten, it should adopt the new hash scheme
-        # which accounts for all dependencies, including build dependencies
-        assert hashes == set([
-            x.build_hash(),
-            y.build_hash()])
+            e = ev.read('test')
+            hashes = set(e._to_lockfile_dict()['concrete_specs'])
+            # When the lockfile is rewritten, it should adopt the new hash scheme
+            # which accounts for all dependencies, including build dependencies
+            assert hashes == set([
+                x.build_hash(),
+                y.build_hash()])
 
 
 @pytest.mark.usefixtures('config')
@@ -1006,26 +1031,27 @@ def test_read_old_lock_creates_backup(tmpdir):
     """When reading a version-1 lockfile, make sure that a backup of that file
     is created.
     """
-    mock_repo = MockPackageMultiRepo()
-    y = mock_repo.add_package('y', [], [])
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        mock_repo = MockPackageMultiRepo()
+        y = mock_repo.add_package('y', [], [])
 
     with spack.repo.use_repositories(mock_repo):
-        y = Spec('y')
-        y.concretize()
+            y = Spec('y')
+            y.concretize()
 
-        test_lockfile_dict = create_v1_lockfile_dict([y], [y])
+            test_lockfile_dict = create_v1_lockfile_dict([y], [y])
 
-        env_root = tmpdir.mkdir('test-root')
-        test_lockfile_path = str(env_root.join(ev.lockfile_name))
-        with open(test_lockfile_path, 'w') as f:
-            sjson.dump(test_lockfile_dict, stream=f)
+            env_root = tmpdir.mkdir('test-root')
+            test_lockfile_path = str(env_root.join(ev.lockfile_name))
+            with open(test_lockfile_path, 'w') as f:
+                sjson.dump(test_lockfile_dict, stream=f)
 
-        e = ev.Environment(str(env_root))
-        assert os.path.exists(e._lock_backup_v1_path)
-        with open(e._lock_backup_v1_path, 'r') as backup_v1_file:
-            lockfile_dict_v1 = sjson.load(backup_v1_file)
-        # Make sure that the backup file follows the v1 hash scheme
-        assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
+            e = ev.Environment(str(env_root))
+            assert os.path.exists(e._lock_backup_v1_path)
+            with open(e._lock_backup_v1_path, 'r') as backup_v1_file:
+                lockfile_dict_v1 = sjson.load(backup_v1_file)
+            # Make sure that the backup file follows the v1 hash scheme
+            assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
 
 
 @pytest.mark.usefixtures('config')
@@ -1037,30 +1063,31 @@ def test_indirect_build_dep():
     default = ('build', 'link')
     build_only = ('build',)
 
-    mock_repo = MockPackageMultiRepo()
-    z = mock_repo.add_package('z', [], [])
-    y = mock_repo.add_package('y', [z], [build_only])
-    mock_repo.add_package('x', [y], [default])
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        mock_repo = MockPackageMultiRepo()
+        z = mock_repo.add_package('z', [], [])
+        y = mock_repo.add_package('y', [z], [build_only])
+        mock_repo.add_package('x', [y], [default])
 
-    def noop(*args):
-        pass
-    setattr(mock_repo, 'dump_provenance', noop)
+        def noop(*args):
+            pass
+        setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
-        x_spec = Spec('x')
-        x_concretized = x_spec.concretized()
+            x_spec = Spec('x')
+            x_concretized = x_spec.concretized()
 
-        _env_create('test', with_view=False)
-        e = ev.read('test')
-        e.add(x_spec)
-        e.concretize()
-        e.write()
+            _env_create('test', with_view=False)
+            e = ev.read('test')
+            e.add(x_spec)
+            e.concretize()
+            e.write()
 
-        e_read = ev.read('test')
-        x_env_hash, = e_read.concretized_order
+            e_read = ev.read('test')
+            x_env_hash, = e_read.concretized_order
 
-        x_env_spec = e_read.specs_by_hash[x_env_hash]
-        assert x_env_spec == x_concretized
+            x_env_spec = e_read.specs_by_hash[x_env_hash]
+            assert x_env_spec == x_concretized
 
 
 @pytest.mark.usefixtures('config')
@@ -1078,42 +1105,43 @@ def test_store_different_build_deps():
     default = ('build', 'link')
     build_only = ('build',)
 
-    mock_repo = MockPackageMultiRepo()
-    z = mock_repo.add_package('z', [], [])
-    y = mock_repo.add_package('y', [z], [build_only])
-    mock_repo.add_package('x', [y, z], [default, build_only])
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        mock_repo = MockPackageMultiRepo()
+        z = mock_repo.add_package('z', [], [])
+        y = mock_repo.add_package('y', [z], [build_only])
+        mock_repo.add_package('x', [y, z], [default, build_only])
 
-    def noop(*args):
-        pass
-    setattr(mock_repo, 'dump_provenance', noop)
+        def noop(*args):
+            pass
+        setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
-        y_spec = Spec('y ^z@3')
-        y_concretized = y_spec.concretized()
+            y_spec = Spec('y ^z@3')
+            y_concretized = y_spec.concretized()
 
-        x_spec = Spec('x ^z@2')
-        x_concretized = x_spec.concretized()
+            x_spec = Spec('x ^z@2')
+            x_concretized = x_spec.concretized()
 
-        # Even though x chose a different 'z', it should choose the same y
-        # according to the DAG hash (since build deps are excluded from
-        # comparison by default). Although the dag hashes are equal, the specs
-        # are not considered equal because they compare build deps.
-        assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
+            # Even though x chose a different 'z', it should choose the same y
+            # according to the DAG hash (since build deps are excluded from
+            # comparison by default). Although the dag hashes are equal, the specs
+            # are not considered equal because they compare build deps.
+            assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
 
-        _env_create('test', with_view=False)
-        e = ev.read('test')
-        e.add(y_spec)
-        e.add(x_spec)
-        e.concretize()
-        e.write()
+            _env_create('test', with_view=False)
+            e = ev.read('test')
+            e.add(y_spec)
+            e.add(x_spec)
+            e.concretize()
+            e.write()
 
-        e_read = ev.read('test')
-        y_env_hash, x_env_hash = e_read.concretized_order
+            e_read = ev.read('test')
+            y_env_hash, x_env_hash = e_read.concretized_order
 
-        y_read = e_read.specs_by_hash[y_env_hash]
-        x_read = e_read.specs_by_hash[x_env_hash]
+            y_read = e_read.specs_by_hash[y_env_hash]
+            x_read = e_read.specs_by_hash[x_env_hash]
 
-        assert x_read['z'] != y_read['z']
+            assert x_read['z'] != y_read['z']
 
 
 def test_env_updates_view_install(
@@ -1160,7 +1188,8 @@ def test_env_without_view_install(
     # view dir
     check_mpileaks_and_deps_in_view(view_dir)
 
-
+@pytest.mark.skipif(sys.platform == "win32",
+                    reason='Not supported on Windows (yet)')
 def test_env_config_view_default(
         tmpdir, mock_stage, mock_fetch, install_mockery):
     # This config doesn't mention whether a view is enabled
@@ -1169,7 +1198,6 @@ env:
   specs:
   - mpileaks
 """
-
     _env_create('test', StringIO(test_config))
 
     with ev.read('test'):
@@ -2187,52 +2215,55 @@ def test_env_activate_default_view_root_unconditional(env_deactivate,
 
 
 def test_concretize_user_specs_together():
-    e = ev.create('coconcretization')
-    e.concretization = 'together'
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('coconcretization')
+        e.concretization = 'together'
 
-    # Concretize a first time using 'mpich' as the MPI provider
-    e.add('mpileaks')
-    e.add('mpich')
-    e.concretize()
+        # Concretize a first time using 'mpich' as the MPI provider
+        e.add('mpileaks')
+        e.add('mpich')
+        e.concretize()
 
-    assert all('mpich' in spec for _, spec in e.concretized_specs())
-    assert all('mpich2' not in spec for _, spec in e.concretized_specs())
+        assert all('mpich' in spec for _, spec in e.concretized_specs())
+        assert all('mpich2' not in spec for _, spec in e.concretized_specs())
 
-    # Concretize a second time using 'mpich2' as the MPI provider
-    e.remove('mpich')
-    e.add('mpich2')
-    e.concretize()
+        # Concretize a second time using 'mpich2' as the MPI provider
+        e.remove('mpich')
+        e.add('mpich2')
+        e.concretize()
 
-    assert all('mpich2' in spec for _, spec in e.concretized_specs())
-    assert all('mpich' not in spec for _, spec in e.concretized_specs())
+        assert all('mpich2' in spec for _, spec in e.concretized_specs())
+        assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
-    # Concretize again without changing anything, check everything
-    # stays the same
-    e.concretize()
+        # Concretize again without changing anything, check everything
+        # stays the same
+        e.concretize()
 
-    assert all('mpich2' in spec for _, spec in e.concretized_specs())
-    assert all('mpich' not in spec for _, spec in e.concretized_specs())
+        assert all('mpich2' in spec for _, spec in e.concretized_specs())
+        assert all('mpich' not in spec for _, spec in e.concretized_specs())
 
 
 def test_cant_install_single_spec_when_concretizing_together():
-    e = ev.create('coconcretization')
-    e.concretization = 'together'
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('coconcretization')
+        e.concretization = 'together'
 
-    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
-        e.concretize_and_add('zlib')
-        e.install_all()
+        with pytest.raises(ev.SpackEnvironmentError, match=r'cannot install'):
+            e.concretize_and_add('zlib')
+            e.install_all()
 
 
 def test_duplicate_packages_raise_when_concretizing_together():
-    e = ev.create('coconcretization')
-    e.concretization = 'together'
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        e = ev.create('coconcretization')
+        e.concretization = 'together'
 
-    e.add('mpileaks+opt')
-    e.add('mpileaks~opt')
-    e.add('mpich')
+        e.add('mpileaks+opt')
+        e.add('mpileaks~opt')
+        e.add('mpich')
 
-    with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
-        e.concretize()
+        with pytest.raises(ev.SpackEnvironmentError, match=r'cannot contain more'):
+            e.concretize()
 
 
 def test_env_write_only_non_default():
@@ -2391,17 +2422,18 @@ spack:
         _, dyninst = next(iter(environment.specs_by_hash.items()))
         return dyninst['libelf'].build_hash()
 
-    # Concretize a first time and create a lockfile
-    with ev.Environment(str(tmpdir)) as e:
-        concretize()
-        libelf_first_hash = extract_build_hash(e)
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        # Concretize a first time and create a lockfile
+        with ev.Environment(str(tmpdir)) as e:
+            concretize()
+            libelf_first_hash = extract_build_hash(e)
 
-    # Check that a second run won't error
-    with ev.Environment(str(tmpdir)) as e:
-        concretize()
-        libelf_second_hash = extract_build_hash(e)
+        # Check that a second run won't error
+        with ev.Environment(str(tmpdir)) as e:
+            concretize()
+            libelf_second_hash = extract_build_hash(e)
 
-    assert libelf_first_hash == libelf_second_hash
+        assert libelf_first_hash == libelf_second_hash
 
 
 @pytest.mark.regression('18441')
@@ -2420,25 +2452,26 @@ spack:
     spack_yaml.write(raw_yaml)
     spack_lock = tmpdir.join('spack.lock')
 
-    # Concretize a first time and create a lockfile
-    with ev.Environment(str(tmpdir)):
-        concretize()
-    assert os.path.exists(str(spack_lock))
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        # Concretize a first time and create a lockfile
+        with ev.Environment(str(tmpdir)):
+            concretize()
+        assert os.path.exists(str(spack_lock))
 
-    # If I run concretize again and there's an error during write,
-    # the spack.lock file shouldn't disappear from disk
-    def _write_helper_raise(self, x, y):
-        raise RuntimeError('some error')
+        # If I run concretize again and there's an error during write,
+        # the spack.lock file shouldn't disappear from disk
+        def _write_helper_raise(self, x, y):
+            raise RuntimeError('some error')
 
-    monkeypatch.setattr(
-        ev.Environment, '_update_and_write_manifest', _write_helper_raise
-    )
-    with ev.Environment(str(tmpdir)) as e:
-        e.concretize(force=True)
-        with pytest.raises(RuntimeError):
-            e.clear()
-            e.write()
-    assert os.path.exists(str(spack_lock))
+        monkeypatch.setattr(
+            ev.Environment, '_update_and_write_manifest', _write_helper_raise
+        )
+        with ev.Environment(str(tmpdir)) as e:
+            e.concretize(force=True)
+            with pytest.raises(RuntimeError):
+                e.clear()
+                e.write()
+        assert os.path.exists(str(spack_lock))
 
 
 def _setup_develop_packages(tmpdir):
