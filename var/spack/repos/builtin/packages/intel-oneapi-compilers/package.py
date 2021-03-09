@@ -6,20 +6,9 @@
 import glob
 import subprocess
 from os import path
+from sys import platform
 
 from spack import *
-
-cpp_releases = {
-    '2021.1.2': {'irc_id': '17513',
-                 'build': '63',
-                 'sha256': '68d6cb638091990e578e358131c859f3bbbbfbf975c581fd0b4b4d36476d6f0a'}
-}
-
-fortran_releases = {
-    '2021.1.2': {'irc_id': '17508',
-                 'build': '62',
-                 'sha256': '29345145268d08a59fa7eb6e58c7522768466dd98f6d9754540d1a0803596829'}
-}
 
 
 class IntelOneapiCompilers(IntelOneApiPackage):
@@ -31,23 +20,20 @@ class IntelOneapiCompilers(IntelOneApiPackage):
 
     depends_on('patchelf', type='build')
 
-    for v in cpp_releases:
-        cpp_release = cpp_releases[v]
-        fortran_release = fortran_releases[v]
-        version(v, cpp_release['sha256'], expand=False)
-        # Download matching fortran standalone for this cpp
+    if platform == 'linux':
+        version('2021.1.2',
+                sha256='68d6cb638091990e578e358131c859f3bbbbfbf975c581fd0b4b4d36476d6f0a',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17513/l_dpcpp-cpp-compiler_p_2021.1.2.63_offline.sh',
+                expand=False)
         resource(name='fortran-installer',
-                 url=IntelOneApiPackage.get_url('fortran-compiler', v, fortran_release),
-                 sha256=fortran_release['sha256'],
+                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17513/l_fortran-compiler_p_2021.1.2.62_offline.sh',
+                 sha256='29345145268d08a59fa7eb6e58c7522768466dd98f6d9754540d1a0803596829',
                  expand=False,
                  placement='fortran-installer',
-                 when='@' + v)
+                 when='@2021.1.2')
 
     def __init__(self, spec):
-        self.component_info(
-            dir_name='compiler',
-            releases=cpp_releases,
-            url_name='dpcpp-cpp-compiler')
+        self.component_info(dir_name='compiler')
         super(IntelOneapiCompilers, self).__init__(spec)
 
     def _join_prefix(self, p):
@@ -67,12 +53,17 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def install(self, spec, prefix):
         # install cpp
         # Copy instead of install to speed up debugging
-        # subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
-        super(IntelOneapiCompilers, self).install(spec, prefix)
+        subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
+        # super(IntelOneapiCompilers, self).install(spec, prefix)
 
-        # install fortran in same prefix
-        self.install_from_releases(spec, prefix, 'fortran-installer',
-                                   'fortran-compiler', fortran_releases)
+        # install fortran
+        super(IntelOneapiCompilers, self).install(spec,
+                                                  prefix,
+                                                  installer_path=glob.glob('fortran-installer/*'))
+
+        # Some installers have a bug and do not return an error code when failing
+        if not path.isfile(join(prefix, 'compilers/latest/linux/bin/ifx')):
+            raise RuntimeError('install failed')
 
         # set rpath so 'spack compiler add' can check version strings
         # without setting LD_LIBRARY_PATH

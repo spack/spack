@@ -4,12 +4,11 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from sys import platform
+
 import subprocess
 
 from spack import *
-
-releases = {
-    '2021.1.1': {'irc_id': '17397', 'build': '76'}}
 
 
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
@@ -19,16 +18,18 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
-    version('2021.1.1', sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe', expand=False)
+    if platform == 'linux':
+        version('2021.1.1',
+                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17397/l_mpi_oneapi_p_2021.1.1.76_offline.sh',
+                expand=False)
 
     provides('mpi@:3')
 
     depends_on('patchelf', type='build')
 
     def __init__(self, spec):
-        self.component_info(dir_name='mpi',
-                            releases=releases,
-                            url_name='mpi_oneapi')
+        self.component_info(dir_name='mpi')
         super(IntelOneapiMpi, self).__init__(spec)
 
     def setup_dependent_package(self, module, dep_spec):

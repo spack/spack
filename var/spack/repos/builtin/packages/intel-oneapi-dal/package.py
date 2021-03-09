@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from sys import platform
 
-releases = {
-    '2021.1.1': {'irc_id': '17443', 'build': '79'}}
+from spack import *
 
 
 class IntelOneapiDal(IntelOneApiLibraryPackage):
@@ -17,12 +16,20 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onedal.html'
 
-    version('2021.1.1', sha256='6e0e24bba462e80f0fba5a46e95cf0cca6cf17948a7753f8e396ddedd637544e', expand=False)
+    if platform == 'linux':
+        version('2021.1.1',
+                sha256='6e0e24bba462e80f0fba5a46e95cf0cca6cf17948a7753f8e396ddedd637544e',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17443/l_daal_oneapi_p_2021.1.1.79_offline.sh',
+                expand=False)
+
+    if platform == 'darwin':
+        version('2021.1.1',
+                sha256='6e0e24bba462e80f0fba5a46e95cf0cca6cf17948a7753f8e396ddedd637544e',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17411/m_daal_oneapi_p_2021.1.1.69_offline.dmg',
+                expand=False)
 
     depends_on('intel-oneapi-tbb')
 
     def __init__(self, spec):
-        self.component_info(dir_name='dal',
-                            releases=releases,
-                            url_name='daal_oneapi')
+        self.component_info(dir_name='dal',)
         super(IntelOneapiDal, self).__init__(spec)

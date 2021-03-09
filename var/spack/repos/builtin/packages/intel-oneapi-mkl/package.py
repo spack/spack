@@ -4,10 +4,9 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from sys import platform
 
-releases = {
-    '2021.1.1': {'irc_id': '17402', 'build': '52'}}
+from spack import *
 
 
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
@@ -17,7 +16,17 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html'
 
-    version('2021.1.1', sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c', expand=False)
+    if platform == 'linux':
+        version('2021.1.1',
+                sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17402/l_onemkl_p_2021.1.1.52_offline.sh',
+                expand=False)
+
+    if platform == 'darwin':
+        version('2021.1.1',
+                sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17408/m_onemkl_p_2021.1.1.50_offline.dmg',
+                expand=False)
 
     depends_on('intel-oneapi-tbb')
 
@@ -28,7 +37,5 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides('blas')
 
     def __init__(self, spec):
-        self.component_info(dir_name='mkl',
-                            releases=releases,
-                            url_name='onemkl')
+        self.component_info(dir_name='mkl')
         super(IntelOneapiMkl, self).__init__(spec)
