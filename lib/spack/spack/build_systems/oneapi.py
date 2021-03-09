@@ -37,7 +37,11 @@ class IntelOneApiPackage(Package):
 
         if platform == 'darwin':
             Executable('hdiutil')('attach', installer_path)
-            Executable('/Volumes/{}/'.format(basename(installer
+            bootstrapper = '/Volumes/{}/bootstrapper.app/Contents/MacOS/bootstrapper'.format(basename(installer_path))
+            installer = Executable(bootstrapper)
+            installer.add_default_env('HOME', prefix)
+            installer('-s', '--action', 'install', '--eula=accept', '--continue-with-optional-error=yes', '--log-dir=.')
+            Executable('hdiutil')('detach', bootstrapper, '-quiet')
 
         if platform == 'linux':
             bash = Executable('bash')
