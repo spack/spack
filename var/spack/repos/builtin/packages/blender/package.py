@@ -132,6 +132,8 @@ class Blender(CMakePackage):
     # ispc requires llvm variant ~libcxx, but spec asked for +libcxx
     depends_on('embree@3.10.0:~ispc', when='@2.92.0:')
 
+    depends_on('pugixml@1.10:', when='@2.92.0:')
+
     def cmake_args(self):
         spec = self.spec
         args = []
