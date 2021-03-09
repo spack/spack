@@ -21,12 +21,10 @@ class Metall(CMakePackage):
 
     depends_on('boost@1.64:', type=('build', 'link'))
 
-
     def cmake_args(self):
         args = []
         args.append('-DINSTALL_HEADER_ONLY=ON')
         return args
-
 
     def setup_run_environment(self, env):
         env.set('METALL_ROOT', self.prefix)
