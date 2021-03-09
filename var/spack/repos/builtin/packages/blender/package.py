@@ -125,6 +125,7 @@ class Blender(CMakePackage):
 #     depends_on('iconv@1.16:', when='@2.92.0:')
 #     depends_on('sndfile@1.0.28:', when='@2.92.0:')
     # sndfile
+    depends_on('embree@3.10.0:~ispc', when='@2.92.0:')
 
     def cmake_args(self):
         spec = self.spec
