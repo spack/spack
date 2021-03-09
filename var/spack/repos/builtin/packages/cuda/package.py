@@ -10,6 +10,7 @@ import os
 import re
 import platform
 import llnl.util.tty as tty
+import shutil
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -168,6 +169,22 @@ class Cuda(Package):
             os.remove('/tmp/cuda-installer.log')
         except OSError:
             pass
+
+        # Environment views do not currently support symlinks.
+        # Since the include/ and lib64/ directories in cuda are
+        # symlinks to subdirectories of targets/ and thus do
+        # not appear in the view, we manually replace them with
+        # copies of the directories they point to.
+        # For reference, see https://github.com/spack/spack/issues/19531
+        include_dir = join_path(prefix, 'include')
+        pointing_to = join_path(prefix, os.readlink(include_dir))
+        os.remove(include_dir)
+        shutil.copytree(pointing_to, include_dir)
+
+        lib64_dir = join_path(prefix, 'lib64')
+        pointing_to = join_path(prefix, os.readlink(lib64_dir))
+        os.remove(lib64_dir)
+        shutil.copytree(pointing_to, lib64_dir)
 
     @property
     def libs(self):
