@@ -79,7 +79,9 @@ class Blender(CMakePackage):
     depends_on('llvm@9.0.1:', when='@2.92.0:+llvm')
     # depends_on('openshadinglanguage')
     # depends_on('openvdb@3.1:')
-    depends_on('freetype')
+
+    # FIXME: this is only temporarily commented out. needs to be fixed
+    # depends_on('freetype')
     depends_on('freetype@2.10.2:', when='@2.92.0:')
 
     depends_on('libuuid')
