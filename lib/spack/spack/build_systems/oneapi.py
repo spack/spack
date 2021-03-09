@@ -27,6 +27,10 @@ class IntelOneApiPackage(Package):
         self._dir_name = dir_name
 
     def install(self, spec, prefix, installer_path=None):
+        """Shared install method for all oneapi packages."""
+
+        # intel-oneapi-compilers overrides the installer_path when
+        # installing fortran, which comes from a spack resource 
         if installer_path is None:
             installer_path = basename(self.url_for_version(spec.version))
 
@@ -44,6 +48,7 @@ class IntelOneApiPackage(Package):
             raise RuntimeError('install failed')
 
     def setup_run_environment(self, env):
+
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:

@@ -53,13 +53,13 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def install(self, spec, prefix):
         # install cpp
         # Copy instead of install to speed up debugging
-        subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
-        # super(IntelOneapiCompilers, self).install(spec, prefix)
+        # subprocess.run(f'cp -r /opt/intel/oneapi/compiler {prefix}', shell=True)
+        super(IntelOneapiCompilers, self).install(spec, prefix)
 
         # install fortran
         super(IntelOneapiCompilers, self).install(spec,
                                                   prefix,
-                                                  installer_path=glob.glob('fortran-installer/*'))
+                                                  installer_path=glob.glob('fortran-installer/*')[0])
 
         # Some installers have a bug and do not return an error code when failing
         if not path.isfile(join(prefix, 'compilers/latest/linux/bin/ifx')):

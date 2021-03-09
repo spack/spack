@@ -32,7 +32,7 @@ oneAPI packages.
 Unrelated packages
 ------------------
 
-The following packages use a different installer and are not disussed
+The following packages use a different installer and are not discussed
 here:
 
 * ``intel-gpu-tools`` -- Test suite and low-level tools for the Linux `Direct
@@ -108,10 +108,10 @@ the configuration to ``compilers.yaml`` as described in :ref:`Compiler
 configuration <compiler-config>`.
 
 
-Libaries
---------
+Libraries
+---------
 
-Configure external librar packages by editing ``packages.yml``,
+Configure external library packages by editing ``packages.yaml``,
 following the Spack documentation under :ref:`External Packages
 <sec-external-packages>`.
 
@@ -156,34 +156,6 @@ You can also use Spack-installed libraries. For example::
 
 Will update your environment CPATH, LIBRARY_PATH, and other
 environment variables for building an application with MKL.
-
-
-Debug notes
-===========
-
-
-* You can trigger a wall of additional diagnostics using Spack options, e.g.:
-
-  .. code-block:: console
-
-     $ spack --debug -v install intel-mpi
-
-  The ``--debug`` option can also be useful while installing client
-  packages to confirm the integration of the Intel tools in Spack,
-  notably MKL and MPI.
-
-* If an installation error occurs, Spack will normally clean up and remove a
-  partially installed target directory. You can direct Spack to keep it using
-  ``--keep-prefix``, e.g.:
-
-  .. code-block:: console
-
-     $ spack install --keep-prefix  intel-mpi
-
-  You must, however, *remove such partial installations* prior to subsequent
-  installation attempts. Otherwise, the Intel installer will behave
-  incorrectly.
-
 
 
 Selecting libraries to satisfy virtual packages
