@@ -1,4 +1,0 @@
-[vermin]
-
-exclusions =
-  lib.spack.spack.util.imp_importer
