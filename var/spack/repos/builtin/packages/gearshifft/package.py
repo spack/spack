@@ -14,7 +14,9 @@ class Gearshifft(CMakePackage):
 
     maintainers = ['ax3l']
 
-    version('0.2.1-lw', sha256='04ba7401615ab29a37089c0dce8580270c0c4aa1ba328c9d438d6e4f163899c5')
+    version('0.4.0', sha256='15b9e4bfa1d9b4fe4ae316f289c67b7be0774cdada5bd7310df4d0e026d9d227')
+
+    patch('gearshifft-v0.4.0-cmake-variable-name.patch', when='@0.4.0')
 
     variant('cufft', default=True,
             description='Compile gearshifft_cufft')
@@ -54,7 +56,5 @@ class Gearshifft(CMakePackage):
             '-DGEARSHIFFT_CLFFT:BOOL={0}'.format(
                 'ON' if '+clfft' in spec else 'OFF')
         ])
-        if self.spec.target.family == 'aarch64':
-            args.append('-DCMAKE_CXX_FLAGS=-pthread')
 
         return args
