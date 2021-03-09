@@ -62,7 +62,7 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                                                   installer_path=glob.glob('fortran-installer/*')[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(join(prefix, 'compilers/latest/linux/bin/ifx')):
+        if not path.isfile(path.join(prefix, 'compilers/latest/linux/bin/ifx')):
             raise RuntimeError('install failed')
 
         # set rpath so 'spack compiler add' can check version strings

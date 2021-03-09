@@ -7,6 +7,7 @@
 
 """
 
+from sys import platform
 from os.path import basename, dirname, isdir, join
 
 from spack.package import Package
@@ -34,15 +35,21 @@ class IntelOneApiPackage(Package):
         if installer_path is None:
             installer_path = basename(self.url_for_version(spec.version))
 
-        bash = Executable('bash')
+        if platform == 'darwin':
+            Executable('hdiutil')('attach', installer_path)
+            Executable('/Volumes/{}/'.format(basename(installer
 
-        # Installer writes files in ~/intel set HOME so it goes to prefix
-        bash.add_default_env('HOME', prefix)
+        if platform == 'linux':
+            bash = Executable('bash')
 
-        bash(installer_path,
-             '-s', '-a', '-s', '--action', 'install',
-             '--eula', 'accept',
-             '--install-dir', prefix)
+            # Installer writes files in ~/intel set HOME so it goes to prefix
+            bash.add_default_env('HOME', prefix)
+
+            bash(installer_path,
+                 '-s', '-a', '-s', '--action', 'install',
+                 '--eula', 'accept',
+                 '--install-dir', prefix)
+
         # Some installers have a bug and do not return an error code when failing
         if not isdir(join(prefix, self._dir_name)):
             raise RuntimeError('install failed')
