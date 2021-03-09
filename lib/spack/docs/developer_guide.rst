@@ -450,6 +450,8 @@ At the end of the init, you will have available to you:
  - **self.dirname**: an optional directory name the user as provided at init to save
  - **self.meta_dir**: the analyzer metadata directory, where we save by default
 
+And can proceed to write your analyzer.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^
 Saving Analyzer Results
@@ -461,7 +463,7 @@ to upload it to a monitor server. If your result follows an accepted result
 format and you don't need to parse it further, you don't need to add this 
 function to your class. However, if your result data is large or otherwise
 needs additional parsing, you can define it. As an example, the Libabigail
-analyzer saves *.xml files to the analyzer metadata folder in ``run()``,
+analyzer saves ``*.xml`` files to the analyzer metadata folder in ``run()``,
 as they are either binaries, or as xml (text) would usually be too big to pass in one request.
 For this reason, the files are saved during ``run()`` and the filenames added
 to the result object, and then when the result object is passed back into
