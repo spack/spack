@@ -12,7 +12,7 @@ class Gearshifft(CMakePackage):
     homepage = "https://github.com/mpicbg-scicomp/gearshifft"
     url      = "https://github.com/mpicbg-scicomp/gearshifft/archive/v0.2.1-lw.tar.gz"
 
-    maintainers = ['ax3l']
+    maintainers = ['zyzzyxdonta']
 
     version('0.4.0', sha256='15b9e4bfa1d9b4fe4ae316f289c67b7be0774cdada5bd7310df4d0e026d9d227')
 
@@ -56,5 +56,4 @@ class Gearshifft(CMakePackage):
             '-DGEARSHIFFT_CLFFT:BOOL={0}'.format(
                 'ON' if '+clfft' in spec else 'OFF')
         ])
-
         return args
