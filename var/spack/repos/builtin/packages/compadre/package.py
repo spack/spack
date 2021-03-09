@@ -20,7 +20,7 @@ class Compadre(CMakePackage):
     url      = 'https://github.com/SNLComputation/compadre/archive/v1.3.0.tar.gz'
     maintainers = ['kuberry']
 
-    version('1.3.3',  branch='master')
+    version('master',  branch='master', preferred=True)
     version('1.3.0', 'f711a840fd921e84660451ded408023ec3bcfc98fd0a7dc4a299bfae6ab489c2')
 
     depends_on('kokkos@3.3.01:main')
