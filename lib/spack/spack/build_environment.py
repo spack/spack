@@ -481,7 +481,7 @@ def _set_variables_for_single_module(pkg, module):
 
     m.meson = Executable('meson')
     # m.cmake = Executable('cmake')
-    m.cmake = Executable('cmake.exe')
+    m.cmake = Executable('cmake')
     m.ctest = MakeExecutable('ctest', jobs)
 
     # Standard CMake arguments
