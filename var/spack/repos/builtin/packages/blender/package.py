@@ -176,4 +176,9 @@ class Blender(CMakePackage):
         if '+player' in spec:
             args.append('-DWITH_PLAYER:BOOL=ON')
 
+# >> 106    CMake Error at CMakeLists.txt:924 (message):
+#    107      WITH_MOD_OCEANSIM requires WITH_FFTW3 to be ON
+        if self.spec.satisfies('@2.92.0:'):
+            args.append('-DWITH_MOD_OCEANSIM:BOOL=OFF')
+
         return args
