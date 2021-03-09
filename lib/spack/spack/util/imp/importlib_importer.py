@@ -46,7 +46,9 @@ def load_source(full_name, path, prepend=None):
     """
     # use our custom loader
     loader = PrependFileLoader(full_name, path, prepend)
-    spec = spec_from_loader(full_name, loader)
-    mod = module_from_spec(spec)
-    spec.loader.exec_module(mod)
+    # Note this is a ModuleSpec object defined in importlib and not a
+    # Spack Spec object
+    module_spec = spec_from_loader(full_name, loader)
+    mod = module_from_spec(module_spec)
+    module_spec.loader.exec_module(mod)
     return mod
