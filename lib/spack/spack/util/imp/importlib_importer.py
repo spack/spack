@@ -8,7 +8,7 @@
 ``importlib`` is only fully implemented in Python 3.
 """
 from importlib.machinery import SourceFileLoader  # novm
-from importlib.util import spec_from_loader, module_from_spec
+from importlib.util import spec_from_loader, module_from_spec  # novm
 
 
 class PrependFileLoader(SourceFileLoader):
