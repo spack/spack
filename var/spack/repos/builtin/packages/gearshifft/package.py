@@ -28,32 +28,43 @@ class Gearshifft(CMakePackage):
             description='use OpenMP parallel fftw libraries')
     # variant('hcfft', default=True,
     #         description='Not implemented yet')
+    variant('mkl', default=True,
+            description='Compile gearshifft_fftwwrappers')
+    variant('rocfft', default=True,
+            description='Compile gearshifft_rocfft')
 
     # depends_on C++14 compiler, e.g. GCC 5.0+
     depends_on('cmake@2.8.0:', type='build')
-    depends_on('boost@1.56.0:')
+    depends_on('boost@1.59.0:')
     depends_on('cuda@8.0:', when='+cufft')
     depends_on('opencl@1.2:', when='+clfft')
     depends_on('clfft@2.12.0:', when='+clfft')
     depends_on('fftw@3.3.4:~mpi~openmp', when='+fftw~openmp')
     depends_on('fftw@3.3.4:~mpi+openmp', when='+fftw+openmp')
+    depends_on('intel-mkl threads=openmp', when='+mkl')
+    depends_on('rocfft', when='+rocfft')
 
     def cmake_args(self):
         spec = self.spec
 
         args = [
-            '-DGEARSHIFFT_HCFFT:BOOL=OFF',
-            '-DGEARSHIFFT_FFTW_PTHREADS:BOOL=ON',
-            '-DGEARSHIFFT_CLFFT:BOOL=OFF'
+            '-DGEARSHIFFT_FLOAT16_SUPPORT:BOOL=OFF',
+            '-DGEARSHIFFT_BACKEND_HCFFT:BOOL=OFF',
         ]
         args.extend([
-            '-DGEARSHIFFT_FFTW:BOOL={0}'.format(
+            '-DGEARSHIFFT_BACKEND_FFTW:BOOL={0}'.format(
                 'ON' if '+fftw' in spec else 'OFF'),
-            '-DGEARSHIFFT_FFTW_OPENMP:BOOL={0}'.format(
+            '-DGEARSHIFFT_BACKEND_FFTW_PTHREADS:BOOL={0}'.format(
+                'ON' if '~openmp' in spec else 'OFF'),
+            '-DGEARSHIFFT_BACKEND_FFTW_OPENMP:BOOL={0}'.format(
                 'ON' if '+openmp' in spec else 'OFF'),
-            '-DGEARSHIFFT_CUFFT:BOOL={0}'.format(
+            '-DGEARSHIFFT_BACKEND_CUFFT:BOOL={0}'.format(
                 'ON' if '+cufft' in spec else 'OFF'),
-            '-DGEARSHIFFT_CLFFT:BOOL={0}'.format(
-                'ON' if '+clfft' in spec else 'OFF')
+            '-DGEARSHIFFT_BACKEND_CLFFT:BOOL={0}'.format(
+                'ON' if '+clfft' in spec else 'OFF'),
+            '-DGEARSHIFFT_BACKEND_FFTWWRAPPERS:BOOL={0}'.format(
+                'ON' if '+mkl' in spec else 'OFF'),
+            '-DGEARSHIFFT_BACKEND_ROCFFT:BOOL={0}'.format(
+                'ON' if '+rocfft' in spec else 'OFF')
         ])
         return args
