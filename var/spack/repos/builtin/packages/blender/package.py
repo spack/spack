@@ -156,6 +156,10 @@ class Blender(CMakePackage):
                 '-DPYTHON_NUMPY_PATH:PATH={0}/python{1}/site-packages'.format(
                     spec['py-numpy'].prefix.lib,
                     spec['python'].version.up_to(2)))
+            args.append(
+                '-DPYTHON_NUMPY_INCLUDE_DIRS:PATH={0}/python{1}/site-packages/numpy/core/include'.format(
+                    spec['py-numpy'].prefix.lib,
+                    spec['python'].version.up_to(2)))
 
         if '+opensubdiv' in spec:
             args.append('-DWITH_OPENSUBDIV:BOOL=ON')
