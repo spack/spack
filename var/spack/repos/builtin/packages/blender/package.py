@@ -105,7 +105,7 @@ class Blender(CMakePackage):
 #     depends_on('pthreads@3.0.0:', when='@2.92.0:')
 #     depends_on('openexr@2.4.0:', when='@2.92.0:')
 #     depends_on('freeglut@3.0.0:', when='@2.92.0:')
-#     depends_on('alembic@1.7.12:', when='@2.92.0:')
+    depends_on('alembic@1.7.12:', when='@2.92.0:')
 #     depends_on('glfw@3.1.2:', when='@2.92.0:')
 #     depends_on('sdl@2.0.12:', when='@2.92.0:')
 #     depends_on('opencollada@1.6.68:', when='@2.92.0:')
@@ -123,9 +123,9 @@ class Blender(CMakePackage):
 #     depends_on('vpx@1.8.2:', when='@2.92.0:')
 #     depends_on('opus@1.3.1:', when='@2.92.0:')
 #     depends_on('xvidcore@1.3.7:', when='@2.92.0:')
-#     depends_on('fftw@3.3.8:', when='@2.92.0:')
+    depends_on('fftw@3.3.8:', when='@2.92.0:')
 #     depends_on('iconv@1.16:', when='@2.92.0:')
-#     depends_on('sndfile@1.0.28:', when='@2.92.0:')
+    depends_on('libsndfile@1.0.28:', when='@2.92.0:')
     # sndfile
 
     # FIXME: ~ispc is temporary fix for
