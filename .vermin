@@ -1,3 +1,4 @@
 [vermin]
 
-Exclude 'lib.spack.spack.util.imp_importer'
+exclusions =
+  lib.spack.spack.util.imp_importer
