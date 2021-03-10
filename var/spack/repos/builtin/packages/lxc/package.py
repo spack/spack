@@ -35,5 +35,5 @@ class Lxc(AutotoolsPackage):
     def configure_args(self):
         args = ["bashcompdir=" +
                 join_path(self.spec['lxc'].prefix, 'share',
-                'bash-completion', 'completions')]
+                          'bash-completion', 'completions')]
         return args
