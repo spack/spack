@@ -95,6 +95,9 @@ class Abinit(AutotoolsPackage):
     # conflicts('+elpa', when='+scalapack')
 
     patch('rm_march_settings.patch')
+
+    # Fix configure not to collect the option that causes an error
+    # Fix intent(out) and unnecessary rewind to avoid compile error
     patch('fix_for_fujitsu.patch', when='%fj')
 
     def configure_args(self):
