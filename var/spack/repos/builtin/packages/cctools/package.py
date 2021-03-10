@@ -25,6 +25,7 @@ class Cctools(AutotoolsPackage):
     version('6.1.1', sha256='97f073350c970d6157f80891b3bf6d4f3eedb5f031fea386dc33e22f22b8af9d')
 
     depends_on('openssl')
+    depends_on('perl+shared', type=('build', 'run'))
     depends_on('python', type=('build', 'run'))
     depends_on('readline')
     depends_on('gettext')  # Corrects python linking of -lintl flag.
@@ -91,11 +92,11 @@ class Cctools(AutotoolsPackage):
                 ])
 
         # disable these bits
-        for p in ['mysql', 'xrootd', 'perl']:
+        for p in ['mysql', 'xrootd']:
             args.append('--with-{0}-path=no'.format(p))
 
         # point these bits at the Spack installations
-        for p in ['openssl', 'readline', 'swig', 'zlib']:
+        for p in ['openssl', 'perl', 'readline', 'swig', 'zlib']:
             args.append('--with-{0}-path={1}'.format(p, self.spec[p].prefix))
 
         return args
