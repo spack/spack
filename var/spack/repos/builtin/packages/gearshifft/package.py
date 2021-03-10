@@ -51,23 +51,14 @@ class Gearshifft(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DGEARSHIFFT_FLOAT16_SUPPORT:BOOL=OFF',
-            '-DGEARSHIFFT_BACKEND_HCFFT:BOOL=OFF',
+            self.define('GEARSHIFFT_FLOAT16_SUPPORT', False),
+            self.define('GEARSHIFFT_BACKEND_HCFFT', False),
+            self.define_from_variant('GEARSHIFFT_BACKEND_FFTW', 'fftw'),
+            self.define('GEARSHIFFT_BACKEND_FFTW_PTHREADS', '~openmp' in spec),
+            self.define_from_variant('GEARSHIFFT_BACKEND_FFTW_OPENMP', 'openmp'),
+            self.define_from_variant('GEARSHIFFT_BACKEND_CUFFT', 'cufft'),
+            self.define_from_variant('GEARSHIFFT_BACKEND_CLFFT', 'clfft'),
+            self.define_from_variant('GEARSHIFFT_BACKEND_FFTWWRAPPERS', 'mkl'),
+            self.define_from_variant('GEARSHIFFT_BACKEND_ROCFFT', 'rocfft')
         ]
-        args.extend([
-            '-DGEARSHIFFT_BACKEND_FFTW:BOOL={0}'.format(
-                'ON' if '+fftw' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_FFTW_PTHREADS:BOOL={0}'.format(
-                'ON' if '~openmp' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_FFTW_OPENMP:BOOL={0}'.format(
-                'ON' if '+openmp' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_CUFFT:BOOL={0}'.format(
-                'ON' if '+cufft' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_CLFFT:BOOL={0}'.format(
-                'ON' if '+clfft' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_FFTWWRAPPERS:BOOL={0}'.format(
-                'ON' if '+mkl' in spec else 'OFF'),
-            '-DGEARSHIFFT_BACKEND_ROCFFT:BOOL={0}'.format(
-                'ON' if '+rocfft' in spec else 'OFF')
-        ])
         return args
