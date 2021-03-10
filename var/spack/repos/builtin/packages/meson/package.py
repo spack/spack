@@ -45,7 +45,7 @@ class Meson(PythonPackage):
     # are not reverted.
     patch('rpath-0.49.patch', when='@0.49:0.53')
     patch('rpath-0.54.patch', when='@0.54:0.55')
-    patch('rpath-0.56.patch', when='@0.56')
+    patch('rpath-0.56.patch', when='@0.56:')
 
     executables = ['^meson$']
 
