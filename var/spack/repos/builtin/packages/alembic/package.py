@@ -17,12 +17,25 @@ class Alembic(CMakePackage):
 
     version('1.7.16', sha256='2529586c89459af34d27a36ab114ad1d43dafd44061e65cfcfc73b7457379e7c')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    variant('python', default=False, description='Build python bindings')
+    variant('hdf5', default=False, description='HDF5 support')
+
+    depends_on('cmake@2.8.11:', type='build')
+    depends_on('openexr@2.2.0:')
+    depends_on('hdf5@1.8.9:', when="+hdf5")
+    depends_on('boost@1.55:')
+    depends_on('py-ilmbase@1.0.0:', when="+python", type=('build', 'run'))
+    depends_on('zlib')
 
     def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
         args = []
+
+        if self.spec.satisfies('+hdf5'):
+            args.append('-DUSE_HDF5=ON')
+        else:
+            args.append('-DUSE_HDF5=OFF')
+
+        if self.spec.satisfies('+python') and self.spec['python'].satisfies('@3:'):
+            args.append('-DPython_ADDITIONAL_VERSIONS=3')
+
         return args
