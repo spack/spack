@@ -1,5 +1,9 @@
-from spack import *
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+from spack import *
 
 
 class PyPytestHtml(PythonPackage):
@@ -12,3 +16,6 @@ class PyPytestHtml(PythonPackage):
 
     depends_on('python@3.6:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools-scm', type='build')
+    depends_on('py-pytest@5.0:5.9,6.1:', type=('build', 'run'))
+    depends_on('py-pytest-metadata', type=('build', 'run'))
