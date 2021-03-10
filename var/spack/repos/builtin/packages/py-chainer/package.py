@@ -81,6 +81,6 @@ class PyChainer(PythonPackage):
             json_load = json.load(json_open)
             v = {d.get('epoch'): d.get('main/accuracy') for d in json_load}
             if 1 not in v or 20 not in v:
-                raise RuntimeError('Cannot found epoch 1 or epoch 20')
+                raise RuntimeError('Cannot find epoch 1 or epoch 20')
             if abs(1.0 - v[1]) < abs(1.0 - v[20]):
                 raise RuntimeError('ChainerMN Test Failed !')
