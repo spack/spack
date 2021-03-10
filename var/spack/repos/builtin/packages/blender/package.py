@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 
@@ -133,6 +134,9 @@ class Blender(CMakePackage):
     depends_on('embree@3.10.0:~ispc', when='@2.92.0:')
 
     depends_on('pugixml@1.10:', when='@2.92.0:')
+
+    def setup_run_environment(self, env):
+        env.prepend_path('PATH', os.path.dirname(self.compiler.cc))
 
     def cmake_args(self):
         spec = self.spec
