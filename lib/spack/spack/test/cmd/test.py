@@ -11,6 +11,8 @@ import pytest
 import spack.config
 import spack.package
 import spack.cmd.install
+
+from spack.cmd.test import has_test_method
 from spack.main import SpackCommand
 
 install = SpackCommand('install')
@@ -202,3 +204,11 @@ def test_test_list(
     install(pkg_with_tests)
     output = spack_test("list")
     assert pkg_with_tests in output
+
+
+def test_has_test_method_fails(capsys):
+    with pytest.raises(SystemExit):
+        has_test_method('printing-package')
+
+    captured = capsys.readouterr()[1]
+    assert 'is not a class' in captured
