@@ -28,6 +28,7 @@ class Blaspp(CMakePackage, CudaPackage):
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # only supported with clingo solver: virtual dependency preferences
     # depends_on('openblas threads=openmp', when='+openmp ^openblas')
