@@ -144,8 +144,6 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
     with capfd.disabled():
         out = install('build-error', fail_on_error=False)
 
-    import IPython
-    IPython.embed()
     assert 'ProcessError' in out
     assert 'configure: error: in /path/to/some/file:' in out
     assert 'configure: error: cannot run C compiled programs.' in out
