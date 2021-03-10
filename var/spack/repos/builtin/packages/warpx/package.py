@@ -93,6 +93,7 @@ class Warpx(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
             '-DWarpX_APP:BOOL={0}'.format(
                 'ON' if '+app' in spec else 'OFF'),
