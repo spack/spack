@@ -51,8 +51,11 @@ class Blender(CMakePackage):
     depends_on('glew')
     depends_on('glew@1.13.0:', when='@2.92.0:')
 
-    depends_on('opengl')
+    #depends_on('opengl')
     # depends_on('openglu')
+    depends_on('gl')
+    depends_on('glu')
+    depends_on('glx')
     
     depends_on('libpng')
     depends_on('libpng@1.6.37:', when='@2.92.0:')
@@ -134,6 +137,8 @@ class Blender(CMakePackage):
     depends_on('embree@3.10.0:~ispc', when='@2.92.0:')
 
     depends_on('pugixml@1.10:', when='@2.92.0:')
+
+    depends_on('gmp@6.2.0:', when='@2.92.0:')
 
     def setup_run_environment(self, env):
         env.prepend_path('PATH', os.path.dirname(self.compiler.cc))
