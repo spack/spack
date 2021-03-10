@@ -9,6 +9,7 @@ import sys
 import llnl.util.lang
 
 from spack.compiler import Compiler
+from spack.version import ver
 
 
 class Aocc(Compiler):
@@ -118,3 +119,18 @@ class Aocc(Compiler):
     @property
     def stdcxx_libs(self):
         return ('-lstdc++', )
+
+    @property
+    def cflags(self):
+        if self.real_version == ver('3.0.0'):
+            return "-mllvm -eliminate-similar-expr=false"
+
+    @property
+    def cxxflags(self):
+        if self.real_version == ver('3.0.0'):
+            return "-mllvm -eliminate-similar-expr=false"
+
+    @property
+    def fflags(self):
+        if self.real_version == ver('3.0.0'):
+            return "-mllvm -eliminate-similar-expr=false"
