@@ -126,16 +126,9 @@ class Warpx(CMakePackage):
 
     @property
     def libs(self):
-        shared = '+shared' in self.spec
-        if 'dims=2' in self.spec:
-            return find_libraries(
-                ['libwarpx.2d'], root=self.prefix, recursive=True, shared=shared
-            )
-        if 'dims=3' in self.spec:
-            return find_libraries(
-                ['libwarpx.3d'], root=self.prefix, recursive=True, shared=shared
-            )
-        if 'dims=rz' in self.spec:
-            return find_libraries(
-                ['libwarpx.rz'], root=self.prefix, recursive=True, shared=shared
-            )
+        libsuffix = {'2': '2d', '3': '3d', 'rz': 'rz'}
+        dims = self.spec.variants['dims'].value
+        return find_libraries(
+            ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
+            shared=True
+        )
