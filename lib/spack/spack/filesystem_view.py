@@ -46,7 +46,10 @@ _projections_path = '.spack/projections.yaml'
 def view_symlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.symlink(src, dst)
+    if sys.platform=='win32':
+        shutil.copyfile(src, dst)
+    else:
+        os.symlink(src, dst)
 
 
 def view_hardlink(src, dst, **kwargs):
