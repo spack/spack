@@ -1,10 +1,9 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Hiop(CMakePackage, CudaPackage):
@@ -71,6 +70,13 @@ class Hiop(CMakePackage, CudaPackage):
     def cmake_args(self):
         args = []
         spec = self.spec
+
+        lapack_blas_libs = (
+            spec['lapack'].libs + spec['blas'].libs).joined(';')
+        args.extend([
+            '-DLAPACK_FOUND=TRUE',
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)
+        ])
 
         args.append('-DHIOP_BUILD_STATIC=ON')
         if '+shared' in spec:
