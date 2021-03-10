@@ -1821,9 +1821,12 @@ def build_process(pkg, kwargs):
                             combine_phase_logs(pkg)
                             if monitor:
                                 monitor.send_phase(pkg, phase_name, log_file, "ERROR")
+                            raise
+
+                    # We assume loggers share echo True/False
+                    echo = logger.echo
 
             # After log, we can get all output/error files from the package stage
-            echo = logger.echo
             combine_phase_logs(pkg)
             log(pkg)
 
