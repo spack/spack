@@ -61,7 +61,7 @@ class Neuron(CMakePackage):
 
     variant("cmake",      default=True, description="Build NEURON using cmake")
     variant("binary",     default=True, description="Create special as a binary instead of shell script")
-    variant("coreneuron", default=False, description="Install CoreNEURON as submodule")
+    variant("coreneuron", default=False, description="Enable CoreNEURON support")
     variant("mod-compatibility",  default=True, description="Enable CoreNEURON compatibility for MOD files")
     variant("cross-compile",  default=False, description="Build for cross-compile environment")
     variant("debug",          default=False, description="Build with flags -g -O0")
@@ -109,6 +109,9 @@ class Neuron(CMakePackage):
     depends_on("py-numpy",    when="+python", type=("build", "run"))
     depends_on("py-cython",   when="+rx3d", type="build")
     depends_on("tau",         when="+profile")
+    depends_on("coreneuron+legacy-unit", when="+coreneuron+legacy-unit")
+    depends_on("coreneuron~legacy-unit", when="+coreneuron~legacy-unit")
+    depends_on("py-pytest-cov", when="+tests@develop:")
 
     conflicts("+cmake",   when="@0:7.8.0b,2018-10")
     conflicts("~shared",  when="+python")
@@ -149,6 +152,8 @@ class Neuron(CMakePackage):
             args.append("-DNRN_ENABLE_BINARY_SPECIAL=ON")
         if "+legacy-unit" in self.spec:
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
+        if "+coreneuron" in self.spec:
+            args.append('-DCORENEURON_DIR=' + self.spec["coreneuron"].prefix)
 
         return args
 
