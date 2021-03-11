@@ -9,6 +9,7 @@
 """
 from importlib.machinery import SourceFileLoader  # novm
 from importlib.util import spec_from_loader, module_from_spec  # novm
+import sys
 
 
 class PrependFileLoader(SourceFileLoader):
@@ -50,5 +51,6 @@ def load_source(full_name, path, prepend=None):
     # Spack Spec object
     module_spec = spec_from_loader(full_name, loader)
     mod = module_from_spec(module_spec)
+    sys.modules[full_name] = mod
     module_spec.loader.exec_module(mod)
     return mod
