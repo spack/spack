@@ -11,10 +11,12 @@ class PyH5py(PythonPackage):
     HDF5 library from Python."""
 
     homepage = "http://www.h5py.org/"
-    pypi     = "h5py/h5py-3.1.0.tar.gz"
+    pypi     = "h5py/h5py-3.2.1.tar.gz"
     git      = "https://github.com/h5py/h5py.git"
 
     version('master', branch='master')
+    version('3.2.1', sha256='89474be911bfcdb34cbf0d98b8ec48b578c27a89fdb1ae4ee7513f1ef8d9249e')
+    version('3.2.0', sha256='4271c1a4b7d87aa76fe96d016368beb05a6c389d64882d58036964ce7d2d03c1')
     version('3.1.0', sha256='1e2516f190652beedcb8c7acfa1c6fa92d99b42331cbef5e5c7ec2d65b0fc3c2')
     version('3.0.0', sha256='7d3803be1b530c68c2955faba726dc0f591079b68941a0c0269b5384a42ab519')
     version('2.10.0', sha256='84412798925dc870ffd7107f045d7659e60f5d46d1c70c700375248bf6bf512d')
