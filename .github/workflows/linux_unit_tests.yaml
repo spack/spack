@@ -10,7 +10,67 @@ on:
       - develop
       - releases/**
 jobs:
+  # Validate that the code can be run on all the Python versions
+  # supported by Spack
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python Packages
+      run: |
+        pip install --upgrade pip
+        pip install --upgrade vermin
+    - name: Minimum Version (Spack's Core)
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: Minimum Version (Repositories)
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools flake8 mypy>=0.800 black
+    - name: Setup git configuration
+      run: |
+        # Need this for the git tests to succeed.
+        git --version
+        . .github/workflows/setup_git.sh
+    - name: Run style tests
+      run: |
+          share/spack/qa/run-style-tests
+  # Build the documentation
+  documentation:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install System packages
+      run: |
+        sudo apt-get -y update
+        sudo apt-get install -y coreutils ninja-build graphviz
+    - name: Install Python packages
+      run: |
+        pip install --upgrade pip six setuptools
+        pip install --upgrade -r lib/spack/docs/requirements.txt
+    - name: Build documentation
+      run: |
+          share/spack/qa/run-doc-tests
+
+  # Run unit tests with different configurations on linux
   unittests:
+    needs: [ validate, style, documentation ]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -68,7 +128,9 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         flags: unittests,linux,${{ matrix.concretizer }}
+  # Test shell integration
   shell:
+    needs: [ validate, style, documentation ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -111,9 +173,9 @@ jobs:
     - uses: codecov/codecov-action@v1
       with:
         flags: shelltests,linux
-
+  # Test for Python2.6 run on Centos 6
   centos6:
-    # Test for Python2.6 run on Centos 6
+    needs: [ validate, style, documentation ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
@@ -127,7 +189,9 @@ jobs:
           git checkout test-branch
           share/spack/qa/run-unit-tests
 
+  # Test RHEL8 UBI with platform Python
   rhel8-platform-python:
+    needs: [ validate, style, documentation ]
     runs-on: ubuntu-latest
     container: registry.access.redhat.com/ubi8/ubi
     steps:
@@ -151,8 +215,9 @@ jobs:
       run: |
           source share/spack/setup-env.sh
           spack unit-test -k 'not svn and not hg' -x --verbose
+  # Test for the clingo based solver (using clingo-cffi)
   clingo-cffi:
-    # Test for the clingo based solver (using clingo-cffi)
+    needs: [ validate, style, documentation ]
     runs-on: ubuntu-latest
     container: spack/github-actions:clingo-cffi
     steps:
