@@ -40,6 +40,7 @@ spack:
     - emacs
     - environment-modules@4.5.1
     - ffmpeg
+    - freetype
     - gdb~python
     - git
     - glew
@@ -61,6 +62,7 @@ spack:
     - ninja
     - openblas
     - optix
+    - poppler
     - python
     - qhull@2015.2
     - qt@5.14.2

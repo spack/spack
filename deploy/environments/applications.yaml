@@ -45,10 +45,10 @@ spack:
     - py-basalt@0.2.9
     - py-bbp-analysis-framework
     - py-bbp-workflow
-    - py-bglibpy%gcc ^neuron%intel^freetype%gcc
+    - py-bglibpy%gcc ^neuron%intel
     - py-bluepy
     - py-bluepyefe
-    - py-bluepymm%gcc ^neuron%intel^freetype%gcc
+    - py-bluepymm%gcc ^neuron%intel
     - py-bluepyopt%gcc ^neuron%intel
     - py-bluepysnap
     - py-currentscape
@@ -62,7 +62,7 @@ spack:
     - py-notebook
     - py-pytouchreader
     - py-simwriter
-    - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc^freetype%gcc
+    - py-sonata-network-reduction%gcc ^neuron%intel^py-ipython%gcc
     - regiodesics
     - reportinglib%intel
     - spatial-index
