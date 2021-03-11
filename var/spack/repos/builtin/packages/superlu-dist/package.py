@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-from spack.util.executable import which
 
 
 class SuperluDist(CMakePackage, CudaPackage):
@@ -148,8 +147,8 @@ class SuperluDist(CMakePackage, CudaPackage):
             # Smoke test input parameters: -r 2 -c 2 g20.rua
             test_args = ['-n', '4', test_exe, '-r', '2', '-c', '2', 'g20.rua']
             # Find the correct mpirun command
-            mpiexe_f = which('mpirun', 'mpiexec', 'srun')
-            if mpiexe_f is not None:
+            mpiexe_f = which('srun', 'mpirun', 'mpiexec')
+            if mpiexe_f:
                 self.run_test(mpiexe_f.command, test_args, work_dir='.',
                               purpose='superlu-dist smoke test')
             make('clean')
