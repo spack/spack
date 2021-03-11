@@ -33,7 +33,7 @@ class my_html_parser(HTMLParser):
             self.state = 1
 
         if self.state == 4:
-            if re.findall('[^a-z_]', data):
+            if re.findall('[^a-z0-9_]', data):
                 return
             self.processes.append(data)
             self.state = 2
