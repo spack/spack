@@ -7,7 +7,9 @@ from spack import *
 
 
 class PyPytestHtml(PythonPackage):
-    """pytest-html is a plugin for pytest that generates a HTML report for test results"""
+    """pytest-html is a plugin for pytest that generates
+    a HTML report for test results
+    """
 
     homepage = "https://github.com/pytest-dev/pytest-html"
     pypi = "pytest-html/pytest-html-3.1.1.tar.gz"
