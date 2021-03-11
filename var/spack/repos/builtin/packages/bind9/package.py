@@ -16,6 +16,8 @@ class Bind9(AutotoolsPackage):
 
     version('9_14_6', sha256='98be7a7b6d614b519f6c8d6ec7a8a39759ae9604d87228d9dc7c034471e5433e')
 
+    depends_on('libuv', type='link')
+    depends_on('pkgconfig', type='build')
     depends_on('openssl', type='link')
     depends_on('libiconv', type='link')
 
