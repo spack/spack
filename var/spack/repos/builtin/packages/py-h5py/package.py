@@ -31,7 +31,8 @@ class PyH5py(PythonPackage):
     variant('mpi', default=True, description='Build with MPI support')
 
     # Python versions
-    depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:')
+    depends_on('python@3.6:', type=('build', 'run'), when='@3.0.0:3.1.99')
+    depends_on('python@3.7:', type=('build', 'run'), when='@3.2.0:')
 
     # Build dependencies
     depends_on('py-cython@0.23:', type='build', when='@:2.99')
@@ -41,8 +42,9 @@ class PyH5py(PythonPackage):
     depends_on('py-wheel', type='build', when='@3.0.0:')
 
     # Build and runtime dependencies
-    depends_on('py-cached-property@1.5:', type=('build', 'run'))
-    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('py-cached-property@1.5:', type=('build', 'run'), when='python@:3.7.999')
+    depends_on('py-numpy@1.7:', type=('build', 'run'), when='@:3.1.99')
+    depends_on('py-numpy@1.14.5:', type=('build', 'run'), when='@3.2.0:')
     depends_on('py-six', type=('build', 'run'), when='@:2.99')
 
     # Link dependencies
@@ -53,7 +55,8 @@ class PyH5py(PythonPackage):
     depends_on('hdf5+mpi', when='+mpi')
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
-    depends_on('py-mpi4py', when='+mpi', type=('build', 'run'))
+    depends_on('py-mpi4py', when='@:2.99 +mpi', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.0:', when='@3.0.0: +mpi', type=('build', 'run'))
 
     phases = ['configure', 'install']
 
