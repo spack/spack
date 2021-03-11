@@ -20,6 +20,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     version('develop', branch='develop')
 
+    version('7.0.2', sha256='ee613607ce3be0b2c3f69b560b2415ce1b0e015179002aa90739430dbfaa0389')
     version('7.0.0', sha256='da783df11e7b65668e29ba8d55c8a6827e2216ad6d88040f84f42ac20fd1bb99')
     version('6.5.7', sha256='d886c3066163c43666ebac2ea50351df03907b5686671e514a75f131ba51b43c',
             preferred=True)
@@ -88,9 +89,9 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('spfft+rocm', when='@6.4.0:+rocm')
     depends_on('spfft+rocm', when='@develop+rocm')
 
-    depends_on('spla@1.1.0:', when='@develop')
-    depends_on('spla@1.1.0:+cuda', when='@develop+cuda')
-    depends_on('spla@1.1.0:+rocm', when='@develop+rocm')
+    depends_on('spla@1.1.0:', when='@7.0.0:')
+    depends_on('spla@1.1.0:+cuda', when='@7.0.0:+cuda')
+    depends_on('spla@1.1.0:+rocm', when='@7.0.0:+rocm')
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
