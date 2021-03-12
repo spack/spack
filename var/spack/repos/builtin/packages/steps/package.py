@@ -13,6 +13,7 @@ class Steps(CMakePackage):
     git      = "git@github.com:CNS-OIST/HBP_STEPS.git"
 
     version("develop", branch="master", submodules=True)
+    version("3.6.0", submodules=True)
     version("3.5.0b",  commit="b2be5fe", submodules=True)
     version("3.4.1", submodules=True)
     version("3.3.0", submodules=True)
@@ -35,6 +36,8 @@ class Steps(CMakePackage):
     depends_on("blas")
     depends_on("lapack", when="+lapack")
     depends_on("lcov", when="+coverage", type="build")
+    depends_on("metis+int64", when="@3.6.1:")
+    depends_on("eigen", when="@3.6.1:")
     depends_on("mpi", when="+mpi")
     depends_on("petsc~debug+int64+mpi", when="+petsc+mpi")
     depends_on("petsc~debug+int64~mpi", when="+petsc~mpi")
