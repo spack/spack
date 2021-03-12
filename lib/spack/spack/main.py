@@ -358,7 +358,7 @@ def make_argument_parser(**kwargs):
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
     parser.add_argument(
-        '-c', default=None, action="append", dest="config_vars",
+        '-c', '--config', default=None, action="append", dest="config_vars",
         help="add one or more custom, one off config settings.")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
