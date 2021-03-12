@@ -43,8 +43,6 @@ class Nekrs(Package):
     depends_on('cuda', when='+cuda')
     depends_on('hip', when='+hip')
 
-    patch('add_fjfortran.patch', when='%fj')
-
     @run_before('install')
     def fortran_check(self):
         if not self.compiler.f77:
