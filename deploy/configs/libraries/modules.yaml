@@ -33,7 +33,7 @@ modules:
       - highfive+mpi%gcc
       - neuron+mpi~debug%intel
       - omega-h
-      - petsc
+      - petsc+int64+mpi
       - py-dask-mpi
       - py-flake8
       - py-mpi4py%gcc

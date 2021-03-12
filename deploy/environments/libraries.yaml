@@ -30,12 +30,12 @@ spack:
     - deflect
     - eigen
     - fmt
-    - gmsh
+    - gmsh+metis+mpi+oce+openmp+shared
     - hdf5~mpi
     - highfive~mpi
-    - hypre@2.18.2
     - libarchive
     - libxml2
+    - metis+int64
     - morphio
     - morpho-kit
     - mvdtool+mpi
@@ -44,8 +44,9 @@ spack:
     - omega-h+trilinos@9.33.0.dev1
     - omega-h+gmsh+trilinos@9.33.0.dev1
     - openscenegraph build_type=Release
-    - parmetis@4.0.3
-    - petsc+int64+mpi@3.13.1
+    - parmetis
+    - petsc~int64+mpi
+    - petsc+int64+mpi
     - pugixml
     - py-argcomplete
     - py-argparse
@@ -85,6 +86,7 @@ spack:
     - py-jprops
     - py-lazy-property
     - py-line-profiler
+    - py-linecache2
     - py-lxml
     - py-markdown
     - py-matplotlib
@@ -95,6 +97,7 @@ spack:
     - py-neurom
     - py-nodeenv
     - py-pathlib2
+    - py-pbr
     - py-pillow
     - py-pip
     - py-plotly
