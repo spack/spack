@@ -87,6 +87,7 @@ repos:
 
 def test_config_edit():
     """Ensure `spack config edit` edits the right paths."""
+
     dms = spack.config.default_modify_scope('compilers')
     dms_path = spack.config.config.scopes[dms].path
     user_path = spack.config.config.scopes['user'].path
@@ -217,7 +218,7 @@ def test_config_add_update_dict(mutable_empty_config):
     assert output == expected
 
 
-def test_config_with_c_argument():
+def test_config_with_c_argument(mutable_empty_config):
 
     # I don't know how to add a spack argument to a Spack Command, so we test this way
     config_file = 'config:install_root:root:/path/to/config.yaml'
@@ -226,9 +227,9 @@ def test_config_with_c_argument():
     assert config_file in args.config_vars
 
     # Add the path to the config
-    spack.config.add(args.config_vars[0], scope='command_line')
-    output = spack.config.get('config')
-    assert output['install_root'][0]['root'] == "/path/to/config.yaml"
+    config("add", args.config_vars[0], scope='command_line')
+    output = config("get", 'config')
+    assert "config:\n  install_root:\n  - root: /path/to/config.yaml" in output
 
 
 def test_config_add_ordered_dict(mutable_empty_config):

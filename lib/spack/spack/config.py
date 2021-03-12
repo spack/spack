@@ -832,14 +832,12 @@ def add_from_file(filename, scope=None):
             # We cannot call config.set directly (set is a type)
             config.set(section, new, scope)
 
-    return config
 
-
-def add(path, scope=None):
+def add(fullpath, scope=None):
     """Add the given configuration to the specified config scope.
     Add accepts a path. If you want to add from a filename, use add_from_file"""
 
-    components = process_config_path(path)
+    components = process_config_path(fullpath)
 
     has_existing_value = True
     path = ''
@@ -870,7 +868,7 @@ def add(path, scope=None):
             break
 
     if has_existing_value:
-        path, _, value = path.rpartition(':')
+        path, _, value = fullpath.rpartition(':')
         value = syaml.load_config(value)
         existing = get(path, scope=scope)
 
