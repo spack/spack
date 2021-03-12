@@ -115,7 +115,7 @@ spack:
     - - $e4s
     - - $arch
 
-  mirrors: { "mirror": "s3://spack-binaries-develop/e4s-new-cluster" }
+  mirrors: { "mirror": "s3://spack-binaries-develop/new-empty" }
 
   gitlab-ci:
     script:
