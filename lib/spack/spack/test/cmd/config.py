@@ -204,7 +204,6 @@ def test_config_add_override_leaf(mutable_empty_config):
 
 
 def test_config_add_update_dict(mutable_empty_config):
-    config('add', 'packages:all:compiler:[gcc]')
     config('add', 'packages:all:version:1.0.0')
     output = config('get', 'packages')
 
@@ -216,6 +215,20 @@ def test_config_add_update_dict(mutable_empty_config):
 """
 
     assert output == expected
+
+
+def test_config_with_c_argument():
+
+    # I don't know how to add a spack argument to a Spack Command, so we test this way
+    config_file = 'config:install_root:root:/path/to/config.yaml'
+    parser = spack.main.make_argument_parser()
+    args = parser.parse_args(['-c', config_file])
+    assert config_file in args.config_vars
+
+    # Add the path to the config
+    spack.config.add(args.config_vars[0], scope='command_line')
+    output = spack.config.get('config')
+    assert output['install_root'][0]['root'] == "/path/to/config.yaml"
 
 
 def test_config_add_ordered_dict(mutable_empty_config):
