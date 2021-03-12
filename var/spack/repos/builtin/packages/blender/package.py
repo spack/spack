@@ -103,7 +103,7 @@ class Blender(CMakePackage):
 
 
     # Dependencies for 2.92.0
-#     depends_on('zlib@1.2.11::', when='@2.92.0:')
+    depends_on('zlib@1.2.11:', when='@2.92.0:')
 #     depends_on('openal@1.20.1:', when='@2.92.0:')
 #     depends_on('blosc@1.5.0:', when='@2.92.0:')
 #     depends_on('pthreads@3.0.0:', when='@2.92.0:')
@@ -120,15 +120,15 @@ class Blender(CMakePackage):
 #     depends_on('openvdb@7.0.0:', when='@2.92.0:')
 #     depends_on('idna@2.9:', when='@2.92.0:')
 #     depends_on('lame@3.100:', when='@2.92.0:')
-#     depends_on('ogg@1.3.4:', when='@2.92.0:')
-#     depends_on('vorbis@1.3.6:', when='@2.92.0:')
-#     depends_on('theora@1.1.1:', when='@2.92.0:')
-#     depends_on('flac@1.3.3:', when='@2.92.0:')
+    depends_on('libogg@1.3.4:', when='@2.92.0:')
+    depends_on('libvorbis@1.3.6:', when='@2.92.0:')
+    depends_on('libtheora@1.1.1:', when='@2.92.0:')
+    depends_on('flac@1.3.3:', when='@2.92.0:')
 #     depends_on('vpx@1.8.2:', when='@2.92.0:')
-#     depends_on('opus@1.3.1:', when='@2.92.0:')
+    depends_on('opus@1.3.1:', when='@2.92.0:')
 #     depends_on('xvidcore@1.3.7:', when='@2.92.0:')
     depends_on('fftw@3.3.8:', when='@2.92.0:')
-#     depends_on('iconv@1.16:', when='@2.92.0:')
+    depends_on('libiconv@1.16:', when='@2.92.0:')
     depends_on('libsndfile@1.0.28:', when='@2.92.0:')
     # sndfile
 
