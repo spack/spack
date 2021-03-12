@@ -16,6 +16,7 @@ class PyFenicsBasix(PythonPackage):
 
     version("main", branch="main")
 
+    depends_on("fenics-basix@main", type=("build", "run"))
     depends_on("cmake@3.9:", type="build")
     depends_on("eigen@3.3.7:")
     depends_on("python@3.5:", type=('build', 'run'))
@@ -23,4 +24,6 @@ class PyFenicsBasix(PythonPackage):
     depends_on("py-scikit-build", type="build")
     depends_on("py-pybind11", type="build")
 
-    phases = ['build', 'install']
+    phases = ['build_ext', 'build', 'install']
+
+    build_directory = 'python'
