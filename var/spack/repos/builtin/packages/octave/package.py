@@ -160,11 +160,6 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         config_args = []
 
         # Required dependencies
-        config_args.extend([
-            "--with-blas=%s" % spec['blas'].libs.ld_flags,
-            "--with-lapack=%s" % spec['lapack'].libs.ld_flags
-        ])
-
         if '^mkl' in spec and 'gfortran' in self.compiler.fc:
             mkl_re = re.compile(r'(mkl_)intel(_i?lp64\b)')
             config_args.extend([
@@ -176,7 +171,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.extend([
                 '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
-                '--with-lapack'
+                '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
             ])
 
         # Strongly recommended dependencies
