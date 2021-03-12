@@ -104,7 +104,7 @@ class Blender(CMakePackage):
 
     # Dependencies for 2.92.0
     depends_on('zlib@1.2.11:', when='@2.92.0:')
-#     depends_on('openal@1.20.1:', when='@2.92.0:')
+    depends_on('openal-soft@1.20.1:', when='@2.92.0:')
 #     depends_on('blosc@1.5.0:', when='@2.92.0:')
 #     depends_on('pthreads@3.0.0:', when='@2.92.0:')
 #     depends_on('openexr@2.4.0:', when='@2.92.0:')
