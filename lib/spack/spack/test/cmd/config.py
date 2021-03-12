@@ -205,16 +205,10 @@ def test_config_add_override_leaf(mutable_empty_config):
 
 
 def test_config_add_update_dict(mutable_empty_config):
-    config('add', 'packages:all:version:1.0.0')
+    config('add', 'packages:all:version:[1.0.0]')
     output = config('get', 'packages')
 
-    expected = """packages:
-  all:
-    compiler: [gcc]
-    version:
-    - 1.0.0
-"""
-
+    expected = 'packages:\n  all:\n    version: [1.0.0]\n'
     assert output == expected
 
 

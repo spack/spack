@@ -879,7 +879,6 @@ def add(fullpath, scope=None):
     # merge value into existing
     new = merge_yaml(existing, value)
     config.set(path, new, scope)
-    return config
 
 
 def get(path, default=None, scope=None):
