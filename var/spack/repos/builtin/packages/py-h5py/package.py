@@ -36,15 +36,20 @@ class PyH5py(PythonPackage):
 
     # Build dependencies
     depends_on('py-cython@0.23:', type='build', when='@:2.99')
-    depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:')
+    depends_on('py-cython@0.29:', type=('build'), when='@3.0.0:^python@:3.7.99')
+    depends_on('py-cython@0.29.14:', type=('build'), when='@3.0.0:^python@3.8.0:3.8.99')
+    depends_on('py-cython@0.29.15:', type=('build'), when='@3.0.0:^python@3.9.0:')
     depends_on('py-pkgconfig', type='build')
     depends_on('py-setuptools', type='build')
     depends_on('py-wheel', type='build', when='@3.0.0:')
 
     # Build and runtime dependencies
-    depends_on('py-cached-property@1.5:', type=('build', 'run'), when='python@:3.7.999')
-    depends_on('py-numpy@1.7:', type=('build', 'run'), when='@:3.1.99')
-    depends_on('py-numpy@1.14.5:', type=('build', 'run'), when='@3.2.0:')
+    depends_on('py-cached-property@1.5:', type=('build', 'run'), when='^python@:3.7.99')
+    depends_on('py-numpy@1.7:', type=('build', 'run'), when='@:2.99')
+    depends_on('py-numpy@1.12:', type=('build', 'run'), when='@3.0.0:^python@3.6.0:3.6.99')
+    depends_on('py-numpy@1.14.5:', type=('build', 'run'), when='@3.0.0:^python@3.7.0:3.7.99')
+    depends_on('py-numpy@1.17.5:', type=('build', 'run'), when='@3.0.0:^python@3.8.0:3.8.99')
+    depends_on('py-numpy@1.19.3:', type=('build', 'run'), when='@3.0.0:^python@3.9.0:')
     depends_on('py-six', type=('build', 'run'), when='@:2.99')
 
     # Link dependencies
@@ -56,7 +61,12 @@ class PyH5py(PythonPackage):
     depends_on('hdf5~mpi', when='~mpi')
     depends_on('mpi', when='+mpi')
     depends_on('py-mpi4py', when='@:2.99 +mpi', type=('build', 'run'))
-    depends_on('py-mpi4py@3.0.0:', when='@3.0.0: +mpi', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.0:', when='@3.0.0:+mpi^python@3.0.0:3.7.99', type=('build', 'run'))
+    depends_on('py-mpi4py@3.0.3:', when='@3.0.0:+mpi^python@3.8.0:', type=('build', 'run'))
+
+    # For version 3+, patch setup.py to allow setup_requires list to be more abstract.
+    # Required for offline installations with version 3+
+    patch('h5py-3-setuprequires.patch', when="@3.0.0:")
 
     phases = ['configure', 'install']
 
