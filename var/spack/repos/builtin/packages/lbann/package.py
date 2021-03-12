@@ -105,12 +105,13 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@0.95:0.100 +al')
     depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al')
-    depends_on('aluminum@0.5:', when='@:0.90,0.102: +al')
+    depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
     depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
 
+    depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
     depends_on('dihydrogen ~cuda', when='+dihydrogen ~cuda')
     depends_on('dihydrogen +cuda', when='+dihydrogen +cuda')
@@ -128,9 +129,9 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~dihydrogen', when='+distconv')
 
     for arch in CudaPackage.cuda_arch_values:
-        depends_on('hydrogen cuda_arch=%s' % arch, when='cuda_arch=%s' % arch)
+        depends_on('hydrogen cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
-        depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen cuda_arch=%s' % arch)
+        depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen +cuda cuda_arch=%s' % arch)
         depends_on('nccl cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
