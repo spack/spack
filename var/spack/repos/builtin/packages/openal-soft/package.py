@@ -36,12 +36,21 @@ class OpenalSoft(CMakePackage):
 
     version('1.21.1', sha256='c8ad767e9a3230df66756a21cc8ebf218a9d47288f2514014832204e666af5d8')
 
+    variant('alsa', default=False, description="ALSA support")
+
     # FIXME: Add dependencies if required.
     # depends_on('foo')
+    depends_on('alsa-lib', when="+alsa")
 
     def cmake_args(self):
         # FIXME: Add arguments other than
         # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
         # FIXME: If not needed delete this function
         args = []
+
+        if self.spec.satisfies('+alsa'):
+            args.append('-DALSOFT_REQUIRE_ALSA=ON')
+        else:
+            args.append('-DALSOFT_REQUIRE_ALSA=OFF')
+
         return args
