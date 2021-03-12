@@ -283,7 +283,7 @@ def test_add_config_filename(mock_low_high_config, tmpdir):
     with config_yaml.open('w') as f:
         syaml.dump_config(config_low, f)
 
-    spack.config.add_from_file(config_yaml, scope="low")
+    spack.config.add_from_file(str(config_yaml), scope="low")
     assert "build_stage" in spack.config.get('config')
     build_stages = spack.config.get('config')['build_stage']
     for stage in config_low['config']['build_stage']:
