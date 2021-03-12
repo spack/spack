@@ -17,6 +17,9 @@ class Cgdb(AutotoolsPackage):
     # Required dependency
     depends_on('ncurses')
     depends_on('readline')
+    depends_on('flex', type='build')
+    depends_on('bison', type='build')
+    depends_on('texinfo', type='build')
 
     def configure_args(self):
         spec = self.spec

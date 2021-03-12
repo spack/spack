@@ -98,9 +98,8 @@ def location(parser, args):
                 print(spack.repo.path.dirname_for_package_name(spec.name))
 
             else:
-                # These versions need concretized specs.
-                spec.concretize()
-                pkg = spack.repo.get(spec)
+                spec = spack.cmd.matching_spec_from_env(spec)
+                pkg = spec.package
 
                 if args.stage_dir:
                     print(pkg.stage.path)

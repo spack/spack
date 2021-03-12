@@ -30,6 +30,7 @@ class RGistr(RPackage):
     version('0.4.0', sha256='51771a257379a17552d0c88ada72ca6263954bbe896997f8a66cde3bf0b83ce0')
     version('0.3.6', sha256='ab22523b79510ec03be336e1d4600ec8a3a65afe57c5843621a4cf8f966b52e5')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r-jsonlite@1.4:', type=('build', 'run'))
     depends_on('r-crul', when='@0.9.0:', type=('build', 'run'))
     depends_on('r-httr@1.2.0:', type=('build', 'run'))

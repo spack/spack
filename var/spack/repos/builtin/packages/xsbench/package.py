@@ -46,8 +46,10 @@ class Xsbench(MakefilePackage):
 
         if '+mpi' in self.spec:
             targets.append('CC={0}'.format(self.spec['mpi'].mpicc))
+            targets.append('MPI=yes')
         else:
-            targets.append('CC={0}'.format(self.compiler.cxx))
+            targets.append('CC={0}'.format(self.compiler.cc))
+            targets.append('MPI=no')
 
         if '+openmp' in self.spec:
             cflags += ' ' + self.compiler.openmp_flag

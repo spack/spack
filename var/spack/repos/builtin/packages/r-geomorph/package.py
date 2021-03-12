@@ -24,6 +24,7 @@ class RGeomorph(RPackage):
     version('3.0.7', sha256='68f8942e1a5bc3f0298c9f5b8f69c4702c8e12ecb2275d740fda4d04d66d38e1')
     version('3.0.5', sha256='7a3a587b253770a5e7e70536234dee13e6a073f1fdf1d644ae4f11d2eb95b104')
 
+    depends_on('r+X', type=('build', 'run'))
     depends_on('r@3.1.0:', type=('build', 'run'))
     depends_on('r@3.5.0:', when='@3.3.2:', type=('build', 'run'))
     depends_on('r-rrpp', type=('build', 'run'), when='@3.0.7:')

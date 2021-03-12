@@ -253,8 +253,9 @@ class Git(AutotoolsPackage):
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
-                self.spec['gettext'].prefix.lib))
+            if 'intl' in self.spec['gettext'].libs.names:
+                env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+                    self.spec['gettext'].prefix.lib))
             env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
@@ -305,3 +306,14 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    def setup_run_environment(self, env):
+        # Setup run environment if using SVN extension
+        # Libs from perl-alien-svn and apr-util are required in
+        # LD_LIBRARY_PATH
+        # TODO: extend to other platforms
+        if "+svn platform=linux" in self.spec:
+            perl_svn = self.spec['perl-alien-svn']
+            env.prepend_path('LD_LIBRARY_PATH', join_path(
+                perl_svn.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
+                'Alien', 'SVN'))

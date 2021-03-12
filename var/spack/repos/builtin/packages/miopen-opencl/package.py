@@ -25,11 +25,12 @@ class MiopenOpencl(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('boost@1.58.0', type='link')
+    depends_on('boost@1.67.0:1.73.0', type='link')
     depends_on('pkgconfig', type='build')
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
     depends_on('half', type='build')
+
     depends_on('miopengemm@1.1.6', type='link', when='@3.5.0')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
