@@ -44,6 +44,8 @@ class VtkM(CMakePackage, CudaPackage):
     variant("doubleprecision", default=True,
             description='enable double precision')
     variant("logging", default=False, description="build logging support")
+    variant("ascent_types", default=True, description="build support for ascent types")
+    variant("virtuals", default=False, description="enable support for deprecated virtual functions")
     variant("mpi", default=False, description="build mpi support")
     variant("rendering", default=True, description="build rendering support")
     variant("64bitids", default=False,
@@ -107,7 +109,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # logging support
             if "+logging" in spec:
-                if not spec.satisfies('@1.3.0:,ascent_ver'):
+                if not spec.satisfies('@1.3.0:'):
                     raise InstallError('logging is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_LOGGING:BOOL=ON")
@@ -116,7 +118,7 @@ class VtkM(CMakePackage, CudaPackage):
 
             # mpi support
             if "+mpi" in spec:
-                if not spec.satisfies('@1.3.0:,ascent_ver'):
+                if not spec.satisfies('@1.3.0:'):
                     raise InstallError('mpi is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_MPI:BOOL=ON")
@@ -128,6 +130,18 @@ class VtkM(CMakePackage, CudaPackage):
                 options.append("-DVTKm_ENABLE_RENDERING:BOOL=ON")
             else:
                 options.append("-DVTKm_ENABLE_RENDERING:BOOL=OFF")
+
+            # Support for ascent types
+            if "+ascent_types" in spec:
+                options.append("-DVTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=ON")
+            else:
+                options.append("-DVTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=OFF")
+
+            # Support for for deprecated virtual functions
+            if "+virtuals" in spec:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=OFF")
+            else:
+                options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=ON")
 
             # 64 bit ids
             if "+64bitids" in spec:
@@ -173,7 +187,7 @@ class VtkM(CMakePackage, CudaPackage):
             # openmp support
             if "+openmp" in spec:
                 # openmp is added since version 1.3.0
-                if not spec.satisfies('@1.3.0:,ascent_ver'):
+                if not spec.satisfies('@1.3.0:'):
                     raise InstallError('OpenMP is not supported for\
                             vtkm version lower than 1.3')
                 options.append("-DVTKm_ENABLE_OPENMP:BOOL=ON")
