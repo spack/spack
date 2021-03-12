@@ -17,11 +17,12 @@ class Parallelmergetree(CMakePackage):
 
     maintainers = ['spetruzza']
 
-    version('develop',
-            commit='6774ed74fd13b9747ac792978a676ce6e8b05cab',
+    version('1.0.0',
+            git='https://bitbucket.org/cedmav/parallelmergetree.git',
+            tag='v1.0.0',
             submodules=True)
 
-    depends_on('babelflow@develop')
+    depends_on('babelflow')
 
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
 

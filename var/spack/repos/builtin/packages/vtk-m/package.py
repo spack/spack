@@ -25,17 +25,16 @@ class VtkM(CMakePackage, CudaPackage):
     git      = "https://gitlab.kitware.com/vtk/vtk-m.git"
 
     version('master', branch='master')
+    version('1.5.5', commit="d2d1c854adc8c0518802f153b48afd17646b6252")
+    version('1.5.4', commit="bbba2a1967b271cc393abd043716d957bca97972")
+    version('1.5.3', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
+    version('1.5.2', commit="c49390f2537c5ba8cf25bd39aa5c212d6eafcf61")
     version('1.5.1', sha256="64c19e66c0d579cfb21bb0df10d649b523b470b0c9a6c2ea5fd979dfeda2c25e")
     version('1.5.0', sha256="b1b13715c7fcc8d17f5c7166ff5b3e9025f6865dc33eb9b06a63471c21349aa8")
     version('1.4.0', sha256="8d83cca7cd5e204d10da151ce4f1846c1f7414c7c1e579173d15c5ea0631555a")
     version('1.3.0', sha256="f88c1b0a1980f695240eeed9bcccfa420cc089e631dc2917c9728a2eb906df2e")
     version('1.2.0', sha256="607272992e05f8398d196f0acdcb4af025a4a96cd4f66614c6341f31d4561763")
     version('1.1.0', sha256="78618c81ca741b1fbba0853cb5d7af12c51973b514c268fc96dfb36b853cdb18")
-    # version used by ascent
-    version('ascent_ver', commit="a3b8525ef97d94996ae843db0dd4f675c38e8b1e")
-    # patches, required for ascent
-    patch('vtkmdiy_fpic.patch', when='@ascent_ver')
-    patch('disable_flying_edges.patch', when='@ascent_ver')
     # use release, instead of release with debug symbols b/c vtkm libs
     # can overwhelm compilers with too many symbols
     variant('build_type', default='Release', description='CMake build type',

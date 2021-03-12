@@ -16,9 +16,7 @@ class Babelflow(CMakePackage):
 
     maintainers = ['spetruzza']
 
-    version('develop',
-            branch='ascent',
-            submodules=True)
+    version('1.0.0',  sha256='4c4d7ddf60e25e8d3550c07875dba3e46e7c9e61b309cc47a409461b7ffa405e')
 
     depends_on('mpi')
 
