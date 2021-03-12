@@ -466,6 +466,9 @@ def test_aocc_flags():
     supported_flag_test("f77_pic_flag", "-fPIC", "aocc@2.2.0")
     supported_flag_test("fc_pic_flag", "-fPIC", "aocc@2.2.0")
     supported_flag_test("version_argument", "--version", "aocc@2.2.0")
+    supported_flag_test("cflags", "-mllvm -eliminate-similar-expr=false", "aocc@3.0.0")
+    supported_flag_test("cxxflags", "-mllvm -eliminate-similar-expr=false", "aocc@3.0.0")
+    supported_flag_test("fflags", "-mllvm -eliminate-similar-expr=false", "aocc@3.0.0")
 
 
 def test_fj_flags():
