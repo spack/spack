@@ -215,8 +215,8 @@ def _add_dependency(spec_label, dep_label, deps):
     deps[spec_label].add(dep_label)
 
 
-def get_spec_dependencies(specs, deps, spec_labels, check_index_only=False):
-    spec_deps_obj = compute_spec_deps(specs, check_index_only=check_index_only)
+def get_spec_dependencies(specs, deps, spec_labels):
+    spec_deps_obj = compute_spec_deps(specs)
 
     if spec_deps_obj:
         dependencies = spec_deps_obj['dependencies']
@@ -233,18 +233,13 @@ def get_spec_dependencies(specs, deps, spec_labels, check_index_only=False):
             _add_dependency(entry['spec'], entry['depends'], deps)
 
 
-def stage_spec_jobs(specs, check_index_only=False):
+def stage_spec_jobs(specs):
     """Take a set of release specs and generate a list of "stages", where the
         jobs in any stage are dependent only on jobs in previous stages.  This
         allows us to maximize build parallelism within the gitlab-ci framework.
 
     Arguments:
         specs (Iterable): Specs to build
-        check_index_only (bool): Regardless of whether DAG pruning is enabled,
-            all configured mirrors are searched to see if binaries for specs
-            are up to date on those mirrors.  This flag limits that search to
-            the binary cache indices on those mirrors to speed the process up,
-            even though there is no garantee the index is up to date.
 
     Returns: A tuple of information objects describing the specs, dependencies
         and stages:
@@ -281,8 +276,7 @@ def stage_spec_jobs(specs, check_index_only=False):
     deps = {}
     spec_labels = {}
 
-    get_spec_dependencies(
-        specs, deps, spec_labels, check_index_only=check_index_only)
+    get_spec_dependencies(specs, deps, spec_labels)
 
     # Save the original deps, as we need to return them at the end of the
     # function.  In the while loop below, the "dependencies" variable is
@@ -327,7 +321,7 @@ def print_staging_summary(spec_labels, dependencies, stages):
         stage_index += 1
 
 
-def compute_spec_deps(spec_list, check_index_only=False):
+def compute_spec_deps(spec_list):
     """
     Computes all the dependencies for the spec(s) and generates a JSON
     object which provides both a list of unique spec names as well as a
@@ -402,8 +396,9 @@ def compute_spec_deps(spec_list, check_index_only=False):
                 tty.msg('Will not stage external pkg: {0}'.format(s))
                 continue
 
-            up_to_date_mirrors = bindist.get_mirrors_for_spec(
-                spec=s, full_hash_match=True, index_only=check_index_only)
+            bindist.binary_index.refresh_mirrors()
+            up_to_date_mirrors = bindist.binary_index.query_for_matching_mirrors(
+                spec=s, full_hash_match=True)
 
             skey = spec_deps_key(s)
             spec_labels[skey] = {
@@ -529,7 +524,7 @@ def remove_pr_mirror():
 
 
 def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
-                            check_index_only=False, run_optimizer=False,
+                            run_optimizer=False,
                             use_dependencies=False):
     # FIXME: What's the difference between one that opens with 'spack'
     # and one that opens with 'env'?  This will only handle the former.
@@ -629,8 +624,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
             phase_name = phase['name']
             with spack.concretize.disable_compiler_existence_check():
                 staged_phases[phase_name] = stage_spec_jobs(
-                    env.spec_lists[phase_name],
-                    check_index_only=check_index_only)
+                    env.spec_lists[phase_name])
     finally:
         # Clean up PR mirror if enabled
         if pr_mirror_url:

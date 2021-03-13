@@ -252,7 +252,7 @@ def test_push_and_fetch_keys(mock_gnupghome):
 def test_built_spec_cache(mirror_dir):
     """ Because the buildcache list command fetches the buildcache index
     and uses it to populate the binary_distribution built spec cache, when
-    this test calls get_mirrors_for_spec, it is testing the popluation of
+    this test calls query_for_matching_mirrors, it is testing the popluation of
     that cache from a buildcache index. """
     buildcache_cmd('list', '-a', '-l')
 
@@ -263,7 +263,7 @@ def test_built_spec_cache(mirror_dir):
         'corge': cspec.full_hash(),
     }
 
-    gspec_results = bindist.get_mirrors_for_spec(gspec)
+    gspec_results = bindist.binary_index.query_for_matching_mirrors(gspec)
 
     gspec_mirrors = {}
     for result in gspec_results:
@@ -272,7 +272,8 @@ def test_built_spec_cache(mirror_dir):
         assert(result['mirror_url'] not in gspec_mirrors)
         gspec_mirrors[result['mirror_url']] = True
 
-    cspec_results = bindist.get_mirrors_for_spec(cspec, full_hash_match=True)
+    cspec_results = bindist.binary_index.query_for_matching_mirrors(
+        cspec, full_hash_match=True)
 
     cspec_mirrors = {}
     for result in cspec_results:
@@ -409,8 +410,8 @@ def test_update_sbang(tmpdir, test_mirror, mutable_database, patch_spec_indices)
     # Need to force an update of the buildcache index
     buildcache_cmd('update-index', '-d', mirror_url)
 
-    entry = spack.spec_index.local_spec_index.lookup_ensuring_single_match(
-            old_concretized.into_hash())
+    entry = spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match(
+        old_concretized.into_hash())
     patch_spec_indices.intern_concretized_spec(entry.concretized_spec, entry.record)
 
     # Uninstall the original package.

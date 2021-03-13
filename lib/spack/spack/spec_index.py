@@ -3,15 +3,14 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import datetime
 import time
 from abc import ABCMeta, abstractmethod, abstractproperty
 from typing import (Any, ClassVar, Dict, FrozenSet, Iterable, Iterator, List,  # novm
-                    Optional, Union, cast)                                     # novm
+                    Optional, Union)                                           # novm
 
 from six import add_metaclass
 
-from llnl.util.lang import Singleton, key_ordering, memoized
+from llnl.util.lang import key_ordering, memoized
 
 import spack.spec
 
@@ -111,59 +110,6 @@ class InstallStatuses(object):
                     'InstallStatus, or iterable of InstallStatus. was: {0}'
                     .format(query_arg))
             return query_arg
-
-
-@key_ordering
-class Timestamp(object):
-    timestamp = None  # type: datetime.datetime
-
-    def __init__(self, timestamp):
-        # type: (Union[float, datetime.datetime, Timestamp]) -> None
-        if isinstance(timestamp, float):
-            timestamp = datetime.datetime.fromtimestamp(timestamp)
-        if isinstance(timestamp, Timestamp):
-            timestamp = timestamp.timestamp
-        self.timestamp = timestamp
-
-    @classmethod
-    def now(cls):
-        # type: () -> Timestamp
-        """Returns the time since the epoch"""
-        return cls(time.time())
-
-    @classmethod
-    def min(cls):
-        # type: () -> Timestamp
-        return cls(datetime.datetime.min)
-
-    @classmethod
-    def max(cls):
-        # type: () -> Timestamp
-        return cls(datetime.datetime.max)
-
-    def _cmp_key(self):
-        return (self.timestamp,)
-
-    def __repr__(self):
-        return '{0}(timestamp={1!r})'.format(type(self).__name__, self.timestamp)
-
-
-class TimeRange(object):
-    start = None  # type: Timestamp
-    end = None    # type: Timestamp
-
-    def __init__(self, start, end):
-        # type: (Optional[Timestamp], Optional[Timestamp]) -> None
-        self.start = start or Timestamp.min()
-        self.end = end or Timestamp.max()
-
-    def satisfies_timestamp(self, timestamp):
-        # type: (Timestamp) -> bool
-        return self.start <= timestamp <= self.end          # type: ignore[operator]
-
-    def __repr__(self):
-        return '{0}(start={1!r}, end={2!r})'.format(
-            type(self).__name__, self.start, self.end)
 
 
 def now():
@@ -307,76 +253,12 @@ class ConcretizedSpec(object):
         return '{0}(spec={1!r})'.format(type(self).__name__, self.spec)
 
 
-class GenericHashedPackageRecord(object):
-    install_path = None                                     # type: Optional[str]
-    install_statuses = None                                 # type: InstallStatuses
-    install_time = None                                     # type: Optional[Timestamp]
-    explicit = None                                         # type: bool
-
-    def __repr__(self):
-        return (
-            '{0}(install_path={1!r}, install_statuses={2!r}, '
-            'install_time={3!r}, explicit={4!r})').format(
-                type(self).__name__, self.install_path, self.install_statuses,
-                self.install_time, self.explicit)
-
-    def __init__(self, install_path, install_statuses, install_time, explicit):
-        # type: (Optional[str], InstallStatuses, Optional[Timestamp], bool) -> None
-        self.install_path = install_path
-        self.install_statuses = install_statuses
-        self.install_time = install_time
-        self.explicit = explicit
-
-    @classmethod
-    def from_install_record(cls, record):
-        # type: (InstallRecord) -> GenericHashedPackageRecord
-        if record.installed is None:
-            install_statuses = InstallStatuses([])
-        else:
-            install_statuses = InstallStatuses.canonical_statuses(record.installed)
-        if record.installation_time is None:
-            install_time = Timestamp.now()
-        else:
-            install_time = Timestamp(record.installation_time)
-        return cls(
-            install_path=record.path,
-            install_statuses=install_statuses,
-            install_time=install_time,
-            explicit=record.explicit,
-        )
-
-    @classmethod
-    def from_mirror(cls, mirror):
-        # type: (Any) -> GenericHashedPackageRecord
-        # FIXME: `mirror` is unused!
-        return cls(
-            install_path=None,
-            install_statuses=InstallStatuses.canonical_statuses(False),
-            install_time=Timestamp.now(),
-            explicit=False,
-        )
-
-    @memoized
-    def install_timestamp(self):
-        # type: () -> Timestamp
-        if self.install_time is None:
-            return Timestamp.now()
-        return self.install_time
-
-    def matches_query(self, query):
-        # type: (IndexQuery) -> bool
-        return (
-            query.installed.satisfies_install_statuses(self.install_statuses) and
-            query.matches_explicit(self.explicit) and
-            query.install_time_range().satisfies_timestamp(self.install_timestamp()))
-
-
 class IndexEntry(object):
     concretized_spec = None  # type: ConcretizedSpec
-    record = None            # type: GenericHashedPackageRecord
+    record = None            # type: InstallRecord
 
     def __init__(self, concretized_spec, record):
-        # type: (ConcretizedSpec, GenericHashedPackageRecord) -> None
+        # type: (ConcretizedSpec, InstallRecord) -> None
         self.concretized_spec = concretized_spec
         self.record = record
 
@@ -452,15 +334,6 @@ class ConcreteHash(CompleteHash):
             type(self).__name__, self.complete_hash)
 
 
-@add_metaclass(ABCMeta)
-class InstallInfoProvider(object):
-
-    @abstractmethod
-    def get_install_info(self, concretized_spec):
-        # type: (ConcretizedSpec) -> Optional[GenericHashedPackageRecord]
-        pass
-
-
 class IndexQuery(object):
     query_specs = None   # type: Optional[List[spack.spec.Spec]]
     known = None         # type: Optional[bool]
@@ -524,57 +397,6 @@ class IndexQuery(object):
             for_all_architectures=self.for_all_architectures,
         )
 
-    def matches_explicit(self, explicit):
-        # type: (Optional[bool]) -> bool
-        if self.explicit is None:
-            return True
-        return self.explicit == explicit
-
-    def _satisfies_spec(self, spec):
-        # type: (spack.spec.Spec) -> bool
-        if self.query_specs is None:
-            return True
-        if self.for_all_architectures:
-            spec = spec.without_architecture_or_compiler()
-        return any(
-            spec.satisfies(qs, strict=True)
-            for qs in self.query_specs
-        )
-
-    def _is_known_package(self, spec):
-        # type: (spack.spec.Spec) -> bool
-        if self.known is None:
-            return True
-        return self.known == spack.repo.path.exists(spec.name)
-
-    @staticmethod
-    def _coerce_timestamp(date):
-        # type: (Optional[float]) -> Optional[Timestamp]
-        return date if date is None else Timestamp(date)
-
-    @memoized
-    def install_time_range(self):
-        # type: () -> TimeRange
-        return TimeRange(start=self._coerce_timestamp(self.start_date),
-                         end=self._coerce_timestamp(self.end_date))
-
-    def compute_satisfies_concrete(self, spec, record):
-        # type: (spack.spec.Spec, GenericHashedPackageRecord) -> bool
-        # Early-cutoff check as in Database._query():
-        if (self.hashes is not None) and spec.concrete:
-            if spec.dag_hash() not in self.hashes:
-                return False
-        return (record.matches_query(self) and
-                self._is_known_package(spec) and
-                self._satisfies_spec(spec))
-
-    def matches(self, concretized_spec, provider):
-        # type: (ConcretizedSpec, InstallInfoProvider) -> bool
-        record = provider.get_install_info(concretized_spec)
-        if record is None:
-            return False
-        return self.compute_satisfies_concrete(concretized_spec.spec, record)
-
 
 @add_metaclass(ABCMeta)
 class SpecIndexable(object):
@@ -582,12 +404,12 @@ class SpecIndexable(object):
 
     @abstractmethod
     def spec_index_lookup(self, hash_prefix):
-        # type: (PartialHash) -> Iterable[IndexEntry]
+        # type: (PartialHash) -> Iterator[IndexEntry]
         pass
 
     @abstractmethod
     def spec_index_query(self, query):
-        # type: (IndexQuery) -> Iterable[ConcretizedSpec]
+        # type: (IndexQuery) -> Iterator[ConcretizedSpec]
         pass
 
 
@@ -598,9 +420,10 @@ class SpecIndex(object):
     @classmethod
     def _local_db(cls):
         import spack.store
-        return spack.store.db
+        return spack.store.db.instance
 
     @classmethod
+    @memoized
     def with_local_db(cls):
         # type: () -> SpecIndex
         return cls([cls._local_db()])
@@ -608,14 +431,17 @@ class SpecIndex(object):
     @classmethod
     def _remote_db(cls):
         import spack.binary_distribution
-        return spack.binary_distribution.binary_index
+        return (
+            spack.binary_distribution.BinaryCacheIndex.with_spack_configured_mirrors())
 
     @classmethod
+    @memoized
     def with_remote_db(cls):
         # type: () -> SpecIndex
         return cls([cls._remote_db()])
 
     @classmethod
+    @memoized
     def with_local_and_remote_dbs(cls):
         # type: () -> SpecIndex
         return cls([cls._local_db(), cls._remote_db()])
@@ -658,11 +484,6 @@ class SpecIndex(object):
         return '{0}(indices={1!r})'.format(type(self).__name__, self.indices)
 
 
-local_spec_index = Singleton(SpecIndex.with_local_db)
-remote_spec_index = Singleton(SpecIndex.with_remote_db)
-merged_local_remote_spec_index = Singleton(SpecIndex.with_local_and_remote_dbs)
-
-
 @key_ordering
 class IndexLocation(object):
     _known_locations = ['LOCAL', 'REMOTE', 'LOCAL_AND_REMOTE']
@@ -701,8 +522,8 @@ class IndexLocation(object):
     def spec_index_for(self):
         # type: () -> SpecIndex
         if self == type(self).LOCAL():
-            return cast(SpecIndex, local_spec_index)
+            return SpecIndex.with_local_db()
         if self == type(self).REMOTE():
-            return cast(SpecIndex, remote_spec_index)
+            return SpecIndex.with_remote_db()
         assert self == type(self).LOCAL_AND_REMOTE()
-        return cast(SpecIndex, merged_local_remote_spec_index)
+        return SpecIndex.with_local_and_remote_dbs()

@@ -64,17 +64,6 @@ date on the mirror""")
         '--no-prune-dag', action='store_false', dest='prune_dag',
         default=True, help="""Generate jobs for specs already up to date
 on the mirror""")
-    generate.add_argument(
-        '--check-index-only', action='store_true', dest='index_only',
-        default=False, help="""Spack always check specs against configured
-binary mirrors when generating the pipeline, regardless of whether or not
-DAG pruning is enabled.  This flag controls whether it might attempt to
-fetch remote spec.yaml files directly (ensuring no spec is rebuilt if it is
-present on the mirror), or whether it should reduce pipeline generation time
-by assuming all remote buildcache indices are up to date and only use those
-to determine whether a given spec is up to date on mirrors.  In the latter
-case, specs might be needlessly rebuilt if remote buildcache indices are out
-of date.""")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
@@ -102,7 +91,6 @@ def ci_generate(args):
     run_optimizer = args.optimize
     use_dependencies = args.dependencies
     prune_dag = args.prune_dag
-    index_only = args.index_only
 
     if not output_file:
         output_file = os.path.abspath(".gitlab-ci.yml")
@@ -115,7 +103,7 @@ def ci_generate(args):
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
         env, True, output_file, prune_dag=prune_dag,
-        check_index_only=index_only, run_optimizer=run_optimizer,
+        run_optimizer=run_optimizer,
         use_dependencies=use_dependencies)
 
     if copy_yaml_to:
@@ -316,26 +304,16 @@ def ci_rebuild(args):
         # to add the mirrors too, which in turn means that any code here *not*
         # using the spack command does *not* have access to the mirrors.
         spack_cmd = exe.which('spack')
-        mirrors_to_check = {
-            'ci_remote_mirror': remote_mirror_url,
-        }
 
         def add_mirror(mirror_name, mirror_url):
             m_args = ['mirror', 'add', mirror_name, mirror_url]
             tty.debug('Adding mirror: spack {0}'.format(m_args))
             mirror_add_output = spack_cmd(*m_args)
-            # Workaround: Adding the mirrors above, using "spack_cmd" makes
-            # sure they're available later when we use "spack_cmd" to install
-            # the package.  But then we also need to add them to this dict
-            # below, so they're available in this process (we end up having to
-            # pass them to "bindist.get_mirrors_for_spec()")
-            mirrors_to_check[mirror_name] = mirror_url
             tty.debug('spack mirror add output: {0}'.format(mirror_add_output))
 
         # Configure mirrors
         if pr_mirror_url:
             add_mirror('ci_pr_mirror', pr_mirror_url)
-
         if pipeline_mirror_url:
             add_mirror(spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url)
 
@@ -344,9 +322,9 @@ def ci_rebuild(args):
         spack_cmd('config', 'blame', 'mirrors')
 
         # Checks all mirrors for a built spec with a matching full hash
-        matches = bindist.get_mirrors_for_spec(
-            job_spec, full_hash_match=True, mirrors_to_check=mirrors_to_check,
-            index_only=False)
+        bindist.binary_index.refresh_mirrors()
+        matches = bindist.binary_index.query_for_matching_mirrors(job_spec,
+                                                                  full_hash_match=True)
 
         if matches:
             # Got at full hash match on at least one configured mirror.  All

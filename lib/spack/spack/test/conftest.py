@@ -15,6 +15,7 @@ import shutil
 import tempfile
 import uuid
 import xml.etree.ElementTree
+from contextlib import contextmanager
 
 import py
 import pytest
@@ -48,7 +49,6 @@ from spack.util.pattern import Bunch
 from spack.directory_layout import YamlDirectoryLayout
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
-from spack.spec_index import GenericHashedPackageRecord, IndexEntry, IndexLocation
 
 
 @pytest.fixture(autouse=True)
@@ -629,6 +629,21 @@ def database(mock_store, mock_packages, config, monkeypatch):
         store.db.last_seen_verifier = ''
 
 
+@contextmanager
+def prepare_writable_db(store_path, store_cache):
+    # Make the database writeable, as we are going to modify it
+    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
+
+    try:
+        yield
+    finally:
+        # Restore the initial state by copying the content of the cache back into
+        # the store and making the database read-only.
+        store_path.remove(rec=1)
+        store_cache.copy(store_path, mode=True, stat=True)
+        store_path.join('.spack-db').chmod(mode=0o555, rec=1)
+
+
 @pytest.fixture(scope='function')
 def mutable_database(database, _store_dir_and_cache):
     """Writeable version of the fixture, restored to its initial state
@@ -636,15 +651,9 @@ def mutable_database(database, _store_dir_and_cache):
     """
     # Make the database writeable, as we are going to modify it
     store_path, store_cache = _store_dir_and_cache
-    store_path.join('.spack-db').chmod(mode=0o755, rec=1)
 
-    yield database
-
-    # Restore the initial state by copying the content of the cache back into
-    # the store and making the database read-only
-    store_path.remove(rec=1)
-    store_cache.copy(store_path, mode=True, stat=True)
-    store_path.join('.spack-db').chmod(mode=0o555, rec=1)
+    with prepare_writable_db(store_path, store_cache):
+        yield database
 
 
 @pytest.fixture()
@@ -1260,50 +1269,13 @@ def mirror_dir(tmpdir_factory):
     dir.join('build_cache').remove()
 
 
-class MirrorCollection(object):
-    """Return a pre-constructed mirror in response to every request for mirrors."""
-    def __init__(self, inner):
-        self.inner = inner
-
-    def __call__(self, *args, **kwargs):
-        return [self.inner]
-
-
-class MirrorsForSpec(object):
-    """Return a pre-constructed mirror in response to every request for mirrors."""
-    def __init__(self, inner):
-        self.inner = inner
-
-    def __call__(self, spec, *args, **kwargs):
-        return [{
-            'spec': spec,
-            'mirror_url': self.inner.to_dict(),
-        }]
-
-
-class ReturnNumMirrors(object):
-    """Return a given integer to every call."""
-    def __init__(self, num):
-        assert isinstance(num, int), num
-        self.num = num
-
-    def __call__(self):
-        return self.num
-
-
 @pytest.fixture(scope='function')
 def test_mirror(mutable_default_config, monkeypatch, mirror_dir):
     import spack.main
     mirror_cmd = spack.main.SpackCommand('mirror')
     mirror_url = 'file://%s' % mirror_dir
     mirror_cmd('add', '--scope', 'site', 'test-mirror-func', mirror_url)
-    inner = spack.mirror.Mirror(fetch_url=mirror_url, name='test-mirror-func')
-    monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__',
-                        ReturnNumMirrors(1))
-    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values',
-                        MirrorCollection(inner))
-    monkeypatch.setattr(spack.binary_distribution, 'get_mirrors_for_spec',
-                        MirrorsForSpec(inner))
+    spack.binary_distribution.binary_index.refresh_mirrors()
     yield mirror_dir
     mirror_cmd('rm', '--scope=site', 'test-mirror-func')
 
@@ -1408,96 +1380,3 @@ def mutable_default_config(
 
     spack.config.config = old_config
     mutable_dir.remove()
-
-
-
-class MockIndex(object):
-
-    @classmethod
-    def empty(cls):
-        return cls()
-
-    def __init__(self):
-        self.install_data = dict()
-        self.data = dict()
-        self.location = None
-
-    def lookup_ensuring_single_match(self, hash_prefix):
-        for chash in self.data.keys():
-            if chash in hash_prefix:
-                return IndexEntry(
-                    self.data[chash],
-                    self.install_data[chash],
-                )
-        raise Exception('should never get here', self)
-
-    def get_install_info(self, concretized_spec):
-        if self.location == IndexLocation.LOCAL():
-            try:
-                return self.install_data[concretized_spec.into_hash()]
-            except KeyError:
-                return None
-        return GenericHashedPackageRecord.from_mirror(None)
-
-    def query(self, query):
-        for cspec in self.data.values():
-            if query.matches(cspec, self):
-                yield cspec
-
-    def intern_concretized_spec(self, cspec, record):
-        self.install_data[cspec.into_hash()] = record
-        self.data[cspec.into_hash()] = cspec
-
-
-class MockIndexProvider(object):
-
-    def __init__(self, mock, status):
-        self.mock = mock
-        self.status = status
-
-    def _cmp_key(self):
-        return (self.status,)
-
-    # A lambda or inner method isn't pickleable for some reason, so we make
-    # ourselves callable in order to support the .spec_index_for() call.
-    def spec_index_for(self):
-        if self.mock.location is None:
-            if self.status == 'LOCAL':
-                return spack.spec_index.local_spec_index
-            if self.status == 'REMOTE':
-                return spack.spec_index.remote_spec_index
-            return spack.spec_index.merged_local_remote_spec_index
-        if self.status == self.mock.location.status:
-            return self.mock
-        if self.mock.location.status == 'LOCAL_AND_REMOTE':
-            return self.mock
-        if self.status == 'LOCAL_AND_REMOTE':
-            return self.mock
-        return MockIndex.empty()
-
-
-class MockMockProvider(object):
-
-    def __init__(self, mock):
-        self.mock = mock
-
-    def LOCAL(self):
-        return self('LOCAL')
-
-    def REMOTE(self):
-        return self('REMOTE')
-
-    def LOCAL_AND_REMOTE(self):
-        return self('LOCAL_AND_REMOTE')
-
-    def __call__(self, status):
-        return MockIndexProvider(self.mock, status)
-
-
-@pytest.fixture(scope='function')
-def patch_spec_indices(monkeypatch):
-    mock = MockIndex()
-    mock_provider = MockMockProvider(mock)
-    monkeypatch.setattr(
-        spack.spec_index, 'IndexLocation', mock_provider)
-    return mock

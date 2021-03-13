@@ -7,10 +7,12 @@ import errno
 import platform
 import os
 import re
+import tarfile
+from typing import FrozenSet  # novm
 
 import pytest
 
-from llnl.util.lang import key_ordering
+from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.compilers
@@ -18,11 +20,13 @@ import spack.installer
 import spack.main
 import spack.binary_distribution
 import spack.environment as ev
+import spack.repo
 import spack.spec
 import spack.spec_index
-from spack.spec_index import (ConcretizedSpec, ConcreteHash, GenericHashedPackageRecord,
-                              IndexEntry, IndexLocation)
+import spack.store
+from spack.spec_index import ConcretizedSpec, ConcreteHash, SpecIndex
 from spack.spec import Spec
+
 
 add = spack.main.SpackCommand('add')
 buildcache = spack.main.SpackCommand('buildcache')
@@ -37,30 +41,7 @@ spec = spack.main.SpackCommand('spec')
 uninstall = spack.main.SpackCommand('uninstall')
 
 
-@pytest.fixture()
-def mock_get_specs(database, monkeypatch):
-    specs = database.query_local()
-    monkeypatch.setattr(
-        spack.binary_distribution, 'update_cache_and_get_specs', lambda: specs
-    )
-
-
-@pytest.fixture()
-def mock_get_specs_multiarch(database, monkeypatch):
-    specs = [spec.copy() for spec in database.query_local()]
-
-    # make one spec that is NOT the test architecture
-    for spec in specs:
-        if spec.name == "mpileaks":
-            spec.architecture = spack.spec.ArchSpec('linux-rhel7-x86_64')
-            break
-
-    monkeypatch.setattr(
-        spack.binary_distribution, 'update_cache_and_get_specs', lambda: specs
-    )
-
-
-def parse_long_hash(package_instance):
+def _parse_long_hash(package_instance):
     match = re.match(r'^([^ ]+) [^ ]*$', package_instance)
     assert match is not None
     return ConcreteHash(match.group(1))
@@ -73,8 +54,9 @@ def _find_output(with_missing=True):
 
 
 def all_found_hashes(with_missing=True):
+    # type: (bool) -> FrozenSet[ConcreteHash]
     return frozenset(
-        parse_long_hash(line)
+        _parse_long_hash(line)
         for line in _find_output(with_missing=with_missing))
 
 
@@ -83,8 +65,32 @@ def _buildcache_list_output(*specs):
 
 
 def buildcache_hashes(*specs):
+    # type: (Spec) -> FrozenSet[ConcreteHash]
     return frozenset(
-        parse_long_hash(line) for line in _buildcache_list_output(*specs)
+        _parse_long_hash(line) for line in _buildcache_list_output(*specs)
+    )
+
+
+@pytest.fixture()
+def mock_get_specs(database, monkeypatch):
+    spec_index = SpecIndex([database])
+    monkeypatch.setattr(
+        spack.spec_index.IndexLocation, 'spec_index_for', lambda self: spec_index
+    )
+
+
+@pytest.fixture()
+def mock_get_specs_multiarch(database, monkeypatch):
+    spec_index = SpecIndex([database])
+
+    # make one spec that is NOT the test architecture
+    for spec in database.query_local():
+        if spec.name == "mpileaks":
+            spec.architecture = spack.spec.ArchSpec('linux-rhel7-x86_64')
+            break
+
+    monkeypatch.setattr(
+        spack.spec_index.IndexLocation, 'spec_index_for', lambda self: spec_index
     )
 
 
@@ -107,169 +113,182 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
 
 
 @pytest.fixture(scope='function')
-def corge_buildcache(test_mirror, patch_spec_indices, cache_directory, install_mockery,
-                     mock_pkg_install):
-    cspec = ConcretizedSpec.from_abstract_spec(Spec('corge'))
+def mutable_buildcache(tmpdir_factory):
+    store_path = tmpdir_factory.mktemp('buildcache_mock_store')
+    store = spack.store.Store(str(store_path))
+    return store.db
 
-    patch_spec_indices.location = None
 
-    # Install 'corge' without using a cache
-    install('--no-cache', cspec.spec.name)
-    # raise Exception(install('--no-cache', cspec.spec.name, fail_on_error=False))
-    all_hashes = all_found_hashes()
-    assert cspec.into_hash() in all_hashes
+@pytest.fixture(scope='function')
+def corge_buildcache(default_config, mutable_buildcache, mock_repo_path, mock_fetch,
+                     install_mockery, mock_pkg_install, tmpdir_factory, monkeypatch):
+    cspec = Spec('corge').concretized()
+    for spec in cspec.traverse():
+        mkdirp(os.path.join(spec.prefix, '.spack'))
+        with open(os.path.join(spec.prefix, '.spack/spec.yaml'), 'w') as f:
+            f.write(spec.to_yaml())
 
-    # Matches the concretized 'corge' spec by hash.
-    spec_str = cspec.spec_string_name_hash_only
+    class EmptyTar(object):
+        def __init__(self, path, *args, **kwargs):
+            self.path = path
 
-    # Create a buildcache
-    mirror_dir = test_mirror
-    buildcache('create', '-au', '--rebuild-index', '-d', mirror_dir, spec_str)
+        def add(self, *args, **kwargs):
+            pass
 
-    for h in all_hashes:
-        entry = spack.spec_index.local_spec_index.lookup_ensuring_single_match(h)
-        patch_spec_indices.intern_concretized_spec(entry.concretized_spec, entry.record)
+        def close(self):
+            with open(self.path, 'w') as f:
+                f.write('ok')
 
-    # Uninstall the package and deps
-    uninstall('-a', '-y', '--dependents')
-    # assert set() == all_found_hashes(with_missing=False)
+        def extractall(self, path):
+            mkdirp(path)
 
-    return patch_spec_indices, cspec, all_hashes
+    monkeypatch.setattr(tarfile, 'open', EmptyTar)
+
+    monkeypatch.setattr(spack.binary_distribution,
+                        'check_package_relocatable',
+                        lambda a, b, c: None)
+
+    mirror_dir_path = tmpdir_factory.mktemp('mirror_dir')
+
+    spack.binary_distribution.build_tarball(cspec, str(mirror_dir_path),
+                                            regenerate_index=True)
+
+    tarball_dir = tmpdir_factory.mktemp('tarball_dir')
+    tarball = tarball_dir.join('file.tar.gz')
+    with open(tarball, 'wb') as f:
+        f.write(b'')
+
+    class TarballMockDownload(object):
+        def __call__(self, spec, preferred_mirrors=None):
+            return str(tarball)
+
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
+                        TarballMockDownload())
+
+    class TarballMockExtract(object):
+        def __call__(self, spec, filename, *args, **kwargs):
+            stagepath = os.path.dirname(filename)
+            mkdirp(stagepath)
+            # spackfile_name = spack.binary_distribution.tarball_name(spec, '.spack')
+            # spackfile_path = os.path.join(stagepath, spackfile_name)
+            tarfile_name = spack.binary_distribution.tarball_name(spec, '.tar.gz')
+            tarfile_path = os.path.join(stagepath, tarfile_name)
+            with open(tarfile_path, 'wb') as f:
+                f.write(b'')
+            return
+
+    monkeypatch.setattr(spack.binary_distribution, 'extract_tarball',
+                        TarballMockExtract())
+
+    class MockOneMirror(object):
+        def __call__(self):
+            return 1
+
+    monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__', MockOneMirror())
+
+    monkeypatch.setattr(spack.hooks, 'post_install', lambda *args, **kwargs: None)
+
+    class MockMirrors(object):
+        def __call__(self):
+            return [spack.mirror.Mirror(name='test-mirror',
+                                        fetch_url=str(mirror_dir_path))]
+
+    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values', MockMirrors())
+    # spack.binary_distribution.binary_index.refresh_mirrors()
+
+    class SpecIndexLookupSite(object):
+
+        def lookup_ensuring_single_match(self, hash_prefix):
+            return list(mutable_buildcache.spec_index_lookup(hash_prefix))[0]
+
+    monkeypatch.setattr(spack.spec.SpecParser, '_spec_index', SpecIndexLookupSite())
+
+    cspec = ConcretizedSpec(cspec)
+    deps = [
+        ConcretizedSpec(spec)
+        for spec in cspec.spec.traverse()
+        if spec.dag_hash() != cspec.spec.dag_hash()
+    ]
+    all_hashes = frozenset(spec.into_hash() for spec in [cspec] + deps)
+
+    yield cspec, deps, all_hashes, mutable_buildcache
 
 
 @pytest.fixture(scope='function')
 def pin_some_dependency_hash(corge_buildcache):
-    _, cspec, all_hashes = corge_buildcache
+    cspec, deps, _all_hashes, _db = corge_buildcache
 
     # Assert that we can pin a *dependency* spec with a hash.
-    some_dependency_hash = next(
-        h.complete_hash
-        for h in all_hashes
-        if h != cspec.into_hash()
-    )
+    some_dependency_hash = next(iter(deps)).into_hash().complete_hash
     merged_spec_str = '{0} ^ /{1}'.format(cspec.spec.name, some_dependency_hash)
-    return corge_buildcache + (merged_spec_str,)
-
-
-@key_ordering
-class SpecType(object):
-    _known_types = ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH']
-
-    def __init__(self, typ):
-        assert typ in self._known_types, (typ, self._known_types)
-        self.typ = typ
-
-    def _cmp_key(self):
-        return (type(self), self.typ)
-
-    @classmethod
-    def TOP_LEVEL_HASH(cls):
-        return cls('TOP_LEVEL_HASH')
-
-    @classmethod
-    def PINNED_DEPENDENCY_HASH(cls):
-        return cls('PINNED_DEPENDENCY_HASH')
-
-    @classmethod
-    def all_values(cls):
-        return [cls(typ) for typ in cls._known_types]
-
-    def __repr__(self):
-        return '{0}(typ={1!r})'.format(type(self).__name__, self.typ)
+    return merged_spec_str
 
 
 @pytest.fixture(scope='function')
-def select_spec_string(pin_some_dependency_hash):
-    patch_spec_indices, cspec, all_hashes, merged_spec_str = pin_some_dependency_hash
+def select_spec_string(corge_buildcache, pin_some_dependency_hash):
+    cspec, deps, all_hashes, _db = corge_buildcache
+    merged_spec_str = pin_some_dependency_hash
 
     def select(arg):
-        if arg == SpecType.TOP_LEVEL_HASH():
+        if arg == 'TOP_LEVEL_HASH':
             return cspec.spec_string_name_hash_only
         return merged_spec_str
-    return (patch_spec_indices, cspec, all_hashes, select,)
+    return (cspec, all_hashes, select,)
 
 
-@pytest.mark.parametrize('spec_type', SpecType.all_values())
+@pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])
 @pytest.mark.regression('reference listed binaries by hash')
 def test_buildcache_spec_reference_by_hash(spec_type, select_spec_string):
-    patch_spec_indices, _, _, select = select_spec_string
-    patch_spec_indices.location = spack.spec_index.IndexLocation.REMOTE()
+    _, _, select = select_spec_string
     spec_str = select(spec_type)
     # Would fail if the hashes weren't in the merged db:
     spec(spec_str)
 
 
 @pytest.mark.maybeslow
-@pytest.mark.parametrize('spec_type', SpecType.all_values())
+@pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])
 def test_buildcache_solve_reference_by_hash(spec_type, select_spec_string):
-    patch_spec_indices, _, _, select = select_spec_string
-    patch_spec_indices.location = spack.spec_index.IndexLocation.REMOTE()
+    _, _, select = select_spec_string
     spec_str = select(spec_type)
     # Would fail if the hashes weren't in the merged db:
     solve(spec_str)
 
 
-@key_ordering
-class InstallMethod(object):
-    _known_methods = ['INSTALL_CACHE_ONLY', 'BUILDCACHE_INSTALL']
-
-    def __init__(self, method):
-        assert method in self._known_methods, (method, self._known_methods)
-        self.method = method
-
-    def _cmp_key(self):
-        return (type(self), self.method)
-
-    @classmethod
-    def INSTALL_CACHE_ONLY(cls):
-        return cls('INSTALL_CACHE_ONLY')
-
-    @classmethod
-    def BUILDCACHE_INSTALL(cls):
-        return cls('BUILDCACHE_INSTALL')
-
-    @classmethod
-    def all_values(cls):
-        return [cls(meth) for meth in cls._known_methods]
-
-    def __repr__(self):
-        return '{0}(method={1!r})'.format(type(self).__name__, self.method)
-
-    def perform_command(self, spec_str):
-        if self == type(self).BUILDCACHE_INSTALL():
-            return buildcache('install', '-u', spec_str)
-        return install('--cache-only', '--verbose', '--no-check-signature', spec_str)
-
-
 # NB: The InstallMethod.INSTALL_CACHE_ONLY() must go first for this test to pass. It's
 # not clear why yet, but likely has to do with some shared state in the pytest fixtures
 # used.
-@pytest.mark.parametrize('spec_type', SpecType.all_values())
-@pytest.mark.parametrize('install_method', InstallMethod.all_values())
+@pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])
+@pytest.mark.parametrize('install_method', ['INSTALL_CACHE_ONLY', 'BUILDCACHE_INSTALL'])
 def test_buildcache_install_reference_by_hash(
         spec_type,
         install_method,
         select_spec_string,
+        mutable_buildcache,
+        monkeypatch,
 ):
-    patch_spec_indices, _, all_hashes, select = select_spec_string
-    patch_spec_indices.location = spack.spec_index.IndexLocation.REMOTE()
+    _, all_hashes, select = select_spec_string
 
     spec_str = select(spec_type)
 
-    # Installed again, referencing a hash known only to the remote spec index:
-    install_method.perform_command(spec_str)
+    class SpecIndexQuery(object):
+        def __call__(self, query):
+            for result in mutable_buildcache.spec_index_query(query):
+                yield result
 
-    patch_spec_indices.location = None
+    monkeypatch.setattr(spack.spec_index.SpecIndex, 'query', SpecIndexQuery())
+
+    # Installed again, referencing a hash known only to the remote spec index:
+    if install_method == 'BUILDCACHE_INSTALL':
+        buildcache('install', '-uf', spec_str)
+    else:
+        install('--cache-only', '--verbose', '--no-check-signature', spec_str)
+
     assert all_hashes == buildcache_hashes()
 
 
-@pytest.mark.parametrize('spec_type', SpecType.all_values())
-def test_buildcache_list_reference_by_hash(
-        spec_type,
-        select_spec_string,
-):
-    patch_spec_indices, cspec, all_hashes, select = select_spec_string
-    patch_spec_indices.location = spack.spec_index.IndexLocation.REMOTE()
+@pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])
+def test_buildcache_list_reference_by_hash(spec_type, select_spec_string):
+    cspec, all_hashes, select = select_spec_string
     spec_str = select(spec_type)
     # Assert that the buildcache hashes do not depend on the installed packages!
     assert all_hashes == buildcache_hashes()

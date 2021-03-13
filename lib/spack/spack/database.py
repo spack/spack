@@ -21,11 +21,12 @@ filesystem.
 """
 
 import contextlib
+import datetime
 import os
 import six
 import socket
 import sys
-from typing import Dict, Iterable, Optional  # novm
+from typing import Dict, Iterator, Optional  # novm
 
 try:
     import uuid
@@ -168,7 +169,7 @@ def _query_docvar(f):
     return f
 
 
-class Database(si.InstallInfoProvider, si.SpecIndexable):
+class Database(si.SpecIndexable):
 
     """Per-process lock objects for each install prefix."""
     _prefix_locks = {}  # type: Dict[str, lk.Lock]
@@ -244,7 +245,8 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
         self.db_lock_timeout = (
             spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
         self.package_lock_timeout = (
-            spack.config.get('config:package_lock_timeout') or _pkg_lock_timeout)
+            spack.config.get('config:package_lock_timeout') or
+            _pkg_lock_timeout)
         tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
                   str(self.db_lock_timeout)))
         timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
@@ -542,11 +544,7 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
             if hash_key in db._data:
                 return db
 
-    def query_by_spec_hash(
-            self,
-            hash_key,
-            data=None,
-    ):
+    def query_by_spec_hash(self, hash_key, data=None):
         if data and hash_key in data:
             return False, data[hash_key]
         if not data:
@@ -590,18 +588,22 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
 
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_file(self, filename):
+    def fill_from_file(self, filename):
+        # type: (str) -> None
         """Fill database from file, do not maintain old data.
-        Translate the spec portions from node-dict form to spec form.
-
-        Does not do any locking.
-        """
+        Translate the spec portions from node-dict form to spec form."""
         try:
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
+        self.fill_from_json(fdata)
+
+    def fill_from_json(self, fdata):
+        # type: (Optional[Dict]) -> None
+        """Fill database from json, do not maintain old data.
+        Translate the spec portions from node-dict form to spec form."""
         if fdata is None:
             return
 
@@ -702,7 +704,7 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
         def _read_suppress_error():
             try:
                 if os.path.isfile(self._index_path):
-                    self._read_from_file(self._index_path)
+                    self.fill_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
@@ -899,7 +901,7 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
                     (current_verifier == '')):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self.fill_from_file(self._index_path)
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(
@@ -1213,13 +1215,7 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
                 continue
             # TODO: conditional way to do this instead of catching exceptions
 
-    def _get_by_hash_local(
-            self,
-            dag_hash,
-            default=None,
-            installed=any,
-    ):
-
+    def _get_by_hash_local(self, dag_hash, default=None, installed=any):
         # hash is a full hash and is in the data somewhere
         if dag_hash in self._data:
             rec = self._data[dag_hash]
@@ -1333,21 +1329,47 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
 
         # Abstract specs require more work -- currently we test
         # against everything.
-        query = si.IndexQuery.from_query_args(
-            query_specs=query_spec,
-            known=known,
-            installed=installed,
-            explicit=explicit,
-            start_date=start_date,
-            end_date=end_date,
-            hashes=hashes,
-            for_all_architectures=for_all_architectures,
-        )
-        return [
-            rec.spec
-            for rec in self._data.values()
-            if query.matches(si.ConcretizedSpec(rec.spec), self)
-        ]
+        results = []
+        start_date = start_date or datetime.datetime.min
+        end_date = end_date or datetime.datetime.max
+
+        for key, rec in self._data.items():
+            if hashes is not None and rec.spec.dag_hash() not in hashes:
+                continue
+
+            if not rec.install_type_matches(installed):
+                continue
+
+            if explicit is not any and rec.explicit != explicit:
+                continue
+
+            if known is not any and spack.repo.path.exists(
+                    rec.spec.name) != known:
+                continue
+
+            if start_date or end_date:
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
+                if not (start_date < inst_date < end_date):
+                    continue
+
+            if query_spec is any:
+                results.append(rec.spec)
+                continue
+
+            if isinstance(query_spec, (list, spack.spec.Spec)):
+                if isinstance(query_spec, spack.spec.Spec):
+                    query_spec = [query_spec]
+                recorded_spec = rec.spec
+                if for_all_architectures:
+                    recorded_spec = recorded_spec.without_architecture_or_compiler()
+                for qs in query_spec:
+                    if recorded_spec.satisfies(qs, strict=True):
+                        results.append(rec.spec)
+                        break
+
+        return results
 
     @_query_docvar
     def query_local(self, *args, **kwargs):
@@ -1372,33 +1394,17 @@ class Database(si.InstallInfoProvider, si.SpecIndexable):
 
         return sorted(results)
 
-    def get_install_info(self, concretized_spec):
-        # type: (si.ConcretizedSpec) -> Optional[si.GenericHashedPackageRecord]
-        chash = concretized_spec.spec.dag_hash()
-        try:
-            record = self._data[chash]
-        except KeyError:
-            return None
-        return si.GenericHashedPackageRecord.from_install_record(record)
-
     def spec_index_query(self, query):
-        # type: (si.IndexQuery) -> Iterable[si.ConcretizedSpec]
-        return [
-            si.ConcretizedSpec(result)
-            for result in self.query(**query.to_query_args())
-        ]
+        # type: (si.IndexQuery) -> Iterator[si.ConcretizedSpec]
+        for result in self.query(**query.to_query_args()):
+            yield si.ConcretizedSpec(result)
 
     def spec_index_lookup(self, hash_prefix):
-        # type: (si.PartialHash) -> Iterable[si.IndexEntry]
-        matching_specs = self.get_by_hash(hash_prefix.hash_prefix) or []
-        results = []
-        for spec in matching_specs:
+        # type: (si.PartialHash) -> Iterator[si.IndexEntry]
+        for spec in self.get_by_hash(hash_prefix.hash_prefix) or []:
             _, record = self.query_by_spec_hash(spec.dag_hash())
             if record:
-                results.append(si.IndexEntry(
-                    si.ConcretizedSpec(spec),
-                    si.GenericHashedPackageRecord.from_install_record(record)))
-        return results
+                yield si.IndexEntry(si.ConcretizedSpec(spec), record)
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.

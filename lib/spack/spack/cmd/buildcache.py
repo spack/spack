@@ -262,7 +262,8 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
         query = IndexQuery(query_specs=Spec(spec), installed=True)
         matching = [
             concretized_spec.spec
-            for concretized_spec in spack.spec_index.local_spec_index.query(query)
+            for concretized_spec
+            in spack.spec_index.SpecIndex.with_local_db().query(query)
             if (hashes is None) or (concretized_spec.spec.dag_hash() in hashes)
             # This is necessary to account for incorrect queries during testing.
             if (spec.name is None) or (spec.name == concretized_spec.spec.name)

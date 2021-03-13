@@ -393,7 +393,7 @@ def _try_install_from_binary_cache(pkg, explicit, unsigned=False,
     """
     pkg_id = package_id(pkg)
     tty.debug('Searching for binary cache of {0}'.format(pkg_id))
-    matches = binary_distribution.get_mirrors_for_spec(
+    matches = binary_distribution.binary_index.query_for_matching_mirrors(
         pkg.spec, full_hash_match=full_hash_match)
 
     if not matches:
