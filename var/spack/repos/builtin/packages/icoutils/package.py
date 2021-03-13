@@ -9,8 +9,8 @@ from spack import *
 class Icoutils(AutotoolsPackage):
     """extract and convert Microsoft icon and cursor files."""
 
-    homepage = "http://www.nongnu.org/icoutils"
-    url      = "http://nongnu.askapache.com/icoutils/icoutils-0.32.3.tar.bz2"
+    homepage = "https://www.nongnu.org/icoutils"
+    url      = "https://nongnu.askapache.com/icoutils/icoutils-0.32.3.tar.bz2"
 
     version('0.32.3', sha256='17abe02d043a253b68b47e3af69c9fc755b895db68fdc8811786125df564c6e0')
     version('0.32.2', sha256='e892affbdc19cb640b626b62608475073bbfa809dc0c9850f0713d22788711bd')
