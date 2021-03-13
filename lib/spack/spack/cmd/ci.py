@@ -64,6 +64,9 @@ date on the mirror""")
         '--no-prune-dag', action='store_false', dest='prune_dag',
         default=True, help="""Generate jobs for specs already up to date
 on the mirror""")
+    generate.add_argument(
+        '--check-index-only', action='store_true', dest='index_only',
+        default=False, help="""Deprecated -- does nothing.""")
     generate.set_defaults(func=ci_generate)
 
     # Check a spec against mirror. Rebuild, create buildcache and push to
