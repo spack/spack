@@ -49,7 +49,8 @@ class Amber(Package, CudaPackage):
     for ver, (ambertools_ver, ambertools_checksum) in resources.items():
         resource(when=f'@{ver}',
                  name='AmberTools',
-                 url=f'http://ambermd.org/downloads/AmberTools{ambertools_ver}.tar.bz2',
+                 url='http://ambermd.org/downloads/AmberTools{0}.tar.bz2'.format(
+                      ambertools_ver),
                  sha256=ambertools_checksum,
                  destination='',
                  placement='ambertools_tmpdir',
