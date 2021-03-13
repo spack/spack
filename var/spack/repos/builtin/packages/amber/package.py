@@ -39,8 +39,8 @@ class Amber(Package, CudaPackage):
         '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
 
     resources = [
-        # Please note that only certain versions of ambertools are compatible with amber.
-        # We will only support the latter version of ambertools for each amber version.
+        # Note: Only certain versions of ambertools are compatible with amber.
+        # Only the latter version of ambertools for each amber version provided.
         # [version amber, version ambertools , sha256sum]
         ('20', '20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
         ('18', '19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
