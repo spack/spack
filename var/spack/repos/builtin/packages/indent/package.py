@@ -9,7 +9,7 @@ from spack import *
 class Indent(AutotoolsPackage):
     """A tool to make code easier to read."""
 
-    homepage = "http://www.gnu.org/software/indent"
+    homepage = "https://www.gnu.org/software/indent"
     url      = "https://ftp.gnu.org/gnu/indent/indent-2.2.11.tar.gz"
 
     version('2.2.12', sha256='e77d68c0211515459b8812118d606812e300097cfac0b4e9fb3472664263bb8b')
