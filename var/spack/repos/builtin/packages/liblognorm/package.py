@@ -9,7 +9,7 @@ from spack import *
 class Liblognorm(AutotoolsPackage):
     """Liblognorm is a fast-samples based normalization library."""
 
-    homepage = "http://www.liblognorm.com/"
+    homepage = "https://www.liblognorm.com/"
     url      = "https://github.com/rsyslog/liblognorm/archive/v2.0.6.tar.gz"
 
     version('2.0.6', sha256='594ea3318ef419cb7f21cf81c513db35a838b32207999a11a82b709da9ff9a2b')
