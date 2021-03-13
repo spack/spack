@@ -16,4 +16,6 @@ class Icoutils(AutotoolsPackage):
     version('0.32.2', sha256='e892affbdc19cb640b626b62608475073bbfa809dc0c9850f0713d22788711bd')
     version('0.32.1', sha256='a9ed0fdb93e35708d9d07d0433ee1d71e07683404fa8d6e9d8aaeb6506a13fbf')
 
-    depends_on('libpng')
+    depends_on('libpng@1.0.0:')
+    depends_on('perl@5.6:')
+    depends_on('perl-libwww-perl@5.64:')
