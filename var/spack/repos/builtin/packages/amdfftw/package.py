@@ -25,11 +25,12 @@ class Amdfftw(FftwBase):
 
     _name = 'amdfftw'
     homepage = "https://developer.amd.com/amd-aocl/fftw/"
-    url = "https://github.com/amd/amd-fftw/archive/2.2.tar.gz"
+    url = "https://github.com/amd/amd-fftw/archive/3.0.tar.gz"
     git = "https://github.com/amd/amd-fftw.git"
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.0', sha256='8dda7a6e440e5c94ffc318c6cd8656e2e9cf8ccc628893be0b46a65ff0d1faac')
     version('2.2', sha256='de9d777236fb290c335860b458131678f75aa0799c641490c644c843f0e246f8')
 
     variant('shared', default=True, description='Builds a shared version of the library')

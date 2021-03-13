@@ -31,11 +31,12 @@ class Amdlibflame(LibflameBase):
 
     _name = 'amdlibflame'
     homepage = "http://developer.amd.com/amd-cpu-libraries/blas-library/#libflame"
-    url = "https://github.com/amd/libflame/archive/2.2.tar.gz"
+    url = "https://github.com/amd/libflame/archive/3.0.tar.gz"
     git = "https://github.com/amd/libflame.git"
 
     maintainers = ['amd-toolchain-support']
 
+    version('3.0', sha256='7546886773a532f928eec87a81034633d8a64e5105f28310a109e66dd0b321de')
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
 
     patch('aocc-2.2.0.patch', when="@:2.999", level=1)
@@ -54,6 +55,12 @@ class Amdlibflame(LibflameBase):
         """configure_args function"""
         args = super(Amdlibflame, self).configure_args()
         args.append("--enable-external-lapack-interfaces")
+
+        """To enabled Fortran to C calling convention for
+        complex types when compiling with aocc flang"""
+        if "%aocc@3.0.0:" in self.spec:
+            args.append("--enable-f2c-dotc")
+
         return args
 
     def install(self, spec, prefix):

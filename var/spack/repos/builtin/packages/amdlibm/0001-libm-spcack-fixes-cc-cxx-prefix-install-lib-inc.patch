@@ -1,0 +1,198 @@
+From b23b2f08048d6a5b3893eec6c2f2fac546b9fc6b Mon Sep 17 00:00:00 2001
+From: lcpu <Llvm.Cpu@amd.com>
+Date: Fri, 12 Mar 2021 08:09:59 +0000
+Subject: [PATCH] libm:spcack:fixes:cc:cxx:prefix:install:lib:inc
+
+---
+ SConstruct                       |  6 +++++-
+ scripts/cfg/__init__.py          | 20 +++++++++++++++++---
+ scripts/cfg/compiler/__init__.py | 14 ++++++++++++++
+ scripts/cfg/compiler/gcc.py      |  0
+ scripts/cfg/compiler/llvm.py     |  0
+ scripts/cfg/helper.py            | 13 +++++++++++++
+ src/SConscript                   |  7 +++++++
+ 7 files changed, 56 insertions(+), 4 deletions(-)
+ mode change 100644 => 100755 scripts/cfg/__init__.py
+ mode change 100644 => 100755 scripts/cfg/compiler/__init__.py
+ mode change 100644 => 100755 scripts/cfg/compiler/gcc.py
+ mode change 100644 => 100755 scripts/cfg/compiler/llvm.py
+ mode change 100644 => 100755 scripts/cfg/helper.py
+ mode change 100644 => 100755 src/SConscript
+
+diff --git a/SConstruct b/SConstruct
+index 64150c0..c739b27 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -70,6 +70,8 @@ if libabi == 'svml':
+         env.Append(INTEL_LIB_PATH = intel_lib_path)
+ 
+ # Add shared top-level headers
++inc_path = os.path.join(os.getcwd(), 'include')
++
+ env.Prepend(CPPPATH=[Dir('include')])
+ 
+ build_root = env['BUILDROOT']
+@@ -94,7 +96,8 @@ targets = []
+ 
+ libenv = env.Clone()
+ libenv.Append(
+-	INCPATH=['#include'],
++	#INCPATH=['#include'],
++	INCPATH=inc_path,
+ 	CWD='#src',
+ )
+ 
+@@ -130,6 +133,7 @@ test_objs = SConscript(dirs='tests',
+                        exports = {'env' : testenv},
+                        duplicate = 0,
+                        src_dir    = 'tests',
++                       must_exist  = 0,
+                        variant_dir = joinpath(build_root, 'tests'))
+ 
+ gtest_objs = SConscript(dirs='gtests',
+diff --git a/scripts/cfg/__init__.py b/scripts/cfg/__init__.py
+old mode 100644
+new mode 100755
+index 2cc9373..47ac2b2
+--- a/scripts/cfg/__init__.py
++++ b/scripts/cfg/__init__.py
+@@ -45,11 +45,15 @@ class DefaultCfg(object):
+         self.defenv = Environment(variables = self.defvars,
+                                   ENV = {'PATH' : environ['PATH']})
+ 
+-        self.Check()
+-
+     def AddOptions(self):
+         opts = cfg.LocalOption()
+ 
++        opts.Add('--prefix', dest='prefix', nargs=1, action='callback',
++                  type='str',
++                  callback=self.__default_store,
++                  help="""Specify an install prefix directory
++                  the directory will be create if non-existant""")
++        
+         opts.Add('--verbose', dest='verbose', nargs=1, action='callback',
+                  callback=self.__default_store,
+                  default='none', type='int',
+@@ -119,9 +123,15 @@ class DefaultCfg(object):
+             EnumVariable('compiler', "Select compiler type", 'gcc',
+                          allowed_values=('gcc', 'aocc', 'llvm', 'icc'), ignorecase=2),
+ 
+-            PathVariable('toolchain_base', "Use this as toolchain prefix", '/usr/bin')
++            PathVariable('toolchain_base', "Use this as toolchain prefix", '/usr/bin'),
++            PathVariable('prefix', "Use this as install prefix", '/usr/local')
+         )
+ 
++        defvars.Add(PathVariable('CC', help="Custom C compielr", default = None,
++                validator=PathVariable.PathAccept))
++        defvars.Add(PathVariable('CXX', help="Custom CXX compielr", default = None,
++                validator=PathVariable.PathAccept))
++
+         self.defvars = defvars
+ 
+     def Check(self):
+@@ -179,6 +189,10 @@ class DefaultCfg(object):
+                 CPPDEFINES = {'DEVELOPER' : env['developer']})
+ 
+         self.defvars.Save(self.def_env_file, env)
++
++        self.Check()
++
++        env['ENV'].update(environ)
+         return env
+ 
+     def GetHelpTexts(self):
+diff --git a/scripts/cfg/compiler/__init__.py b/scripts/cfg/compiler/__init__.py
+old mode 100644
+new mode 100755
+index 5185a7c..a6de267
+--- a/scripts/cfg/compiler/__init__.py
++++ b/scripts/cfg/compiler/__init__.py
+@@ -62,3 +62,17 @@ class Compiler:
+             "debug": self.cpp_flags_debug,
+             "release": self.cpp_flags_release
+         }
++
++        def fixup_from_vars(self):
++            pass
++
++        def fixup_from_env(self):
++            if 'CC' in os.environ:
++                self.cmd = os.getenv('CC')
++            if 'CXX' in os.environ:
++                self.cxxcmd = os.getenv('CXX')
++            if 'CFLAGS' in os.environ:
++                self.compile_flag_map[self.prod_mode]
++            if 'LDFLAGS' in os.environ:
++                self.link_flag_map[self.prod_mode]
++
+diff --git a/scripts/cfg/compiler/gcc.py b/scripts/cfg/compiler/gcc.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/cfg/compiler/llvm.py b/scripts/cfg/compiler/llvm.py
+old mode 100644
+new mode 100755
+diff --git a/scripts/cfg/helper.py b/scripts/cfg/helper.py
+old mode 100644
+new mode 100755
+index a0fb991..8220745
+--- a/scripts/cfg/helper.py
++++ b/scripts/cfg/helper.py
+@@ -140,6 +140,17 @@ def UpdateEnvComStr(env):
+         env["SHCCCOMSTR"]   = Transform('SHCC')
+         env["SHLINKCOMSTR"] = Transform('SHLINK', hidesrc=True)
+ 
++def MakeInstallRoot(env):
++    """Build root has
++       build/<libabi>-<debug/release/developer>
++    """
++    try:
++        inst = env['prefix']
++    except KeyError:
++        inst = '#install'
++
++    env['INSTALL_PREFIX'] = inst
++ 
+ def MakeBuildRoot(env):
+     """Build root has
+        build/<libabi>-<debug/release/developer>
+@@ -178,7 +189,9 @@ def SetupConfiguration(env):
+         and puts target into testdir."""
+         #print(env.Dump())
+         MakeBuildRoot(env)
++        MakeInstallRoot(env)
+         UpdateEnvComStr(env)
++        env['compiler'] = GetOption('compiler')
+ 
+         if env['debug_mode'] != 'no':
+             env.Append(CPPDEFINES = {'DEBUG': '1'})
+diff --git a/src/SConscript b/src/SConscript
+old mode 100644
+new mode 100755
+index 0fe4e19..a003350
+--- a/src/SConscript
++++ b/src/SConscript
+@@ -27,6 +27,7 @@
+ Import('env')
+ from os.path import join as joinpath
+ 
++installdir = env['prefix']
+ builddir = joinpath(env['BUILDROOT'], 'src')
+ 
+ e = env.Clone()
+@@ -72,6 +73,12 @@ alm_objs += almenv.StaticObject(lib_srcs)
+ libm = almenv.StaticLibrary('alm', alm_objs)
+ libmso = almenv.SharedLibrary('alm', alm_objs)
+ 
++#add include headers as part of the install
++alm_header_scalar = joinpath(env['INCPATH'], 'external', 'amdlibm.h')
++alm_header_vector = joinpath(env['INCPATH'], 'external', 'amdlibm_vec.h')
++
++almenv.Alias("install", almenv.Install(joinpath(installdir, "lib"), [libmso, libm]))
++almenv.Alias("install", almenv.Install(joinpath(installdir, "include"), [alm_header_scalar, alm_header_vector]))
+ 
+ fast_libm = SConscript('fast/SConscript',
+                        exports = {'env' : e},
+-- 
+2.25.1
+
