@@ -32,29 +32,39 @@ class Amber(Package, CudaPackage):
         return url
 
     version(
-        '18.20', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+        '20', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
     version(
-        '18.19', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+        '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
     version(
-        '16.16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
+        '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
 
     resources = [
+        # Please note that only certain versions of ambertools are compatible with amber.
+        # We will only support the latter version of ambertools for each amber version.
         # [version amber, version ambertools , sha256sum]
-        ('18', '20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
+        ('20', '20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
         ('18', '19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
         ('16', '16', '7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa'),
     ]
     for ver, ambertools_ver, checksum in resources:
-        resource(when='@{0}.{1}'.format(ver, ambertools_ver),
+        resource(when=f'@{ver}.{ambertools_ver}',
                  name='AmberTools',
-                 url='file://{0}/AmberTools{1}.tar.bz2'.format(os.getcwd(),
-                                                               ambertools_ver),
+                 url=f'http://ambermd.org/downloads/AmberTools{ambertools_ver}.tar.bz2',
                  sha256=checksum,
                  destination='',
                  placement='ambertools_tmpdir',
                  )
 
     patches = [
+        ('20', '1', '10780cb91a022b49ffdd7b1e2bf4a572fa4edb7745f0fc4e5d93b158d6168e42'),
+        ('20', '2', '9c973e3f8f33a271d60787e8862901e8f69e94e7d80cda1695f7fad7bc396093'),
+        ('20', '3', 'acb359dc9b1bcff7e0f1965baa9f3f3dc18eeae99c49f1103c1e2986c0bbeed8'),
+        ('20', '4', 'fd93c74f5ec80689023648cdd12b2c5fb21a3898c81ebc3fa256ef244932562a'),
+        ('20', '5', '8e46d5be28c002f560050a71f4851b01ef45a3eb66ac90d7e23553fae1370e68'),
+        ('20', '6', '8cf9707b3d08ad9242326f02d1861831ad782c9bfb0c46e7b1f0d4640571d5c1'),
+        ('20', '7', '143b6a09f774aeae8b002afffb00839212020139a11873a3a1a34d4a63fa995d'),
+        ('20', '8', 'a6fc6d5c8ba0aad3a8afe44d1539cc299ef78ab53721e28244198fd5425d14ad'),
+        ('20', '9', '5ce6b534bab869b1e9bfefa353d7f578750e54fa72c8c9d74ddf129d993e78cf'),
         ('18', '1', '3cefac9a24ece99176d5d2d58fea2722de3e235be5138a128428b9260fe922ad'),
         ('18', '2', '3a0707a9a59dcbffa765dcf87b68001450095c51b96ec39d21260ba548a2f66a'),
         ('18', '3', '24c2e06f71ae553a408caa3f722254db2cbf1ca4db274542302184e3d6ca7015'),
@@ -94,17 +104,17 @@ class Amber(Package, CudaPackage):
               sha256=checksum, level=0, when='@{0}'.format(ver))
 
     # Patch to add ppc64le in config.guess
-    patch('ppc64le.patch', when='@18.20')
+    patch('ppc64le.patch', when='@18:')
 
     # Patch to add aarch64 in config.guess
-    patch('aarch64.patch', when='@18.20')
+    patch('aarch64.patch', when='@18:')
 
     # Workaround to modify the AmberTools script when using the NVIDIA
     # compilers
-    patch('nvhpc.patch', when='@18.20 %nvhpc')
+    patch('nvhpc.patch', when='@18: %nvhpc')
 
     # Workaround to use NVIDIA compilers to build the bundled Boost
-    patch('nvhpc-boost.patch', when='@18.20 %nvhpc')
+    patch('nvhpc-boost.patch', when='@18: %nvhpc')
 
     variant('mpi', description='Build MPI executables',
             default=True)
