@@ -54,6 +54,7 @@ modules:
       - py-bbp-workflow
       - py-bglibpy
       - py-bluepy
+      - py-bluepyefe
       - py-bluepymm
       - py-bluepyopt
       - py-bluepysnap
