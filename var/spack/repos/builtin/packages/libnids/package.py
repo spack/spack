@@ -13,7 +13,9 @@ class Libnids(AutotoolsPackage):
 
     homepage = "http://libnids.sourceforge.net/"
     url      = "https://github.com/MITRECND/libnids/archive/1.25.tar.gz"
+    git      = "https://github.com/MITRECND/libnids.git"
 
+    version('master', branch='master')
     version('1.25', sha256='47aa634bd0cdad81e092fac3aef6f12ee346c2f536a1eff4d3d5dacdb6dfcec1')
 
     depends_on('libpcap')
