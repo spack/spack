@@ -38,7 +38,7 @@ class Amber(Package, CudaPackage):
         preferred=True)
     version(
         '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d',
-         deprecated=True)
+        deprecated=True)
 
     # Note: Only certain versions of ambertools are compatible with amber.
     # Only the latter version of ambertools for each amber version provided.
