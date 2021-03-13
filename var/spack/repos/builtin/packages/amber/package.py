@@ -12,13 +12,14 @@ class Amber(Package, CudaPackage):
     """Amber is a suite of biomolecular simulation programs together
        with Amber tools.
 
-       Note: The version number is composed of the Amber version (major)
-       and the tools version (minor). A manual download is required for
-       both Amber and Amber tools.
-       Spack will search your current directory for the download files.
-       Alternatively, add the files to a mirror so that Spack can find them.
-       For instructions on how to set up a mirror, see
-       http://spack.readthedocs.io/en/latest/mirrors.html"""
+       A manual download is required for Ambers. Spack will search your current
+       directory for the download files. Alternatively, add the files to a mirror
+       so that Spack can find them. For instructions on how to set up a mirror, see
+       http://spack.readthedocs.io/en/latest/mirrors.html
+
+       Note: Only certain versions of ambertools are compatible with amber.
+       Only the latter version of ambertools for each amber version is supported.
+       """
 
     homepage = "http://ambermd.org/"
     url = "file://{0}/Amber18.tar.bz2".format(os.getcwd())
@@ -40,8 +41,6 @@ class Amber(Package, CudaPackage):
         '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d',
         deprecated=True)
 
-    # Note: Only certain versions of ambertools are compatible with amber.
-    # Only the latter version of ambertools for each amber version provided.
     resources = {
         # [version amber, version ambertools , sha256sum]
         '20': ('20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
