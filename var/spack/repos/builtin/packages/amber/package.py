@@ -32,25 +32,27 @@ class Amber(Package, CudaPackage):
         return url
 
     version(
-        '20', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+        '20', sha256='')
     version(
-        '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
+        '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277',
+        preferred=True)
     version(
-        '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d')
+        '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d',
+         deprecated=True)
 
-    resources = [
-        # Note: Only certain versions of ambertools are compatible with amber.
-        # Only the latter version of ambertools for each amber version provided.
+    # Note: Only certain versions of ambertools are compatible with amber.
+    # Only the latter version of ambertools for each amber version provided.
+    resources = {
         # [version amber, version ambertools , sha256sum]
-        ('20', '20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
-        ('18', '19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
-        ('16', '16', '7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa'),
-    ]
-    for ver, ambertools_ver, checksum in resources:
-        resource(when=f'@{ver}.{ambertools_ver}',
+        '20': ('20', 'b1e1f8f277c54e88abc9f590e788bbb2f7a49bcff5e8d8a6eacfaf332a4890f9'),
+        '18': ('19', '0c86937904854b64e4831e047851f504ec45b42e593db4ded92c1bee5973e699'),
+        '16': ('16', '7b876afe566e9dd7eb6a5aa952a955649044360f15c1f5d4d91ba7f41f3105fa'),
+    }
+    for ver, (ambertools_ver, ambertools_checksum) in resources.items():
+        resource(when=f'@{ver}',
                  name='AmberTools',
                  url=f'http://ambermd.org/downloads/AmberTools{ambertools_ver}.tar.bz2',
-                 sha256=checksum,
+                 sha256=ambertools_checksum,
                  destination='',
                  placement='ambertools_tmpdir',
                  )
