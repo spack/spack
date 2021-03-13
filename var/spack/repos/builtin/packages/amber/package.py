@@ -32,7 +32,7 @@ class Amber(Package, CudaPackage):
         return url
 
     version(
-        '20', sha256='')
+        '20', sha256='a4c53639441c8cc85adee397933d07856cc4a723c82c6bea585cd76c197ead75')
     version(
         '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277',
         preferred=True)
