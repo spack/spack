@@ -900,7 +900,7 @@ class SpackSolverSetup(object):
             raise RuntimeError(msg)
         return clauses
 
-    def spec_clauses(self, spec, body=False, transitive=True, force_check=False):
+    def spec_clauses(self, spec, body=False, transitive=True):
         """Return a list of clauses for a spec mandates are true.
 
         Arguments:
@@ -909,7 +909,6 @@ class SpackSolverSetup(object):
                 (final values) instead of rule heads (setters).
             transitive (bool): if False, don't generate clauses from
                  dependencies (default True)
-            force_check (bool): if the spec is concrete, force checking variants.
         """
         clauses = []
 
@@ -967,8 +966,8 @@ class SpackSolverSetup(object):
                 if value == '*':
                     continue
 
-                # validate variant value only if spec not concrete, or asked for
-                if not spec.concrete or force_check:
+                # validate variant value only if spec not concrete
+                if not spec.concrete:
                     reserved_names = spack.directives.reserved_names
                     if not spec.virtual and vname not in reserved_names:
                         try:
