@@ -27,7 +27,7 @@ import spack.util.url as url_util
 
 from spack.error import SpecError
 from spack.spec import Spec, save_dependency_spec_yamls
-from spack.spec_index import IndexQuery, InstallStatuses
+from spack.spec_index import IndexQuery
 from spack.util.string import plural
 
 from spack.cmd import display_specs
@@ -308,7 +308,7 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     remote = spack.spec_index.IndexLocation.REMOTE()
     qspecs = spack.cmd.parse_specs(pkgs, index_location=remote) or None
     query = IndexQuery(query_specs=qspecs,
-                       installed=InstallStatuses.any_status(),
+                       installed=None,
                        for_all_architectures=other_arch)
     specs = [
         concretized_spec.spec
@@ -523,7 +523,7 @@ def listspecs(args):
     remote = spack.spec_index.IndexLocation.REMOTE()
     qspecs = spack.cmd.parse_specs(args.specs, index_location=remote) or None
     query = IndexQuery(query_specs=qspecs,
-                       installed=InstallStatuses.any_status(),
+                       installed=None,
                        for_all_architectures=args.allarch)
     specs = [
         concretized_spec.spec

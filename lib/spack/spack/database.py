@@ -26,6 +26,7 @@ import os
 import six
 import socket
 import sys
+import time
 from typing import Dict, Iterator, Optional  # novm
 
 try:
@@ -95,6 +96,22 @@ _pkg_lock_timeout = None
 # Types of dependencies tracked by the database
 _tracked_deps = ('link', 'run')
 
+# Default list of fields written for each install record
+default_install_record_fields = [
+    'spec',
+    'ref_count',
+    'path',
+    'installed',
+    'explicit',
+    'installation_time',
+    'deprecated_for',
+]
+
+
+def _now():
+    """Returns the time since the epoch"""
+    return time.time()
+
 
 def _autospec(function):
     """Decorator that automatically converts the argument of a single-arg
@@ -106,6 +123,116 @@ def _autospec(function):
         return function(self, spec_like, *args, **kwargs)
 
     return converter
+
+
+class InstallStatus(str):
+    pass
+
+
+class InstallStatuses(object):
+    INSTALLED = InstallStatus('installed')
+    DEPRECATED = InstallStatus('deprecated')
+    MISSING = InstallStatus('missing')
+
+    @classmethod
+    def canonicalize(cls, query_arg):
+        if query_arg is True:
+            return [cls.INSTALLED]
+        elif query_arg is False:
+            return [cls.MISSING]
+        elif query_arg is any:
+            return [cls.INSTALLED, cls.DEPRECATED, cls.MISSING]
+        elif isinstance(query_arg, InstallStatus):
+            return [query_arg]
+        else:
+            try:  # Try block catches if it is not an iterable at all
+                if any(type(x) != InstallStatus for x in query_arg):
+                    raise TypeError
+            except TypeError:
+                raise TypeError(
+                    'installation query must be `any`, boolean, '
+                    'InstallStatus, or iterable of InstallStatus')
+            return query_arg
+
+
+class InstallRecord(object):
+    """A record represents one installation in the DB.
+
+    The record keeps track of the spec for the installation, its
+    install path, AND whether or not it is installed.  We need the
+    installed flag in case a user either:
+
+        a) blew away a directory, or
+        b) used spack uninstall -f to get rid of it
+
+    If, in either case, the package was removed but others still
+    depend on it, we still need to track its spec, so we don't
+    actually remove from the database until a spec has no installed
+    dependents left.
+
+    Args:
+        spec (Spec): spec tracked by the install record
+        path (str): path where the spec has been installed
+        installed (bool): whether or not the spec is currently installed
+        ref_count (int): number of specs that depend on this one
+        explicit (bool, optional): whether or not this spec was explicitly
+            installed, or pulled-in as a dependency of something else
+        installation_time (time, optional): time of the installation
+    """
+
+    def __init__(
+            self,
+            spec,
+            path,
+            installed,
+            ref_count=0,
+            explicit=False,
+            installation_time=None,
+            deprecated_for=None
+    ):
+        self.spec = spec
+        self.path = str(path) if path else None
+        self.installed = bool(installed)
+        self.ref_count = ref_count
+        self.explicit = explicit
+        self.installation_time = installation_time or _now()
+        self.deprecated_for = deprecated_for
+
+    def install_type_matches(self, installed):
+        installed = InstallStatuses.canonicalize(installed)
+        if self.installed:
+            return InstallStatuses.INSTALLED in installed
+        elif self.deprecated_for:
+            return InstallStatuses.DEPRECATED in installed
+        else:
+            return InstallStatuses.MISSING in installed
+
+    def to_dict(self, include_fields=default_install_record_fields):
+        rec_dict = {}
+
+        for field_name in include_fields:
+            if field_name == 'spec':
+                rec_dict.update({'spec': self.spec.node_dict_with_hashes()})
+            elif field_name == 'deprecated_for' and self.deprecated_for:
+                rec_dict.update({'deprecated_for': self.deprecated_for})
+            else:
+                rec_dict.update({field_name: getattr(self, field_name)})
+
+        return rec_dict
+
+    @classmethod
+    def from_dict(cls, spec, dictionary):
+        d = dict(dictionary.items())
+        d.pop('spec', None)
+
+        # Old databases may have "None" for path for externals
+        if 'path' not in d or d['path'] == 'None':
+            d['path'] = None
+
+        if 'installed' not in d:
+            d['installed'] = False
+
+        return InstallRecord(spec, **d)
 
 
 class ForbiddenLockError(SpackError):
@@ -177,15 +304,9 @@ class Database(si.SpecIndexable):
     """Per-process failure (lock) objects for each install prefix."""
     _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
-    def __init__(
-            self,
-            root,
-            db_dir=None,
-            upstream_dbs=None,
-            is_upstream=False,
-            enable_transaction_locking=True,
-            record_fields=si.InstallRecord.include_fields,
-    ):
+    def __init__(self, root, db_dir=None, upstream_dbs=None,
+                 is_upstream=False, enable_transaction_locking=True,
+                 record_fields=default_install_record_fields):
         """Create a Database for Spack installations under ``root``.
 
         A Database is a cache of Specs data from ``$prefix/spec.yaml``
@@ -667,7 +788,7 @@ class Database(si.SpecIndexable):
                 # spec has its own copies of its dependency specs.
                 # TODO: would a more immmutable spec implementation simplify
                 #       this?
-                data[hash_key] = si.InstallRecord.from_dict(spec, rec)
+                data[hash_key] = InstallRecord.from_dict(spec, rec)
             except Exception as e:
                 invalid_record(hash_key, e)
 
@@ -955,7 +1076,7 @@ class Database(si.SpecIndexable):
             return
 
         # Retrieve optional arguments
-        installation_time = installation_time or si.now()
+        installation_time = installation_time or _now()
 
         for dep in spec.dependencies(_tracked_deps):
             dkey = dep.dag_hash()
@@ -987,7 +1108,7 @@ class Database(si.SpecIndexable):
                 'explicit': explicit,
                 'installation_time': installation_time
             }
-            self._data[key] = si.InstallRecord(
+            self._data[key] = InstallRecord(
                 new_spec, path, installed, ref_count=0, **extra_args
             )
 
@@ -1011,7 +1132,7 @@ class Database(si.SpecIndexable):
             # If it is already there, mark it as installed and update
             # installation time
             self._data[key].installed = True
-            self._data[key].installation_time = si.now()
+            self._data[key].installation_time = _now()
 
         self._data[key].explicit = explicit
 

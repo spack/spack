@@ -19,7 +19,7 @@ import spack.cmd as cmd
 import spack.cmd.common.arguments as arguments
 import spack.user_environment as uenv
 from spack.util.string import plural
-from spack.spec_index import InstallStatus
+from spack.database import InstallStatuses
 
 description = "list and search installed packages"
 section = "basic"
@@ -127,11 +127,11 @@ def query_arguments(args):
     # Set up query arguments.
     installed = []
     if not (args.only_missing or args.only_deprecated):
-        installed.append(InstallStatus.INSTALLED())
+        installed.append(InstallStatuses.INSTALLED)
     if (args.deprecated or args.only_deprecated) and not args.only_missing:
-        installed.append(InstallStatus.DEPRECATED())
+        installed.append(InstallStatuses.DEPRECATED)
     if (args.missing or args.only_missing) and not args.only_deprecated:
-        installed.append(InstallStatus.MISSING())
+        installed.append(InstallStatuses.MISSING)
 
     known = any
     if args.unknown:

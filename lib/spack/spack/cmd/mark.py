@@ -13,7 +13,7 @@ import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
 import spack.store
-from spack.spec_index import InstallStatus
+from spack.database import InstallStatuses
 
 from llnl.util import tty
 
@@ -69,7 +69,7 @@ def find_matching_specs(specs, allow_multiple_matches=False):
     has_errors = False
 
     for spec in specs:
-        install_query = [InstallStatus.INSTALLED()]
+        install_query = [InstallStatuses.INSTALLED]
         matching = spack.store.db.query_local(spec, installed=install_query)
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
