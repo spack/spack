@@ -12,8 +12,9 @@ class Libmbim(AutotoolsPackage):
     protocol."""
 
     homepage = "https://github.com/linux-mobile-broadband/libmbim/"
-    url      = "https://github.com/linux-mobile-broadband/libmbim/archive/1.18.0.tar.gz"
+    url      = "https://github.com/linux-mobile-broadband/libmbim/archive/1.20.4.tar.gz"
 
+    version('1.20.4', sha256='edb56afb862a7756dc097086d8fa791c93332f6f1daf27759eff6ddc99a0f50d')
     version('1.18.0', sha256='47003bfdf78bf32009a1d917f30c063079fa5bd4afc739d6d8ec356070b270df')
     version('1.16.2', sha256='06b7a9e8430c6ab213d96c71a71469aefc86deb52cffd5e4f75121d9a79545e2')
     version('1.16.0', sha256='d123426678f415c2ac4544534ed8a9ff54d133c2ba8c982ce667b793e54f8e99')
@@ -25,3 +26,7 @@ class Libmbim(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('glib@:2.62.0')
+
+    def autoreconf(self, spec, prefix):
+        bash = which('bash')
+        bash('./autogen.sh')
