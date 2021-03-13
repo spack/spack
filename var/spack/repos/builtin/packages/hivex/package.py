@@ -9,8 +9,8 @@ from spack import *
 class Hivex(AutotoolsPackage):
     """Windows Registry "hive" extraction library."""
 
-    homepage = "http://libguestfs.org"
-    url      = "http://libguestfs.org/download/hivex/hivex-1.3.17.tar.gz"
+    homepage = "https://libguestfs.org"
+    url      = "https://libguestfs.org/download/hivex/hivex-1.3.17.tar.gz"
 
     version('1.3.19', sha256='5102cc5149767229dbfb436ae7b47dd85b90e0215445e42c2809cbe32e54f762')
     version('1.3.18', sha256='8a1e788fd9ea9b6e8a99705ebd0ff8a65b1bdee28e319c89c4a965430d0a7445')
