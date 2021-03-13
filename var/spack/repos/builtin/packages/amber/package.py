@@ -35,8 +35,7 @@ class Amber(Package, CudaPackage):
     version(
         '20', sha256='a4c53639441c8cc85adee397933d07856cc4a723c82c6bea585cd76c197ead75')
     version(
-        '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277',
-        preferred=True)
+        '18', sha256='2060897c0b11576082d523fb63a51ba701bc7519ff7be3d299d5ec56e8e6e277')
     version(
         '16', sha256='3b7ef281fd3c46282a51b6a6deed9ed174a1f6d468002649d84bfc8a2577ae5d',
         deprecated=True)
