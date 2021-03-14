@@ -689,6 +689,109 @@ structured the way you want:
     }
 
 
+^^^^^^^^^^^^^^
+``spack diff``
+^^^^^^^^^^^^^^
+
+It's often the case that you have two versions of a spec that you need to
+disambiguate. Let's say that we've installed two variants of zlib, one with
+and one without the optimize variant:
+
+.. code-block:: console
+
+   $ spack install zlib
+   $ spack install zlib -optimize
+
+When we do ``spack find`` we see the two versions.
+
+.. code-block:: console
+
+    $ spack find zlib
+    ==> 2 installed packages
+    -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+    zlib@1.2.11  zlib@1.2.11
+
+
+Let's now say that we want to uninstall zlib. We run the command, and hit a problem
+real quickly that we have two!
+
+.. code-block:: console
+
+    $ spack uninstall zlib
+    ==> Error: zlib matches multiple packages:
+
+        -- linux-ubuntu20.04-skylake / gcc@9.3.0 ------------------------
+        efzjziy zlib@1.2.11  sl7m27m zlib@1.2.11
+
+    ==> Error: You can either:
+        a) use a more specific spec, or
+        b) specify the spec by its hash (e.g. `spack uninstall /hash`), or
+        c) use `spack uninstall --all` to uninstall ALL matching specs.
+
+Oh no! This is a good use case for ``spack diff``, which can easily show us the
+"diff" or set difference between properties for two packages. Let's try it out.
+Since the only difference between these two is the hash, we provide the hash.
+
+.. code-block::console
+
+    $ spack diff zlib@1.2.11/efzjziy zlib@1.2.11/sl7m27m
+    ==> diff(zlib@1.2.11/efzjziy, zlib@1.2.11/sl7m27m)
+    VARIANT_SET  zlib optimize bool(False)
+    ==> diff(zlib@1.2.11/sl7m27m, zlib@1.2.11/efzjziy)
+    VARIANT_SET  zlib optimize bool(True)
+
+Awesome! The above tells us that our first zlib was built without optimize (False)
+and the second was built with optimize (True). This is a small example, but there are
+actually several different types of difference properties you can view, each one being
+a fact about a particular spec. The way we calculate the difference is basically by
+taking a set difference based on these facts. The first package that you provide (A)
+being diffed against B means that we see what is in A but not B. Here is another example
+with one more difference type:
+
+.. code-block::console
+
+    $ spack diff python@2.7.8 python@3.8.8
+    ==> diff(python@2.7.8, python@3.8.8)
+    VARIANT_SET  python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8  VERSION  python Version(2.7.8)  openssl Version(1.0.2u)
+    ==> diff(python@3.8.8, python@2.7.8)
+    VARIANT_SET  python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87  VERSION  openssl Version(1.1.1j)  python Version(3.8.8)
+
+Let's say that we were only interested in one kind of attribute above, versions!
+We could first see the options by asking the command for help:
+
+.. code-block:: console
+
+    $ spack diff --help
+    ...
+    --diff-type {all,version,concrete,node,node_compiler_set,node_compiler_version_set,node_os_set,node_platform_set,node_target_set,variant_set}
+    
+
+We might then want to filter down to just a subset
+of a property type. To do this, you'd add the ``--diff-type`` parameter, which defaults to all. 
+Here is how you would filter to show just versions:
+
+
+.. code-block:: console
+
+    $ spack diff --diff-type version python@2.7.8 python@3.8.8
+    ==> diff(python@2.7.8, python@3.8.8)
+    VERSION  python Version(2.7.8)  openssl Version(1.0.2u)
+    ==> diff(python@3.8.8, python@2.7.8)
+    VERSION  openssl Version(1.1.1j)  python Version(3.8.8)
+
+Finally, if you want to view the data as json (and possibly pipe into an output file)
+just add ``--json``:
+
+
+.. code-block:: console
+   
+    $ spack diff --json python@2.7.8 python@3.8.8
+
+
+This data will be much longer because along with the differences for A vs. B and
+B vs. A, we also capture the intersection.
+
+
 ------------------------
 Using installed packages
 ------------------------
