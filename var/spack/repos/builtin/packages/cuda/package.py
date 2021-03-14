@@ -5,12 +5,11 @@
 
 from spack import *
 from glob import glob
-from llnl.util.filesystem import LibraryList
+from llnl.util.filesystem import LibraryList, copy_tree
 import os
 import re
 import platform
 import llnl.util.tty as tty
-import shutil
 
 # FIXME Remove hack for polymorphic versions
 # This package uses a ugly hack to be able to dispatch, given the same
@@ -179,12 +178,12 @@ class Cuda(Package):
         include_dir = join_path(prefix, 'include')
         pointing_to = join_path(prefix, os.readlink(include_dir))
         os.remove(include_dir)
-        shutil.copytree(pointing_to, include_dir)
+        copy_tree(pointing_to, include_dir)
 
         lib64_dir = join_path(prefix, 'lib64')
         pointing_to = join_path(prefix, os.readlink(lib64_dir))
         os.remove(lib64_dir)
-        shutil.copytree(pointing_to, lib64_dir)
+        copy_tree(pointing_to, lib64_dir)
 
     @property
     def libs(self):
