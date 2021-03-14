@@ -41,6 +41,12 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     # Only one version of mpileaks will work
     diff('mpileaks', 'mpileaks')
 
+    # 2 specs are required for a diff
+    with pytest.raises(spack.main.SpackCommandError):
+        diff('mpileaks')
+    with pytest.raises(spack.main.SpackCommandError):
+        diff('mpileaks', 'mpileaks', 'mpileaks')
+
     # Ensure they are the same
     assert "No differences" in diff('mpileaks', 'mpileaks')
     output = diff('--json', 'mpileaks', 'mpileaks')
