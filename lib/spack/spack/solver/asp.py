@@ -966,16 +966,17 @@ class SpackSolverSetup(object):
                 if value == '*':
                     continue
 
-                # validate variant value
-                reserved_names = spack.directives.reserved_names
-                if not spec.virtual and vname not in reserved_names:
-                    try:
-                        variant_def = spec.package.variants[vname]
-                    except KeyError:
-                        msg = 'variant "{0}" not found in package "{1}"'
-                        raise RuntimeError(msg.format(vname, spec.name))
-                    else:
-                        variant_def.validate_or_raise(variant, spec.package)
+                # validate variant value only if spec not concrete
+                if not spec.concrete:
+                    reserved_names = spack.directives.reserved_names
+                    if not spec.virtual and vname not in reserved_names:
+                        try:
+                            variant_def = spec.package.variants[vname]
+                        except KeyError:
+                            msg = 'variant "{0}" not found in package "{1}"'
+                            raise RuntimeError(msg.format(vname, spec.name))
+                        else:
+                            variant_def.validate_or_raise(variant, spec.package)
 
                 clauses.append(f.variant_value(spec.name, vname, value))
 
