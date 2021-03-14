@@ -1,0 +1,11 @@
+--- spack-src/Makefile	2021-03-14 19:07:07.999802127 +0800
++++ spack-src.patched/Makefile	2021-03-14 19:06:00.970806212 +0800
+@@ -55,7 +55,7 @@
+ # library files (both static and shared) will be installed.
+ LIBDIR := $(PREFIX)/lib
+ 
+-EXLDFLAGS := -Wl,-rpath,$(LIBDIR)
++EXLDFLAGS := -Wl,-rpath,$(LIBDIR) -liconv
+ 
+ # You should not need to change this. It is the directory into which the
+ # executable program files will be installed. BINDIR for programs that are
