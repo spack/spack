@@ -49,10 +49,14 @@ condition_holds(ID) :-
   attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
   attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
 
+% condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
+% is derived. This allows imposed constraints to be canceled in special cases.
+impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+
 % conditions that hold impose constraints on other specs
-attr(Name, A1)         :- condition_holds(ID), imposed_constraint(ID, Name, A1).
-attr(Name, A1, A2)     :- condition_holds(ID), imposed_constraint(ID, Name, A1, A2).
-attr(Name, A1, A2, A3) :- condition_holds(ID), imposed_constraint(ID, Name, A1, A2, A3).
+attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 
 #defined condition/1.
 #defined condition_requirement/3.
@@ -72,15 +76,21 @@ depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
-  condition_holds(ID).
+  condition_holds(ID),
+  not external(Package).
+
+% We cut off dependencies of externals (as we don't really know them).
+% Don't impose constraints on dependencies that don't exist.
+do_not_impose(ID) :-
+  not dependency_holds(Package, Dependency, _),
+  dependency_condition(ID, Package, Dependency).
 
 % declared dependencies are real if they're not virtual AND
 % the package is not an external.
 % They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
  :- dependency_holds(Package, Dependency, Type),
-    not virtual(Dependency),
-    not external(Package).
+    not virtual(Dependency).
 
 % every root must be a node
 node(Package) :- root(Package).
