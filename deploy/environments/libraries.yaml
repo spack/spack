@@ -33,6 +33,7 @@ spack:
     - gmsh+metis+mpi+oce+openmp+shared
     - hdf5~mpi
     - highfive~mpi
+    - hypre+int64+mpi
     - libarchive
     - libxml2
     - metis+int64
