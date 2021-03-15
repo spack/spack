@@ -631,6 +631,13 @@ class MfemCmake(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_inc))
             cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS",blas_inc))
 
+        if '+parmetis' in spec:
+            parmetis_dir = get_spec_path(spec, "parmetis")
+            cfg.write(cmake_cache_entry("ParMETIS_DIR", parmetis_dir))
+
+            #TODO (bernede1@llnl.gov): what about SUPERLUDIST_REQUIRED_PACKAGES
+            # see MFEM config/defaults.cmake
+
         if '+superlu-dist' in spec:
             superludist_dir = get_spec_path(spec, "superlu-dist")
             cfg.write(cmake_cache_entry("SuperLUDist_DIR", superludist_dir))
