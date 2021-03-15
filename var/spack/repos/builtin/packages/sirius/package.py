@@ -50,7 +50,10 @@ class Sirius(CMakePackage, CudaPackage):
 
     variant('shared', default=True, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
-    variant('boost_filesystem', default=False, description="Use boost filesystem")
+    variant('boost_filesystem', default=False,
+            description="Use Boost filesystem for self-consistent field method "
+                        "mini-app. Only required when the compiler does not "
+                        "support std::experimental::filesystem nor std::filesystem")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
     variant('memory_pool', default=True, description="Build with memory pool")
@@ -117,6 +120,7 @@ class Sirius(CMakePackage, CudaPackage):
     extends('python', when='+python')
 
     conflicts('+shared', when='@6.3.0:6.4.999')
+    conflicts('+boost_filesystem', when='~apps')
 
     # TODO:
     # add support for CRAY_LIBSCI, testing
