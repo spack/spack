@@ -3,7 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
 class SnapKorf(MakefilePackage):
     """SNAP is a general purpose gene finding program suitable for both
        eukaryotic and prokaryotic genomes."""

@@ -6,6 +6,7 @@
 import os.path
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Dyninst(CMakePackage):

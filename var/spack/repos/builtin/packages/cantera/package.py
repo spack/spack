@@ -6,6 +6,7 @@
 import os
 
 from spack import *
+from spack.pkg.builtin.boost import Boost
 
 
 class Cantera(SConsPackage):
@@ -31,7 +32,11 @@ class Cantera(SConsPackage):
     depends_on('fmt@3.0.0:3.0.2', when='@2.3.0:')
     depends_on('googletest+gmock', when='@2.3.0:')
     depends_on('eigen',           when='@2.3.0:')
-    depends_on('boost')
+
+    # TODO: replace this with an explicit list of components of Boost,
+    # for instance depends_on('boost +filesystem')
+    # See https://github.com/spack/spack/pull/22303 for reference
+    depends_on(Boost.with_default_variants)
     depends_on('sundials@:3.1.2+lapack', when='+sundials')  # must be compiled with -fPIC
     depends_on('blas')
     depends_on('lapack')
