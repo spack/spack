@@ -54,10 +54,10 @@ spack:
     - py-currentscape
     - py-efel
     - py-entity-management
-    - py-minis-validation
+    - py-minis-validation%gcc ^neuron%intel
     - py-morphio
     - py-morphology-repair-workflow
-    - py-morph-tool
+    - py-morph-tool%gcc ^neuron%intel
     - py-neurodamus
     - py-notebook
     - py-pytouchreader

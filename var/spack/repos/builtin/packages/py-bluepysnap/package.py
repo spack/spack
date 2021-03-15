@@ -11,8 +11,9 @@ class PyBluepysnap(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/snap"
     git      = "https://github.com/BlueBrain/snap.git"
-    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.9.0.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.10.0.tar.gz"
 
+    version('0.10.0', sha256='0cc73e82c5f54a2eb6e4b22b59bc1c714915bd8df7fec156af5f2e24755e805e')
     version('0.9.0', sha256='140e06b9a7cc90719ffaf4c71ffaa9320c13bdd8ef25ffb598fd348b850b6695')
     version('0.8.0', sha256='10337610cfb83121f2869cec53830de04eed8e90b2b27aba36b8799468fa9c0f')
     version('0.7.0', sha256='fa4d54539fdb98c5febdabf7f13786567fc8fbd5e86f95864b4de89f18fd97bd')
@@ -26,13 +27,13 @@ class PyBluepysnap(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-pandas@0.24.0:', type='run')
-    depends_on('py-libsonata@0.1.4:', type='run')
+    depends_on('py-pandas@1.0.0:', type='run')
+    depends_on('py-libsonata@0.1.6:', type='run')
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-click@7.0:', type='run')
 
     depends_on('py-cached-property@1.0:', type='run')
-    depends_on('py-more-itertools@7.2.0:', type='run')
+    depends_on('py-more-itertools@8.2.0:', type='run')
 
     # Version 0.8.0 is the switch between the python2+python3
     # and python3 only + the h5py > 3.0.0

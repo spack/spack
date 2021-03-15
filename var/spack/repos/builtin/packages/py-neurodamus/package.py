@@ -30,7 +30,8 @@ class PyNeurodamus(PythonPackage):
     version('0.8.0',   tag='0.8.0')
     version('0.7.2',   tag='0.7.2')
 
-    # We depend on Neurodamus but let the user decide which one
+    # Note: we depend on Neurodamus but let the user decide which one.
+    # Note: avoid Neuron dependency due to issues with Intel and GCC conflicts.
     depends_on('python@3.4:',      type=('build', 'run'))
     depends_on('py-setuptools',    type=('build', 'run'))
     depends_on('py-h5py',          type='run')

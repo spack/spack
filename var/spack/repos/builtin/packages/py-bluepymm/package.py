@@ -26,6 +26,8 @@ class PyBluepymm(PythonPackage):
     depends_on('py-lxml', type='run')
     depends_on('py-sh', type='run')
     depends_on('neuron', type='run')
+    depends_on('py-h5py', type='run')
+    depends_on('py-pyyaml', type='run')
 
     def setup_run_environment(self, env):
         env.unset('PMI_RANK')
