@@ -105,7 +105,7 @@ class Blender(CMakePackage):
     # Dependencies for 2.92.0
     depends_on('zlib@1.2.11:', when='@2.92.0:')
     depends_on('openal-soft@1.20.1:', when='@2.92.0:')
-#     depends_on('blosc@1.5.0:', when='@2.92.0:')
+    depends_on('c-blosc@1.5.0:', when='@2.92.0:')
 #     depends_on('pthreads@3.0.0:', when='@2.92.0:')
 #     depends_on('openexr@2.4.0:', when='@2.92.0:')
 #     depends_on('freeglut@3.0.0:', when='@2.92.0:')
@@ -114,7 +114,7 @@ class Blender(CMakePackage):
 #     depends_on('sdl@2.0.12:', when='@2.92.0:')
 #     depends_on('opencollada@1.6.68:', when='@2.92.0:')
 #     depends_on('opencolorio@1.1.1:', when='@2.92.0:')
-#     depends_on('tiff@4.1.0:', when='@2.92.0:')
+    depends_on('libtiff@4.1.0:', when='@2.92.0:')
 #     depends_on('openshadinglanguage@1.10.10:', when='@2.92.0:')
 #     depends_on('tbb@2019_u9:', when='@2.92.0:')
 #     depends_on('openvdb@7.0.0:', when='@2.92.0:')
