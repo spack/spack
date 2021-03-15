@@ -50,6 +50,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     variant('shared', default=True, description="Build shared libraries")
     variant('openmp', default=True, description="Build with OpenMP support")
+    variant('boost_filesystem', default=False, description="Use boost filesystem")
     variant('fortran', default=False, description="Build Fortran bindings")
     variant('python', default=False, description="Build Python bindings")
     variant('memory_pool', default=True, description="Build with memory pool")
@@ -63,6 +64,8 @@ class Sirius(CMakePackage, CudaPackage):
     variant('build_type', default='Release',
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo'))
+    variant('apps', default=True, description="Build applications")
+    variant('tests', default=False, description="Build tests")
 
     depends_on('python', type=('build', 'run'))
     depends_on('mpi')
@@ -82,17 +85,19 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('py-voluptuous', when='+python', type=('build', 'run'))
     depends_on('py-pybind11', when='+python', type=('build', 'run'))
     depends_on('magma', when='+magma')
+    depends_on('boost cxxstd=14 +filesystem \
+                ~atomic ~chrono ~date_time ~exception \
+                ~graph ~iostreams ~locale ~log ~math ~program_options \
+                ~random ~regex ~serialization ~signals ~system ~test \
+                ~thread ~timer ~wave', when='+boost_filesystem')
 
     depends_on('spfft', when='@6.4.0:')
-    depends_on('spfft', when='@develop')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
-    depends_on('spfft+cuda', when='@develop+cuda')
     depends_on('spfft+rocm', when='@6.4.0:+rocm')
-    depends_on('spfft+rocm', when='@develop+rocm')
 
-    depends_on('spla@1.1.0:', when='@7.0.0:')
-    depends_on('spla@1.1.0:+cuda', when='@7.0.0:+cuda')
-    depends_on('spla@1.1.0:+rocm', when='@7.0.0:+rocm')
+    depends_on('spla@1.2.0:', when='@7.0.0:')
+    depends_on('spla+cuda', when='@7.0.0:+cuda')
+    depends_on('spla+rocm', when='@7.0.0:+rocm')
 
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
@@ -146,78 +151,72 @@ class Sirius(CMakePackage, CudaPackage):
     def cmake_args(self):
         spec = self.spec
 
-        def _def(variant, flag=None):
-            """Returns "-DUSE_VARIANT:BOOL={ON,OFF}" depending on whether
-               +variant is set. If the CMake flag differs from the variant
-               name, pass the flag name explicitly.
-            """
-
-            return "-D{0}:BOOL={1}".format(
-                flag if flag else "USE_{0}".format(
-                    variant.strip('+~').upper()
-                ),
-                "ON" if variant in spec else "OFF"
-            )
-
         args = [
-            _def('+openmp'),
-            _def('+elpa'),
-            _def('+magma'),
-            _def('+nlcglib'),
-            _def('+vdwxc'),
-            _def('+memory_pool'),
-            _def('+scalapack'),
-            _def('+fortran', 'CREATE_FORTRAN_BINDINGS'),
-            _def('+python', 'CREATE_PYTHON_MODULE'),
-            _def('+cuda'),
-            _def('+rocm')
+            self.define_from_variant('USE_OPENMP', 'openmp'),
+            self.define_from_variant('USE_ELPA', 'elpa'),
+            self.define_from_variant('USE_MAGMA', 'magma'),
+            self.define_from_variant('USE_NLCGLIB', 'nlcglib'),
+            self.define_from_variant('USE_VDWXC', 'vdwxc'),
+            self.define_from_variant('USE_MEMORY_POOL', 'memory_pool'),
+            self.define_from_variant('USE_SCALAPACK', 'scalapack'),
+            self.define_from_variant('CREATE_FORTRAN_BINDINGS', 'fortran'),
+            self.define_from_variant('CREATE_PYTHON_MODULE', 'python'),
+            self.define_from_variant('USE_CUDA', 'cuda'),
+            self.define_from_variant('USE_ROCM', 'rocm'),
+            self.define_from_variant('BUILD_TESTING', 'tests'),
+            self.define_from_variant('BUILD_APPS', 'apps'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
         ]
-
-        args += [_def('+shared', 'BUILD_SHARED_LIBS')]
 
         lapack = spec['lapack']
         blas = spec['blas']
 
-        args += [
-            '-DLAPACK_FOUND=true',
-            '-DLAPACK_LIBRARIES={0}'.format(lapack.libs.joined(';')),
-            '-DBLAS_FOUND=true',
-            '-DBLAS_LIBRARIES={0}'.format(blas.libs.joined(';')),
-        ]
+        args.extend([
+            self.define('LAPACK_FOUND', 'true'),
+            self.define('LAPACK_LIBRARIES', lapack.libs.joined(';')),
+            self.define('BLAS_FOUND', 'true'),
+            self.define('BLAS_LIBRARIES', blas.libs.joined(';'))
+        ])
 
         if '+scalapack' in spec:
-            args += [
-                '-DSCALAPACK_FOUND=true',
-                '-DSCALAPACK_INCLUDE_DIRS={0}'.format(
-                    spec['scalapack'].prefix.include),
-                '-DSCALAPACK_LIBRARIES={0}'.format(
-                    spec['scalapack'].libs.joined(';')),
-            ]
+            args.extend([
+                self.define('SCALAPACK_FOUND', 'true'),
+                self.define('SCALAPACK_INCLUDE_DIRS',
+                            spec['scalapack'].prefix.include),
+                self.define('SCALAPACK_LIBRARIES',
+                            spec['scalapack'].libs.joined(';'))
+            ])
 
         if spec['blas'].name in ['intel-mkl', 'intel-parallel-studio']:
-            args += ['-DUSE_MKL=ON']
+            args.append(self.define('USE_MKL', 'ON'))
 
         if '+elpa' in spec:
             elpa_incdir = os.path.join(
                 spec['elpa'].headers.directories[0],
                 'elpa'
             )
-            args += ["-DELPA_INCLUDE_DIR={0}".format(elpa_incdir)]
+            args.append(self.define('ELPA_INCLUDE_DIR', elpa_incdir))
 
-        cuda_arch = spec.variants['cuda_arch'].value
-        cuda_arch_selected = cuda_arch[0] != 'none'
-        if '+cuda' in spec and cuda_arch_selected:
-            cuda_args = '-DCUDA_ARCH={0}'.format(cuda_arch[0])
-            if spec.satisfies('@:6.999'):
-                cuda_args = '-DCMAKE_CUDA_FLAGS=-arch=sm_{0}'.format(
-                    cuda_arch[0])
-            args.append(cuda_args)
+        if '+cuda' in spec:
+            cuda_arch = spec.variants['cuda_arch'].value
+            if cuda_arch[0] != 'none':
+                # Specify a single arch directly
+                if '@:6' in spec:
+                    args.append(self.define(
+                        'CMAKE_CUDA_FLAGS',
+                        '-arch=sm_{0}'.format(cuda_arch[0]))
+                    )
+
+                # Make SIRIUS handle it
+                else:
+                    args.append(self.define('CUDA_ARCH', ';'.join(cuda_arch)))
 
         if '+rocm' in spec:
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
             args.extend([
-                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+                self.define('HIP_ROOT_DIR', spec['hip'].prefix),
+                self.define('HIP_HCC_FLAGS', '--amdgpu-target={0}'.format(archs)),
+                self.define('HIP_CXX_COMPILER', self.spec['hip'].hipcc)
             ])
 
         return args
