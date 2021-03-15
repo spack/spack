@@ -13,7 +13,7 @@ class FenicsDolfinx(CMakePackage):
     git = "https://github.com/FEniCS/dolfinx.git"
     maintainers = ["js947", "chrisrichardson"]
 
-    version("master", branch="master")
+    version("main", branch="main")
 
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
