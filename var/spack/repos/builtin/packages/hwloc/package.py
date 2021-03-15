@@ -90,6 +90,9 @@ class Hwloc(AutotoolsPackage):
     depends_on('libxml2', when='+libxml2')
     depends_on('cairo', when='+cairo')
     depends_on('numactl', when='@:1.11.11 platform=linux')
+
+    # see https://github.com/open-mpi/hwloc/pull/417
+    depends_on('ncurses ~termlib', when='@:2.2')
     depends_on('ncurses')
 
     # When mpi=openmpi, this introduces an unresolvable dependency.
