@@ -337,10 +337,10 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
-        if '~icu' in spec:
-            options.append('--without-icu')
-        else:
+        if '+icu' in spec:
             options.append('--with-icu')
+        else:
+            options.append('--without-icu')
 
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
