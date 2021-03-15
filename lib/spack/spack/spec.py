@@ -1550,6 +1550,16 @@ class Spec(object):
         """Get the first <bits> bits of the DAG hash as an integer type."""
         return base32_prefix_bits(self.dag_hash(), bits)
 
+    @property
+    def name_version_build_hash(self):
+        """A convenience function to print the name, version, and first 7
+        characters for a spec, intended for quick printing to the screen
+        to identify the spec for diff and other purposes. This mimics
+        cmd.display_specs but is a much simpler version to generate and return
+        a string instead of writing to an output.
+        """
+        return "%s@%s/%s" % (self.name, self.version, self.build_hash()[0:7])
+
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
 

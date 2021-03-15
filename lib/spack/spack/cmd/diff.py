@@ -10,10 +10,9 @@ import spack.environment as ev
 import spack.util.environment
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 import spack.util.spack_json as sjson
 import operator
-import sys
+import spack.cmd
 
 description = "compare two specs"
 section = "extensions"
@@ -59,7 +58,7 @@ def bold(string):
     return "\033[1m" + string + "\033[0m"
 
 
-def compare_specs(a, b, a_name, b_name, to_string=False):
+def compare_specs(a, b, to_string=False):
     """Generate a comparison, including diffs (for each side) along with
     an intersection. We can either print the result to the console, or parse
     into a json object for the user to save. We return an object that shows
@@ -90,8 +89,8 @@ def compare_specs(a, b, a_name, b_name, to_string=False):
         "intersect": flatten(intersect) if to_string else intersect,
         "a_not_b": flatten(spec1_not_spec2) if to_string else spec1_not_spec2,
         "b_not_a": flatten(spec2_not_spec1) if to_string else spec2_not_spec1,
-        "a_name": a_name,
-        "b_name": b_name,
+        "a_name": a.name_version_build_hash,
+        "b_name": b.name_version_build_hash,
     }
 
 
@@ -145,7 +144,7 @@ def print_difference(diffset, diff_type="all"):
                 rows.append(bold(category.upper()))
             rows.append(entry[1])
 
-    colify(rows, indent=0, output=sys.stdout)
+    print('\n'.join(rows))
 
 
 def diff(parser, args):
@@ -158,7 +157,7 @@ def diff(parser, args):
              for spec in spack.cmd.parse_specs(args.specs)]
 
     # Calculate the comparison (c)
-    c = compare_specs(specs[0], specs[1], args.specs[0], args.specs[1], to_string=True)
+    c = compare_specs(specs[0], specs[1], to_string=True)
 
     if args.dump_json:
         print(sjson.dump(c))

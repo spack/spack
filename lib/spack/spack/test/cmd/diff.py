@@ -22,12 +22,12 @@ def test_diff(install_mockery, mock_fetch, mock_archive, mock_packages):
     specB = spack.spec.Spec('mpileaks+debug').concretized()
 
     # Specs should be the same as themselves
-    c = spack.cmd.diff.compare_specs(specA, specA, "A", "A", to_string=True)
+    c = spack.cmd.diff.compare_specs(specA, specA, to_string=True)
     assert len(c['a_not_b']) == 0
     assert len(c['b_not_a']) == 0
 
     # Calculate the comparison (c)
-    c = spack.cmd.diff.compare_specs(specA, specB, "A", "B", to_string=True)
+    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
     assert len(c['a_not_b']) == 1
     assert len(c['b_not_a']) == 1
     assert c['a_not_b'][0] == ['variant_set', 'mpileaks debug bool(False)']
@@ -54,8 +54,9 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
 
     assert len(result['a_not_b']) == 0
     assert len(result['b_not_a']) == 0
-    assert result['a_name'] == 'mpileaks'
-    assert result['b_name'] == 'mpileaks'
+
+    assert 'mpileaks' in result['a_name']
+    assert 'mpileaks' in result['b_name']
     assert "intersect" in result and len(result['intersect']) > 50
 
     # After we install another version, it should ask us to disambiguate
