@@ -2369,33 +2369,3 @@ spack:
             e.clear()
             e.write()
     assert os.path.exists(str(spack_lock))
-
-
-@pytest.mark.parametrize('concretization', ['separately', 'together'])
-def test_concretize_all_test_dependencies(concretization):
-    e = ev.create('test')
-    e.concretization = concretization
-    e.add('depb')
-    e.concretize(tests=True)
-    assert e.matching_spec('test-dependency')
-
-
-@pytest.mark.parametrize('concretization', ['separately', 'together'])
-def test_concretize_root_test_dependencies_not_recursive(concretization):
-    """Should not recursively concretize test dependencies"""
-    e = ev.create('test')
-    e.concretization = concretization
-    e.add('depb')
-    e.concretize(tests=['depb'])
-    assert e.matching_spec('test-dependency') is None
-
-
-@pytest.mark.parametrize('concretization', ['separately', 'together'])
-def test_concretize_root_test_dependencies_are_concretized(concretization):
-    """Should concretize test dependency"""
-    e = ev.create('test')
-    e.concretization = concretization
-    e.add('a')
-    e.add('b')
-    e.concretize(tests=['a', 'b'])
-    assert e.matching_spec('test-dependency')
