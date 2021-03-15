@@ -178,6 +178,7 @@ class MfemCmake(CMakePackage, CudaPackage):
             description='Enable functionality based on GSLIB')
     variant('mpfr', default=False,
             description='Enable precise, 1D quadrature rules')
+
     variant('lapack', default=False,
             description='Use external blas/lapack routines')
     variant('debug', default=False,
@@ -628,10 +629,10 @@ class MfemCmake(CMakePackage, CudaPackage):
             blas = spec['blas'].libs
             blas_inc = spec['blas'].prefix.includes
             blas_lib = ld_flags_from_library_list(blas)
-            cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_inc))
+            cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_lib))
             cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS",blas_inc))
 
-            # Parmetis is reguired my superlu-dist.
+            # Parmetis is reguired by superlu-dist.
             # The MFEM way is to provide superlu with it's parmetis dependency
             # location. A better way would be to have superlu autonomous for
             # this, but requires changes in MFEM CMake build-system.
