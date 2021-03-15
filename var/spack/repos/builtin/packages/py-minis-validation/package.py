@@ -29,7 +29,7 @@ class PyMinisValidation(PythonPackage):
     depends_on('py-bluepy@0.14:0.99', type='run')
     depends_on('py-neurom@1.4:1.5.9', type='run')  # temp fix for h5py < 3
     depends_on('py-bluepy-configfile@0.1.10:', type='run')
-    depends_on('py-bglibpy@4.3:', type='run')
+    depends_on('py-bglibpy@4.3:4.4.20', type='run')
 
     def setup_run_environment(self, env):
         env.set('NEURON_INIT_MPI', "0")

@@ -14,6 +14,7 @@ class PyBglibpy(PythonPackage):
 
     version('develop', branch='master')
 
+    version('4.4.36', commit='07fe9999a137c3741fd95713149a76a202cb7d7a')
     version('4.4.20', commit='59cd13df919e60c272f1f90d178eea687206f13f')
     version('4.4.18', commit='cbfb1c214d44eaab0a1cef3d3bbafa097469fe85')
     version('4.4.10', commit='53db9eee6f0b4e025f19c271b3235831f86c866e')
@@ -27,10 +28,16 @@ class PyBglibpy(PythonPackage):
     version('4.1.4', commit='e54d294460e5bdf6b9990bc10a4606b412b76d90')
 
     depends_on('py-setuptools', type=('build', 'run'))
-
     depends_on('neuron+python', type='run')
+    depends_on('py-numpy@1.8:', type='run')
+    depends_on('py-matplotlib@3.0.3:', type='run')
+    depends_on('py-cachetools', type='run')
     depends_on('py-h5py~mpi@2.3:', type='run')
-    depends_on('py-bluepy', type='run')
+
+    # bluepy
+    depends_on('py-bluepy@:2.0', type='run', when='@:4.4.20')
+    depends_on('py-bluepy@2.1:', type='run', when='@4.4.36:')
+
     depends_on('py-libsonata', type='run')
 
     # skip import test, because bglibpy needs HOC_LIBRARY_PATH
