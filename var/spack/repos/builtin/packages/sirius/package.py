@@ -88,11 +88,7 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('py-voluptuous', when='+python', type=('build', 'run'))
     depends_on('py-pybind11', when='+python', type=('build', 'run'))
     depends_on('magma', when='+magma')
-    depends_on('boost cxxstd=14 +filesystem \
-                ~atomic ~chrono ~date_time ~exception \
-                ~graph ~iostreams ~locale ~log ~math ~program_options \
-                ~random ~regex ~serialization ~signals ~system ~test \
-                ~thread ~timer ~wave', when='+boost_filesystem')
+    depends_on('boost cxxstd=14 +filesystem', when='+boost_filesystem')
 
     depends_on('spfft', when='@6.4.0:')
     depends_on('spfft+cuda', when='@6.4.0:+cuda')
