@@ -50,8 +50,8 @@ class Amdblis(BlisBase):
         if "@3.0%aocc" in spec:
             """ To enabled Fortran to C calling convention for
             complex types when compiling with aocc flang"""
-            config_args.append('CFLAGS = {0}'.format("-DAOCL_F2C"))
-            config_args.append('CXXFLAGS = {0}'.format("-DAOCL_F2C"))
+            config_args.append('CFLAGS={0}'.format("-DAOCL_F2C"))
+            config_args.append('CXXFLAGS={0}'.format("-DAOCL_F2C"))
 
         # FIXME: add cpu isa variants.
         config_args.append("auto")
