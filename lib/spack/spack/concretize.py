@@ -73,9 +73,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = dev_info['path']
-        path = path if os.path.isabs(path) else os.path.join(
-            env.path, path)
+        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
 
         if 'dev_path' in spec.variants:
             assert spec.variants['dev_path'].value == path
