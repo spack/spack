@@ -713,7 +713,7 @@ When we do ``spack find`` we see the two versions.
 
 
 Let's now say that we want to uninstall zlib. We run the command, and hit a problem
-real quickly that we have two!
+real quickly since we have two!
 
 .. code-block:: console
 
