@@ -241,18 +241,23 @@ environment variables:
     if args.log_file:
         reporter.filename = args.log_file
 
+    if args.run_tests:
+        tty.warn("Deprecated option: --run-tests: use --test=all instead")
+
+    def get_tests(specs):
+        if args.test == 'all' or args.run_tests:
+            return True
+        elif args.test == 'root':
+            return [spec.name for spec in specs]
+        else:
+            return False
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
-            if args.test == 'all' or args.run_tests:
-                tests = True
-            elif args.test == 'root':
-                tests = [spec.name for spec in env.user_specs]
-            else:
-                tests = False
-
+            tests = get_tests(env.user_specs)
             kwargs['tests'] = tests
 
             if not args.only_concrete:
@@ -304,19 +309,9 @@ environment variables:
     # that will be passed to the package installer
     update_kwargs_from_args(args, kwargs)
 
-    if args.run_tests:
-        tty.warn("Deprecated option: --run-tests: use --test=all instead")
-
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
-
-    if args.test == 'all' or args.run_tests:
-        tests = True
-    elif args.test == 'root':
-        tests = [spec.name for spec in abstract_specs]
-    else:
-        tests = False
-
+    tests = get_tests(abstract_specs)
     kwargs['tests'] = tests
 
     try:
