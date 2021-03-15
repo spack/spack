@@ -10,7 +10,7 @@ import inspect
 
 class AoclSparse(CMakePackage):
     """AOCL-Sparse is a library that contains basic linear algebra subroutines
-    for sparse matrices and vectors optimized for AMD EPYC family of processors.
+    for sparse matrices and vectors optimized for AMD family of processors.
     It is designed to be used with C and C++. Current functionality of sparse
     library supports SPMV function with CSR and ELLPACK formats."""
 
