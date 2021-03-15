@@ -117,7 +117,7 @@ class Sirius(CMakePackage, CudaPackage):
 
     conflicts('+shared', when='@6.3.0:6.4.999')
     conflicts('+boost_filesystem', when='~apps')
-    conflicts('libxc@5.0.0') # known to produce incorrect results
+    conflicts('libxc@5.0.0')  # known to produce incorrect results
 
     # TODO:
     # add support for CRAY_LIBSCI, testing
