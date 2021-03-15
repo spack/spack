@@ -62,6 +62,8 @@ packages:
       prefix: /usr
   node-js:
     version: [14.13.0]
+  omega-h:
+    variants: +trilinos
   openssl:
     version: [1.0.2k]
     externals:

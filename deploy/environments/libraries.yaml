@@ -28,6 +28,7 @@ spack:
     - boost+python@1.73.0
     - catch2
     - deflect
+    - easyloggingpp
     - eigen
     - fmt
     - gmsh+metis+mpi+oce+openmp+shared
@@ -125,6 +126,8 @@ spack:
     - py-sympy
     - python-dev
     - py-toml
+    - py-traceback2
+    - py-unittest2
     - py-urllib3
     - py-virtualenv
     - py-virtualenv-clone
@@ -136,4 +139,5 @@ spack:
     - rockets
     - rocksdb~static
     - spark@3.0.0
+    - sundials+int64
     - superlu-dist@5.4.0
