@@ -631,11 +631,15 @@ class MfemCmake(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_inc))
             cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS",blas_inc))
 
-        if '+parmetis' in spec:
+            # Parmetis is reguired my superlu-dist.
+            # The MFEM way is to provide superlu with it's parmetis dependency
+            # location. A better way would be to have superlu autonomous for
+            # this, but requires changes in MFEM CMake build-system.
+        if '+superlu-dist' in spec:
             parmetis_dir = get_spec_path(spec, "parmetis")
             cfg.write(cmake_cache_entry("ParMETIS_DIR", parmetis_dir))
 
-            #TODO (bernede1@llnl.gov): what about SUPERLUDIST_REQUIRED_PACKAGES
+            #TODO (bernede1@llnl.gov): what about PARMETIS_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
 
         if '+superlu-dist' in spec:
