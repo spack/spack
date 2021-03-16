@@ -77,6 +77,10 @@ jobs:
       packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
+    - uses: actions/checkout@v2
+      if: ${{ github.event_name == 'push' }}
+      with:
+        fetch-depth: 0
     # For pull requests it's not necessary to checkout the code
     - uses: dorny/paths-filter@v2
       id: filter
