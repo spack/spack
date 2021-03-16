@@ -27,6 +27,11 @@ class IntelMpiBenchmarks(MakefilePackage):
 
     depends_on('mpi')
 
+    # https://github.com/intel/mpi-benchmarks/pull/19
+    patch('add_const.patch')
+    # https://github.com/intel/mpi-benchmarks/pull/20
+    patch('reorder_benchmark_macros.patch')
+
     variant(
         'benchmark', default='all',
         values=('mpi1', 'ext', 'io', 'nbc',
