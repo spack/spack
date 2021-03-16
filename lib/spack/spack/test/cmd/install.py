@@ -885,3 +885,23 @@ def test_cache_install_full_hash_match(
 
     uninstall('-y', s.name)
     mirror('rm', 'test-mirror')
+
+
+def test_install_env_with_tests_all(tmpdir, mock_packages, mock_fetch,
+                                    install_mockery, mutable_mock_env_path):
+    env('create', 'test')
+    with ev.read('test'):
+        test_dep = Spec('test-dependency').concretized()
+        add('depb')
+        install('--test', 'all')
+        assert os.path.exists(test_dep.prefix)
+
+
+def test_install_env_with_tests_root(tmpdir, mock_packages, mock_fetch,
+                                     install_mockery, mutable_mock_env_path):
+    env('create', 'test')
+    with ev.read('test'):
+        test_dep = Spec('test-dependency').concretized()
+        add('depb')
+        install('--test', 'root')
+        assert not os.path.exists(test_dep.prefix)
