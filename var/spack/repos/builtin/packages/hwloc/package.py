@@ -91,6 +91,10 @@ class Hwloc(AutotoolsPackage):
     depends_on('cairo', when='+cairo')
     depends_on('numactl', when='@:1.11.11 platform=linux')
 
+    # see https://github.com/open-mpi/hwloc/pull/417
+    depends_on('ncurses ~termlib', when='@:2.2')
+    depends_on('ncurses')
+
     # When mpi=openmpi, this introduces an unresolvable dependency.
     # See https://github.com/spack/spack/issues/15836 for details
     depends_on('mpi', when='+netloc')
