@@ -52,18 +52,24 @@ def test_location_build_dir(mock_spec):
     assert location('--build-dir', spec.name).strip() == pkg.stage.source_path
 
 
-def test_location_build_dir_missing():
-    """Tests spack location --build-dir with a missing build directory."""
+def test_location_source_dir(mock_spec):
+    """Tests spack location --source-dir."""
+    spec, pkg = mock_spec
+    assert location('--source-dir', spec.name).strip() == pkg.stage.source_path
+
+
+def test_location_source_dir_missing():
+    """Tests spack location --source-dir with a missing source directory."""
     spec = 'mpileaks'
     prefix = "==> Error: "
-    expected = "%sBuild directory does not exist yet. Run this to create it:"\
+    expected = "%sSource directory does not exist yet. Run this to create it:"\
                "%s  spack stage %s" % (prefix, os.linesep, spec)
-    out = location('--build-dir', spec, fail_on_error=False).strip()
+    out = location('--source-dir', spec, fail_on_error=False).strip()
     assert out == expected
 
 
 @pytest.mark.parametrize('options', [([]),
-                                     (['--build-dir', 'mpileaks']),
+                                     (['--source-dir', 'mpileaks']),
                                      (['--env', 'missing-env']),
                                      (['spec1', 'spec2'])])
 def test_location_cmd_error(options):
