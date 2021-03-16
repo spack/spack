@@ -41,8 +41,9 @@ def stage(parser, args):
     if args.deprecated:
         spack.config.set('config:deprecated', True, scope='command_line')
 
-    specs = spack.cmd.parse_specs(args.specs, concretize=True)
+    specs = spack.cmd.parse_specs(args.specs, concretize=False)
     for spec in specs:
+        spec = spack.cmd.matching_spec_from_env(spec)
         package = spack.repo.get(spec)
         if args.path:
             package.path = args.path
