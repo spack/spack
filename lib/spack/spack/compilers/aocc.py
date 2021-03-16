@@ -152,4 +152,4 @@ class Aocc(Compiler):
         cflags, cxxflags and fflags member functions.
         """
         if self.real_version == ver('3.0.0'):
-            return "-mllvm -eliminate-similar-expr=false"
+            return " -Wno-unused-command-line-argument -mllvm -eliminate-similar-expr=false "
