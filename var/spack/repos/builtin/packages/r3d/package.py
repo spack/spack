@@ -6,19 +6,31 @@
 from spack import *
 
 
-class R3d(MakefilePackage):
+class R3d(CMakePackage):
     """Fast, robust polyhedral intersections, analytic integration, and
     conservative voxelization."""
 
     homepage = "https://github.com/devonmpowell/r3d"
     git      = "https://github.com/devonmpowell/r3d.git"
 
+    maintainers = ['raovgarimella', 'gaber']
+
+    version('master', branch='master')
+    version('2021-03-16', commit='5978a3f9cc145a52eecbf89c44d7fd2166b4c778')
     version('2019-04-24', commit='86cea79c124c6a8edd8c8cdea61e3e923acb0b22')
     version('2018-12-19', commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
     version('2018-01-07', commit='d6799a582256a120ef3bd7e18959e96cba0e5495')
 
-    variant("test",  default=False, description="Build R3D regression tests")
+    variant("r3d_max_verts", default='0', description="Maximum number of vertices allowed in a polyhedron (versions 2021-03-10 or later)")
 
+    # Bypass CMake for older builds
+    variant("test",  default=False, description="Build R3D regression tests (versions 2019-04-24 or earlier)")
+
+    @when('@:2019-04-24')
+    def cmake(self, spec, prefix):
+        pass
+
+    @when('@:2019-04-24')
     def build(self, spec, prefix):
 
         make_args = [
@@ -31,8 +43,10 @@ class R3d(MakefilePackage):
             with working_dir('tests'):
                 make('all', *make_args)
 
+    @when('@:2019-04-24')
     def install(self, spec, prefix):
-
+        pass
+    
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
         my_headers = find('.', '*.h', recursive=False)
@@ -49,3 +63,19 @@ class R3d(MakefilePackage):
                 install('r2d_unit_tests', prefix.test)
                 install('r3d_unit_tests', prefix.test)
                 install('rNd_unit_tests', prefix.test)
+                
+    # CMake support was added in 2021-03-10
+    @when('@2021-03-10:')
+    def cmake_args(self):
+        options = []
+        r3d_max_verts = self.spec.variants['r3d_max_verts'].value
+        if (r3d_max_verts != '0'):
+            options.append('-DR3D_MAX_VERTS=' + r3d_max_verts)
+
+        if self.run_tests:
+            options.append('-DENABLE_UNIT_TESTS=ON')
+        else:
+            options.append('-DENABLE_UNIT_TESTS=OFF')
+
+        return options
+
