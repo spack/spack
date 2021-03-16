@@ -279,6 +279,11 @@ class Opencv(CMakePackage, CudaPackage):
                 self.define('PYTHON3_INCLUDE_DIR', python_include_dir),
                 self.define('PYTHON2_EXECUTABLE', '')
             ])
+        else:
+            args.extend([
+                self.define('PYTHON2_EXECUTABLE', ''),
+                self.define('PYTHON3_EXECUTABLE', ''),
+            ])
 
         return args
 
