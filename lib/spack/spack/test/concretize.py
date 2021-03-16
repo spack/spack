@@ -660,8 +660,7 @@ class TestConcretize(object):
 
         abstract_specs = [Spec(x) for x in abstract_specs]
         concrete_specs = spack.concretize.concretize_specs_together(
-            *abstract_specs
-        )
+            *abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
         names = set(

@@ -55,7 +55,7 @@ _bash_completion_spack() {
     # For our purposes, flags should not affect tab completion. For instance,
     # `spack install []` and `spack -d install --jobs 8 []` should both give the same
     # possible completions. Therefore, we need to ignore any flags in COMP_WORDS.
-    local COMP_WORDS_NO_FLAGS=()
+    local -a COMP_WORDS_NO_FLAGS
     local index=0
     while [[ "$index" -lt "$COMP_CWORD" ]]
     do
@@ -331,7 +331,7 @@ _spacktivate() {
 _spack() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
+        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add analyze arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
@@ -588,7 +588,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force"
+    SPACK_COMPREPLY="-h --help -f --force --test"
 }
 
 _spack_config() {
@@ -802,7 +802,7 @@ _spack_env_deactivate() {
 _spack_env_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --dir --without-view --with-view"
+        SPACK_COMPREPLY="-h --help -d --dir --keep-relative --without-view --with-view"
     else
         _environments
     fi
@@ -1394,7 +1394,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -i -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -i -m --path"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1557,7 +1557,7 @@ _spack_test_run() {
 }
 
 _spack_test_list() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help -a --all"
 }
 
 _spack_test_find() {

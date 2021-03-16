@@ -187,6 +187,13 @@ class Cmake(Package):
     # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5025
     patch('pgi-cxx-ansi.patch', when='@3.15:3.18.99')
 
+    # Adds CCE v11+ fortran preprocessing definition.
+    # requires Cmake 3.19+
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/5882
+    patch('5882-enable-cce-fortran-preprocessing.patch',
+          sha256='b48396c0e4f61756248156b6cebe9bc0d7a22228639b47b5aa77c9330588ce88',
+          when='@3.19.0:3.19.99')
+
     conflicts('+qt', when='^qt@5.4.0')  # qt-5.4.0 has broken CMake modules
 
     # https://gitlab.kitware.com/cmake/cmake/issues/18166
