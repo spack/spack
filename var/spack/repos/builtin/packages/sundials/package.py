@@ -277,7 +277,6 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             args.append('-DCUDA_ENABLE=OFF')
 
         if '+rocm' in spec:
-            rocm_path = spec['llvm-amdgpu'].prefix
             args.extend([
                 '-DCMAKE_CXX_COMPILER=%s' % spec['hip'].hipcc,
                 '-DENABLE_HIP=ON',
@@ -653,6 +652,10 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
 
     def test(self):
         """Run the smoke tests."""
+        if '+examples' not in self.spec:
+            print('Smoke tests were skipped: install will examples enabled')
+        return
+
         self.run_test('examples/nvector/serial/test_nvector_serial',
                       options=['10', '0'],
                       work_dir=self._extra_tests_path)
