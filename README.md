@@ -15,6 +15,7 @@ documentation:
 * [Installing software using environments](deploy/docs/installing_with_environments.md),
   allowing to customize software used in complex build scenarios
 * [Deploying modules on BlueBrain5](deploy/docs/deploy_bb5.md)
+* [Debugging pull requests on BlueBrain5](deploy/docs/debug_bb5.md)
 * [Continuous Integration with Spack on BlueBrain5](deploy/docs/ci_bb5.md)
 * [Continuous Integration with Spack on Travis](deploy/docs/ci_travis.md)
 

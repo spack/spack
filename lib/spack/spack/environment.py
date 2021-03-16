@@ -1148,6 +1148,7 @@ class Environment(object):
         for uspec, uspec_constraints in zip(
                 self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
+                tty.info("Concretizing %s" % (uspec,))
                 concrete = _concretize_from_constraints(uspec_constraints)
                 self._add_concrete_spec(uspec, concrete)
                 concretized_specs.append((uspec, concrete))
