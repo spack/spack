@@ -33,6 +33,7 @@ class GtkDoc(AutotoolsPackage):
     depends_on('libxslt')
     depends_on('libxml2')
     depends_on('docbook-xsl')
+    depends_on('docbook-xml@4.3')
     # depends_on('dblatex', when='+pdf')
 
     def url_for_version(self, version):
