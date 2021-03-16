@@ -81,12 +81,11 @@ jobs:
     - uses: dorny/paths-filter@v2
       id: filter
       with:
-        # FIXME: currently inverting core and packages for testing purposes
         # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
         filters: |
-          packages:
-          - './!(var/**)/**'
           core:
+          - './!(var/**)/**'
+          packages:
           - 'var/**'
     # Some links for easier reference:
     #
