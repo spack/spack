@@ -56,7 +56,7 @@ def setup_parser(subparser):
         help="build directory for a spec "
              "(requires it to be staged first)")
     directories.add_argument(
-        '-e', '--env', action='store',
+        '-e', '--env', action='store', dest='location_env',
         help="location of an environment managed by spack")
 
     arguments.add_common_arguments(subparser, ['spec'])
@@ -71,10 +71,10 @@ def location(parser, args):
         print(spack.paths.prefix)
         return
 
-    if args.env:
-        path = spack.environment.root(args.env)
+    if args.location_env:
+        path = spack.environment.root(args.location_env)
         if not os.path.isdir(path):
-            tty.die("no such environment: '%s'" % args.env)
+            tty.die("no such environment: '%s'" % args.location_env)
         print(path)
         return
 
