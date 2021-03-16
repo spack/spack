@@ -17,9 +17,9 @@ class R3d(CMakePackage):
 
     version('master', branch='master')
     version('2021-03-16', commit='5978a3f9cc145a52eecbf89c44d7fd2166b4c778')
-    version('2019-04-24', commit='86cea79c124c6a8edd8c8cdea61e3e923acb0b22', deprecated=True)
-    version('2018-12-19', commit='47308f68c782ed3227d3dab1eff24d41f6421f21', deprecated=True)
-    version('2018-01-07', commit='d6799a582256a120ef3bd7e18959e96cba0e5495', deprecated=True)
+    version('2019-04-24', commit='86cea79c124c6a8edd8c8cdea61e3e923acb0b22')
+    version('2018-12-19', commit='47308f68c782ed3227d3dab1eff24d41f6421f21')
+    version('2018-01-07', commit='d6799a582256a120ef3bd7e18959e96cba0e5495')
 
     variant("r3d_max_verts", default='0', description="Maximum number of vertices allowed in a polyhedron (versions 2021-03-10 or later)")
 
@@ -36,6 +36,7 @@ class R3d(CMakePackage):
         make_args = [
             'CC={0}'.format(spack_cc),
         ]
+
         make('libr3d.a', *make_args)
 
         if '+test' in spec:
@@ -44,7 +45,8 @@ class R3d(CMakePackage):
 
     @when('@:2019-04-24')
     def install(self, spec, prefix):
-
+        pass
+    
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
         my_headers = find('.', '*.h', recursive=False)
@@ -61,7 +63,7 @@ class R3d(CMakePackage):
                 install('r2d_unit_tests', prefix.test)
                 install('r3d_unit_tests', prefix.test)
                 install('rNd_unit_tests', prefix.test)
-
+                
     # CMake support was added in 2021-03-10
     @when('@2021-03-10:')
     def cmake_args(self):
@@ -76,3 +78,4 @@ class R3d(CMakePackage):
             options.append('-DENABLE_UNIT_TESTS=OFF')
 
         return options
+
