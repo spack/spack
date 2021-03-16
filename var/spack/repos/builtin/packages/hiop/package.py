@@ -86,10 +86,10 @@ class Hiop(CMakePackage, CudaPackage):
 
         if '+mpi' in spec:
             args.append(
-                "-DHIOP_USE_MPI=ON -DMPI_HOME={}".format(spec['mpi'].prefix))
-            args.append('-DMPI_C_COMPILER={}'.format(spec['mpi'].mpicc))
-            args.append('-DMPI_CXX_COMPILER={}'.format(spec['mpi'].mpicxx))
-            args.append('-DMPI_Fortran_COMPILER={}'.format(spec['mpi'].mpifc))
+                "-DHIOP_USE_MPI=ON -DMPI_HOME={0}".format(spec['mpi'].prefix))
+            args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
+            args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
+            args.append('-DMPI_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
         else:
             args.append("-DHIOP_USE_MPI=OFF")
 
