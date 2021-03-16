@@ -329,7 +329,7 @@ jobs:
           coverage xml
         else
           echo "ONLY PACKAGE RECIPES CHANGED [skipping coverage]"
-          $(which spack) unit-test -x
+          $(which spack) unit-test -x -m "not maybeslow"
         fi
     - uses: codecov/codecov-action@v1
       if: ${{ needs.changes.outputs.with_coverage == 'true' }}
