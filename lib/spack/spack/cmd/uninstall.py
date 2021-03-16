@@ -7,6 +7,7 @@ from __future__ import print_function
 
 import sys
 import itertools
+from collections import defaultdict
 
 import spack.cmd
 import spack.environment as ev
@@ -14,6 +15,7 @@ import spack.error
 import spack.package
 import spack.cmd.common.arguments as arguments
 import spack.repo
+import spack.spec_index
 import spack.store
 from spack.database import InstallStatuses
 
@@ -65,6 +67,7 @@ def setup_parser(subparser):
 
 
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
+    # type: (Environment, List[Spec], bool, bool) -> Iterable[Spec]
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -82,30 +85,40 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
     # List of specs that match expressions given via command line
     specs_from_cli = []
     has_errors = False
-    for spec in specs:
-        install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
-        matching = spack.store.db.query_local(spec, hashes=hashes,
-                                              installed=install_query)
+    local_index = spack.spec_index.IndexLocation.LOCAL().spec_index_for()
+
+    install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
+    index_query = spack.spec_index.IndexQuery(
+        query_spec=specs, hashes=hashes, installed=install_query)
+
+    specs_by_input_spec = defaultdict(list)  # type: Dict[Spec, List[ConcretizedSpec]]
+    for cspec in local_index.query(index_query):
+        for input_spec in specs:
+            if input_spec is any or cspec.spec.satisfies(input_spec, strict=True):
+                specs_by_input_spec[cspec.spec.name].append(cspec)
+
+    for spec, matching in specs_by_input_spec.items():
+        matching_specs = [cspec.spec for cspec in matching]
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
-        if not allow_multiple_matches and len(matching) > 1:
+        if not allow_multiple_matches and len(matching_specs) > 1:
             tty.error('{0} matches multiple packages:'.format(spec))
             sys.stderr.write('\n')
-            spack.cmd.display_specs(matching, output=sys.stderr,
+            spack.cmd.display_specs(matching_specs, output=sys.stderr,
                                     **display_args)
             sys.stderr.write('\n')
             sys.stderr.flush()
             has_errors = True
 
         # No installed package matches the query
-        if len(matching) == 0 and spec is not any:
+        if len(matching_specs) == 0 and spec is not any:
             if env:
                 pkg_type = "packages in environment '%s'" % env.name
             else:
                 pkg_type = 'installed packages'
             tty.die('{0} does not match any {1}.'.format(spec, pkg_type))
 
-        specs_from_cli.extend(matching)
+        specs_from_cli.extend(matching_specs)
 
     if has_errors:
         tty.die(error_message)
@@ -219,7 +232,11 @@ def do_uninstall(env, specs, force):
 
     # A package is ready to be uninstalled when nothing else references it,
     # unless we are requested to force uninstall it.
-    is_ready = lambda x: not spack.store.db.query_by_spec_hash(x)[1].ref_count
+    local_index = spack.spec_index.IndexLocation.LOCAL().spec_index_for()
+    def is_ready(x):
+        pfx = spack.spec_index.HashPrefix(x)
+        entry = local_index.lookup_ensuring_single_match(pfx)
+        return not entry.record.ref_count
     if force:
         is_ready = lambda x: True
 

@@ -113,95 +113,14 @@ def test_buildcache_list_duplicates(mock_get_specs, capsys):
 
 
 @pytest.fixture(scope='function')
-def mutable_buildcache(tmpdir_factory):
-    store_path = tmpdir_factory.mktemp('buildcache_mock_store')
-    store = spack.store.Store(str(store_path))
-    return store.db
+def corge_buildcache(default_config, mutable_buildcache):
+    db, mirror_dir_path, prepare_spec, spec_index_query, _ = mutable_buildcache
 
-
-@pytest.fixture(scope='function')
-def corge_buildcache(default_config, mutable_buildcache, mock_repo_path, mock_fetch,
-                     install_mockery, mock_pkg_install, tmpdir_factory, monkeypatch):
     cspec = Spec('corge').concretized()
-    for spec in cspec.traverse():
-        mkdirp(os.path.join(spec.prefix, '.spack'))
-        with open(os.path.join(spec.prefix, '.spack/spec.yaml'), 'w') as f:
-            f.write(spec.to_yaml())
-
-    class EmptyTar(object):
-        def __init__(self, path, *args, **kwargs):
-            self.path = path
-
-        def add(self, *args, **kwargs):
-            pass
-
-        def close(self):
-            with open(self.path, 'w') as f:
-                f.write('ok')
-
-        def extractall(self, path):
-            mkdirp(path)
-
-    monkeypatch.setattr(tarfile, 'open', EmptyTar)
-
-    monkeypatch.setattr(spack.binary_distribution,
-                        'check_package_relocatable',
-                        lambda a, b, c: None)
-
-    mirror_dir_path = tmpdir_factory.mktemp('mirror_dir')
+    prepare_spec(cspec)
 
     spack.binary_distribution.build_tarball(cspec, str(mirror_dir_path),
                                             regenerate_index=True)
-
-    tarball_dir = tmpdir_factory.mktemp('tarball_dir')
-    tarball = tarball_dir.join('file.tar.gz')
-    with open(tarball, 'wb') as f:
-        f.write(b'')
-
-    class TarballMockDownload(object):
-        def __call__(self, spec, preferred_mirrors=None):
-            return str(tarball)
-
-    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
-                        TarballMockDownload())
-
-    class TarballMockExtract(object):
-        def __call__(self, spec, filename, *args, **kwargs):
-            stagepath = os.path.dirname(filename)
-            mkdirp(stagepath)
-            # spackfile_name = spack.binary_distribution.tarball_name(spec, '.spack')
-            # spackfile_path = os.path.join(stagepath, spackfile_name)
-            tarfile_name = spack.binary_distribution.tarball_name(spec, '.tar.gz')
-            tarfile_path = os.path.join(stagepath, tarfile_name)
-            with open(tarfile_path, 'wb') as f:
-                f.write(b'')
-            return
-
-    monkeypatch.setattr(spack.binary_distribution, 'extract_tarball',
-                        TarballMockExtract())
-
-    class MockOneMirror(object):
-        def __call__(self):
-            return 1
-
-    monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__', MockOneMirror())
-
-    monkeypatch.setattr(spack.hooks, 'post_install', lambda *args, **kwargs: None)
-
-    class MockMirrors(object):
-        def __call__(self):
-            return [spack.mirror.Mirror(name='test-mirror',
-                                        fetch_url=str(mirror_dir_path))]
-
-    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values', MockMirrors())
-    # spack.binary_distribution.binary_index.refresh_mirrors()
-
-    class SpecIndexLookupSite(object):
-
-        def lookup_ensuring_single_match(self, hash_prefix):
-            return list(mutable_buildcache.spec_index_lookup(hash_prefix))[0]
-
-    monkeypatch.setattr(spack.spec.SpecParser, '_spec_index', SpecIndexLookupSite())
 
     cspec = ConcretizedSpec(cspec)
     deps = [
@@ -211,7 +130,7 @@ def corge_buildcache(default_config, mutable_buildcache, mock_repo_path, mock_fe
     ]
     all_hashes = frozenset(spec.into_hash() for spec in [cspec] + deps)
 
-    yield cspec, deps, all_hashes, mutable_buildcache
+    yield cspec, deps, all_hashes, db
 
 
 @pytest.fixture(scope='function')
@@ -264,26 +183,24 @@ def test_buildcache_install_reference_by_hash(
         install_method,
         select_spec_string,
         mutable_buildcache,
-        monkeypatch,
 ):
     _, all_hashes, select = select_spec_string
+    db, _, _, spec_index_query, _ = mutable_buildcache
 
     spec_str = select(spec_type)
 
-    class SpecIndexQuery(object):
-        def __call__(self, query):
-            for result in mutable_buildcache.spec_index_query(query):
-                yield result
-
-    monkeypatch.setattr(spack.spec_index.SpecIndex, 'query', SpecIndexQuery())
+    spec_index_query.use_local = False
+    assert all_hashes == buildcache_hashes()
 
     # Installed again, referencing a hash known only to the remote spec index:
     if install_method == 'BUILDCACHE_INSTALL':
         buildcache('install', '-uf', spec_str)
     else:
-        install('--cache-only', '--verbose', '--no-check-signature', spec_str)
+        install('--cache-only', '--overwrite', '-y', '--verbose',
+                '--no-check-signature',
+                spec_str)
 
-    assert all_hashes == buildcache_hashes()
+    uninstall('-y', '-a', '--dependents')
 
 
 @pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])

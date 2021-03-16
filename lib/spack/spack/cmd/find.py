@@ -150,6 +150,7 @@ def query_arguments(args):
         known=known,
         explicit=explicit,
         for_all_architectures=for_all_architectures,
+        location=spack.spec_index.IndexLocation.LOCAL(),
     )
 
     # Time window of installation

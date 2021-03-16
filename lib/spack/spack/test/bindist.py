@@ -381,12 +381,14 @@ def discard_checksum(monkeypatch):
 
 
 @pytest.mark.db
-@pytest.mark.usefixtures('mock_fetch', 'mutable_default_config', 'discard_checksum')
-def test_update_sbang(tmpdir, test_mirror, mutable_database, patch_spec_indices):
+@pytest.mark.usefixtures('mutable_default_config', 'discard_checksum')
+def test_update_sbang(mutable_buildcache, tmpdir):
     """Test the creation and installation of buildcaches with default rpaths
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
+    db, mirror_dir_path, prepare_spec, spec_index_query, spec_index_lookup_site = mutable_buildcache
+
     scheme = os.path.join(
         '${name}', '${version}',
         '${architecture}-${compiler.name}-${compiler.version}-${hash}'
@@ -394,64 +396,58 @@ def test_update_sbang(tmpdir, test_mirror, mutable_database, patch_spec_indices)
     spec_str = 'old-sbang'
     # Concretize a package with some old-fashioned sbang lines.
     old_spec = Spec(spec_str).concretized()
-    old_concretized = ConcretizedSpec(old_spec)
-    old_spec_hash_str = old_concretized.spec_string_name_hash_only
 
-    # Need a fake mirror with *function* scope.
-    mirror_dir = test_mirror
-    mirror_url = 'file://{0}'.format(mirror_dir)
+    sbang_style_1_expected = '''{0}
+#!/usr/bin/env python
 
-    # Assume all commands will concretize old_spec the same way.
-    install_cmd('--no-cache', old_spec.name)
+{1}
+'''.format(sbang.sbang_shebang_line(), old_spec.prefix.bin)
+    prepare_spec(old_spec,
+                 filename='bin/sbang-style-1.sh', contents=sbang_style_1_expected)
 
-    # Create a buildcache with the installed spec.
-    buildcache_cmd('create', '-u', '-a', '-d', mirror_dir, old_spec_hash_str)
+    bindist.build_tarball(old_spec, str(mirror_dir_path), regenerate_index=True)
 
-    # Need to force an update of the buildcache index
-    buildcache_cmd('update-index', '-d', mirror_url)
+    spec_index_query.use_local = False
+    buildcache_cmd('install', '-u', '-f',
+                   ConcretizedSpec(old_spec).spec_string_name_hash_only)
 
-    entry = spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match(
-        old_concretized.into_hash())
-    patch_spec_indices.intern_concretized_spec(entry.concretized_spec, entry.record)
-
-    # Uninstall the original package.
-    uninstall_cmd('-y', old_spec_hash_str)
+    installed_script_style_1_path = old_spec.prefix.bin.join('sbang-style-1.sh')
+    assert sbang_style_1_expected == \
+        open(str(installed_script_style_1_path)).read()
 
     # Switch the store to the new install tree locations
     newtree_dir = tmpdir.join('newtree')
     s = spack.store.Store(str(newtree_dir))
     s.layout = YamlDirectoryLayout(str(newtree_dir), path_scheme=scheme)
 
-    with spack.store.use_store(s):
+    with spack.store.use_store(s) as store:
         new_spec = Spec('old-sbang').concretized()
         assert new_spec.dag_hash() == old_spec.dag_hash()
 
-        # Install package from buildcache
-        buildcache_cmd('install', '-a', '-u', '-f', new_spec.name)
-
-        # Continue blowing away caches
-        bindist.clear_spec_cache()
-        spack.stage.purge()
-
-        # test that the sbang was updated by the move
-        sbang_style_1_expected = '''{0}
-#!/usr/bin/env python
-
-{1}
-'''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
         sbang_style_2_expected = '''{0}
 #!/usr/bin/env python
 
 {1}
 '''.format(sbang.sbang_shebang_line(), new_spec.prefix.bin)
 
-        installed_script_style_1_path = new_spec.prefix.bin.join('sbang-style-1.sh')
-        assert sbang_style_1_expected == \
-            open(str(installed_script_style_1_path)).read()
+        prepare_spec(new_spec,
+                     filename='bin/sbang-style-2.sh', contents=sbang_style_2_expected)
 
+        new_cspec = ConcretizedSpec(new_spec)
+
+        new_local_index = spack.spec_index.SpecIndex([store.db])
+        spec_index_query.local = new_local_index.query
+        spec_index_lookup_site.local = new_local_index.lookup_ensuring_single_match
+
+        # Install package from buildcache
+        spec_index_query.use_local = False
+        buildcache_cmd('install', '-u', '-f', new_cspec.spec_string_name_hash_only)
+
+        # Continue blowing away caches
+        bindist.clear_spec_cache()
+        spack.stage.purge()
+
+        # test that the sbang was updated by the move
         installed_script_style_2_path = new_spec.prefix.bin.join('sbang-style-2.sh')
         assert sbang_style_2_expected == \
             open(str(installed_script_style_2_path)).read()
-
-        patch_spec_indices.location = spack.spec_index.IndexLocation.LOCAL()
-        uninstall_cmd('-y', '/%s' % new_spec.dag_hash())

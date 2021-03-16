@@ -12,6 +12,7 @@ import os
 import os.path
 import platform
 import shutil
+import tarfile
 import tempfile
 import uuid
 import xml.etree.ElementTree
@@ -25,6 +26,7 @@ import archspec.cpu.schema
 from llnl.util.filesystem import mkdirp, remove_linked_tree
 
 import spack.architecture
+import spack.binary_distribution
 import spack.compilers
 import spack.config
 import spack.caches
@@ -32,12 +34,14 @@ import spack.database
 import spack.directory_layout
 import spack.environment as ev
 import spack.fetch_strategy
+import spack.hooks
 import spack.mirror
 import spack.package
 import spack.package_prefs
 import spack.paths
 import spack.platforms.test
 import spack.repo
+import spack.spec
 import spack.stage
 import spack.store
 import spack.util.executable
@@ -1380,3 +1384,117 @@ def mutable_default_config(
 
     spack.config.config = old_config
     mutable_dir.remove()
+
+
+@pytest.fixture(scope='function')
+def mutable_buildcache(mock_repo_path, mock_fetch, install_mockery, mock_pkg_install,
+                       tmpdir_factory, monkeypatch):
+    store_path = tmpdir_factory.mktemp('buildcache_mock_store')
+    store = spack.store.Store(str(store_path))
+
+    class EmptyTar(object):
+        def __init__(self, path, *args, **kwargs):
+            self.path = path
+
+        def add(self, *args, **kwargs):
+            pass
+
+        def close(self):
+            with open(self.path, 'w') as f:
+                f.write('ok')
+
+        def extractall(self, path):
+            mkdirp(path)
+
+    monkeypatch.setattr(tarfile, 'open', EmptyTar)
+
+    monkeypatch.setattr(spack.binary_distribution,
+                        'check_package_relocatable',
+                        lambda a, b, c: None)
+
+    mirror_dir_path = tmpdir_factory.mktemp('mirror_dir')
+
+    tarball_dir = tmpdir_factory.mktemp('tarball_dir')
+    tarball = tarball_dir.join('file.tar.gz')
+    with open(tarball, 'wb') as f:
+        f.write(b'')
+
+    class TarballMockDownload(object):
+        def __call__(self, spec, preferred_mirrors=None):
+            return str(tarball)
+
+    monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
+                        TarballMockDownload())
+
+    class TarballMockExtract(object):
+        def __call__(self, spec, filename, *args, **kwargs):
+            stagepath = os.path.dirname(filename)
+            mkdirp(stagepath)
+            tarfile_name = spack.binary_distribution.tarball_name(spec, '.tar.gz')
+            tarfile_path = os.path.join(stagepath, tarfile_name)
+            with open(tarfile_path, 'wb') as f:
+                f.write(b'')
+            return
+
+    monkeypatch.setattr(spack.binary_distribution, 'extract_tarball',
+                        TarballMockExtract())
+
+    class MockOneMirror(object):
+        def __call__(self):
+            return 1
+
+    monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__', MockOneMirror())
+
+    monkeypatch.setattr(spack.hooks, 'post_install', lambda *args, **kwargs: None)
+
+    class MockMirrors(object):
+        def __call__(self):
+            return [spack.mirror.Mirror(name='test-mirror',
+                                        fetch_url=str(mirror_dir_path))]
+
+    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values', MockMirrors())
+
+    class SpecIndexLookupSite(object):
+        def __init__(self):
+            self.local = spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match
+            self.use_local = False
+
+        def lookup_ensuring_single_match(self, hash_prefix):
+            if self.use_local:
+                return self.local(hash_prefix)
+            return list(store.db.spec_index_lookup(hash_prefix))[0]
+
+    spec_index_lookup_site = SpecIndexLookupSite()
+
+    monkeypatch.setattr(spack.spec.SpecParser, '_spec_index', spec_index_lookup_site)
+
+    class SpecIndexQuery(object):
+        def __init__(self):
+            self.local = spack.spec_index.SpecIndex.with_local_db().query
+            self.use_local = True
+
+        def __call__(self, query):
+            if self.use_local:
+                for result in self.local(query):
+                    yield result
+            else:
+                for result in store.db.spec_index_query(query):
+                    yield result
+
+    spec_index_query = SpecIndexQuery()
+
+    monkeypatch.setattr(spack.spec_index.SpecIndex, 'query', spec_index_query)
+
+    def prepare_spec(cspec, filename=None, contents=None):
+        assert cspec.concrete, cspec
+        for spec in cspec.traverse():
+            mkdirp(os.path.join(spec.prefix, '.spack'))
+            with open(os.path.join(spec.prefix, '.spack/spec.yaml'), 'w') as f:
+                f.write(spec.to_yaml())
+            if filename and contents:
+                target = os.path.join(spec.prefix, filename)
+                mkdirp(os.path.dirname(target))
+                with open(target, 'w') as f:
+                    f.write(contents)
+
+    return store.db, mirror_dir_path, prepare_spec, spec_index_query, spec_index_lookup_site

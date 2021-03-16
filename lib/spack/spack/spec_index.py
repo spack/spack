@@ -188,7 +188,7 @@ class SpecIndex(object):
     @classmethod
     def _local_db(cls):
         import spack.store
-        return spack.store.db.instance
+        return spack.store.db
 
     @classmethod
     @memoized
