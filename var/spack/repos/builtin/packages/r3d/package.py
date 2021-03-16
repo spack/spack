@@ -36,7 +36,6 @@ class R3d(CMakePackage):
         make_args = [
             'CC={0}'.format(spack_cc),
         ]
-
         make('libr3d.a', *make_args)
 
         if '+test' in spec:
@@ -45,8 +44,7 @@ class R3d(CMakePackage):
 
     @when('@:2019-04-24')
     def install(self, spec, prefix):
-        pass
-    
+
         # R3D does not have an install target so create our own here.
         mkdirp(prefix.include)
         my_headers = find('.', '*.h', recursive=False)
@@ -63,7 +61,7 @@ class R3d(CMakePackage):
                 install('r2d_unit_tests', prefix.test)
                 install('r3d_unit_tests', prefix.test)
                 install('rNd_unit_tests', prefix.test)
-                
+
     # CMake support was added in 2021-03-10
     @when('@2021-03-10:')
     def cmake_args(self):
@@ -78,4 +76,3 @@ class R3d(CMakePackage):
             options.append('-DENABLE_UNIT_TESTS=OFF')
 
         return options
-
