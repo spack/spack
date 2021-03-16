@@ -25,7 +25,7 @@ class Amdscalapack(ScalapackBase):
 
     maintainers = ['amd-toolchain-support']
 
-    version('3.0', sha256='e0144831fd8f3f2489b7aa1b96c4da4ea15bb1560b2fdf4ef08a740f7a5459a8')
+    version('3.0', sha256='6e6f3578f44a8e64518d276e7580530599ecfa8729f568303ed2590688e7096f')
     version('2.2', sha256='2d64926864fc6d12157b86e3f88eb1a5205e7fc157bf67e7577d0f18b9a7484c')
 
     variant(
