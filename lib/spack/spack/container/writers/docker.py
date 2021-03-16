@@ -21,9 +21,9 @@ class DockerContext(PathContext):
         echoed_lines = []
         for idx, line in enumerate(manifest_str.split('\n')):
             if idx == 0:
-                echoed_lines.append('&&  (echo "' + line + '" \\')
+                echoed_lines.append('&&  (echo \'' + line + '\' \\')
                 continue
-            echoed_lines.append('&&   echo "' + line + '" \\')
+            echoed_lines.append('&&   echo \'' + line + '\' \\')
 
         echoed_lines[-1] = echoed_lines[-1].replace(' \\', ')')
 
