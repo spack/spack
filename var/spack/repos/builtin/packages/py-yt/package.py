@@ -22,6 +22,8 @@ class PyYt(PythonPackage):
     version("develop", branch="master")
     version("develop-4.0", branch="yt-4.0")
 
+    version('3.6.1', sha256='a1be3ea7e18729d3cd86e9234dc4731bf23200dff3344fa756fe173ea36cc747')
+    version('3.6.0', sha256='4e3bab11766d5950477ba4d6c528a495e12cda1155227361b4579ac4ac0bf975')
     version('3.5.1', sha256='cdc0ecb153e737d74820581f311d1be7b6f1a7ee065ad69706470939db88b041')
     version('3.5.0', sha256='548598912adba72b782b7422d40d1d12a8c1a6cd064281a9a537fdb2a5af89fc')
     version('3.4.1', sha256='b9a73ade3726a8163fc992999c8c1010ca89473131901fe4d48b820ab2ced486')
@@ -46,6 +48,7 @@ class PyYt(PythonPackage):
     depends_on("py-ipython", type=('build', 'run'))
     depends_on("py-ipython@:6.99", type=('build', 'run'), when="^python@:2.99")
     depends_on("py-matplotlib", type=('build', 'run'))
+    depends_on("py-matplotlib@:3.2.2", type=('build', 'run'), when="@:3.6.0")
     depends_on("py-numpy", type=('build', 'run'))
     depends_on("py-scipy", type=('build', 'run'), when="+scipy")
     depends_on("py-setuptools", type=('build', 'run'))
