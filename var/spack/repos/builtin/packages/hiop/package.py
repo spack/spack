@@ -50,7 +50,7 @@ class Hiop(CMakePackage, CudaPackage):
 
     depends_on('lapack')
     depends_on('blas')
-    depends_on('cmake@3.15:', type='build')
+    depends_on('cmake@3.18:', type='build')
 
     depends_on('mpi', when='+mpi')
 
