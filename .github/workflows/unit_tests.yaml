@@ -23,9 +23,9 @@ jobs:
       run: |
         pip install --upgrade pip
         pip install --upgrade vermin
-    - name: Minimum Version (Spack's Core)
+    - name: vermin (Spack's Core)
       run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
-    - name: Minimum Version (Repositories)
+    - name: vermin (Repositories)
       run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v var/spack/repos
   # Run style checks on the files that have been changed
   style:
@@ -95,7 +95,7 @@ jobs:
     # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
     #
     - id: coverage
-      # Run the following jobs with coverage if this is a PR and core has been modified
+      # Run the subsequent jobs with coverage if this is a PR and core has been modified
       # or if this workflow is triggered by a push event (this means that once a PR is
       # merged we'll perform a full run with CI on develop even though the PR was only
       # modifying packages)
