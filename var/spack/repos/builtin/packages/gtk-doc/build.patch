@@ -1,0 +1,11 @@
+--- gtk-doc-GTK_DOC_1_32/m4/gtkdoc_jh_check_xml_catalog.m4	2019-08-15 12:08:57.000000000 -0700
++++ b/m4/gtkdoc_jh_check_xml_catalog.m4	2021-03-16 10:24:35.066428000 -0700
+@@ -6,7 +6,7 @@
+ 	AC_REQUIRE([JH_PATH_XML_CATALOG],[JH_PATH_XML_CATALOG(,[:])])dnl
+ 	AC_MSG_CHECKING([for ifelse([$2],,[$1],[$2]) in XML catalog])
+ 	if $jh_found_xmlcatalog && \
+-		AC_RUN_LOG([$XMLCATALOG --noout "$XML_CATALOG_FILE" "$1" >&2]); then
++		AC_RUN_LOG([$XMLCATALOG --noout "" "$1" >&2]); then
+ 		AC_MSG_RESULT([found])
+ 		ifelse([$3],,,[$3])
+ 	else
