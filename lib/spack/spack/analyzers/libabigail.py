@@ -13,12 +13,12 @@ import spack.repo
 
 import llnl.util.tty as tty
 
-from .base import AnalyzerBase
+from .analyzerbase import Analyzerbase
 
 import os
 
 
-class LibabigailAnalyzer(AnalyzerBase):
+class Libabigail(Analyzerbase):
 
     name = "libabigail"
     outfile = "spack-analyzer-libabigail.json"
@@ -30,7 +30,7 @@ class LibabigailAnalyzer(AnalyzerBase):
         Since the output for libabigail is one file per object, we communicate
         with the monitor multiple times.
         """
-        super().__init__(spec, dirname)
+        super(Libabigail, self).__init__(spec, dirname)
 
         # This doesn't seem to work to import on the module level
         tty.debug("Preparing to use Libabigail, will install if missing.")
@@ -68,7 +68,7 @@ class LibabigailAnalyzer(AnalyzerBase):
         return {self.name: result}
 
     def save_result(self, result, outdir=None, monitor=None):
-        """Abi results are saved to individual files, so each one needs to be
+        """ABI results are saved to individual files, so each one needs to be
         read and uploaded. Result here should be the lookup generated in run(),
         the key is the analyzer name, and each value is the result file.
         We currently upload the entire xml as text because libabigail can't
@@ -79,12 +79,12 @@ class LibabigailAnalyzer(AnalyzerBase):
 
         name = self.spec.package.name
 
-        # We've already saved the results to file during run
         for obj, filename in result.get(self.name, {}).items():
 
             # Don't include the prefix
-
             rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
+
+            # We've already saved the results to file during run
             content = spack.monitor.read_file(filename)
 
             # A result needs an analyzer, value or binary_value, and name

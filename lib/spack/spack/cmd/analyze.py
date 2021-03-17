@@ -33,7 +33,7 @@ def setup_parser(subparser):
     subparser.add_argument(
         '-o', '--outdir', default=None,
         dest='outdir',
-        help="write output to a different directory than .spack metadata.")
+        help="write output to a different directory than ~/.spack/analyzers")
     subparser.add_argument(
         '--list-analyzers', action="store_true",
         default=False,
@@ -58,9 +58,6 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
         monitor (monitor.SpackMonitorClient): a monitor client
     """
     analyzers = analyzers or list(spack.analyzers.analyzer_types.keys())
-
-    # If the package analyze folder does not exist, create it
-    spack.analyzers.create_package_analyze_dir(spec)
 
     # Load the build environment from the spec install directory, and send
     # the spec to the monitor if it's not known

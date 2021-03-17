@@ -112,6 +112,7 @@ def get_module(cmd_name):
     """
     require_cmd_name(cmd_name)
     pname = python_name(cmd_name)
+
     try:
         # Try to import the command from the built-in directory
         module_name = "%s.%s" % (__name__, pname)

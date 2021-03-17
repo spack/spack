@@ -10,56 +10,24 @@ existing metadata.
 
 from __future__ import absolute_import
 
+import spack.util.classes
+import spack.paths
+
 import llnl.util.tty as tty
-from .abi import LibabigailAnalyzer
-from .build import (
-    InstallFilesAnalyzer,
-    EnvironmentVariablesAnalyzer,
-    ConfigArgsAnalyzer
-)
 
-import os
 
-__all__ = [
-    'LibabigailAnalyzer',
-    'InstallFilesAnalyzer',
-    'EnvironmentVariablesAnalyzer',
-    'ConfigArgsAnalyzer'
-]
+mod_path = spack.paths.analyzers_path
+analyzers = spack.util.classes.list_classes("spack.analyzers", mod_path)
 
-# "all" cannot be an analyzer type
-analyzer_types = {
-
-    # Build analyzers are generally just uploading metadata that exists
-    'install_files': InstallFilesAnalyzer,
-    'environment_variables': EnvironmentVariablesAnalyzer,
-    'config_args': ConfigArgsAnalyzer,
-
-    # Abi Analyzers need to generate features for objects
-    'abigail': LibabigailAnalyzer,
-}
+# The base analyzer does not have a name
+analyzer_types = {a.name: a for a in analyzers if hasattr(a, "name")}
 
 
 def list_all():
     """A helper function to list all analyzers and their descriptions
     """
     for name, analyzer in analyzer_types.items():
-        tty.info("%-35s: %-35s" % (name, analyzer.description))
-
-
-def create_package_analyze_dir(spec):
-    """Given a spec, create the analyze folder in it's metadata folder. The
-    spec requires an associated package.
-    """
-    # An analyzer cannot be run if the spec isn't associated with a package
-    if not hasattr(spec, "package") or not spec.package:
-        tty.die("A spec can only be analyzed with an associated package.")
-
-    meta_dir = os.path.dirname(spec.package.install_log_path)
-    analyze_dir = os.path.join(meta_dir, "analyze")
-    if not os.path.exists(analyze_dir):
-        tty.debug("Creating directory for analyze %s" % analyze_dir)
-        os.mkdir(analyze_dir)
+        print("%-25s: %-35s" % (name, analyzer.description))
 
 
 def get_analyzer(name):

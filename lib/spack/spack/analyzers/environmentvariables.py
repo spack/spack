@@ -3,33 +3,19 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-"""A build analyzer is a class of analyzer that typically just uploads
-already existing metadata files from a package spec install directory. They
-are grouped with analyzers because they are conceptually the same - uploading
-additional metadata about the build with the spack analyze command."""
+"""An environment analyzer will read and parse the environment variables
+file in the installed package directory, generating a json file that has
+an index of key, value pairs for environment variables."""
 
 
 import spack.monitor
-from .base import AnalyzerBase
+from .analyzerbase import Analyzerbase
 
 import os
 import re
 
 
-class ConfigArgsAnalyzer(AnalyzerBase):
-
-    name = "config_args"
-    outfile = "spack-analyzer-install-files.json"
-    description = "config args loaded from spack-configure-args.txt"
-
-    def run(self):
-        """Given a directory name, return the json file to save the result to
-        """
-        config_file = os.path.join(self.meta_dir, "spack-configure-args.txt")
-        return {self.name: spack.monitor.read_file(config_file)}
-
-
-class EnvironmentVariablesAnalyzer(AnalyzerBase):
+class Environmentvariables(Analyzerbase):
 
     name = "environment_variables"
     outfile = "spack-analyzer-environment-variables.json"
@@ -57,23 +43,6 @@ class EnvironmentVariablesAnalyzer(AnalyzerBase):
         lines = re.split("(;|\n)", content)
         lines = [x for x in lines if x not in ['', '\n', ';'] and "SPACK_" in x]
         lines = [x.strip() for x in lines if "export " not in x]
-        lines = [x.strip() for x in lines if "export " not in x]
-        result = {}
 
         # Dictionary comprehentions require 2.7
-        for x in lines:
-            result[x.split("=", 1)[0]] = x.split("=", 1)[1]
-        return result
-
-
-class InstallFilesAnalyzer(AnalyzerBase):
-
-    name = "install_files"
-    outfile = "spack-analyzer-install-files.json"
-    description = "install file listing read from install_manifest.json"
-
-    def run(self):
-        """Given a directory name, return the json file to save the result to
-        """
-        manifest_file = os.path.join(self.meta_dir, "install_manifest.json")
-        return {self.name: spack.monitor.read_json(manifest_file)}
+        return dict(x.partition("=")[::2] for x in lines)

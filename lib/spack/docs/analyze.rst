@@ -9,30 +9,43 @@
 Analyze
 =======
 
-The analyze commands allows you to take an existing package install, and run
-an analyzer to extract one or more metrics. The metrics can range from reading
-metadata about install files and output to extracting Application Binary
-Interface (ABI) information from binaries. 
+
+The analyze command is a front-end to various tools that let us analyze
+package installations. Each analyzer is a module for a different kind
+of analysis that can be done on a package installation, including (but not
+limited to) binary, log, or text analysis. Thus, the analyze command group
+allows you to take an existing package install, choose an analyzer,
+and extract some output for the package using it.
+
 
 -----------------
 Analyzer Metadata
 -----------------
 
-For all analyzers, we write to an ``analyze`` folder in the package install
-directory metadata folder. For example, here we see an analyze folder that is
-alongside a wget install:
+For all analyzers, we write to an ``analyzers`` folder in your spack ``$HOME``
+directory, or the value that you specify in your spack config at 
+``config:analyzers_dir``. We don't want to write to your package install folder
+in the case that it is read only. For example, here we see the results
+of running an analysis on zlib:
 
 .. code-block:: console
 
-    $ ls .spack/
-    analyze                   archived-files                     repos                              spack-build-03-build-out.txt
-    spack-build-out.txt       install_environment.json           spack-build-01-autoreconf-out.txt  spack-build-04-install-out.txt
-    spack-configure-args.txt  install_manifest.json              spack-build-02-configure-out.txt   spack-build-env.txt
-    spec.yaml
+    $ tree ~/.spack/analyzers/
+    /home/vanessa/.spack/analyzers/
+    └── linux-ubuntu20.04-skylake
+        └── gcc-9.3.0
+            └── zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2
+                ├── spack-analyzer-environment-variables.json
+                ├── spack-analyzer-install-files.json
+                └── spack-analyzer-libabigail-libz.so.1.2.11.xml
 
-This means that you can always find analyzer output in this folder. Sometimes the output
-is a bit redundant - parsed files from the folder above, but it's been added to
-be namespaced as an analyzer output.
+
+This means that you can always find analyzer output in this folder, and it
+is organized with the same logic as the package install it was run for. 
+If you want to customize this top level folder, simply provide the ``--outdir``
+argument to ``spack analyze``. Note that the organization of the install folders
+shown above will not be written if you specify a custom directory - it will
+write to the folder you specify, verbatim.
 
 -----------------
 Listing Analyzers
@@ -44,10 +57,10 @@ are available:
 .. code-block:: console
 
     $ spack analyze --list-analyzers
-    ==> install_files                      : install file listing read from install_manifest.json
-    ==> environment_variables              : environment variables parsed from spack-build-env.txt
-    ==> config_args                        : config args loaded from spack-configure-args.txt
-    ==> abigail                            : Application Binary Interface (ABI) features for objects
+    install_files            : install file listing read from install_manifest.json
+    environment_variables    : environment variables parsed from spack-build-env.txt
+    config_args              : config args loaded from spack-configure-args.txt
+    abigail                  : Application Binary Interface (ABI) features for objects
 
 
 In the above, the first three are fairly simple - parsing metadata files from
@@ -76,18 +89,19 @@ We can then specify the spec version that we want to analyze:
 
 .. code-block:: console
 
-    $ spack analyze zlib@1.2.11%gcc@7.5.0 arch=linux-ubuntu18.04-skylake
+    $ spack analyze zlib/fz2bs56
 
 If you don't provide any specific analyzer names, by default all analyzers 
 (shown in the ``--list-analyzers`` list) will be run. If an analyzer does not
 have any result, it will be skipped. For example, here is a result running for
-wget, which didn't have config args, and also did not have the libabigail
-analyzer implemented yet:
+zlib:
 
 .. code-block:: console
 
-    $ ls opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/
-    spack-analyzer-environment-variables.json  spack-analyzer-install-files.json
+    $ ls ~/.spack/analyzers/linux-ubuntu20.04-skylake/gcc-9.3.0/zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2/
+    spack-analyzer-environment-variables.json
+    spack-analyzer-install-files.json
+    spack-analyzer-libabigail-libz.so.1.2.11.xml
 
 If you want to run a specific analyzer, ask for it with `--analyzer`. Here we run
 spack analyze on libabigail (already installed) _using_ libabigail1
@@ -95,13 +109,6 @@ spack analyze on libabigail (already installed) _using_ libabigail1
 .. code-block:: console
 
     $ spack analyze --analyzer abigail libabigail
-
-You can now see the abigail results in the analyze folder!
-
-    $ ls opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/
-    spack-analyzer-environment-variables.json  spack-analyzer-install-files.json  spack-analyzer-libabigail-wget.xml
-
-It is currently flat (not compressed) xml, and will eventually be gzipped when libabigail supports it.
 
 
 ----------------------
@@ -150,7 +157,5 @@ before, and a message that the monitor server was pinged:
 .. code-block:: console
 
     $ spack analyze --monitor wget
-    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-install-files.json
-    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-environment-variables.json
-    ==> Writing result to /home/vanessa/Desktop/Code/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.3.0/wget-1.20.3-bum6zeaezbuqjhudzphcsyb4avkiizhj/.spack/analyze/spack-analyzer-install-files.json
+    ...
     ==> Sending result for wget bin/wget to monitor.

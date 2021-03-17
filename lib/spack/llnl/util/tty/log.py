@@ -440,9 +440,9 @@ class log_output(object):
         Args:
             file_like (str or stream): open file object or name of file where
                 output should be logged
-            echo     (bool): whether to echo output in addition to logging it
-            debug    (int): positive to enable tty debug mode during logging
-            buffer   (bool): pass buffer=True to skip unbuffering output; note
+            echo (bool): whether to echo output in addition to logging it
+            debug (int): positive to enable tty debug mode during logging
+            buffer (bool): pass buffer=True to skip unbuffering output; note
                 this doesn't set up any *new* buffering
 
         log_output can take either a file object or a filename. If a

@@ -9,11 +9,38 @@ and (optionally) interact with a Spack Monitor
 
 import spack.monitor
 import llnl.util.tty as tty
+import spack.util.path
+import spack.config
 
 import os
 
 
-class AnalyzerBase:
+def get_analyzer_dir(spec):
+    """Given a spec, return the directory to save analyzer results,
+    creating it if it does not exist. We also check that the spec has an
+    associated package. An analyzer cannot be run if the spec isn't
+    associated with a package.
+    """
+    # An analyzer cannot be run if the spec isn't associated with a package
+    if not hasattr(spec, "package") or not spec.package:
+        tty.die("A spec can only be analyzed with an associated package.")
+
+    # The top level directory is in the user home, or a custom location
+    analyzer_dir = spack.util.path.canonicalize_path(
+        spack.config.get('config:analyzers_dir', '~/.spack/analyzers'))
+
+    # We follow the same convention as the spec install (this could be better)
+    package_prefix = os.sep.join(spec.package.prefix.split('/')[-3:])
+    meta_dir = os.path.join(analyzer_dir, package_prefix)
+
+    if not os.path.exists(meta_dir):
+        tty.debug("Creating directory for analyze %s" % meta_dir)
+        os.makedirs(meta_dir)
+
+    return meta_dir
+
+
+class Analyzerbase(object):
 
     def __init__(self, spec, dirname=None):
         """An Analyzer is intended to run on one spec install, so the spec
@@ -28,11 +55,8 @@ class AnalyzerBase:
         """
         self.spec = spec
         self.dirname = dirname
-
-        # An analyzer cannot be run if the spec isn't associated with a package
-        if not hasattr(spec, "package") or not spec.package:
-            tty.die("A spec can only be analyzed with an associated package.")
         self.meta_dir = os.path.dirname(spec.package.install_log_path)
+        self.output_dir = get_analyzer_dir(spec)
 
         for required in ["name", "outfile", "description"]:
             if not hasattr(self, required):
@@ -46,8 +70,8 @@ class AnalyzerBase:
     def get_outfile(self, dirname=None, outfile=None):
         """Given a directory name, return the json file to save the result to
         """
-        dirname = dirname or self.dirname or self.meta_dir
-        return os.path.join(dirname, 'analyze', outfile or self.outfile)
+        dirname = dirname or self.dirname or self.output_dir
+        return os.path.join(dirname, outfile or self.outfile)
 
     def save_result(self, result, outdir=None, monitor=None):
         """Save a result to the associated spack monitor, if defined. This

@@ -75,9 +75,14 @@ or refer to the full manual below.
    command_index
    package_list
    chain
-   analyze
    extensions
    pipelines
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Research
+
+   analyze
 
 .. toctree::
    :maxdepth: 2

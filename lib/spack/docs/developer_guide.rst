@@ -322,27 +322,55 @@ Stage objects
 Writing analyzers
 -----------------
 
-To write an analyzer, you can either include it in one of the files in the
-analyzers module folder (e.g., if it's associated with an application
-binary interface, ABI, you might add it to ``abi.py``) or you can add a new file.
-Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.AnalyzerBase>`,
-and you can look at other analyzers in that folder for examples. The guide
-here will tell you about the basic functions needed.
+To write an analyzer, you should add a new module file to the
+analyzers module directory at ``lib/spack/spack/analyzers`` .
+Your analyzer should be a subclass of the :class:`Analyzerbase <spack.analyzers.analyzerbase.Analyzerbase>`. For example, if you want
+to add an analyzer class ``Myanalyzer`` you woul write to 
+``spack/analyzers/myanalyzer.py`` and import and 
+use the base as follows:
+
+.. code-block:: python
+
+    from .analyzerbase import Analyzerbase
+
+    class Myanalyzer(Analyzerbase):
+
+
+Note that the class name is your module file name, all lowercase
+except for the first capital letter. You can  look at other analyzers in 
+that analyzer directory for examples. The guide here will tell you about the basic functions needed.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 Analyzer Output Directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, when you run ``spack analyze`` an analyzer output folder will
-be created in the spec's package directory for results:
+be created in your spack user directory in your ``$HOME``. The reason we output here
+is because the install directory might not always be writable. 
 
 .. code-block:: console
 
-    .spack/
+    ~/.spack/
       analyzers
       
-Result files will be written here, typically as json, so they could be uploaded
-in a future interaction with a monitor.
+Result files will be written here, organized in subfolders in the same structure
+as the package, for example:
+
+
+.. code-block:: console
+
+    $ tree ~/.spack/analyzers/
+    /home/vanessa/.spack/analyzers/
+    └── linux-ubuntu20.04-skylake
+        └── gcc-9.3.0
+            └── zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2
+                ├── spack-analyzer-environment-variables.json
+                ├── spack-analyzer-install-files.json
+                └── spack-analyzer-libabigail-libz.so.1.2.11.xml
+
+
+The result files are typically written as json so they can be easily read and 
+uploaded in a future interaction with a monitor.
 
 ^^^^^^^^^^^^^^^^^
 Analyzer Metadata
@@ -350,12 +378,14 @@ Analyzer Metadata
 
 Your analyzer is required to have the class attributes ``name``, ``outfile``,
 and ``description``. These are printed to the user with they ask for
-``spack analyze --list-analyzers``.  Here is an example:
+``spack analyze --list-analyzers``.  Here is an example.
+As we mentioned above, note that this analyzer would live in a module named
+``libabigail.py`` in the analyzers folder so that the class can be discovered.
 
 
 .. code-block:: python
 
-    class LibabigailAnalyzer(AnalyzerBase):
+    class Libabigail(Analyzerbase):
 
         name = "libabigail"
         outfile = "spack-analyzer-libabigail.json"
@@ -363,32 +393,7 @@ and ``description``. These are printed to the user with they ask for
 
 
 This means that the name and output file should be unique for your analyzer.
-This is enforced for the next step, where you have to add your analyzer in 
-the lookup in ``spack/analyzers/__init__.py`` to each of ``__all__`` and
-``analyzer_types``:
-
-.. code-block:: python
-
-    __all__ = [
-        'LibabigailAnalyzer',
-        'InstallFilesAnalyzer',
-        'EnvironmentVariablesAnalyzer',
-        'ConfigArgsAnalyzer'
-    ]
-
-    # "all" cannot be an analyzer type
-    analyzer_types = {
-
-        # Build analyzers are generally just uploading metadata that exists
-        'install_files': InstallFilesAnalyzer,
-        'environment_variables': EnvironmentVariablesAnalyzer,
-        'config_args': ConfigArgsAnalyzer,
-
-        # Abi Analyzers need to generate features for objects
-        'abigail': LibabigailAnalyzer,
-    }
-
-Note that "all" cannot be an analyzer type, as this key is used to indicate
+Note that "all" cannot be the name of an analyzer, as this key is used to indicate
 that the user wants to run all analyzers.
 
 
@@ -439,7 +444,7 @@ work. For example:
 .. code-block:: python
 
     def __init__(self, spec, dirname=None):
-        super().__init__(spec, dirname)
+        super(Myanalyzer, self).__init__(spec, dirname)
 
         # install extra dependencies, do extra preparation and checks here
 
@@ -448,7 +453,8 @@ At the end of the init, you will have available to you:
 
  - **self.spec**: the spec object
  - **self.dirname**: an optional directory name the user as provided at init to save
- - **self.meta_dir**: the analyzer metadata directory, where we save by default
+ - **self.output_dir**: the analyzer metadata directory, where we save by default
+ - **self.meta_dir**: the path to the package metadata directory (.spack) if you need it
 
 And can proceed to write your analyzer.
 
@@ -485,12 +491,12 @@ and send each one (separately) to the monitor:
 
         name = self.spec.package.name
 
-        # We've already saved the results to file during run
         for obj, filename in result.get(self.name, {}).items():
 
-            # Don't include the prefix            
-
+            # Don't include the prefix
             rel_path = obj.replace(self.spec.prefix + os.path.sep, "")
+
+            # We've already saved the results to file during run
             content = spack.monitor.read_file(filename)
 
             # A result needs an analyzer, value or binary_value, and name
