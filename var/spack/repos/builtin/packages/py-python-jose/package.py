@@ -11,9 +11,9 @@ class PyPythonJose(PythonPackage):
     Python."""
 
     homepage = "https://python-jose.readthedocs.io/en/latest"
-    url      = "https://pypi.io/packages/source/p/python-jose/python-jose-3.0.1.tar.gz"
+    url      = "https://pypi.io/packages/source/p/python-jose/python-jose-3.2.0.tar.gz"
 
-    version('3.0.1', sha256='ed7387f0f9af2ea0ddc441d83a6eb47a5909bd0c8a72ac3250e75afec2cc1371')
+    version('3.2.0', sha256='4e4192402e100b5fb09de5a8ea6bcc39c36ad4526341c123d401e2561720335b')
 
     depends_on('py-setuptools', type='build')
 
