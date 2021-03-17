@@ -48,8 +48,8 @@ users. Install the oneAPI compilers::
 
 Add the oneAPI compilers to the set of compilers that Spack can use::
 
-  spack compiler add `spack location -i intel-oneapi-compilers`/latest/linux/bin/intel64
-  spack compiler add `spack location -i intel-oneapi-compilers`/latest/linux/bin
+  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin/intel64
+  spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin
 
 This adds the compilers to your ``compilers.yaml``. Verify that the
 compilers are available::
