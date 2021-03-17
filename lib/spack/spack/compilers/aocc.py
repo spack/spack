@@ -136,4 +136,5 @@ class Aocc(Compiler):
         # This is a known issue for AOCC 3.0 see:
         # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
         if self.real_version == ver('3.0.0'):
-            return "-Wno-unused-command-line-argument -mllvm -eliminate-similar-expr=false"
+            return ("-Wno-unused-command-line-argument "
+                    "-mllvm -eliminate-similar-expr=false")
