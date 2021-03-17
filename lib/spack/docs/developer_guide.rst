@@ -480,7 +480,7 @@ and send each one (separately) to the monitor:
 .. code-block:: python
 
     def save_result(self, result, outdir=None, monitor=None):
-        """Abi results are saved to individual files, so each one needs to be
+        """ABI results are saved to individual files, so each one needs to be
         read and uploaded. Result here should be the lookup generated in run(),
         the key is the analyzer name, and each value is the result file.
         We currently upload the entire xml as text because libabigail can't
