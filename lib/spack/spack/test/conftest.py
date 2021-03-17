@@ -1456,7 +1456,8 @@ def mutable_buildcache(mock_repo_path, mock_fetch, install_mockery, mock_pkg_ins
 
     class SpecIndexLookupSite(object):
         def __init__(self):
-            self.local = spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match
+            self.local = (
+                spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match)
             self.use_local = False
 
         def lookup_ensuring_single_match(self, hash_prefix):
@@ -1497,4 +1498,5 @@ def mutable_buildcache(mock_repo_path, mock_fetch, install_mockery, mock_pkg_ins
                 with open(target, 'w') as f:
                     f.write(contents)
 
-    return store.db, mirror_dir_path, prepare_spec, spec_index_query, spec_index_lookup_site
+    return (store.db, mirror_dir_path, prepare_spec, spec_index_query,
+            spec_index_lookup_site)

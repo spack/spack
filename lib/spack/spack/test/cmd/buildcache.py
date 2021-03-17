@@ -7,12 +7,9 @@ import errno
 import platform
 import os
 import re
-import tarfile
 from typing import FrozenSet  # novm
 
 import pytest
-
-from llnl.util.filesystem import mkdirp
 
 import spack.config
 import spack.compilers

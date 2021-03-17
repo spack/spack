@@ -8,6 +8,7 @@ from __future__ import print_function
 import sys
 import itertools
 from collections import defaultdict
+from typing import Dict, Iterable, List  # novm
 
 import spack.cmd
 import spack.environment as ev
@@ -18,6 +19,8 @@ import spack.repo
 import spack.spec_index
 import spack.store
 from spack.database import InstallStatuses
+from spack.spec import Spec
+from spack.spec_index import ConcretizedSpec
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
@@ -67,7 +70,7 @@ def setup_parser(subparser):
 
 
 def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
-    # type: (Environment, List[Spec], bool, bool) -> Iterable[Spec]
+    # type: (ev.Environment, List[Spec], bool, bool) -> Iterable[Spec]
     """Returns a list of specs matching the not necessarily
        concretized specs given from cli
 
@@ -233,12 +236,13 @@ def do_uninstall(env, specs, force):
     # A package is ready to be uninstalled when nothing else references it,
     # unless we are requested to force uninstall it.
     local_index = spack.spec_index.IndexLocation.LOCAL().spec_index_for()
+
     def is_ready(x):
         pfx = spack.spec_index.HashPrefix(x)
         entry = local_index.lookup_ensuring_single_match(pfx)
         return not entry.record.ref_count
     if force:
-        is_ready = lambda x: True
+        is_ready = lambda x: True                           # noqa
 
     while packages:
         ready = [x for x in packages if is_ready(x.spec.dag_hash())]

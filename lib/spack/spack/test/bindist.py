@@ -387,7 +387,8 @@ def test_update_sbang(mutable_buildcache, tmpdir):
     into the non-default directory layout scheme, triggering an update of the
     sbang.
     """
-    db, mirror_dir_path, prepare_spec, spec_index_query, spec_index_lookup_site = mutable_buildcache
+    db, mirror_dir_path, prepare_spec, spec_index_query, spec_index_lookup_site = (
+        mutable_buildcache)
 
     scheme = os.path.join(
         '${name}', '${version}',
