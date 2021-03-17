@@ -27,11 +27,6 @@ class Amber(Package, CudaPackage):
 
     maintainers = ['hseara']
 
-    def url_for_version(self, version):
-        url = "file://{0}/Amber{1}.tar.bz2".format(
-            os.getcwd(), version.up_to(1))
-        return url
-
     version(
         '20', sha256='a4c53639441c8cc85adee397933d07856cc4a723c82c6bea585cd76c197ead75')
     version(
