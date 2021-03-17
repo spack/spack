@@ -53,7 +53,7 @@ import spack.repo
 import spack.store
 
 from llnl.util.tty.color import colorize
-from llnl.util.tty.log import log_output, logwin32_output
+from llnl.util.tty.log import log_output, winlog
 from spack.util.environment import dump_environment
 from spack.util.executable import which
 
@@ -1704,7 +1704,7 @@ def build_process(pkg, kwargs):
                 # Spawn a daemon that reads from a pipe and redirects
                 # everything to log_path
                 if sys.platform == 'win32':
-                    with logwin32_output(pkg.log_path, echo, True,
+                    with winlog(pkg.log_path, True, True,
                                     env=unmodified_env) as logger:
 
                         # Debug this child process from here
