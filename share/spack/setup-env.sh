@@ -70,22 +70,41 @@ _spack_shell_wrapper() {
                 _sp_flags="$_sp_flags $1 $2"
                 shift 2
                 ;;
-            -c*|-e*|-D*)
-                # short flags taking values
-                flag="${1:0:2}"
-                arg="${1:2}"
-                if [ -z "$arg" ]; then shift; arg="$1"; fi
-                _sp_flags="$_sp_flags $flag $arg"
-                shift
-                ;;
-            -h|--help|-V|--version)
+            --help|--version)
+                # special early return flags
                 help_or_version_was_used=1
                 _sp_flags="$_sp_flags $1"
                 shift
                 ;;
-            -*)
-                # flags that take no values
+            --*)
+                # long flags taking no value
                 _sp_flags="$_sp_flags $1"
+                shift
+                ;;
+            -*)
+                # loop over all single character flags (e.g. -kle[env]), but
+                # skip the dash before the flag, so start at 1
+                for (( i=1 ; i<${#1}; i++ )); do
+                    flag="${1:$i:1}"
+                    case "$flag" in
+                        c|C|e|D)
+                            # flags with required values
+                            val="${1:((i+1))}"
+                            if [ -z "$val" ]; then shift; val="$1"; fi
+                            _sp_flags="$_sp_flags -$flag $val"
+                            break
+                            ;;
+                        h|V)
+                            # special early return flags
+                            help_or_version_was_used=1
+                            _sp_flags="$_sp_flags -$flag"
+                            ;;
+                        *)
+                            # flags not taking a value
+                            _sp_flags="$_sp_flags -$flag"
+                            ;;
+                    esac
+                done
                 shift
                 ;;
             *)
