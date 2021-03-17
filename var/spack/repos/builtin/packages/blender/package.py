@@ -41,6 +41,7 @@ class Blender(CMakePackage):
     variant('opensubdiv', default=False, description='Build with opensubdiv support')
     variant('jemalloc', default=True)
 
+    # https://developer.blender.org/diffusion/B/browse/blender-v2.92-release/build_files/build_environment/cmake/versions.cmake
     depends_on('python@3.5:', when="@:2.79b")
     depends_on('python@3.7:', when="@2.80:")
     depends_on('python@3.7.7:', when="@2.92.0:")
