@@ -670,7 +670,7 @@ class log_output(object):
 
 
 class StreamWrapper:
-    ''' Wrapper class to handle redirection of io streams '''
+    """ Wrapper class to handle redirection of io streams """
     def __init__(self, sys_attr):
         self.sys_attr = sys_attr
         self.saved_stream = None
@@ -732,7 +732,7 @@ class StreamWrapper:
         self.sys_stream.flush()
 
     def close(self):
-        '''Redirect back to the original system stream, and close stream'''
+        """Redirect back to the original system stream, and close stream"""
         try:
             if self.saved_stream is not None:
                 self.redirect_stream(self.saved_stream)
