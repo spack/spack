@@ -19,3 +19,8 @@ class Libcroco(AutotoolsPackage):
     depends_on('libxml2')
     depends_on('gtk-doc', type='build')
     depends_on('pkgconfig', type='build')
+
+    def configure_args(self):
+        # macOS ld does not support this flag
+        # https://github.com/Homebrew/homebrew-core/blob/HEAD/Formula/libcroco.rb
+        return ['--disable-Bsymbolic']
