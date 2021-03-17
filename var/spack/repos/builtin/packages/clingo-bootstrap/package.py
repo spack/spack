@@ -49,8 +49,6 @@ class ClingoBootstrap(Clingo):
         args.extend([
             # Avoid building the clingo executable
             self.define('CLINGO_BUILD_APPS', 'OFF'),
-            # Do not link to libpython
-            self.define('PYCLINGO_DYNAMIC_LOOKUP', 'ON')
         ])
         return args
 
