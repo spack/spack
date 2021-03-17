@@ -26,3 +26,4 @@ class PyLibsonata(PythonPackage):
 
     depends_on('py-numpy@1.12:', type=('build', 'run'))
     depends_on('py-setuptools', type='build', when='@0.1:')
+    depends_on('py-setuptools-scm', type='build', when='@0.1:')
