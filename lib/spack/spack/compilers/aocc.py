@@ -122,34 +122,18 @@ class Aocc(Compiler):
 
     @property
     def cflags(self):
-        return self.__handle_default_flag_addtions()
+        return self._handle_default_flag_addtions()
 
     @property
     def cxxflags(self):
-        return self.__handle_default_flag_addtions()
+        return self._handle_default_flag_addtions()
 
     @property
     def fflags(self):
-        return self.__handle_default_flag_addtions()
+        return self._handle_default_flag_addtions()
 
-    def __handle_default_flag_addtions(self):
-        """
-        We have found a compilation issue which was
-        exposed during last minute in our validation.
-        Hence we could not accommodate its fix in
-        our AOCC-3.0.0 release and planning to fix only in
-        our next release of AOCC.
-
-        Workaround for this issue is the use of default flag
-        for AOCC-3.0.0 in function defined below.
-
-        We are mentioning about this issue and its workaround option
-        under *known issue* section in
-        our user guide of AOCC-3.0.0
-
-        This function is private as
-        it is only meant to be called from
-        cflags, cxxflags and fflags member functions.
-        """
+    def _handle_default_flag_addtions(self):
+        # This is a known issue for AOCC 3.0 see:
+        # https://developer.amd.com/wp-content/resources/AOCC-3.0-Install-Guide.pdf
         if self.real_version == ver('3.0.0'):
             return "-Wno-unused-command-line-argument -mllvm -eliminate-similar-expr=false"
