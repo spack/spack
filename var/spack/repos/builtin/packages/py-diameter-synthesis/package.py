@@ -12,6 +12,7 @@ class PyDiameterSynthesis(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/cells/diameter-synthesis"
     git      = "ssh://bbpcode.epfl.ch/cells/diameter-synthesis"
 
+    version('0.1.10', tag='diameter-synthesis-v0.1.10')
     version('0.1.7', tag='diameter-synthesis-v0.1.7')
 
     depends_on('py-setuptools', type='build')
@@ -23,4 +24,4 @@ class PyDiameterSynthesis(PythonPackage):
     depends_on('py-morphio@2.3.4:', type='run')
     depends_on('py-matplotlib@2.2:', type='run')
     depends_on('py-pandas@0.24:', type='run')
-    depends_on('py-neurom@1.4.2:', type='run')
+    depends_on('py-neurom@1.7.0:', type='run')

@@ -14,6 +14,7 @@ class PyTns(PythonPackage):
 
     version('develop', branch='master')
     version('space2', branch='space2')
+    version('2.3.1', tag='TNS-v2.3.1')
     version('2.2.7', tag='tns-v2.2.7')
     version('2.0.4', tag='tns-v2.0.4')
     version('1.0.8', tag='tns-v1.0.8')
