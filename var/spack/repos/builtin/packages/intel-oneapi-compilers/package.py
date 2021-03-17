@@ -37,16 +37,16 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         super(IntelOneapiCompilers, self).__init__(spec)
 
     def _join_prefix(self, p):
-        return path.join(self.prefix, 'compiler/latest/linux', p)
+        return path.join(self.prefix, 'compiler', 'latest', 'linux', p)
 
     def _ld_library_path(self):
         dirs = ['lib',
-                'lib/x64',
-                'lib/emu',
-                'lib/oclfpga/host/linux64/lib',
-                'lib/oclfpga/linux64/lib',
-                'compiler/lib/intel64_lin',
-                'compiler/lib']
+                path.join('lib', 'x64'),
+                path.join('lib', 'emu'),
+                path.join('lib', 'oclfpga', 'host', 'linux64', 'lib'),
+                path.join('lib', 'oclfpga', 'linux64', 'lib'),
+                path.join('compiler', 'lib', 'intel64_lin'),
+                path.join('compiler', 'lib')]
         for dir in dirs:
             yield self._join_prefix(dir)
 
@@ -60,22 +60,21 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         super(IntelOneapiCompilers, self).install(
             spec,
             prefix,
-            installer_path=glob.glob('fortran-installer/*')[0])
+            installer_path=glob.glob(path.join('fortran-installer', '*'))[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(path.join(prefix,
-                                     'compiler/latest/linux/bin/intel64/ifort')):
+        if not path.isfile(path.join(prefix, 'compiler', 'latest', 'linux', 'bin', 'intel64', 'ifort')):
             raise RuntimeError('install failed')
 
         # set rpath so 'spack compiler add' can check version strings
         # without setting LD_LIBRARY_PATH
         rpath = ':'.join(self._ld_library_path())
-        patch_dirs = ['compiler/lib/intel64_lin',
-                      'compiler/lib/intel64',
+        patch_dirs = [path.join('compiler', 'lib', 'intel64_lin'),
+                      path.join('compiler', 'lib', 'intel64'),
                       'bin']
         for pd in patch_dirs:
             patchables = glob.glob(self._join_prefix(path.join(pd, '*')))
-            patchables.append(self._join_prefix('lib/icx-lto.so'))
+            patchables.append(self._join_prefix(path.join('lib', 'icx-lto.so')))
             for file in patchables:
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched

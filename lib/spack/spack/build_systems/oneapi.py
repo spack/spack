@@ -24,7 +24,15 @@ class IntelOneApiPackage(Package):
 
     phases = ['install']
 
+    # oneAPI license does not allow mirroring outside of the
+    # organization (e.g. University/Company).
+    redistribute_source = False
+    
     def component_info(self, dir_name):
+        """Define the expected installation directory. After the install script runs,
+           IntelOneApiPackage will look for this directory to make sure the install
+           was successful.
+        """
         self._dir_name = dir_name
 
     def install(self, spec, prefix, installer_path=None):
