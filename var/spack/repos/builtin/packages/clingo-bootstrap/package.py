@@ -9,6 +9,9 @@ import spack.compilers
 
 class ClingoBootstrap(Clingo):
     """Clingo with some options used for bootstrapping"""
+
+    maintainers = ['alalazo']
+
     variant('build_type', default='Release', values=('Release',),
             description='CMake build type')
 
@@ -40,6 +43,16 @@ class ClingoBootstrap(Clingo):
 
     # Clingo needs the Python module to be usable by Spack
     conflicts('~python', msg='Python support is required to bootstrap Spack')
+
+    def cmake_args(self):
+        args = super(ClingoBootstrap, self).cmake_args()
+        args.extend([
+            # Avoid building the clingo executable
+            self.define('CLINGO_BUILD_APPS', 'OFF'),
+            # Do not link to libpython
+            self.define('PYCLINGO_DYNAMIC_LOOKUP', 'ON')
+        ])
+        return args
 
     def setup_build_environment(self, env):
         if '%apple-clang platform=darwin' in self.spec:
