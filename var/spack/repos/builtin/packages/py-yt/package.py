@@ -19,6 +19,8 @@ class PyYt(PythonPackage):
     url      = "https://github.com/yt-project/yt/archive/yt-3.5.0.tar.gz"
     git      = "https://github.com/yt-project/yt.git"
 
+    maintainers = ['qobilidop']
+
     version("develop", branch="master")
     version("develop-4.0", branch="yt-4.0")
 
