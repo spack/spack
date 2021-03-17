@@ -134,15 +134,10 @@ class Slepc(Package):
         # set up SLEPC_DIR for everyone using SLEPc package
         env.set('SLEPC_DIR', self.prefix)
 
-    @run_after('install')
-    def cache_test_source(self):
-        #Copy build test files from ??
+    def  run_pep_test11(self):
+        """Run smoke test: pep test11"""
+        tets_dir = self.prefix.pep.tests
 
-    def hello_test(self):
-        """Copy the build test files after the package is installed to an
-        install test subdirectory for use during `spack test run`."""
-
-        # Find test
-        # Compile test
-        # Run test
-        # Compare output
+    def test(self):
+        print("Kayla")
+        print(self.prefix.pep.tests)
