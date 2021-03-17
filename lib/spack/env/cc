@@ -284,7 +284,7 @@ while [ -n "$1" ]; do
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
-	    isystem_was_used=true
+            isystem_was_used=true
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if system_dir "$arg"; then
                 isystem_system_includes+=("$arg")
