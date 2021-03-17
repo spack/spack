@@ -20,6 +20,7 @@ class PyScikitImage(PythonPackage):
     extends('python', ignore=r'bin/.*\.py$')
 
     depends_on('python@3.6:', when='@0.16.1:')
+    depends_on('py-setuptools', type='build')
     depends_on('py-cython@0.23.4:', type='build')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.14.1:', type=('build', 'run'), when='@0.16.1:')
