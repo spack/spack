@@ -51,6 +51,12 @@ class FluxSched(AutotoolsPackage):
     depends_on("automake", type='build', when='@master')
     depends_on("libtool", type='build', when='@master')
 
+    # adding Dong's patch (Mar 16, 2021)
+    version('0.11.0.mummifixmar162021', 
+            url='https://github.com/flux-framework/flux-sched/releases/download/v0.11.0/flux-sched-0.11.0.tar.gz',
+            sha256='6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336')
+    patch('first_match_feasibility', when='@0.11.0.mummifixmar162021')
+
     def url_for_version(self, version):
         '''
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract

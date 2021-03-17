@@ -1,0 +1,32 @@
+diff --git a/resource/traversers/dfu_impl.cpp b/resource/traversers/dfu_impl.cpp
+index c029597b..0e27fdcd 100644
+--- a/resource/traversers/dfu_impl.cpp
++++ b/resource/traversers/dfu_impl.cpp
+@@ -383,6 +383,7 @@ int dfu_impl_t::prime_exp (const subsystem_t &subsystem, vtx_t u,
+     return rc;
+ }
+
++#include <iostream>
+ int dfu_impl_t::explore (const jobmeta_t &meta, vtx_t u,
+                          const subsystem_t &subsystem,
+                          const std::vector<Resource> &resources, bool pristine,
+@@ -414,6 +415,20 @@ int dfu_impl_t::explore (const jobmeta_t &meta, vtx_t u,
+             egrp.edges.push_back (ev_edg);
+             dfu.add (subsystem, (*m_graph)[tgt].type, egrp);
+             rc2 = 0;
++            bool first_match = true;
++            for (auto &resource : resources) {
++                std::cout << "JOBSPEC: " << resource.type << ": count=" << resource.count.min << std::endl;
++                std::cout << "Found: " << dfu.total_count (subsystem, resource.type) << std::endl;
++               if (resource.count.min <= dfu.total_count (subsystem, resource.type)) {
++                   first_match = true && first_match;
++               } else {
++                    first_match = false && first_match;
++                }
++            }
++           if (first_match) {
++                std::cout << "First match detected ... breaking" << std::endl;
++                break;
++            }
+         }
+     }
