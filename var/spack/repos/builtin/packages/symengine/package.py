@@ -10,9 +10,10 @@ import sys
 class Symengine(CMakePackage):
     """SymEngine is a fast symbolic manipulation library, written in C++."""
 
-    homepage = "https://github.com/symengine/symengine"
+    homepage = "https://symengine.org"
     url      = "https://github.com/symengine/symengine/archive/v0.2.0.tar.gz"
     git      = "https://github.com/symengine/symengine.git"
+    maintainers = ['HaoZeke']
 
     version('master', branch='master')
     version('0.7.0', sha256='8b865bb72b71539d9cd2488a0468c6c3ea90cc606062a7880c3ff5af6abd74b1')
