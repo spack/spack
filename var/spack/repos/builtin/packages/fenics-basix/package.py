@@ -16,7 +16,7 @@ class FenicsBasix(CMakePackage):
     version("main", branch="main")
 
     depends_on("cmake@3.16:", type="build")
-    depends_on("eigen@3.3.7:")
+    depends_on("xtensor", type="build")
     depends_on("blas")
 
 
