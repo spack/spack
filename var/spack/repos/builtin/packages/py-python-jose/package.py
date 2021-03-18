@@ -19,4 +19,4 @@ class PyPythonJose(PythonPackage):
 
     depends_on('py-six', type='run')
     depends_on('py-rsa', type='run')
-    depends_on('py-ecdsa', type='run')
+    depends_on('py-ecdsa@:0.14.999', type='run')
