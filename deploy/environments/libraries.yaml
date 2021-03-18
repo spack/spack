@@ -43,8 +43,8 @@ spack:
     - mvdtool+mpi
     - neuron+mpi~debug%intel
     - nlohmann-json +single_header
-    - omega-h+trilinos@9.33.0.dev1
-    - omega-h+gmsh+trilinos@9.33.0.dev1
+    - omega-h+trilinos
+    - omega-h+gmsh+trilinos
     - openscenegraph build_type=Release
     - parmetis
     - petsc~int64+mpi
