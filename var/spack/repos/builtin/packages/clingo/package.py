@@ -56,8 +56,13 @@ class Clingo(CMakePackage):
         """Return standard CMake defines to ensure that the
         current spec is the one found by CMake find_package(Python, ...)
         """
+        python_spec = self.spec['python']
+        library_dir = python_spec.package.get_python_lib()
+        include_dir = python_spec.package.get_python_inc()
         return [
-            '-DPython_EXECUTABLE={0}'.format(str(self.spec['python'].command))
+            self.define('Python_EXECUTABLE', str(python_spec.command)),
+            self.define('Python_LIBRARY', library_dir),
+            self.define('Python_INCLUDE_DIR', include_dir)
         ]
 
     def cmake_args(self):
