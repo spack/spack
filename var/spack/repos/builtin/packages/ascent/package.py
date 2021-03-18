@@ -85,12 +85,20 @@ class Ascent(Package, CudaPackage):
     # use cmake 3.14, newest that provides proper cuda support
     # and we have seen errors with cuda in 3.15
     depends_on("cmake@3.14.1:3.14.99", type='build')
+
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
     depends_on("conduit~python~mpi", when="~python~mpi")
     depends_on("conduit+python~mpi", when="+python+shared~mpi")
     depends_on("conduit~shared~python~mpi", when="~shared~mpi")
+
+    depends_on("conduit@0.6:~python", when="@0.6:~python")
+    depends_on("conduit@0.6:+python", when="@0.6:+python+shared")
+    depends_on("conduit@0.6:~shared~python", when="@0.6:~shared")
+    depends_on("conduit@0.6:~python~mpi", when="@0.6:~python~mpi")
+    depends_on("conduit@0.6:+python~mpi", when="@0.6:+python+shared~mpi")
+    depends_on("conduit@0.6:~shared~python~mpi", when="@0.6:~shared~mpi")
 
     #######################
     # Python
