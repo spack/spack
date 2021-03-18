@@ -1,7 +1,7 @@
---- WRF-4.2/arch/configure.defaults	2020-04-23 22:38:37.000000000 +0530
-+++ WRF-4.2/arch/configure_42_aocc22.defaults	2020-12-28 08:22:49.253214150 +0530
-@@ -1975,6 +1975,51 @@
-                      $(WRF_SRC_ROOT_DIR)/frame/pack_utils.o
+--- WRF-3.9.1.1/arch/configure_new.defaults	2021-03-10 10:08:07.885236847 +0530
++++ WRF-3.9.1.1/arch/configure_new_aocc.defaults	2021-03-13 18:30:42.191344515 +0530
+@@ -1917,6 +1917,50 @@
+ CC_TOOLS        =      $(SCC) 
  
  #insert new stanza here
 +#############################################################
@@ -17,29 +17,28 @@
 +CCOMP           =       clang
 +DM_FC           =       mpif90 -DMPI2_SUPPORT
 +DM_CC           =       mpicc -DMPI2_SUPPORT
-+FC              =       time $(DM_FC)
++FC              =       $(DM_FC)
 +CC              =       $(DM_CC) -DFSEEKO64_OK
 +LD              =       $(FC)
 +RWORDSIZE       =       $(NATIVE_RWORDSIZE)
 +PROMOTION       =
 +ARCH_LOCAL      =       -DNONSTANDARD_SYSTEM_SUBR -DWRF_USE_CLM
-+LIBMVEC         =       -mllvm -vector-library=LIBMVEC
-+AMDARCHOPT      =       -march=native
-+AOCCOPT         =       -O3 -m64 -Ofast -ffast-math -g $(AMDARCHOPT)
++LIBMVEC         =       -mllvm -vector-library=LIBMVEC-X86 -mllvm -enable-boscc -Mstack_arrays
++AOCCOPT         =       -O3 -m64 -Ofast -ffast-math
 +CFLAGS_LOCAL    =       -w $(AOCCOPT)
 +LDFLAGS_LOCAL   =       -lm -ltirpc -lamdlibm  -ljemalloc -lmvec $(AOCCOPT)
 +CPLUSPLUSLIB    =
 +ESMF_LDFLAG     =       $(CPLUSPLUSLIB)
 +FCOPTIM         =       $(AOCCOPT) -fopenmp
 +FCREDUCEDOPT    =       -O2 -Ofast -ffast-math
-+FCNOOPT         =       -O0 -ffast-math
++FCNOOPT         =       -O0 -DFCNOOPT -fopenmp
 +FCDEBUG         =       #-g
 +FORMAT_FIXED    =       -Mfixed
 +FORMAT_FREE     =       -Mfreeform
 +FCSUFFIX        =
 +BYTESWAPIO      =       -Mbyteswapio
-+FCBASEOPTS_NO_G =       -w $(FORMAT_FREE) $(BYTESWAPIO) -ffast-math
-+FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG)
++FCBASEOPTS_NO_G =       $(FORMAT_FREE) $(BYTESWAPIO) -fopenmp
++FCBASEOPTS      =       $(FCBASEOPTS_NO_G) $(FCDEBUG) -DBASEOPTS -fopenmp
 +MODULE_SRCH_FLAG =
 +TRADFLAG        =       -traditional
 +CPP             =       /lib/cpp -P

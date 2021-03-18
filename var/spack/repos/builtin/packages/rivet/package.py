@@ -155,16 +155,15 @@ class Rivet(AutotoolsPackage):
         fjcontrib_home = self.spec['fjcontrib'].prefix
         env.prepend_path('LD_LIBRARY_PATH', fjcontrib_home.lib)
 
-    @when('@3.1.2:')
     def flag_handler(self, name, flags):
-        if name == 'cxxflags':
+        if self.spec.satisfies('@3.1.2:') and name == 'cxxflags':
             flags.append('-faligned-new')
             return (None, None, flags)
         return (flags, None, None)
 
     def configure_args(self):
         args = []
-        if self.spec.variants['hepmc'] == '2':
+        if self.spec.variants['hepmc'].value == '2':
             args += ['--with-hepmc=' + self.spec['hepmc'].prefix]
         else:
             args += ['--with-hepmc3=' + self.spec['hepmc'].prefix]

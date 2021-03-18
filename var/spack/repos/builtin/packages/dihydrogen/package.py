@@ -23,6 +23,8 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('0.2.1', sha256='11e2c0f8a94ffa22e816deff0357dde6f82cc8eac21b587c800a346afb5c49ac')
+    version('0.2.0', sha256='e1f597e80f93cf49a0cb2dbc079a1f348641178c49558b28438963bd4a0bdaa4')
     version('0.1', sha256='171d4b8adda1e501c38177ec966e6f11f8980bf71345e5f6d87d0a988fef4c4e')
 
     variant('al', default=True,
@@ -73,7 +75,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     # Specify the correct version of Aluminum
     depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+    depends_on('aluminum@0.5.0:', when='@:0.0,0.2: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
@@ -151,6 +153,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
             '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
+            '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
             '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+distconv' in spec),
             '-DH2_ENABLE_OPENMP=%s' % ('+openmp' in spec),

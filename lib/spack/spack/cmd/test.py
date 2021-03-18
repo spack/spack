@@ -7,6 +7,7 @@ from __future__ import print_function
 import os
 import argparse
 import textwrap
+import inspect
 import fnmatch
 import re
 import shutil
@@ -194,6 +195,9 @@ environment variables:
 
 
 def has_test_method(pkg):
+    if not inspect.isclass(pkg):
+        tty.die('{0}: is not a class, it is {1}'.format(pkg, type(pkg)))
+
     pkg_base = spack.package.PackageBase
     return (
         (issubclass(pkg, pkg_base) and pkg.test != pkg_base.test) or
@@ -220,7 +224,7 @@ def test_list(args):
     hashes = env.all_hashes() if env else None
 
     specs = spack.store.db.query(hashes=hashes)
-    specs = list(filter(lambda s: has_test_method(s.package), specs))
+    specs = list(filter(lambda s: has_test_method(s.package_class), specs))
 
     spack.cmd.display_specs(specs, long=True)
 

@@ -107,6 +107,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
     depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-tqdm', type='run')
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')
