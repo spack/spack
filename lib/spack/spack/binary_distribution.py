@@ -169,8 +169,6 @@ class BinaryCacheIndex(si.SpecIndexable):
 
     def spec_index_lookup(self, hash_prefix):
         # type: (si.PartialHash) -> Iterator[si.IndexEntry]
-        # TODO: generate some sort of trie mapping when `self.update()` is called, to
-        # avoid iterating over every entry here.
         for _url, db in self._mirror_dbs():
             for entry in db.spec_index_lookup(hash_prefix):
                 yield entry
@@ -235,6 +233,8 @@ class BinaryCacheIndex(si.SpecIndexable):
         for url in configured_mirror_urls:
             try:
                 fresh_hash = fetch_index_hash(url)
+                # NB: self.fetch_mirror_database() is @memoized, so we can simply drop
+                # this value.
                 _ = self.fetch_mirror_database(url, fresh_hash)
             except WebFailure as e:
                 tty.warn(e)

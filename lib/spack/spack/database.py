@@ -1405,7 +1405,8 @@ class Database(si.SpecIndexable):
             (list): a list of specs matching the hash or hash prefix
 
         """
-
+        # TODO: generate some sort of trie mapping to avoid iterating over every
+        # entry here.
         spec = self.get_by_hash_local(
             dag_hash, default=default, installed=installed)
         if spec is not None:

@@ -616,7 +616,7 @@ def generate_gitlab_ci_yaml(env, print_summary, output_file, prune_dag=False,
 
     # Speed up staging by first fetching binary indices from all mirrors
     # (including the per-PR mirror we may have just added above).
-    bindist.binary_index.update()
+    bindist.binary_index.refresh_mirrors()
 
     staged_phases = {}
     try:
