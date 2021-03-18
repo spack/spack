@@ -268,9 +268,6 @@ class Conduit(CMakePackage):
         """
         if not os.path.isdir(spec.prefix):
             os.mkdir(spec.prefix)
-        py_site_pkgs_dir = None
-        if "+python" in spec:
-            py_site_pkgs_dir = site_packages_dir
 
         #######################
         # Compiler Info
@@ -425,10 +422,6 @@ class Conduit(CMakePackage):
             cfg.write("# python from spack \n")
             cfg.write(cmake_cache_entry("PYTHON_EXECUTABLE",
                       spec['python'].command.path))
-            # only set dest python site packages dir if passed
-            if py_site_pkgs_dir:
-                cfg.write(cmake_cache_entry("PYTHON_MODULE_INSTALL_PREFIX",
-                                            py_site_pkgs_dir))
         else:
             cfg.write(cmake_cache_entry("ENABLE_PYTHON", "OFF"))
 
