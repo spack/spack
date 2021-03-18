@@ -502,9 +502,9 @@ for dir in "${isystem_includes[@]}";         do args+=("-isystem" "$dir"); done
 IFS=':' read -ra spack_include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
     if [[ "$isystem_was_used" == "true" ]] ; then
-	for dir in "${spack_include_dirs[@]}";  do args+=("-isystem" "$dir"); done
+        for dir in "${spack_include_dirs[@]}";  do args+=("-isystem" "$dir"); done
     else
-	for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+        for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
     fi
 fi
 
