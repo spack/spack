@@ -632,7 +632,6 @@ class PackageInstaller(object):
         Return:
             (PackageInstaller) instance
         """
-
         # List of build requests
         self.build_requests = [BuildRequest(pkg, install_args)
                                for pkg, install_args in installs]
@@ -1416,7 +1415,6 @@ class PackageInstaller(object):
             pkg (Package): the package to be built and installed"""
 
         self._init_queue()
-
         fail_fast_err = 'Terminating after first install failure'
         single_explicit_spec = len(self.build_requests) == 1
         failed_explicits = []
@@ -1427,10 +1425,7 @@ class PackageInstaller(object):
             if task is None:
                 continue
 
-            # Each build task is a new build in the database
-            # pre_build_task?
             spack.hooks.on_install_start(task.request.pkg.spec)
-
             install_args = task.request.install_args
             keep_prefix = install_args.get('keep_prefix')
 
@@ -1444,7 +1439,6 @@ class PackageInstaller(object):
             # dependencies handling).  So terminate under the assumption that
             # all subsequent tasks will have non-zero priorities or may be
             # dependencies of this task.
-
             if task.priority != 0:
                 tty.error('Detected uninstalled dependencies for {0}: {1}'
                           .format(pkg_id, task.uninstalled_deps))
@@ -1649,8 +1643,6 @@ class PackageInstaller(object):
             # include downgrading the write to a read lock
             self._cleanup_task(pkg)
 
-        # Finish logging the task?
-
         # Cleanup, which includes releasing all of the read locks
         self._cleanup_all_tasks()
 
@@ -1710,7 +1702,6 @@ def build_process(pkg, kwargs):
     pkg.stage.keep = keep_stage
 
     with pkg.stage:
-
         # Run the pre-install hook in the child process after
         # the directory is created.
         spack.hooks.pre_install(pkg.spec)

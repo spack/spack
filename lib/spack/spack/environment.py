@@ -1478,7 +1478,6 @@ class Environment(object):
         """
         from spack.installer import PackageInstaller
         tty.debug('Assessing installation status of environment packages')
-
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
@@ -1510,11 +1509,6 @@ class Environment(object):
 
         try:
             builder = PackageInstaller(installs)
-
-            # If the user has requested a monitor client, attach to builder
-            if install_args.get('use_monitor', False):
-                builder.init_monitor_client(install_args)
-
             builder.install()
         finally:
             # Ensure links are set appropriately
