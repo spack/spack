@@ -24,6 +24,6 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
 
     depends_on('intel-oneapi-tbb')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='dal',)
-        super(IntelOneapiDal, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'dal'

@@ -22,6 +22,6 @@ class IntelOneapiIppcp(IntelOneApiLibraryPackage):
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17415/l_ippcp_oneapi_p_2021.1.1.54_offline.sh',
                 expand=False)
 
-    def __init__(self, spec):
-        self.component_info(dir_name='ippcp')
-        super(IntelOneapiIppcp, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'ippcp'

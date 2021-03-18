@@ -27,13 +27,11 @@ class IntelOneApiPackage(Package):
     # oneAPI license does not allow mirroring outside of the
     # organization (e.g. University/Company).
     redistribute_source = False
-    
-    def component_info(self, dir_name):
-        """Define the expected installation directory. After the install script runs,
-           IntelOneApiPackage will look for this directory to make sure the install
-           was successful.
-        """
-        self._dir_name = dir_name
+
+    @property
+    def component_dir(self):
+        """Subdirectory for this component in the install prefix."""
+        raise NotImplementedError
 
     def install(self, spec, prefix, installer_path=None):
         """Shared install method for all oneapi packages."""
@@ -55,7 +53,7 @@ class IntelOneApiPackage(Package):
                  '--install-dir', prefix)
 
         # Some installers have a bug and do not return an error code when failing
-        if not isdir(join(prefix, self._dir_name)):
+        if not isdir(join(prefix, self.component_dir)):
             raise RuntimeError('install failed')
 
     def setup_run_environment(self, env):
@@ -69,7 +67,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/setvars.sh --force
         """
         env.extend(EnvironmentModifications.from_sourcing_file(
-            join(self.prefix, self._dir_name, 'latest/env/vars.sh')))
+            join(self.prefix, self.component_dir, 'latest/env/vars.sh')))
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
@@ -78,11 +76,11 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
     @property
     def headers(self):
         include_path = '%s/%s/latest/include' % (
-            self.prefix, self._dir_name)
+            self.prefix, self.component_dir)
         return find_headers('*', include_path, recursive=True)
 
     @property
     def libs(self):
-        lib_path = '%s/%s/latest/lib/intel64' % (self.prefix, self._dir_name)
+        lib_path = '%s/%s/latest/lib/intel64' % (self.prefix, self.component_dir)
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
         return find_libraries('*', root=lib_path, shared=True, recursive=True)

@@ -25,6 +25,6 @@ class IntelOneapiIpp(IntelOneApiLibraryPackage):
 
     provides('ipp')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='ipp')
-        super(IntelOneapiIpp, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'ipp'

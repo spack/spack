@@ -23,6 +23,6 @@ class IntelOneapiCcl(IntelOneApiLibraryPackage):
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17391/l_oneapi_ccl_p_2021.1.1.54_offline.sh',
                 expand=False)
 
-    def __init__(self, spec):
-        self.component_info(dir_name='ccl',)
-        super(IntelOneapiCcl, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'ccl'

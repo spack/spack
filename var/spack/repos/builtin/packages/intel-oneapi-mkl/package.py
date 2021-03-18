@@ -30,6 +30,6 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides('lapack')
     provides('blas')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='mkl')
-        super(IntelOneapiMkl, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'mkl'

@@ -32,9 +32,9 @@ class IntelOneapiCompilers(IntelOneApiPackage):
                  placement='fortran-installer',
                  when='@2021.1.2')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='compiler')
-        super(IntelOneapiCompilers, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'compiler'
 
     def _join_prefix(self, p):
         return path.join(self.prefix, 'compiler', 'latest', 'linux', p)
@@ -63,7 +63,8 @@ class IntelOneapiCompilers(IntelOneApiPackage):
             installer_path=glob.glob(path.join('fortran-installer', '*'))[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(path.join(prefix, 'compiler', 'latest', 'linux', 'bin', 'intel64', 'ifort')):
+        if not path.isfile(path.join(prefix, 'compiler', 'latest', 'linux',
+                                     'bin', 'intel64', 'ifort')):
             raise RuntimeError('install failed')
 
         # set rpath so 'spack compiler add' can check version strings

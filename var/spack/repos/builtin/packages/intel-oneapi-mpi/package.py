@@ -4,9 +4,10 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
+from os import path
+import subprocess
 from sys import platform
 
-import subprocess
 
 from spack import *
 
@@ -28,9 +29,9 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
 
     depends_on('patchelf', type='build')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='mpi')
-        super(IntelOneapiMpi, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'mpi'
 
     def setup_dependent_package(self, module, dep_spec):
         dir = join_path(self.prefix, 'mpi', 'latest', 'bin')
@@ -49,8 +50,10 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     @property
     def libs(self):
         libs = []
-        for dir in ['lib/release_mt', 'lib', 'libfabric/lib']:
-            lib_path = '{0}/{1}/latest/{2}'.format(self.prefix, self._dir_name, dir)
+        for dir in [path.join('lib', 'release_mt'),
+                    'lib',
+                    path.join('libfabric', 'lib')]:
+            lib_path = path.join(self.prefix, 'mpi', 'latest', dir)
             ldir = find_libraries('*', root=lib_path, shared=True, recursive=False)
             libs += ldir
         return libs
@@ -62,7 +65,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         super(IntelOneapiMpi, self).install(spec, prefix)
 
         # need to patch libmpi.so so it can always find libfabric
-        libfabric_rpath = self._join_prefix('libfabric/lib')
+        libfabric_rpath = self._join_prefix(path.join('libfabric', 'lib'))
         for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
-            file = self._join_prefix('lib/' + lib_version + '/libmpi.so')
+            file = self._join_prefix(path.join('lib', lib_version, 'libmpi.so'))
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])

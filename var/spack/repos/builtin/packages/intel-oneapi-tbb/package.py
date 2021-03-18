@@ -24,6 +24,6 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
 
     provides('tbb')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='tbb')
-        super(IntelOneapiTbb, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'tbb'

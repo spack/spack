@@ -21,6 +21,6 @@ class IntelOneapiVpl(IntelOneApiLibraryPackage):
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17418/l_oneVPL_p_2021.1.1.66_offline.sh',
                 expand=False)
 
-    def __init__(self, spec):
-        self.component_info(dir_name='vpl')
-        super(IntelOneapiVpl, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'vpl'
