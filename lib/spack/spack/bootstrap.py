@@ -5,6 +5,7 @@
 import contextlib
 import os
 import sys
+import sysconfig
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -20,17 +21,33 @@ import spack.util.executable
 from spack.util.environment import EnvironmentModifications
 
 
+def spec_for_current_python():
+    """For bootstrapping purposes we are just interested in the Python
+    minor version (all patches are ABI compatible with the same minor)
+    and on whether ucs4 support has been enabled for Python 2.7
+
+    See:
+      https://www.python.org/dev/peps/pep-0513/
+      https://stackoverflow.com/a/35801395/771663
+    """
+    version_str = '.'.join(str(x) for x in sys.version_info[:2])
+    variant_str = ''
+    if sys.version_info[0] == 2:
+        unicode_size = sysconfig.get_config_var('Py_UNICODE_SIZE')
+        variant_str = '+ucs4' if unicode_size == 4 else '~ucs4'
+
+    spec_fmt = 'python@{0} {1}'
+    return spec_fmt.format(version_str, variant_str)
+
+
 @contextlib.contextmanager
 def spack_python_interpreter():
     """Override the current configuration to set the interpreter under
     which Spack is currently running as the only Python external spec
     available.
     """
-    python_cls = type(spack.spec.Spec('python').package)
     python_prefix = os.path.dirname(os.path.dirname(sys.executable))
-    externals = python_cls.determine_spec_details(
-        python_prefix, [os.path.basename(sys.executable)])
-    external_python = externals[0]
+    external_python = spec_for_current_python()
 
     entry = {
         'buildable': False,
