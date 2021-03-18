@@ -7,7 +7,7 @@ from spack import *
 
 
 class Xyce(CMakePackage):
-    """Xyce (zīs, rhymes with “spice”) is an open source, SPICE-compatible,
+    """Xyce (rhymes with 'spice') is an open source, SPICE-compatible,
     high-performance analog circuit simulator, capable of solving extremely
     large circuit problems by supporting large-scale parallel computing
     platforms.
