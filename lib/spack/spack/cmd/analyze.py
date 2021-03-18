@@ -83,7 +83,7 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=Fals
         # Send the result. We do them separately because:
         # 1. each analyzer might have differently organized output
         # 2. the size of a result can be large
-        analyzer.save_result(result, monitor, overwrite)
+        analyzer.save_result(result, overwrite)
 
 
 def analyze(parser, args, **kwargs):
@@ -103,6 +103,7 @@ def analyze(parser, args, **kwargs):
     spec = spack.cmd.disambiguate_spec(specs[0], env)
 
     # The user wants to monitor builds using github.com/spack/spack-monitor
+    # It is instantianted once here, and then available at spack.monitor.cli
     monitor = None
     if args.use_monitor:
         monitor = spack.monitor.get_client(

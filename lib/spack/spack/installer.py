@@ -413,6 +413,20 @@ def clear_failures():
     spack.store.db.clear_all_failures()
 
 
+def combine_phase_logs(pkg):
+    """
+    Each phase will produce it's own log, so this function aims to cat all the
+    separate phase log output files into the pkg.log_path.
+    Args:
+        pkg (Package): the package that was built and installed
+    """
+    log_files = pkg.phase_log_files
+
+    with open(pkg.log_path, 'w') as fd:
+        for line in itertools.chain.from_iterable(list(map(open, log_files))):
+            fd.write(line)
+
+
 def dump_packages(spec, path):
     """
     Dump all package information for a spec and its dependencies.
@@ -579,21 +593,6 @@ def log(pkg):
     dump_packages(pkg.spec, packages_dir)
 
 
-def combine_phase_logs(pkg):
-    """
-    Each phase will produce it's own log, so this function aims to cat all the
-    separate phase log output files into the pkg.log_path.
-
-    Args:
-        pkg (Package): the package that was built and installed
-    """
-    log_files = pkg.phase_log_files
-
-    with open(pkg.log_path, 'w') as fd:
-        for line in itertools.chain.from_iterable(list(map(open, log_files))):
-            fd.write(line)
-
-
 def package_id(pkg):
     """A "unique" package identifier for installation purposes
 
@@ -663,9 +662,6 @@ class PackageInstaller(object):
         # fast then that option applies to all build requests.
         self.fail_fast = False
 
-        # A Monitor client will interact with a monitor server at each step
-        self.monitor = None
-
     def __repr__(self):
         """Returns a formal representation of the package installer."""
         rep = '{0}('.format(self.__class__.__name__)
@@ -682,16 +678,6 @@ class PackageInstaller(object):
             len(self.installed), self.installed)
         return '{0}: {1}; {2}; {3}; {4}'.format(
             self.pid, requests, tasks, installed, failed)
-
-    def add_monitor_client(self, args):
-        """Given that the args.use_monitor is true, instantiate a client
-        """
-        if args.use_monitor:
-            self.monitor = spack.monitor.get_client(
-                host=args.monitor_host,
-                prefix=args.monitor_prefix,
-                disable_auth=args.monitor_disable_auth
-            )
 
     def _add_bootstrap_compilers(
             self, compiler, architecture, pkgs, request, all_deps):
@@ -1422,14 +1408,6 @@ class PackageInstaller(object):
                 for dependent_id in dependents.difference(task.dependents):
                     task.add_dependent(dependent_id)
 
-    def _send_task_failure(self, spec):
-        """Given that we have a spack monitor enabled, ping the server that
-        the task (spec) has failed. This is different from a phase fail in that
-        we typically don't even get to any phases.
-        """
-        if self.monitor:
-            self.monitor.fail_task(spec)
-
     def install(self):
         """
         Install the requested package(s) and or associated dependencies.
@@ -1450,9 +1428,8 @@ class PackageInstaller(object):
                 continue
 
             # Each build task is a new build in the database
-            if self.monitor:
-                result = self.monitor.new_build(task.pkg.spec)
-                tty.verbose(result.get('message'))
+            # pre_build_task?
+            spack.hooks.on_install_start(task.request.pkg.spec)
 
             install_args = task.request.install_args
             keep_prefix = install_args.get('keep_prefix')
@@ -1478,12 +1455,8 @@ class PackageInstaller(object):
                              ' left'.format(pkg_id))
                 dep_str = 'dependencies' if task.priority > 1 else 'dependency'
 
-                # Update the endpoint to indicate the failure (cancel)
-                # Here we do not consider fail fast, as an error is raised.
-                # TODO: this currently marks the main task as failed -
-                # in the future we want the main task to be cancelled,
-                # and the task that failed marked as failed.
-                self._send_task_failure(task.request.pkg.spec)
+                # Hook to indicate task failure, but without an exception
+                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 raise InstallError(
                     'Cannot proceed with {0}: {1} uninstalled {2}: {3}'
@@ -1507,7 +1480,7 @@ class PackageInstaller(object):
                 # Mark that the package failed
                 # TODO: this should also be for the task.pkg, but we don't
                 # model transitive yet.
-                self._send_task_failure(task.request.pkg.spec)
+                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 if self.fail_fast:
                     raise InstallError(fail_fast_err)
@@ -1618,7 +1591,7 @@ class PackageInstaller(object):
                 # Only terminate at this point if a single build request was
                 # made.
                 if task.explicit and single_explicit_spec:
-                    self._send_task_failure(task.request.pkg.spec)
+                    spack.hooks.on_install_failure(task.request.pkg.spec)
                     raise
 
                 if task.explicit:
@@ -1630,12 +1603,12 @@ class PackageInstaller(object):
                 err = 'Failed to install {0} due to {1}: {2}'
                 tty.error(err.format(pkg.name, exc.__class__.__name__,
                           str(exc)))
-                self._send_task_failure(task.request.pkg.spec)
+                spack.hooks.on_install_failure(task.request.pkg.spec)
                 raise
 
             except (Exception, SystemExit) as exc:
                 self._update_failed(task, True, exc)
-                self._send_task_failure(task.request.pkg.spec)
+                spack.hooks.on_install_failure(task.request.pkg.spec)
 
                 # Best effort installs suppress the exception and mark the
                 # package as a failure.
@@ -1714,16 +1687,6 @@ def build_process(pkg, kwargs):
     skip_patch = kwargs.get('skip_patch', False)
     unmodified_env = kwargs.get('unmodified_env', {})
     verbose = kwargs.get('verbose', False)
-    use_monitor = kwargs.get('use_monitor', False)
-    monitor = None
-
-    # Instantiate a monitor for the worker, if requested
-    if use_monitor:
-        monitor = spack.monitor.get_client(
-            host=kwargs.get("monitor_host"),
-            prefix=kwargs.get("monitor_prefix"),
-            disable_auth=kwargs.get("monitor_disable_auth")
-        )
 
     start_time = time.time()
     if not fake:
@@ -1814,13 +1777,11 @@ def build_process(pkg, kwargs):
                         # Catch any errors to report to logging
                         try:
                             phase(pkg.spec, pkg.prefix)
-                            if monitor:
-                                monitor.send_phase(pkg, phase_name, log_file, "SUCCESS")
+                            spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
                         except Exception:
                             combine_phase_logs(pkg)
-                            if monitor:
-                                monitor.send_phase(pkg, phase_name, log_file, "ERROR")
+                            spack.hooks.on_phase_error(pkg, phase_name, log_file)
                             raise
 
                     # We assume loggers share echo True/False
@@ -1844,8 +1805,7 @@ def build_process(pkg, kwargs):
     _print_installed_pkg(pkg.prefix)
 
     # Send final status that install is successful
-    if monitor:
-        monitor.update_build(pkg.spec, status="SUCCESS")
+    spack.hooks.on_install_success(pkg.spec)
 
     # preserve verbosity across runs
     return echo

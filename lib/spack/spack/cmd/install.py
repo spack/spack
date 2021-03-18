@@ -213,7 +213,6 @@ def install_specs(cli_args, kwargs, specs):
         else:
             installs = [(concrete.package, kwargs) for _, concrete in specs]
             builder = PackageInstaller(installs)
-            builder.add_monitor_client(cli_args)
             builder.install()
     except spack.build_environment.InstallError as e:
         if cli_args.show_log_on_error:

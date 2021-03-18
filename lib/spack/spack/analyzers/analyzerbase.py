@@ -8,6 +8,7 @@ and (optionally) interact with a Spack Monitor
 """
 
 import spack.monitor
+import spack.hooks
 import llnl.util.tty as tty
 import spack.util.path
 import spack.config
@@ -100,5 +101,5 @@ class Analyzerbase(object):
                 tty.info("Writing result to %s" % outfile)
                 spack.monitor.write_json(result[self.name], outfile)
 
-        if monitor:
-            monitor.send_analyze_metadata(self.spec.package, result)
+        # This hook runs after a save result
+        spack.hooks.on_analyzer_save(self.spec.package, result)

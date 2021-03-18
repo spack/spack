@@ -7,6 +7,8 @@
 import spack
 import spack.error
 import spack.bootstrap
+import spack.hooks
+import spack.monitor
 import spack.binary_distribution
 import spack.package
 import spack.repo
@@ -71,14 +73,14 @@ class Libabigail(Analyzerbase):
 
         return {self.name: result}
 
-    def save_result(self, result, monitor=None, overwrite=False):
+    def save_result(self, result, overwrite=False):
         """ABI results are saved to individual files, so each one needs to be
         read and uploaded. Result here should be the lookup generated in run(),
         the key is the analyzer name, and each value is the result file.
         We currently upload the entire xml as text because libabigail can't
         easily read gzipped xml, but this will be updated when it can.
         """
-        if not monitor:
+        if not spack.monitor.cli:
             return
 
         name = self.spec.package.name
@@ -94,4 +96,4 @@ class Libabigail(Analyzerbase):
             # A result needs an analyzer, value or binary_value, and name
             data = {"value": content, "install_file": rel_path, "name": "abidw-xml"}
             tty.info("Sending result for %s %s to monitor." % (name, rel_path))
-            monitor.send_analyze_metadata(self.spec.package, {"libabigail": [data]})
+            spack.hooks.on_analyzer_save(self.spec.package, {"libabigail": [data]})

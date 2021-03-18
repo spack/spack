@@ -110,6 +110,8 @@ spack analyze on libabigail (already installed) _using_ libabigail1
     $ spack analyze run --analyzer abigail libabigail
 
 
+.. _analyze_monitoring:
+
 ----------------------
 Monitoring An Analysis
 ----------------------

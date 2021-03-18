@@ -16,6 +16,13 @@ follow the instructions in the `spack monitor documentation <https://spack-monit
 to first create a server along with a username and token for yourself.
 You can then use this guide to interact with the server.
 
+-------------------
+Analysis Monitoring
+-------------------
+
+To read about how to monitor an analysis (meaning you want to send analysis results
+to a server) see :ref:`analyze_monitoring`.
+
 ---------------------
 Monitoring An Install
 ---------------------
@@ -79,7 +86,6 @@ flag.
 .. code-block:: console
 
     $ spack install --monitor --monitor-keep-going hdf5
-
 
 This could mean that if a request fails, you only have partial or no data
 added to your monitoring database. This setting will not be applied to the

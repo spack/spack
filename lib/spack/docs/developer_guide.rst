@@ -106,11 +106,21 @@ with a high level view of Spack's directory structure:
             external/      <- external libs included in Spack distro
             llnl/          <- some general-use libraries
 
-            spack/         <- spack module; contains Python code
-               cmd/        <- each file in here is a spack subcommand
-               compilers/  <- compiler description files
-               test/       <- unit test modules
-               util/       <- common code
+            spack/                <- spack module; contains Python code
+               analyzers/         <- modules to run analysis on installed packages
+               build_systems/     <- modules for different build systems 
+               cmd/               <- each file in here is a spack subcommand
+               compilers/         <- compiler description files          
+               container/         <- module for spack containerize
+               hooks/             <- hook modules to run at different points
+               modules/           <- modules for lmod, tcl, etc.
+               operating_systems/ <- operating system modules
+               platforms/         <- different spack platforms
+               reporters/         <- reporters like cdash, junit
+               schema/            <- schemas to validate data structures
+               solver/            <- the spack solver
+               test/              <- unit test modules
+               util/              <- common code
 
 Spack is designed so that it could live within a `standard UNIX
 directory hierarchy <http://linux.die.net/man/7/hier>`_, so ``lib``,
@@ -399,6 +409,8 @@ This means that the name and output file should be unique for your analyzer.
 Note that "all" cannot be the name of an analyzer, as this key is used to indicate
 that the user wants to run all analyzers.
 
+.. _analyzer_run_function:
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^
 An analyzer run Function
@@ -562,6 +574,182 @@ prevent this from happening.
 Whenever you add/remove/rename a command or flags for an existing command,
 make sure to update Spack's `Bash tab completion script
 <https://github.com/adamjstewart/spack/blob/develop/share/spack/spack-completion.bash>`_.
+
+
+-------------
+Writing Hooks
+-------------
+
+A hook is a callback that makes it easy to design functions that run
+for different events. We do this by way of defining hook types, and then
+inserting them at different places in the spack code base. Whenever a hook
+type triggers by way of a function call, we find all the hooks of that type,
+and run them.
+
+Spack defines hooks by way of a module at ``lib/spack/spack/hooks`` where we can define
+types of hooks in the ``__init__.py``, and then python files in that folder
+can use hook functions. The files are automatically parsed, so if you write
+a new file for some integration (e.g., ``lib/spack/spack/hooks/myintegration.py``
+you can then write hook functions in that file that will be automatically detected,
+and run whenever your hook is called. This section will cover the basic kind 
+of hooks, and how to write them.
+
+^^^^^^^^^^^^^^
+Types of Hooks
+^^^^^^^^^^^^^^
+
+The following hooks are currently implemented. If there is a hook that you
+would like and is missing, you can propose to add a new one.
+
+"""""""""""""""""""""
+``pre_install(spec)``
+"""""""""""""""""""""
+
+A ``pre_install`` hook is run within an install subprocess, directly before
+the install starts. It expects a single argument of a spec, and is run in 
+a multiprocessing subprocess. Note that if you see ``pre_install`` functions associated with packages these are not hooks
+as we have defined them here, but rather callback functions associated with 
+a package install.
+
+
+"""""""""""""""""""""
+``post_install(spec)``
+"""""""""""""""""""""
+
+A ``post_install`` hook is run within an install subprocess, directly after
+the install finishes, but before the build stage is removed. If you
+write one of these hooks, you should expect it to accept a spec as the only
+argument. This is run in a multiprocessing subprocess. This ``post_install`` is
+also seen in packages, but in this context not related to the hooks described
+here.
+
+
+""""""""""""""""""""""""""
+``on_install_start(spec)``
+""""""""""""""""""""""""""
+
+This hook is run at the beginning of ``lib/spack/spack/installer.py``,
+in the install function of a ``PackageInstaller``,
+and importantly is not part of a build process, but before it. This is when
+we have just newly grabbed the task, and are preparing to install. If you 
+write a hook of this type, you should provide the spec to it.
+
+.. code-block:: python
+
+    def on_install_start(spec):
+        """On start of an install, we want to...
+        """
+        print('on_install_start')
+    
+
+""""""""""""""""""""""""""""
+``on_install_success(spec)``
+""""""""""""""""""""""""""""
+
+This hook is run on a successful install, and is also run inside the build
+process, akin to ``post_install``. The main difference is that this hook
+is run outside of the context of the stage directory, meaning after the
+build stage has been removed and the user is alerted that the install was
+successful. If you need to write a hook that is run on success of a particular
+phase, you should use ``on_phase_success``.
+
+""""""""""""""""""""""""""""
+``on_install_failure(spec)``
+""""""""""""""""""""""""""""
+
+This hook is run given an install failure that happens outside of the build
+subprocess, but somewhere in ``installer.py`` when something else goes wrong.
+If you need to write a hook that is relevant to a failure within a build
+process, you would want to instead use ``on_phase_failure``.
+
+
+"""""""""""""""""""""""""""""""""""""""""""""""
+``on_phase_success(pkg, phase_name, log_file)``
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+This hook is run within the install subprocess, and specifically when a phase
+successfully finishes. Since we are interested in the package, the name of
+the phase, and any output from it, we require:
+
+ - **pkg**: the package variable, which also has the attached spec at ``pkg.spec``
+ - **phase_name**: the name of the phase that was successful (e.g., configure)
+ - **log_file**: the path to the file with output, in case you need to inspect or otherwise interact with it.
+
+"""""""""""""""""""""""""""""""""""""""""""""""
+``on_phase_error(pkg, phase_name, log_file)``
+"""""""""""""""""""""""""""""""""""""""""""""""
+
+In the case of an error during a phase, we might want to trigger some event
+with a hook, and this is the purpose of this particular hook. Akin to
+``on_phase_success`` we require the same variables - the package that failed,
+the name of the phase, and the log file where we might find errors.
+
+"""""""""""""""""""""""""""""""""
+``on_analyzer_save(pkg, result)``
+"""""""""""""""""""""""""""""""""
+
+After an analyzer has saved some result for a package, this hook is called,
+and it provides the package that we just ran the analysis for, along with
+the loaded result. Typically, a result is structured to have the name
+of the analyzer as key, and the result object that is defined in detail in
+:ref:`analyzer_run_function`.
+
+.. code-block:: python
+
+    def on_analyzer_save(pkg, result):
+        """given a package and a result...
+        """
+        print('Do something extra with a package analysis result here')
+
+
+^^^^^^^^^^^^^^^^^^^^^^
+Adding a New Hook Type
+^^^^^^^^^^^^^^^^^^^^^^
+
+Adding a new hook type is very simple!  In ``lib/spack/spack/hooks/__init__.py``
+you can simply create a new ``HookRunner`` that is named to match your new hook.
+For example, let's say I want to add a new hook called ``post_log_write``
+to trigger after anything is written to a logger. I would add it as follows:
+
+.. code-block:: python
+
+    # pre/post install and run by the install subprocess
+    pre_install = HookRunner('pre_install')
+    post_install = HookRunner('post_install')
+
+    # hooks related to logging
+    post_log_write = HookRunner('post_log_write') # <- here is my new hook! 
+    
+
+I would then need to decide what arguments my hook would expect. Since this is
+related to logging, let's say that we want a message and level. That means
+that when I add a python file to the ``lib/spack/spack/hooks``
+folder with one or more callbacks intended to be triggered by this hook. I might
+use my new hook as follows:
+
+.. code-block:: python
+
+    def post_log_write(message, level):
+        """Do something custom with the messsage and level every time we write
+        to the log
+        """
+        print('running post_log_write!')
+
+
+To use the hook, we would call it as follows somewhere in the logic to do logging.
+In this example, we use it outside of a logger that is already defined:
+
+.. code-block:: python
+
+    import spack.hooks
+
+    # We do something here to generate a logger and message
+    spack.hooks.post_log_write(message, logger.level)
+
+
+This is not to say that this would be the best way to implement an integration
+with the logger (you'd probably want to write a custom logger, or you could
+have the hook defined within the logger) but serves as an example of writing a hook. 
 
 ----------
 Unit tests

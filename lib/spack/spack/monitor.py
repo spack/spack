@@ -27,12 +27,23 @@ import llnl.util.tty as tty
 from copy import deepcopy
 
 
+# A global client to instantiate once
+cli = None
+
+
 def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
     """a common function to get a client for a particular host and prefix.
     If the client is not running, we exit early, unless allow_fail is set
     to true, indicating that we should continue the build even if the
-    server is not present.
+    server is not present. Note that this client is defined globally as "cli"
+    so we can istantiate it once (checking for credentials, etc.) and then
+    always have access to it via spack.monitor.cli. Also note that
+    typically, we call the monitor by way of hooks in spack.hooks.monitor.
+    So if you want the monitor to have a new interaction with some part of
+    the codebase, it's recommended to write a hook first, and then have
+    the monitor use it.
     """
+    global cli
     cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail)
 
     # If we don't disable auth, environment credentials are required

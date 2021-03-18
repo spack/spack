@@ -1645,7 +1645,8 @@ class Spec(object):
             package_hash = self.package.content_hash()
 
             # Full hashes are in bytes
-            if isinstance(package_hash, bytes):
+            if (not isinstance(package_hash, six.text_type)
+                and isinstance(package_hash, six.binary_type)):
                 package_hash = package_hash.decode('utf-8')
             d['package_hash'] = package_hash
 
