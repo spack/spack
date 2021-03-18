@@ -545,7 +545,10 @@ class Boost(Package):
 
         threading_opts = self.determine_b2_options(spec, b2_options)
 
-        b2('--clean')
+        if spec.satisfies('@:1.65'):
+            b2('--clean', *b2_options)
+        else:
+            b2('--clean')
 
         # In theory it could be done on one call but it fails on
         # Boost.MPI if the threading options are not separated.
