@@ -91,6 +91,11 @@ class Amrex(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('%apple-clang')
     conflicts('%clang')
 
+    # these versions of gcc have lambda function issues
+    # see https://github.com/spack/spack/issues/22310
+    conflicts('%gcc@8.1.0:8.3.0', when='@21.03')
+    conflicts('%gcc@8.1.0:8.2.0', when='@21.01:21.02')
+
     # Check options compatibility
     conflicts('+sundials', when='~fortran',
               msg='AMReX SUNDIALS support needs AMReX Fortran API (+fortran)')

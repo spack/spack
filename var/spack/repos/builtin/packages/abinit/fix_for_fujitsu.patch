@@ -1,6 +1,17 @@
-diff -uprN src/43_wvl_wrappers/m_abi2big.F90 src/43_wvl_wrappers/m_abi2big.F90
---- src/43_wvl_wrappers/m_abi2big.F90	2019-01-17 20:49:35.000000000 +0900
-+++ src/43_wvl_wrappers/m_abi2big.F90	2019-05-21 15:05:23.000000000 +0900
+diff -uprN spack-src.org/configure spack-src/configure
+--- spack-src.org/configure	2019-01-17 20:37:58.000000000 +0900
++++ spack-src/configure	2021-02-26 09:01:06.656123015 +0900
+@@ -14655,6 +14655,7 @@ $as_echo "$as_me:${as_lineno-$LINENO}: $
+ # gfortran 4.3 outputs lines setting COLLECT_GCC_OPTIONS, COMPILER_PATH,
+ # LIBRARY_PATH; skip all such settings.
+ ac_fc_v_output=`eval $ac_link 5>&1 2>&1 |
++  sed -r "s/(\-L)(\/[^ ]+)+(\/bin\/\.\.\/lib64\/nofjobj)//g" |
+   sed '/^Driving:/d; /^Configured with:/d;
+       '"/^[_$as_cr_Letters][_$as_cr_alnum]*=/d"`
+ $as_echo "$ac_fc_v_output" >&5
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_abi2big.F90 spack-src/src/43_wvl_wrappers/m_abi2big.F90
+--- spack-src.org/src/43_wvl_wrappers/m_abi2big.F90	2019-01-17 20:49:35.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_abi2big.F90	2021-02-26 09:01:06.657122997 +0900
 @@ -1333,10 +1333,10 @@ subroutine wvl_setngfft(me_wvl, mgfft, n
  
  !Arguments ------------------------------------
@@ -14,9 +25,9 @@ diff -uprN src/43_wvl_wrappers/m_abi2big.F90 src/43_wvl_wrappers/m_abi2big.F90
  
  !Local variables-------------------------------
  !scalars
-diff -uprN src/43_wvl_wrappers/m_wvl_denspot.F90 src/43_wvl_wrappers/m_wvl_denspot.F90
---- src/43_wvl_wrappers/m_wvl_denspot.F90	2019-01-17 20:49:32.000000000 +0900
-+++ src/43_wvl_wrappers/m_wvl_denspot.F90	2019-05-21 15:06:21.000000000 +0900
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_wvl_denspot.F90 spack-src/src/43_wvl_wrappers/m_wvl_denspot.F90
+--- spack-src.org/src/43_wvl_wrappers/m_wvl_denspot.F90	2019-01-17 20:49:32.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_wvl_denspot.F90	2021-02-26 09:01:06.657122997 +0900
 @@ -96,7 +96,7 @@ subroutine wvl_denspot_set(den,gth_param
    real(dp), intent(in) :: rprimd(3, 3)
    real(dp), intent(in) :: wvl_frmult,wvl_crmult
@@ -26,9 +37,9 @@ diff -uprN src/43_wvl_wrappers/m_wvl_denspot.F90 src/43_wvl_wrappers/m_wvl_densp
    type(wvl_internal_type),intent(in)  :: wvl
    type(pseudopotential_gth_type),intent(in)::gth_params
  
-diff -uprN src/43_wvl_wrappers/m_wvl_wfs.F90 src/43_wvl_wrappers/m_wvl_wfs.F90
---- src/43_wvl_wrappers/m_wvl_wfs.F90	2019-01-17 20:49:33.000000000 +0900
-+++ src/43_wvl_wrappers/m_wvl_wfs.F90	2019-05-21 15:07:08.000000000 +0900
+diff -uprN spack-src.org/src/43_wvl_wrappers/m_wvl_wfs.F90 spack-src/src/43_wvl_wrappers/m_wvl_wfs.F90
+--- spack-src.org/src/43_wvl_wrappers/m_wvl_wfs.F90	2019-01-17 20:49:33.000000000 +0900
++++ spack-src/src/43_wvl_wrappers/m_wvl_wfs.F90	2021-02-26 09:01:06.657122997 +0900
 @@ -103,7 +103,7 @@ subroutine wvl_wfs_set(alphadiis, spinma
   integer, intent(in) :: natom, nkpt, nsppol, nspinor, nband, nwfshist,me,nproc
   real(dp), intent(in) :: spinmagntarget, wvl_crmult, wvl_frmult, alphadiis
@@ -38,9 +49,9 @@ diff -uprN src/43_wvl_wrappers/m_wvl_wfs.F90 src/43_wvl_wrappers/m_wvl_wfs.F90
   type(wvl_internal_type), intent(in) :: wvl
  !arrays
   real(dp), intent(in) :: kpt(3,nkpt)
-diff -uprN src/52_fft_mpi_noabirule/m_fftw3.F90 src/52_fft_mpi_noabirule/m_fftw3.F90
---- src/52_fft_mpi_noabirule/m_fftw3.F90	2019-01-17 20:49:35.000000000 +0900
-+++ src/52_fft_mpi_noabirule/m_fftw3.F90	2019-05-21 15:14:52.000000000 +0900
+diff -uprN spack-src.org/src/52_fft_mpi_noabirule/m_fftw3.F90 spack-src/src/52_fft_mpi_noabirule/m_fftw3.F90
+--- spack-src.org/src/52_fft_mpi_noabirule/m_fftw3.F90	2019-01-17 20:49:35.000000000 +0900
++++ spack-src/src/52_fft_mpi_noabirule/m_fftw3.F90	2021-02-26 09:01:06.658122980 +0900
 @@ -4588,7 +4588,7 @@ subroutine fftw3_mpiback_wf(cplexwf,ndat
   integer,intent(in) :: cplexwf,ndat,n1,n2,n3,nd1,nd2,nd3proc
   integer,intent(in) :: max1,max2,max3,m1,m2,m3,md1,md2proc,md3,comm_fft
@@ -95,9 +106,9 @@ diff -uprN src/52_fft_mpi_noabirule/m_fftw3.F90 src/52_fft_mpi_noabirule/m_fftw3
  
  !Local variables-------------------------------
  !scalars
-diff -uprN src/62_poisson/m_psolver.F90 src/62_poisson/m_psolver.F90
---- src/62_poisson/m_psolver.F90	2019-01-17 20:49:26.000000000 +0900
-+++ src/62_poisson/m_psolver.F90	2019-05-21 15:09:11.000000000 +0900
+diff -uprN spack-src.org/src/62_poisson/m_psolver.F90 spack-src/src/62_poisson/m_psolver.F90
+--- spack-src.org/src/62_poisson/m_psolver.F90	2019-01-17 20:49:26.000000000 +0900
++++ spack-src/src/62_poisson/m_psolver.F90	2021-02-26 09:01:06.659122963 +0900
 @@ -118,7 +118,7 @@ subroutine psolver_rhohxc(enhartr, enxc,
    integer,intent(in)            :: usexcnhat,usepaw,xclevel
    real(dp),intent(in)           :: rprimd(3,3)
@@ -133,9 +144,9 @@ diff -uprN src/62_poisson/m_psolver.F90 src/62_poisson/m_psolver.F90
  
    !Local variables-------------------------------
  #if defined HAVE_BIGDFT
-diff -uprN src/62_wvl_wfs/m_wvl_psi.F90 src/62_wvl_wfs/m_wvl_psi.F90
---- src/62_wvl_wfs/m_wvl_psi.F90	2019-01-17 20:49:14.000000000 +0900
-+++ src/62_wvl_wfs/m_wvl_psi.F90	2019-05-21 15:10:51.000000000 +0900
+diff -uprN spack-src.org/src/62_wvl_wfs/m_wvl_psi.F90 spack-src/src/62_wvl_wfs/m_wvl_psi.F90
+--- spack-src.org/src/62_wvl_wfs/m_wvl_psi.F90	2019-01-17 20:49:14.000000000 +0900
++++ spack-src/src/62_wvl_wfs/m_wvl_psi.F90	2021-02-26 09:01:06.659122963 +0900
 @@ -248,16 +248,16 @@ subroutine wvl_psitohpsi(alphamix,eexctX
  !scalars
   integer, intent(in) :: me, nproc, itrp, iter, iscf, natom, nfft, nspden
@@ -166,21 +177,9 @@ diff -uprN src/62_wvl_wfs/m_wvl_psi.F90 src/62_wvl_wfs/m_wvl_psi.F90
   type(MPI_type),intent(in) :: mpi_enreg
   type(dataset_type),intent(in) :: dtset
   type(energies_type),intent(inout) :: energies
-diff -uprN src/67_common/m_mklocl_realspace.F90 src/67_common/m_mklocl_realspace.F90
---- src/67_common/m_mklocl_realspace.F90	2019-01-17 20:49:35.000000000 +0900
-+++ src/67_common/m_mklocl_realspace.F90	2019-05-21 15:12:07.000000000 +0900
-@@ -1703,7 +1703,7 @@ subroutine local_forces_wvl(iproc,natom,
- !arrays
-  real(dp),intent(in) :: rxyz(3,natom)
-  real(dp),dimension(*),intent(in) :: rho,pot
-- real(dp),intent(out) :: floc(3,natom)
-+ real(dp),intent(inout) :: floc(3,natom)
- 
- !Local variables -------------------------
- #if defined HAVE_BIGDFT
-diff -uprN src/67_common/mkcore_wvl.F90 src/67_common/mkcore_wvl.F90
---- src/67_common/mkcore_wvl.F90	2019-01-17 20:49:30.000000000 +0900
-+++ src/67_common/mkcore_wvl.F90	2019-05-21 15:13:04.000000000 +0900
+diff -uprN spack-src.org/src/67_common/mkcore_wvl.F90 spack-src/src/67_common/mkcore_wvl.F90
+--- spack-src.org/src/67_common/mkcore_wvl.F90	2019-01-17 20:49:30.000000000 +0900
++++ spack-src/src/67_common/mkcore_wvl.F90	2021-02-26 09:01:06.660122945 +0900
 @@ -138,7 +138,7 @@ subroutine mkcore_wvl(atindx1,corstr,grx
   integer,intent(in) :: atindx1(natom),nattyp(ntypat)
   real(dp),intent(in) :: rprimd(3,3),xccc1d(n1xccc,6,ntypat),xcccrc(ntypat),xred(3,natom)
@@ -200,10 +199,22 @@ diff -uprN src/67_common/mkcore_wvl.F90 src/67_common/mkcore_wvl.F90
 + real(dp),intent(inout) :: corstr(6),dyfrx2(3,3,natom),grxc(3,natom)
   type(pawtab_type),intent(in) :: pawtab(ntypat)
   type(pawrad_type),intent(in) :: pawrad(ntypat)
-
-diff -uprN src/98_main/abinit.F90 src/98_main/abinit.F90
---- src/98_main/abinit.F90	2019-01-17 20:49:35.000000000 +0900
-+++ src/98_main/abinit.F90	2019-08-07 08:29:17.000000000 +0900
+ 
+diff -uprN spack-src.org/src/67_common/m_mklocl_realspace.F90 spack-src/src/67_common/m_mklocl_realspace.F90
+--- spack-src.org/src/67_common/m_mklocl_realspace.F90	2019-01-17 20:49:35.000000000 +0900
++++ spack-src/src/67_common/m_mklocl_realspace.F90	2021-02-26 09:01:06.659122963 +0900
+@@ -1703,7 +1703,7 @@ subroutine local_forces_wvl(iproc,natom,
+ !arrays
+  real(dp),intent(in) :: rxyz(3,natom)
+  real(dp),dimension(*),intent(in) :: rho,pot
+- real(dp),intent(out) :: floc(3,natom)
++ real(dp),intent(inout) :: floc(3,natom)
+ 
+ !Local variables -------------------------
+ #if defined HAVE_BIGDFT
+diff -uprN spack-src.org/src/98_main/abinit.F90 spack-src/src/98_main/abinit.F90
+--- spack-src.org/src/98_main/abinit.F90	2019-01-17 20:49:35.000000000 +0900
++++ spack-src/src/98_main/abinit.F90	2021-02-26 09:01:06.660122945 +0900
 @@ -261,7 +261,7 @@ program abinit
     open(unit=ab_out,file=filnam(2),form='formatted',status='new', action="write", iomsg=message, iostat=ios)
  #endif
