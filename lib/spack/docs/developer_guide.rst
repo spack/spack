@@ -598,8 +598,9 @@ of hooks, and how to write them.
 Types of Hooks
 ^^^^^^^^^^^^^^
 
-The following hooks are currently implemented. If there is a hook that you
-would like and is missing, you can propose to add a new one.
+The following hooks are currently implemented to make it easy for you,
+the developer, to add hooks at different stages of a spack install or similar. 
+If there is a hook that you would like and is missing, you can propose to add a new one.
 
 """""""""""""""""""""
 ``pre_install(spec)``
@@ -708,8 +709,8 @@ Adding a New Hook Type
 
 Adding a new hook type is very simple!  In ``lib/spack/spack/hooks/__init__.py``
 you can simply create a new ``HookRunner`` that is named to match your new hook.
-For example, let's say I want to add a new hook called ``post_log_write``
-to trigger after anything is written to a logger. I would add it as follows:
+For example, let's say you want to add a new hook called ``post_log_write``
+to trigger after anything is written to a logger. You would add it as follows:
 
 .. code-block:: python
 
@@ -721,10 +722,10 @@ to trigger after anything is written to a logger. I would add it as follows:
     post_log_write = HookRunner('post_log_write') # <- here is my new hook! 
     
 
-I would then need to decide what arguments my hook would expect. Since this is
-related to logging, let's say that we want a message and level. That means
-that when I add a python file to the ``lib/spack/spack/hooks``
-folder with one or more callbacks intended to be triggered by this hook. I might
+You then need to decide what arguments my hook would expect. Since this is
+related to logging, let's say that you want a message and level. That means
+that when you add a python file to the ``lib/spack/spack/hooks``
+folder with one or more callbacks intended to be triggered by this hook. You might
 use my new hook as follows:
 
 .. code-block:: python
