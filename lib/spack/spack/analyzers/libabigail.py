@@ -57,7 +57,7 @@ class Libabigail(Analyzerbase):
         for obj in manifest.get("binary_to_relocate_fullpath", []):
 
             outfile = "spack-analyzer-libabigail-%s.xml" % os.path.basename(obj)
-            outfile = self.get_outfile(self.dirname, outfile=outfile)
+            outfile = self._get_outfile(self.dirname, outfile=outfile)
             # Sometimes libabigail segfaults and dumps
             try:
                 self.abidw(obj, "--out-file", outfile)

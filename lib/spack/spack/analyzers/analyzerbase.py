@@ -67,7 +67,7 @@ class Analyzerbase(object):
         """
         raise NotImplementedError
 
-    def get_outfile(self, dirname=None, outfile=None):
+    def _get_outfile(self, dirname=None, outfile=None):
         """Given a directory name, return the json file to save the result to
         """
         dirname = dirname or self.dirname or self.output_dir
@@ -82,7 +82,7 @@ class Analyzerbase(object):
         this function with a custom save, that is appropriate to do (see abi).
         """
         # Save the result to file in the .analyze folder
-        outfile = self.get_outfile(outdir)
+        outfile = self._get_outfile(outdir)
 
         # We maintain the structure in json with the analyzer as key so
         # that in the future, we could upload to a monitor server
