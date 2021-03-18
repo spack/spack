@@ -29,10 +29,13 @@ from __future__ import print_function
 import os
 import sys
 
-if sys.version_info[:2] < (2, 6):
+if sys.version_info[:2] < (2, 6) or (
+        sys.version_info[:2] >= (3, 0)
+    and sys.version_info[:2] < (3, 5)
+    ):
     v_info = sys.version_info[:3]
-    sys.exit("Spack requires Python 2.6 or higher."
-             "This is Python %d.%d.%d." % v_info)
+    sys.exit("Spack requires Python 2.6, 2.7 or 3.5-3.9"
+             "You are running spack with Python %d.%d.%d." % v_info)
 
 # Find spack's location and its prefix.
 spack_file = os.path.realpath(os.path.expanduser(__file__))
