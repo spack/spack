@@ -43,7 +43,7 @@ For example, here we see the results of running an analysis on zlib:
 This means that you can always find analyzer output in this folder, and it
 is organized with the same logic as the package install it was run for. 
 If you want to customize this top level folder, simply provide the ``--path``
-argument to ``spack analyze``. The nested organization will be maintained
+argument to ``spack analyze run``. The nested organization will be maintained
 within your custom root.
 
 -----------------
