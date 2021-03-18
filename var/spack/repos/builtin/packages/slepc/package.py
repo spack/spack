@@ -136,8 +136,14 @@ class Slepc(Package):
 
     def  run_pep_test11(self):
         """Run smoke test: pep test11"""
-        tets_dir = self.prefix.pep.tests
+        tests_dir = self.prefix.share.slepc.examples.src.pep.tests
+
+        exe = 'test11'
+
+        expected_output = get_escaped_text_output(output_dir.join('test11_1.out'))
 
     def test(self):
-        print("Kayla")
-        print(self.prefix.pep.tests)
+        print("running_tests")
+        output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
+        var = get_escaped_text_output(output_dir.join('test11_1.out'))
+        print(var)
