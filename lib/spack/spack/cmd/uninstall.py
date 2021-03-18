@@ -7,8 +7,7 @@ from __future__ import print_function
 
 import sys
 import itertools
-from collections import defaultdict
-from typing import Dict, Iterable, List  # novm
+from typing import Iterable, List  # novm
 
 import spack.cmd
 import spack.environment as ev
@@ -20,7 +19,6 @@ import spack.spec_index
 import spack.store
 from spack.database import InstallStatuses
 from spack.spec import Spec
-from spack.spec_index import ConcretizedSpec
 
 from llnl.util import tty
 from llnl.util.tty.colify import colify
@@ -92,15 +90,9 @@ def find_matching_specs(env, specs, allow_multiple_matches=False, force=False):
 
     install_query = [InstallStatuses.INSTALLED, InstallStatuses.DEPRECATED]
     index_query = spack.spec_index.IndexQuery(
-        query_spec=specs, hashes=hashes, installed=install_query)
+        query_specs=specs, hashes=hashes, installed=install_query)
 
-    specs_by_input_spec = defaultdict(list)  # type: Dict[Spec, List[ConcretizedSpec]]
-    for cspec in local_index.query(index_query):
-        for input_spec in specs:
-            if input_spec is any or cspec.spec.satisfies(input_spec, strict=True):
-                specs_by_input_spec[cspec.spec.name].append(cspec)
-
-    for spec, matching in specs_by_input_spec.items():
+    for spec, matching in local_index.query_collecting_result_map(index_query).items():
         matching_specs = [cspec.spec for cspec in matching]
         # For each spec provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't

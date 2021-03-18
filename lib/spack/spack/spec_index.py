@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from abc import ABCMeta, abstractmethod, abstractproperty
+from collections import defaultdict
 from typing import Any, ClassVar, Dict, Iterable, Iterator, List  # novm
 
 from six import add_metaclass
@@ -140,7 +141,14 @@ class IndexQuery(object):
         self.kwargs = kwargs
 
     def __getattr__(self, name):
+        if name == 'kwargs':
+            return super(IndexQuery, self).__getattr__('kwargs')
         return self.kwargs.get(name, None)
+
+    def __repr__(self):
+        return 'IndexQuery({0})'.format(', '.join(
+            '{0}={1}'.format(k, repr(v)) for k, v in self.kwargs.items()
+        ))
 
     @classmethod
     def from_query_args(cls, **kwargs):
@@ -148,7 +156,8 @@ class IndexQuery(object):
         for field, value in kwargs.items():
             if value is any:
                 kwargs[field] = None
-        kwargs['query_specs'] = kwargs.pop('query_spec', None)
+        if 'query_spec' in kwargs:
+            kwargs['query_specs'] = kwargs.pop('query_spec')
         return cls(**kwargs)
 
     def to_query_args(self):
@@ -247,6 +256,21 @@ class SpecIndex(object):
         for index in self.indices:
             for result in index.spec_index_query(query):
                 yield result
+
+    def query_collecting_result_map(self, query):
+        # type: (IndexQuery) -> Dict[spack.spec.Spec, List[ConcretizedSpec]]
+        if not isinstance(query.query_specs, list):
+            raise TypeError('expected a list of input specs from query {0}'
+                            .format(query))
+
+        spec_to_results = (
+            defaultdict(list))  # type: Dict[spack.spec.Spec, List[ConcretizedSpec]]
+        for concretized_spec in self.query(query):
+            for spec in query.query_specs:
+                if concretized_spec.spec.satisfies(spec, strict=True):
+                    spec_to_results[spec].append(concretized_spec)
+
+        return spec_to_results
 
     def __repr__(self):
         return '{0}(indices={1!r})'.format(type(self).__name__, self.indices)

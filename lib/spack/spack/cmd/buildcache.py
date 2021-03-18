@@ -258,18 +258,13 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
     has_errors = False
     tty.debug('find_matching_specs: about to parse specs for {0}'.format(pkgs))
     specs = spack.cmd.parse_specs(pkgs)
-    for spec in specs:
-        query = IndexQuery(query_specs=Spec(spec), installed=True)
-        matching = [
-            concretized_spec.spec
-            for concretized_spec
-            in spack.spec_index.SpecIndex.with_local_db().query(query)
-            if (hashes is None) or (concretized_spec.spec.dag_hash() in hashes)
-            # This is necessary to account for incorrect queries during testing.
-            if (spec.name is None) or (spec.name == concretized_spec.spec.name)
-        ]
-        # For each spec provided, make sure it refers to only one package.
-        # Fail and ask user to be unambiguous if it doesn't
+    query = IndexQuery(query_specs=specs, installed=True, hashes=hashes)
+
+    # For each spec provided, make sure it refers to only one concrete spec.
+    # Fail and ask user to be unambiguous if it doesn't.
+    local_index = spack.spec_index.SpecIndex.with_local_db()
+    for spec, concretized in local_index.query_collecting_result_map(query).items():
+        matching = [cspec.spec for cspec in concretized]
         if not allow_multiple_matches and len(matching) > 1:
             tty.error('%s matches multiple installed packages:' % spec)
             for match in matching:
@@ -278,11 +273,11 @@ def find_matching_specs(pkgs, allow_multiple_matches=False, env=None):
 
         # No installed package matches the query
         if len(matching) == 0 and spec is not any:
-            tty.error('{0} does not match any installed packages.'.format(
-                spec))
+            tty.error('{0} does not match any installed packages.'.format(spec))
             has_errors = True
 
         specs_from_cli.extend(matching)
+
     if has_errors:
         tty.die('use one of the matching specs above')
 
@@ -310,18 +305,17 @@ def match_downloaded_specs(pkgs, allow_multiple_matches=False, force=False,
     query = IndexQuery(query_specs=qspecs,
                        installed=None,
                        for_all_architectures=other_arch)
-    specs = [
-        concretized_spec.spec
-        for concretized_spec in remote.spec_index_for().query(query)
-    ]
 
     if qspecs is None:
-        return specs
+        return [
+            concretized_spec.spec
+            for concretized_spec in remote.spec_index_for().query(query)
+        ]
 
-    for pkg, qspec in zip(pkgs, qspecs):
+    query_results = remote.spec_index_for().query_collecting_result_map(query)
+    for pkg, (qspec, concretized) in zip(pkgs, query_results.items()):
+        matches = [cspec.spec for cspec in concretized]
         tty.msg("buildcache spec(s) matching %s \n" % pkg)
-        matches = [s for s in specs if s.satisfies(qspec)]
-
         # For each pkg provided, make sure it refers to only one package.
         # Fail and ask user to be unambiguous if it doesn't
         if not allow_multiple_matches and len(matches) > 1:
