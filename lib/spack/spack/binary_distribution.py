@@ -596,6 +596,7 @@ def get_buildfile_manifest(spec):
 
             if relocate.needs_text_relocation(m_type, m_subtype):
                 data['text_to_relocate'].append(rel_path_name)
+                added = True
 
             if not added:
                 data['other'].append(path_name)

@@ -17,11 +17,13 @@ import os
 class Configargs(Analyzerbase):
 
     name = "config_args"
-    outfile = "spack-analyzer-install-files.json"
+    outfile = "spack-analyzer-config-args.json"
     description = "config args loaded from spack-configure-args.txt"
 
     def run(self):
-        """Given a directory name, return the json file to save the result to
+        """The run function will find the spack-config-args.txt file in the
+        package install directory, and read it into a json structure that has
+        the name of the analyzer as the key.
         """
         config_file = os.path.join(self.meta_dir, "spack-configure-args.txt")
         return {self.name: spack.monitor.read_file(config_file)}

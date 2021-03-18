@@ -21,7 +21,8 @@ class Installfiles(Analyzerbase):
     description = "install file listing read from install_manifest.json"
 
     def run(self):
-        """Given a directory name, return the json file to save the result to
+        """Read in the install_manifest.json from the install directory and
+        write it out to the analyzers folder, with the key as the analyzer name.
         """
         manifest_file = os.path.join(self.meta_dir, "install_manifest.json")
         return {self.name: spack.monitor.read_json(manifest_file)}

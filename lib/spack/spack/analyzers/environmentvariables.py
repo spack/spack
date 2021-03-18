@@ -22,7 +22,9 @@ class Environmentvariables(Analyzerbase):
     description = "environment variables parsed from spack-build-env.txt"
 
     def run(self):
-        """Given a directory name, return the json file to save the result to
+        """Read in the spack-build-env.txt file from the package install
+        directory and parse the environment variables into key value pairs.
+        The result should have the key for the analyzer, the name.
         """
         env_file = os.path.join(self.meta_dir, "spack-build-env.txt")
         return {self.name: self._read_environment_file(env_file)}

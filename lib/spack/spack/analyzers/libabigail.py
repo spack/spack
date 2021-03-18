@@ -46,7 +46,9 @@ class Libabigail(Analyzerbase):
 
     def run(self):
         """Run libabigail, and save results to filename. This run function differs
-        in that we write as we generate and then return a lookup of files.
+        in that we write as we generate and then return a dict with the analyzer
+        name as the key, and the value of a dict of results, where the key is
+        the object name, and the value is the output file written to.
         """
         manifest = spack.binary_distribution.get_buildfile_manifest(self.spec)
 
