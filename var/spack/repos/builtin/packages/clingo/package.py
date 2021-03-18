@@ -57,13 +57,15 @@ class Clingo(CMakePackage):
         current spec is the one found by CMake find_package(Python, ...)
         """
         python_spec = self.spec['python']
-        library_dir = python_spec.package.get_python_lib()
         include_dir = python_spec.package.get_python_inc()
         return [
             self.define('Python_EXECUTABLE', str(python_spec.command)),
-            self.define('Python_LIBRARY', library_dir),
             self.define('Python_INCLUDE_DIR', include_dir)
         ]
+
+    @property
+    def cmake_py_shared(self):
+        return self.define('CLINGO_BUILD_PY_SHARED', 'ON')
 
     def cmake_args(self):
         try:
@@ -76,13 +78,10 @@ class Clingo(CMakePackage):
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
             '-DPYCLINGO_USER_INSTALL=OFF',
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
-            '-DCLINGO_BUILD_WITH_LUA=OFF'
+            '-DCLINGO_BUILD_WITH_LUA=OFF',
+            self.cmake_py_shared
         ]
         if self.spec['cmake'].satisfies('@3.16.0:'):
             args += self.cmake_python_hints
-
-        args.append(self.define(
-            'CLINGO_BUILD_PY_SHARED', self.spec['python'].satisfies('+shared')
-        ))
 
         return args

@@ -44,6 +44,10 @@ class ClingoBootstrap(Clingo):
     # Clingo needs the Python module to be usable by Spack
     conflicts('~python', msg='Python support is required to bootstrap Spack')
 
+    @property
+    def cmake_py_shared(self):
+        return self.define('CLINGO_BUILD_PY_SHARED', 'OFF')
+
     def cmake_args(self):
         args = super(ClingoBootstrap, self).cmake_args()
         args.extend([
