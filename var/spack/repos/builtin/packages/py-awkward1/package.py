@@ -26,4 +26,5 @@ class PyAwkward1(PythonPackage):
     depends_on('py-numpy@1.13.1:')
     depends_on('py-pybind11')
     depends_on('rapidjson')
+    depends_on('dlpack')
     depends_on('cmake', type='build')
