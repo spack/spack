@@ -188,13 +188,8 @@ class Openmpi(AutotoolsPackage):
     # The second patch was applied starting version v4.0.0 and backported to
     # v2.x, v3.0.x, and v3.1.x.
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
-    # in order to work around a bug in older gcc versions on x86_64,
-    # __atomic_thread_fence (__ATOMIC_SEQ_CST)
-    # was replaced with
-    # __atomic_thread_fence (__ATOMIC_ACQUIRE)
-    # based on the asumption that this did not introduce performance regressions.
-    # Refs. open-mpi/ompi#8603
-    # It was recently found that this did introduce some performance regression.
+    # To fix performance regressions introduced while fixing a bug in older
+    # gcc versions on x86_64, Refs. open-mpi/ompi#8603
     patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
 
     variant(
