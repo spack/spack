@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,17 +15,14 @@ class Libristra(CMakePackage):
     homepage = 'https://github.com/laristra/libristra'
     url = 'https://github.com/laristra/libristra/archive/master.zip'
     git = 'https://github.com/laristra/libristra.git'
-    tags = ['ristra']
 
     version('master', branch='master', submodules=False, preferred=True)
     version('1.0.0', commit='33235fe0334ca7f1f99b386a90932d9f8e1e71de')
 
     variant('build_type', default='Release', values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'),
             description='The build type to build', multi=False)
-    variant('paraview', default=False,
-            description='Enable ParaView')
-    variant('shared_lua', default=False,
-            description='Build with shared lua')
+    variant('paraview', default=False, description='Enable ParaView')
+    variant('shared_lua', default=False, description='Build with shared lua')
 
     depends_on('cmake@3.12:')
     depends_on('mpi')
@@ -40,9 +37,6 @@ class Libristra(CMakePackage):
     def cmake_args(self):
         options = ['-DENABLE_LUA=ON']
 
-        if self.run_tests:
-            options.append('-DENABLE_UNIT_TESTS=ON')
-        else:
-            options.append('-DENABLE_UNIT_TESTS=OFF')
+        options.append(self.define('ENABLE_UNIT_TESTS', self.run_tests))
 
         return options
