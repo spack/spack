@@ -44,7 +44,7 @@ class Hiop(CMakePackage, CudaPackage):
         'sparse',
         default=False,
         description='Enable/Disable Sparse linear algebra')
-    variant('deepchecking', default=True,
+    variant('deepchecking', default=False,
             description='Ultra safety checks - '
             'used for increased robustness and self-diagnostics')
 
