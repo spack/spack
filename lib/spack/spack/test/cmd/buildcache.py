@@ -170,9 +170,8 @@ def test_buildcache_solve_reference_by_hash(spec_type, select_spec_string):
     solve(spec_str)
 
 
-# NB: The InstallMethod.INSTALL_CACHE_ONLY() must go first for this test to pass. It's
-# not clear why yet, but likely has to do with some shared state in the pytest fixtures
-# used.
+# NB: 'INSTALL_CACHE_ONLY' must go first for this test to pass. It's not clear why yet,
+# but likely has to do with some shared state in the pytest fixtures used.
 @pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])
 @pytest.mark.parametrize('install_method', ['INSTALL_CACHE_ONLY', 'BUILDCACHE_INSTALL'])
 def test_buildcache_install_reference_by_hash(
@@ -196,8 +195,6 @@ def test_buildcache_install_reference_by_hash(
         install('--cache-only', '--overwrite', '-y', '--verbose',
                 '--no-check-signature',
                 spec_str)
-
-    uninstall('-y', '-a', '--dependents')
 
 
 @pytest.mark.parametrize('spec_type', ['TOP_LEVEL_HASH', 'PINNED_DEPENDENCY_HASH'])

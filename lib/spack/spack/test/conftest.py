@@ -1386,31 +1386,99 @@ def mutable_default_config(
     mutable_dir.remove()
 
 
+class EmptyTar(object):
+    def __init__(self, path, *args, **kwargs):
+        self.path = path
+
+    def add(self, *args, **kwargs):
+        pass
+
+    def close(self):
+        with open(self.path, 'w') as f:
+            f.write('ok')
+
+    def extractall(self, path):
+        mkdirp(path)
+
+
+class TarballMockDownload(object):
+    def __init__(self, tarball):
+        self.tarball = tarball
+
+    def __call__(self, spec, preferred_mirrors=None):
+        return str(self.tarball)
+
+
+class TarballMockExtract(object):
+    def __call__(self, spec, filename, *args, **kwargs):
+        stagepath = os.path.dirname(filename)
+        mkdirp(stagepath)
+        tarfile_name = spack.binary_distribution.tarball_name(spec, '.tar.gz')
+        tarfile_path = os.path.join(stagepath, tarfile_name)
+        with open(tarfile_path, 'wb') as f:
+            f.write(b'')
+
+
+class MockMirrors(object):
+    def __init__(self, mirror_dir_path):
+        self.mirror_dir_path = mirror_dir_path
+
+    def __call__(self):
+        return [spack.mirror.Mirror(name='test-mirror',
+                                    fetch_url=str(self.mirror_dir_path))]
+
+
+class MockOneMirror(object):
+    def __call__(self):
+        return 1
+
+
+class SpecIndexLookupSite(object):
+    def __init__(self, db):
+        self.local = (
+            spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match)
+        self.db = db
+        self.use_local = False
+
+    def lookup_ensuring_single_match(self, hash_prefix):
+        if self.use_local:
+            return self.local(hash_prefix)
+        return list(self.db.spec_index_lookup(hash_prefix))[0]
+
+    def __call__(self, hash_prefix):
+        return self.lookup_ensuring_single_match(hash_prefix)
+
+
+class SpecIndexQuery(object):
+    def __init__(self, db):
+        self.local = spack.spec_index.SpecIndex.with_local_db().query
+        self.db = db
+        self.use_local = True
+
+    def __call__(self, query):
+        if self.use_local:
+            for result in self.local(query):
+                yield result
+        else:
+            for result in self.db.spec_index_query(query):
+                yield result
+
+
+class IgnoreMethod(object):
+    def __call__(self, *args, **kwargs):
+        return None
+
+
 @pytest.fixture(scope='function')
 def mutable_buildcache(mock_repo_path, mock_fetch, install_mockery, mock_pkg_install,
                        tmpdir_factory, monkeypatch):
     store_path = tmpdir_factory.mktemp('buildcache_mock_store')
     store = spack.store.Store(str(store_path))
 
-    class EmptyTar(object):
-        def __init__(self, path, *args, **kwargs):
-            self.path = path
-
-        def add(self, *args, **kwargs):
-            pass
-
-        def close(self):
-            with open(self.path, 'w') as f:
-                f.write('ok')
-
-        def extractall(self, path):
-            mkdirp(path)
-
     monkeypatch.setattr(tarfile, 'open', EmptyTar)
 
-    monkeypatch.setattr(spack.binary_distribution,
-                        'check_package_relocatable',
-                        lambda a, b, c: None)
+    monkeypatch.setattr(spack.binary_distribution, 'check_package_relocatable',
+                        IgnoreMethod())
 
     mirror_dir_path = tmpdir_factory.mktemp('mirror_dir')
 
@@ -1419,70 +1487,27 @@ def mutable_buildcache(mock_repo_path, mock_fetch, install_mockery, mock_pkg_ins
     with open(tarball, 'wb') as f:
         f.write(b'')
 
-    class TarballMockDownload(object):
-        def __call__(self, spec, preferred_mirrors=None):
-            return str(tarball)
-
     monkeypatch.setattr(spack.binary_distribution, 'download_tarball',
-                        TarballMockDownload())
-
-    class TarballMockExtract(object):
-        def __call__(self, spec, filename, *args, **kwargs):
-            stagepath = os.path.dirname(filename)
-            mkdirp(stagepath)
-            tarfile_name = spack.binary_distribution.tarball_name(spec, '.tar.gz')
-            tarfile_path = os.path.join(stagepath, tarfile_name)
-            with open(tarfile_path, 'wb') as f:
-                f.write(b'')
-            return
+                        TarballMockDownload(tarball))
 
     monkeypatch.setattr(spack.binary_distribution, 'extract_tarball',
                         TarballMockExtract())
 
-    class MockOneMirror(object):
-        def __call__(self):
-            return 1
-
     monkeypatch.setattr(spack.mirror.MirrorCollection, '__len__', MockOneMirror())
 
-    monkeypatch.setattr(spack.hooks, 'post_install', lambda *args, **kwargs: None)
+    monkeypatch.setattr(spack.hooks, 'post_install',
+                        IgnoreMethod())
 
-    class MockMirrors(object):
-        def __call__(self):
-            return [spack.mirror.Mirror(name='test-mirror',
-                                        fetch_url=str(mirror_dir_path))]
+    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values',
+                        MockMirrors(mirror_dir_path))
 
-    monkeypatch.setattr(spack.mirror.MirrorCollection, 'values', MockMirrors())
-
-    class SpecIndexLookupSite(object):
-        def __init__(self):
-            self.local = (
-                spack.spec_index.SpecIndex.with_local_db().lookup_ensuring_single_match)
-            self.use_local = False
-
-        def lookup_ensuring_single_match(self, hash_prefix):
-            if self.use_local:
-                return self.local(hash_prefix)
-            return list(store.db.spec_index_lookup(hash_prefix))[0]
-
-    spec_index_lookup_site = SpecIndexLookupSite()
+    spec_index_lookup_site = SpecIndexLookupSite(store.db)
 
     monkeypatch.setattr(spack.spec.SpecParser, '_spec_index', spec_index_lookup_site)
+    monkeypatch.setattr(spack.spec_index.SpecIndex, 'lookup_ensuring_single_match',
+                        spec_index_lookup_site)
 
-    class SpecIndexQuery(object):
-        def __init__(self):
-            self.local = spack.spec_index.SpecIndex.with_local_db().query
-            self.use_local = True
-
-        def __call__(self, query):
-            if self.use_local:
-                for result in self.local(query):
-                    yield result
-            else:
-                for result in store.db.spec_index_query(query):
-                    yield result
-
-    spec_index_query = SpecIndexQuery()
+    spec_index_query = SpecIndexQuery(store.db)
 
     monkeypatch.setattr(spack.spec_index.SpecIndex, 'query', spec_index_query)
 
