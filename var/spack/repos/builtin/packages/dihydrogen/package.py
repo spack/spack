@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ import os
 from spack import *
 
 
-class Dihydrogen(CMakePackage, CudaPackage):
+class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     """DiHydrogen is the second version of the Hydrogen fork of the
        well-known distributed linear algebra library,
        Elemental. DiHydrogen aims to be a basic distributed
@@ -23,6 +23,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('0.2.1', sha256='11e2c0f8a94ffa22e816deff0357dde6f82cc8eac21b587c800a346afb5c49ac')
+    version('0.2.0', sha256='e1f597e80f93cf49a0cb2dbc079a1f348641178c49558b28438963bd4a0bdaa4')
     version('0.1', sha256='171d4b8adda1e501c38177ec966e6f11f8980bf71345e5f6d87d0a988fef4c4e')
 
     variant('al', default=True,
@@ -31,8 +33,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='Enable extra warnings and force tests to be enabled.')
     variant('half', default=False,
             description='Enable FP16 support on the CPU.')
-    variant('legacy', default=False,
-            description='Enable the legacy DistConv code branch.')
+    variant('distconv', default=False,
+            description='Support distributed convolutions: spatial, channel, '
+            'filter.')
     variant('nvshmem', default=False,
             description='Builds with support for NVSHMEM')
     variant('openmp', default=False,
@@ -65,15 +68,26 @@ class Dihydrogen(CMakePackage, CudaPackage):
             description='CUDA architecture',
             values=spack.variant.auto_or_any_combination_of(*cuda_arch_values))
 
+    conflicts('~cuda', when='+nvshmem')
+
     depends_on('mpi')
     depends_on('catch2', type='test')
 
     # Specify the correct version of Aluminum
     depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5:', when='@:0.0,0.2: +al')
+    depends_on('aluminum@0.5.0:', when='@:0.0,0.2: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
+
+    # variants +rocm and amdgpu_targets are not automatically passed to
+    # dependencies, so do it manually.
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('aluminum amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
     depends_on('cuda', when=('+cuda' or '+legacy'))
     depends_on('cudnn', when=('+cuda' or '+legacy'))
@@ -102,6 +116,9 @@ class Dihydrogen(CMakePackage, CudaPackage):
     # Legacy builds require cuda
     conflicts('~cuda', when='+legacy')
 
+    conflicts('+distconv', when='+half')
+    conflicts('+rocm', when='+half')
+
     depends_on('half', when='+half')
 
     generator = 'Ninja'
@@ -112,6 +129,8 @@ class Dihydrogen(CMakePackage, CudaPackage):
     depends_on('doxygen', type='build', when='+docs')
 
     depends_on('llvm-openmp', when='%apple-clang +openmp')
+
+    depends_on('nvshmem', when='+nvshmem')
 
     illegal_cuda_arch_values = [
         '10', '11', '12', '13',
@@ -131,10 +150,12 @@ class Dihydrogen(CMakePackage, CudaPackage):
         spec = self.spec
 
         args = [
+            '-DCMAKE_CXX_STANDARD=17',
             '-DCMAKE_INSTALL_MESSAGE:STRING=LAZY',
             '-DBUILD_SHARED_LIBS:BOOL=%s'      % ('+shared' in spec),
+            '-DH2_ENABLE_ALUMINUM=%s' % ('+al' in spec),
             '-DH2_ENABLE_CUDA=%s' % ('+cuda' in spec),
-            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+legacy' in spec),
+            '-DH2_ENABLE_DISTCONV_LEGACY=%s' % ('+distconv' in spec),
             '-DH2_ENABLE_OPENMP=%s' % ('+openmp' in spec),
             '-DH2_ENABLE_FP16=%s' % ('+half' in spec),
             '-DH2_ENABLE_HIP_ROCM=%s' % ('+rocm' in spec),
@@ -142,6 +163,11 @@ class Dihydrogen(CMakePackage, CudaPackage):
         ]
 
         if '+cuda' in spec:
+            if spec.satisfies('^cuda@11.0:'):
+                args.append('-DCMAKE_CUDA_STANDARD=17')
+            else:
+                args.append('-DCMAKE_CUDA_STANDARD=14')
+
             cuda_arch = spec.variants['cuda_arch'].value
             if len(cuda_arch) == 1 and cuda_arch[0] == 'auto':
                 args.append('-DCMAKE_CUDA_FLAGS=-arch=sm_60')
@@ -172,6 +198,18 @@ class Dihydrogen(CMakePackage, CudaPackage):
                 '-DOpenMP_CXX_LIB_NAMES=libomp',
                 '-DOpenMP_libomp_LIBRARY={0}/lib/libomp.dylib'.format(
                     clang_root)])
+
+        if '+rocm' in spec:
+            args.extend([
+                '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)])
+            archs = self.spec.variants['amdgpu_target'].value
+            if archs != 'none':
+                arch_str = ",".join(archs)
+                args.append(
+                    '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
+                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                )
 
         return args
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,7 +70,7 @@ class Trilinos(CMakePackage, CudaPackage):
     variant('float', default=False,
             description='Enable single precision (float) numbers in Trilinos')
     variant('gotype', default='long',
-            values=('int', 'long', 'long_long'),
+            values=('none', 'int', 'long', 'long_long'),
             multi=False,
             description='global ordinal type for Tpetra')
     variant('fortran',      default=True,
@@ -191,6 +191,8 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Shards')
     variant('shylu',        default=False,
             description='Compile with ShyLU')
+    variant('stokhos',      default=False,
+            description='Compile with Stokhos')
     variant('stratimikos',  default=False,
             description='Compile with Stratimikos')
     variant('teko',         default=False,
@@ -201,10 +203,22 @@ class Trilinos(CMakePackage, CudaPackage):
             description='Compile with Teuchos')
     variant('tpetra',       default=True,
             description='Compile with Tpetra')
+    variant('trilinoscouplings', default=False,
+            description='Compile with TrilinosCouplings')
     variant('zoltan',       default=True,
             description='Compile with Zoltan')
     variant('zoltan2',      default=True,
             description='Compile with Zoltan2')
+
+    # Internal package options (alphabetical order)
+    variant('amesos2basker',             default=False,
+            description='Compile with Basker in Amesos2')
+    variant('epetraextbtf',              default=False,
+            description='Compile with BTF in EpetraExt')
+    variant('epetraextexperimental',     default=False,
+            description='Compile with experimental in EpetraExt')
+    variant('epetraextgraphreorderings', default=False,
+            description='Compile with graph reorderings in EpetraExt')
 
     # External package options
     variant('dtk',          default=False,
@@ -271,7 +285,6 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+isorropia', when='~teuchos')
     conflicts('+isorropia', when='~zoltan')
     conflicts('+muelu', when='~teuchos')
-    conflicts('+muelu', when='~xpetra')
     conflicts('+nox', when='~teuchos')
     conflicts('+phalanx', when='~kokkos')
     conflicts('+phalanx', when='~sacado')
@@ -292,8 +305,12 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+tpetra', when='~teuchos')
     conflicts('+zoltan2', when='~teuchos')
     conflicts('+zoltan2', when='~tpetra')
-    conflicts('+zoltan2', when='~xpetra')
     conflicts('+zoltan2', when='~zoltan')
+
+    conflicts('+epetraextbtf', when='~epetraext')
+    conflicts('+epetraextexperimental', when='~epetraext')
+    conflicts('+epetraextgraphreorderings', when='~epetraext')
+    conflicts('+amesos2basker', when='~amesos2')
 
     conflicts('+dtk', when='~boost')
     conflicts('+dtk', when='~intrepid2')
@@ -333,6 +350,7 @@ class Trilinos(CMakePackage, CudaPackage):
     conflicts('+cuda_rdc', when='~cuda')
     conflicts('+wrapper', when='~cuda')
     conflicts('+wrapper', when='%clang')
+    conflicts('cxxstd=11', when='@develop')
     conflicts('cxxstd=11', when='+wrapper ^cuda@6.5.14')
     conflicts('cxxstd=14', when='+wrapper ^cuda@6.5.14:8.0.61')
     conflicts('cxxstd=17', when='+wrapper ^cuda@6.5.14:10.2.89')
@@ -398,7 +416,6 @@ class Trilinos(CMakePackage, CudaPackage):
 
     # Dependencies/conflicts when MPI is disabled
     depends_on('hdf5~mpi', when='+hdf5~mpi')
-    conflicts('+parmetis', when='~mpi')
     conflicts('+pnetcdf', when='~mpi')
 
     patch('umfpack_from_suitesparse.patch', when='@11.14.1:12.8.1')
@@ -452,6 +469,12 @@ class Trilinos(CMakePackage, CudaPackage):
                 spec_var = cmake_var.lower()
             return self.define_from_variant('TPL_ENABLE_' + cmake_var,
                                             spec_var)
+
+        def define_prefix_enable(prefix, cmake_var, spec_var=None):
+            if spec_var is None:
+                spec_var = cmake_var.lower()
+            return self.define_from_variant(
+                '%s' % prefix, spec_var)
 
         cxx_flags = []
         options = []
@@ -518,13 +541,21 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
+            define_trilinos_enable('Stokhos'),
             define_trilinos_enable('Stratimikos'),
             define_trilinos_enable('Teko'),
             define_trilinos_enable('Tempus'),
             define_trilinos_enable('Teuchos'),
             define_trilinos_enable('Tpetra'),
+            define_trilinos_enable('TrilinosCouplings'),
             define_trilinos_enable('Zoltan'),
             define_trilinos_enable('Zoltan2'),
+            define_prefix_enable('EpetraExt_BUILD_BTF', 'epetraextbtf'),
+            define_prefix_enable('EpetraExt_BUILD_EXPERIMENTAL',
+                                 'epetraextexperimental'),
+            define_prefix_enable('EpetraExt_BUILD_GRAPH_REORDERINGS',
+                                 'epetraextgraphreorderings'),
+            define_prefix_enable('Amesos2_ENABLE_Basker', 'amesos2basker'),
         ])
 
         options.append(self.define_from_variant('USE_XSDK_DEFAULTS',

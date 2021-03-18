@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -43,6 +43,7 @@ def update_kwargs_from_args(args, kwargs):
         'dirty': args.dirty,
         'use_cache': args.use_cache,
         'cache_only': args.cache_only,
+        'include_build_deps': args.include_build_deps,
         'explicit': True,  # Always true for install command
         'stop_at': args.until,
         'unsigned': args.unsigned,
@@ -106,6 +107,11 @@ the dependencies"""
         help="only install package from binary mirrors")
 
     subparser.add_argument(
+        '--include-build-deps', action='store_true', dest='include_build_deps',
+        default=False, help="""include build deps when installing from cache,
+which is useful for CI pipeline troubleshooting""")
+
+    subparser.add_argument(
         '--no-check-signature', action='store_true',
         dest='unsigned', default=False,
         help="do not check signatures of binary packages")
@@ -120,7 +126,7 @@ remote spec matches that of the local spec""")
     subparser.add_argument(
         '--source', action='store_true', dest='install_source',
         help="install source files in prefix")
-    arguments.add_common_arguments(subparser, ['no_checksum'])
+    arguments.add_common_arguments(subparser, ['no_checksum', 'deprecated'])
     subparser.add_argument(
         '-v', '--verbose', action='store_true',
         help="display verbose build output while installing")
@@ -235,14 +241,28 @@ environment variables:
     if args.log_file:
         reporter.filename = args.log_file
 
+    if args.run_tests:
+        tty.warn("Deprecated option: --run-tests: use --test=all instead")
+
+    def get_tests(specs):
+        if args.test == 'all' or args.run_tests:
+            return True
+        elif args.test == 'root':
+            return [spec.name for spec in specs]
+        else:
+            return False
+
     if not args.spec and not args.specfiles:
         # if there are no args but an active environment
         # then install the packages from it.
         env = ev.get_env(args, 'install')
         if env:
+            tests = get_tests(env.user_specs)
+            kwargs['tests'] = tests
+
             if not args.only_concrete:
                 with env.write_transaction():
-                    concretized_specs = env.concretize()
+                    concretized_specs = env.concretize(tests=tests)
                     ev.display_specs(concretized_specs)
 
                     # save view regeneration for later, so that we only do it
@@ -255,7 +275,7 @@ environment variables:
             reporter.specs = specs
 
             tty.msg("Installing environment {0}".format(env.name))
-            with reporter:
+            with reporter('build'):
                 env.install_all(args, **kwargs)
 
             tty.debug("Regenerating environment views for {0}"
@@ -282,20 +302,16 @@ environment variables:
     if args.no_checksum:
         spack.config.set('config:checksum', False, scope='command_line')
 
+    if args.deprecated:
+        spack.config.set('config:deprecated', True, scope='command_line')
+
     # Parse cli arguments and construct a dictionary
     # that will be passed to the package installer
     update_kwargs_from_args(args, kwargs)
 
-    if args.run_tests:
-        tty.warn("Deprecated option: --run-tests: use --test=all instead")
-
     # 1. Abstract specs from cli
     abstract_specs = spack.cmd.parse_specs(args.spec)
-    tests = False
-    if args.test == 'all' or args.run_tests:
-        tests = True
-    elif args.test == 'root':
-        tests = [spec.name for spec in abstract_specs]
+    tests = get_tests(abstract_specs)
     kwargs['tests'] = tests
 
     try:

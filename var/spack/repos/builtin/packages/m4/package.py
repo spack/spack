@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -18,6 +18,7 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     patch('gnulib-pgi.patch', when='@1.4.18')
     patch('pgi.patch', when='@1.4.17')
     patch('nvhpc.patch', when='%nvhpc')
+    patch('oneapi.patch', when='%oneapi')
     # from: https://github.com/Homebrew/homebrew-core/blob/master/Formula/m4.rb
     # Patch credit to Jeremy Huddleston Sequoia <jeremyhu@apple.com>
     patch('secure_snprintf.patch', when='os = highsierra')
@@ -32,6 +33,8 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
     depends_on('libsigsegv', when='+sigsegv')
 
     build_directory = 'spack-build'
+
+    tags = ['build-tools']
 
     executables = ['^g?m4$']
 

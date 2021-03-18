@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,9 +16,12 @@ class Petsc(Package):
     git = "https://gitlab.com/petsc/petsc.git"
     maintainers = ['balay', 'barrysmith', 'jedbrown']
 
-    version('develop', branch='master')
+    version('main', branch='main')
     version('xsdk-0.2.0', tag='xsdk-0.2.0')
 
+    version('3.14.4', sha256='b030969816e02c251a6d010c07a90b69ade44932f9ddfac3090ff5e95ab97d5c')
+    version('3.14.3', sha256='63ed7e3440f2bbc732a6c44aa878364f88f5016ab375d9b36d742893a049053d')
+    version('3.14.2', sha256='87a04fd05cac20a2ec47094b7d18b96e0651257d8c768ced2ef7db270ecfb9cb')
     version('3.14.1', sha256='0b4681165a9af96594c794b97ac6993452ec902726679f6b50bb450f89d230ed')
     version('3.14.0', sha256='a8f9caba03e0d57d8452c08505cf96be5f6949adaa266e819382162c03ddb9c5')
     version('3.13.6', sha256='67ca2cf3040d08fdc51d27f660ea3157732b24c2f47aae1b19d63f62a39842c2')
@@ -78,6 +81,8 @@ class Petsc(Package):
 
     variant('metis',   default=True,
             description='Activates support for metis and parmetis')
+    variant('ptscotch',   default=False,
+            description='Activates support for PTScotch (only parallel)')
     variant('hdf5',    default=True,
             description='Activates support for HDF5 (only parallel)')
     variant('hypre',   default=True,
@@ -90,6 +95,8 @@ class Petsc(Package):
             description='Activates support for SuperluDist (only parallel)')
     variant('trilinos', default=False,
             description='Activates support for Trilinos (only parallel)')
+    variant('mkl-pardiso', default=False,
+            description='Activates support for MKL Pardiso')
     variant('int64', default=False,
             description='Compile with 64bit indices')
     variant('clanguage', default='C', values=('C', 'C++'),
@@ -145,6 +152,7 @@ class Petsc(Package):
     conflicts('+moab', when='~mpi', msg=mpi_msg)
     conflicts('+mumps', when='~mpi', msg=mpi_msg)
     conflicts('+p4est', when='~mpi', msg=mpi_msg)
+    conflicts('+ptscotch', when='~mpi', msg=mpi_msg)
     conflicts('+superlu-dist', when='~mpi', msg=mpi_msg)
     conflicts('+trilinos', when='~mpi', msg=mpi_msg)
 
@@ -168,7 +176,7 @@ class Petsc(Package):
 
     # Virtual dependencies
     # Git repository needs sowing to build Fortran interface
-    depends_on('sowing', when='@develop')
+    depends_on('sowing', when='@main')
     depends_on('sowing@1.1.23-p1', when='@xsdk-0.2.0')
 
     # PETSc, hypre, superlu_dist when built with int64 use 32 bit integers
@@ -191,6 +199,11 @@ class Petsc(Package):
     depends_on('metis@5:~int64', when='@3.8:+metis~int64')
     depends_on('metis@5:+int64', when='@3.8:+metis+int64')
 
+    # PTScotch: Currently disable Parmetis wrapper, this means
+    # nested disection won't be available thought PTScotch
+    depends_on('scotch+esmumps~metis+mpi', when='+ptscotch')
+    depends_on('scotch+int64', when='+ptscotch+int64')
+
     depends_on('hdf5@:1.10.99+mpi', when='@:3.12.99+hdf5+mpi')
     depends_on('hdf5+mpi', when='@3.13:+hdf5+mpi')
     depends_on('hdf5+mpi', when='+exodusii+mpi')
@@ -198,7 +211,8 @@ class Petsc(Package):
     depends_on('zlib', when='+hdf5')
     depends_on('zlib', when='+libpng')
     depends_on('zlib', when='+p4est')
-    depends_on('parmetis', when='+metis+mpi')
+    depends_on('parmetis+int64', when='+metis+mpi+int64')
+    depends_on('parmetis~int64', when='+metis+mpi~int64')
     depends_on('valgrind', when='+valgrind')
     # Hypre does not support complex numbers.
     # Also PETSc prefer to build it without internal superlu, likely due to
@@ -212,8 +226,8 @@ class Petsc(Package):
     depends_on('hypre@2.14:+mpi~internal-superlu+int64', when='@3.14:+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu+int64', when='@xsdk-0.2.0+hypre+mpi~complex+int64')
     depends_on('hypre@xsdk-0.2.0+mpi~internal-superlu~int64', when='@xsdk-0.2.0+hypre+mpi~complex~int64')
-    depends_on('hypre@develop+mpi~internal-superlu+int64', when='@develop+hypre+mpi~complex+int64')
-    depends_on('hypre@develop+mpi~internal-superlu~int64', when='@develop+hypre+mpi~complex~int64')
+    depends_on('hypre@develop+mpi~internal-superlu+int64', when='@main+hypre+mpi~complex+int64')
+    depends_on('hypre@develop+mpi~internal-superlu~int64', when='@main+hypre+mpi~complex~int64')
     depends_on('superlu-dist@:4.3~int64', when='@3.4.4:3.6.4+superlu-dist+mpi~int64')
     depends_on('superlu-dist@:4.3+int64', when='@3.4.4:3.6.4+superlu-dist+mpi+int64')
     depends_on('superlu-dist@5.0.0:5.1.3~int64', when='@3.7:3.7.99+superlu-dist+mpi~int64')
@@ -228,13 +242,14 @@ class Petsc(Package):
     depends_on('superlu-dist@6.1:+int64', when='@3.13.0:+superlu-dist+mpi+int64')
     depends_on('superlu-dist@xsdk-0.2.0~int64', when='@xsdk-0.2.0+superlu-dist+mpi~int64')
     depends_on('superlu-dist@xsdk-0.2.0+int64', when='@xsdk-0.2.0+superlu-dist+mpi+int64')
-    depends_on('superlu-dist@develop~int64', when='@develop+superlu-dist+mpi~int64')
-    depends_on('superlu-dist@develop+int64', when='@develop+superlu-dist+mpi+int64')
+    depends_on('superlu-dist@develop~int64', when='@main+superlu-dist+mpi~int64')
+    depends_on('superlu-dist@develop+int64', when='@main+superlu-dist+mpi+int64')
     depends_on('mumps+mpi~int64', when='+mumps')
     depends_on('scalapack', when='+mumps')
     depends_on('trilinos@12.6.2:+mpi', when='@3.7.0:+trilinos+mpi')
     depends_on('trilinos@xsdk-0.2.0+mpi', when='@xsdk-0.2.0+trilinos+mpi')
-    depends_on('trilinos@develop+mpi', when='@xdevelop+trilinos+mpi')
+    depends_on('trilinos@develop+mpi', when='@main+trilinos+mpi')
+    depends_on('mkl', when='+mkl-pardiso')
     depends_on('fftw+mpi', when='+fftw+mpi')
     depends_on('suite-sparse', when='+suite-sparse')
     depends_on('libx11', when='+X')
@@ -409,6 +424,17 @@ class Petsc(Package):
         else:
             options.append('--with-suitesparse=0')
 
+        # PTScotch: Since we are not using the Parmetis wrapper for now,
+        # we cannot use '--with-ptscotch-dir=...'
+        if '+ptscotch' in spec:
+            options.extend([
+                '--with-ptscotch-include=%s' % spec['scotch'].prefix.include,
+                '--with-ptscotch-lib=%s' % spec['scotch'].libs.joined(),
+                '--with-ptscotch=1'
+            ])
+        else:
+            options.append('--with-ptscotch=0')
+
         # hdf5: configure detection is convoluted for pflotran
         if '+hdf5' in spec:
             options.extend([
@@ -429,6 +455,11 @@ class Petsc(Package):
             ])
         else:
             options.append('--with-zlib=0')
+
+        if '+mkl-pardiso' in spec:
+            options.append(
+                '--with-mkl_pardiso-dir=%s' % spec['mkl'].prefix
+            )
 
         python('configure', '--prefix=%s' % prefix, *options)
 
@@ -477,6 +508,13 @@ class Petsc(Package):
                         '-da_grid_y', '4',
                         '-pc_type', 'hypre',
                         '-pc_hypre_type', 'boomeramg')
+
+                if 'mkl-pardiso' in spec:
+                    run('ex50',
+                        '-da_grid_x', '4',
+                        '-da_grid_y', '4',
+                        '-pc_type', 'lu',
+                        '-pc_factor_mat_solver_package', 'mkl_pardiso')
 
     def setup_build_environment(self, env):
         # configure fails if these env vars are set outside of Spack

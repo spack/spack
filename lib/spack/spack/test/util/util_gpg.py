@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -65,6 +65,7 @@ fpr:::::::::ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ:"""
 
 @pytest.mark.skipif(not spack.util.gpg.GpgConstants.user_run_dir,
                     reason='This test requires /var/run/user/$(id -u)')
+@pytest.mark.requires_executables('gpg2')
 def test_really_long_gnupg_home_dir(tmpdir):
     N = 960
 

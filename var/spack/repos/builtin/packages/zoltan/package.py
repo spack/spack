@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,9 @@ class Zoltan(AutotoolsPackage):
     """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
-    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
+    url      = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
 
-    version('3.83', sha256='d0d78fdeab7a385c87d3666b8a8dc748994ff04d3fd846872a4845e12d79c1bb')
-    version('3.8', sha256='5bdd46548fb9c73b225bbcf3d206c558c318cb292f0b19645e536315d14aafb7')
-    version('3.6', sha256='d2cb41e5fb72ca564b24bc5f21d82d9f7992f2c977bc82b243a01a8a8ee4eb9c')
-    version('3.3', sha256='8a90585674ab1bbd011dab29f778b9816519712c78d0aab4cdde9c68f02b30dc')
+    version('3.83', sha256='17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c')
 
     patch('notparallel.patch', when='@3.8')
 
@@ -39,6 +36,7 @@ class Zoltan(AutotoolsPackage):
 
     depends_on('mpi', when='+mpi')
 
+    depends_on('parmetis@4: +int64', when='+parmetis+int64')
     depends_on('parmetis@4:', when='+parmetis')
     depends_on('metis+int64', when='+parmetis+int64')
     depends_on('metis', when='+parmetis')
@@ -90,6 +88,10 @@ class Zoltan(AutotoolsPackage):
             '-g' if '+debug' in spec else '',
         ]
 
+        config_ldflags = []
+        # PGI runtime libraries
+        if '%pgi' in spec:
+            config_ldflags.append('-pgf90libs')
         if '+shared' in spec:
             config_args.extend([
                 'RANLIB=echo',
@@ -142,7 +144,8 @@ class Zoltan(AutotoolsPackage):
         config_args.extend([
             '--with-cflags={0}'.format(' '.join(config_cflags)),
             '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-            '--with-fcflags={0}'.format(' '.join(config_fcflags))
+            '--with-fcflags={0}'.format(' '.join(config_fcflags)),
+            '--with-ldflags={0}'.format(' '.join(config_ldflags))
         ])
         return config_args
 

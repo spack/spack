@@ -5,7 +5,7 @@
  #include <stdint.h>
  #include <assert.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef USE_MALLOC_WRAPPERS
@@ -16,7 +16,7 @@
  #include <stdlib.h>
  #include <stdint.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef __GNUC__
@@ -27,7 +27,7 @@
  #include <stdlib.h>
  #include <stdint.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef __GNUC__
@@ -38,7 +38,7 @@
  #include <stdint.h>
  #include <string.h>
 -#include <emmintrin.h>
-+#include <SSE2NEON.h>
++#include <sse2neon.h>
  #include "ksw.h"
  
  #ifdef __GNUC__

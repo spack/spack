@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -54,8 +54,6 @@ class FujitsuSsl2(Package):
             else:
                 libslist.append("libfjlapack.so")
 
-        libslist.append("libfj90rt2.a")
-
         if spec.target == "a64fx":  # Build with SVE support
             if "+parallel" in spec:  # parallel
                 libslist.append("libssl2mtexsve.a")
@@ -104,7 +102,7 @@ class FujitsuSsl2(Package):
             libslist.append("libscalapack.a")
 
         libslist.extend(
-            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so", "libfj90rt2.a"]
+            ["libmpi_usempi_ignore_tkr.so", "libmpi_mpifh.so"]
         )
 
         if spec.target == "a64fx":  # Build with SVE support

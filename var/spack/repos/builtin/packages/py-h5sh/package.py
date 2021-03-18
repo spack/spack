@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyH5sh(PythonPackage):
     """Shell-like environment for HDF5."""
 
-    homepage = "https://pypi.python.org/pypi/h5sh"
+    homepage = "https://github.com/sethrj/h5sh"
     url      = "https://github.com/sethrj/h5sh/archive/v0.1.1.tar.gz"
 
     maintainers = ['sethrj']
@@ -22,4 +22,3 @@ class PyH5sh(PythonPackage):
     depends_on('py-prompt-toolkit@2:', type=('build', 'run'))
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
-    depends_on('py-pytest', type='test')

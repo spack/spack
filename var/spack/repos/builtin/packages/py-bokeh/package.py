@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyBokeh(PythonPackage):
     """Statistical and novel interactive HTML plots for Python"""
 
     homepage = "http://github.com/bokeh/bokeh"
-    url      = "https://pypi.io/packages/source/b/bokeh/bokeh-0.12.2.tar.gz"
+    pypi = "bokeh/bokeh-0.12.2.tar.gz"
 
     version('1.3.4', sha256='e2d97bed5b199a10686486001fed5c854e4c04ebe28859923f27c52b93904754')
     version('0.12.2', sha256='0a840f6267b6d342e1bd720deee30b693989538c49644142521d247c0f2e6939')

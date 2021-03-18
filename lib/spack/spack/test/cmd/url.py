@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,7 +71,7 @@ def test_url_with_no_version_fails():
         url('parse', 'http://www.netlib.org/voronoi/triangle.zip')
 
 
-@pytest.mark.network
+@pytest.mark.maybeslow
 @pytest.mark.skipif(
     sys.version_info < (2, 7),
     reason="Python 2.6 tests are run in a container, where "
@@ -106,7 +106,7 @@ def test_url_list():
     assert 0 < correct_version_urls < total_urls
 
 
-@pytest.mark.network
+@pytest.mark.maybeslow
 @pytest.mark.skipif(
     sys.version_info < (2, 7),
     reason="Python 2.6 tests are run in a container, where "

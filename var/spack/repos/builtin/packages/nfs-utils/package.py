@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class NfsUtils(AutotoolsPackage):
     depends_on('lvm2')
     depends_on('keyutils')
     depends_on('sqlite')
+    depends_on('uuid')
     depends_on('util-linux')
     depends_on('gettext')
 

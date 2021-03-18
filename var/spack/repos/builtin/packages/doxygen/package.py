@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Doxygen(CMakePackage):
@@ -33,6 +34,29 @@ class Doxygen(CMakePackage):
     variant('mscgen', default=False,
             description='Build with support for code graphs from mscgen.')
 
+    executables = ['doxygen']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-v', output=str, error=str)
+        match = re.search(r"^([\d\.]+)$", output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        variants = ''
+        if which('dot'):
+            variants += "+graphviz"
+        else:
+            variants += "~graphviz"
+
+        if which('mscgen'):
+            variants += "+mscgen"
+        else:
+            variants += "~mscgen"
+
+        return variants
+
     depends_on("cmake@2.8.12:", type='build')
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
@@ -50,6 +74,9 @@ class Doxygen(CMakePackage):
     # https://github.com/Sleepyowl/doxygen/commit/6c380ba91ae41c6d5c409a5163119318932ae2a3?diff=unified
     # Also - https://github.com/doxygen/doxygen/pull/6588
     patch('shared_ptr.patch', when='@1.8.14')
+
+    # Workaround for gcc getting stuck in an infinite loop
+    patch('gcc-partial-inlining-bug.patch', when='@1.8.20: %gcc@7')
 
     def patch(self):
         if self.spec['iconv'].name == 'libc':

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyKnack(PythonPackage):
     """A Command-Line Interface framework."""
 
     homepage = "https://github.com/microsoft/knack"
-    url      = "https://pypi.io/packages/source/k/knack/knack-0.7.1.tar.gz"
+    pypi = "knack/knack-0.7.1.tar.gz"
 
     version('0.7.1', sha256='fcef6040164ebe7d69629e4e089b398c9b980791446496301befcf8381dba0fc')
 

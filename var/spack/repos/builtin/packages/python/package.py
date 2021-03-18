@@ -1,21 +1,16 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import ast
 import os
 import platform
 import re
-import sys
 
 import llnl.util.tty as tty
 from llnl.util.lang import match_predicate
-from llnl.util.filesystem import (force_remove, get_filetype,
-                                  path_contains_subdirectory)
+from llnl.util.filesystem import get_filetype, path_contains_subdirectory
 
-import spack.store
-import spack.util.spack_json as sjson
 from spack.util.environment import is_system_path
 from spack.util.prefix import Prefix
 from spack import *
@@ -29,16 +24,21 @@ class Python(AutotoolsPackage):
     list_url = "https://www.python.org/ftp/python/"
     list_depth = 1
 
-    maintainers = ['adamjstewart']
+    maintainers = ['adamjstewart', 'skosukhin']
 
+    version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
+    version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21', preferred=True)
+    version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7', preferred=True)
+    version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac')
+    version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
     version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
     version('3.8.4',  sha256='32c4d9817ef11793da4d0d95b3191c4db81d2e45544614e8449255ca9ae3cc18')
     version('3.8.3',  sha256='6af6d4d2e010f9655518d0fc6738c7ff7069f10a4d2fbd55509e467f092a8b90')
     version('3.8.2',  sha256='e634a7a74776c2b89516b2e013dda1728c89c8149b9863b8cea21946daf9d561')
     version('3.8.1',  sha256='c7cfa39a43b994621b245e029769e9126caa2a93571cee2e743b213cceac35fb')
     version('3.8.0',  sha256='f1069ad3cae8e7ec467aa98a6565a62a48ef196cb8f1455a245a08db5e1792df')
+    version('3.7.10', sha256='c9649ad84dc3a434c8637df6963100b2e5608697f9ba56d82e3809e4148e0975')
     version('3.7.9',  sha256='39b018bc7d8a165e59aa827d9ae45c45901739b0bbb13721e4f973f3521c166a')
     version('3.7.8',  sha256='0e25835614dc221e3ecea5831b38fa90788b5389b99b675a751414c858789ab0')
     version('3.7.7',  sha256='8c8be91cd2648a1a0c251f04ea0bb4c2a5570feb9c45eaaa2241c785585b475a')
@@ -49,6 +49,7 @@ class Python(AutotoolsPackage):
     version('3.7.2',  sha256='f09d83c773b9cc72421abba2c317e4e6e05d919f9bcf34468e192b6a6c8e328d')
     version('3.7.1',  sha256='36c1b81ac29d0f8341f727ef40864d99d8206897be96be73dc34d4739c9c9f06')
     version('3.7.0',  sha256='85bb9feb6863e04fb1700b018d9d42d1caac178559ffa453d7e6a436e259fd0d')
+    version('3.6.13', sha256='614950d3d54f6e78dac651b49c64cfe2ceefea5af3aff3371a9e4b27a53b2669')
     version('3.6.12', sha256='12dddbe52385a0f702fb8071e12dcc6b3cb2dde07cd8db3ed60e90d90ab78693')
     version('3.6.11', sha256='96621902f89746fffc22f39749c07da7c2917b232e72352e6837d41850f7b90c')
     version('3.6.10', sha256='7034dd7cba98d4f94c74f9edd7345bac71c8814c41672c64d9044fa2f96f334d')
@@ -165,14 +166,8 @@ class Python(AutotoolsPackage):
     depends_on('libffi', when='+ctypes')
     depends_on('tk', when='+tkinter')
     depends_on('tcl', when='+tkinter')
+    depends_on('uuid', when='+uuid')
     depends_on('tix', when='+tix')
-    if sys.platform != 'darwin':
-        # On macOS systems, Spack's libuuid conflicts with the system-installed
-        # version and breaks anything linked against Cocoa/Carbon. Since the
-        # system-provided version is sufficient to build Python's UUID support,
-        # the easy solution is to only depend on Spack's libuuid when *not* on
-        # a Mac.
-        depends_on('libuuid', when='+uuid')
 
     # Python needs to be patched to build extensions w/ mixed C/C++ code:
     # https://github.com/NixOS/nixpkgs/pull/19585/files
@@ -225,10 +220,6 @@ class Python(AutotoolsPackage):
               msg='python+tix requires python+tix+tkinter')
 
     conflicts('%nvhpc')
-
-    _DISTUTIL_VARS_TO_SAVE = ['LDSHARED']
-    _DISTUTIL_CACHE_FILENAME = 'sysconfig.json'
-    _distutil_vars = None
 
     # Used to cache home locations, since computing them might be expensive
     _homes = {}
@@ -422,8 +413,8 @@ class Python(AutotoolsPackage):
             config_args.append('--disable-toolbox-glue')
 
         if spec.satisfies('%intel', strict=True) and \
-                spec.satisfies('@2.7.12:2.8,3.5.2:', strict=True):
-            config_args.append('--with-icc')
+                spec.satisfies('@2.7.12:2.8,3.5.2:3.7', strict=True):
+            config_args.append('--with-icc={0}'.format(spack_cc))
 
         if '+debug' in spec:
             config_args.append('--with-pydebug')
@@ -487,90 +478,6 @@ class Python(AutotoolsPackage):
         return config_args
 
     @run_after('install')
-    def _save_distutil_vars(self):
-        """
-        Run before changing automatically generated contents of the
-        _sysconfigdata.py, which is used by distutils to figure out what
-        executables to use while compiling and linking extensions. If we build
-        extensions with spack those executables should be spack's wrappers.
-        Spack partially covers this by setting environment variables that
-        are also accounted for by distutils. Currently there is one more known
-        variable that must be set, which is LDSHARED, so the method saves its
-        autogenerated value to pass it to the dependent package's setup script.
-        """
-
-        self._distutil_vars = {}
-
-        input_filename = self.get_sysconfigdata_name()
-        input_dict = None
-        try:
-            with open(input_filename) as input_file:
-                match = re.search(r'build_time_vars\s*=\s*(?P<dict>{.*})',
-                                  input_file.read(),
-                                  flags=re.DOTALL)
-
-                if match:
-                    input_dict = ast.literal_eval(match.group('dict'))
-        except (IOError, SyntaxError):
-            pass
-
-        if not input_dict:
-            tty.warn("Failed to find 'build_time_vars' dictionary in file "
-                     "'%s'. This might cause the extensions that are "
-                     "installed with distutils to call compilers directly "
-                     "avoiding Spack's wrappers." % input_filename)
-            return
-
-        for var_name in Python._DISTUTIL_VARS_TO_SAVE:
-            if var_name in input_dict:
-                self._distutil_vars[var_name] = input_dict[var_name]
-            else:
-                tty.warn("Failed to find key '%s' in 'build_time_vars' "
-                         "dictionary in file '%s'. This might cause the "
-                         "extensions that are installed with distutils to "
-                         "call compilers directly avoiding Spack's wrappers."
-                         % (var_name, input_filename))
-
-        if len(self._distutil_vars) > 0:
-            output_filename = None
-            try:
-                output_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
-                    Python._DISTUTIL_CACHE_FILENAME)
-                with open(output_filename, 'w') as output_file:
-                    sjson.dump(self._distutil_vars, output_file)
-            except Exception:
-                tty.warn("Failed to save metadata for distutils. This might "
-                         "cause the extensions that are installed with "
-                         "distutils to call compilers directly avoiding "
-                         "Spack's wrappers.")
-                # We make the cache empty if we failed to save it to file
-                # to provide the same behaviour as in the case when the cache
-                # is initialized by the method load_distutils_data().
-                self._distutil_vars = {}
-                if output_filename:
-                    force_remove(output_filename)
-
-    def _load_distutil_vars(self):
-        # We update and keep the cache unchanged only if the package is
-        # installed.
-        if not self._distutil_vars and self.installed:
-            try:
-                input_filename = join_path(
-                    spack.store.layout.metadata_path(self.spec),
-                    Python._DISTUTIL_CACHE_FILENAME)
-                if os.path.isfile(input_filename):
-                    with open(input_filename) as input_file:
-                        self._distutil_vars = sjson.load(input_file)
-            except Exception:
-                pass
-
-            if not self._distutil_vars:
-                self._distutil_vars = {}
-
-        return self._distutil_vars
-
-    @run_after('install')
     def filter_compilers(self):
         """Run after install to tell the configuration files and Makefiles
         to use the compilers that Spack built the package with.
@@ -616,6 +523,13 @@ class Python(AutotoolsPackage):
                        os.path.join(prefix.bin, 'python'))
             os.symlink(os.path.join(prefix.bin, 'python3-config'),
                        os.path.join(prefix.bin, 'python-config'))
+
+    @run_after('install')
+    def install_python_gdb(self):
+        # https://devguide.python.org/gdb/
+        src = os.path.join('Tools', 'gdb', 'libpython.py')
+        if os.path.exists(src):
+            install(src, self.command.path + '-gdb.py')
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -944,14 +858,76 @@ class Python(AutotoolsPackage):
         pythonpath = ':'.join(python_paths)
         env.set('PYTHONPATH', pythonpath)
 
+        # We need to make sure that the extensions are compiled and linked with
+        # the Spack wrapper. Paths to the executables that are used for these
+        # operations are normally taken from the sysconfigdata file, which we
+        # modify after the installation (see method filter compilers). The
+        # modified file contains paths to the real compilers, not the wrappers.
+        # The values in the file, however, can be overridden with environment
+        # variables. The first variable, CC (CXX), which is used for
+        # compilation, is set by Spack for the dependent package by default.
+        # That is not 100% correct because the value for CC (CXX) in the
+        # sysconfigdata file often contains additional compiler flags (e.g.
+        # -pthread), which we lose by simply setting CC (CXX) to the path to the
+        # Spack wrapper. Moreover, the user might try to build an extension with
+        # a compiler that is different from the one that was used to build
+        # Python itself, which might have unexpected side effects. However, the
+        # experience shows that none of the above is a real issue and we will
+        # not try to change the default behaviour. Given that, we will simply
+        # try to modify LDSHARED (LDCXXSHARED), the second variable, which is
+        # used for linking, in a consistent manner.
+
+        for compile_var, link_var in [('CC', 'LDSHARED'),
+                                      ('CXX', 'LDCXXSHARED')]:
+            # First, we get the values from the sysconfigdata:
+            config_compile = self.get_config_var(compile_var)
+            config_link = self.get_config_var(link_var)
+
+            # The dependent environment will have the compilation command set to
+            # the following:
+            new_compile = join_path(
+                spack.paths.build_env_path,
+                dependent_spec.package.compiler.link_paths[compile_var.lower()])
+
+            # Normally, the link command starts with the compilation command:
+            if config_link.startswith(config_compile):
+                new_link = new_compile + config_link[len(config_compile):]
+            else:
+                # Otherwise, we try to replace the compiler command if it
+                # appears "in the middle" of the link command; to avoid
+                # mistaking some substring of a path for the compiler (e.g. to
+                # avoid replacing "gcc" in "-L/path/to/gcc/"), we require that
+                # the compiler command be surrounded by spaces. Note this may
+                # leave "config_link" unchanged if the compilation command does
+                # not appear in the link command at all, for example if "ld" is
+                # invoked directly (no change would be required in that case
+                # because Spack arranges for the Spack ld wrapper to be the
+                # first instance of "ld" in PATH).
+                new_link = config_link.replace(" {0} ".format(config_compile),
+                                               " {0} ".format(new_compile))
+
+            # There is logic in the sysconfig module that is sensitive to the
+            # fact that LDSHARED is set in the environment, therefore we export
+            # the variable only if the new value is different from what we got
+            # from the sysconfigdata file:
+            if config_link != new_link:
+                env.set(link_var, new_link)
+
     def setup_dependent_run_environment(self, env, dependent_spec):
-        # For run time environment set only the path for
-        # dependent_spec and prepend it to PYTHONPATH
-        if dependent_spec.package.extends(self.spec):
-            for lib in ['lib', 'lib64']:
-                env.prepend_path('PYTHONPATH', join_path(
-                    dependent_spec.prefix, lib,
-                    'python' + str(self.version.up_to(2)), 'site-packages'))
+        python_paths = []
+        for d in dependent_spec.traverse(deptype='run'):
+            if d.package.extends(self.spec):
+                # Python libraries may be installed in lib or lib64
+                # See issues #18520 and #17126
+                for lib in ['lib', 'lib64']:
+                    root = join_path(
+                        d.prefix, lib, 'python' + str(self.version.up_to(2)),
+                        'site-packages')
+                    if os.path.exists(root):
+                        python_paths.append(root)
+
+        pythonpath = ':'.join(python_paths)
+        env.prepend_path('PYTHONPATH', pythonpath)
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before python modules' install() methods.
@@ -963,12 +939,6 @@ class Python(AutotoolsPackage):
         module.python = self.command
         module.setup_py = Executable(
             self.command.path + ' setup.py --no-user-cfg')
-
-        distutil_vars = self._load_distutil_vars()
-
-        if distutil_vars:
-            for key, value in distutil_vars.items():
-                module.setup_py.add_default_env(key, value)
 
         # Add variables for lib/pythonX.Y and lib/pythonX.Y/site-packages dirs.
         module.python_lib_dir = join_path(dependent_spec.prefix,

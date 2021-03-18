@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -453,6 +453,8 @@ def test_aocc_flags():
                          '-Os', '-Oz', '-Og',
                          '-O', '-O4'],
                         'aocc@2.2.0')
+
+    supported_flag_test("stdcxx_libs", ("-lstdc++",), "aocc@2.2.0")
     supported_flag_test("openmp_flag", "-fopenmp", "aocc@2.2.0")
     supported_flag_test("cxx11_flag", "-std=c++11", "aocc@2.2.0")
     supported_flag_test("cxx14_flag", "-std=c++14", "aocc@2.2.0")
@@ -464,6 +466,10 @@ def test_aocc_flags():
     supported_flag_test("f77_pic_flag", "-fPIC", "aocc@2.2.0")
     supported_flag_test("fc_pic_flag", "-fPIC", "aocc@2.2.0")
     supported_flag_test("version_argument", "--version", "aocc@2.2.0")
+    flg = "-Wno-unused-command-line-argument -mllvm -eliminate-similar-expr=false"
+    supported_flag_test("cflags", flg, "aocc@3.0.0")
+    supported_flag_test("cxxflags", flg, "aocc@3.0.0")
+    supported_flag_test("fflags", flg, "aocc@3.0.0")
 
 
 def test_fj_flags():

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyScikitImage(PythonPackage):
     filtering, warping, color manipulation, object detection, etc."""
 
     homepage = "http://scikit-image.org/"
-    url      = "https://pypi.io/packages/source/s/scikit-image/scikit-image-0.17.2.tar.gz"
+    pypi = "scikit-image/scikit-image-0.17.2.tar.gz"
 
     version('0.17.2', sha256='bd954c0588f0f7e81d9763dc95e06950e68247d540476e06cb77bcbcd8c2d8b3')
     version('0.14.2', sha256='1afd0b84eefd77afd1071c5c1c402553d67be2d7db8950b32d6f773f25850c1f')

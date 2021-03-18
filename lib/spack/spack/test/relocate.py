@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,6 @@ import llnl.util.filesystem
 import pytest
 import spack.architecture
 import spack.concretize
-import spack.hooks.sbang as sbang
 import spack.paths
 import spack.relocate
 import spack.spec
@@ -281,7 +280,7 @@ def test_replace_prefix_bin(hello_world):
     executable = hello_world(rpaths=['/usr/lib', '/usr/lib64'])
 
     # Relocate the RPATHs
-    spack.relocate._replace_prefix_bin(str(executable), '/usr', '/foo')
+    spack.relocate._replace_prefix_bin(str(executable), {b'/usr': b'/foo'})
 
     # Some compilers add rpaths so ensure changes included in final result
     assert '/foo/lib:/foo/lib64' in rpaths_for(executable)
@@ -382,11 +381,12 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert not text_in_bin(str(new_binary.dirpath()), new_binary)
 
     # Check this call succeed
+    orig_path_bytes = str(orig_binary.dirpath()).encode('utf-8')
+    new_path_bytes = str(new_binary.dirpath()).encode('utf-8')
+
     spack.relocate.relocate_text_bin(
         [str(new_binary)],
-        str(orig_binary.dirpath()), str(new_binary.dirpath()),
-        spack.paths.spack_root, spack.paths.spack_root,
-        {str(orig_binary.dirpath()): str(new_binary.dirpath())}
+        {orig_path_bytes: new_path_bytes}
     )
 
     # Check original directory is not there anymore and it was
@@ -395,55 +395,13 @@ def test_relocate_text_bin(hello_world, copy_binary, tmpdir):
     assert text_in_bin(str(new_binary.dirpath()), new_binary)
 
 
-def test_relocate_text_bin_raise_if_new_prefix_is_longer():
-    short_prefix = '/short'
-    long_prefix = '/much/longer'
+def test_relocate_text_bin_raise_if_new_prefix_is_longer(tmpdir):
+    short_prefix = b'/short'
+    long_prefix = b'/much/longer'
+    fpath = str(tmpdir.join('fakebin'))
+    with open(fpath, 'w') as f:
+        f.write('/short')
     with pytest.raises(spack.relocate.BinaryTextReplaceError):
         spack.relocate.relocate_text_bin(
-            ['item'], short_prefix, long_prefix, None, None, None
+            [fpath], {short_prefix: long_prefix}
         )
-
-
-@pytest.mark.parametrize("sbang_line", [
-    "#!/bin/bash /path/to/orig/spack/bin/sbang",
-    "#!/bin/sh /orig/layout/root/bin/sbang"
-])
-def test_relocate_text_old_sbang(tmpdir, sbang_line):
-    """Ensure that old and new sbang styles are relocated."""
-
-    old_install_prefix = "/orig/layout/root/orig/install/prefix"
-    new_install_prefix = os.path.join(
-        spack.store.layout.root, "new", "install", "prefix"
-    )
-
-    # input file with an sbang line
-    original = """\
-{0}
-#!/usr/bin/env python
-
-/orig/layout/root/orig/install/prefix
-""".format(sbang_line)
-
-    # expected relocation
-    expected = """\
-{0}
-#!/usr/bin/env python
-
-{1}
-""".format(sbang.sbang_shebang_line(), new_install_prefix)
-
-    path = tmpdir.ensure("path", "to", "file")
-    with path.open("w") as f:
-        f.write(original)
-
-    spack.relocate.relocate_text(
-        [str(path)],
-        "/orig/layout/root",   spack.store.layout.root,
-        old_install_prefix,    new_install_prefix,
-        "/path/to/orig/spack", spack.paths.spack_root,
-        {
-            old_install_prefix: new_install_prefix
-        }
-    )
-
-    assert expected == open(str(path)).read()

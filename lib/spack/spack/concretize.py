@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -73,9 +73,7 @@ class Concretizer(object):
         if not dev_info:
             return False
 
-        path = dev_info['path']
-        path = path if os.path.isabs(path) else os.path.join(
-            env.path, path)
+        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
 
         if 'dev_path' in spec.variants:
             assert spec.variants['dev_path'].value == path
@@ -253,8 +251,7 @@ class Concretizer(object):
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
 
-        if spec.architecture.platform and \
-                (spec.architecture.os and spec.architecture.target):
+        if spec.architecture.concrete:
             return False
 
         # Get platform of nearest spec with a platform, including spec
@@ -294,22 +291,58 @@ class Concretizer(object):
 
         # Get the nearest spec with relevant platform and a target
         # Generally, same algorithm as finding os
+        curr_target = None
         if spec.architecture.target:
+            curr_target = spec.architecture.target
+        if spec.architecture.target and spec.architecture.target_concrete:
             new_target = spec.architecture.target
         else:
             new_target_spec = find_spec(
                 spec, lambda x: (x.architecture and
                                  x.architecture.platform == str(new_plat) and
-                                 x.architecture.target)
+                                 x.architecture.target and
+                                 x.architecture.target != curr_target)
             )
             if new_target_spec:
-                new_target = new_target_spec.architecture.target
+                if curr_target:
+                    # constrain one target by the other
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, new_target_spec.architecture.target))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, curr_target))
+                    curr_target_arch.constrain(new_target_arch)
+                    new_target = curr_target_arch.target
+                else:
+                    new_target = new_target_spec.architecture.target
             else:
                 # To get default platform, consider package prefs
                 if PackagePrefs.has_preferred_targets(spec.name):
                     new_target = self.target_from_package_preferences(spec)
                 else:
                     new_target = new_plat.target('default_target')
+                if curr_target:
+                    # convert to ArchSpec to compare satisfaction
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(new_target)))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(curr_target)))
+
+                    if not new_target_arch.satisfies(curr_target_arch):
+                        # new_target is an incorrect guess based on preferences
+                        # and/or default
+                        valid_target_ranges = str(curr_target).split(',')
+                        for target_range in valid_target_ranges:
+                            t_min, t_sep, t_max = target_range.partition(':')
+                            if not t_sep:
+                                new_target = t_min
+                                break
+                            elif t_max:
+                                new_target = t_max
+                                break
+                            elif t_min:
+                                # TODO: something better than picking first
+                                new_target = t_min
+                                break
 
         # Construct new architecture, compute whether spec changed
         arch_spec = (str(new_plat), str(new_os), str(new_target))
@@ -384,7 +417,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -482,7 +515,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -543,10 +576,14 @@ class Concretizer(object):
             True if spec was modified, False otherwise
         """
         # To minimize the impact on performance this function will attempt
-        # to adjust the target only at the very first call. It will just
-        # return False on subsequent calls. The way this is achieved is by
-        # initializing a generator and making this function return the next
-        # answer.
+        # to adjust the target only at the very first call once necessary
+        # information is set. It will just return False on subsequent calls.
+        # The way this is achieved is by initializing a generator and making
+        # this function return the next answer.
+        if not (spec.architecture and spec.architecture.concrete):
+            # Not ready, but keep going because we have work to do later
+            return True
+
         def _make_only_one_call(spec):
             yield self._adjust_target(spec)
             while True:
@@ -584,9 +621,10 @@ class Concretizer(object):
         if PackagePrefs.has_preferred_targets(spec.name):
             default_target = self.target_from_package_preferences(spec)
 
-        if current_target != default_target or \
-            (self.abstract_spec.architecture is not None and
-             self.abstract_spec.architecture.target is not None):
+        if current_target != default_target or (
+                self.abstract_spec and
+                self.abstract_spec.architecture and
+                self.abstract_spec.architecture.concrete):
             return False
 
         try:
@@ -674,10 +712,12 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
-def concretize_specs_together(*abstract_specs):
+def concretize_specs_together(*abstract_specs, **kwargs):
     """Given a number of specs as input, tries to concretize them together.
 
     Args:
+        tests (bool or list or set): False to run no tests, True to test
+            all packages, or a list of package names to run tests for some
         *abstract_specs: abstract specs to be concretized, given either
             as Specs or strings
 
@@ -717,7 +757,7 @@ def concretize_specs_together(*abstract_specs):
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize()
+        concretization_root.concretize(tests=kwargs.get('tests', False))
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs

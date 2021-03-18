@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,5 +15,5 @@ class Lndir(AutotoolsPackage, XorgPackage):
 
     version('1.0.3', sha256='95b2d26fb3cbe702f828146c7a4c7c48001d2da52b062580227b7b68180be902')
 
-    depends_on('xproto@7.0.17:', type='build')
+    depends_on('xproto@7.0.17:')
     depends_on('pkgconfig', type='build')

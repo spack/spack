@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,10 +26,13 @@ class Mesa(MesonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
+    depends_on('cmake', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
+    depends_on('expat')
+    depends_on('zlib@1.2.3:')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -70,7 +73,26 @@ class Mesa(MesonPackage):
     depends_on('libxext', when='+glx')
     depends_on('libxt',  when='+glx')
     depends_on('xrandr', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
+
+    # Require at least 1 front-end
+    # TODO: Add egl to this conflict once made available
+    conflicts('~osmesa ~glx')
+
+    # Require at least 1 back-end
+    # TODO: Add vulkan to this conflict once made available
+    conflicts('~opengl ~opengles')
+
+    # OpenGL ES requires OpenGL
+    conflicts('~opengl +opengles')
+
+    # 'auto' needed when shared llvm is built
+    @when('^llvm~shared_libs')
+    def patch(self):
+        filter_file(
+            r"_llvm_method = 'auto'",
+            "_llvm_method = 'config-tool'",
+            "meson.build")
 
     def meson_args(self):
         spec = self.spec
@@ -187,7 +209,6 @@ class Mesa(MesonPackage):
         if libs_to_seek:
             return find_libraries(list(libs_to_seek),
                                   root=self.spec.prefix,
-                                  shared='+shared' in self.spec,
                                   recursive=True)
         return LibraryList()
 
@@ -195,19 +216,16 @@ class Mesa(MesonPackage):
     def osmesa_libs(self):
         return find_libraries('libOSMesa',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
                               recursive=True)
 
     @property
     def glx_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
                               recursive=True)
 
     @property
     def gl_libs(self):
         return find_libraries('libGL',
                               root=self.spec.prefix,
-                              shared='+shared' in self.spec,
                               recursive=True)

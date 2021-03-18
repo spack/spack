@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,9 @@ class Pfunit(CMakePackage):
 
     maintainers = ['citibeth']
 
+    version('4.1.14', sha256='bada2be8d7e69ca1f16209ba92293fa1c06748b78534d71b24b2c825450a495f')
+    version('4.1.13', sha256='f388e08c67c51cbfd9f3a3658baac912b5506d2fc651410cd34a21260c309630')
+    version('4.1.12', sha256='7d71b0fb996497fe9a20eb818d02d596cd0d3cded1033a89a9081fbd925c68f2')
     version('4.1.11', sha256='16160bac223aaa3ed2b27e30287d25fdaec3cf6f2c570ebd8d61196e6aa6180f')
     version('4.1.10', sha256='051c35ad9678002943f4a4f2ab532a6b44de86ca414751616f93e69f393f5373')
     version('3.3.3',  sha256='9f673b58d20ad23148040a100227b4f876458a9d9aee0f0d84a5f0eef209ced5')

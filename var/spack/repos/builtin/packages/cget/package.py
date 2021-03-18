@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class Cget(PythonPackage):
     """Cmake package retrieval."""
 
     homepage = "https://github.com/pfultz2/cget"
-    url      = "https://pypi.io/packages/source/c/cget/cget-0.1.9.tar.gz"
+    pypi = "cget/cget-0.1.9.tar.gz"
 
     version('0.1.9', sha256='2a7913b601bec615208585eda7e69998a43cc17080d36c2ff2ce8742c9794bf6')
 

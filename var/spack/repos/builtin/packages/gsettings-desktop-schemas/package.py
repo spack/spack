@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,3 +20,15 @@ class GsettingsDesktopSchemas(MesonPackage):
     depends_on('glib')
     depends_on('gobject-introspection', type='build')
     depends_on('gettext', type='build')
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        env.prepend_path('XDG_DATA_DIRS', self.prefix.share)
+
+    def setup_build_environment(self, env):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)
+
+    def setup_run_environment(self, env):
+        env.prepend_path("XDG_DATA_DIRS", self.prefix.share)

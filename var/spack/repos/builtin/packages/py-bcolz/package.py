@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class PyBcolz(PythonPackage):
     """
 
     homepage = "https://github.com/Blosc/bcolz"
-    url      = "https://pypi.io/packages/source/b/bcolz/bcolz-1.2.1.tar.gz"
+    pypi = "bcolz/bcolz-1.2.1.tar.gz"
 
     version('1.2.1', sha256='c017d09bb0cb5bbb07f2ae223a3f3638285be3b574cb328e91525b2880300bd1')
 

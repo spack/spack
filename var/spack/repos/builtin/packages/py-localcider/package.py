@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyLocalcider(PythonPackage):
     """Tools for calculating sequence properties of disordered proteins"""
 
     homepage = "http://pappulab.github.io/localCIDER"
-    url      = "https://pypi.io/packages/source/l/localcider/localcider-0.1.14.tar.gz"
+    pypi = "localcider/localcider-0.1.14.tar.gz"
 
     version('0.1.14', sha256='54ff29e8a011947cca5df79e96f3c69a76c49c4db41dcf1608663992be3e3f5f')
 

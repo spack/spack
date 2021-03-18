@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class PyAwkward1(PythonPackage):
 
     maintainers = ['vvolkl']
 
+    version('1.1.2', sha256='626e3a6a2a92dd67abc8692b1ebfa1b447b9594352d6ce8c86c37d7299dc4602')
     version('0.3.1', sha256='7126d9feab8828b0b4f4c6dbc9e28c269a91e28eef4a6033d7ebb5db21f1dab3')
 
     patch('pybind11.patch')
@@ -25,4 +26,4 @@ class PyAwkward1(PythonPackage):
     depends_on('py-numpy@1.13.1:')
     depends_on('py-pybind11')
     depends_on('rapidjson')
-    depends_on('cmake')
+    depends_on('cmake', type='build')

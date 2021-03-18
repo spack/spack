@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -62,16 +62,15 @@ def topological_sort(spec, reverse=False, deptype='all'):
     """
     deptype = canonical_deptype(deptype)
 
-    if not reverse:
-        parents = lambda s: s.dependents()
-        children = lambda s: s.dependencies()
-    else:
-        parents = lambda s: s.dependencies()
-        children = lambda s: s.dependents()
-
     # Work on a copy so this is nondestructive.
     spec = spec.copy(deps=deptype)
     nodes = spec.index(deptype=deptype)
+
+    parents = lambda s: [p for p in s.dependents() if p.name in nodes]
+    children = lambda s: s.dependencies()
+
+    if reverse:
+        parents, children = children, parents
 
     topo_order = []
     par = dict((name, parents(nodes[name])) for name in nodes.keys())

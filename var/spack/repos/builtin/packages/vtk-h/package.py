@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -63,9 +63,8 @@ class VtkH(Package, CudaPackage):
     variant("logging", default=False, description="Build vtk-h with logging enabled")
     variant("contourtree", default=False, description="Enable contour tree support")
 
-    # use cmake 3.14, newest that provides proper cuda support
-    # and we have seen errors with cuda in 3.15
-    depends_on("cmake@3.14.1:3.14.99", type='build')
+    # Certain CMake versions have been found to break for our use cases
+    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
 
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")

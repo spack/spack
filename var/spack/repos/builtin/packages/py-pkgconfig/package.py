@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPkgconfig(PythonPackage):
     """Interface Python with pkg-config."""
 
     homepage = "http://github.com/matze/pkgconfig"
-    url      = "https://pypi.io/packages/source/p/pkgconfig/pkgconfig-1.2.2.tar.gz"
+    pypi = "pkgconfig/pkgconfig-1.2.2.tar.gz"
 
     version('1.5.1', sha256='97bfe3d981bab675d5ea3ef259045d7919c93897db7d3b59d4e8593cba8d354f')
     version('1.4.0',  sha256='048c3b457da7b6f686b647ab10bf09e2250e4c50acfe6f215398a8b5e6fcdb52')
@@ -19,7 +19,4 @@ class PyPkgconfig(PythonPackage):
     depends_on('python@2.6:2.8,3.3:', type=('build', 'run'))
     depends_on('python@2.7:2.8,3.3:', when='@1.5:', type=('build', 'run'))
     depends_on('py-setuptools', when='@:1.4', type=('build', 'run'))
-
     depends_on('pkgconfig', type=('build', 'run'))
-
-    depends_on('py-nose@1.0:', type=('build', 'test'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyFlake8ImportOrder(PythonPackage):
     """
 
     homepage = "https://github.com/PyCQA/flake8-import-order"
-    url      = "https://pypi.io/packages/source/f/flake8-import-order/flake8-import-order-0.18.1.tar.gz"
+    pypi = "flake8-import-order/flake8-import-order-0.18.1.tar.gz"
 
     version('0.18.1', sha256='a28dc39545ea4606c1ac3c24e9d05c849c6e5444a50fb7e9cdd430fc94de6e92')
 

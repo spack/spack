@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class Boost(Package):
     maintainers = ['hainest']
 
     version('develop', branch='develop', submodules=True)
+    version('1.75.0', sha256='953db31e016db7bb207f11432bef7df100516eeb746843fa0486a222e3fd49cb')
     version('1.74.0', sha256='83bfc1507731a0906e387fc28b7ef5417d591429e51e788417fe9ff025e116b1')
     version('1.73.0', sha256='4eb3b8d442b426dc35346235c8733b5ae35ba431690e38c6a8263dce9fcbb402')
     version('1.72.0', sha256='59c9b274bc451cf91a9ba1dd2c7fdcaf5d60b1b3aa83f2c9fa143417cc660722')
@@ -158,7 +159,13 @@ class Boost(Package):
             description='Default symbol visibility in compiled libraries '
             '(1.69.0 or later)')
 
+    # Unicode support
     depends_on('icu4c', when='+icu')
+    depends_on('icu4c cxxstd=11', when='+icu cxxstd=11')
+    depends_on('icu4c cxxstd=14', when='+icu cxxstd=14')
+    depends_on('icu4c cxxstd=17', when='+icu cxxstd=17')
+    conflicts('cxxstd=98', when='+icu')  # Requires c++11 at least
+
     depends_on('python', when='+python')
     depends_on('mpi', when='+mpi')
     depends_on('bzip2', when='+iostreams')
@@ -253,7 +260,16 @@ class Boost(Package):
 
     # Support bzip2 and gzip in other directory
     # See https://github.com/boostorg/build/pull/154
-    patch('boost_154.patch', when='@:1.63.99')
+    patch('boost_154.patch', when='@1.56.0:1.63.99')
+
+    # Backport Python3 import problem
+    # See https://github.com/boostorg/python/pull/218
+    patch('boost_218.patch', when='@1.63.0:1.67.99')
+
+    # Fix B2 bootstrap toolset during installation
+    # See https://github.com/spack/spack/issues/20757
+    # and https://github.com/spack/spack/pull/21408
+    patch("bootstrap-toolset.patch", when="@1.75:")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -321,6 +337,11 @@ class Boost(Package):
         if '+python' in spec:
             options.append('--with-python=%s' % spec['python'].command.path)
 
+        if '+icu' in spec:
+            options.append('--with-icu')
+        else:
+            options.append('--without-icu')
+
         with open('user-config.jam', 'w') as f:
             # Boost may end up using gcc even though clang+gfortran is set in
             # compilers.yaml. Make sure this does not happen:
@@ -356,8 +377,10 @@ class Boost(Package):
         else:
             options.append('variant=release')
 
-        if '+icu_support' in spec:
-            options.extend(['-s', 'ICU_PATH=%s' % spec['icu'].prefix])
+        if '+icu' in spec:
+            options.extend(['-s', 'ICU_PATH=%s' % spec['icu4c'].prefix])
+        else:
+            options.append('--disable-icu')
 
         if '+iostreams' in spec:
             options.extend([
@@ -539,3 +562,16 @@ class Boost(Package):
 
     def setup_run_environment(self, env):
         env.set('BOOST_ROOT', self.prefix)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        # Disable find package's config mode for versions of Boost that
+        # didn't provide it. See https://github.com/spack/spack/issues/20169
+        # and https://cmake.org/cmake/help/latest/module/FindBoost.html
+        is_cmake = isinstance(dependent_spec.package, CMakePackage)
+        if self.spec.satisfies('boost@:1.69.0') and is_cmake:
+            args_fn = type(dependent_spec.package).cmake_args
+
+            def _cmake_args(self):
+                return ['-DBoost_NO_BOOST_CMAKE=ON'] + args_fn(self)
+
+            type(dependent_spec.package).cmake_args = _cmake_args

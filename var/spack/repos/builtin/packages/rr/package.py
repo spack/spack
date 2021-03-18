@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,7 +29,7 @@ class Rr(CMakePackage):
     # Only 'Release' is supported at the moment
     variant('build_type', default='Release',
             description='The build type to build',
-            values=('Release'))
+            values=('Release',))
 
     def patch(self):
         # because otherwise CMake would try and fail to set RPATH of

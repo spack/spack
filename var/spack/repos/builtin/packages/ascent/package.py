@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -41,6 +41,9 @@ class Ascent(Package, CudaPackage):
 
     version('develop',
             branch='develop',
+            submodules=True)
+    version('0.6.0',
+            tag='v0.6.0',
             submodules=True,
             preferred=True)
 
@@ -79,9 +82,8 @@ class Ascent(Package, CudaPackage):
     # package dependencies
     ###########################################################################
 
-    # use cmake 3.14, newest that provides proper cuda support
-    # and we have seen errors with cuda in 3.15
-    depends_on("cmake@3.14.1:3.14.99", type='build')
+    # Certain CMake versions have been found to break for our use cases
+    depends_on("cmake@3.14.1:3.14.99,3.18.2:", type='build')
     depends_on("conduit~python", when="~python")
     depends_on("conduit+python", when="+python+shared")
     depends_on("conduit~shared~python", when="~shared")
