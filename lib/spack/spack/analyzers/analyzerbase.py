@@ -80,7 +80,7 @@ class Analyzerbase(object):
 
         return self._output_dir
 
-    def save_result(self, result, monitor=None, overwrite=False):
+    def save_result(self, result, overwrite=False):
         """Save a result to the associated spack monitor, if defined. This
         function is on the level of the analyzer because it might be
         the case that the result is large (appropriate for a single request)
