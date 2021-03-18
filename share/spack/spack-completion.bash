@@ -358,7 +358,20 @@ _spack_add() {
 _spack_analyze() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --overwrite --monitor --monitor-no-auth --monitor-keep-going --monitor-host --monitor-prefix -o --outdir --list-analyzers -a --analyzers"
+        SPACK_COMPREPLY="-h --help --monitor --monitor-no-auth --monitor-keep-going --monitor-host --monitor-prefix"
+    else
+        SPACK_COMPREPLY="list-analyzers run"
+    fi
+}
+
+_spack_analyze_list_analyzers() {
+    SPACK_COMPREPLY="-h --help"
+}
+
+_spack_analyze_run() {
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help --overwrite -p --path -a --analyzers"
     else
         _all_packages
     fi

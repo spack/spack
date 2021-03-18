@@ -15,28 +15,25 @@ import spack.config
 import os
 
 
-def get_analyzer_dir(spec):
+def get_analyzer_dir(spec, analyzer_dir=None):
     """Given a spec, return the directory to save analyzer results,
     creating it if it does not exist. We also check that the spec has an
     associated package. An analyzer cannot be run if the spec isn't
-    associated with a package.
+    associated with a package. If the user provides a custom analyzer_dir,
+    we use it over checking the config and the default at ~/.spack/analyzers
     """
     # An analyzer cannot be run if the spec isn't associated with a package
     if not hasattr(spec, "package") or not spec.package:
         tty.die("A spec can only be analyzed with an associated package.")
 
     # The top level directory is in the user home, or a custom location
-    analyzer_dir = spack.util.path.canonicalize_path(
-        spack.config.get('config:analyzers_dir', '~/.spack/analyzers'))
+    if not analyzer_dir:
+        analyzer_dir = spack.util.path.canonicalize_path(
+            spack.config.get('config:analyzers_dir', '~/.spack/analyzers'))
 
     # We follow the same convention as the spec install (this could be better)
     package_prefix = os.sep.join(spec.package.prefix.split('/')[-3:])
     meta_dir = os.path.join(analyzer_dir, package_prefix)
-
-    if not os.path.exists(meta_dir):
-        tty.debug("Creating directory for analyze %s" % meta_dir)
-        os.makedirs(meta_dir)
-
     return meta_dir
 
 
@@ -56,7 +53,6 @@ class Analyzerbase(object):
         self.spec = spec
         self.dirname = dirname
         self.meta_dir = os.path.dirname(spec.package.install_log_path)
-        self.output_dir = get_analyzer_dir(spec)
 
         for required in ["name", "outfile", "description"]:
             if not hasattr(self, required):
@@ -67,13 +63,23 @@ class Analyzerbase(object):
         """
         raise NotImplementedError
 
-    def _get_outfile(self, dirname=None, outfile=None):
-        """Given a directory name, return the json file to save the result to
+    @property
+    def output_dir(self):
+        """The full path to the output directory, including the nested analyzer
+        directory structure. This will create the full path if it doesn't exist,
+        so you should be sure that you have a result before using the property.
         """
-        dirname = dirname or self.dirname or self.output_dir
-        return os.path.join(dirname, outfile or self.outfile)
+        if not hasattr(self, "_output_dir"):
+            output_dir = get_analyzer_dir(self.spec, self.dirname)
+            self._output_dir = os.path.join(output_dir, self.name)
 
-    def save_result(self, result, outdir=None, monitor=None):
+        # Only try to create the results directory if we have a result
+        if not os.path.exists(self._output_dir):
+            os.makedirs(self._output_dir)
+
+        return self._output_dir
+
+    def save_result(self, result, monitor=None, overwrite=False):
         """Save a result to the associated spack monitor, if defined. This
         function is on the level of the analyzer because it might be
         the case that the result is large (appropriate for a single request)
@@ -81,14 +87,18 @@ class Analyzerbase(object):
         request per result). If an analyzer subclass needs to over-write
         this function with a custom save, that is appropriate to do (see abi).
         """
-        # Save the result to file in the .analyze folder
-        outfile = self._get_outfile(outdir)
-
         # We maintain the structure in json with the analyzer as key so
         # that in the future, we could upload to a monitor server
         if result[self.name]:
-            tty.info("Writing result to %s" % outfile)
-            spack.monitor.write_json(result[self.name], outfile)
+
+            outfile = os.path.join(self.output_dir, self.outfile)
+
+            # Don't overwrite an existing result if overwrite is False
+            if os.path.exists(outfile) and not overwrite:
+                tty.info("%s exists and overwrite is False, skipping." % outfile)
+            else:
+                tty.info("Writing result to %s" % outfile)
+                spack.monitor.write_json(result[self.name], outfile)
 
         if monitor:
             monitor.send_analyze_metadata(self.spec.package, result)

@@ -22,30 +22,29 @@ and extract some output for the package using it.
 Analyzer Metadata
 -----------------
 
-For all analyzers, we write to an ``analyzers`` folder in your spack ``$HOME``
-directory, or the value that you specify in your spack config at 
-``config:analyzers_dir``. We don't want to write to your package install folder
-in the case that it is read only. For example, here we see the results
-of running an analysis on zlib:
+For all analyzers, we write to an ``analyzers`` folder in ``~/.spack``, or the
+value that you specify in your spack config at ``config:analyzers_dir``. 
+For example, here we see the results of running an analysis on zlib:
 
 .. code-block:: console
 
     $ tree ~/.spack/analyzers/
-    /home/vanessa/.spack/analyzers/
     └── linux-ubuntu20.04-skylake
         └── gcc-9.3.0
             └── zlib-1.2.11-sl7m27mzkbejtkrajigj3a3m37ygv4u2
-                ├── spack-analyzer-environment-variables.json
-                ├── spack-analyzer-install-files.json
-                └── spack-analyzer-libabigail-libz.so.1.2.11.xml
-
+                ├── environment_variables
+                │   └── spack-analyzer-environment-variables.json
+                ├── install_files
+                │   └── spack-analyzer-install-files.json
+                └── libabigail
+                    └── spack-analyzer-libabigail-libz.so.1.2.11.xml
+    
 
 This means that you can always find analyzer output in this folder, and it
 is organized with the same logic as the package install it was run for. 
-If you want to customize this top level folder, simply provide the ``--outdir``
-argument to ``spack analyze``. Note that the organization of the install folders
-shown above will not be written if you specify a custom directory - it will
-write to the folder you specify, verbatim.
+If you want to customize this top level folder, simply provide the ``--path``
+argument to ``spack analyze``. The nested organization will be maintained
+within your custom root.
 
 -----------------
 Listing Analyzers
@@ -56,7 +55,7 @@ are available:
 
 .. code-block:: console
 
-    $ spack analyze --list-analyzers
+    $ spack analyze list-analyzers
     install_files            : install file listing read from install_manifest.json
     environment_variables    : environment variables parsed from spack-build-env.txt
     config_args              : config args loaded from spack-configure-args.txt
@@ -77,7 +76,7 @@ install, we are asked to disambiguate:
 
 .. code-block:: console
 
-    $ spack analyze zlib
+    $ spack analyze run zlib
     ==> Error: zlib matches multiple packages.
       Matching packages:
         fz2bs56 zlib@1.2.11%gcc@7.5.0 arch=linux-ubuntu18.04-skylake
@@ -89,10 +88,10 @@ We can then specify the spec version that we want to analyze:
 
 .. code-block:: console
 
-    $ spack analyze zlib/fz2bs56
+    $ spack analyze run zlib/fz2bs56
 
 If you don't provide any specific analyzer names, by default all analyzers 
-(shown in the ``--list-analyzers`` list) will be run. If an analyzer does not
+(shown in the ``list-analyzers`` subcommand list) will be run. If an analyzer does not
 have any result, it will be skipped. For example, here is a result running for
 zlib:
 
@@ -108,7 +107,7 @@ spack analyze on libabigail (already installed) _using_ libabigail1
 
 .. code-block:: console
 
-    $ spack analyze --analyzer abigail libabigail
+    $ spack analyze run --analyzer abigail libabigail
 
 
 ----------------------
@@ -136,19 +135,19 @@ with a prefix of ``ms1``, and if this is the case, you can simply add the
 
 .. code-block:: console
 
-    $ spack analyze --monitor wget
+    $ spack analyze run --monitor wget
 
 If you need to customize the host or the prefix, you can do that as well:
 
 .. code-block:: console
 
-    $ spack analyze --monitor --monitor-prefix monitor --monitor-host https://monitor-service.io wget
+    $ spack analyze run --monitor --monitor-prefix monitor --monitor-host https://monitor-service.io wget
 
 If your server doesn't have authentication, you can skip it:
 
 .. code-block:: console
 
-    $ spack analyze --monitor --monitor-disable-auth wget
+    $ spack analyze run --monitor --monitor-disable-auth wget
     
 Regardless of your choice, when you run analyze on an installed package (whether
 it was installed with ``--monitor`` or not, you'll see the results generating as they did

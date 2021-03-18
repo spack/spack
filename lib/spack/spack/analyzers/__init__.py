@@ -19,8 +19,12 @@ import llnl.util.tty as tty
 mod_path = spack.paths.analyzers_path
 analyzers = spack.util.classes.list_classes("spack.analyzers", mod_path)
 
-# The base analyzer does not have a name
-analyzer_types = {a.name: a for a in analyzers if hasattr(a, "name")}
+# The base analyzer does not have a name, and cannot do dict comprehension
+analyzer_types = {}
+for a in analyzers:
+    if not hasattr(a, "name"):
+        continue
+    analyzer_types[a.name] = a
 
 
 def list_all():

@@ -24,29 +24,33 @@ level = "short"
 
 
 def setup_parser(subparser):
-    subparser.add_argument(
-        '--overwrite', action='store_true',
-        help="re-analyze even if the output file already exists.")
+    sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='analyze_command')
+
+    sp.add_parser('list-analyzers',
+                  description="list available analyzers",
+                  help="show list of analyzers that are available to run.")
 
     monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
 
-    subparser.add_argument(
-        '-o', '--outdir', default=None,
-        dest='outdir',
+    # Run Parser
+    run_parser = sp.add_parser('run', description="run an analyzer",
+                               help="provide the name of the analyzer to run.")
+
+    run_parser.add_argument(
+        '--overwrite', action='store_true',
+        help="re-analyze even if the output file already exists.")
+    run_parser.add_argument(
+        '-p', '--path', default=None,
+        dest='path',
         help="write output to a different directory than ~/.spack/analyzers")
-    subparser.add_argument(
-        '--list-analyzers', action="store_true",
-        default=False,
-        help="list available analyzers.")
-    subparser.add_argument(
+    run_parser.add_argument(
         '-a', '--analyzers', default=None,
         dest="analyzers", action="append",
-        choices=list(spack.analyzers.analyzer_types.keys()) + ["all"],
         help="add an analyzer (defaults to all available)")
-    arguments.add_common_arguments(subparser, ['spec'])
+    arguments.add_common_arguments(run_parser, ['spec'])
 
 
-def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
+def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=False):
     """Do an analysis for a spec, optionally adding monitoring and allowing
     the user to specify a custom output directory.
 
@@ -56,6 +60,7 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
         spec (Spec): spec object of installed package
         analyzers (list): list of analyzer (keys) to run
         monitor (monitor.SpackMonitorClient): a monitor client
+        overwrite (bool): overwrite result if already exists
     """
     analyzers = analyzers or list(spack.analyzers.analyzer_types.keys())
 
@@ -67,8 +72,8 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
 
     for name in analyzers:
 
-        # Instantiate the analyzer with the spec
-        analyzer = spack.analyzers.get_analyzer(name)(spec)
+        # Instantiate the analyzer with the spec and outdir
+        analyzer = spack.analyzers.get_analyzer(name)(spec, outdir)
 
         # Run the analyzer to get a json result - results are returned as
         # a dictionary with a key corresponding to the analyzer type, so
@@ -78,13 +83,13 @@ def analyze_spec(spec, analyzers=None, outdir=None, monitor=None):
         # Send the result. We do them separately because:
         # 1. each analyzer might have differently organized output
         # 2. the size of a result can be large
-        analyzer.save_result(result, outdir, monitor)
+        analyzer.save_result(result, monitor, overwrite)
 
 
 def analyze(parser, args, **kwargs):
 
     # If the user wants to list analyzers, do so and exit
-    if args.list_analyzers:
+    if args.analyze_command == "list-analyzers":
         spack.analyzers.list_all()
         sys.exit(0)
 
@@ -107,4 +112,4 @@ def analyze(parser, args, **kwargs):
         )
 
     # Run the analysis
-    analyze_spec(spec, args.analyzers, args.outdir, monitor)
+    analyze_spec(spec, args.analyzers, args.path, monitor, args.overwrite)

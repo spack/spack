@@ -57,17 +57,19 @@ class Libabigail(Analyzerbase):
         for obj in manifest.get("binary_to_relocate_fullpath", []):
 
             outfile = "spack-analyzer-libabigail-%s.xml" % os.path.basename(obj)
-            outfile = self._get_outfile(self.dirname, outfile=outfile)
+            outfile = os.path.join(self.output_dir, outfile)
+
             # Sometimes libabigail segfaults and dumps
             try:
                 self.abidw(obj, "--out-file", outfile)
                 result[obj] = outfile
+                tty.info("Writing result to %s" % outfile)
             except spack.error.SpackError:
                 tty.warn("Issue running abidw for %s" % obj)
 
         return {self.name: result}
 
-    def save_result(self, result, outdir=None, monitor=None):
+    def save_result(self, result, monitor=None, overwrite=False):
         """ABI results are saved to individual files, so each one needs to be
         read and uploaded. Result here should be the lookup generated in run(),
         the key is the analyzer name, and each value is the result file.
