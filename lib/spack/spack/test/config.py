@@ -258,6 +258,37 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
 repos_low = {'repos': ["/some/path"]}
 repos_high = {'repos': ["/some/other/path"]}
 
+# Test setting config values via path in filename
+
+
+def test_add_config_path():
+
+    # Try setting a new install tree root
+    path = "config:install_tree:root:/path/to/config.yaml"
+    spack.config.add(path, scope="command_line")
+    set_value = spack.config.get('config')['install_tree']['root']
+    assert set_value == '/path/to/config.yaml'
+
+    # Now a package:all setting
+    path = "packages:all:compiler:[gcc]"
+    spack.config.add(path, scope="command_line")
+    compilers = spack.config.get('packages')['all']['compiler']
+    assert "gcc" in compilers
+
+
+def test_add_config_filename(mock_low_high_config, tmpdir):
+
+    config_yaml = tmpdir.join('config-filename.yaml')
+    config_yaml.ensure()
+    with config_yaml.open('w') as f:
+        syaml.dump_config(config_low, f)
+
+    spack.config.add_from_file(str(config_yaml), scope="low")
+    assert "build_stage" in spack.config.get('config')
+    build_stages = spack.config.get('config')['build_stage']
+    for stage in config_low['config']['build_stage']:
+        assert stage in build_stages
+
 
 # repos
 def test_write_list_in_memory(mock_low_high_config):

@@ -38,6 +38,8 @@ class Amdlibflame(LibflameBase):
 
     version('2.2', sha256='12b9c1f92d2c2fa637305aaa15cf706652406f210eaa5cbc17aaea9fcfa576dc')
 
+    depends_on('python', type='build')
+
     patch('aocc-2.2.0.patch', when="@:2.999", level=1)
 
     provides('flame@5.2', when='@2:')

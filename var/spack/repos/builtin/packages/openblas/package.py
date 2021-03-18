@@ -218,8 +218,15 @@ class Openblas(MakefilePackage):
         if microarch.vendor == 'generic':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
-            # an optimized kernel at run time.
+            # an optimized kernel at run time, including older CPUs, while
+            # forcing it not to add flags for the current host compiler.
             args.append('DYNAMIC_ARCH=1')
+            if self.spec.version >= Version('0.3.12'):
+                # These are necessary to prevent OpenBLAS from targeting the
+                # host architecture on newer version of OpenBLAS, but they
+                # cause build errors on 0.3.5 .
+                args.extend(['DYNAMIC_OLDER=1', 'TARGET=GENERIC'])
+
         elif microarch.name in skylake:
             # Special case for renaming skylake family
             args.append('TARGET=SKYLAKEX')
