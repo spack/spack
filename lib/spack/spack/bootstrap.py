@@ -5,7 +5,11 @@
 import contextlib
 import os
 import sys
-import sysconfig
+try:
+    import sysconfig  # novm
+except ImportError:
+    # Not supported on Python 2.6
+    pass
 
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
@@ -32,7 +36,7 @@ def spec_for_current_python():
     """
     version_str = '.'.join(str(x) for x in sys.version_info[:2])
     variant_str = ''
-    if sys.version_info[0] == 2:
+    if sys.version_info[0] == 2 and sys.version_info[1] == 7:
         unicode_size = sysconfig.get_config_var('Py_UNICODE_SIZE')
         variant_str = '+ucs4' if unicode_size == 4 else '~ucs4'
 
