@@ -1,0 +1,20 @@
+diff --git a/qmanager/modules/qmanager_callbacks.cpp b/qmanager/modules/qmanager_callbacks.cpp
+index 96ed4cc9..caef185c 100644
+--- a/qmanager/modules/qmanager_callbacks.cpp
++++ b/qmanager/modules/qmanager_callbacks.cpp
+@@ -102,6 +102,7 @@ int qmanager_cb_t::post_sched_loop (flux_t *h, schedutil_t *schedutil,
+             flux_log (h, LOG_DEBUG, "%s (id=%jd queue=%s)", note.c_str (),
+                      static_cast<intmax_t> (job->id), queue_name.c_str ());
+         }
++#if 0
+         for (job = queue->pending_begin (); job != nullptr;
+              job = queue->pending_next ()) {
+             // if old_at == at, then no reason to send this annotation again.
+@@ -118,6 +119,7 @@ int qmanager_cb_t::post_sched_loop (flux_t *h, schedutil_t *schedutil,
+                 goto out;
+             }
+         }
++#endif
+     }
+     rc = 0;
+

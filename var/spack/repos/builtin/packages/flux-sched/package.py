@@ -57,6 +57,14 @@ class FluxSched(AutotoolsPackage):
             sha256='6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336')
     patch('first_match_feasibility', when='@0.11.0.mummifixmar162021')
 
+
+    version('0.11.0.mummifixmar190321',
+            url='https://github.com/flux-framework/flux-sched/releases/download/v0.11.0/flux-sched-0.11.0.tar.gz',
+            sha256='6a0e3c0678f85da8724e5399b02be9686311c835617f6036235ef54b489cc336')
+    patch('first_match_feasibility', when='@0.11.0.mummifixmar190321')
+    patch('annotation',              when='@0.11.0.mummifixmar190321')
+
+
     def url_for_version(self, version):
         '''
         Flux uses a fork of ZeroMQ's Collective Code Construction Contract
