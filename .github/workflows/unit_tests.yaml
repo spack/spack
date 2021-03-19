@@ -235,7 +235,7 @@ jobs:
         flags: shelltests,linux
   # Test for Python2.6 run on Centos 6
   centos6:
-    needs: [ validate, style, documentation ]
+    needs: [ validate, style, documentation, changes ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
