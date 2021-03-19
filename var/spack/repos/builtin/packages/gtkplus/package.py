@@ -39,6 +39,7 @@ class Gtkplus(MesonPackage):
     depends_on('gobject-introspection@1.39.0:')
     depends_on('shared-mime-info')
     depends_on('libxkbcommon')
+    depends_on('librsvg')
     depends_on('xrandr')
     depends_on('libepoxy', when='@3:')
     depends_on('libxi', when='@3:')
