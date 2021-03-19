@@ -180,14 +180,9 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
                       fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.pkg.name == 'build-error'
-    assert 'Full build log:' in out
 
-    print(out)
-
-    # Message shows up for ProcessError (1) and output (1)
-    errors = [line for line in out.split('\n')
-              if 'configure: error: cannot run C compiled programs' in line]
-    assert len(errors) == 2
+    assert '==> Installing build-error' in out
+    assert 'See build log for details:' in out
 
 
 def test_install_overwrite(
