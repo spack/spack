@@ -87,7 +87,7 @@ class Arborx(CMakePackage):
 
         # We don't need to append the path to Kokkos to CMAKE_PREFIX_PATH
         # since a hint is already hardcoded inside the CMake ArborX configuration.
-        # Omitting it here allows us to avoid to distinguis between Kokkos
+        # Omitting it here allows us to avoid to distinguish between Kokkos
         # being installed as a standalone or as part of Trilinos.
         if '+mpi' in self.spec:
             cmake_prefix_path += ";{0}".format(self.spec['mpi'].prefix)
