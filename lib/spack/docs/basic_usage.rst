@@ -746,7 +746,7 @@ Since the only difference between these two is the hash, we provide the hashes:
 
 Awesome! The above tells us that our first zlib was built without optimize (False)
 and the second was built with optimize (True). This is a small example, but there are
-actually several different kinds of differences that you can view, a ``VARIANT_SET``
+actually several kinds of differences that you can view, a ``VARIANT_SET``
 being just one of them. The first package that you provide (A)
 being diffed against B means that we see what is in A but not B. Here is another example
 with one more difference type, ``VERSION``:
