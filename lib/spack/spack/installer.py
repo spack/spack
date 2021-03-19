@@ -1399,6 +1399,7 @@ class PackageInstaller(object):
         exists_errors = []
 
         while self.build_pq:
+        
             task = self._pop_task()
             if task is None:
                 continue
@@ -1518,6 +1519,7 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
+ 
                 if pkg.spec.dag_hash() in task.request.overwrite:
                     rec, _ = self._check_db(pkg.spec)
                     if rec and rec.installed:

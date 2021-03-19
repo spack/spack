@@ -20,9 +20,9 @@ import spack.spec
 from spack.error import SpackError
 
 
-default_projections = {'all': ('{architecture}/'
-                               '{compiler.name}-{compiler.version}/'
-                               '{name}-{version}-{hash}')}
+default_projections = {'all': os.path.join(
+    '{architecture}', '{compiler.name}-{compiler.version}',
+    '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
