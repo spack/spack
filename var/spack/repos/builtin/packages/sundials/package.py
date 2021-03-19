@@ -653,7 +653,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     def test(self):
         """Run the smoke tests."""
         if '+examples' not in self.spec:
-            print('Smoke tests were skipped: install will examples enabled')
+            print('Smoke tests were skipped: install with examples enabled')
         return
 
         self.run_test('examples/nvector/serial/test_nvector_serial',
