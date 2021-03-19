@@ -66,6 +66,8 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
                                'Whether HPX supports asynchronous dispath'],
         'profiling': [True,
                       'Create bindings for profiling tools'],
+        'tuning': [False,
+                   'Create bindings for tuning tools'],
         'profiling_load_print': [False,
                                  'Print which profiling tools got loaded'],
         'qthread': [False, 'Eenable the QTHREAD library'],
@@ -217,6 +219,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
+
+        if spec.satisfies('~wrapper+cuda') and not spec.satisfies('%clang'):
+            raise InstallError("Kokkos requires +wrapper when using +cuda"
+                               "without clang")
+
         options = []
 
         isdiy = "+diy" in spec

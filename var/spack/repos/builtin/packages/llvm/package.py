@@ -232,8 +232,8 @@ class Llvm(CMakePackage, CudaPackage):
     patch("thread-p9.patch", when="@develop+libcxx")
 
     # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
+    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0
@@ -393,8 +393,14 @@ class Llvm(CMakePackage, CudaPackage):
                         'create this identity.'
                     )
 
-    def setup_build_environment(self, env):
-        env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+            return(None, flags, None)
+        elif name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
 
     def setup_run_environment(self, env):
         if "+clang" in self.spec:

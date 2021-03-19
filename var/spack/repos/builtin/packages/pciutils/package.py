@@ -18,6 +18,9 @@ class Pciutils(MakefilePackage):
 
     variant('lib', default=False, description='Install libraries with headers')
 
+    def build(self, spec, prefix):
+        make('PREFIX={0}'.format(prefix))
+
     def install(self, spec, prefix):
         if '+lib' in spec:
             make('install-lib', 'install', 'PREFIX={0}'.format(prefix))

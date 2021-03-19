@@ -15,6 +15,7 @@ class PyAwkward1(PythonPackage):
 
     maintainers = ['vvolkl']
 
+    version('1.1.2', sha256='626e3a6a2a92dd67abc8692b1ebfa1b447b9594352d6ce8c86c37d7299dc4602')
     version('0.3.1', sha256='7126d9feab8828b0b4f4c6dbc9e28c269a91e28eef4a6033d7ebb5db21f1dab3')
 
     patch('pybind11.patch')

@@ -155,8 +155,7 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
                         fpic,
-                        '-fdefault-integer-8' if using_gcc
-                                              else '-i8'),  # noqa
+                        '-fdefault-integer-8' if using_gcc else '-i8'),  # noqa
                 ])
 
             makefile_conf.extend([
@@ -242,8 +241,8 @@ class Mumps(Package):
                 makefile_conf.extend([
                     'LIBEXT=.so',
                     'AR=link_cmd() { $(FL) -%s -Wl,-soname '
-                    '-Wl,%s/$(notdir $@) -o "$$@" %s; }; link_cmd ' %
-                    (build_shared_flag, prefix.lib, inject_libs),
+                    '-Wl,$(notdir $@) -o "$$@" %s; }; link_cmd ' %
+                    (build_shared_flag, inject_libs),
                     'RANLIB=ls'
                 ])
                 # When building libpord, read AR from Makefile.inc instead of
@@ -274,6 +273,15 @@ class Mumps(Package):
             with open("Makefile.inc", "w") as fh:
                 makefile_inc = '\n'.join(makefile_conf)
                 fh.write(makefile_inc)
+
+    def flag_handler(self, name, flags):
+        if name == 'fflags':
+            if self.spec.satisfies('%gcc@10:'):
+                if flags is None:
+                    flags = []
+                flags.append('-fallow-argument-mismatch')
+
+        return (flags, None, None)
 
     def install(self, spec, prefix):
         self.write_makefile_inc()
