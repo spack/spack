@@ -739,10 +739,11 @@ Since the only difference between these two is the hash, we provide the hashes:
     $ spack diff /efzjziy /sl7m27m
     ==> diff(zlib@1.2.11/efzjziy, zlib@1.2.11/sl7m27m)
     VARIANT_SET
-    zlib optimize bool(False)
+      zlib optimize bool(False)
     ==> diff(zlib@1.2.11/sl7m27m, zlib@1.2.11/efzjziy)
     VARIANT_SET
-    zlib optimize bool(True)
+      zlib optimize bool(True)
+
 
 Awesome! The above tells us that our first zlib was built without optimize (False)
 and the second was built with optimize (True). This is a small example, but there are
@@ -756,16 +757,16 @@ with an additional difference type, ``VERSION``:
     $ spack diff python@2.7.8 python@3.8.8
     ==> diff(python@2.7.8/7oknfqf, python@3.8.8/vrp4fmj)
     VARIANT_SET
-    python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
+      python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
     VERSION
-    openssl Version(1.0.2u)
-    python Version(2.7.8)
+      openssl Version(1.0.2u)
+      python Version(2.7.8)
     ==> diff(python@3.8.8/vrp4fmj, python@2.7.8/7oknfqf)
     VARIANT_SET
-    python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
+      python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
     VERSION
-    python Version(3.8.8)
-    openssl Version(1.1.1j)
+      openssl Version(1.1.1j)
+      python Version(3.8.8)
 
 
 Let's say that we were only interested in one kind of attribute above, versions!
@@ -788,12 +789,13 @@ Here is how you would filter to show just versions:
     $ spack diff --diff-type version python@2.7.8 python@3.8.8
     ==> diff(python@2.7.8/7oknfqf, python@3.8.8/vrp4fmj)
     VERSION
-    python Version(2.7.8)
-    openssl Version(1.0.2u)
+      python Version(2.7.8)
+      openssl Version(1.0.2u)
     ==> diff(python@3.8.8/vrp4fmj, python@2.7.8/7oknfqf)
     VERSION
-    openssl Version(1.1.1j)
-    python Version(3.8.8)
+      python Version(3.8.8)
+      openssl Version(1.1.1j)
+
 
 Finally, if you want to view the data as json (and possibly pipe into an output file)
 just add ``--json``:
