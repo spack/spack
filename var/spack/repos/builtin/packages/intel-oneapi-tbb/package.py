@@ -23,7 +23,6 @@ class IntelOneapiTbb(IntelOneApiLibraryPackage):
                 expand=False)
 
     provides('tbb')
-    provides('onetbb')
 
     @property
     def component_dir(self):

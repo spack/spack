@@ -25,7 +25,6 @@ class IntelOneapiDal(IntelOneApiLibraryPackage):
     depends_on('intel-oneapi-tbb')
 
     provides('daal')
-    provides('onedal')
 
     @property
     def component_dir(self):
