@@ -39,13 +39,13 @@ class Amdscalapack(ScalapackBase):
         args = super(Amdscalapack, self).cmake_args()
         spec = self.spec
 
-        if "%gcc@10:" in spec:
+        if spec.satisfies('%gcc@10:'):
             args.extend(['-DCMAKE_Fortran_FLAGS={0}'.format(
                         "-fallow-argument-mismatch")])
 
-        if "@2.2" in spec:
+        if spec.satisfies('@2.2'):
             args.extend(['-DUSE_DOTC_WRAPPER:BOOL=%s' % (
-                        'ON' if '%aocc ^amdblis' in spec else 'OFF')])
+                        'ON' if spec.satisfies('%aocc ^amdblis') else 'OFF')])
 
         args.extend([
             '-DUSE_F2C=ON',

@@ -73,7 +73,7 @@ class AoclSparse(CMakePackage):
                 'ON' if self.run_tests else 'OFF')
         ])
 
-        if "@3.0:" in spec:
+        if spec.satisfies('@3.0:'):
             args.extend([
                 "-DBUILD_ILP64:BOOL=%s" % (
                     'ON' if '+ilp64' in spec else 'OFF')
@@ -81,11 +81,10 @@ class AoclSparse(CMakePackage):
 
         return args
 
-    # Check that self.prefix is there after installation
     @run_after('build')
     @on_package_attributes(run_tests=True)
     def check(self):
-        """ Simple test to test the installation by running
+        """ Simple test to test the built library by running
         one of the aocl-sparse examples, after compiling the
         library with benchmarks.
         """

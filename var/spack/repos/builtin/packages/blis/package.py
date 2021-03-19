@@ -80,14 +80,17 @@ class BlisBase(Package):
         else:
             config_args.append("--disable-static")
 
-        # FIXME: add cpu isa variants.
-        config_args.append("auto")
-
         return config_args
 
     def configure(self, spec, prefix):
+        config_args = self.configure_args()
+
+        # To ensure auto should always be the
+        # last argument for base and derived class
+        config_args.append("auto")
+
         configure("--prefix=" + prefix,
-                  *self.configure_args())
+                  *config_args)
 
     def build(self, spec, prefix):
         make()
