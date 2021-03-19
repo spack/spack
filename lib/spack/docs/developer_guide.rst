@@ -613,9 +613,9 @@ as we have defined them here, but rather callback functions associated with
 a package install.
 
 
-"""""""""""""""""""""
+""""""""""""""""""""""
 ``post_install(spec)``
-"""""""""""""""""""""
+""""""""""""""""""""""
 
 A ``post_install`` hook is run within an install subprocess, directly after
 the install finishes, but before the build stage is removed. If you
