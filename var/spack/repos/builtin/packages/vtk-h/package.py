@@ -73,17 +73,17 @@ class VtkH(Package, CudaPackage):
     depends_on("mpi", when="+mpi")
     depends_on("cuda", when="+cuda")
 
-    depends_on("vtk-m@ascent_ver~tbb+openmp", when="+openmp")
-    depends_on("vtk-m@ascent_ver~tbb~openmp", when="~openmp")
+    depends_on("vtk-m~tbb+openmp", when="+openmp")
+    depends_on("vtk-m~tbb~openmp", when="~openmp")
 
-    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp", when="+cuda+openmp")
-    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp", when="+cuda~openmp")
+    depends_on("vtk-m+cuda~tbb+openmp", when="+cuda+openmp")
+    depends_on("vtk-m+cuda~tbb~openmp", when="+cuda~openmp")
 
-    depends_on("vtk-m@ascent_ver~tbb+openmp~shared", when="+openmp~shared")
-    depends_on("vtk-m@ascent_ver~tbb~openmp~shared", when="~openmp~shared")
+    depends_on("vtk-m~tbb+openmp~shared", when="+openmp~shared")
+    depends_on("vtk-m~tbb~openmp~shared", when="~openmp~shared")
 
-    depends_on("vtk-m@ascent_ver+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
-    depends_on("vtk-m@ascent_ver+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("vtk-m+cuda~tbb+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("vtk-m+cuda~tbb~openmp~shared", when="+cuda~openmp~shared")
 
     def install(self, spec, prefix):
         with working_dir('spack-build', create=True):
