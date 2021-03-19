@@ -1,0 +1,43 @@
+From a3a292c2ba66bf09b4adc4cee8fcdfb1b1386067 Mon Sep 17 00:00:00 2001
+From: Daniel Frey <d.frey@gmx.de>
+Date: Mon, 11 May 2020 22:19:31 +0200
+Subject: [PATCH] Repair warning from GCC 10
+
+* Backported patch thx to Fedora.
+
+---
+ include/tao/pegtl/contrib/rep_one_min_max.hpp | 21 +++++++++++++++++++
+ 1 file changed, 21 insertions(+)
+
+diff --git a/include/tao/pegtl/contrib/rep_one_min_max.hpp b/include/tao/pegtl/contrib/rep_one_min_max.hpp
+index 7ec4639e..ee0a3782 100644
+--- a/include/tao/pegtl/contrib/rep_one_min_max.hpp
++++ b/include/tao/pegtl/contrib/rep_one_min_max.hpp
+@@ -45,6 +45,27 @@ namespace tao
+             }
+          };
+ 
++         template< unsigned Max, char C >
++         struct rep_one_min_max< 0, Max, C >
++         {
++            using analyze_t = analysis::counted< analysis::rule_type::any, 0 >;
++
++            template< typename Input >
++            static bool match( Input& in )
++            {
++               const auto size = in.size( Max + 1 );
++               std::size_t i = 0;
++               while( ( i < size ) && ( in.peek_char( i ) == C ) ) {
++                  ++i;
++               }
++               if( i <= Max ) {
++                  bump_help< result_on_found::success, Input, char, C >( in, i );
++                  return true;
++               }
++               return false;
++            }
++         };
++
+          template< unsigned Min, unsigned Max, char C >
+          inline constexpr bool enable_control< rep_one_min_max< Min, Max, C > > = false;
+ 
