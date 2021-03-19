@@ -24,6 +24,8 @@ class IntelOneapiDnn(IntelOneApiLibraryPackage):
 
     depends_on('intel-oneapi-tbb')
 
+    provides('onednn')
+
     @property
     def component_dir(self):
         return 'dnnl'

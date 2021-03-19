@@ -29,6 +29,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides('mkl')
     provides('lapack')
     provides('blas')
+    provides('onemkl')
 
     @property
     def component_dir(self):
