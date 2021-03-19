@@ -142,7 +142,7 @@ def print_difference(diffset, diff_type="all"):
             if category != entry[0]:
                 category = entry[0]
                 rows.append(bold(category.upper()))
-            rows.append(entry[1])
+            rows.append('  {0}'.format(entry[1]))
 
     print('\n'.join(rows))
 
