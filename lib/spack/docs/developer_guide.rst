@@ -676,9 +676,9 @@ the phase, and any output from it, we require:
  - **phase_name**: the name of the phase that was successful (e.g., configure)
  - **log_file**: the path to the file with output, in case you need to inspect or otherwise interact with it.
 
-"""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""
 ``on_phase_error(pkg, phase_name, log_file)``
-"""""""""""""""""""""""""""""""""""""""""""""""
+"""""""""""""""""""""""""""""""""""""""""""""
 
 In the case of an error during a phase, we might want to trigger some event
 with a hook, and this is the purpose of this particular hook. Akin to

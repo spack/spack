@@ -140,12 +140,14 @@ def test_package_output(tmpdir, capsys, install_mockery, mock_fetch):
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
                                        config, install_mockery, capfd):
+    """This test used to assume receiving full output, but since we've updated
+    spack to generate logs on the level of phases, it will only return the
+    last phase, install.
+    """
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('-v', 'build-error', fail_on_error=False)
-    assert 'ProcessError' in out
-    assert 'configure: error: in /path/to/some/file:' in out
-    assert 'configure: error: cannot run C compiled programs.' in out
+    assert 'Installing build-error' in out
 
 
 @pytest.mark.disable_clean_stage_check
