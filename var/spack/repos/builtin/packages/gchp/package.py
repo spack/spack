@@ -24,11 +24,11 @@ class Gchp(CMakePackage):
 
     depends_on('esmf@8.0.1', when='@13.0.0:')
     depends_on('esmf@8.0.1: -lapack -pio -pnetcdf -xerces', when='@13.0.0-rc.0')
-
     depends_on('mpi@3')
     depends_on('netcdf-fortran')
     depends_on('cmake@3.13:')
     depends_on('libfabric', when='+ofi')
+    depends_on('m4')
 
     variant('omp',   default=False, description="OpenMP parallelization")
     variant('real8', default=True,  description="REAL*8 precision")
