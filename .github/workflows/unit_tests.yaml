@@ -73,8 +73,8 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      packages: ${{ steps.filter.outputs.core }}
-      core: ${{ steps.filter.outputs.packages }}
+      core: ${{ steps.filter.outputs.core }}
+      packages: ${{ steps.filter.outputs.packages }}
       with_coverage: ${{ steps.coverage.outputs.with_coverage }}
     steps:
     - uses: actions/checkout@v2
@@ -87,9 +87,9 @@ jobs:
       with:
         # See https://github.com/dorny/paths-filter/issues/56 for the syntax used below
         filters: |
-          core:
-          - './!(var/**)/**'
           packages:
+          - './!(var/**)/**'
+          core:
           - 'var/**'
     # Some links for easier reference:
     #
