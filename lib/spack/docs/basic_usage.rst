@@ -749,7 +749,7 @@ and the second was built with optimize (True). This is a small example, but ther
 actually several kinds of differences that you can view, a ``VARIANT_SET``
 being just one of them. The first package that you provide (A)
 being diffed against B means that we see what is in A but not B. Here is another example
-with one more difference type, ``VERSION``:
+with an additional difference type, ``VERSION``:
 
 .. code-block::console
 
