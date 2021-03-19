@@ -1,6 +1,12 @@
 @ECHO OFF
 setlocal EnableDelayedExpansion
 :: (c) 2021 Lawrence Livermore National Laboratory
+:: To use this file independently of Spack's installer, please copy this file, and the
+:: 'scripts' directory, to be adjacent to your spack directory. You must have python on
+:: your path for Spack to locate it.
+:: source_dir -------- spack
+::                |--- scripts
+::                |--- spack_cmd.bat
 pushd %~dp0
 set spackinstdir=%CD%
 popd
