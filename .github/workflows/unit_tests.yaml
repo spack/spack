@@ -98,14 +98,12 @@ jobs:
     # setting environment variables from earlier steps: https://docs.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-environment-variable
     #
     - id: coverage
-      # Run the subsequent jobs with coverage if this is a PR and core has been modified
-      # or if this workflow is triggered by a push event (this means that once a PR is
-      # merged we'll perform a full run with CI on develop even though the PR was only
-      # modifying packages)
+      # Run the subsequent jobs with coverage if core has been modified,
+      # regardless of whether this is a pull request or a push to a branch
       run: |
         echo Core changes: ${{ steps.filter.outputs.core }}
         echo Event name: ${{ github.event_name }}
-        if [ "${{ steps.filter.outputs.core }}" == "true" ] || [ "${{ github.event_name }}" == 'push' ]
+        if [ "${{ steps.filter.outputs.core }}" == "true" ]
         then
           echo "::set-output name=with_coverage::true"
         else
