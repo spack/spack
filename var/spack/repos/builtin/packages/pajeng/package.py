@@ -42,6 +42,7 @@ class Pajeng(CMakePackage):
     depends_on('bison')
     depends_on('qt@:4.999+opengl', when='@:1.3.2+gui')
     depends_on('freeglut', when='@:1.3.2+gui')
+    depends_on('fmt', when='@develop')
 
     conflicts('+tools', when='~lib', msg="Enable libpaje to compile tools.")
     conflicts('+gui', when='@1.3.3:', msg="PajeNG visualization tool is available only for versions up to 1.3.2.")
