@@ -413,18 +413,20 @@ def clear_failures():
     spack.store.db.clear_all_failures()
 
 
-def combine_phase_logs(pkg):
+def combine_phase_logs(phase_log_files, log_path):
     """
     Each phase will produce it's own log, so this function aims to cat all the
-    separate phase log output files into the pkg.log_path.
+    separate phase log output files into the pkg.log_path. It is written
+    generally to accept some list of files, and a log path to combine them to.
     Args:
-        pkg (Package): the package that was built and installed
+        phase_log_files (list): a list or iterator of logs to combine
+        log_path (path): the path to combine them to
     """
-    log_files = pkg.phase_log_files
 
-    with open(pkg.log_path, 'w') as fd:
-        for line in itertools.chain.from_iterable(list(map(open, log_files))):
-            fd.write(line)
+    with open(log_path, 'w') as log_file:
+        for phase_log_file in phase_log_files:
+            with open(phase_log_file, 'r') as phase_log:
+                log_file.write(phase_log.read())
 
 
 def dump_packages(spec, path):
@@ -536,11 +538,12 @@ def log(pkg):
     # Archive the whole stdout + stderr for the package
     fs.install(pkg.log_path, pkg.install_log_path)
 
-    # Archive all phase log paths
+    # Archive all phase log paths (in future, when they exist)
     for phase_log in pkg.phase_log_files:
         log_file = os.path.basename(phase_log)
         log_file = os.path.join(os.path.dirname(packages_dir), log_file)
-        fs.install(phase_log, log_file)
+        if os.path.exists(phase_log):
+            fs.install(phase_log, log_file)
 
     # Archive the environment used for the build
     fs.install(pkg.env_path, pkg.install_env_path)
@@ -1739,21 +1742,17 @@ def build_process(pkg, kwargs):
                 debug_level = tty.debug_level()
 
                 # Spawn a daemon that reads from a pipe and redirects
-                # everything to log_path, and provide the phase for logging
-                for i, (phase_name, phase_attr) in enumerate(zip(
-                        pkg.phases, pkg._InstallPhase_phases)):
+                # everything to log_path
+                log_file = pkg.log_path
+                with log_output(log_file, echo, True,
+                                env=unmodified_env) as logger:
 
-                    # Keep a log file for each phase
-                    log_dir = os.path.dirname(pkg.log_path)
-                    log_file = "spack-build-%02d-%s-out.txt" % (
-                        i + 1, phase_name.lower()
-                    )
-                    log_file = os.path.join(log_dir, log_file)
-
-                    # DEBUGGING TIP - to debug this section, insert an IPython
-                    # embed here, and run the sections below without log capture
-                    with log_output(log_file, echo, True,
-                                    env=unmodified_env) as logger:
+                    # In the future, these loops can be reversed to write
+                    # to phase specific output files, and combine_phase_logs
+                    # used to combine them. There is a race condition that
+                    # is preventing this from currently working.
+                    for i, (phase_name, phase_attr) in enumerate(zip(
+                            pkg.phases, pkg._InstallPhase_phases)):
 
                         with logger.force_echo():
                             inner_debug_level = tty.debug_level()
@@ -1771,15 +1770,11 @@ def build_process(pkg, kwargs):
                             spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
                         except Exception:
-                            combine_phase_logs(pkg)
                             spack.hooks.on_phase_error(pkg, phase_name, log_file)
                             raise
 
-                    # We assume loggers share echo True/False
-                    echo = logger.echo
-
             # After log, we can get all output/error files from the package stage
-            combine_phase_logs(pkg)
+            echo = logger.echo
             log(pkg)
 
         # Run post install hooks before build stage is removed.

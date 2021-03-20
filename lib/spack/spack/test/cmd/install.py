@@ -147,6 +147,9 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
     # capfd interferes with Spack's capturing
     with capfd.disabled():
         out = install('-v', 'build-error', fail_on_error=False)
+    assert "ProcessError" in out
+    assert 'configure: error: in /path/to/some/file:' in out
+    assert 'configure: error: cannot run C compiled programs.' in out
     assert 'Installing build-error' in out
 
 
@@ -179,10 +182,15 @@ def test_show_log_on_error(mock_packages, mock_archive, mock_fetch,
         out = install('--show-log-on-error', 'build-error',
                       fail_on_error=False)
     assert isinstance(install.error, spack.build_environment.ChildError)
-    assert install.error.pkg.name == 'build-error'
 
-    assert '==> Installing build-error' in out
-    assert 'See build log for details:' in out
+    assert 'Full build log:' in out
+
+    print(out)
+
+    # Message shows up for ProcessError (1) and output (1)
+    errors = [line for line in out.split('\n')
+              if 'configure: error: cannot run C compiled programs' in line]
+    assert len(errors) == 2
 
 
 def test_install_overwrite(
