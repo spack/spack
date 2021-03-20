@@ -28,7 +28,7 @@ class Minizip(AutotoolsPackage):
 
     # statically link to libz.a
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/minizip.rb
-    patch('static.patch')
+    patch('static.patch', when='%apple-clang@12:')
 
     # build minizip and miniunz
     @run_before('autoreconf')
@@ -37,15 +37,6 @@ class Minizip(AutotoolsPackage):
         make()
         with working_dir(self.configure_directory):
             make()
-
-    # Building a shared lib against a static one is not portable
-    # so we link against the PIC independent lib
-    def build(self, spec, prefix):
-        with working_dir(self.configure_directory):
-            makefile = FileFilter('Makefile')
-            makefile.filter('libz.a', 'libz.so')
-
-        make()
 
     # install minizip and miniunz
     @run_after('install')
