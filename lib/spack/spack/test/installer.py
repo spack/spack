@@ -589,13 +589,13 @@ def test_combine_phase_logs(tmpdir):
 
     # Create and write to dummy phase log files
     for log_file in log_files:
-        phase_log_file = os.path.join(tmpdir, log_file)
+        phase_log_file = os.path.join(str(tmpdir), log_file)
         with open(phase_log_file, 'w') as plf:
             plf.write('Output from %s\n' % log_file)
         phase_log_files.append(phase_log_file)
 
     # This is the output log we will combine them into
-    combined_log = os.path.join(tmpdir, "combined-out.txt")
+    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
     spack.installer.combine_phase_logs(phase_log_files, combined_log)
     with open(combined_log, 'r') as log_file:
         out = log_file.read()
