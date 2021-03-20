@@ -1750,30 +1750,31 @@ def build_process(pkg, kwargs):
                     )
                     log_file = os.path.join(log_dir, log_file)
 
-                    # DEBUGGING TIP - to debug this section, insert an IPython
-                    # embed here, and run the sections below without log capture
-                    with log_output(log_file, echo, True,
-                                    env=unmodified_env) as logger:
+                    try:
+                        # DEBUGGING TIP - to debug this section, insert an IPython
+                        # embed here, and run the sections below without log capture
+                        with log_output(log_file, echo, True,
+                                        env=unmodified_env) as logger:
 
-                        with logger.force_echo():
-                            inner_debug_level = tty.debug_level()
-                            tty.set_debug(debug_level)
-                            tty.msg("{0} Executing phase: '{1}'"
-                                    .format(pre, phase_name))
-                            tty.set_debug(inner_debug_level)
+                            with logger.force_echo():
+                                inner_debug_level = tty.debug_level()
+                                tty.set_debug(debug_level)
+                                tty.msg("{0} Executing phase: '{1}'"
+                                        .format(pre, phase_name))
+                                tty.set_debug(inner_debug_level)
 
-                        # Redirect stdout and stderr to daemon pipe
-                        phase = getattr(pkg, phase_attr)
+                            # Redirect stdout and stderr to daemon pipe
+                            phase = getattr(pkg, phase_attr)
 
-                        # Catch any errors to report to logging
-                        try:
+                            # Catch any errors to report to logging
+
                             phase(pkg.spec, pkg.prefix)
                             spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
-                        except Exception:
-                            combine_phase_logs(pkg)
-                            spack.hooks.on_phase_error(pkg, phase_name, log_file)
-                            raise
+                    except BaseException:
+                        combine_phase_logs(pkg)
+                        spack.hooks.on_phase_error(pkg, phase_name, log_file)
+                        raise
 
                     # We assume loggers share echo True/False
                     echo = logger.echo
