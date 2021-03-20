@@ -233,11 +233,14 @@ jobs:
         flags: shelltests,linux
   # Test for Python2.6 run on Centos 6
   centos6:
-    needs: [ validate, style, documentation ]
+    needs: [ validate, style, documentation, changes ]
     runs-on: ubuntu-latest
     container: spack/github-actions:centos6
     steps:
-    - name: Run unit tests
+    - name: Run unit tests (full test-suite)
+      # The CentOS 6 container doesn't run with coverage, but
+      # under the same conditions it runs the full test suite
+      if: ${{ needs.changes.outputs.with_coverage == 'true' }}
       env:
           HOME: /home/spack-test
       run: |
@@ -246,11 +249,24 @@ jobs:
           git fetch origin ${{ github.ref }}:test-branch
           git checkout test-branch
           share/spack/qa/run-unit-tests
+    - name: Run unit tests (only package tests)
+      if: ${{ needs.changes.outputs.with_coverage == 'false' }}
+      env:
+          HOME: /home/spack-test
+          ONLY_PACKAGES: true
+      run: |
+          whoami && echo $HOME && cd $HOME
+          git clone https://github.com/spack/spack.git && cd spack
+          git fetch origin ${{ github.ref }}:test-branch
+          git checkout test-branch
+          share/spack/qa/run-unit-tests
 
-  # Test RHEL8 UBI with platform Python
+  # Test RHEL8 UBI with platform Python. This job is run
+  # only on PRs modifying core Spack
   rhel8-platform-python:
-    needs: [ validate, style, documentation ]
+    needs: [ validate, style, documentation, changes ]
     runs-on: ubuntu-latest
+    if: ${{ needs.changes.outputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
     steps:
     - name: Install dependencies
@@ -289,9 +305,14 @@ jobs:
           . share/spack/setup-env.sh
           spack compiler find
           spack solve mpileaks%gcc
-          coverage run $(which spack) unit-test -v
-          coverage combine
-          coverage xml
+          if [ "${{ needs.changes.outputs.with_coverage }}" == "true" ]
+          then
+            coverage run $(which spack) unit-test -v -x
+            coverage combine
+            coverage xml
+          else
+            $(which spack) unit-test -m "not maybeslow" -k "package_sanity"
+          fi
       - uses: codecov/codecov-action@v1
         if: ${{ needs.changes.outputs.with_coverage == 'true' }}
         with:
