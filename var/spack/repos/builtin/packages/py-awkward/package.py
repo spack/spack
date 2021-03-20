@@ -7,10 +7,10 @@ from spack import *
 
 
 class PyAwkward(PythonPackage):
-    """ROOT I/O in pure Python and NumPy."""
+    """Manipulate JSON-like data with NumPy-like idioms."""
 
     git = "https://github.com/scikit-hep/awkward-1.0.git"
-    url = "https://github.com/scikit-hep/awkward-1.0/archive/0.3.1.tar.gz"
+    pypi = "awkward/awkward-1.1.2.tar.gz"
     homepage = "https://awkward-array.org"
 
     maintainers = ['vvolkl']
@@ -18,13 +18,15 @@ class PyAwkward(PythonPackage):
     version('1.1.2', sha256='626e3a6a2a92dd67abc8692b1ebfa1b447b9594352d6ce8c86c37d7299dc4602')
     version('0.3.1', sha256='7126d9feab8828b0b4f4c6dbc9e28c269a91e28eef4a6033d7ebb5db21f1dab3')
 
-    patch('pybind11.patch')
+    variant('builtin_pybind11', description="Build with the builtin version of pybind11", default=False)
+
+    patch('pybind11.patch', when="~builtin_pybind11")
 
     depends_on('py-setuptools', type='build')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.13.1:')
-    depends_on('py-pybind11')
+    depends_on('py-numpy@1.13.1:', type=('build', 'run'))
+    depends_on('py-pybind11', type=('build', 'link'), when="~builtin_pybind11")
     depends_on('dlpack', when="@1.0.0:")
     depends_on('rapidjson')
     depends_on('cmake', type='build')
