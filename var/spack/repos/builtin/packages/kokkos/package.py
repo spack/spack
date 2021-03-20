@@ -140,6 +140,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         "70": 'volta70',
         "72": 'volta72',
         "75": 'turing75',
+        "80": 'ampere80',
     }
     cuda_arches = spack_cuda_arch_map.values()
     conflicts("+cuda", when="cuda_arch=none")
