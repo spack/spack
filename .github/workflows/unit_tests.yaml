@@ -266,7 +266,7 @@ jobs:
   # Test RHEL8 UBI with platform Python. This job is run
   # only on PRs modifying core Spack
   rhel8-platform-python:
-    needs: [ validate, style, documentation ]
+    needs: [ validate, style, documentation, changes ]
     runs-on: ubuntu-latest
     if: ${{ needs.changes.outputs.with_coverage == 'true' }}
     container: registry.access.redhat.com/ubi8/ubi
