@@ -117,7 +117,7 @@ class Rpm(AutotoolsPackage):
 
         # OpenMP multithreading support automatically enabled if C compiler has
         # support for OpenMP version 4.5 or higher
-        if "-openmp" in spec:
+        if "~openmp" in spec:
             args.append("--disable-openmp")
 
         return args
