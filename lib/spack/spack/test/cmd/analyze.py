@@ -64,6 +64,7 @@ def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
     Test that an analyzer errors if requested name does not exist.
     """
     install('libdwarf')
+    install('python@3.8')
     analyzer_dir = tmpdir.join('analyzers')
 
     # An analyzer that doesn't exist should not work
