@@ -23,8 +23,8 @@ class PyAwkward1(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('python@3.6:', type=('build', 'run'))
-    depends_on('py-numpy@1.13.1:')
-    depends_on('py-pybind11')
+    depends_on('py-numpy@1.13.1:', type=('build', 'run'))
+    depends_on('py-pybind11', type=('build', 'link'))
     depends_on('dlpack', when="@1.0.0:")
     depends_on('rapidjson')
     depends_on('cmake', type='build')
