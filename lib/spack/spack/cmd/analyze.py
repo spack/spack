@@ -30,7 +30,8 @@ def setup_parser(subparser):
                   description="list available analyzers",
                   help="show list of analyzers that are available to run.")
 
-    monitor_group = spack.monitor.get_monitor_group(subparser)  # noqa
+    # This adds the monitor group to the subparser
+    spack.monitor.get_monitor_group(subparser)
 
     # Run Parser
     run_parser = sp.add_parser('run', description="run an analyzer",
@@ -51,9 +52,10 @@ def setup_parser(subparser):
 
 
 def analyze_spec(spec, analyzers=None, outdir=None, monitor=None, overwrite=False):
-    """Do an analysis for a spec, optionally adding monitoring and allowing
-    the user to specify a custom output directory.
+    """
+    Do an analysis for a spec, optionally adding monitoring.
 
+    We also allow the user to specify a custom output directory.
     analyze_spec(spec, args.analyzers, args.outdir, monitor)
 
     Args:

@@ -18,15 +18,14 @@ analyze = SpackCommand('analyze')
 
 
 def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):
-
     # We cannot run an analysis for a package not installed
     out = analyze('run', 'libdwarf', fail_on_error=False)
     assert "==> Error: Spec 'libdwarf' matches no installed packages.\n" in out
 
 
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
-    """Test that an analyzer is able to run and errors if a run is requested
-    for one that does not exist
+    """
+    Test that an analyzer errors if requested name does not exist.
     """
     install('libdwarf')
     analyzer_dir = tmpdir.join('analyzers')
@@ -50,8 +49,10 @@ def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
 
 
 def _run_analyzer(name, package, tmpdir):
-    """A shared function to test that an analyzer runs. We return the output
-    file for further inspection.
+    """
+    A shared function to test that an analyzer runs.
+
+    We return the output file for further inspection.
     """
     analyzer = spack.analyzers.get_analyzer(name)
     analyzer_dir = tmpdir.join('analyzers')
@@ -67,8 +68,8 @@ def _run_analyzer(name, package, tmpdir):
 
 
 def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
-
-    """test the install files analyzer
+    """
+    test the install files analyzer
     """
     install('libdwarf')
     output_file = _run_analyzer("install_files", "libdwarf", tmpdir)
@@ -87,8 +88,8 @@ def test_installfiles_analyzer(tmpdir, mock_fetch, install_mockery_mutable_confi
 
 
 def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
-
-    """test the environment variables analyzer
+    """
+    test the environment variables analyzer.
     """
     install('libdwarf')
     output_file = _run_analyzer("environment_variables", "libdwarf", tmpdir)
@@ -101,7 +102,8 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
 
 
 def test_list_analyzers():
-    """test that listing analyzers shows all the possible analyzers
+    """
+    test that listing analyzers shows all the possible analyzers.
     """
     from spack.analyzers import analyzer_types
 
@@ -115,9 +117,10 @@ def test_list_analyzers():
 
 
 def test_configargs_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
+    """
+    test the config args analyzer.
 
-    """test the config args analyzer. Since we don't have any, this should
-    return an empty result.
+    Since we don't have any, this should return an empty result.
     """
     install('libdwarf')
     analyzer_dir = tmpdir.join('analyzers')

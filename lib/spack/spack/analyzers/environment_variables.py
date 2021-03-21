@@ -8,21 +8,24 @@ file in the installed package directory, generating a json file that has
 an index of key, value pairs for environment variables."""
 
 
-import spack.monitor
-from .analyzerbase import Analyzerbase
+from .analyzer_base import AnalyzerBase
+from spack.util.environment import EnvironmentModifications
+
 
 import os
-import re
 
 
-class Environmentvariables(Analyzerbase):
+class EnvironmentVariables(AnalyzerBase):
 
     name = "environment_variables"
     outfile = "spack-analyzer-environment-variables.json"
     description = "environment variables parsed from spack-build-env.txt"
 
     def run(self):
-        """Read in the spack-build-env.txt file from the package install
+        """
+        Load, parse, and save spack-build-env.txt to analyzers.
+
+        Read in the spack-build-env.txt file from the package install
         directory and parse the environment variables into key value pairs.
         The result should have the key for the analyzer, the name.
         """
@@ -30,7 +33,10 @@ class Environmentvariables(Analyzerbase):
         return {self.name: self._read_environment_file(env_file)}
 
     def _read_environment_file(self, filename):
-        """Given an environment file, we want to read it, split by semicolons
+        """
+        Read and parse the environment file.
+
+        Given an environment file, we want to read it, split by semicolons
         and new lines, and then parse down to the subset of SPACK_* variables.
         We assume that all spack prefix variables are not secrets, and unlike
         the install_manifest.json, we don't (at least to start) parse the values
@@ -38,13 +44,8 @@ class Environmentvariables(Analyzerbase):
         """
         if not os.path.exists(filename):
             return
-        content = spack.monitor.read_file(filename)
 
-        # Filter down to lines, not export statements. I'm only using multiple
-        # lines because of the length limit.
-        lines = re.split("(;|\n)", content)
-        lines = [x for x in lines if x not in ['', '\n', ';'] and "SPACK_" in x]
-        lines = [x.strip() for x in lines if "export " not in x]
-
-        # Dictionary comprehentions require 2.7
-        return dict(x.partition("=")[::2] for x in lines)
+        mods = EnvironmentModifications.from_sourcing_file(filename)
+        env = {}
+        mods.apply_modifications(env)
+        return env

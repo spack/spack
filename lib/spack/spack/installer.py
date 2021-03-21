@@ -415,9 +415,12 @@ def clear_failures():
 
 def combine_phase_logs(phase_log_files, log_path):
     """
+    Read set or list of logs and combine them into one file.
+
     Each phase will produce it's own log, so this function aims to cat all the
     separate phase log output files into the pkg.log_path. It is written
     generally to accept some list of files, and a log path to combine them to.
+
     Args:
         phase_log_files (list): a list or iterator of logs to combine
         log_path (path): the path to combine them to

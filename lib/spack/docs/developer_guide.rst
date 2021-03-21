@@ -272,7 +272,7 @@ Research and Monitoring Modules
 
 
 :mod:`spack.analyzers`
-  A module folder with a :class:`AnalyzerBase <spack.analyzers.AnalyzerBase>`
+  A module folder with a :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`
   that provides base functions to run, save, and (optionally) upload analysis
   results to a `Spack Monitor <https://github.com/spack/spack-monitor>`_ server.
 
@@ -334,16 +334,16 @@ Writing analyzers
 
 To write an analyzer, you should add a new python file to the
 analyzers module directory at ``lib/spack/spack/analyzers`` .
-Your analyzer should be a subclass of the :class:`Analyzerbase <spack.analyzers.analyzerbase.Analyzerbase>`. For example, if you want
+Your analyzer should be a subclass of the :class:`AnalyzerBase <spack.analyzers.analyzer_base.AnalyzerBase>`. For example, if you want
 to add an analyzer class ``Myanalyzer`` you woul write to 
 ``spack/analyzers/myanalyzer.py`` and import and 
 use the base as follows:
 
 .. code-block:: python
 
-    from .analyzerbase import Analyzerbase
+    from .analyzer_base import AnalyzerBase
 
-    class Myanalyzer(Analyzerbase):
+    class Myanalyzer(AnalyzerBase):
 
 
 Note that the class name is your module file name, all lowercase
@@ -379,11 +379,14 @@ as the package, with each analyzer owning it's own subfolder. for example:
                 ├── install_files
                 │   └── spack-analyzer-install-files.json
                 └── libabigail
-                    └── spack-analyzer-libabigail-libz.so.1.2.11.xml
+                    └── lib
+                        └── spack-analyzer-libabigail-libz.so.1.2.11.xml 
 
 
-The result files are typically written as json so they can be easily read and 
-uploaded in a future interaction with a monitor.
+Notice that for the libabigail analyzer, since results are generated per object,
+we honor the object's folder in case there are equivalently named files in 
+different folders. The result files are typically written as json so they can be easily read and  uploaded in a future interaction with a monitor.
+
 
 ^^^^^^^^^^^^^^^^^
 Analyzer Metadata
@@ -398,7 +401,7 @@ As we mentioned above, note that this analyzer would live in a module named
 
 .. code-block:: python
 
-    class Libabigail(Analyzerbase):
+    class Libabigail(AnalyzerBase):
 
         name = "libabigail"
         outfile = "spack-analyzer-libabigail.json"
@@ -416,7 +419,7 @@ that the user wants to run all analyzers.
 An analyzer run Function
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-The core of an analyzer is it's ``run()`` function, which should accept no
+The core of an analyzer is its ``run()`` function, which should accept no
 arguments. You can assume your analyzer has the package spec of interest at ``self.spec``
 and it's up to the run function to generate whatever analysis data you need,
 and then return the object with a key as the analyzer name. The result data
@@ -440,9 +443,7 @@ We'd then return it as follows - note that they key is the analyzer name at ``se
 This will save the complete result to the analyzer metadata folder, as described
 previously. If you want support for adding a different kind of metadata (e.g.,
 not associated with an install file) then the monitor server would need to be updated
-to support this first. For the analyzers in ``build.py`` that support ``config_args``,
-``install_files``, and ``environment``, these are parsed differently to create matching
-objects in the database or otherwise update the build.
+to support this first.
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -483,13 +484,37 @@ to save it to the filesystem, and if the user has added the ``--monitor`` flag
 to upload it to a monitor server. If your result follows an accepted result
 format and you don't need to parse it further, you don't need to add this 
 function to your class. However, if your result data is large or otherwise
-needs additional parsing, you can define it. As an example, the Libabigail
-analyzer saves ``*.xml`` files to the analyzer metadata folder in ``run()``,
-as they are either binaries, or as xml (text) would usually be too big to pass in one request.
-For this reason, the files are saved during ``run()`` and the filenames added
-to the result object, and then when the result object is passed back into
-``save_result()``, we skip saving to the filesystem, and instead read the file
-and send each one (separately) to the monitor:
+needs additional parsing, you can define it. If you define the function, it
+is useful to know about the ``output_dir`` property, which you can join
+with your output file relative path of choice:
+
+.. code-block:: python
+
+    outfile = os.path.join(self.output_dir, "my-output-file.txt")
+
+
+The directory will be provided by the ``output_dir`` property but it won't exist,
+so you should create it:
+
+
+.. code::block:: python
+
+    # Create the output directory
+    if not os.path.exists(self._output_dir):
+        os.makedirs(self._output_dir)
+
+
+If you are generating results that match to specific files in the package
+install directory, you should try to maintain those paths in the case that
+there are equivalently named files in different directories that would
+overwrite one another. As an example of an analyzer with a custom save,
+the Libabigail analyzer saves ``*.xml`` files to the analyzer metadata
+folder in ``run()``, as they are either binaries, or as xml (text) would
+usually be too big to pass in one request. For this reason, the files
+are saved during ``run()`` and the filenames added to the result object,
+and then when the result object is passed back into ``save_result()``,
+we skip saving to the filesystem, and instead read the file and send
+each one (separately) to the monitor:
 
 
 .. code-block:: python
