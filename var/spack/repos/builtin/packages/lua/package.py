@@ -40,7 +40,11 @@ class Lua(Package):
     depends_on('unzip', type='run')
 
     # By default, we are missing lua.pc
-    patch('add-lua-pc-file.patch', when="+pc-file")
+    patch(
+        "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
+        sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae"
+        when="+pc-file"
+    )
 
     resource(
         name="luarocks",
