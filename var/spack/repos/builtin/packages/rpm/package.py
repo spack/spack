@@ -37,7 +37,7 @@ class Rpm(AutotoolsPackage):
     depends_on('popt')
 
     # Without this file patch, we don't detect lua
-    depends_on('lua+pc-file@5.3.5:')
+    depends_on('lua+pcfile@5.3.5:')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
