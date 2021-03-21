@@ -207,6 +207,9 @@ class Result(object):
         self.answers = []
         self.cores = []
 
+        # names of optimization criteria
+        self.criteria = []
+
     def print_cores(self):
         for core in self.cores:
             tty.msg(
@@ -357,6 +360,7 @@ class PyclingoDriver(object):
                 return x.string or str(x)
 
         if result.satisfiable:
+            # build spec from the best model
             builder = SpecBuilder(specs)
             min_cost, best_model = min(models)
             tuples = [
@@ -364,7 +368,19 @@ class PyclingoDriver(object):
                 for sym in best_model
             ]
             answers = builder.build_specs(tuples)
+
+            # add best spec to the results
             result.answers.append((list(min_cost), 0, answers))
+
+            # pull optimization criteria names out of the solution
+            criteria = [
+                (int(args[0]), args[1]) for name, args in tuples
+                if name == "opt_criterion"
+            ]
+            result.criteria = [t[1] for t in sorted(criteria, reverse=True)]
+
+            # record the number of models the solver considered
+            result.nmodels = len(models)
 
         elif cores:
             symbols = dict(
