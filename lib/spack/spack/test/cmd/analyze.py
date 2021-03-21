@@ -10,7 +10,6 @@ import spack.config
 import spack.package
 import spack.cmd.install
 
-from spack.error import SpackError
 from spack.spec import Spec
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
