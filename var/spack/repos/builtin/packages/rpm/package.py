@@ -73,7 +73,7 @@ class Rpm(AutotoolsPackage):
     depends_on('gzip')
     depends_on('xz')
 
-    # java jara dependency analysis (already requirement for lua)
+    # java jar dependency analysis (already requirement for lua)
     depends_on('unzip', type='run')
 
     # Documentation dependencies
