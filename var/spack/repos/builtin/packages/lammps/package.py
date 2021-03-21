@@ -155,6 +155,9 @@ class Lammps(CMakePackage, CudaPackage):
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
+    patch("https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch",
+          sha256="7e1610dad4d8203b45ca6dc2c1f97d02a40f98a5e9778f51a3dbcc30ea1dc717",
+          when="@20200721 +cuda")
 
     root_cmakelists_dir = 'cmake'
 
