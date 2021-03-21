@@ -30,7 +30,7 @@ class Rpm(AutotoolsPackage):
     variant('python', default=False, description="build Python bindings to RPM library")
     variant('posix', default=False, description="enable POSIX.1e draft 15 file capabilities support")
     variant('gpg', default=False, description="install gpg for using cryptographic signatures")
-    variant('openmp', default=True, description="OpenMP multithreading support (default).")
+    variant('openmp', default=True, description="OpenMP multithreading support")
     variant('docs', default=False, description='build documentation')
 
     # Always required
