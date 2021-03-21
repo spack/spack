@@ -149,25 +149,6 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     assert not result['environment_variables']
 
 
-def test_libabigail_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
-    """Test the libabigail analyzer, as much as we can.
-    """
-    install('libdwarf')
-    spec = Spec('libdwarf').concretized()
-    analyzer_dir = tmpdir.join('analyzers')
-    analyzer = spack.analyzers.get_analyzer('libabigail')(spec, analyzer_dir)
-    assert hasattr(analyzer, 'abidw')
-    assert os.path.exists(analyzer.abidw.path)
-    result = analyzer.run()
-
-    # We don't actually have a binary, so the result will be empty
-    assert "libabigail" in result
-    assert not result['libabigail']
-
-    # This also won't do anything, we don't have a result
-    analyzer.save_result(result)
-
-
 def test_list_analyzers():
     """
     test that listing analyzers shows all the possible analyzers.
