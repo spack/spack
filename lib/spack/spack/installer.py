@@ -413,18 +413,20 @@ def clear_failures():
     spack.store.db.clear_all_failures()
 
 
-def combine_phase_logs(pkg):
+def combine_phase_logs(phase_log_files, log_path):
     """
     Each phase will produce it's own log, so this function aims to cat all the
-    separate phase log output files into the pkg.log_path.
+    separate phase log output files into the pkg.log_path. It is written
+    generally to accept some list of files, and a log path to combine them to.
     Args:
-        pkg (Package): the package that was built and installed
+        phase_log_files (list): a list or iterator of logs to combine
+        log_path (path): the path to combine them to
     """
-    log_files = pkg.phase_log_files
 
-    with open(pkg.log_path, 'w') as fd:
-        for line in itertools.chain.from_iterable(list(map(open, log_files))):
-            fd.write(line)
+    with open(log_path, 'w') as log_file:
+        for phase_log_file in phase_log_files:
+            with open(phase_log_file, 'r') as phase_log:
+                log_file.write(phase_log.read())
 
 
 def dump_packages(spec, path):
@@ -1772,7 +1774,7 @@ def build_process(pkg, kwargs):
                             spack.hooks.on_phase_success(pkg, phase_name, log_file)
 
                     except BaseException:
-                        combine_phase_logs(pkg)
+                        combine_phase_logs(pkg.phase_log_files, pkg.log_path)
                         spack.hooks.on_phase_error(pkg, phase_name, log_file)
                         raise
 
@@ -1780,7 +1782,7 @@ def build_process(pkg, kwargs):
                     echo = logger.echo
 
             # After log, we can get all output/error files from the package stage
-            combine_phase_logs(pkg)
+            combine_phase_logs(pkg.phase_log_files, pkg.log_path)
             log(pkg)
 
         # Run post install hooks before build stage is removed.
