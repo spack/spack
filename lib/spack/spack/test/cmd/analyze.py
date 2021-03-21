@@ -4,12 +4,14 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
-
+import pytest
 
 import spack.config
 import spack.package
 import spack.cmd.install
 
+from spack.error import SpackError
+from spack.spec import Spec
 import spack.util.spack_json as sjson
 from spack.main import SpackCommand
 
@@ -21,6 +23,41 @@ def test_test_package_not_installed(mock_fetch, install_mockery_mutable_config):
     # We cannot run an analysis for a package not installed
     out = analyze('run', 'libdwarf', fail_on_error=False)
     assert "==> Error: Spec 'libdwarf' matches no installed packages.\n" in out
+
+
+def test_analyzer_get_install_dir(mock_fetch, install_mockery_mutable_config):
+    """
+    Test that we cannot get an analyzer directory without a spec package.
+    """
+    spec = Spec('libdwarf').concretized()
+    assert 'libdwarf' in spack.analyzers.analyzer_base.get_analyzer_dir(spec)
+
+    # Case 1: spec is missing attribute for package
+    with pytest.raises(SystemExit):
+        spack.analyzers.analyzer_base.get_analyzer_dir(None)
+
+    class Packageless(object):
+        package = None
+
+    # Case 2: spec has package attribute, but it's None
+    with pytest.raises(SystemExit):
+        spack.analyzers.analyzer_base.get_analyzer_dir(Packageless())
+
+
+def test_malformed_analyzer(mock_fetch, install_mockery_mutable_config):
+    """
+    Test that an analyzer missing needed attributes is invalid.
+    """
+    from spack.analyzers.analyzer_base import AnalyzerBase
+
+    # Missing attribute description
+    class MyAnalyzer(AnalyzerBase):
+        name = "my_analyzer"
+        outfile = "my_analyzer_output.txt"
+
+    spec = Spec('libdwarf').concretized()
+    with pytest.raises(SystemExit):
+        MyAnalyzer(spec)
 
 
 def test_analyze_output(tmpdir, mock_fetch, install_mockery_mutable_config):
@@ -99,6 +136,36 @@ def test_environment_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config
     # Check a few expected keys
     for key in ['SPACK_CC', 'SPACK_COMPILER_SPEC', 'SPACK_ENV_PATH']:
         assert key in content
+
+    # The analyzer should return no result if the output file does not exist.
+    spec = Spec('libdwarf').concretized()
+    env_file = os.path.join(spec.package.prefix, '.spack', 'spack-build-env.txt')
+    assert os.path.exists(env_file)
+    os.remove(env_file)
+    analyzer = spack.analyzers.get_analyzer("environment_variables")
+    analyzer_dir = tmpdir.join('analyzers')
+    result = analyzer(spec, analyzer_dir).run()
+    assert "environment_variables" in result
+    assert not result['environment_variables']
+
+
+def test_libabigail_analyzer(tmpdir, mock_fetch, install_mockery_mutable_config):
+    """Test the libabigail analyzer, as much as we can.
+    """
+    install('libdwarf')
+    spec = Spec('libdwarf').concretized()
+    analyzer_dir = tmpdir.join('analyzers')
+    analyzer = spack.analyzers.get_analyzer('libabigail')(spec, analyzer_dir)
+    assert hasattr(analyzer, 'abidw')
+    assert os.path.exists(analyzer.abidw.path)
+    result = analyzer.run()
+
+    # We don't actually have a binary, so the result will be empty
+    assert "libabigail" in result
+    assert not result['libabigail']
+
+    # This also won't do anything, we don't have a result
+    analyzer.save_result(result)
 
 
 def test_list_analyzers():

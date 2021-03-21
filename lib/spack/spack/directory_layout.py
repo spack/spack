@@ -253,7 +253,7 @@ class YamlDirectoryLayout(DirectoryLayout):
         versioning. We use it in the case that an analysis later needs to
         easily access this information.
         """
-        from spack.environment import get_host_environment_metadata
+        from spack.util.environment import get_host_environment_metadata
         env_file = self.env_metadata_path(spec)
         environ = get_host_environment_metadata()
         with open(env_file, 'w') as fd:

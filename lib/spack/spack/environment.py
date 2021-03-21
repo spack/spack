@@ -9,9 +9,6 @@ import re
 import sys
 import shutil
 import copy
-import platform
-import socket
-
 import six
 
 from ordereddict_backport import OrderedDict
@@ -34,7 +31,6 @@ import spack.config
 import spack.user_environment as uenv
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
-import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
@@ -445,41 +441,9 @@ def _write_yaml(data, str_or_file):
     syaml.dump_config(data, str_or_file, default_flow_style=False)
 
 
-def get_host_environment_metadata():
-    """Get the host environment, reduce to a subset that we can store in
-    the install directory, and add the spack version.
-    """
-    import spack.main
-    environ = _get_host_environment()
-    return {"host_os": environ['os'],
-            "platform": environ['platform'],
-            "host_target": environ['target'],
-            "hostname": environ['hostname'],
-            "spack_version": spack.main.get_version(),
-            "kernel_version": platform.version()}
-
-
-def _get_host_environment():
-    """Return a dictionary (lookup) with host information (not including the
-    os.environ).
-    """
-    arch = architecture.Arch(
-        architecture.platform(), 'default_os', 'default_target')
-    arch_spec = spack.spec.Spec('arch=%s' % arch)
-    return {
-        'target': str(arch.target),
-        'os': str(arch.os),
-        'platform': str(arch.platform),
-        'arch': arch_spec,
-        'architecture': arch_spec,
-        'arch_str': str(arch),
-        'hostname': socket.gethostname()
-    }
-
-
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
-    valid_variables = _get_host_environment()
+    valid_variables = spack.util.environment.get_host_environment()
     valid_variables.update({
         're': re,
         'env': os.environ,

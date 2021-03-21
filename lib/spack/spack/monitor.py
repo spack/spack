@@ -133,7 +133,7 @@ class SpackMonitorClient:
             self.build_environment = build_environment
 
     def capture_build_environment(self):
-        """Use spack.environment._get_host_environment_metadata to capture the
+        """Use spack.util.environment.get_host_environment_metadata to capture the
         environment for the build. This is important because it's a unique
         identifier, along with the spec, for a Build. It should look something
         like this:
@@ -149,7 +149,7 @@ class SpackMonitorClient:
         install_environment.json, and can be loaded by the monitor for uploading
         data relevant to a later analysis.
         """
-        from spack.environment import get_host_environment_metadata
+        from spack.util.environment import get_host_environment_metadata
         self.build_environment = get_host_environment_metadata()
 
     def require_auth(self):
