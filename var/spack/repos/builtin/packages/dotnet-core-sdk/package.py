@@ -18,8 +18,7 @@ class DotnetCoreSdk(Package):
             sha256='9ff77087831e8ca32719566ec9ef537e136cfc02c5ff565e53f5509cc6e7b341')
 
     version('3.1.13',
-            url='https://download.visualstudio.microsoft.com/download/pr/ab82011d-25'
-                '49-4e23-a8a9-a2b522a31f27/6e615d6177e49c3e874d05ee3566e8bf/dotnet-sdk-3.1.407-linux-x64.tar.gz',
+            url='https://download.visualstudio.microsoft.com/download/pr/ab82011d-2549-4e23-a8a9-a2b522a31f27/6e615d6177e49c3e874d05ee3566e8bf/dotnet-sdk-3.1.407-linux-x64.tar.gz',
             sha256='a744359910206fe657c3a02dfa54092f288a44c63c7c86891e866f0678a7e911')
 
     version('2.1.300',
