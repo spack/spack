@@ -53,7 +53,8 @@ class BlisBase(Package):
 
     phases = ['configure', 'build', 'install']
 
-    def configure(self, spec, prefix):
+    def configure_args(self):
+        spec = self.spec
         config_args = []
 
         config_args.append("--enable-threading=" +
@@ -79,7 +80,13 @@ class BlisBase(Package):
         else:
             config_args.append("--disable-static")
 
-        # FIXME: add cpu isa variants.
+        return config_args
+
+    def configure(self, spec, prefix):
+        config_args = self.configure_args()
+
+        # To ensure auto should always be the
+        # last argument for base and derived class
         config_args.append("auto")
 
         configure("--prefix=" + prefix,
