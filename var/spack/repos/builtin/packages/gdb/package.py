@@ -45,6 +45,8 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant('ld', default=False, description='Enable ld')
     variant('tui', default=False, description='Enable tui')
 
+    patch('gdb-libintl.patch', level=0, when='@10.1')
+
     # Required dependency
     depends_on('texinfo', type='build')
 
