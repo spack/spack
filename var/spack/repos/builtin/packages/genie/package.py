@@ -65,40 +65,17 @@ class Genie(Package):  # Genie doesn"t use Autotools
     patch("genie_disable_gopt_with_compiler_check.patch", level=0, when="@2.11:")
 
     # Flags for GENIE"s optional but disabled by default features
-    variant(
-        "vleextension",
-        default=False,
-        description="Enable GENIE very low energy (1 MeV - 100 MeV) extension",
-    )
-    variant(
-        "validationtools",
-        default=False,
-        description="GENIE physics model validation tools",
-    )
-    variant("test", default=False, description="Enable test programs")
+    variant("atmo", default=False,
+        description="Enable GENIE Atmospheric neutrino event generation app")
+    variant("fnal", default=False, 
+        description="Enables FNAL experiment-specific event generation app")
+    variant("nucleondecay", default=False,
+        description="Enable GENIE Nucleon decay event generation app")
+    variant("masterclass", default=False,
+        description="Enable GENIE neutrino masterclass app")
     variant("t2k", default=False, description="Enable T2K-specific generation app")
-    variant("fnal", default=False, description="Enable T2K-specific generation app")
-    variant(
-        "atmo",
-        default=False,
-        description="Enable GENIE Atmospheric neutrino event generation app",
-    )
-    variant(
-        "nucleondecay",
-        default=False,
-        description="Enable GENIE Nucleon decay event generation app",
-    )
-    variant(
-        "masterclass",
-        default=False,
-        description="Enable GENIE neutrino masterclass app",
-    )
-
-    conflicts(
-        "+validationtools",
-        when="@2.8.6:2.8.6",
-        msg="Validation tools in GENIE 2.8.6 don't build.",
-    )
+    variant("vleextension", default=False,
+        description="Enable GENIE very low energy (1 MeV - 100 MeV) extension")
 
     phases = ["configure", "build", "install"]
 
@@ -164,10 +141,6 @@ class Genie(Package):  # Genie doesn"t use Autotools
             ]
         if "+vleextension" in self.spec:
             args += ["--enable-vle-extension"]
-        if "+validationtools" in self.spec:
-            args += ["--enable-validation-tools"]
-        if "+test" in self.spec:
-            args += ["--enable-test"]
         if "+t2k" in self.spec:
             args += ["--enable-t2k"]
         if "+fnal" in self.spec:
