@@ -29,7 +29,7 @@ class Amdblis(BlisBase):
         spec = self.spec
         args = super(Amdblis, self).configure_args()
 
-        if spec.satisfies('@3.0%aocc'):
+        if spec.satisfies('@3.0 %aocc'):
             """ To enabled Fortran to C calling convention for
             complex types when compiling with aocc flang"""
             args.append('CFLAGS={0}'.format("-DAOCL_F2C"))
