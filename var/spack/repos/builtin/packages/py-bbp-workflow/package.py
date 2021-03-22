@@ -27,6 +27,7 @@ class PyBbpWorkflow(PythonPackage):
     depends_on('py-xarray', type='run')
     depends_on('py-zarr', type='run')
     depends_on('py-notebook', type='run')
+    depends_on('py-ipyparallel', type='run')
 
     depends_on('py-docutils', type='run')  # rdflib plugins pull this from python-daemon
 
@@ -38,4 +39,5 @@ class PyBbpWorkflow(PythonPackage):
         env.prepend_path('PATH', self.spec['py-distributed'].prefix.bin)
         env.prepend_path('PATH', self.spec['py-notebook'].prefix.bin)
         env.prepend_path('PATH', self.spec['py-ipython'].prefix.bin)
+        env.prepend_path('PATH', self.spec['py-ipyparallel'].prefix.bin)
         env.prepend_path('PATH', self.spec['py-luigi'].prefix.bin)
