@@ -26,7 +26,7 @@ from spack.util.path import substitute_path_variables
 
 # everything here uses the mock_env_path
 pytestmark = pytest.mark.usefixtures(
-    'mutable_mock_env_path', 'config', 'mutable_mock_repo')
+    'mutable_mock_env_path', 'config')
 
 env        = SpackCommand('env')
 install    = SpackCommand('install')
