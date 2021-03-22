@@ -29,6 +29,9 @@ class RRpostgres(RPackage):
     depends_on('r-plogr@0.2.0:', type=('build', 'run'))
     depends_on('postgresql@9.0:', type=('build', 'run'))
 
+    # The postgresql pkg-config file does not contain rpath flags. This recipe
+    # passes LIB_DIR and INCLUDE_DIR instead of using pkg-config. The below
+    # patch ensures that the rpath flags are added in that case.
     patch('configure_add_rpath.patch')
 
     def configure_vars(self):
