@@ -14,7 +14,6 @@ class PyPyem(PythonPackage):
     commands against virtual environments created against
     various Python interpreters."""
 
-    homepage = "https://pypi.org/project/pyem/#description"
     pypi     = "pyem/pyem-2.1.0.tar.gz"
 
     depends_on('python@3.7:', type=('build', 'run'))
@@ -22,6 +21,7 @@ class PyPyem(PythonPackage):
 
     version('2.1.0', sha256='5234a20427ab2813a8a0bf1e9112d4d854b1b0502b3e63d17c1b1a3c4be9340e')
 
+    # distutils does not support entry_points, setuptools needed to install pyem binary
     def patch(self):
         filter_file(r'from distutils.core import setup', 'from setuptools import setup', 'setup.py')
 
