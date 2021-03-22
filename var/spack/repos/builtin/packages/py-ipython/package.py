@@ -37,7 +37,7 @@ class PyIpython(PythonPackage):
     depends_on('python@2.7:2.8,3.3:', type=('build', 'run'))
     depends_on('py-setuptools@18.5:', type='run', when='@4.1:')
     depends_on('py-jedi@0.10:', type=('build', 'run'), when='@7.5.0:')
-    depends_on('py-jedi@:0.17', type=('build', 'run'), when='@:7.18.0')  # from release notes
+    depends_on('py-jedi@:0.17', type=('build', 'run'), when='@:7.18')  # from release notes
     depends_on('py-jedi@0.16:', type=('build', 'run'), when='@7.18.0:')
     depends_on('py-decorator', type=('build', 'run'))
     depends_on('py-pickleshare', type=('build', 'run'))
