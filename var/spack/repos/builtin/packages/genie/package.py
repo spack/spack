@@ -6,7 +6,7 @@
 
 import os
 
-from spack.directives import conflicts, depends_on, patch, variant, version
+from spack.directives import depends_on, patch, variant, version
 from spack.package import Package
 from spack.util.executable import Executable
 from spack.version import Version
@@ -66,16 +66,16 @@ class Genie(Package):  # Genie doesn"t use Autotools
 
     # Flags for GENIE"s optional but disabled by default features
     variant("atmo", default=False,
-        description="Enable GENIE Atmospheric neutrino event generation app")
-    variant("fnal", default=False, 
-        description="Enables FNAL experiment-specific event generation app")
+            description="Enable GENIE Atmospheric neutrino event generation app")
+    variant("fnal", default=False,
+            description="Enables FNAL experiment-specific event generation app")
     variant("nucleondecay", default=False,
-        description="Enable GENIE Nucleon decay event generation app")
+            description="Enable GENIE Nucleon decay event generation app")
     variant("masterclass", default=False,
-        description="Enable GENIE neutrino masterclass app")
+            description="Enable GENIE neutrino masterclass app")
     variant("t2k", default=False, description="Enable T2K-specific generation app")
     variant("vleextension", default=False,
-        description="Enable GENIE very low energy (1 MeV - 100 MeV) extension")
+            description="Enable GENIE very low energy (1 MeV - 100 MeV) extension")
 
     phases = ["configure", "build", "install"]
 
