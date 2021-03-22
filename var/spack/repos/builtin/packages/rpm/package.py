@@ -79,6 +79,9 @@ class Rpm(AutotoolsPackage):
     # Documentation dependencies
     depends_on('doxygen', type="build", when="+docs")
 
+    def setup_build_environment(self, env):
+        env.set('LIBS', self.spec['gettext'].libs.search_flags + ' -lintl')
+
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh', '--noconfigure')

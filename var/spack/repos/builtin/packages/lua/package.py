@@ -39,7 +39,12 @@ class Lua(Package):
     # luarocks needs unzip for some packages (e.g. lua-luaposix)
     depends_on('unzip', type='run')
 
-    patch('add-lua-pc-file.patch', when="+pcfile")
+    patch(
+        "http://lua.2524044.n2.nabble.com/attachment/7666421/0/pkg-config.patch",
+        sha256="208316c2564bdd5343fa522f3b230d84bd164058957059838df7df56876cb4ae",
+        when="+pcfile"
+    )
+
     resource(
         name="luarocks",
         url="https://keplerproject.github.io/luarocks/releases/"
@@ -172,7 +177,7 @@ class Lua(Package):
     @run_after('install')
     def link_pkg_config(self):
         if "+pcfile" in self.spec:
-            symlink(join_path(self.prefix.lib, 'pkgconfig', 'lua-5.3.pc'),
+            symlink(join_path(self.prefix.lib, 'pkgconfig', 'lua5.3.pc'),
                     join_path(self.prefix.lib, 'pkgconfig', 'lua.pc'))
 
     @property
