@@ -23,5 +23,5 @@ class PyPyem(PythonPackage):
 
     # distutils does not support entry_points, setuptools needed to install pyem binary
     def patch(self):
-        filter_file(r'from distutils.core import setup', 'from setuptools import setup', 'setup.py')
-
+        filter_file(r'from distutils.core import setup',
+                    'from setuptools import setup', 'setup.py')
