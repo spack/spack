@@ -3617,8 +3617,8 @@ class Spec(object):
 
     def _cmp_node(self):
         """Yield comparable elements of just *this node* and not its deps."""
-        yield self.name or ''
-        yield self.namespace or ''
+        yield self.name
+        yield self.namespace
         yield self.versions
         yield self.variants
         yield self.compiler
