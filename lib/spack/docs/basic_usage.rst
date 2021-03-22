@@ -776,17 +776,19 @@ We could first see the options by asking the command for help:
 
     $ spack diff --help
     ...
-    --diff-type {all,version,concrete,node,node_compiler_set,node_compiler_version_set,node_os_set,node_platform_set,node_target_set,variant_set}
-    
+      -a     {all,version,concrete,node,node_compiler_set,node_compiler_version_set,
+      node_os_set,node_platform_set,node_target_set,variant_set}
+                        select the attributes to show (defaults to all)
 
+    
 We might then want to filter down to just a subset
-of a property type. To do this, you'd add the ``--diff-type`` parameter, which defaults to all. 
-Here is how you would filter to show just versions:
+of a property type. To do this, you'd add the ``-a`` for attribute parameter,
+which defaults to all. Here is how you would filter to show just versions:
 
 
 .. code-block:: console
 
-    $ spack diff --diff-type version python@2.7.8 python@3.8.8
+    $ spack diff -a version python@2.7.8 python@3.8.8
     ==> diff(python@2.7.8/7oknfqf, python@3.8.8/vrp4fmj)
     VERSION
       python Version(2.7.8)
@@ -797,6 +799,7 @@ Here is how you would filter to show just versions:
       openssl Version(1.1.1j)
 
 
+And you can add as many attributes as you'd like with multiple `-a`.
 Finally, if you want to view the data as json (and possibly pipe into an output file)
 just add ``--json``:
 
