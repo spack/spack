@@ -8,7 +8,7 @@ spack:
     - matrix:
         - [
             coreneuron,
-            coreneuron+debug,
+            coreneuron build_type=Debug,
             hdf5+mpi,
             highfive+mpi,
             neuron,

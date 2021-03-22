@@ -18,7 +18,7 @@ class Coreneuron(CMakePackage):
     url      = "https://github.com/BlueBrain/CoreNeuron"
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
-    version('develop', branch='master', submodules=True)
+    version('develop', branch='master')
     version('1.0a', commit="857551a", submodules=True, preferred=True)
     version('0.23b', commit="be131ec", submodules=True)
     version('0.22', tag='0.22', submodules=True)
@@ -32,7 +32,6 @@ class Coreneuron(CMakePackage):
     version('0.14', tag='0.14', submodules=True)
     patch('0001-Fixes-for-NMODL-MOD2C-binary.patch', when='@0.17+nmodl')
 
-    variant('debug', default=False, description='Build debug with O0')
     variant('gpu', default=False, description="Enable GPU build")
     variant('knl', default=False, description="Enable KNL specific flags")
     variant('mpi', default=True, description="Enable MPI support")
@@ -87,8 +86,14 @@ class Coreneuron(CMakePackage):
     conflicts('+codegenopt', when='~nmodl')
     conflicts('+ispc', when='~nmodl')
 
+    # An old comment said "PGI compiler not able to compile nrnreport.cpp when
+    # enabled OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU", but
+    # with the contemporary develop version it seems to work. Encode this
+    # knowledge as a conflict between +report and +gpu for older versions.
+    conflicts('+report', when='coreneuron@:1.0a+gpu+openmp')
+
     # raise conflict when trying to install '+gpu' without PGI compiler
-    gpu_compiler_message = "For gpu build use %pgi"
+    gpu_compiler_message = "For gpu build use %pgi or %nvhpc"
     conflicts('%gcc', when='+gpu', msg=gpu_compiler_message)
     conflicts('%intel', when='+gpu', msg=gpu_compiler_message)
 
@@ -107,18 +112,11 @@ class Coreneuron(CMakePackage):
 
     def get_flags(self):
         spec = self.spec
-        flags = "-g -O2"
+        flags = ''
         if '%intel' in spec:
-            flags = '-g -xHost -O2 -qopt-report=5'
+            flags = '-xHost -qopt-report=5'
             if '+knl' in spec:
-                flags = '-g -xMIC-AVX512 -O2 -qopt-report=5'
-        if '+gpu' in spec:
-            flags = '-O2'
-            flags += ' -Minline=size:1000,levels:100,'
-            flags += 'totalsize:40000,maxsize:4000'
-            flags += ' -ta=tesla:cuda%s' % (spec['cuda'].version.up_to(2))
-        if '+debug' in spec:
-            flags = '-g -O0'
+                flags = '-xMIC-AVX512 -qopt-report=5'
         # when pdt is used for instrumentation, the gcc's unint128 extension
         # is activated from random123 which results in compilation error
         if '+profile' in spec:
@@ -142,7 +140,6 @@ class Coreneuron(CMakePackage):
             ['-DCORENRN_ENABLE_SPLAYTREE_QUEUING=ON',
              '-DCMAKE_C_FLAGS=%s' % flags,
              '-DCMAKE_CXX_FLAGS=%s' % flags,
-             '-DCMAKE_BUILD_TYPE=CUSTOM',
              enable_reporting % ('ON' if '+report' in spec else 'OFF'),
              '-DCORENRN_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF'),
              '-DCORENRN_ENABLE_OPENMP=%s'
@@ -192,9 +189,6 @@ class Coreneuron(CMakePackage):
             options.extend(['-DCUDA_HOST_COMPILER=%s' % gcc,
                             '-DCUDA_PROPAGATE_HOST_FLAGS=OFF',
                             '-DCORENRN_ENABLE_GPU=ON'])
-            # PGI compiler not able to compile nrnreport.cpp when enabled
-            # OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU
-            options.append('-DCORENRN_ENABLE_REPORTING=OFF')
 
         return options
 
