@@ -399,6 +399,12 @@ There are two ways to include configuration information in a Spack Environment:
 
 #. Included in the ``spack.yaml`` file from another file.
 
+Many Spack commands also affect configuration information in files
+automatically. Those commands take a ``--scope`` argument, and the
+environment can be specified by ``env:NAME`` (to affect environment
+``foo``, set ``--scope env:foo``). These commands will automatically
+manipulate configuration inline in the ``spack.yaml`` file.
+
 """""""""""""""""""""
 Inline configurations
 """""""""""""""""""""
