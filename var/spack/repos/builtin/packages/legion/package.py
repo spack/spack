@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Legion(CMakePackage):
     """Legion is a data-centric parallel programming system for writing
        portable high performance programs targeted at distributed heterogeneous
@@ -24,36 +25,33 @@ class Legion(CMakePackage):
     url = "https://github.com/StanfordLegion/legion/tarball/legion-20.12.0"
     git = "https://github.com/StanfordLegion/legion.git"
 
-    # !!! NOTE: 'master' is the only spot were the embedded gasnet builds is currently 
-    # supported. 
-    #version('stable', branch='stable')
+    # !!! NOTE: 'master' is the only spot were the embedded gasnet builds is currently
+    # supported.
+    # version('stable', branch='stable')
     version('master', branch='master')
     version('cr', branch='control_replication')
 
-
-
     depends_on("cmake@3.16:", type='build')  # rest of legion to be updated to match.
-
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
     # mature.  We have many users that default to using no network layer for
     # day-to-day development thus we default to 'none'.  MPI support is new and
     # should be considered as a beta release.
-    variant('network', default='none', 
+    variant('network', default='none',
             values=('gasnet', 'mpi', 'none'),
             description="The network communications/transport layer to use.",
             multi=False)
 
-    # TODO: Need to pick a version of MPI v3 below. 
+    # TODO: Need to pick a version of MPI v3 below.
     depends_on('mpi', when='network=mpi')
     depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
 
-    # We default to automatically embedding a gasnet build. To override this 
+    # We default to automatically embedding a gasnet build. To override this
     # point the package a pre-installed version of GASNet-Ex via the gasnet_root
-    # variant. 
-    # 
-    # make sure we have a valid directory provided for gasnet_root...  
+    # variant.
+    #
+    # make sure we have a valid directory provided for gasnet_root...
     def validate_gasnet_root(value):
         if value == 'none':
             return True
@@ -64,7 +62,7 @@ class Legion(CMakePackage):
         else:
             return True
 
-    variant('gasnet_root', 
+    variant('gasnet_root',
             default='none',
             values=validate_gasnet_root,
             description="Path to a pre-installed version of GASNet (prefix directory).",
@@ -72,8 +70,8 @@ class Legion(CMakePackage):
     conflicts('gasnet_root', when="network=mpi")
 
     # The preferred mechanism for gasnet is to embed the build within the
-    # package.  As such, we prefer to use a resource vs. a package dependency 
-    # (i.e., there is currently not an officially supported gasnet(ex) package that 
+    # package.  As such, we prefer to use a resource vs. a package dependency
+    # (i.e., there is currently not an officially supported gasnet(ex) package that
     # follows the preferred/supported mechanisms.
     resource(name='gasnet_res',
              git='https://github.com/StanfordLegion/gasnet.git',
@@ -86,16 +84,16 @@ class Legion(CMakePackage):
             description="The gasnet conduit(s) to enable.",
             multi=False)
 
-    conflicts('conduit=none', when='network=gasnet', 
+    conflicts('conduit=none', when='network=gasnet',
               msg="a conduit must be selected when 'network=gasnet'")
 
-    gasnet_conduits=('aries', 'ibv', 'udp', 'mpi', 'ucx')
+    gasnet_conduits = ('aries', 'ibv', 'udp', 'mpi', 'ucx')
     for c in gasnet_conduits:
-        conflict_str='conduit=%s' % c
-        conflicts(conflict_str, when='network=mpi', 
-            msg="conduit attribute requires 'network=gasnet'.")
-        conflicts(conflict_str, when='network=none', 
-            msg="conduit attribute requires 'network=gasnet'.")
+        conflict_str = 'conduit=%s' % c
+        conflicts(conflict_str, when='network=mpi',
+                  msg="conduit attribute requires 'network=gasnet'.")
+        conflicts(conflict_str, when='network=none',
+                  msg="conduit attribute requires 'network=gasnet'.")
     depends_on('ucx', when='conduit=ucx')
     depends_on('mpi', when='conduit=mpi')  # TODO: need to ferret out MPI 3.x support details.
 
@@ -118,21 +116,22 @@ class Legion(CMakePackage):
 
     variant('output_level', default='warning',
             # Note: these values are dependent upon those used in the cmake config.
-            values=("spew", "debug", "info", "print", "warning", "error", "fatal", "none"),
+            values=("spew", "debug", "info", "print", "warning", "error", "fatal",
+                    "none"),
             description="Set the compile-time logging level.",
             multi=False)
 
     variant('spy', default=False,
             description="Enable detailed logging for Legion Spy debugging.")
 
-
     # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
+    # TODO: we could use a map here to clean up and use naming vs. numbers.
     cuda_arch_list = ('60', '70', '75', '80')
     # note: we will be dependent upon spack's latest-and-greatest cuda version...
     variant('cuda', default=False,
             description="Enable CUDA support.")
     variant('cuda_hijack', default=False,
-            description="Hijack application calls into the CUDA runtime (implies +cuda).")
+            description="Hijack application calls into the CUDA runtime (+cuda).")
     variant('cuda_arch', default='70',
             values=cuda_arch_list,
             description="GPU/CUDA architecture to build for.",
@@ -140,7 +139,6 @@ class Legion(CMakePackage):
 
     depends_on('cuda@10:11', when='+cuda')
     conflicts('+cuda_hijack', when='~cuda')
-
 
     variant('fortran', default=False,
             description="Enable Fortran bindings.")
@@ -153,8 +151,6 @@ class Legion(CMakePackage):
             description="Use hwloc for topology awareness.")
     depends_on('hwloc', when='+hwloc')
 
-
-
     variant('kokkos', default=False,
             description="Enable support for interoperability with Kokkos.")
 
@@ -165,10 +161,10 @@ class Legion(CMakePackage):
         depends_on("kokkos@3.2+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
                    when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
 
-    depends_on("kokkos@3.2~cuda+openmp", when='kokkos+openmp')
+    depends_on("kokkos@3.3~cuda+openmp", when='kokkos+openmp')
 
     variant('bindings', default=False,
-            description="Build language bindings to the Legion runtime (excluding Fortran).")
+            description="Build runtime language bindings (excl. Fortran).")
 
     variant('libdl', default=True,
             description="Enable support for dynamic object/library loading.")
@@ -191,22 +187,19 @@ class Legion(CMakePackage):
     variant('redop_complex', default=False,
             description="Use reduction operators for complex types.")
 
-
     variant('max_dims', values=int, default=3,
-            description="Set the maximum number of dimensions available in a logical region.")
+            description="Set max number of dimensions for logical regions.")
     variant('max_fields', values=int, default=512,
             description="Maximum number of fields allowed in a logical region.")
 
-
     variant('native', default=False,
             description="Enable native/host processor optimizaton target.")
-
 
     def cmake_args(self):
         spec = self.spec
         cmake_cxx_flags = []
         options = []
-        
+
         if 'network=gasnet' in spec:
             options.append('-DLegion_NETWORKS=gasnetex')
             if spec.variants['gasnet_root'].value != 'none':
@@ -214,7 +207,7 @@ class Legion(CMakePackage):
                 options.append('-DGASNet_ROOT_DIR=%s' % gasnet_dir)
             else:
                 options.append('-DLegion_EMBED_GASNet=ON')
-                gasnet_dir=join_path(self.stage.source_path, 'gasnet')
+                gasnet_dir = join_path(self.stage.source_path, 'gasnet')
                 options.append('-DLegion_EMBED_GASNet_LOCALSRC=%s' % gasnet_dir)
 
             gasnet_conduit = spec.variants['conduit'].value
@@ -310,7 +303,7 @@ class Legion(CMakePackage):
         if '+bindings' in spec:
             # default is off.
             options.append('-DLegion_BUILD_BINDINGS=ON')
-            options.append('-DLegion_REDOP_COMPLEX=ON') # required for bindings
+            options.append('-DLegion_REDOP_COMPLEX=ON')  # required for bindings
             options.append('-DLegion_USE_Fortran=ON')
 
         if spec.variants['build_type'].value == 'Debug':
