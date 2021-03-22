@@ -51,7 +51,6 @@ class Openssh(AutotoolsPackage):
         match = re.search(r'OpenSSH_([^, ]+)', output)
         return match.group(1) if match else None
 
-
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At
         # least newer versions want to create the directory during the
