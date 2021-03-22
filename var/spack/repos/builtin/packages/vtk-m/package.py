@@ -69,7 +69,7 @@ class VtkM(CMakePackage, CudaPackage):
     depends_on("cmake@3.12:", type="build")               # CMake >= 3.12
     depends_on("cmake@3.18:", when="+hip", type="build")  # CMake >= 3.18
 
-    depends_on('cuda@10.2.0:', when='+cuda')
+    depends_on('cuda@10.1.0:', when='+cuda')
     depends_on("tbb", when="+tbb")
     depends_on("mpi", when="+mpi")
 
