@@ -16,6 +16,7 @@ import spack.fetch_strategy
 import spack.util.file_cache
 import spack.util.path
 
+from llnl.util.symlink import symlink
 
 def _misc_cache():
     """The ``misc_cache`` is Spack's cache for small data.
@@ -80,7 +81,7 @@ class MirrorCache(object):
                 # to https://github.com/spack/spack/pull/13908)
                 os.unlink(cosmetic_path)
             mkdirp(os.path.dirname(cosmetic_path))
-            os.symlink(relative_dst, cosmetic_path)
+            symlink(relative_dst, cosmetic_path)
 
 
 #: Spack's local cache for downloaded source archives

@@ -41,6 +41,8 @@ import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
 from spack.installer import PackageInstaller
 import spack.util.path
+from llnl.util.symlink import symlink
+
 
 #: environment variable used to indicate the active environment
 spack_env_var = 'SPACK_ENV'
@@ -1436,7 +1438,7 @@ class Environment(object):
                     log_path, '%s-%s.log' % (spec.name, spec.dag_hash(7)))
                 if os.path.lexists(build_log_link):
                     os.remove(build_log_link)
-                os.symlink(spec.package.build_log_path, build_log_link)
+                symlink(spec.package.build_log_path, build_log_link)
 
     def uninstalled_specs(self):
         """Return a list of all uninstalled (and non-dev) specs."""
