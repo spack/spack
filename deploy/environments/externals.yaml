@@ -23,6 +23,7 @@ spack:
   specs:
     - llvm@11.0.0 +python
     - nvhpc@20.9 install_type=network
+    - nvhpc@21.2 install_type=network
     - arm-forge@20.2.0-Redhat-7.0-x86_64
     - blender
     - boost~mpi@1.73.0
