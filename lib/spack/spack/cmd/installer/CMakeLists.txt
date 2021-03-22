@@ -39,9 +39,6 @@ else()
 endif()
 
 
-# Use PYTHON_DIR and SPACK_DIR to configure spack_cmd.bat
-configure_file("spack_cmd.bat.in" "spack_cmd.bat")
-
 # PYTHON DOWLOAD AND EXTRACTION-----------------------------------
 file(DOWNLOAD "${PY_DOWNLOAD_LINK}/${PY_FILENAME}"
   "${CMAKE_CURRENT_BINARY_DIR}/${PY_FILENAME}"
@@ -94,7 +91,7 @@ set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 #set(CPACK_WIX_UPGRADE_GUID "B9DBDE20-C6C8-4644-AC39-6F5F4D5039CB")
 
 # Set full path to icon, shortcut in spack.wxs
-set(SPACK_SHORTCUT "${CMAKE_CURRENT_BINARY_DIR}/spack_cmd.bat")
+set(SPACK_SHORTCUT "${CMAKE_CURRENT_SOURCE_DIR}/spack_cmd.bat")
 configure_file("spack.wxs.in" "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
 set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
 
