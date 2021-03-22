@@ -26,6 +26,7 @@ class PyScikitImage(PythonPackage):
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-numpy@1.14.1:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-numpy@1.15.1:', type=('build', 'run'), when='@0.17.1:')
+    depends_on('py-numpy@1.16.5:', type=('build', 'run'), when='@0.18:')
     depends_on('py-scipy', type=('build', 'run'))
     depends_on('py-scipy@0.19.0:', type=('build', 'run'), when='@0.16.1:')
     depends_on('py-scipy@1.0.1:', type=('build', 'run'), when='@0.17.1:')
