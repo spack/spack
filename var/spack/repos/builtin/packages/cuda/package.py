@@ -5,7 +5,6 @@
 
 from spack import *
 from glob import glob
-from llnl.util.filesystem import LibraryList
 import os
 import re
 import platform
@@ -123,20 +122,6 @@ class Cuda(Package):
     def setup_run_environment(self, env):
         env.set('CUDA_HOME', self.prefix)
 
-    def setup_dependent_package(self, module, dependent_spec):
-        # define the path to the driver lib separately.
-        libs = find_libraries('libcuda', root=self.prefix,
-                              shared=True, recursive=True)
-        filtered_libs = []
-
-        # Filter out compat libs
-        for lib in libs:
-            parts = lib.split(os.sep)
-            if 'compat' not in parts:
-                filtered_libs.append(lib)
-
-        self.spec.driver_libs = LibraryList(filtered_libs)
-
     def install(self, spec, prefix):
         if os.path.exists('/tmp/cuda-installer.log'):
             try:
@@ -186,7 +171,10 @@ class Cuda(Package):
     @property
     def libs(self):
         """
-        List of runtime libraries
+        Export the libraries of CUDA. For the driver stub library use
+        spec['cuda:cuda'].libs. Defaults to libcudart (the runtime library).
         """
-        return find_libraries('libcudart', root=self.prefix,
-                              shared=True, recursive=True)
+        comps = self.spec.last_query.extra_parameters or ['cudart']
+        names = ['lib' + c for c in comps]
+        libs = find_libraries(names, root=self.prefix, recursive=True)
+        return libs
