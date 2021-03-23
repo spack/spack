@@ -540,9 +540,6 @@ def set_module_variables_for_package(pkg):
     # for both classes so the parent class can still use them if it gets
     # called. parent_class_modules includes pkg.module.
 
-    # Accessing this attribute ensures that the package module is imported
-    pkg.module
-
     modules = parent_class_modules(pkg.__class__)
     for mod in modules:
         _set_variables_for_single_module(pkg, mod)
@@ -702,6 +699,9 @@ def parent_class_modules(cls):
         issubclass(spack.package.PackageBase, cls)):
         return []
     result = []
+    # Accessing cls.module ensures that the module is imported
+    cls.module
+
     module = sys.modules.get(cls.__module__)
     if module:
         result = [module]
