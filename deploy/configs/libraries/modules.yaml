@@ -34,12 +34,14 @@ modules:
       - neuron+mpi~debug%intel
       - omega-h
       - petsc+int64+mpi
+      - py-cgal-pybind
       - py-dask-mpi
       - py-flake8
       - py-mpi4py%gcc
       - python-dev
       - py-h5py~mpi%gcc
       - py-numpy%gcc
+      - py-rtree
       - py-scikit-learn
       - py-virtualenv
       - 'tensorflow@1.12.0'

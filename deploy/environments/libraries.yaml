@@ -59,6 +59,7 @@ spack:
     - py-cached-property
     - py-cffi
     - py-cfgv
+    - py-cgal-pybind
     - py-click
     - py-clustershell
     - py-cmake-format
@@ -114,6 +115,7 @@ spack:
     - py-pyyaml
     - py-regex
     - py-requests
+    - py-rtree
     - py-scikit-learn
     - py-scipy
     - py-seaborn
