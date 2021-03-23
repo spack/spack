@@ -83,6 +83,26 @@ class PyScipy(PythonPackage):
         if platform.mac_ver()[0][0:2] == '11':
             env.set('MACOSX_DEPLOYMENT_TARGET', '10.15')
 
+        if self.spec.satisfies("^fujitsu-ssl2+parallel"):
+            if self.spec.target == "a64fx":  # Build with SVE support
+                libname = "libfjlapackexsve.so"
+            else:
+                libname = "libfjlapackex.so"
+            env.set("BLAS", join_path(self.spec["blas"].libs.directories[0], libname))
+            env.set(
+                "LAPACK", join_path(self.spec["lapack"].libs.directories[0], libname)
+            )
+
+        elif self.spec.satisfies("^fujitsu-ssl2~parallel"):
+            if self.spec.target == "a64fx":  # Build with SVE support
+                libname = "libfjlapacksve.so"
+            else:
+                libname = "libfjlapack.so"
+            env.set("BLAS", join_path(self.spec["blas"].libs.directories[0], libname))
+            env.set(
+                "LAPACK", join_path(self.spec["lapack"].libs.directories[0], libname)
+            )
+
     def build_args(self, spec, prefix):
         args = []
         if spec.satisfies('%fj'):
