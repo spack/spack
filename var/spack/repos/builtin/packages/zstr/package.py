@@ -24,8 +24,7 @@ class Zstr(Package):
     depends_on('zlib')
 
     def install(self, spec, prefix):
-        """Make the install targets - Note that this package 
+        """Make the install targets - Note that this package
            keeps it's headers in the src directory"""
         install_tree(join_path(self.stage.source_path, 'src'),
                      prefix.include)
-
