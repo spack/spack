@@ -31,7 +31,7 @@ class Casacore(CMakePackage):
     variant('readline', default=True, description='Build readline support')
     # see note below about the reason for disabling the "sofa" variant
     # variant('sofa', default=False, description='Build SOFA support')
-    variant('fftw', default=False, description='Build FFTW3 support')
+    variant('fftw', default=True, description='Build FFTW3 support')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
 
@@ -65,12 +65,20 @@ class Casacore(CMakePackage):
         args.append(self.define_from_variant('USE_OPENMP', 'openmp'))
         args.append(self.define_from_variant('USE_READLINE', 'readline'))
         args.append(self.define_from_variant('USE_HDF5', 'hdf5'))
-        args.append(self.define_from_variant('USE_FFTW3', 'fftw'))
+
+        # fftw3 is used by casacore as the default starting with
+        # v3.4.0 (although we use fftw3 by default in this Spack
+        # package), but the old fftpack is still available
+        if spec.satisfies('@3.4.0:'):
+            if spec.satisfies('~fftw'):
+                args.append('-DBUILD_FFTPACK_DEPRECATED=YES')
+        else:
+            args.append(self.define_from_variant('USE_FFTW3', 'fftw'))
 
         # Python2 and Python3 binding
-        if '+python' not in spec:
+        if spec.satisfies('~python'):
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=NO'])
-        elif spec['python'].version >= Version('3.0.0'):
+        elif spec.satisfies('^python@3.0.0:'):
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=YES'])
         else:
             args.extend(['-DBUILD_PYTHON=YES', '-DBUILD_PYTHON3=NO'])

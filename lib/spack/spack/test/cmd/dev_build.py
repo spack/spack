@@ -202,7 +202,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % build_dir)
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -328,7 +328,7 @@ env:
     dev-build-test-install:
       spec: dev-build-test-install@0.0.0
       path: %s
-""" % build_dir)
+""" % os.path.relpath(str(build_dir), start=str(envdir)))
 
         env('create', 'test', './spack.yaml')
         with ev.read('test'):
@@ -343,7 +343,7 @@ env:
     assert dep_spec.package.filename in os.listdir(dep_spec.prefix)
     assert os.path.exists(spec.prefix)
 
-    # Ensure variants set properly
+    # Ensure variants set properly; ensure build_dir is absolute and normalized
     for dep in (dep_spec, spec['dev-build-test-install']):
         assert dep.satisfies('dev_path=%s' % build_dir)
     assert spec.satisfies('^dev_path=*')

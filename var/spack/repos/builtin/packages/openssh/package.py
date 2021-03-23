@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Openssh(AutotoolsPackage):
@@ -39,6 +40,16 @@ class Openssh(AutotoolsPackage):
     depends_on('libedit')
     depends_on('ncurses')
     depends_on('zlib')
+
+    # Note: some server apps have "ssh" in the name, so require the exact
+    # command 'ssh'
+    executables = ['^ssh$', '^rsh$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('-V', output=str, error=str).rstrip()
+        match = re.search(r'OpenSSH_([^, ]+)', output)
+        return match.group(1) if match else None
 
     def configure_args(self):
         # OpenSSH's privilege separation path defaults to /var/empty. At

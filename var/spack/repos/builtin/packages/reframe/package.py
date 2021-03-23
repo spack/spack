@@ -23,6 +23,7 @@ class Reframe(Package):
     maintainers = ['victorusu', 'vkarak']
 
     version('master', branch='master')
+    version('3.5.0',  sha256='81b501be4252c99f12043cb21b0b7b8059207a340fc94173b180444599773f1a')
     version('3.4.2',  sha256='0c5c6dbd234b8007be929be2ccbe6a00d9a5ec75cc86e129557590b83f71acca')
     version('3.4.1',  sha256='aed5752a2f687002839923c5432784d3a25d3a29d43b69122dcbf72befa0fdbf')
     version('3.4',    sha256='7e74b1c7468b94e89cff4cd4a91934645ab227ad61d57a9ddf6a7d3d0726010e')

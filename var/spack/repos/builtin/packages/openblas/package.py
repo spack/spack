@@ -18,6 +18,7 @@ class Openblas(MakefilePackage):
     git      = 'https://github.com/xianyi/OpenBLAS.git'
 
     version('develop', branch='develop')
+    version('0.3.14', sha256='d381935d26f9cae8e4bbd7d7f278435adf8e3a90920edf284bb9ad789ee9ad60')
     version('0.3.13', sha256='79197543b17cc314b7e43f7a33148c308b0807cd6381ee77f77e15acf3e6459e')
     version('0.3.12', sha256='65a7d3a4010a4e3bd5c0baa41a234797cd3a1735449a4a5902129152601dc57b')
     version('0.3.11', sha256='bc4617971179e037ae4e8ebcd837e46db88422f7b365325bd7aba31d1921a673')
@@ -218,8 +219,15 @@ class Openblas(MakefilePackage):
         if microarch.vendor == 'generic':
             # User requested a generic platform, or we couldn't find a good
             # match for the requested one. Allow OpenBLAS to determine
-            # an optimized kernel at run time.
+            # an optimized kernel at run time, including older CPUs, while
+            # forcing it not to add flags for the current host compiler.
             args.append('DYNAMIC_ARCH=1')
+            if self.spec.version >= Version('0.3.12'):
+                # These are necessary to prevent OpenBLAS from targeting the
+                # host architecture on newer version of OpenBLAS, but they
+                # cause build errors on 0.3.5 .
+                args.extend(['DYNAMIC_OLDER=1', 'TARGET=GENERIC'])
+
         elif microarch.name in skylake:
             # Special case for renaming skylake family
             args.append('TARGET=SKYLAKEX')
