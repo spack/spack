@@ -28,12 +28,9 @@ class Alembic(CMakePackage):
     depends_on('zlib')
 
     def cmake_args(self):
-        args = []
-
-        if self.spec.satisfies('+hdf5'):
-            args.append('-DUSE_HDF5=ON')
-        else:
-            args.append('-DUSE_HDF5=OFF')
+        args = [
+            self.define_from_variant('USE_HDF5', 'hdf5')
+        ]
 
         if self.spec.satisfies('+python') and self.spec['python'].satisfies('@3:'):
             args.append('-DPython_ADDITIONAL_VERSIONS=3')
