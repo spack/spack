@@ -34,10 +34,10 @@ class PyDaskGlm(PythonPackage):
     depends_on('pandoc', type='build', when='+docs')
     depends_on('py-pip', type=('build', 'run'), when='+docs')
     depends_on('py-s3fs', type=('build', 'run'), when='+docs')
-    depends_on('py-matplotlib', type=('build', 'run'), when='+docs')
-    depends_on('llvm@:10.0.1~flang', when='+docs')
-    depends_on('cairo+X+ft+fc+pdf+gobject', type=('build', 'run'), when='+docs')
-    depends_on('harfbuzz+graphite2', type=('build', 'run'), when='+docs')
+    depends_on('py-matplotlib', type='build', when='+docs')
+    depends_on('llvm@:10.0.1~flang', type='build', when='+docs')
+    depends_on('cairo+X+ft+fc+pdf+gobject', type='build', when='+docs')
+    depends_on('harfbuzz+graphite2', type='build', when='+docs')
 
     @run_after('install')
     def install_docs(self):
