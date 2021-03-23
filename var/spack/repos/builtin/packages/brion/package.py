@@ -36,17 +36,17 @@ class Brion(CMakePackage):
     depends_on('boost +shared', when='~python')
     depends_on('boost +shared +python', when='+python')
 
-    depends_on('libsonata@0.1.2 ~mpi', when='@:3.1.0')
-    depends_on('libsonata ~mpi', when='@3.2.0:')
+    depends_on('libsonata@0.1.2', when='@:3.1.0')
+    depends_on('libsonata', when='@3.2.0:')
 
     # TODO: bzip2 is a dependency of boost. Needed here because of linking
     # issue (libboost_iostreams.so.1.68.0 not finding libbz2.so)
     depends_on('bzip2')
     depends_on('lunchbox', when='@3.1.0')
     depends_on('vmmlib', when='@3.1.0')
-    depends_on('highfive +boost ~mpi')
-    depends_on('highfive@2.1.1 +boost ~mpi', when='@3.1.0')
-    depends_on('mvdtool ~mpi')
+    depends_on('highfive +boost')
+    depends_on('highfive@2.1.1 +boost', when='@3.1.0')
+    depends_on('mvdtool')
     depends_on('glm')
 
     def patch(self):

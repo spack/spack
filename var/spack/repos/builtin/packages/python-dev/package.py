@@ -19,7 +19,7 @@ class PythonDev(BundlePackage):
     depends_on('py-click', type=('build', 'run'))
     depends_on('py-clustershell', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
-    depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-jinja2-cli', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))

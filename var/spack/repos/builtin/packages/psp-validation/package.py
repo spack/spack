@@ -19,7 +19,7 @@ class PspValidation(PythonPackage):
 
     depends_on('py-attrs@20.3.0:', type='run')
     depends_on('py-click@7.0:7.999', type='run')
-    depends_on('py-h5py~mpi@3:3.999', type='run')
+    depends_on('py-h5py@3:3.999', type='run')
     depends_on('py-joblib@0.16:', type='run')
     depends_on('py-numpy@1.10:', type='run')
     depends_on('py-tqdm@4.0:', type='run')

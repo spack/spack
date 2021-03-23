@@ -21,7 +21,7 @@ class PyLibsonata(PythonPackage):
     version('0.0.3', tag='v0.0.3', submodules=True)
 
     depends_on('cmake@3.3:', type='build')
-    depends_on('hdf5~mpi')
+    depends_on('hdf5')
     depends_on('py-pybind11')
 
     depends_on('py-numpy@1.12:', type=('build', 'run'))

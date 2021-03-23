@@ -36,7 +36,7 @@ class PyTorchGeometric(PythonPackage):
     depends_on('py-pandas', type=('build', 'run'))
     depends_on('py-rdflib', type=('build', 'run'))
     depends_on('py-googledrivedownloader', type=('build', 'run'))
-    depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-ase', type=('build', 'run'))
     depends_on('py-jinja2', type=('build', 'run'))
     depends_on('py-torch-sparse+cuda', when='+cuda', type=('build', 'run'))

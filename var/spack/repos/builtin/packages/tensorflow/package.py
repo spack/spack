@@ -67,7 +67,7 @@ class Tensorflow(Package):
     depends_on(
         "py-keras-preprocessing@1.0.5:", type=("build", "run"), when="@1.12.0:"
     )
-    depends_on("py-h5py~mpi", type=("build", "run"), when="@1.12.0:")
+    depends_on("py-h5py", type=("build", "run"), when="@1.12.0:")
 
     patch("url-zlib.patch", when="@0.10.0")
 

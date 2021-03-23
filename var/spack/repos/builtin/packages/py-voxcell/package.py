@@ -24,8 +24,8 @@ class PyVoxcell(PythonPackage):
     depends_on('py-setuptools', type='build')
 
     depends_on('py-future@0.16:', type='run')
-    depends_on('py-h5py~mpi@2.3:2.99', type='run', when='@:2.99.9')
-    depends_on('py-h5py~mpi@3.1.0:', type='run', when='@3.0.0:')
+    depends_on('py-h5py@2.3:2.99', type='run', when='@:2.99.9')
+    depends_on('py-h5py@3.1.0:', type='run', when='@3.0.0:')
     depends_on('py-numpy@1.9:', type='run')
     depends_on('py-pandas@0.24.2:', type='run')
     depends_on('py-pynrrd@0.2:0.2.99', type='run', when='@:2.6.1')

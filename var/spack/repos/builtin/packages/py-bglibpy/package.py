@@ -32,7 +32,7 @@ class PyBglibpy(PythonPackage):
     depends_on('py-numpy@1.8:', type='run')
     depends_on('py-matplotlib@3.0.3:', type='run')
     depends_on('py-cachetools', type='run')
-    depends_on('py-h5py~mpi@2.3:', type='run')
+    depends_on('py-h5py@2.3:', type='run')
 
     # bluepy
     depends_on('py-bluepy@:2.0', type='run', when='@:4.4.20')

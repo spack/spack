@@ -23,7 +23,7 @@ class Archngv(PythonPackage):
 
     depends_on('py-cached-property@1.3:', type='run')
     depends_on('py-click@7.0:7.999', type='run')
-    depends_on('py-h5py~mpi@2.3:', type='run')
+    depends_on('py-h5py@2.3:', type='run')
     depends_on('py-jenkspy@0.1.4:', type='run')
     depends_on('py-numpy@1.13:', type='run')
     depends_on('py-numpy-stl@2.7:', type='run')

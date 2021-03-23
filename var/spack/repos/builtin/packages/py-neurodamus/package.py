@@ -39,7 +39,7 @@ class PyNeurodamus(PythonPackage):
     depends_on('py-docopt',        type='run')
     depends_on('py-lazy-property', type='run', when='@:1.0.0')
     depends_on('py-six',           type='run', when='@:1.0.0')
-    depends_on('py-morphio+mpi',   type='run', when='@develop')
+    depends_on('py-morphio',       type='run', when='@develop')
 
     @run_after('install')
     def install_scripts(self):

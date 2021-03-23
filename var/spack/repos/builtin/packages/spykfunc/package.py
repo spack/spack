@@ -43,7 +43,7 @@ class Spykfunc(PythonPackage):
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-future', type=('build', 'run'))
     depends_on('py-funcsigs', type=('build', 'run'))
-    depends_on('py-h5py~mpi', type=('build', 'run'), when='@:0.15.1')
+    depends_on('py-h5py', type=('build', 'run'), when='@:0.15.1')
     depends_on('py-hdfs', type=('build', 'run'))
     depends_on('py-jprops', type=('build', 'run'))
     depends_on('py-lazy-property', type=('build', 'run'))

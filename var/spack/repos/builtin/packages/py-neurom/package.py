@@ -28,7 +28,7 @@ class PyNeurom(PythonPackage):
     depends_on('py-click@7.0:', type='run')
     depends_on('py-enum34@1.0.4:', type='run', when='@:1.4.999 ^python@:3.3.99')
     depends_on('py-future@0.16.0:', type='run', when='@:1.4.999')
-    depends_on('py-h5py~mpi@2.7.1:', type='run')
+    depends_on('py-h5py@2.7.1:', type='run')
     depends_on('py-matplotlib@1.3.1:', type='run')
     depends_on('py-morphio@2.3.10:', type='run', when='@mut_morphio')
     depends_on('py-numpy@1.8.0:', type='run')

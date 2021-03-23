@@ -24,7 +24,7 @@ class PyBasalt(PythonPackage):
     depends_on('py-cached-property', type=('build', 'run'))
     depends_on('py-docopt', type=('build', 'run'))
     depends_on('py-exhale', type='build')
-    depends_on('py-h5py~mpi', type=('build', 'run'))
+    depends_on('py-h5py', type=('build', 'run'))
     depends_on('py-humanize', type=('build', 'run'))
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-progress', type=('build', 'run'))

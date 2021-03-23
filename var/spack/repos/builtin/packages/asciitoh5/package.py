@@ -19,7 +19,7 @@ class Asciitoh5(Package):
     version('1.0', git=git, tag='1.0')
 
     depends_on('neuron')
-    depends_on('hdf5~mpi')
+    depends_on('hdf5')
 
     def install(self, spec, prefix):
         os.mkdir(prefix.lib)

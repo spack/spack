@@ -23,8 +23,7 @@ class Morphio(CMakePackage):
     variant('mpi', default=True, description="Build with MPI support")
 
     depends_on('cmake@3.2:', type='build')
-    depends_on('hdf5~mpi', when='~mpi')
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5')
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
