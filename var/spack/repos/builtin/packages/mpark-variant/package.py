@@ -5,6 +5,7 @@
 
 from spack import *
 
+
 class MparkVariant(CMakePackage):
     """C++17 `std::variant` for C++11/14/17"""
 
@@ -12,8 +13,8 @@ class MparkVariant(CMakePackage):
     git     = "https://github.com/mpark/variant.git"
     maintainers = ['ax3l']
 
-    version('1.4.0', tag='v1.4.0')
-    version('1.3.0', tag='v1.3.0')
+    version('1.4.0', commit='4988879a9f5a95d72308eca2b1779db6ed9b135d')
+    version('1.3.0', commit='29319715a1f0eb0980d380db8a2fda5af8d58feb')
 
     # Ref.: https://github.com/mpark/variant/pull/73
     patch('nvcc.patch', when='@:1.4.0')
