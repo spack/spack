@@ -9,7 +9,6 @@
 """
 from importlib.machinery import SourceFileLoader  # novm
 from importlib.util import spec_from_loader, module_from_spec  # novm
-import sys
 
 
 class PrependFileLoader(SourceFileLoader):
@@ -33,8 +32,6 @@ class PrependFileLoader(SourceFileLoader):
 
 def load_source(full_name, path, prepend=None):
     """Import a Python module from source.
-
-    Load the source file and add it to ``sys.modules``.
 
     Args:
         full_name (str): full name of the module to be loaded
