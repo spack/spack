@@ -20,7 +20,7 @@ class Datatransferkit(CMakePackage):
     version('3.1-rc2', commit='1abc1a43b33dffc7a16d7497b4185d09d865e36a', submodules=True)
 
     variant('external-arborx', default=False,
-            description='use externally ArborX library instead of pulling it')
+            description='use an external ArborX library instead of the submodule')
     variant('openmp', default=False, description='enable OpenMP backend')
     variant('serial', default=True, description='enable Serial backend (default)')
     variant('shared', default=True,
