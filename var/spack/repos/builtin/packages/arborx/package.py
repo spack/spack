@@ -15,7 +15,8 @@ class Arborx(CMakePackage):
 
     maintainers = ['aprokop']
 
-    version('master', branch='master')
+    version('master',   branch='master')
+    version('1.0',      sha256='9b5f45c8180622c907ef0b7cc27cb18ba272ac6558725d9e460c3f3e764f1075')
     version('0.9-beta', sha256='b349b5708d1aa00e8c20c209ac75dc2d164ff9bf1b85adb5437346d194ba6c0d')
 
     # ArborX relies on Kokkos to provide devices, providing one-to-one matching
