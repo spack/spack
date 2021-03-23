@@ -22,11 +22,8 @@ class OpenalSoft(CMakePackage):
     depends_on('alsa-lib', when="+alsa")
 
     def cmake_args(self):
-        args = []
-
-        if self.spec.satisfies('+alsa'):
-            args.append('-DALSOFT_REQUIRE_ALSA=ON')
-        else:
-            args.append('-DALSOFT_REQUIRE_ALSA=OFF')
+        args = [
+            self.define_from_variant('ALSOFT_REQUIRE_ALSA', 'alsa')
+        ]
 
         return args
