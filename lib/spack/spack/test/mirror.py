@@ -117,7 +117,7 @@ def test_git_mirror(mock_git_repository, mutable_mock_repo):
 @pytest.mark.skipif(
     not which('svn') or not which('svnadmin'),
     reason='requires subversion to be installed')
-def test_svn_mirror(mock_svn_repository, mutable_mock_repo:
+def test_svn_mirror(mock_svn_repository, mutable_mock_repo):
     set_up_package('svn-test', mock_svn_repository, 'svn')
     check_mirror()
     repos.clear()
