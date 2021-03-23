@@ -47,6 +47,14 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPICH_F90', spack_fc)
         env.set('MPICH_FC', spack_fc)
 
+        # Set compiler wrappers for dependent build stage
+        dir = self._join_prefix('bin')
+        env.set('MPICC', join_path(dir, 'mpicc'))
+        env.set('MPICXX', join_path(dir, 'mpicxx'))
+        env.set('MPIF77', join_path(dir, 'mpif77'))
+        env.set('MPIF90', join_path(dir, 'mpif90'))
+        env.set('MPIFC', join_path(dir, 'mpifc'))
+
     @property
     def libs(self):
         libs = []
