@@ -112,3 +112,9 @@ class Cce(Compiler):
         if self.is_clang_based:
             return "-fPIC"
         return "-h PIC"
+
+    @property
+    def stdcxx_libs(self):
+        # Cray compiler wrappers link to the standard C++ library
+        # without additional flags.
+        return ()
