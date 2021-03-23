@@ -16,7 +16,7 @@ from spack.util.executable import which
 
 from llnl.util.filesystem import resolve_link_target_relative_to_the_link
 
-pytestmark = pytest.mark.usefixtures('mutable_config')
+pytestmark = pytest.mark.usefixtures('mutable_config', 'mock_packages')
 
 # paths in repos that shouldn't be in the mirror tarballs.
 exclude = ['.hg', '.git', '.svn']
