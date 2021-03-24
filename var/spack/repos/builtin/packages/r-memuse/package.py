@@ -14,7 +14,7 @@ class RMemuse(RPackage):
     Learn the scintillating answer to these and many more such questions
     with the 'memuse' package."""
 
-    homepage = "https://cran.r-project.org/web/packages/memuse/index.html"
+    homepage = "https://github.com/shinra-dev/memuse"
     cran     = "memuse"
 
     maintainers = ['dorton21']
