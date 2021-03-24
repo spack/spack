@@ -57,6 +57,7 @@ def configuration(env=None):
         return spack.config.get('modules', {})
     return spack.config.no_env_config().get('modules', {})
 
+
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
     'name',

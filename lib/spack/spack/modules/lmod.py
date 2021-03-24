@@ -27,6 +27,7 @@ def configuration(env=None):
         return spack.config.get('modules:lmod', {})
     return spack.config.no_env_config().get('modules:lmod', {})
 
+
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
