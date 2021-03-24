@@ -5,7 +5,6 @@
 
 from spack import *
 import os
-import subprocess
 
 
 class Nekrs(Package):
@@ -63,15 +62,13 @@ class Nekrs(Package):
             f.write(par)
             f.close()
 
-            ethier_cmd = ' '.join(['TRAVIS=true', os.path.join(prefix.bin, 'nrsmpi'),
-                                   'ethier 4 1'])
+            ethier = Executable(os.path.join(prefix.bin, 'nrsmpi'))
+            ethier.add_default_env("TRAVIS", "true")
+            ethier.add_default_arg("ethier")
+            ethier.add_default_arg("4")
+            ethier.add_default_arg("1")
 
-            process = subprocess.Popen(ethier_cmd, stdout=subprocess.PIPE,
-                                       cwd=os.getcwd(), shell=True)
-            output, error = process.communicate()
-            rc = process.returncode
-
-            assert rc == 0, "ethier example failed.\n{}".format(output.decode('ascii'))
+            error = ethier(output=str, error=str, fail_on_error=True)
 
     # Following 4 methods are stolen from OCCA since we are using OCCA
     # shipped with nekRS not as a dependency.
