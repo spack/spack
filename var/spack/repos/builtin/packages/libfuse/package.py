@@ -31,7 +31,6 @@ class Libfuse(MesonPackage):
         match = re.search(r'^fusermount.*version: (\S+)', output)
         return match.group(1) if match else None
 
-
     def meson_args(self):
         args = []
 
