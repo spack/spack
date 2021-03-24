@@ -23,7 +23,7 @@ class Libfuse(MesonPackage):
 
     variant('useroot', default=False)
 
-    executables = ['fusermount']
+    executables = ['^fusermount$']
 
     @classmethod
     def determine_version(cls, exe):
