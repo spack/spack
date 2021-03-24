@@ -28,7 +28,6 @@ class Debugedit(AutotoolsPackage):
     depends_on('libiberty')
 
     def build(self, spec, prefix):
-
         # requires libiberty
         libiberty = spec['libiberty'].prefix.include
         include_path = os.path.join(libiberty, "libiberty")
