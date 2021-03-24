@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class Debugedit(AutotoolsPackage):
@@ -29,6 +28,5 @@ class Debugedit(AutotoolsPackage):
 
     def build(self, spec, prefix):
         # requires libiberty
-        libiberty = spec['libiberty'].prefix.include
-        include_path = os.path.join(libiberty, "libiberty")
-        make('CPPFLAGS=-I%s' % include_path, 'PREFIX=' + prefix)
+        libiberty = spec['libiberty'].prefix.include.libiberty
+        make('CPPFLAGS=-I%s' % libiberty)
