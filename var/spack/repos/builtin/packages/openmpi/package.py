@@ -273,7 +273,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('libevent@2.0:', when='@4:')
 
-    depends_on('hwloc@2.0:', when='@4: ~internal-hwloc')
+    depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
