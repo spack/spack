@@ -274,12 +274,9 @@ spack package at this time.''',
             elif re.search(r'--with-pmix', output):
                 variants += ' pmi=pmix'
 
-            match = re.search(r'MPICH Device:\s+(\S+)', output)
+            match = re.search(r'MPICH Device:\s+(ch3|ch4)', output)
             if match:
-                if match.group(1) == 'ch3:nemesis':
-                    variants += ' device=ch3'
-                else:
-                    variants += ' device=' + match.group(1)
+                variants += ' device=' + match.group(1)
 
             match = re.search(r'--with-device=ch.\S+(ucx|ofi|mxm|tcp)', output)
             if match:
