@@ -847,6 +847,12 @@ class Environment(object):
         return os.path.join(self.env_subdir_path, 'view')
 
     @property
+    def module_path_defaults(self):
+        lmod = os.path.join(self.env_subdir_path, 'lmod')
+        tcl = os.path.join(self.env_subdir_path, 'modules')
+        return {'lmod': lmod, 'tcl': tcl}
+
+    @property
     def repo(self):
         if self._repo is None:
             self._repo = make_repo_path(self.repos_path)

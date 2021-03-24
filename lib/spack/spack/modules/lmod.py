@@ -22,21 +22,23 @@ from .common import BaseContext, BaseModuleFileWriter
 
 
 #: lmod specific part of the configuration
-def configuration():
-    return spack.config.get('modules:lmod', {})
-
+def configuration(env=None):
+    if env:
+        return spack.config.get('modules:lmod', {})
+    return spack.config.no_env_config().get('modules:lmod', {})
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
 
-def make_configuration(spec):
+def make_configuration(spec, env=None):
     """Returns the lmod configuration for spec"""
-    key = spec.dag_hash()
+    key = (spec.dag_hash(), env)
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(key, LmodConfiguration(spec))
+        return configuration_registry.setdefault(
+            key, LmodConfiguration(spec, env))
 
 
 def make_layout(spec):
@@ -137,7 +139,8 @@ class LmodConfiguration(BaseConfiguration):
             raise NonVirtualInHierarchyError(msg)
 
         # Append 'compiler' which is always implied
-        tokens.append('compiler')
+        if 'compiler' not in tokens:
+            tokens.append('compiler')
 
         # Deduplicate tokens in case duplicates have been coded
         tokens = list(lang.dedupe(tokens))
@@ -229,24 +232,30 @@ class LmodFileLayout(BaseFileLayout):
     @property
     def filename(self):
         """Returns the filename for the current module file"""
+        if not self._filename:
 
-        # Get the list of requirements and build an **ordered**
-        # list of the path parts
-        requires = self.conf.requires
-        hierarchy = self.conf.hierarchy_tokens
-        path_parts = lambda x: self.token_to_path(x, requires[x])
-        parts = [path_parts(x) for x in hierarchy if x in requires]
+            # Get the list of requirements and build an **ordered**
+            # list of the path parts
+            requires = self.conf.requires
+            hierarchy = self.conf.hierarchy_tokens
+            path_parts = lambda x: self.token_to_path(x, requires[x])
+            parts = [path_parts(x) for x in hierarchy if x in requires]
 
-        # My relative path if just a join of all the parts
-        hierarchy_name = os.path.join(*parts)
+            # My relative path if just a join of all the parts
+            hierarchy_name = os.path.join(*parts)
 
-        # Compute the absolute path
-        fullname = os.path.join(
-            self.arch_dirname,  # root for lmod files on this architecture
-            hierarchy_name,  # relative path
-            '.'.join([self.use_name, self.extension])  # file name
-        )
-        return fullname
+            # Compute the absolute path
+            fullname = os.path.join(
+                self.arch_dirname,  # root for lmod files on this architecture
+                hierarchy_name,  # relative path
+                '.'.join([self.use_name, self.extension])  # file name
+            )
+            self._filename = fullname
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        self._filename = value
 
     def token_to_path(self, name, value):
         """Transforms a hierarchy token into the corresponding path part.

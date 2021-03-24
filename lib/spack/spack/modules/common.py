@@ -52,9 +52,10 @@ import spack.util.spack_yaml as syaml
 
 
 #: config section for this file
-def configuration():
-    return spack.config.get('modules', {})
-
+def configuration(env=None):
+    if env:
+        return spack.config.get('modules', {})
+    return spack.config.no_env_config().get('modules', {})
 
 #: Valid tokens for naming scheme and env variable names
 _valid_tokens = (
@@ -389,20 +390,35 @@ class BaseConfiguration(object):
     default_projections = {
         'all': '{name}-{version}-{compiler.name}-{compiler.version}'}
 
-    def __init__(self, spec):
+    def __init__(self, spec, env=None):
         # Module where type(self) is defined
         self.module = inspect.getmodule(self)
         # Spec for which we want to generate a module file
         self.spec = spec
         # Dictionary of configuration options that should be applied
         # to the spec
-        self.conf = merge_config_rules(self.module.configuration(), self.spec)
+        self.conf = merge_config_rules(
+            self.module.configuration(env), self.spec)
+        self.full_conf = self.module.configuration(env)
+        # store value of Spack environment
+        self._env = env
+
+    @property
+    def view(self):
+        if not self._env:
+            return None
+
+        view_name = self.full_conf.get('env_modules_use_view', None)
+        if not view_name:
+            return None
+
+        return self._env.views.get(view_name, None).view()
 
     @property
     def projections(self):
         """Projection from specs to module names"""
         # backwards compatiblity for naming_scheme key
-        conf = self.module.configuration()
+        conf = self.full_conf
         if 'naming_scheme' in conf:
             default = {'all': conf['naming_scheme']}
         else:
@@ -425,7 +441,7 @@ class BaseConfiguration(object):
         return self.conf.get('template', None)
 
     @property
-    def env(self):
+    def environment(self):
         """List of environment modifications that should be done in the
         module.
         """
@@ -460,7 +476,7 @@ class BaseConfiguration(object):
         """
         # A few variables for convenience of writing the method
         spec = self.spec
-        conf = self.module.configuration()
+        conf = self.full_conf
 
         # Compute the list of whitelist rules that match
         wlrules = conf.get('whitelist', [])
@@ -545,6 +561,7 @@ class BaseFileLayout(object):
 
     def __init__(self, configuration):
         self.conf = configuration
+        self._filename = None
 
     @property
     def spec(self):
@@ -578,14 +595,21 @@ class BaseFileLayout(object):
     @property
     def filename(self):
         """Name of the module file for the current spec."""
-        # Just the name of the file
-        filename = self.use_name
-        if self.extension:
-            filename = '{0}.{1}'.format(self.use_name, self.extension)
-        # Architecture sub-folder
-        arch_folder = str(self.spec.architecture)
-        # Return the absolute path
-        return os.path.join(self.dirname(), arch_folder, filename)
+        if not self._filename:
+            # Just the name of the file
+            filename = self.use_name
+            if self.extension:
+                filename = '{0}.{1}'.format(self.use_name, self.extension)
+            # Architecture sub-folder
+            arch_folder = str(self.spec.architecture)
+            # Return the absolute path
+            self._filename = os.path.join(
+                self.dirname(), arch_folder, filename)
+        return self._filename
+
+    @filename.setter
+    def filename(self, value):
+        self._filename = value
 
 
 class BaseContext(tengine.Context):
@@ -655,9 +679,13 @@ class BaseContext(tengine.Context):
     @tengine.context_property
     def environment_modifications(self):
         """List of environment modifications to be processed."""
+        spec = self.spec.copy()  # mutable copy of spec
+        if self.conf.view:  # If we're using a view, change the prefix
+            spec.prefix = self.conf.view.get_projection_for_spec(spec)
+
         # Modifications guessed inspecting the spec prefix
         env = spack.util.environment.inspect_path(
-            self.spec.prefix,
+            spec.prefix,
             spack.config.get('modules:prefix_inspections', {}),
             exclude=spack.util.environment.is_system_path
         )
@@ -666,15 +694,15 @@ class BaseContext(tengine.Context):
         # before asking for package-specific modifications
         env.extend(
             build_environment.modifications_from_dependencies(
-                self.spec, context='run'
+                spec, context='run'
             )
         )
         # Package specific modifications
-        build_environment.set_module_variables_for_package(self.spec.package)
-        self.spec.package.setup_run_environment(env)
+        build_environment.set_module_variables_for_package(spec.package)
+        spec.package.setup_run_environment(env)
 
         # Modifications required from modules.yaml
-        env.extend(self.conf.env)
+        env.extend(self.conf.environment)
 
         # List of variables that are blacklisted in modules.yaml
         blacklist = self.conf.environment_blacklist
@@ -686,17 +714,17 @@ class BaseContext(tengine.Context):
         # tokens uppercase.
         transform = {}
         for token in _valid_tokens:
-            transform[token] = lambda spec, string: str.upper(string)
+            transform[token] = lambda s, string: str.upper(string)
 
         for x in env:
             # Ensure all the tokens are valid in this context
             msg = 'some tokens cannot be expanded in an environment variable name'  # noqa: E501
             _check_tokens_are_valid(x.name, message=msg)
             # Transform them
-            x.name = self.spec.format(x.name, transform=transform)
+            x.name = spec.format(x.name, transform=transform)
             try:
                 # Not every command has a value
-                x.value = self.spec.format(x.value)
+                x.value = spec.format(x.value)
             except AttributeError:
                 pass
             x.name = str(x.name).replace('-', '_')
@@ -724,7 +752,7 @@ class BaseContext(tengine.Context):
 
 
 class BaseModuleFileWriter(object):
-    def __init__(self, spec):
+    def __init__(self, spec, scope=None):
         self.spec = spec
 
         # This class is meant to be derived. Get the module of the
@@ -733,7 +761,7 @@ class BaseModuleFileWriter(object):
         m = self.module
 
         # Create the triplet of configuration/layout/context
-        self.conf = m.make_configuration(spec)
+        self.conf = m.make_configuration(spec, scope)
         self.layout = m.make_layout(spec)
         self.context = m.make_context(spec)
 
