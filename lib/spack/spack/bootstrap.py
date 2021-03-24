@@ -11,6 +11,8 @@ except ImportError:
     # Not supported on Python 2.6
     pass
 
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
@@ -218,3 +220,27 @@ def ensure_bootstrap_configuration():
                 with spack.store.use_store(spack.paths.user_bootstrap_store):
                     with spack_python_interpreter():
                         yield
+
+
+def clingo_root_spec():
+    # Construct the root spec that will be used to bootstrap clingo
+    spec_str = 'clingo-bootstrap@spack+python'
+
+    # Add a proper compiler hint to the root spec. We use GCC for
+    # everything but MacOS.
+    if str(spack.architecture.platform()) == 'darwin':
+        spec_str += ' %apple-clang'
+    else:
+        spec_str += ' %gcc'
+
+    # Add hint to use frontend operating system on Cray
+    if str(spack.architecture.platform()) == 'cray':
+        spec_str += ' os=fe'
+
+    # Add the generic target
+    generic_target = archspec.cpu.host().family
+    spec_str += ' target={0}'.format(str(generic_target))
+
+    tty.debug('[BOOTSTRAP ROOT SPEC] clingo: {0}'.format(spec_str))
+
+    return spack.spec.Spec(spec_str)
