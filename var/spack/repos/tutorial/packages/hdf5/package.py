@@ -221,9 +221,9 @@ class Hdf5(AutotoolsPackage):
 
         if '+pic' in self.spec:
             extra_args.extend([
-                'CFLAGS='   + self.compiler.cc_pic_flag,
-                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
-                'FCFLAGS='  + self.compiler.fc_pic_flag,
+                'CFLAGS=%s' % self.compiler.cc_pic_flag,
+                'CXXFLAGS=%s' % self.compiler.cxx_pic_flag,
+                'FCFLAGS=%s' % self.compiler.fc_pic_flag,
             ])
 
         if '+mpi' in self.spec:
