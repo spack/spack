@@ -12,6 +12,7 @@ class PyPyspark(PythonPackage):
     homepage = "http://spark.apache.org"
     url      = "https://pypi.io/packages/source/p/pyspark/pyspark-2.3.0.tar.gz"
 
+    version('3.1.1', sha256='104abc146d4ffb72d4c683d25d7af5a6bf955d94590a76f542ee23185670aa7e')
     version('3.0.0', sha256='8c6e5cc51d91eb8d43e81d0b7093292b5e144ac81445491d5f887d2cf4fe121f')
     version('2.4.5', sha256='0deed5687828efdaf4091e748f0ba1ae8aad6e4c3a5f07aa07e19487397e0e07')
     version('2.4.0', sha256='c9d7b7c5e91b13488b657e364ff392a80b2e374b182138e5ec8702a1822bffdc')
