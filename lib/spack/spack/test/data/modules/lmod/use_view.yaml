@@ -1,0 +1,3 @@
+lmod:
+  env_modules_use_view: default
+  core_compilers: ['%gcc']

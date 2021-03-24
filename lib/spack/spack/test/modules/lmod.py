@@ -5,7 +5,10 @@
 import re
 import pytest
 
+import llnl.util.filesystem as fs
+
 import spack.modules.lmod
+import spack.environment as ev
 
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
@@ -262,6 +265,34 @@ class TestLmod(object):
         # Assert we have core compilers now
         writer, _ = factory(mpileaks_spec_string)
         assert writer.conf.core_compilers
+
+    def test_env_modules_use_view(
+            self, factory, module_configuration, mutable_mock_env_path,
+            tmpdir, monkeypatch
+    ):
+        """Check that modules can be configured to point to view"""
+        module_configuration('use_view')
+        env = ev.create('test', with_view=str(tmpdir))
+        writer, _ = factory(mpileaks_spec_string, env)
+        writer.layout.filename = str(tmpdir.join('modulefile'))
+        writer.write()
+
+        # Make sure the view is there for prefix inspections
+        env_view = env.views[ev.default_view_name].view()
+        fs.mkdirp(str(tmpdir.join('bin')))
+
+        # Check that we got the right view
+        assert writer.conf.view.projections == env_view.projections
+        assert writer.conf.view._root == env_view._root
+
+        # Check that we used the view prefix
+        prefix = writer.conf.view.get_projection_for_spec(
+            mpileaks_spec_string
+        )
+        assert prefix == str(tmpdir)
+        with open(writer.layout.filename, 'r') as f:
+            content = f.read()
+        assert prefix in content
 
     @pytest.mark.parametrize('spec_str', [
         'mpileaks target=nocona',

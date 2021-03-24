@@ -763,11 +763,11 @@ class MockConfig(object):
         self._configuration = configuration
         self.writer_key = writer_key
 
-    def configuration(self):
+    def configuration(self, env=None):
         return self._configuration
 
-    def writer_configuration(self):
-        return self.configuration()[self.writer_key]
+    def writer_configuration(self, env=None):
+        return self.configuration(env)[self.writer_key]
 
 
 class ConfigUpdate(object):
@@ -780,7 +780,9 @@ class ConfigUpdate(object):
     def __call__(self, filename):
         file = os.path.join(self.root_for_conf, filename + '.yaml')
         with open(file) as f:
-            mock_config = MockConfig(syaml.load_config(f), self.writer_key)
+            config = syaml.load_config(f)
+            spack.config.set('modules', config)
+            mock_config = MockConfig(config, self.writer_key)
 
         self.monkeypatch.setattr(
             spack.modules.common,
@@ -800,7 +802,7 @@ class ConfigUpdate(object):
 
 
 @pytest.fixture()
-def module_configuration(monkeypatch, request):
+def module_configuration(monkeypatch, request, mutable_config):
     """Reads the module configuration file from the mock ones prepared
     for tests and monkeypatches the right classes to hook it in.
     """
@@ -814,6 +816,9 @@ def module_configuration(monkeypatch, request):
     root_for_conf = os.path.join(
         spack.paths.test_path, 'data', 'modules', writer_key
     )
+
+    # inclusion of mutable config makes it safe for ConfigUpdate to modify
+    # config values.
 
     return ConfigUpdate(root_for_conf, writer_mod, writer_key, monkeypatch)
 

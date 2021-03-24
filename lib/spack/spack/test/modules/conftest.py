@@ -56,9 +56,11 @@ def factory(request):
     # Class of the module file writer
     writer_cls = getattr(request.module, 'writer_cls')
 
-    def _mock(spec_string):
+    def _mock(spec_string, env=None):
         spec = spack.spec.Spec(spec_string)
         spec.concretize()
-        return writer_cls(spec), spec
+        writer = writer_cls(spec)
+        writer.conf._env = env
+        return writer, spec
 
     return _mock
