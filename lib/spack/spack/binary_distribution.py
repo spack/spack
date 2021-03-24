@@ -1176,6 +1176,7 @@ def relocate_package(spec, allow_root):
                                              old_prefix,
                                              new_prefix)
         if 'elf' in platform.binary_formats:
+            # Relocate the elf binaries, including debugedit to change dwarfinfo
             relocate.relocate_elf_binaries(files_to_relocate,
                                            old_layout_root,
                                            new_layout_root,

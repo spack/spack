@@ -20,6 +20,12 @@ import spack.spec
 import spack.util.executable as executable
 
 
+try:
+    import elftools
+except ImportError:
+    elftools = None  # type: ignore
+
+
 class InstallRootStringError(spack.error.SpackError):
     def __init__(self, file_path, root_path):
         """Signal that the relocated binary still has the original
@@ -618,12 +624,85 @@ def _transform_rpaths(orig_rpaths, orig_root, new_prefixes):
     return new_rpaths
 
 
+def _get_elf_attribute(binary, attr_name):
+    """
+    Read DW_AT_comp_dirs from a binary, if present.
+
+    We assume that we want the value defined for the attribute,
+    and that it's bytes.
+
+    Args:
+        binary (str): binary to get attribute for.
+    """
+    import spack.bootstrap
+    import archspec.cpu
+
+    # Note: this does not work.
+    global elftools
+    if not elftools:
+        with spack.bootstrap.ensure_bootstrap_configuration():
+            generic_target = archspec.cpu.host().family
+            spec_str = 'py-pyelftools target={0}'.format(
+                str(generic_target)
+            )
+            elftools_spec = spack.spec.Spec(spec_str)
+            elftools_spec.concretize()
+            spack.bootstrap.make_module_available('elftools',
+                                                  spec=elftools_spec, install=True)
+            import elftools
+
+    # Derive the old DW_AT_comp_dir
+    comp_dirs = set()
+
+    with open(binary, "rb") as fd:
+        elffile = elftools.elf.elffile.ELFFile(fd)
+
+        # Get the dwarf info
+        if elffile.has_dwarf_info():
+            dwarfinfo = elffile.get_dwarf_info()
+            for cu in dwarfinfo.iter_CUs():
+                die = cu.get_top_DIE()
+                if attr_name in die.attributes:
+                    comp_dir = die.attributes[attr_name].value
+                    comp_dirs.add(elftools.common.py3compat.bytes2str(comp_dir))
+    return comp_dirs
+
+
+def _debugedit(binaries, new_prefix):
+    """
+    Edit debuginfo section of elf files, specifically the base-dir info.
+
+    This function requires 1) pyelftools to get all previous DW_AT_comp_dir,
+    and 2) debugedit to then change these paths in the binary to the new
+    location.
+
+    Args:
+        binaries (list): list of binaries that might need relocation, located
+            in the new prefix
+        new_prefix (str): prefix where we want to relocate the executables
+    """
+    import spack.bootstrap
+
+    # Use debugedit to change the prefix in the binary
+    with spack.bootstrap.ensure_bootstrap_configuration():
+        spec = spack.spec.Spec("debugedit")
+        spec.concretize()
+        debugedit = spack.bootstrap.get_executable(
+            "debugedit", spec=spec, install=True)
+
+        # Change the base-dir information with debugedit!
+        for binary in binaries:
+            for comp_dir in _get_elf_attribute(binary, "DW_AT_comp_dir"):
+                debugedit('-b', comp_dir, '-d', new_prefix, binary)
+
+
 def relocate_elf_binaries(binaries, orig_root, new_root,
                           new_prefixes, rel, orig_prefix, new_prefix):
     """Relocate the binaries passed as arguments by changing their RPATHs.
 
     Use patchelf to get the original RPATHs and then replace them with
-    rpaths in the new directory layout.
+    rpaths in the new directory layout. Use bootstrapped debugedit to edit
+    the filepaths in the binary headers too.
 
     New RPATHs are determined from a dictionary mapping the prefixes in the
     old directory layout to the prefixes in the new directory layout if the
@@ -640,6 +719,9 @@ def relocate_elf_binaries(binaries, orig_root, new_root,
         orig_prefix (str): prefix where the executable was originally located
         new_prefix (str): prefix where we want to relocate the executable
     """
+    # Use debugedit to change the prefix in the binary
+    _debugedit(binaries, new_prefix)
+
     for new_binary in binaries:
         orig_rpaths = _elf_rpaths_for(new_binary)
         # TODO: Can we deduce `rel` from the original RPATHs?
