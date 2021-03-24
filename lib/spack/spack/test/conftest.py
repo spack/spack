@@ -266,6 +266,7 @@ def check_for_leftover_stage_files(request, mock_stage, ignore_stage_files):
         else:
             raise
 
+    print(stage_files)
     if 'disable_clean_stage_check' in request.keywords:
         # clean up after tests that are expected to be dirty
         for f in files_in_stage:
