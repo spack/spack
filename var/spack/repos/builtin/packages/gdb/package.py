@@ -45,6 +45,10 @@ class Gdb(AutotoolsPackage, GNUMirrorPackage):
     variant('ld', default=False, description='Enable ld')
     variant('tui', default=False, description='Enable tui')
 
+    # Resolves the undefined references to libintl_gettext while linking gdbserver
+    # https://www.gnu.org/software/gettext/FAQ.html#integrating_undefined
+    patch('gdb-libintl.patch', level=0, when='@10.1')
+
     # Required dependency
     depends_on('texinfo', type='build')
 
