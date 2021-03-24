@@ -239,6 +239,9 @@ class Llvm(CMakePackage, CudaPackage):
     # merged in llvm main prior to 12.0.0
     patch("llvm_python_path.patch", when="@11.0.0")
 
+    # Workaround for issue https://github.com/spack/spack/issues/18197
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
