@@ -32,6 +32,7 @@ class Parallelmergetree(CMakePackage):
     variant("shared", default=True, description="Build ParallelMergeTree as shared libs")
 
     def cmake_args(self):
+        spec = self.spec
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
