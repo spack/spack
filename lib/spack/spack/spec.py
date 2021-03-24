@@ -82,7 +82,7 @@ import operator
 import os
 import re
 import warnings
-from typing import Iterable, Optional, Union  # novm
+from typing import Iterable, List, Optional, Union  # novm
 
 import ruamel.yaml as yaml
 import six
@@ -101,7 +101,6 @@ import spack.error
 import spack.hash_types as ht
 import spack.parse
 import spack.paths
-import spack.platforms
 import spack.provider_index
 import spack.repo
 import spack.solver
@@ -4841,11 +4840,21 @@ class SpecParser(spack.parse.Parser):
         self.setup(text)
         return self.compiler()
 
+    @staticmethod
+    def _lookup_local_or_remote_hash(find_hash):
+        # type: (str) -> List[Spec]
+        import spack.binary_distribution
+        return (spack.store.db.get_by_hash(find_hash) or
+                # If the hash doesn't exist locally, check the remote.
+                spack.binary_distribution.binary_index.find_prefix_hash(find_hash))
+
     def spec_by_hash(self):
+        # type: () -> Spec
         self.expect(ID)
 
         dag_hash = self.token.value
-        matches = spack.store.db.get_by_hash(dag_hash)
+        matches = self._lookup_local_or_remote_hash(dag_hash)
+
         if not matches:
             raise NoSuchHashError(dag_hash)
 

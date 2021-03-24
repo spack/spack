@@ -21,9 +21,6 @@ from six.moves import shlex_quote as cmd_quote
 import llnl.util.tty as tty
 from llnl.util.lang import dedupe
 
-import spack.config
-import spack.platforms
-import spack.spec
 import spack.util.executable as executable
 import spack.util.spack_json as sjson
 
@@ -165,6 +162,7 @@ def get_host_environment():
     """Return a dictionary (lookup) with host information (not including the
     os.environ).
     """
+    import spack.platforms
     host_platform = spack.platforms.host()
     host_target = host_platform.target('default_target')
     host_os = host_platform.operating_system('default_os')
