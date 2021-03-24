@@ -27,12 +27,12 @@ def configuration(env=None):
 
 
 #: Caches the configuration {spec_hash: configuration}
-configuration_registry = {}  # type: Dict[(str, str), Any]
+configuration_registry = {}  # type: Dict[Tuple(str, str), Any]
 
 
 def make_configuration(spec, env=None):
     """Returns the tcl configuration for spec"""
-    key = (spec.dag_hash(), env)
+    key = (spec.dag_hash(), env.name)
     try:
         return configuration_registry[key]
     except KeyError:
