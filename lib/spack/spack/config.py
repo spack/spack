@@ -806,6 +806,14 @@ def _config():
 config = llnl.util.lang.Singleton(_config)
 
 
+def no_env_config():
+    no_env_config = copy.deepcopy(config)
+    for scope_name in list(no_env_config.scopes.keys()):
+        if scope_name.startswith('env'):
+            no_env_config.remove_scope(scope_name)
+    return no_env_config
+
+
 def add_from_file(filename, scope=None):
     """Add updates to a config from a filename
     """
