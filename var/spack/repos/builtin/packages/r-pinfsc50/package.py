@@ -15,7 +15,7 @@ class RPinfsc50(RPackage):
     ('GFF'). This package is intended to be used as example data for packages
     that work with genomic data."""
 
-    homepage = "https://cran.r-project.org/web/packages/pinfsc50/index.html"
+    homepage = "https://cloud.r-project.org/web/packages/pinfsc50/index.html"
     cran     = "pinfsc50"
 
     maintainers = ['dorton21']
