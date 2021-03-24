@@ -149,8 +149,6 @@ class Nekrs(Package):
 
     def install(self, spec, prefix):
         script_dir = 'scripts'
-        makenrs_cmd = 'NEKRS_INSTALL_DIR={} NEKRS_CC={} NEKRS_CXX={} ' + \
-            'NEKRS_FC={} ./makenrs'
 
         cc  = spec['mpi'].mpicc
         fc  = spec['mpi'].mpifc
@@ -185,11 +183,10 @@ class Nekrs(Package):
                 filter_file(r'mpirun -np', 'srun -n', 'nrspre')
                 filter_file(r'mpirun -np', 'srun -n', 'nrsbmpi')
 
-        makenrs_cmd = makenrs_cmd.format(prefix, cc, cxx, fc)
+        makenrs = Executable(os.path.join(os.getcwd(), "makenrs"))
+        makenrs.add_default_env("NEKRS_INSTALL_DIR", prefix)
+        makenrs.add_default_env("NEKRS_CC", cc)
+        makenrs.add_default_env("NEKRS_CXX", cxx)
+        makenrs.add_default_env("NEKRS_FC", fc)
 
-        process = subprocess.Popen(makenrs_cmd, stdout=subprocess.PIPE,
-                                   cwd=os.getcwd(), shell=True)
-        output, error = process.communicate()
-        rc = process.returncode
-
-        assert rc == 0, "nekRS installation failed.\n{}".format(output.decode('ascii'))
+        error = makenrs(output=str, error=str, fail_on_error=True)
