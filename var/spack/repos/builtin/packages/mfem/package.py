@@ -725,37 +725,14 @@ class Mfem(Package):
                           skip_missing=False, work_dir='.')
             make('clean')
 
-    # The files referenced in this patch method do not exist in stable
-    # versions earlier than 4.1.
-    @when('@4.1:')
+    # this patch is only needed for mfem 4.1, where a few
+    # released files include byte order marks
+    @when('@4.1.0')
     def patch(self):
-        ######################################################################
-        # CYRUSH NOTE:
-        # Using .encode("utf-8") fixes the following unicode issue when using
-        # python 2:
-        #
-        # ==> Error: UnicodeEncodeError: 'ascii' codec can't encode character
-        # u'\ufeff' in position 0: ordinal not in range(128)
-        # spack/var/spack/repos/builtin/packages/mfem/package.py:733, in 
-        # patch:
-        #
-        #    731    def patch(self):
-        #    732        # Remove the byte order mark since it messes 
-        #                 with some compilers
-        # >> 733        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
-        #    734        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
-        #    735        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
-        ####
-        # That said, I don't 100% understand the goal of these edits,
-        # are these unicode bytes embedded in these files?
-        # can folks suggest a better python 2 and python 3 way?
-        ######################################################################
-        #
         # Remove the byte order mark since it messes with some compilers
-        pattern = u'\uFEFF'.encode("utf-8")
-        filter_file(pattern, '', 'fem/gslib.hpp')
-        filter_file(pattern, '', 'fem/gslib.cpp')
-        filter_file(pattern, '', 'linalg/hiop.hpp')
+        filter_file(u'\uFEFF', '', 'fem/gslib.hpp')
+        filter_file(u'\uFEFF', '', 'fem/gslib.cpp')
+        filter_file(u'\uFEFF', '', 'linalg/hiop.hpp')
 
     @property
     def suitesparse_components(self):
