@@ -602,6 +602,8 @@ def write_buildinfo_file(spec, workdir, rel=False):
     import spack.hooks.sbang as sbang
     buildinfo = {}
     buildinfo['sbang_install_path'] = sbang.sbang_install_path()
+    buildinfo['stage_path'] = spec.package.stage.path
+    buildinfo['install_prefix'] = str(spec.package.prefix)
     buildinfo['relative_rpaths'] = rel
     buildinfo['buildpath'] = spack.store.layout.root
     buildinfo['spackprefix'] = spack.paths.prefix
