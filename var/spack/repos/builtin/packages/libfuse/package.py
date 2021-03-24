@@ -22,6 +22,9 @@ class Libfuse(MesonPackage):
     version('3.9.2',  sha256='b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0')
 
     variant('useroot', default=False)
+    variant('system_install', default=False)
+
+    patch('0001-Do-not-run-install-script.patch', when='~system_install')
 
     executables = ['^fusermount$']
 
