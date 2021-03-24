@@ -71,7 +71,7 @@ example, you might add the directory "spack-cache" and call it ``mymirror``:
     $ spack mirror add mymirror ./spack-cache
 
 
-You can see that the mirror is added with ``spack mirror list``
+You can see that the mirror is added with ``spack mirror list`` as follows:
 
 .. code-block:: console
 
