@@ -12,6 +12,7 @@ class Babelflow(CMakePackage):
        executed on top of one of several available runtime systems."""
 
     homepage = "https://github.com/sci-visus/BabelFlow"
+    url      = "https://github.com/sci-visus/BabelFlow/archive/v1.0.1.tar.gz"
     git      = 'https://github.com/sci-visus/BabelFlow.git'
 
     maintainers = ['spetruzza']
