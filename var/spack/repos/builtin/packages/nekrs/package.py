@@ -68,7 +68,7 @@ class Nekrs(Package):
             ethier.add_default_arg("4")
             ethier.add_default_arg("1")
 
-            error = ethier(output=str, error=str, fail_on_error=True)
+            ethier(output=str, error=str, fail_on_error=True)
 
     # Following 4 methods are stolen from OCCA since we are using OCCA
     # shipped with nekRS not as a dependency.
