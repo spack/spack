@@ -32,7 +32,7 @@ configuration_registry = {}  # type: Dict[Tuple(str, str), Any]
 
 def make_configuration(spec, env=None):
     """Returns the tcl configuration for spec"""
-    key = (spec.dag_hash(), env.name)
+    key = (spec.dag_hash(), env.name if env else '')
     try:
         return configuration_registry[key]
     except KeyError:
