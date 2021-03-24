@@ -19,19 +19,18 @@ class Squashfuse(AutotoolsPackage):
     # support for fuse@3:, so we have our own spack version here (46 commits
     # after 0.1.103)
     version('master', branch='master')
-    version('0.1.103-46', commit='e5dddbfc6e402c82f5fbba115b0eb3476684f50d')
+    version('0.1.103-46', commit='e5dddbfc6e402c82f5fbba115b0eb3476684f50d', preferred=True)
 
     # official releases
     version('0.1.103', sha256='42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7')
 
     depends_on('libfuse@2.5:')
-    depends_on('libfuse@:2.99', when='@:0.1.103')
+    depends_on('libfuse@:2.99', when='@0.1.103')
 
-    # NOTE: pkg-config is used to detect fuse/fuse3, but libfuse is typically
-    # external (as fusermount is a setuid binary).
-    # When depending on spack's pkg-config, fuse/fuse3 is not found, so we avoid
-    # that.
-    # depends_on('pkg-config', type='build')
+    # Note: typically libfuse is external, but this implies that you have to make
+    # pkg-config external too, because spack's pkg-config doesn't know how to
+    # locate system pkg-config's fuse.pc/fuse3.pc
+    depends_on('pkg-config', type='build')
 
     # compression libs
     depends_on('zlib')
@@ -45,3 +44,6 @@ class Squashfuse(AutotoolsPackage):
     depends_on('autoconf', type='build', when='@master,0.1.103-46')
     depends_on('automake', type='build', when='@master,0.1.103-46')
     depends_on('libtool',  type='build', when='@master,0.1.103-46')
+
+    def configure_args(self):
+        return ['--disable-demo']
