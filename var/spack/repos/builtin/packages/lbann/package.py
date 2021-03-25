@@ -105,7 +105,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@0.95:0.100 +al')
     depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al')
-    depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
+    depends_on('aluminum@0.5.0:1.0.99', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
@@ -182,7 +182,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('python@3: +shared', type=('build', 'run'), when='@:0.90,0.99: +pfe')
     extends("python", when='+pfe')
     depends_on('py-setuptools', type='build', when='+pfe')
-    depends_on('py-argparse', type='run', when='@:0.90,0.99: ^python@:2.6 +pfe')
+    depends_on('py-argparse', type='run', when='@:0.90,0.99: +pfe ^python@:2.6')
     depends_on('py-configparser', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-graphviz@0.10.1:', type='run', when='@:0.90,0.99: +pfe +extras')
     depends_on('py-matplotlib@3.0.0:', type='run', when='@:0.90,0.99: +pfe +extras')
