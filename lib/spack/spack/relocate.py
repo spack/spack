@@ -632,6 +632,10 @@ def run_debugedit(binaries, new_prefix, comp_dirs):
         new_prefix (str): prefix where we want to relocate the executables
         comp_dirs (list): if known, list of compile directories to change,
     """
+    # Don't run in CI
+    if os.environ.get("CI"):
+        return
+
     import spack.bootstrap
     comp_dirs = comp_dirs or []
 
