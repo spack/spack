@@ -1127,6 +1127,25 @@ Here is an example of creating a key. Note that we provide a name for the key fi
     $ spack gpg create dinosaur dinosaur@thedinosaurthings.com
 
 
+If you want to export the key as you create it:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export key.pub dinosaur dinosaur@thedinosaurthings.com
+
+Or the private key:
+
+
+.. code-block:: console
+
+    $ spack gpg create --export-secret key.priv dinosaur dinosaur@thedinosaurthings.com
+
+
+You can include both ``--export`` and ``--export-secret``, each with
+an output file of choice, to export both.
+
+
 ^^^^^^^^^^^^
 Listing keys
 ^^^^^^^^^^^^
