@@ -12,11 +12,14 @@ class Libwhich(Package):
     """
 
     homepage = "https://github.com/vtjnash/libwhich"
-    url      = "https://github.com/vtjnash/libwhich.git"
+    url      = "https://github.com/vtjnash/libwhich/archive/refs/tags/v1.1.0.tar.gz"
     git      = "https://github.com/vtjnash/libwhich.git"
 
-    version('master',  branch='master')
     maintainers = ['dmageeLANL']
+
+    version('master',  branch='master')
+    version('1.1.0', sha256='f1c30bf7396859ad437a5db74e9e328fb4b4e1379457121e28a3524b1e3a0b3f')
+    version('1.0.0', sha256='61d5d643d4cbd4b340b9b48922e1b4fd2a35729b7cfdcc7283aab82a6f742a6c')
 
     def install(self, spec, prefix):
         make()
