@@ -1094,6 +1094,28 @@ class TestConcretize(object):
         assert s.external == is_external
         assert s.satisfies(expected)
 
+    def test_external_package_without_version(self):
+        # Check that the version from package.py is set if an external is
+        # specified without a version.
+
+        if spack.config.get('config:concretizer') == 'clingo':
+            pytest.xfail('This is not supported with the ASP-based concretizer')
+
+        packages_yaml = {
+            'externaltool': {
+                'externals': [
+                    {'spec': 'externaltool',
+                     'prefix': '/prefix'}
+                ]
+            },
+        }
+
+        for k, v in packages_yaml.items():
+            spack.config.set('packages::{0}'.format(k), v)
+
+        s = Spec('externaltool').concretized()
+        assert s.satisfies('externaltool@1.0')
+
     @pytest.mark.regression('20292')
     @pytest.mark.parametrize('context', [
         {'add_variant': True, 'delete_variant': False},
