@@ -528,8 +528,8 @@ class SpackCommand(object):
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
-            prepend_flags (optional list): List of flags to add before command:
-                simulates spack [prepend_flags] [command] [*argv]
+            global_args (optional list): List of global spack arguments:
+                simulates ``spack [global_args] [command] [*argv]``
 
         Returns:
             (str): combined output and error as a string
@@ -542,7 +542,7 @@ class SpackCommand(object):
         self.returncode = None
         self.error = None
 
-        prepend = kwargs['prepend_flags'] if 'prepend_flags' in kwargs else []
+        prepend = kwargs['global_args'] if 'global_args' in kwargs else []
 
         args, unknown = self.parser.parse_known_args(
             prepend + [self.command_name] + list(argv))

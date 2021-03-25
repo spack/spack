@@ -95,7 +95,7 @@ def test_location_env_flag_interference(mock_test_env, tmpdir):
     env('create', '-d', other_env)
 
     assert location('-e', test_env_name,
-                    prepend_flags=['-e', 'other_env']).strip() == env_dir
+                    global_args=['-e', 'other_env']).strip() == env_dir
 
 
 def test_location_env_missing():
