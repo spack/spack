@@ -14,6 +14,10 @@ def on_install_success(spec):
     """
     After successful install, use debugedit to change DW_TAG_comp_dir paths.
     """
+    # Don't run in CI
+    if os.environ.get("CI"):
+        return
+
     tty.debug("Running post_install debugedit for %s" % spec)
 
     # create info for later relocation
