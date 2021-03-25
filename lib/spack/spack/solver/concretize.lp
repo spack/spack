@@ -350,6 +350,11 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 :- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
 
+% If a variant has been set to something explicitly, prevent adding other values to it
+% This is relevant for multi-valued variants, in particular the ones allowing disjoint
+% sets of values
+:- variant_set(Package, Variant), variant_value(Package, Variant, Value), not variant_set(Package, Variant, Value).
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
