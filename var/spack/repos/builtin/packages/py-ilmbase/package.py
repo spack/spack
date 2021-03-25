@@ -36,11 +36,17 @@ class PyIlmbase(AutotoolsPackage):
 
     version('2.3.0', sha256='9c898bb16e7bc916c82bebdf32c343c0f2878fc3eacbafa49937e78f2079a425')
 
-    # FIXME: Add dependencies if required.
-    # depends_on('foo')
+    depends_on('ilmbase')
+    depends_on('boost+python')
+
+    # https://github.com/AcademySoftwareFoundation/openexr/issues/336
+    parallel = False
 
     def configure_args(self):
-        # FIXME: Add arguments other than --prefix
-        # FIXME: If not needed delete this function
-        args = []
+        spec = self.spec
+
+        args = [
+            '--with-boost-python-libname=boost_python{0}'.format(spec['python'].version.up_to(2).joined)
+        ]
+
         return args
