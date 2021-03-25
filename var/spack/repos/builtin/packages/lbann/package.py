@@ -208,6 +208,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('onednn cpu_runtime=omp gpu_runtime=none', when='+onednn')
     depends_on('nvshmem', when='+nvshmem')
 
+    depends_on('zstr')
+
     generator = 'Ninja'
     depends_on('ninja', type='build')
 
