@@ -23,13 +23,11 @@ def post_install(spec):
     # read in the buildinfo file to get stage and install prefix
     buildinfo = spack.binary_distribution.read_buildinfo_file(workdir)
 
-    # Ensure that we update stage paths to install path
-    binaries = [os.path.join(buildinfo['install_prefix'], x)
-                for x in buildinfo['relocate_binaries']]
-
-    # The old prefix is the stage path plus spack-src
+    # Derive list of binaries, old prefix (staging) and new prefix (install)
     old_prefix = os.path.join(buildinfo['stage_path'], 'spack-src')
     new_prefix = buildinfo['install_prefix']
+    binaries = [os.path.join(buildinfo['install_prefix'], x)
+                for x in buildinfo['relocate_binaries']]
 
     # Change the stage directory to install for DW_AT_comp_dir with debugedit
     spack.relocate.run_debugedit(binaries, new_prefix, comp_dirs=[old_prefix])
