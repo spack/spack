@@ -137,7 +137,7 @@ class VtkM(CMakePackage, CudaPackage):
             else:
                 options.append("-DVTKm_USE_DEFAULT_TYPES_FOR_ASCENT:BOOL=OFF")
 
-            # Support for for deprecated virtual functions
+            # Support for deprecated virtual functions
             if "+virtuals" in spec:
                 options.append("-DVTKm_NO_DEPRECATED_VIRTUAL:BOOL=OFF")
             else:
