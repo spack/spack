@@ -593,11 +593,16 @@ class SpackSolverSetup(object):
                 values = []
             elif isinstance(values, spack.variant.DisjointSetsOfValues):
                 union = set()
-                for s in values.sets:
+                # Encode the disjoint sets in the logic program
+                for sid, s in enumerate(values.sets):
+                    for value in s:
+                        self.gen.fact(fn.variant_value_from_disjoint_sets(
+                            pkg.name, name, value, sid
+                        ))
                     union.update(s)
                 values = union
 
-            # make sure that every variant has at least one posisble value
+            # make sure that every variant has at least one possible value
             if not values:
                 values = [variant.default]
 
