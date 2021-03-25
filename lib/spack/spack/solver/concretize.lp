@@ -418,6 +418,7 @@ variant_single_value(Package, "dev_path")
 #defined variant_possible_value/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
+#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
