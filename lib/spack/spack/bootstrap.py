@@ -83,9 +83,10 @@ def make_module_available(module, spec=None, install=False):
     # We can constrain by a shortened version in place of a version range
     # because this spec is only used for querying or as a placeholder to be
     # replaced by an external that already has a concrete version. This syntax
-    # is not suffucient when concretizing without an external, as it will
+    # is not sufficient when concretizing without an external, as it will
     # concretize to python@X.Y instead of python@X.Y.Z
-    spec.constrain('^python@%d.%d' % sys.version_info[:2])
+    python_requirement = '^' + spec_for_current_python()
+    spec.constrain(python_requirement)
     installed_specs = spack.store.db.query(spec, installed=True)
 
     for ispec in installed_specs:
