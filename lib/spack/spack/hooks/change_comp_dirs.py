@@ -10,9 +10,9 @@ import spack.binary_distribution
 import os
 
 
-def post_install(spec):
+def on_install_success(spec):
     """
-    After install of a spec, use debugedit to change DW_TAG_comp_dir paths.
+    After successful install, use debugedit to change DW_TAG_comp_dir paths.
     """
     tty.debug("Running post_install debugedit for %s" % spec)
 
