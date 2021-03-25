@@ -79,7 +79,9 @@ def setup_parser(subparser):
                         help='where to export keys')
     export.add_argument('keys', nargs='*',
                         help='the keys to export; '
-                             'all secret keys if unspecified')
+                             'all public keys if unspecified')
+    export.add_argument('--secret', action='store_true',
+                        help='include secret keys')
     export.set_defaults(func=gpg_export)
 
     publish = subparsers.add_parser('publish', help=gpg_publish.__doc__)
@@ -119,15 +121,17 @@ def gpg_create(args):
     if args.export:
         new_sec_keys = set(spack.util.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
-        spack.util.gpg.export_keys(args.export, *new_keys)
+
+        # False indicates we are not exporting secret
+        spack.util.gpg.export_keys(args.export, False, *new_keys)
 
 
 def gpg_export(args):
-    """export a secret key"""
+    """export a gpg key, optionally including secret key."""
     keys = args.keys
     if not keys:
         keys = spack.util.gpg.signing_keys()
-    spack.util.gpg.export_keys(args.location, *keys)
+    spack.util.gpg.export_keys(args.location, args.secret, *keys)
 
 
 def gpg_list(args):
