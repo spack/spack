@@ -20,3 +20,5 @@ class RMemuse(RPackage):
     maintainers = ['dorton21']
 
     version('4.1-0', sha256='58d6d1ca5d6bd481f4ed299eff6a9d5660eb0f8db1abe54c49e144093cba72ad')
+
+    depends_on('r@3.0.0:', type=('build', 'run'))
