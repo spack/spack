@@ -17,6 +17,7 @@ class Alembic(CMakePackage):
 
     version('1.7.16', sha256='2529586c89459af34d27a36ab114ad1d43dafd44061e65cfcfc73b7457379e7c')
 
+    variant('python', default=False, description='Python support')
     variant('hdf5', default=False, description='HDF5 support')
 
     depends_on('cmake@2.8.11:', type='build')
@@ -24,10 +25,14 @@ class Alembic(CMakePackage):
     depends_on('hdf5@1.8.9:', when="+hdf5")
     depends_on('boost@1.55:')
     depends_on('zlib')
+    depends_on('pyilmbase', when="+python")
 
     def cmake_args(self):
         args = [
             self.define_from_variant('USE_HDF5', 'hdf5')
         ]
+
+        if self.spec.satisfies('+python') and self.spec['python'].satisfies('@3:'):
+            args.append('-DPython_ADDITIONAL_VERSIONS=3')
 
         return args
