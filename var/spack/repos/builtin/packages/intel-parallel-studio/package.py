@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.mpi import MPIRunner
 
 
 class IntelParallelStudio(IntelPackage):
@@ -238,3 +239,16 @@ class IntelParallelStudio(IntelPackage):
 
         for name, value in self.mpi_compiler_wrappers.items():
             env.set(name, value)
+
+    def setup_dependent_package(self, module, dependent_spec):
+        mpiroot_dir = os.environ['I_MPI_ROOT']
+        mpibin_dir = join_path(mpiroot_dir, 'intel64', 'bin')
+        self.spec.runner = MPIRunner.query_mgr_pref(
+            'srun',
+            mpibin_dir
+        )
+        if not self.spec.runner:
+            mpibin_dir = join_path(mpiroot_dir, 'ia32', 'bin')
+            self.spec.runner = MPIRunner.query_mpi_pref(
+                mpibin_dir
+            )

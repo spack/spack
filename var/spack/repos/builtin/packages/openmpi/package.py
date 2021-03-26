@@ -9,6 +9,7 @@ import re
 import os
 import sys
 import llnl.util.tty as tty
+from spack.util.mpi import MPIRunner
 
 
 class Openmpi(AutotoolsPackage):
@@ -513,6 +514,16 @@ class Openmpi(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi_cxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
+
+        if 'schedulers=slurm' in self.spec:
+            self.spec.runner = MPIRunner(
+                self.spec['slurm'].prefix.bin.srun,
+                'slurm'
+            )
+        else:
+            self.spec.runner = MPIRunner.query_mpi_pref(
+                self.prefix.bin
+            )
 
     # Most of the following with_or_without methods might seem redundant
     # because Spack compiler wrapper adds the required -I and -L flags, which

@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
+from spack.util.mpi import MPIRunner
 
 
 class IntelMpi(IntelPackage):
@@ -69,6 +71,19 @@ class IntelMpi(IntelPackage):
             'F90':  spack_fc,
             'FC':   spack_fc,
         })
+
+    def setup_dependent_package(self, module, dependent_spec):
+        mpiroot_dir = os.environ['I_MPI_ROOT']
+        mpibin_dir = join_path(mpiroot_dir, 'intel64', 'bin')
+        self.spec.runner = MPIRunner.query_mgr_pref(
+            'srun',
+            mpibin_dir
+        )
+        if not self.spec.runner:
+            mpibin_dir = join_path(mpiroot_dir, 'ia32', 'bin')
+            self.spec.runner = MPIRunner.query_mpi_pref(
+                mpibin_dir
+            )
 
     def setup_run_environment(self, env):
         super(IntelMpi, self).setup_run_environment(env)

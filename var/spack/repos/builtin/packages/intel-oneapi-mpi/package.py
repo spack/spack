@@ -5,8 +5,9 @@
 
 
 import subprocess
-
 from spack import *
+from spack.util.mpi import MPIRunner
+
 
 releases = {
     '2021.1.1': {'irc_id': '17397', 'build': '76'}}
@@ -38,6 +39,8 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         self.spec.mpicxx = join_path(dir, 'mpicxx')
         self.spec.mpif77 = join_path(dir, 'mpif77')
         self.spec.mpifc  = join_path(dir, 'mpifc')
+
+        self.spec.runner = MPIRunner.query_mpi_pref(dir)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('MPICH_CC', spack_cc)

@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.mpi import MPIRunner
 import os
 import sys
 import re
@@ -357,6 +358,17 @@ spack package at this time.''',
             join_path(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
+
+        if '+slurm' in spec:
+            spec.runner = MPIRunner(
+                spec['slurm'].prefix.bin.srun,
+                'slurm'
+            )
+        else:
+            spec.runner = MPIRunner(
+                spec.prefix.bin.mpirun,
+                'mpirun'
+            )
 
     def autoreconf(self, spec, prefix):
         """Not needed usually, configure should be already there"""

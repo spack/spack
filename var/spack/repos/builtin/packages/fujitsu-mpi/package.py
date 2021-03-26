@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.mpi import MPIRunner
 import os
 
 
@@ -52,6 +53,11 @@ class FujitsuMpi(Package):
         self.spec.mpicxx = self.prefix.bin.mpiFCC
         self.spec.mpif77 = self.prefix.bin.mpifrt
         self.spec.mpifc = self.prefix.bin.mpifrt
+
+        self.spec.runner = MPIRunner.query_mgr_pref(
+            'srun',
+            self.prefix.bin
+        )
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)
