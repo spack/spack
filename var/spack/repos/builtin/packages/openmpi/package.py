@@ -29,7 +29,7 @@ class Openmpi(AutotoolsPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ['hppritcha']
+    maintainers = ['hppritcha', 'naughtont3']
 
     executables = ['^ompi_info$']
 
