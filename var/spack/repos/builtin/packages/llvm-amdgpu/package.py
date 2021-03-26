@@ -67,7 +67,7 @@ class LlvmAmdgpu(CMakePackage):
         if self.compiler.name == "gcc":
             compiler = Executable(self.compiler.cc)
             gcc_output = compiler('-print-search-dirs', output=str, error=str)
-            
+
             gcc_prefix = ""
             for line in gcc_output.splitlines():
                 if line.startswith("install:"):
