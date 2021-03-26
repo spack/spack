@@ -467,7 +467,7 @@ def setup_main_options(args):
 
     # Use the spack config command to handle parsing the config strings
     for config_var in (args.config_vars or []):
-        spack.config.add(path=config_var, scope="command_line")
+        spack.config.add(fullpath=config_var, scope="command_line")
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)

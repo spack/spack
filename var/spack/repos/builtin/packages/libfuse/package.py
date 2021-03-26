@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import re
 
 
 class Libfuse(MesonPackage):
@@ -21,6 +22,14 @@ class Libfuse(MesonPackage):
     version('3.9.2',  sha256='b4409255cbda6f6975ca330f5b04cb335b823a95ddd8c812c3d224ec53478fc0')
 
     variant('useroot', default=False)
+
+    executables = ['^fusermount$']
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'^fusermount.*version: (\S+)', output)
+        return match.group(1) if match else None
 
     def meson_args(self):
         args = []

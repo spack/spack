@@ -241,11 +241,18 @@ class SingleFileScope(ConfigScope):
         #      }
         #   }
         # }
+
+        # This bit ensures we have read the file and have
+        # the raw data in memory
         if self._raw_data is None:
             self._raw_data = read_config_file(self.path, self.schema)
             if self._raw_data is None:
                 return None
 
+        # Here we know we have the raw data and ensure we
+        # populate the sections dictionary, which may be
+        # cleared by the clear() method
+        if not self.sections:
             section_data = self._raw_data
             for key in self.yaml_path:
                 if section_data is None:
@@ -254,6 +261,7 @@ class SingleFileScope(ConfigScope):
 
             for section_key, data in section_data.items():
                 self.sections[section_key] = {section_key: data}
+
         return self.sections.get(section, None)
 
     def _write_section(self, section):

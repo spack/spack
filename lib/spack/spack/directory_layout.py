@@ -429,8 +429,8 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def check_extension_conflict(self, spec, ext_spec):
         exts = self._extension_map(spec)
         if ext_spec.name in exts:
-            installed_spec = exts[ext_spec.name]
-            if ext_spec == installed_spec:
+            installed_spec = exts[ext_spec.name].copy(deps=('link', 'run'))
+            if ext_spec.copy(deps=('link', 'run')) == installed_spec:
                 raise ExtensionAlreadyInstalledError(spec, ext_spec)
             else:
                 raise ExtensionConflictError(spec, ext_spec, installed_spec)

@@ -75,6 +75,10 @@ class Mesa(MesonPackage):
     depends_on('xrandr', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx')
 
+    # version specific issue
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
+    conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
+
     # Require at least 1 front-end
     # TODO: Add egl to this conflict once made available
     conflicts('~osmesa ~glx')
