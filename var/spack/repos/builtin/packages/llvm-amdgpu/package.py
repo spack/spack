@@ -33,7 +33,6 @@ class LlvmAmdgpu(CMakePackage):
     depends_on('python', type='build')
     depends_on('z3', type='link')
     depends_on('zlib', type='link')
-    depends_on('unzip', type='link')
     depends_on('ncurses+termlib', type='link')
     # openmp dependencies
     depends_on("perl-data-dumper", type=("build"), when='+openmp')
