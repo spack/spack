@@ -33,3 +33,9 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     @property
     def component_dir(self):
         return 'mkl'
+
+    @property
+    def libs(self):
+        lib_path = '{0}/{1}/latest/lib/intel64'.format(self.prefix, self.component_dir)
+        mkl_libs = ['libmkl_intel_ilp64', 'libmkl_sequential', 'libmkl_core']
+        return find_libraries(mkl_libs, root=lib_path, shared=True, recursive=False)
