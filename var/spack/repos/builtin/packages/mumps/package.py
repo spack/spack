@@ -138,8 +138,8 @@ class Mumps(Package):
         # when building shared libs need -fPIC, otherwise
         # /usr/bin/ld: graph.o: relocation R_X86_64_32 against `.rodata.str1.1'
         # can not be used when making a shared object; recompile with -fPIC
-        cpic = self.compiler.cc_pic_flag if '+shared' in self.spec else ''
-        fpic = self.compiler.fc_pic_flag if '+shared' in self.spec else ''
+        cpic = self.compiler.cc_pic_flag if shared else ''
+        fpic = self.compiler.fc_pic_flag if shared else ''
         # TODO: test this part, it needs a full blas, scalapack and
         # partitionning environment with 64bit integers
 
@@ -149,34 +149,35 @@ class Mumps(Package):
 
         opt_level = '3' if using_xl else ''
 
+        optc = ['-O{0}'.format(opt_level)]
+        optf = ['-O{0}'.format(opt_level)]
+        optl = ['-O{0}'.format(opt_level)]
+
+        if shared:
+            optc.append(cpic)
+            optf.append(fpic)
+            optl.append(cpic)
+
+        if not using_xlf:
+            optf.append('-DALLOW_NON_INIT')
+
         if '+int64' in self.spec:
-            if using_xlf:
-                makefile_conf.append('OPTF = -O%s' % opt_level)
-            else:
+            if not using_xlf:
                 # the fortran compilation flags most probably are
                 # working only for intel and gnu compilers this is
                 # perhaps something the compiler should provide
-                makefile_conf.extend([
-                    'OPTF = %s -O  -DALLOW_NON_INIT %s' % (
-                        fpic,
-                        '-fdefault-integer-8' if using_gcc else '-i8'),  # noqa
-                ])
+                optf.append('-fdefault-integer-8' if using_gcc else '-i8')
 
-            makefile_conf.extend([
-                'OPTL = %s -O%s' % (cpic, opt_level),
-                'OPTC = %s -O%s -DINTSIZE64' % (cpic, opt_level)
-            ])
+            optc.append('-DINTSIZE64')
         else:
             if using_xlf:
-                makefile_conf.append('OPTF = -O%s -qfixed' % opt_level)
-            else:
-                makefile_conf.append('OPTF = %s -O%s -DALLOW_NON_INIT' % (
-                    fpic, opt_level))
+                optf.append('-qfixed')
 
-            makefile_conf.extend([
-                'OPTL = %s -O%s' % (cpic, opt_level),
-                'OPTC = %s -O%s' % (cpic, opt_level)
-            ])
+        makefile_conf.extend([
+            'OPTC = {0}'.format(' '.join(optc)),
+            'OPTF = {0}'.format(' '.join(optf)),
+            'OPTL = {0}'.format(' '.join(optl))
+        ])
 
         if '+mpi' in self.spec:
             scalapack = self.spec['scalapack'].libs if not shared \
