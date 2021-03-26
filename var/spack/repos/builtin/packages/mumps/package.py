@@ -62,6 +62,8 @@ class Mumps(Package):
 
     conflicts('+parmetis', when='~mpi',
               msg="You cannot use the parmetis variant without mpi")
+    conflicts('+parmetis', when='~metis',
+              msg="You cannot use the parmetis variant without metis")
     conflicts('+ptscotch', when='~mpi',
               msg="You cannot use the ptscotch variant without mpi")
 
@@ -96,7 +98,7 @@ class Mumps(Package):
             if '+ptscotch' in self.spec:
                 orderings.append('-Dptscotch')
 
-        if '+parmetis' in self.spec and '+metis' in self.spec:
+        if '+parmetis' in self.spec:
             makefile_conf.extend([
                 "IMETIS = -I%s" % self.spec['parmetis'].prefix.include,
                 ("LMETIS = -L%s -l%s -L%s -l%s" % (
