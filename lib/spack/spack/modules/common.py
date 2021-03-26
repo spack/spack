@@ -40,6 +40,7 @@ import llnl.util.filesystem
 from llnl.util.lang import dedupe
 import llnl.util.tty as tty
 import spack.build_environment as build_environment
+import spack.environment as ev
 import spack.error
 import spack.paths
 import spack.schema.environment
@@ -221,7 +222,7 @@ def root_path(name, module_set_name):
     # For backwards compatibility, read the old module roots for default set
     if module_set_name == 'default':
         roots = spack.config.merge_yaml(
-            roots, spack.config.get('config:module_roots', {}))
+            spack.config.get('config:module_roots', {}), roots)
     path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
