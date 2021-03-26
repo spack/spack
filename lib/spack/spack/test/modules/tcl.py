@@ -359,14 +359,14 @@ class TestTcl(object):
         # the tests database
         mpileaks_specs = database.query('mpileaks')
         for item in mpileaks_specs:
-            writer = writer_cls(item)
+            writer = writer_cls(item, 'default')
             assert not writer.conf.blacklisted
 
         # callpath is a dependency of mpileaks, and has been pulled
         # in implicitly
         callpath_specs = database.query('callpath')
         for item in callpath_specs:
-            writer = writer_cls(item)
+            writer = writer_cls(item, 'default')
             assert writer.conf.blacklisted
 
     @pytest.mark.regression('9624')

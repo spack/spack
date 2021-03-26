@@ -11,19 +11,20 @@ import llnl.util.tty as tty
 
 def _for_each_enabled(spec, method_name):
     """Calls a method for each enabled module"""
-    enabled = spack.config.get('modules:enable')
-    if not enabled:
-        tty.debug('NO MODULE WRITTEN: list of enabled module files is empty')
-        return
+    for name in spack.config.get('modules', {}):
+        enabled = spack.config.get('modules:%s:enable' % name)
+        if not enabled:
+            tty.debug('NO MODULE WRITTEN: list of enabled module files is empty')
+            return
 
-    for name in enabled:
-        generator = spack.modules.module_types[name](spec)
-        try:
-            getattr(generator, method_name)()
-        except RuntimeError as e:
-            msg = 'cannot perform the requested {0} operation on module files'
-            msg += ' [{1}]'
-            tty.warn(msg.format(method_name, str(e)))
+        for type in enabled:
+            generator = spack.modules.module_types[type](spec, name)
+            try:
+                getattr(generator, method_name)()
+            except RuntimeError as e:
+                msg = 'cannot perform the requested {0} operation on module files'
+                msg += ' [{1}]'
+                tty.warn(msg.format(method_name, str(e)))
 
 
 def post_install(spec):
