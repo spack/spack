@@ -105,7 +105,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@0.95:0.100 +al')
     depends_on('aluminum@0.4:0.4.99', when='@0.101:0.101.99 +al')
-    depends_on('aluminum@0.5.0:1.0.99', when='@:0.90,0.102: +al')
+    depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')

@@ -93,7 +93,7 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
     depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
     depends_on('aluminum@0.5.0:0.5.99', when='@1.5.0:1.5.1 +al')
-    depends_on('aluminum@0.7.0:1.0.99', when='@:1.0,1.5.2: +al')
+    depends_on('aluminum@0.7.0:', when='@:1.0,1.5.2: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')

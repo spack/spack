@@ -63,7 +63,7 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
     depends_on('aluminum@0.5.0:0.7.99', when='@0.2.0:0.2.1 +al')
-    depends_on('aluminum@0.5.0:1.0.99', when='@:0.0,0.2.1: +al')
+    depends_on('aluminum@0.5.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
