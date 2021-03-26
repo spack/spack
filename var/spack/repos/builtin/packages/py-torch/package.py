@@ -20,6 +20,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.8.1', tag='v1.8.1', submodules=True)
     version('1.8.0', tag='v1.8.0', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)
     version('1.7.0', tag='v1.7.0', submodules=True)
