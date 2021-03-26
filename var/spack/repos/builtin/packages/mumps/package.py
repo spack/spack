@@ -43,6 +43,8 @@ class Mumps(Package):
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
+    variant('openmp', default=False,
+            description='Compile MUMPS with OpenMP support')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
@@ -178,6 +180,11 @@ class Mumps(Package):
         # known BLAS implementation supported.
         if '@5.2.0: ^mkl' in self.spec:
             optf.append('-DGEMMT_AVAILABLE')
+
+        if '+openmp' in self.spec:
+            optc.append(self.compiler.openmp_flag)
+            optf.append(self.compiler.openmp_flag)
+            optl.append(self.compiler.openmp_flag)
 
         makefile_conf.extend([
             'OPTC = {0}'.format(' '.join(optc)),
