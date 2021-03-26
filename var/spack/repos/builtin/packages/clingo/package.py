@@ -21,7 +21,7 @@ class Clingo(CMakePackage):
     url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
     git      = 'https://github.com/potassco/clingo.git'
 
-    maintainers = ["tgamblin"]
+    maintainers = ["tgamblin", "alalazo"]
 
     version('master', branch='master', submodules=True, preferred=True)
     version('spack', commit='2a025667090d71b2c9dce60fe924feb6bde8f667', submodules=True)
@@ -56,9 +56,16 @@ class Clingo(CMakePackage):
         """Return standard CMake defines to ensure that the
         current spec is the one found by CMake find_package(Python, ...)
         """
+        python_spec = self.spec['python']
+        include_dir = python_spec.package.get_python_inc()
         return [
-            '-DPython_EXECUTABLE={0}'.format(str(self.spec['python'].command))
+            self.define('Python_EXECUTABLE', str(python_spec.command)),
+            self.define('Python_INCLUDE_DIR', include_dir)
         ]
+
+    @property
+    def cmake_py_shared(self):
+        return self.define('CLINGO_BUILD_PY_SHARED', 'ON')
 
     def cmake_args(self):
         try:
@@ -69,10 +76,10 @@ class Clingo(CMakePackage):
         args = [
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
-            '-DCLINGO_BUILD_PY_SHARED=ON',
             '-DPYCLINGO_USER_INSTALL=OFF',
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
-            '-DCLINGO_BUILD_WITH_LUA=OFF'
+            '-DCLINGO_BUILD_WITH_LUA=OFF',
+            self.cmake_py_shared
         ]
         if self.spec['cmake'].satisfies('@3.16.0:'):
             args += self.cmake_python_hints
