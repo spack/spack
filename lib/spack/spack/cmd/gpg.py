@@ -127,11 +127,10 @@ def gpg_create(args):
         new_sec_keys = set(spack.util.gpg.signing_keys())
         new_keys = new_sec_keys.difference(old_sec_keys)
 
-    # False/True indicates public/secret key to export
     if args.export:
-        spack.util.gpg.export_keys(args.export, False, *new_keys)
+        spack.util.gpg.export_keys(args.export, new_keys)
     if args.secret:
-        spack.util.gpg.export_keys(args.secret, True, *new_keys)
+        spack.util.gpg.export_keys(args.secret, new_keys, secret=True)
 
 
 def gpg_export(args):
@@ -139,7 +138,7 @@ def gpg_export(args):
     keys = args.keys
     if not keys:
         keys = spack.util.gpg.signing_keys()
-    spack.util.gpg.export_keys(args.location, args.secret, *keys)
+    spack.util.gpg.export_keys(args.location, keys, args.secret)
 
 
 def gpg_list(args):
