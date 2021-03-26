@@ -38,6 +38,8 @@ class IntelXed(Package):
     # The current mfile uses python3 by name.
     depends_on('python@3.4:', type='build')
 
+    patch('1201-segv.patch', when='@12.0.1')
+
     conflicts('target=ppc64:', msg='intel-xed only runs on x86')
     conflicts('target=ppc64le:', msg='intel-xed only runs on x86')
     conflicts('target=aarch64:', msg='intel-xed only runs on x86')

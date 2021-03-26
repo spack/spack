@@ -27,7 +27,7 @@ class Llvm(CMakePackage, CudaPackage):
     family = "compiler"  # Used by lmod
 
     # fmt: off
-    version('master', branch='master')
+    version('main', branch='main')
     version('11.0.1', sha256='9c7ad8e8ec77c5bde8eb4afa105a318fd1ded7dff3747d14f012758719d7171b')
     version('11.0.0', sha256='8ad4ddbafac4f2c8f2ea523c2c4196f940e8e16f9e635210537582a48622a5d5')
     version('10.0.1', sha256='c7ccb735c37b4ec470f66a6c35fbae4f029c0f88038f6977180b1a8ddc255637')
@@ -232,12 +232,15 @@ class Llvm(CMakePackage, CudaPackage):
     patch("thread-p9.patch", when="@develop+libcxx")
 
     # https://github.com/spack/spack/issues/19625,
-    # merged in llvm-11.0.0_rc2
-    patch("lldb_external_ncurses-10.patch", when="@10.0.0:10.99+lldb")
+    # merged in llvm-11.0.0_rc2, but not found in 11.0.1
+    patch("lldb_external_ncurses-10.patch", when="@10.0.0:11.0.1+lldb")
 
     # https://github.com/spack/spack/issues/19908
     # merged in llvm main prior to 12.0.0
     patch("llvm_python_path.patch", when="@11.0.0")
+
+    # Workaround for issue https://github.com/spack/spack/issues/18197
+    patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
 
     # The functions and attributes below implement external package
     # detection for LLVM. See:
@@ -393,8 +396,14 @@ class Llvm(CMakePackage, CudaPackage):
                         'create this identity.'
                     )
 
-    def setup_build_environment(self, env):
-        env.append_flags("CXXFLAGS", self.compiler.cxx11_flag)
+    def flag_handler(self, name, flags):
+        if name == 'cxxflags':
+            flags.append(self.compiler.cxx11_flag)
+            return(None, flags, None)
+        elif name == 'ldflags' and self.spec.satisfies('%intel'):
+            flags.append('-shared-intel')
+            return(None, flags, None)
+        return(flags, None, None)
 
     def setup_run_environment(self, env):
         if "+clang" in self.spec:

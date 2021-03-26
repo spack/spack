@@ -18,6 +18,8 @@ class PyUproot4(PythonPackage):
     tags = ['hep']
 
     version('master', branch='master')
+    version('4.0.2',    sha256='8145af29788cbe6bf0ee279a7f176159f3eee801641ead4ad6e627f8c4dff0a9')
+    version('0.1.2', sha256='b32dbffadc87bc5707ee0093964d2ce4a5ccfd521b17bbf10732afc25b820d82')
     version('0.0.27', sha256='de87555937332998b476f3e310392962bc983bddc008ed2b3c07a25c0379c4c9')
 
     variant('xrootd', default=True,

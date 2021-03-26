@@ -23,5 +23,7 @@ class Bird(AutotoolsPackage):
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
+    depends_on('flex',     type='build')
+    depends_on('bison',    type='build')
     depends_on('ncurses')
     depends_on('readline')

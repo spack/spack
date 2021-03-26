@@ -25,6 +25,9 @@ class Openmx(MakefilePackage):
     depends_on('fftw')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('for_aarch64.patch', when='@3.8 target=aarch64:')
 
     parallel = False
 

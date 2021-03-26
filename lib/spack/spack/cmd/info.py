@@ -189,10 +189,11 @@ def print_text_info(pkg):
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            if pkg.has_code:
-                url = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + color.cescape(url)
-            color.cprint(line)
+            if not pkg.versions[v].get('deprecated', False):
+                if pkg.has_code:
+                    url = fs.for_package_version(pkg, v)
+                line = version('    {0}'.format(pad(v))) + color.cescape(url)
+                color.cprint(line)
 
     color.cprint('')
     color.cprint(section_title('Variants:'))

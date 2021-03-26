@@ -612,6 +612,62 @@ it executable, then runs it with some arguments.
        installer = Executable(self.stage.archive_file)
        installer('--prefix=%s' % prefix, 'arg1', 'arg2', 'etc.')
 
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Deprecating old versions
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are many reasons to remove old versions of software:
+
+#. Security vulnerabilities (most serious reason)
+#. Changing build systems that increase package complexity
+#. Changing dependencies/patches/resources/flags that increase package complexity
+#. Maintainer/developer inability/unwillingness to support old versions
+#. No longer available for download (right to be forgotten)
+#. Package or version rename
+
+At the same time, there are many reasons to keep old versions of software:
+
+#. Reproducibility
+#. Requirements for older packages (e.g. some packages still rely on Qt 3)
+
+In general, you should not remove old versions from a ``package.py``. Instead,
+you should first deprecate them using the following syntax:
+
+.. code-block:: python
+
+   version('1.2.3', sha256='...', deprecated=True)
+
+
+This has two effects. First, ``spack info`` will no longer advertise that
+version. Second, commands like ``spack install`` that fetch the package will
+require user approval:
+
+.. code-block:: console
+
+   $ spack install openssl@1.0.1e
+   ==> Warning: openssl@1.0.1e is deprecated and may be removed in a future Spack release.
+   ==>   Fetch anyway? [y/N]
+
+
+If you use ``spack install --deprecated``, this check can be skipped.
+
+This also applies to package recipes that are renamed or removed. You should
+first deprecate all versions before removing a package. If you need to rename
+it, you can deprecate the old package and create a new package at the same
+time.
+
+Version deprecations should always last at least one Spack minor release cycle
+before the version is completely removed. For example, if a version is
+deprecated in Spack 0.16.0, it should not be removed until Spack 0.17.0. No
+version should be removed without such a deprecation process. This gives users
+a chance to complain about the deprecation in case the old version is needed
+for some application. If you require a deprecated version of a package, simply
+submit a PR to remove ``deprecated=True`` from the package. However, you may be
+asked to help maintain this version of the package if the current maintainers
+are unwilling to support this older version.
+
+
 ^^^^^^^^^^^^^^^^
 Download caching
 ^^^^^^^^^^^^^^^^
@@ -4016,8 +4072,11 @@ the package being tested when ``installed`` is ``True``.
 The executable runs in ``work_dir``, when specified, using the provided
 ``options``. The return code is checked against the ``status`` argument,
 which can be an integer or list of integers representing status codes
-corresponding to successful execution. Spack also checks that every string
-in ``expected`` is a regex matching part of the output from the test run.
+corresponding to successful execution (e.g. ``status=[0,3,7]``).
+Spack also checks that every string in ``expected`` is a regex matching
+part of the output from the test run (e.g.
+``expected=['completed successfully', 'converged in']``). Default behavior
+is to behave as though ``status=[0]`` and ``expected=[]`` are specified.
 
 Output from the test is written to its log file. The ``purpose`` argument
 serves as the heading in text logs to highlight the start of each test part.
@@ -4064,9 +4123,9 @@ are copied **after** the package is installed during the build process.
 The method copies files to the package's metadata directory under
 the ``self.install_test_root``. All files in the package source's
 ``tests`` directory for the example above will be copied to the
-``join_path(self.install_test_root, 'tests')`` directory. The files
-will be copied to the ``join_path(self.install_test_root, 'examples')``
-directory.
+``join_path(self.install_test_root, 'tests')`` directory. The two
+files listed under the staged ``examples`` directory will be copied
+to the ``join_path(self.install_test_root, 'examples')`` directory.
 
 .. note::
 

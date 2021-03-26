@@ -25,7 +25,7 @@ class MiopenHip(CMakePackage):
     variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
 
     depends_on('cmake@3:', type='build')
-    depends_on('boost@1.58.0', type='link')
+    depends_on('boost@1.67.0:1.73.0', type='link')
     depends_on('pkgconfig', type='build')
     depends_on('bzip2', type='link')
     depends_on('sqlite', type='link')
