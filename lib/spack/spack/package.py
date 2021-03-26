@@ -2321,7 +2321,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         try:
             extensions_layout.check_extension_conflict(
-                    self.extendee_spec, self.spec)
+               self.extendee_spec, self.spec)
         except spack.directory_layout.ExtensionAlreadyInstalledError as e:
             # already installed, let caller know
             tty.msg(e.message)
