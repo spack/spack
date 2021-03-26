@@ -153,7 +153,7 @@ def test_nested_directives(mock_packages):
 
     # this ensures that results of dependency patches were properly added
     # to Dependency objects.
-    libelf_dep = next(iter(patcher.dependencies['libelf'].values()))
+    libelf_dep = patcher.dependencies['libelf'][Spec('+foo')]
     assert len(libelf_dep.patches) == 1
     assert len(libelf_dep.patches[Spec()]) == 1
 
