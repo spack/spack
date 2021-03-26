@@ -18,7 +18,7 @@ verify = SpackCommand('verify')
 install = SpackCommand('install')
 
 
-def test_single_file_verify_cmd(tmpdir):
+def test_single_file_verify_cmd(tmpdir, capsys):
     # Test the verify command interface to verifying a single file.
     filedir = os.path.join(str(tmpdir), 'a', 'b', 'c', 'd')
     filepath = os.path.join(filedir, 'file')
@@ -38,7 +38,7 @@ def test_single_file_verify_cmd(tmpdir):
     with open(manifest_file, 'w') as f:
         sjson.dump({filepath: data}, f)
 
-    results = verify('-f', filepath, fail_on_error=False)
+    results = verify('-f', filepath, fail_on_error=False, out=capsys)
     print(results)
     assert not results
 
@@ -46,7 +46,7 @@ def test_single_file_verify_cmd(tmpdir):
     with open(filepath, 'w') as f:
         f.write("I changed.")
 
-    results = verify('-f', filepath, fail_on_error=False)
+    results = verify('-f', filepath, fail_on_error=False, out=capsys)
 
     expected = ['hash']
     mtime = os.stat(filepath).st_mtime
@@ -57,7 +57,7 @@ def test_single_file_verify_cmd(tmpdir):
     assert filepath in results
     assert all(x in results for x in expected)
 
-    results = verify('-fj', filepath, fail_on_error=False)
+    results = verify('-fj', filepath, fail_on_error=False, out=capsys)
     res = sjson.load(results)
     assert len(res) == 1
     errors = res.pop(filepath)
@@ -65,25 +65,25 @@ def test_single_file_verify_cmd(tmpdir):
 
 
 def test_single_spec_verify_cmd(tmpdir, mock_packages, mock_archive,
-                                mock_fetch, config, install_mockery):
+                                mock_fetch, config, install_mockery, capsys):
     # Test the verify command interface to verify a single spec
     install('libelf')
     s = spack.spec.Spec('libelf').concretized()
     prefix = s.prefix
     hash = s.dag_hash()
 
-    results = verify('/%s' % hash, fail_on_error=False)
+    results = verify('/%s' % hash, fail_on_error=False, out=capsys)
     assert not results
 
     new_file = os.path.join(prefix, 'new_file_for_verify_test')
     with open(new_file, 'w') as f:
         f.write('New file')
 
-    results = verify('/%s' % hash, fail_on_error=False)
+    results = verify('/%s' % hash, fail_on_error=False, out=capsys)
     assert new_file in results
     assert 'added' in results
 
-    results = verify('-j', '/%s' % hash, fail_on_error=False)
+    results = verify('-j', '/%s' % hash, fail_on_error=False, out=capsys)
     res = sjson.load(results)
     assert len(res) == 1
     assert res[new_file] == ['added']

@@ -14,8 +14,8 @@ pytestmark = pytest.mark.usefixtures('config', 'mutable_mock_repo')
 spec = SpackCommand('spec')
 
 
-def test_spec():
-    output = spec('mpileaks')
+def test_spec(capsys):
+    output = spec('mpileaks', out=capsys)
 
     assert 'mpileaks@2.3' in output
     assert 'callpath@1.0' in output
@@ -25,8 +25,8 @@ def test_spec():
     assert 'mpich@3.0.4' in output
 
 
-def test_spec_yaml():
-    output = spec('--yaml', 'mpileaks')
+def test_spec_yaml(capsys):
+    output = spec('--yaml', 'mpileaks', out=capsys)
 
     mpileaks = spack.spec.Spec.from_yaml(output)
     assert 'mpileaks' in mpileaks
@@ -37,8 +37,8 @@ def test_spec_yaml():
     assert 'mpich' in mpileaks
 
 
-def test_spec_json():
-    output = spec('--json', 'mpileaks')
+def test_spec_json(capsys):
+    output = spec('--json', 'mpileaks', out=capsys)
 
     mpileaks = spack.spec.Spec.from_json(output)
     assert 'mpileaks' in mpileaks
@@ -63,8 +63,8 @@ def _parse_types(string):
     return result
 
 
-def test_spec_deptypes_nodes():
-    output = spec('--types', '--cover', 'nodes', 'dt-diamond')
+def test_spec_deptypes_nodes(capsys):
+    output = spec('--types', '--cover', 'nodes', 'dt-diamond', out=capsys)
     types = _parse_types(output)
 
     assert types['dt-diamond']        == ['    ']
@@ -73,8 +73,8 @@ def test_spec_deptypes_nodes():
     assert types['dt-diamond-bottom'] == ['blr ']
 
 
-def test_spec_deptypes_edges():
-    output = spec('--types', '--cover', 'edges', 'dt-diamond')
+def test_spec_deptypes_edges(capsys):
+    output = spec('--types', '--cover', 'edges', 'dt-diamond', out=capsys)
     types = _parse_types(output)
 
     assert types['dt-diamond']        == ['    ']

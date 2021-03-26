@@ -14,18 +14,18 @@ from spack.main import SpackCommand
 python = SpackCommand('python')
 
 
-def test_python():
-    out = python('-c', 'import spack; print(spack.spack_version)')
+def test_python(capsys):
+    out = python('-c', 'import spack; print(spack.spack_version)', out=capsys)
     assert out.strip() == spack.spack_version
 
 
-def test_python_interpreter_path():
-    out = python('--path')
+def test_python_interpreter_path(capsys):
+    out = python('--path', out=capsys)
     assert out.strip() == sys.executable
 
 
-def test_python_version():
-    out = python('-V')
+def test_python_version(capsys):
+    out = python('-V', out=capsys)
     assert platform.python_version() in out
 
 
@@ -38,6 +38,6 @@ def test_python_with_module():
         python('-m', 'sys')
 
 
-def test_python_raises():
-    out = python('--foobar', fail_on_error=False)
+def test_python_raises(capsys):
+    out = python('--foobar', fail_on_error=False, out=capsys)
     assert "Error: Unknown arguments" in out

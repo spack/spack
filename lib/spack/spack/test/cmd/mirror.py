@@ -143,33 +143,32 @@ mpich@1.0
 
 
 def test_mirror_crud(tmp_scope, capsys):
-    with capsys.disabled():
-        mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
+    mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
 
-        output = mirror('remove', '--scope', tmp_scope, 'mirror')
-        assert 'Removed mirror' in output
+    output = mirror('remove', '--scope', tmp_scope, 'mirror', out=capsys)
+    assert 'Removed mirror' in output
 
-        mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
+    mirror('add', '--scope', tmp_scope, 'mirror', 'http://spack.io')
 
-        # no-op
-        output = mirror('set-url', '--scope', tmp_scope,
-                        'mirror', 'http://spack.io')
-        assert 'Url already set' in output
+    # no-op
+    output = mirror('set-url', '--scope', tmp_scope,
+                    'mirror', 'http://spack.io', out=capsys)
+    assert 'Url already set' in output
 
-        output = mirror('set-url', '--scope', tmp_scope,
-                        '--push', 'mirror', 's3://spack-public')
-        assert 'Changed (push) url' in output
+    output = mirror('set-url', '--scope', tmp_scope,
+                    '--push', 'mirror', 's3://spack-public', out=capsys)
+    assert 'Changed (push) url' in output
 
-        # no-op
-        output = mirror('set-url', '--scope', tmp_scope,
-                        '--push', 'mirror', 's3://spack-public')
-        assert 'Url already set' in output
+    # no-op
+    output = mirror('set-url', '--scope', tmp_scope,
+                    '--push', 'mirror', 's3://spack-public', out=capsys)
+    assert 'Url already set' in output
 
-        output = mirror('remove', '--scope', tmp_scope, 'mirror')
-        assert 'Removed mirror' in output
+    output = mirror('remove', '--scope', tmp_scope, 'mirror', out=capsys)
+    assert 'Removed mirror' in output
 
-        output = mirror('list', '--scope', tmp_scope)
-        assert 'No mirrors configured' in output
+    output = mirror('list', '--scope', tmp_scope, out=capsys)
+    assert 'No mirrors configured' in output
 
 
 def test_mirror_nonexisting(tmp_scope):

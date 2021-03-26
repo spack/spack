@@ -55,11 +55,11 @@ def config_yaml_v015(mutable_config):
     return functools.partial(_create_config, data=old_data, section='config')
 
 
-def test_get_config_scope(mock_low_high_config):
-    assert config('get', 'compilers').strip() == 'compilers: {}'
+def test_get_config_scope(mock_low_high_config, capsys):
+    assert config('get', 'compilers', out=capsys).strip() == 'compilers: {}'
 
 
-def test_get_config_scope_merged(mock_low_high_config):
+def test_get_config_scope_merged(mock_low_high_config, capsys):
     low_path = mock_low_high_config.scopes['low'].path
     high_path = mock_low_high_config.scopes['high'].path
 
@@ -79,13 +79,13 @@ repos:
 - repo2
 ''')
 
-    assert config('get', 'repos').strip() == '''repos:
+    assert config('get', 'repos', out=capsys).strip() == '''repos:
 - repo1
 - repo2
 - repo3'''
 
 
-def test_config_edit():
+def test_config_edit(capsys):
     """Ensure `spack config edit` edits the right paths."""
 
     dms = spack.config.default_modify_scope('compilers')
@@ -95,66 +95,66 @@ def test_config_edit():
     comp_path = os.path.join(dms_path, 'compilers.yaml')
     repos_path = os.path.join(user_path, 'repos.yaml')
 
-    assert config('edit', '--print-file', 'compilers').strip() == comp_path
-    assert config('edit', '--print-file', 'repos').strip() == repos_path
+    assert config('edit', '--print-file', 'compilers', out=capsys).strip() == comp_path
+    assert config('edit', '--print-file', 'repos', out=capsys).strip() == repos_path
 
 
-def test_config_get_gets_spack_yaml(mutable_mock_env_path):
+def test_config_get_gets_spack_yaml(mutable_mock_env_path, capsys):
     env = ev.create('test')
 
-    config('get', fail_on_error=False)
+    config('get', fail_on_error=False, out=capsys)
     assert config.returncode == 1
 
     with env:
-        config('get', fail_on_error=False)
+        config('get', fail_on_error=False, out=capsys)
         assert config.returncode == 1
 
         env.write()
 
-        assert 'mpileaks' not in config('get')
+        assert 'mpileaks' not in config('get', out=capsys)
 
         env.add('mpileaks')
         env.write()
 
-        assert 'mpileaks' in config('get')
+        assert 'mpileaks' in config('get', out=capsys)
 
 
-def test_config_edit_edits_spack_yaml(mutable_mock_env_path):
+def test_config_edit_edits_spack_yaml(mutable_mock_env_path, capsys):
     env = ev.create('test')
     with env:
-        assert config('edit', '--print-file').strip() == env.manifest_path
+        assert config('edit', '--print-file', out=capsys).strip() == env.manifest_path
 
 
-def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path):
-    output = config('edit', '--print-file', fail_on_error=False)
+def test_config_edit_fails_correctly_with_no_env(mutable_mock_env_path, capsys):
+    output = config('edit', '--print-file', fail_on_error=False, out=capsys)
     assert "requires a section argument or an active environment" in output
 
 
-def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path):
-    output = config('get', fail_on_error=False)
+def test_config_get_fails_correctly_with_no_env(mutable_mock_env_path, capsys):
+    output = config('get', fail_on_error=False, out=capsys)
     assert "requires a section argument or an active environment" in output
 
 
-def test_config_list():
-    output = config('list')
+def test_config_list(capsys):
+    output = config('list', out=capsys)
     assert 'compilers' in output
     assert 'packages' in output
 
 
-def test_config_add(mutable_empty_config):
+def test_config_add(mutable_empty_config, capsys):
     config('add', 'config:dirty:true')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   dirty: true
 """
 
 
-def test_config_add_list(mutable_empty_config):
+def test_config_add_list(mutable_empty_config, capsys):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -164,10 +164,10 @@ def test_config_add_list(mutable_empty_config):
 """
 
 
-def test_config_add_override(mutable_empty_config):
+def test_config_add_override(mutable_empty_config, capsys):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -176,7 +176,7 @@ def test_config_add_override(mutable_empty_config):
 """
 
     config('add', 'config::template_dirs:[test2]')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -184,10 +184,10 @@ def test_config_add_override(mutable_empty_config):
 """
 
 
-def test_config_add_override_leaf(mutable_empty_config):
+def test_config_add_override_leaf(mutable_empty_config, capsys):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -196,7 +196,7 @@ def test_config_add_override_leaf(mutable_empty_config):
 """
 
     config('add', 'config:template_dirs::[test2]')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   'template_dirs:':
@@ -204,15 +204,15 @@ def test_config_add_override_leaf(mutable_empty_config):
 """
 
 
-def test_config_add_update_dict(mutable_empty_config):
+def test_config_add_update_dict(mutable_empty_config, capsys):
     config('add', 'packages:all:version:[1.0.0]')
-    output = config('get', 'packages')
+    output = config('get', 'packages', out=capsys)
 
     expected = 'packages:\n  all:\n    version: [1.0.0]\n'
     assert output == expected
 
 
-def test_config_with_c_argument(mutable_empty_config):
+def test_config_with_c_argument(mutable_empty_config, capsys):
 
     # I don't know how to add a spack argument to a Spack Command, so we test this way
     config_file = 'config:install_root:root:/path/to/config.yaml'
@@ -222,14 +222,14 @@ def test_config_with_c_argument(mutable_empty_config):
 
     # Add the path to the config
     config("add", args.config_vars[0], scope='command_line')
-    output = config("get", 'config')
+    output = config("get", 'config', out=capsys)
     assert "config:\n  install_root:\n  - root: /path/to/config.yaml" in output
 
 
-def test_config_add_ordered_dict(mutable_empty_config):
+def test_config_add_ordered_dict(mutable_empty_config, capsys):
     config('add', 'mirrors:first:/path/to/first')
     config('add', 'mirrors:second:/path/to/second')
-    output = config('get', 'mirrors')
+    output = config('get', 'mirrors', out=capsys)
 
     assert output == """mirrors:
   first: /path/to/first
@@ -245,7 +245,7 @@ def test_config_add_invalid_fails(mutable_empty_config):
         config('add', 'packages:all:True')
 
 
-def test_config_add_from_file(mutable_empty_config, tmpdir):
+def test_config_add_from_file(mutable_empty_config, tmpdir, capsys):
     contents = """spack:
   config:
     dirty: true
@@ -255,14 +255,14 @@ def test_config_add_from_file(mutable_empty_config, tmpdir):
     with open(file, 'w') as f:
         f.write(contents)
     config('add', '-f', file)
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   dirty: true
 """
 
 
-def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
+def test_config_add_from_file_multiple(mutable_empty_config, tmpdir, capsys):
     contents = """spack:
   config:
     dirty: true
@@ -273,7 +273,7 @@ def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
     with open(file, 'w') as f:
         f.write(contents)
     config('add', '-f', file)
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   dirty: true
@@ -281,7 +281,7 @@ def test_config_add_from_file_multiple(mutable_empty_config, tmpdir):
 """
 
 
-def test_config_add_override_from_file(mutable_empty_config, tmpdir):
+def test_config_add_override_from_file(mutable_empty_config, tmpdir, capsys):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     contents = """spack:
   config::
@@ -292,14 +292,14 @@ def test_config_add_override_from_file(mutable_empty_config, tmpdir):
     with open(file, 'w') as f:
         f.write(contents)
     config('add', '-f', file)
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs: [test2]
 """
 
 
-def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
+def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir, capsys):
     config('--scope', 'site', 'add', 'config:template_dirs:test1')
     contents = """spack:
   config:
@@ -310,14 +310,14 @@ def test_config_add_override_leaf_from_file(mutable_empty_config, tmpdir):
     with open(file, 'w') as f:
         f.write(contents)
     config('add', '-f', file)
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   'template_dirs:': [test2]
 """
 
 
-def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
+def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir, capsys):
     config('add', 'packages:all:compiler:[gcc]')
 
     # contents to add to file
@@ -335,7 +335,7 @@ def test_config_add_update_dict_from_file(mutable_empty_config, tmpdir):
     config('add', '-f', file)
 
     # get results
-    output = config('get', 'packages')
+    output = config('get', 'packages', out=capsys)
 
     # added config comes before prior config
     expected = """packages:
@@ -368,39 +368,39 @@ def test_config_add_invalid_file_fails(tmpdir):
         config('add', '-f', file)
 
 
-def test_config_remove_value(mutable_empty_config):
+def test_config_remove_value(mutable_empty_config, capsys):
     config('add', 'config:dirty:true')
     config('remove', 'config:dirty:true')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config: {}
 """
 
 
-def test_config_remove_alias_rm(mutable_empty_config):
+def test_config_remove_alias_rm(mutable_empty_config, capsys):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty:true')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config: {}
 """
 
 
-def test_config_remove_dict(mutable_empty_config):
+def test_config_remove_dict(mutable_empty_config, capsys):
     config('add', 'config:dirty:true')
     config('rm', 'config:dirty')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config: {}
 """
 
 
-def test_remove_from_list(mutable_empty_config):
+def test_remove_from_list(mutable_empty_config, capsys):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
     config('remove', 'config:template_dirs:test2')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -409,12 +409,12 @@ def test_remove_from_list(mutable_empty_config):
 """
 
 
-def test_remove_list(mutable_empty_config):
+def test_remove_list(mutable_empty_config, capsys):
     config('add', 'config:template_dirs:test1')
     config('add', 'config:template_dirs:[test2]')
     config('add', 'config:template_dirs:test3')
     config('remove', 'config:template_dirs:[test2]')
-    output = config('get', 'config')
+    output = config('get', 'config', out=capsys)
 
     assert output == """config:
   template_dirs:
@@ -423,11 +423,11 @@ def test_remove_list(mutable_empty_config):
 """
 
 
-def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
+def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path, capsys):
     ev.create('test')
     with ev.read('test'):
         config('add', 'config:dirty:true')
-        output = config('get')
+        output = config('get', out=capsys)
 
     expected = """  config:
     dirty: true
@@ -438,7 +438,7 @@ def test_config_add_to_env(mutable_empty_config, mutable_mock_env_path):
 
 def test_config_add_to_env_preserve_comments(mutable_empty_config,
                                              mutable_mock_env_path,
-                                             tmpdir):
+                                             tmpdir, capsys):
     filepath = str(tmpdir.join('spack.yaml'))
     manifest = """# comment
 spack:  # comment
@@ -458,7 +458,7 @@ spack:  # comment
     env = ev.Environment(str(tmpdir))
     with env:
         config('add', 'config:dirty:true')
-        output = config('get')
+        output = config('get', out=capsys)
 
     expected = manifest
     expected += """  config:
@@ -468,7 +468,7 @@ spack:  # comment
     assert output == expected
 
 
-def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
+def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path, capsys):
     env('create', 'test')
 
     with ev.read('test'):
@@ -476,7 +476,7 @@ def test_config_remove_from_env(mutable_empty_config, mutable_mock_env_path):
 
     with ev.read('test'):
         config('rm', 'config:dirty')
-        output = config('get')
+        output = config('get', out=capsys)
 
     expected = ev.default_manifest_yaml
     expected += """  config: {}
@@ -618,7 +618,7 @@ packages:
 
 
 @pytest.mark.regression('18050')
-def test_config_update_works_for_empty_paths(mutable_config):
+def test_config_update_works_for_empty_paths(mutable_config, capsys):
     # Create an outdated config file with empty "paths" and "modules"
     scope = spack.config.default_modify_scope()
     cfg_file = spack.config.config.get_config_filename(scope, 'packages')
@@ -632,7 +632,7 @@ packages:
 """)
 
     # Try to update it, it should not raise errors
-    output = config('update', '-y', 'packages')
+    output = config('update', '-y', 'packages', out=capsys)
 
     # This ensures that we updated the configuration
     assert '[backup=' in output
@@ -659,7 +659,7 @@ def check_config_updated(data):
 
 
 def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
-                                mutable_config, gen_mock_layout, monkeypatch):
+                                mutable_config, gen_mock_layout, monkeypatch, capsys):
     """Check that when a dependency package is recorded as installed in
        an upstream database that it is not reinstalled.
     """
@@ -684,8 +684,8 @@ def test_config_prefer_upstream(tmpdir_factory, install_mockery, mock_fetch,
     db_for_test = spack.database.Database(
         downstream_db_root, upstream_dbs=[prepared_db])
     monkeypatch.setattr(spack.store, 'db', db_for_test)
-
-    output = config('prefer-upstream')
+    
+    output = config('prefer-upstream', out=capsys)
     scope = spack.config.default_modify_scope('packages')
     cfg_file = spack.config.config.get_config_filename(scope, 'packages')
     packages = syaml.load(open(cfg_file))['packages']

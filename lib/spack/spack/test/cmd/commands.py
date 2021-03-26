@@ -22,23 +22,23 @@ parser = spack.main.make_argument_parser()
 spack.main.add_all_commands(parser)
 
 
-def test_names():
+def test_names(capsys):
     """Test default output of spack commands."""
-    out1 = commands().strip().split('\n')
+    out1 = commands(out=capsys).strip().split('\n')
     assert out1 == spack.cmd.all_commands()
     assert 'rm' not in out1
 
-    out2 = commands('--aliases').strip().split('\n')
+    out2 = commands('--aliases', out=capsys).strip().split('\n')
     assert out1 != out2
     assert 'rm' in out2
 
-    out3 = commands('--format=names').strip().split('\n')
+    out3 = commands('--format=names', out=capsys).strip().split('\n')
     assert out1 == out3
 
 
-def test_subcommands():
+def test_subcommands(capsys):
     """Test subcommand traversal."""
-    out1 = commands('--format=subcommands')
+    out1 = commands('--format=subcommands', out=capsys)
     assert 'spack mirror create' in out1
     assert 'spack buildcache list' in out1
     assert 'spack repo add' in out1
@@ -48,7 +48,7 @@ def test_subcommands():
     assert 'spack rm' not in out1
     assert 'spack compiler add' not in out1
 
-    out2 = commands('--aliases', '--format=subcommands')
+    out2 = commands('--aliases', '--format=subcommands', out=capsys)
     assert 'spack mirror create' in out2
     assert 'spack buildcache list' in out2
     assert 'spack repo add' in out2
@@ -59,9 +59,9 @@ def test_subcommands():
     assert 'spack compiler add' in out2
 
 
-def test_rst():
+def test_rst(capsys):
     """Do some simple sanity checks of the rst writer."""
-    out1 = commands('--format=rst')
+    out1 = commands('--format=rst', out=capsys)
     assert 'spack mirror create' in out1
     assert 'spack buildcache list' in out1
     assert 'spack repo add' in out1
@@ -71,7 +71,7 @@ def test_rst():
     assert 'spack rm' not in out1
     assert 'spack compiler add' not in out1
 
-    out2 = commands('--aliases', '--format=rst')
+    out2 = commands('--aliases', '--format=rst', out=capsys)
     assert 'spack mirror create' in out2
     assert 'spack buildcache list' in out2
     assert 'spack repo add' in out2
@@ -82,7 +82,7 @@ def test_rst():
     assert 'spack compiler add' in out2
 
 
-def test_rst_with_input_files(tmpdir):
+def test_rst_with_input_files(tmpdir, capsys):
     filename = tmpdir.join('file.rst')
     with filename.open('w') as f:
         f.write('''
@@ -93,7 +93,7 @@ _cmd-spack-install:
 .. _cmd-spack-patch:
 ''')
 
-    out = commands('--format=rst', str(filename))
+    out = commands('--format=rst', str(filename), out=capsys)
     for name in ['fetch', 'stage', 'patch']:
         assert (':ref:`More documentation <cmd-spack-%s>`' % name) in out
 
@@ -101,14 +101,14 @@ _cmd-spack-install:
         assert (':ref:`More documentation <cmd-spack-%s>`' % name) not in out
 
 
-def test_rst_with_header(tmpdir):
+def test_rst_with_header(tmpdir, capsys):
     fake_header = 'this is a header!\n\n'
 
     filename = tmpdir.join('header.txt')
     with filename.open('w') as f:
         f.write(fake_header)
 
-    out = commands('--format=rst', '--header', str(filename))
+    out = commands('--format=rst', '--header', str(filename), out=capsys)
     assert out.startswith(fake_header)
 
     with pytest.raises(spack.main.SpackCommandError):
@@ -152,9 +152,9 @@ def test_no_pipe_error():
     assert 'Broken pipe' not in stderr
 
 
-def test_bash_completion():
+def test_bash_completion(capsys):
     """Test the bash completion writer."""
-    out1 = commands('--format=bash')
+    out1 = commands('--format=bash', out=capsys)
 
     # Make sure header not included
     assert '_bash_completion_spack() {' not in out1
@@ -175,7 +175,7 @@ def test_bash_completion():
     for function in _positional_to_subroutine.values():
         assert function in out1
 
-    out2 = commands('--aliases', '--format=bash')
+    out2 = commands('--aliases', '--format=bash', out=capsys)
 
     # Make sure aliases appear
     assert '_spack_rm() {' in out2

@@ -150,8 +150,8 @@ def test_install_output_on_build_error(mock_packages, mock_archive, mock_fetch,
 
 @pytest.mark.disable_clean_stage_check
 def test_install_output_on_python_error(
-        mock_packages, mock_archive, mock_fetch, config, install_mockery):
-    out = install('failing-build', fail_on_error=False)
+        mock_packages, mock_archive, mock_fetch, config, install_mockery, capsys):
+    out = install('failing-build', fail_on_error=False, out=capsys)
     assert isinstance(install.error, spack.build_environment.ChildError)
     assert install.error.name == 'InstallError'
     assert 'raise InstallError("Expected failure.")' in out
@@ -311,7 +311,7 @@ def test_install_invalid_spec(invalid_spec):
     (Spec('boost'), False, 1),
     (Spec('boost'), True, 0)
 ])
-def test_install_from_file(spec, concretize, error_code, tmpdir):
+def test_install_from_file(spec, concretize, error_code, tmpdir, capsys):
 
     if concretize:
         spec.concretize()
@@ -326,12 +326,12 @@ def test_install_from_file(spec, concretize, error_code, tmpdir):
     # Relative path to specfile (regression for #6906)
     with fs.working_dir(specfile.dirname):
         # A non-concrete spec will fail to be installed
-        out = install('-f', specfile.basename, fail_on_error=False)
+        out = install('-f', specfile.basename, fail_on_error=False, out=capsys)
     assert install.returncode == error_code
     assert err_msg in out
 
     # Absolute path to specfile (regression for #6983)
-    out = install('-f', str(specfile), fail_on_error=False)
+    out = install('-f', str(specfile), fail_on_error=False, out=capsys)
     assert install.returncode == error_code
     assert err_msg in out
 
@@ -721,22 +721,21 @@ def test_install_help_does_not_show_cdash_options(capsys):
 def test_install_help_cdash(capsys):
     """Make sure `spack install --help-cdash` describes CDash arguments"""
     install_cmd = SpackCommand('install')
-    out = install_cmd('--help-cdash')
+    out = install_cmd('--help-cdash', out=capsys)
     assert 'CDash URL' in out
 
 
 @pytest.mark.disable_clean_stage_check
-def test_cdash_auth_token(tmpdir, install_mockery, capfd):
+def test_cdash_auth_token(tmpdir, install_mockery, capsys):
     # capfd interferes with Spack's capturing
     with tmpdir.as_cwd():
-        with capfd.disabled():
-            os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
-            out = install(
-                '-v',
-                '--log-file=cdash_reports',
-                '--log-format=cdash',
-                'a')
-            assert 'Using CDash auth token from environment' in out
+        os.environ['SPACK_CDASH_AUTH_TOKEN'] = 'asdf'
+        out = install(
+            '-v',
+            '--log-file=cdash_reports',
+            '--log-format=cdash',
+            'a', out=capsys)
+        assert 'Using CDash auth token from environment' in out
 
 
 def test_compiler_bootstrap(
@@ -802,10 +801,10 @@ def test_compiler_bootstrap_already_installed(
     install('a%gcc@2.0')
 
 
-def test_install_fails_no_args(tmpdir):
+def test_install_fails_no_args(tmpdir, capsys):
     # ensure no spack.yaml in directory
     with tmpdir.as_cwd():
-        output = install(fail_on_error=False)
+        output = install(fail_on_error=False, out=capsys)
 
     # check we got the short version of the error message with no spack.yaml
     assert 'requires a package argument or active environment' in output
@@ -813,12 +812,12 @@ def test_install_fails_no_args(tmpdir):
     assert 'using the `spack.yaml` in this directory' not in output
 
 
-def test_install_fails_no_args_suggests_env_activation(tmpdir):
+def test_install_fails_no_args_suggests_env_activation(tmpdir, capsys):
     # ensure spack.yaml in directory
     tmpdir.ensure('spack.yaml')
 
     with tmpdir.as_cwd():
-        output = install(fail_on_error=False)
+        output = install(fail_on_error=False, out=capsys)
 
     # check we got the long version of the error message with spack.yaml
     assert 'requires a package argument or active environment' in output
@@ -835,7 +834,7 @@ def fake_full_hash(spec):
 
 def test_cache_install_full_hash_match(
         install_mockery_mutable_config, mock_packages, mock_fetch,
-        mock_archive, mutable_config, monkeypatch, tmpdir):
+        mock_archive, mutable_config, monkeypatch, tmpdir, capsys):
     """Make sure installing from cache respects full hash argument"""
 
     # Create a temp mirror directory for buildcache usage
@@ -858,7 +857,7 @@ def test_cache_install_full_hash_match(
     mirror('add', 'test-mirror', mirror_url)
 
     # Make sure we get the binary version by default
-    install_output = install('--no-check-signature', s.name, output=str)
+    install_output = install('--no-check-signature', s.name, output=str, out=capsys)
     expect_extract_msg = 'Extracting {0} from binary cache'.format(package_id)
 
     assert expect_extract_msg in install_output
@@ -870,14 +869,14 @@ def test_cache_install_full_hash_match(
 
     # Check that even if the full hash changes, we install from binary when
     # we don't explicitly require the full hash to match
-    install_output = install('--no-check-signature', s.name, output=str)
+    install_output = install('--no-check-signature', s.name, output=str, out=capsys)
     assert expect_extract_msg in install_output
 
     uninstall('-y', s.name)
 
     # Finally, make sure that if we insist on the full hash match, spack
     # installs from source.
-    install_output = install('--require-full-hash-match', s.name, output=str)
+    install_output = install('--require-full-hash-match', s.name, output=str, out=capsys)
     expect_msg = 'No binary for {0} found: installing from source'.format(
         package_id)
 

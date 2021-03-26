@@ -82,7 +82,7 @@ def test_get_executables(working_env, mock_executable):
 external = SpackCommand('external')
 
 
-def test_find_external_cmd(mutable_config, working_env, mock_executable):
+def test_find_external_cmd(mutable_config, working_env, mock_executable, capsys):
     """Test invoking 'spack external find' with additional package arguments,
     which restricts the set of packages that Spack looks for.
     """
@@ -90,7 +90,7 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable):
     prefix = os.path.dirname(os.path.dirname(cmake_path1))
 
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
-    external('find', 'cmake')
+    external('find', 'cmake', out=capsys)
 
     pkgs_cfg = spack.config.get('packages')
     cmake_cfg = pkgs_cfg['cmake']
@@ -100,20 +100,20 @@ def test_find_external_cmd(mutable_config, working_env, mock_executable):
 
 
 def test_find_external_cmd_not_buildable(
-        mutable_config, working_env, mock_executable):
+        mutable_config, working_env, mock_executable, capsys):
     """When the user invokes 'spack external find --not-buildable', the config
     for any package where Spack finds an external version should be marked as
     not buildable.
     """
     cmake_path1 = mock_executable("cmake", output="echo cmake version 1.foo")
     os.environ['PATH'] = ':'.join([os.path.dirname(cmake_path1)])
-    external('find', '--not-buildable', 'cmake')
+    external('find', '--not-buildable', 'cmake', out=capsys)
     pkgs_cfg = spack.config.get('packages')
     assert not pkgs_cfg['cmake']['buildable']
 
 
 def test_find_external_cmd_full_repo(
-        mutable_config, working_env, mock_executable, mutable_mock_repo):
+        mutable_config, working_env, mock_executable, mutable_mock_repo, capsys):
     """Test invoking 'spack external find' with no additional arguments, which
     iterates through each package in the repository.
     """
@@ -124,7 +124,7 @@ def test_find_external_cmd_full_repo(
     prefix = os.path.dirname(os.path.dirname(exe_path1))
 
     os.environ['PATH'] = ':'.join([os.path.dirname(exe_path1)])
-    external('find')
+    external('find', out=capsys)
 
     pkgs_cfg = spack.config.get('packages')
     pkg_cfg = pkgs_cfg['find-externals1']
@@ -170,19 +170,19 @@ def test_find_external_merge(mutable_config, mutable_mock_repo):
             'prefix': '/x/y2/'} in pkg_externals
 
 
-def test_list_detectable_packages(mutable_config, mutable_mock_repo):
-    external("list")
+def test_list_detectable_packages(mutable_config, mutable_mock_repo, capsys):
+    external("list", out=capsys)
     assert external.returncode == 0
 
 
-def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
+def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch, capsys):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable('gcc', output="echo 4.2.1")
     prefix = os.path.dirname(gcc_exe)
     monkeypatch.setenv('PATH', prefix)
 
     # Find the external spec
-    external('find', 'gcc')
+    external('find', 'gcc', out=capsys)
 
     # Check entries in 'packages.yaml'
     packages_yaml = spack.config.get('packages')
@@ -199,7 +199,7 @@ def test_packages_yaml_format(mock_executable, mutable_config, monkeypatch):
     assert extra_attributes['compilers']['c'] == gcc_exe
 
 
-def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
+def test_overriding_prefix(mock_executable, mutable_config, monkeypatch, capsys):
     # Prepare an environment to detect a fake gcc that
     # override its external prefix
     gcc_exe = mock_executable('gcc', output="echo 4.2.1")
@@ -217,7 +217,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
     monkeypatch.setattr(gcc_cls, 'determine_variants', _determine_variants)
 
     # Find the external spec
-    external('find', 'gcc')
+    external('find', 'gcc', out=capsys)
 
     # Check entries in 'packages.yaml'
     packages_yaml = spack.config.get('packages')
@@ -229,7 +229,7 @@ def test_overriding_prefix(mock_executable, mutable_config, monkeypatch):
 
 
 def test_new_entries_are_reported_correctly(
-        mock_executable, mutable_config, monkeypatch
+        mock_executable, mutable_config, monkeypatch, capsys
 ):
     # Prepare an environment to detect a fake gcc
     gcc_exe = mock_executable('gcc', output="echo 4.2.1")
@@ -237,12 +237,12 @@ def test_new_entries_are_reported_correctly(
     monkeypatch.setenv('PATH', prefix)
 
     # The first run will find and add the external gcc
-    output = external('find', 'gcc')
+    output = external('find', 'gcc', out=capsys)
     assert 'The following specs have been' in output
 
     # The second run should report that no new external
     # has been found
-    output = external('find', 'gcc')
+    output = external('find', 'gcc', out=capsys)
     assert 'No new external packages detected' in output
 
 
@@ -251,7 +251,7 @@ def test_new_entries_are_reported_correctly(
     ('-t', 'build-tools', 'cmake'),
 ])
 def test_use_tags_for_detection(
-        command_args, mock_executable, mutable_config, monkeypatch
+        command_args, mock_executable, mutable_config, monkeypatch, capsys
 ):
     # Prepare an environment to detect a fake cmake
     cmake_exe = mock_executable('cmake', output="echo cmake version 3.19.1")
@@ -263,7 +263,7 @@ def test_use_tags_for_detection(
     monkeypatch.setenv('PATH', prefix)
 
     # Test that we detect specs
-    output = external('find', *command_args)
+    output = external('find', *command_args, out=capsys)
     assert 'The following specs have been' in output
     assert 'cmake' in output
     assert 'openssl' not in output

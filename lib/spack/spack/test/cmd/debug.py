@@ -47,8 +47,8 @@ def test_create_db_tarball(tmpdir, database):
             assert spec_suffix in contents
 
 
-def test_report():
-    out = debug('report')
+def test_report(capsys):
+    out = debug('report', out=capsys)
     arch = architecture.Arch(architecture.platform(), 'frontend', 'frontend')
 
     assert get_version() in out

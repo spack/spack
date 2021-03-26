@@ -18,7 +18,7 @@ def test_help_option():
     assert repo.returncode in (None, 0)
 
 
-def test_create_add_list_remove(mutable_config, tmpdir):
+def test_create_add_list_remove(mutable_config, tmpdir, capsys):
     # Create a new repository and check that the expected
     # files are there
     repo('create', str(tmpdir), 'mockrepo')
@@ -26,10 +26,10 @@ def test_create_add_list_remove(mutable_config, tmpdir):
 
     # Add the new repository and check it appears in the list output
     repo('add', '--scope=site', str(tmpdir))
-    output = repo('list', '--scope=site', output=str)
+    output = repo('list', '--scope=site', output=str, out=capsys)
     assert 'mockrepo' in output
 
     # Then remove it and check it's not there
     repo('remove', '--scope=site', str(tmpdir))
-    output = repo('list', '--scope=site', output=str)
+    output = repo('list', '--scope=site', output=str, out=capsys)
     assert 'mockrepo' not in output

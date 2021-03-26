@@ -353,7 +353,7 @@ env:
                                        'dependent-of-dev-build'])
 def test_dev_build_rebuild_on_source_changes(
         test_spec, tmpdir, mock_packages, install_mockery,
-        mutable_mock_env_path, mock_fetch):
+        mutable_mock_env_path, mock_fetch, capsys):
     """Test dev builds rebuild on changes to source code.
 
     ``test_spec = dev-build-test-install`` tests rebuild for changes to package
@@ -394,6 +394,6 @@ env:
             reset_string()  # so the package will accept rebuilds
 
             fs.touch(os.path.join(str(build_dir), 'test'))
-            output = install()
+            output = install(out=capsys)
 
     assert 'Installing %s' % test_spec in output

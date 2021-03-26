@@ -117,11 +117,11 @@ def test_tag2_tag3(parser, specs):
 
 
 @pytest.mark.db
-def test_namespaces_shown_correctly(database):
-    out = find()
+def test_namespaces_shown_correctly(database, capsys):
+    out = find(out=capsys)
     assert 'builtin.mock.zmpi' not in out
 
-    out = find('--namespace')
+    out = find('--namespace', out=capsys)
     assert 'builtin.mock.zmpi' in out
 
 
@@ -151,15 +151,15 @@ def _check_json_output_deps(spec_list):
 
 
 @pytest.mark.db
-def test_find_json(database):
-    output = find('--json', 'mpileaks')
+def test_find_json(database, capsys):
+    output = find('--json', 'mpileaks', out=capsys)
     spec_list = json.loads(output)
     _check_json_output(spec_list)
 
 
 @pytest.mark.db
-def test_find_json_deps(database):
-    output = find('-d', '--json', 'mpileaks')
+def test_find_json_deps(database, capsys):
+    output = find('-d', '--json', 'mpileaks', out=capsys)
     spec_list = json.loads(output)
     _check_json_output_deps(spec_list)
 
@@ -199,8 +199,8 @@ def test_display_json_deps(database, capsys):
 
 
 @pytest.mark.db
-def test_find_format(database, config):
-    output = find('--format', '{name}-{^mpi.name}', 'mpileaks')
+def test_find_format(database, config, capsys):
+    output = find('--format', '{name}-{^mpi.name}', 'mpileaks', out=capsys)
     assert set(output.strip().split('\n')) == set([
         "mpileaks-zmpi",
         "mpileaks-mpich",
@@ -208,7 +208,7 @@ def test_find_format(database, config):
     ])
 
     output = find('--format', '{name}-{version}-{compiler.name}-{^mpi.name}',
-                  'mpileaks')
+                  'mpileaks', out=capsys)
     assert "installed package" not in output
     assert set(output.strip().split('\n')) == set([
         "mpileaks-2.3-gcc-zmpi",
@@ -217,7 +217,7 @@ def test_find_format(database, config):
     ])
 
     output = find('--format', '{name}-{^mpi.name}-{hash:7}',
-                  'mpileaks')
+                  'mpileaks', out=capsys)
     elements = output.strip().split('\n')
     assert set(e[:-7] for e in elements) == set([
         "mpileaks-zmpi-",
@@ -232,8 +232,8 @@ def test_find_format(database, config):
 
 
 @pytest.mark.db
-def test_find_format_deps(database, config):
-    output = find('-d', '--format', '{name}-{version}', 'mpileaks', '^zmpi')
+def test_find_format_deps(database, config, capsys):
+    output = find('-d', '--format', '{name}-{version}', 'mpileaks', '^zmpi', out=capsys)
     assert output == """\
 mpileaks-2.3
     callpath-1.0
@@ -247,8 +247,8 @@ mpileaks-2.3
 
 
 @pytest.mark.db
-def test_find_format_deps_paths(database, config):
-    output = find('-dp', '--format', '{name}-{version}', 'mpileaks', '^zmpi')
+def test_find_format_deps_paths(database, config, capsys):
+    output = find('-dp', '--format', '{name}-{version}', 'mpileaks', '^zmpi', out=capsys)
 
     spec = Spec("mpileaks ^zmpi").concretized()
     prefixes = [s.prefix for s in spec.traverse()]
@@ -266,8 +266,8 @@ mpileaks-2.3                   {0}
 
 
 @pytest.mark.db
-def test_find_very_long(database, config):
-    output = find('-L', '--no-groups', "mpileaks")
+def test_find_very_long(database, config, capsys):
+    output = find('-L', '--no-groups', "mpileaks", out=capsys)
 
     specs = [Spec(s).concretized() for s in [
         "mpileaks ^zmpi",
@@ -281,32 +281,31 @@ def test_find_very_long(database, config):
 
 
 @pytest.mark.db
-def test_find_show_compiler(database, config):
-    output = find('--no-groups', '--show-full-compiler', "mpileaks")
+def test_find_show_compiler(database, config, capsys):
+    output = find('--no-groups', '--show-full-compiler', "mpileaks", out=capsys)
     assert "mpileaks@2.3%gcc@4.5.0" in output
 
 
 @pytest.mark.db
 def test_find_not_found(database, config, capsys):
-    with capsys.disabled():
-        output = find("foobarbaz", fail_on_error=False)
+    output = find("foobarbaz", fail_on_error=False, out=capsys)
     assert "No package matches the query: foobarbaz" in output
     assert find.returncode == 1
 
 
 @pytest.mark.db
-def test_find_no_sections(database, config):
-    output = find()
+def test_find_no_sections(database, config, capsys):
+    output = find(out=capsys)
     assert "-----------" in output
 
-    output = find("--no-groups")
+    output = find("--no-groups", out=capsys)
     assert "-----------" not in output
     assert "==>" not in output
 
 
 @pytest.mark.db
 def test_find_command_basic_usage(database):
-    output = find()
+    output = find(out=capsys)
     assert 'mpileaks' in output
 
 
@@ -323,12 +322,12 @@ def test_find_prefix_in_env(mutable_mock_env_path, install_mockery, mock_fetch,
         # Would throw error on regression
 
 
-def test_find_loaded(database, working_env):
-    output = find('--loaded', '--group')
+def test_find_loaded(database, working_env, capsys):
+    output = find('--loaded', '--group', out=capsys)
     assert output == ''
 
     os.environ[uenv.spack_loaded_hashes_var] = ':'.join(
         [x.dag_hash() for x in spack.store.db.query()])
-    output = find('--loaded')
+    output = find('--loaded', out=capsys)
     expected = find()
     assert output == expected

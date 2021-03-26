@@ -750,6 +750,7 @@ class winlog:
         self.stdout = StreamWrapper('stdout')
         self.stderr = StreamWrapper('stderr')
         self._active = False
+        self._ioflag = False 
 
     def __enter__(self):
         if self._active:
@@ -761,6 +762,7 @@ class winlog:
 
         # Open both write and reading on logfile
         if type(self.logfile) == StringIO:
+            self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
             self.writer = open('temp.txt', mode='wb+')
             self.reader = open('temp.txt', mode='rb+')
@@ -783,6 +785,8 @@ class winlog:
                 self.stdout.flush()
                 line = reader.readline()
                 while line:
+                    if self._ioflag:
+                        self.logfile.write(line.decode())
                     if self.echo:
                         self.echo_writer.write('{0}'.format(line.decode()))
                         self.echo_writer.flush()
@@ -797,6 +801,10 @@ class winlog:
             self._thread.start()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        self.writer.close()
+        self.reader.close()
+        if os.path.exists("temp.txt"):
+            os.remove("temp.txt")
         self.echo_writer.flush()
         self.stdout.flush()
         self.stderr.flush()
@@ -804,8 +812,6 @@ class winlog:
         self._thread.join()
         self.stdout.close()
         self.stderr.close()
-        if os.path.exists("temp.txt"):
-            os.remove("temp.txt")
         self._active = False
 
     @contextmanager

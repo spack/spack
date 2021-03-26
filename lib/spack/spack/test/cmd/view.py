@@ -126,10 +126,10 @@ def test_view_multiple_projections_all_first(
 
 def test_view_external(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('externaltool')
     viewpath = str(tmpdir.mkdir('view'))
-    output = view('symlink', viewpath, 'externaltool')
+    output = view('symlink', viewpath, 'externaltool', out=capsys)
     assert 'Skipping external package: externaltool' in output
 
 
@@ -213,13 +213,13 @@ def test_view_extension_remove(
 
 def test_view_extension_conflict(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
     viewpath = str(tmpdir.mkdir('view'))
     view('symlink', viewpath, 'extension1@1.0')
-    output = view('symlink', viewpath, 'extension1@2.0')
+    output = view('symlink', viewpath, 'extension1@2.0', out=capsys)
     assert 'Package conflict detected' in output
 
 
@@ -267,14 +267,14 @@ def test_view_extension_global_activation(
 
 def test_view_extendee_with_global_activations(
         tmpdir, mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('extendee')
     install('extension1@1.0')
     install('extension1@2.0')
     install('extension2@1.0')
     viewpath = str(tmpdir.mkdir('view'))
     activate('extension1@2.0')
-    output = view('symlink', viewpath, 'extension1@1.0')
+    output = view('symlink', viewpath, 'extension1@1.0', out=capsys)
     assert 'Error: Globally activated extensions cannot be used' in output
 
 

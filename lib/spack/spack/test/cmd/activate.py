@@ -13,30 +13,30 @@ extensions = SpackCommand('extensions')
 
 def test_activate(
         mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('extension1')
     activate('extension1')
-    output = extensions('--show', 'activated', 'extendee')
+    output = extensions('--show', 'activated', 'extendee', out=capsys)
     assert 'extension1' in output
 
 
 def test_deactivate(
         mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('extension1')
     activate('extension1')
     deactivate('extension1')
-    output = extensions('--show', 'activated', 'extendee')
+    output = extensions('--show', 'activated', 'extendee', out=capsys)
     assert 'extension1' not in output
 
 
 def test_deactivate_all(
         mock_packages, mock_archive, mock_fetch, config,
-        install_mockery):
+        install_mockery, capsys):
     install('extension1')
     install('extension2')
     activate('extension1')
     activate('extension2')
     deactivate('--all', 'extendee')
-    output = extensions('--show', 'activated', 'extendee')
+    output = extensions('--show', 'activated', 'extendee', out=capsys)
     assert 'extension1' not in output

@@ -46,19 +46,19 @@ def mock_spec():
     shutil.rmtree(pkg.stage.path)
 
 
-def test_location_build_dir(mock_spec):
+def test_location_build_dir(mock_spec, capsys):
     """Tests spack location --build-dir."""
     spec, pkg = mock_spec
-    assert location('--build-dir', spec.name).strip() == pkg.stage.source_path
+    assert location('--build-dir', spec.name, out=capsys).strip() == pkg.stage.source_path
 
 
-def test_location_build_dir_missing():
+def test_location_build_dir_missing(capsys):
     """Tests spack location --build-dir with a missing build directory."""
     spec = 'mpileaks'
     prefix = "==> Error: "
     expected = "%sBuild directory does not exist yet. Run this to create it:"\
                "%s  spack stage %s" % (prefix, os.linesep, spec)
-    out = location('--build-dir', spec, fail_on_error=False).strip()
+    out = location('--build-dir', spec, fail_on_error=False, out=capsys).strip()
     assert out == expected
 
 
@@ -78,26 +78,26 @@ def test_location_env(mock_test_env):
     assert location('--env', test_env_name).strip() == env_dir
 
 
-def test_location_env_missing():
+def test_location_env_missing(capsys):
     """Tests spack location --env."""
     missing_env_name = 'missing-env'
     error = "==> Error: no such environment: '%s'" % missing_env_name
-    out = location('--env', missing_env_name, fail_on_error=False).strip()
+    out = location('--env', missing_env_name, fail_on_error=False, out=capsys).strip()
     assert out == error
 
 
 @pytest.mark.db
-def test_location_install_dir(mock_spec):
+def test_location_install_dir(mock_spec, capsys):
     """Tests spack location --install-dir."""
     spec, _ = mock_spec
-    assert location('--install-dir', spec.name).strip() == spec.prefix
+    assert location('--install-dir', spec.name, out=capsys).strip() == spec.prefix
 
 
 @pytest.mark.db
-def test_location_package_dir(mock_spec):
+def test_location_package_dir(mock_spec, capsys):
     """Tests spack location --package-dir."""
     spec, pkg = mock_spec
-    assert location('--package-dir', spec.name).strip() == pkg.package_dir
+    assert location('--package-dir', spec.name, out=capsys).strip() == pkg.package_dir
 
 
 @pytest.mark.db
@@ -105,28 +105,28 @@ def test_location_package_dir(mock_spec):
     ('--module-dir', spack.paths.module_path),
     ('--packages', spack.paths.mock_packages_path),
     ('--spack-root', spack.paths.prefix)])
-def test_location_paths_options(option, expected):
+def test_location_paths_options(option, expected, capsys):
     """Tests basic spack.paths location command options."""
-    assert location(option).strip() == expected
+    assert location(option, out=capsys).strip() == expected
 
 
 @pytest.mark.parametrize('specs,expected', [
     ([], "You must supply a spec."),
     (['spec1', 'spec2'], "Too many specs.  Supply only one.")])
-def test_location_spec_errors(specs, expected):
+def test_location_spec_errors(specs, expected, capsys):
     """Tests spack location with bad spec options."""
     error = "==> Error: %s" % expected
-    assert location(*specs, fail_on_error=False).strip() == error
+    assert location(*specs, fail_on_error=False, out=capsys).strip() == error
 
 
 @pytest.mark.db
-def test_location_stage_dir(mock_spec):
+def test_location_stage_dir(mock_spec, capsys):
     """Tests spack location --stage-dir."""
     spec, pkg = mock_spec
-    assert location('--stage-dir', spec.name).strip() == pkg.stage.path
+    assert location('--stage-dir', spec.name, out=capsys).strip() == pkg.stage.path
 
 
 @pytest.mark.db
-def test_location_stages(mock_spec):
+def test_location_stages(mock_spec, capsys):
     """Tests spack location --stages."""
-    assert location('--stages').strip() == spack.stage.get_stage_root()
+    assert location('--stages', out=capsys).strip() == spack.stage.get_stage_root()

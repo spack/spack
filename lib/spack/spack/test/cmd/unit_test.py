@@ -9,26 +9,25 @@ spack_test = SpackCommand('unit-test')
 cmd_test_py = 'lib/spack/spack/test/cmd/unit_test.py'
 
 
-def test_list():
-    output = spack_test('--list')
+def test_list(capsys):
+    output = spack_test('--list', out=capsys)
     assert "unit_test.py" in output
     assert "spec_semantics.py" in output
     assert "test_list" not in output
 
 
-def test_list_with_pytest_arg():
-    output = spack_test('--list', cmd_test_py)
+def test_list_with_pytest_arg(capsys):
+    output = spack_test('--list', cmd_test_py, out=capsys)
     assert output.strip() == cmd_test_py
 
 
-def test_list_with_keywords():
-    output = spack_test('--list', '-k', 'cmd/unit_test.py')
+def test_list_with_keywords(capsys):
+    output = spack_test('--list', '-k', 'cmd/unit_test.py', out=capsys)
     assert output.strip() == cmd_test_py
 
 
 def test_list_long(capsys):
-    with capsys.disabled():
-        output = spack_test('--list-long')
+    output = spack_test('--list-long', out=capsys)
     assert "unit_test.py::\n" in output
     assert "test_list" in output
     assert "test_list_with_pytest_arg" in output
@@ -44,8 +43,7 @@ def test_list_long(capsys):
 
 
 def test_list_long_with_pytest_arg(capsys):
-    with capsys.disabled():
-        output = spack_test('--list-long', cmd_test_py)
+    output = spack_test('--list-long', cmd_test_py, out=capsys)
     print(output)
     assert "unit_test.py::\n" in output
     assert "test_list" in output
@@ -61,8 +59,8 @@ def test_list_long_with_pytest_arg(capsys):
     assert 'test_test_deptype' not in output
 
 
-def test_list_names():
-    output = spack_test('--list-names')
+def test_list_names(capsys):
+    output = spack_test('--list-names', out=capsys)
     assert "unit_test.py::test_list\n" in output
     assert "unit_test.py::test_list_with_pytest_arg\n" in output
     assert "unit_test.py::test_list_with_keywords\n" in output
@@ -75,8 +73,8 @@ def test_list_names():
     assert 'spec_dag.py::test_test_deptype\n' in output
 
 
-def test_list_names_with_pytest_arg():
-    output = spack_test('--list-names', cmd_test_py)
+def test_list_names_with_pytest_arg(capsys):
+    output = spack_test('--list-names', cmd_test_py, out=capsys)
     assert "unit_test.py::test_list\n" in output
     assert "unit_test.py::test_list_with_pytest_arg\n" in output
     assert "unit_test.py::test_list_with_keywords\n" in output
@@ -89,8 +87,8 @@ def test_list_names_with_pytest_arg():
     assert 'spec_dag.py::test_test_deptype\n' not in output
 
 
-def test_pytest_help():
-    output = spack_test('--pytest-help')
+def test_pytest_help(capsys):
+    output = spack_test('--pytest-help', out=capsys)
     assert "-k EXPRESSION" in output
     assert "pytest-warnings:" in output
     assert "--collect-only" in output

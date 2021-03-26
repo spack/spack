@@ -510,7 +510,7 @@ class SpackCommand(object):
     Use this to invoke Spack commands directly from Python and check
     their output.
     """
-    def __init__(self, command_name):
+    def __init__(self, command_name, log=False):
         """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
@@ -519,6 +519,7 @@ class SpackCommand(object):
         self.parser = make_argument_parser()
         self.command = self.parser.add_command(command_name)
         self.command_name = command_name
+        self.log = log
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -548,9 +549,13 @@ class SpackCommand(object):
         out = StringIO()
         try:
             if sys.platform == 'win32':
-                with winlog(out):
+                if self.log:
+                    with winlog(out):
+                        self.returncode = _invoke_command(
+                            self.command, self.parser, args, unknown)
+                else:
                     self.returncode = _invoke_command(
-                        self.command, self.parser, args, unknown)
+                            self.command, self.parser, args, unknown)
             else:
                 with log_output(out):
                     self.returncode = _invoke_command(
@@ -573,7 +578,13 @@ class SpackCommand(object):
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
-        return out.getvalue()
+        if sys.platform == 'win32':
+            capsys = kwargs.get('out')
+            if capsys is None:
+                return ""
+            return "".join(capsys.readouterr())
+        else:
+            return out.getvalue()
 
     def _log_command_output(self, out):
         if tty.is_verbose():

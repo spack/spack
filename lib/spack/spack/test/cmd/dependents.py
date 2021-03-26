@@ -15,8 +15,8 @@ from spack.main import SpackCommand
 dependents = SpackCommand('dependents')
 
 
-def test_immediate_dependents(mock_packages):
-    out = dependents('libelf')
+def test_immediate_dependents(mock_packages, capsys):
+    out = dependents('libelf', out=capsys)
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set([
         'dyninst',
@@ -28,8 +28,8 @@ def test_immediate_dependents(mock_packages):
     ])
 
 
-def test_transitive_dependents(mock_packages):
-    out = dependents('--transitive', 'libelf')
+def test_transitive_dependents(mock_packages, capsys):
+    out = dependents('--transitive', 'libelf', out=capsys)
     actual = set(re.split(r'\s+', out.strip()))
     assert actual == set([
         'callpath',
@@ -45,9 +45,9 @@ def test_transitive_dependents(mock_packages):
 
 
 @pytest.mark.db
-def test_immediate_installed_dependents(mock_packages, database):
+def test_immediate_installed_dependents(mock_packages, database, capsys):
     with color_when(False):
-        out = dependents('--installed', 'libelf')
+        out = dependents('--installed', 'libelf', out=capsys)
 
     lines = [li for li in out.strip().split('\n') if not li.startswith('--')]
     hashes = set([re.split(r'\s+', li)[0] for li in lines])
@@ -62,9 +62,9 @@ def test_immediate_installed_dependents(mock_packages, database):
 
 
 @pytest.mark.db
-def test_transitive_installed_dependents(mock_packages, database):
+def test_transitive_installed_dependents(mock_packages, database, capsys):
     with color_when(False):
-        out = dependents('--installed', '--transitive', 'fake')
+        out = dependents('--installed', '--transitive', 'fake', out=capsys)
 
     lines = [li for li in out.strip().split('\n') if not li.startswith('--')]
     hashes = set([re.split(r'\s+', li)[0] for li in lines])

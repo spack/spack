@@ -116,17 +116,17 @@ def test_find(database, cli_args, module_type):
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2215')
-def test_find_fails_on_multiple_matches():
+def test_find_fails_on_multiple_matches(capsys):
     # As we installed multiple versions of mpileaks, the command will
     # fail because of multiple matches
-    out = module('tcl', 'find', 'mpileaks', fail_on_error=False)
+    out = module('tcl', 'find', 'mpileaks', fail_on_error=False, out=capsys)
     assert module.returncode == 1
     assert 'matches multiple packages' in out
 
     # Passing multiple packages from the command line also results in the
     # same failure
     out = module(
-        'tcl', 'find', 'mpileaks ^mpich', 'libelf', fail_on_error=False
+        'tcl', 'find', 'mpileaks ^mpich', 'libelf', fail_on_error=False, out=capsys
     )
     assert module.returncode == 1
     assert 'matches multiple packages' in out
@@ -135,23 +135,23 @@ def test_find_fails_on_multiple_matches():
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
 @pytest.mark.regression('2570')
-def test_find_fails_on_non_existing_packages():
+def test_find_fails_on_non_existing_packages(capsys):
     # Another way the command might fail is if the package does not exist
-    out = module('tcl', 'find', 'doesnotexist', fail_on_error=False)
+    out = module('tcl', 'find', 'doesnotexist', fail_on_error=False, out=capsys)
     assert module.returncode == 1
     assert 'matches no package' in out
 
 
 @pytest.mark.db
 @pytest.mark.usefixtures('database')
-def test_find_recursive():
+def test_find_recursive(capsys):
     # If we call find without options it should return only one module
-    out = module('tcl', 'find', 'mpileaks ^zmpi')
+    out = module('tcl', 'find', 'mpileaks ^zmpi', out=capsys)
     assert len(out.split()) == 1
 
     # If instead we call it with the recursive option the length should
     # be greater
-    out = module('tcl', 'find', '-r', 'mpileaks ^zmpi')
+    out = module('tcl', 'find', '-r', 'mpileaks ^zmpi', out=capsys)
     assert len(out.split()) > 1
 
 
@@ -164,11 +164,11 @@ def test_find_recursive_blacklisted(database, module_configuration):
 
 
 @pytest.mark.db
-def test_loads_recursive_blacklisted(database, module_configuration):
+def test_loads_recursive_blacklisted(database, module_configuration, capsys):
     module_configuration('blacklist')
 
     module('lmod', 'refresh', '-y', '--delete-tree')
-    output = module('lmod', 'loads', '-r', 'mpileaks ^mpich')
+    output = module('lmod', 'loads', '-r', 'mpileaks ^mpich', out=capsys)
     lines = output.split('\n')
 
     assert any(re.match(r'[^#]*module load.*mpileaks', ln) for ln in lines)

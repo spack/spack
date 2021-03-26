@@ -77,31 +77,31 @@ def test_url_with_no_version_fails():
     reason="Python 2.6 tests are run in a container, where "
            "networking is super slow"
 )
-def test_url_list():
-    out = url('list')
+def test_url_list(capsys):
+    out = url('list', out=capsys)
     total_urls = len(out.split('\n'))
 
     # The following two options should not change the number of URLs printed.
-    out = url('list', '--color', '--extrapolation')
+    out = url('list', '--color', '--extrapolation', out=capsys)
     colored_urls = len(out.split('\n'))
     assert colored_urls == total_urls
 
     # The following options should print fewer URLs than the default.
     # If they print the same number of URLs, something is horribly broken.
     # If they say we missed 0 URLs, something is probably broken too.
-    out = url('list', '--incorrect-name')
+    out = url('list', '--incorrect-name', out=capsys)
     incorrect_name_urls = len(out.split('\n'))
     assert 0 < incorrect_name_urls < total_urls
 
-    out = url('list', '--incorrect-version')
+    out = url('list', '--incorrect-version', out=capsys)
     incorrect_version_urls = len(out.split('\n'))
     assert 0 < incorrect_version_urls < total_urls
 
-    out = url('list', '--correct-name')
+    out = url('list', '--correct-name', out=capsys)
     correct_name_urls = len(out.split('\n'))
     assert 0 < correct_name_urls < total_urls
 
-    out = url('list', '--correct-version')
+    out = url('list', '--correct-version', out=capsys)
     correct_version_urls = len(out.split('\n'))
     assert 0 < correct_version_urls < total_urls
 
@@ -112,7 +112,7 @@ def test_url_list():
     reason="Python 2.6 tests are run in a container, where "
            "networking is super slow"
 )
-def test_url_summary():
+def test_url_summary(capsys):
     """Test the URL summary command."""
     # test url_summary, the internal function that does the work
     (total_urls, correct_names, correct_versions,
@@ -124,7 +124,7 @@ def test_url_summary():
             sum(version_count_dict.values()) <= total_urls)
 
     # make sure it agrees with the actual command.
-    out = url('summary')
+    out = url('summary', out=capsys)
     out_total_urls = int(
         re.search(r'Total URLs found:\s*(\d+)', out).group(1))
     assert out_total_urls == total_urls
@@ -143,13 +143,12 @@ def test_url_summary():
     reason="Python 2.6 tests are run in a container, where "
            "networking is super slow"
 )
-def test_url_stats(capfd):
-    with capfd.disabled():
-        output = url('stats')
-        npkgs = '%d packages' % len(spack.repo.all_package_names())
-        assert npkgs in output
-        assert 'url' in output
-        assert 'git' in output
-        assert 'schemes' in output
-        assert 'versions' in output
-        assert 'resources' in output
+def test_url_stats(capsys):
+    output = url('stats', out=capsys)
+    npkgs = '%d packages' % len(spack.repo.all_package_names())
+    assert npkgs in output
+    assert 'url' in output
+    assert 'git' in output
+    assert 'schemes' in output
+    assert 'versions' in output
+    assert 'resources' in output

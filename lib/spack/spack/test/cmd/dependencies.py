@@ -17,31 +17,31 @@ mpis = ['mpich', 'mpich2', 'multi-provider-mpi', 'zmpi']
 mpi_deps = ['fake']
 
 
-def test_direct_dependencies(mock_packages):
-    out = dependencies('mpileaks')
+def test_direct_dependencies(mock_packages, capsys):
+    out = dependencies('mpileaks', out=capsys)
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(['callpath'] + mpis)
     assert expected == actual
 
 
-def test_transitive_dependencies(mock_packages):
-    out = dependencies('--transitive', 'mpileaks')
+def test_transitive_dependencies(mock_packages, capsys):
+    out = dependencies('--transitive', 'mpileaks', out=capsys)
     actual = set(re.split(r'\s+', out.strip()))
     expected = set(
         ['callpath', 'dyninst', 'libdwarf', 'libelf'] + mpis + mpi_deps)
     assert expected == actual
 
 
-def test_transitive_dependencies_with_deptypes(mock_packages):
-    out = dependencies('--transitive', '--deptype=link,run', 'dtbuild1')
+def test_transitive_dependencies_with_deptypes(mock_packages, capsys):
+    out = dependencies('--transitive', '--deptype=link,run', 'dtbuild1', out=capsys)
     deps = set(re.split(r'\s+', out.strip()))
     assert set(['dtlink2', 'dtrun2']) == deps
 
-    out = dependencies('--transitive', '--deptype=build', 'dtbuild1')
+    out = dependencies('--transitive', '--deptype=build', 'dtbuild1', out=capsys)
     deps = set(re.split(r'\s+', out.strip()))
     assert set(['dtbuild2', 'dtlink2']) == deps
 
-    out = dependencies('--transitive', '--deptype=link', 'dtbuild1')
+    out = dependencies('--transitive', '--deptype=link', 'dtbuild1', out=capsys)
     deps = set(re.split(r'\s+', out.strip()))
     assert set(['dtlink2']) == deps
 
@@ -64,9 +64,9 @@ def test_direct_installed_dependencies(mock_packages, database):
 
 
 @pytest.mark.db
-def test_transitive_installed_dependencies(mock_packages, database):
+def test_transitive_installed_dependencies(mock_packages, database, capsys):
     with color_when(False):
-        out = dependencies('--installed', '--transitive', 'mpileaks^zmpi')
+        out = dependencies('--installed', '--transitive', 'mpileaks^zmpi', out=capsys)
 
     lines = [
         line for line in out.strip().split('\n')
