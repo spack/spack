@@ -1060,6 +1060,9 @@ class TestConcretize(object):
         # having an additional dependency, but the dependency shouldn't
         # appear in the answer set
         ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
+        # This package has an external version declared that would be
+        # the least preferred if Spack had to build it
+        ('old-external', True, '@1.0.0'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()

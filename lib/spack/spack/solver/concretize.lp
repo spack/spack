@@ -14,12 +14,14 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight),
     not preferred_version_declared(Package, Version, _).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
