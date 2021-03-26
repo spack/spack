@@ -648,6 +648,8 @@ def print_setup_info(*info):
         'lmod': list()
     }
     module_roots = spack.config.get('modules:default:roots', {})
+    module_roots = spack.config.merge_yaml(
+        module_roots, spack.config.get('config:module_roots', {}))
     module_roots = dict(
         (k, v) for k, v in module_roots.items() if k in module_to_roots
     )
