@@ -173,6 +173,12 @@ class Mumps(Package):
             if using_xlf:
                 optf.append('-qfixed')
 
+        # As of version 5.2.0, MUMPS is able to take advantage
+        # of the GEMMT BLAS extension. MKL is currently the only
+        # known BLAS implementation supported.
+        if '@5.2.0: ^mkl' in self.spec:
+            optf.append('-DGEMMT_AVAILABLE')
+
         makefile_conf.extend([
             'OPTC = {0}'.format(' '.join(optc)),
             'OPTF = {0}'.format(' '.join(optf)),
