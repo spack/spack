@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.mpi import MPIRunner
 
 
 class Mpt(Package):
@@ -65,6 +66,11 @@ class Mpt(Package):
             self.spec.mpicxx = self.prefix.bin.mpicxx
             self.spec.mpifc = self.prefix.bin.mpif90
             self.spec.mpif77 = self.prefix.bin.mpif77
+
+        self.spec.runner = MPIRunner.query_mgr_pref(
+            'srun',
+            self.prefix.bin
+        )
 
     @property
     def fetcher(self):

@@ -6,6 +6,7 @@
 import re
 import os.path
 import sys
+from spack.util.mpi import MPIRunner
 
 
 class Mvapich2(AutotoolsPackage):
@@ -381,6 +382,17 @@ class Mvapich2(AutotoolsPackage):
             os.path.join(self.prefix.lib, 'libmpicxx.{0}'.format(dso_suffix)),
             os.path.join(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
+
+        if 'process_managers=slurm' in self.spec:
+            self.spec.runner = MPIRunner(
+                self.spec['slurm'].prefix.bin.srun,
+                'slurm'
+            )
+        else:
+            self.spec.runner = MPIRunner(
+                self.spec.prefix.bin.mpirun,
+                'mpirun'
+            )
 
     @run_before('configure')
     def die_without_fortran(self):
