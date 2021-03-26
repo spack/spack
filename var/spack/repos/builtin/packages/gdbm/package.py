@@ -16,7 +16,6 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     homepage = "http://www.gnu.org.ua/software/gdbm/gdbm.html"
     gnu_mirror_path = "gdbm/gdbm-1.13.tar.gz"
 
-    version('1.19.1', sha256='37ed12214122b972e18a0d94995039e57748191939ef74115b1d41d8811364bc')
     version('1.19',   sha256='37ed12214122b972e18a0d94995039e57748191939ef74115b1d41d8811364bc')
     version('1.18.1', sha256='86e613527e5dba544e73208f42b78b7c022d4fa5a6d5498bf18c8d6f745b91dc')
     version('1.14.1', sha256='cdceff00ffe014495bed3aed71c7910aa88bf29379f795abc0f46d4ee5f8bc5f')
@@ -28,11 +27,11 @@ class Gdbm(AutotoolsPackage, GNUMirrorPackage):
     version('1.9',    sha256='f85324d7de3777db167581fd5d3493d2daa3e85e195a8ae9afc05b34551b6e57')
 
     depends_on("readline")
-    patch('gdbm.patch', when='@:1.18.1%gcc@10:')
-    patch('gdbm.patch', when='@:1.18.1%clang@11:')
-    patch('gdbm.patch', when='@:1.18.1%cce@11:')
-    patch('gdbm.patch', when='@:1.18.1%aocc@2:')
-    patch('gdbm.patch', when='@:1.18.1%oneapi')
+    patch('gdbm.patch', when='@:1.18 %gcc@10:')
+    patch('gdbm.patch', when='@:1.18 %clang@11:')
+    patch('gdbm.patch', when='@:1.18 %cce@11:')
+    patch('gdbm.patch', when='@:1.18 %aocc@2:')
+    patch('gdbm.patch', when='@:1.18 %oneapi')
 
     def configure_args(self):
 
