@@ -60,12 +60,12 @@ class Mumps(Package):
     patch('mumps.src-makefile.5.2.patch', when='@5.2.0 +shared')
     patch('mumps.src-makefile.5.3.patch', when='@5.3.0: +shared')
 
-    def write_makefile_inc(self):
-        if ('+parmetis' in self.spec or '+ptscotch' in self.spec) and (
-                '+mpi' not in self.spec):
-            raise RuntimeError(
-                'You cannot use the variants parmetis or ptscotch without mpi')
+    conflicts('+parmetis', when='~mpi',
+              msg="You cannot use the parmetis variant without mpi")
+    conflicts('+ptscotch', when='~mpi',
+              msg="You cannot use the ptscotch variant without mpi")
 
+    def write_makefile_inc(self):
         # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
         # used to link the examples, so if building '+shared' there is no need
         # to explicitly link with the respective libraries because we make sure
