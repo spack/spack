@@ -344,6 +344,15 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 :- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
 
+% Some multi valued variants accept multiple values from disjoint sets.
+% Ensure that we respect that constraint and we don't pick values from more
+% than one set at once
+:- variant_value(Package, Variant, Value1),
+   variant_value(Package, Variant, Value2),
+   variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
+   variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
+   Set1 != Set2.
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -403,6 +412,7 @@ variant_single_value(Package, "dev_path")
 #defined variant_possible_value/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
+#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics

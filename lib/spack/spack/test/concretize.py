@@ -1110,3 +1110,35 @@ class TestConcretize(object):
         s = Spec(spec_str)
         with pytest.raises(RuntimeError, match='not found in package'):
             s.concretize()
+
+    @pytest.mark.regression('22533')
+    @pytest.mark.parametrize('spec_str,variant_name,expected_values', [
+        # Test the default value 'auto'
+        ('mvapich2', 'file_systems', ('auto',)),
+        # Test setting a single value from the disjoint set
+        ('mvapich2 file_systems=lustre', 'file_systems', ('lustre',)),
+        # Test setting multiple values from the disjoint set
+        ('mvapich2 file_systems=lustre,gpfs', 'file_systems',
+         ('lustre', 'gpfs')),
+    ])
+    def test_mv_variants_disjoint_sets_from_spec(
+            self, spec_str, variant_name, expected_values
+    ):
+        s = Spec(spec_str).concretized()
+        assert set(expected_values) == set(s.variants[variant_name].value)
+
+    @pytest.mark.regression('22533')
+    def test_mv_variants_disjoint_sets_from_packages_yaml(self):
+        external_mvapich2 = {
+            'mvapich2': {
+                'buildable': False,
+                'externals': [{
+                    'spec': 'mvapich2@2.3.1 file_systems=nfs,ufs',
+                    'prefix': '/usr'
+                }]
+            }
+        }
+        spack.config.set('packages', external_mvapich2)
+
+        s = Spec('mvapich2').concretized()
+        assert set(s.variants['file_systems'].value) == set(['ufs', 'nfs'])
