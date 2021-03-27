@@ -17,6 +17,6 @@ class Graphite2(CMakePackage):
 
     version('1.3.13', sha256='dd63e169b0d3cf954b397c122551ab9343e0696fb2045e1b326db0202d875f06')
 
-    depends_on('python@3.6:')
+    depends_on('python@3.6:', type='run')
 
     patch('regparm.patch')
