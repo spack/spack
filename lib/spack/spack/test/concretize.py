@@ -1142,3 +1142,13 @@ class TestConcretize(object):
 
         s = Spec('mvapich2').concretized()
         assert set(s.variants['file_systems'].value) == set(['ufs', 'nfs'])
+
+    @pytest.mark.regression('22596')
+    def test_external_with_non_default_variant_as_dependency(self):
+        # This package depends on another that is registered as an external
+        # with 'buildable: true' and a variant with a non-default value set
+        s = Spec('trigger-external-non-default-variant').concretized()
+
+        assert '~foo' in s['external-non-default-variant']
+        assert '~bar' in s['external-non-default-variant']
+        assert s['external-non-default-variant'].external

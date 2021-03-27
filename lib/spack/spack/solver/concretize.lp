@@ -360,23 +360,40 @@ variant_value(Package, Variant, Value)
     variant(Package, Variant),
     variant_set(Package, Variant, Value).
 
-% prefer default values.
+% The rules below allow us to prefer default values for variants
+% whenever possible. If a variant is set in a spec, or if it is
+% specified in an external, we score it as if it was a default value.
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
     not variant_set(Package, Variant, Value),
+    not external_with_variant_set(Package, Variant, Value),
     node(Package).
 
+% We are using the default value for a variant
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
 
+% The variant is set in the spec
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_set(Package, Variant, Value),
     node(Package).
 
+% The variant is set in an external spec
+external_with_variant_set(Package, Variant, Value)
+ :- variant_value(Package, Variant, Value),
+    condition_requirement(ID, "variant_value", Package, Variant, Value),
+    possible_external(ID, Package, _),
+    external(Package),
+    node(Package).
+
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    external_with_variant_set(Package, Variant, Value),
+    node(Package).
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
