@@ -41,3 +41,8 @@ packages:
     externals:
       - spec: old-external@1.0.0
         prefix: /usr
+  'external-non-default-variant':
+    buildable: True
+    externals:
+      - spec: external-non-default-variant@3.8.7~foo~bar
+        prefix: /usr
