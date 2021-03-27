@@ -153,6 +153,8 @@ class Nvhpc(Package):
             self.spec.mpif77 = join_path(mpi_prefix.bin, 'mpif77')
             self.spec.mpifc  = join_path(mpi_prefix.bin, 'mpif90')
 
+            # First query for 'srun' in the environment and if it doesn't
+            # exist use either 'mpirun' or 'mpiexec'
             self.spec.runner = MPIRunner.query_mgr_pref(
                 'srun',
                 mpi_prefix.bin

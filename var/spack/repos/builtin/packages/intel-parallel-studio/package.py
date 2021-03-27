@@ -246,6 +246,9 @@ class IntelParallelStudio(IntelPackage):
             env.set(name, value)
 
     def setup_dependent_package(self, module, dependent_spec):
+        # First query for 'srun' in the environment and if it doesn't exist
+        # use either 'mpirun' or 'mpiexec', both of which could be either in
+        # $I_MPI_ROOT/intel64 or $I_MPI_ROOT/ia32
         mpiroot_dir = os.environ['I_MPI_ROOT']
         mpibin_dir = join_path(mpiroot_dir, 'intel64', 'bin')
         self.spec.runner = MPIRunner.query_mgr_pref(

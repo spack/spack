@@ -213,15 +213,18 @@ class Mvapich2x(AutotoolsPackage):
             os.path.join(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-        if 'process_managers=slurm' in self.spec:
+        # If we have slurm in spec use that as the resource manager, otherwise
+        # query for 'srun' in the environment and if it doesn't exist use
+        # either 'mpirun' or 'mpiexec'
+        if 'process_managers=slurm' in self.spec and 'slurm' in self.spec:
             self.spec.runner = MPIRunner(
                 self.spec['slurm'].prefix.bin.srun,
                 'slurm'
             )
         else:
-            self.spec.runner = MPIRunner(
-                self.spec.prefix.bin.mpirun,
-                'mpirun'
+            self.spec.runner = MPIRunner.query_mgr_pref(
+                'srun',
+                self.prefix.bin
             )
 
     def configure_args(self):

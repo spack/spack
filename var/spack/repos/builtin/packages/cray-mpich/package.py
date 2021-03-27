@@ -55,6 +55,8 @@ class CrayMpich(Package):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
+        # First query for 'srun' in the environment and if it doesn't exist
+        # use either 'mpirun' or 'mpiexec'
         spec.runner = MPIRunner.query_mgr_pref(
             'srun',
             self.prefix.bin

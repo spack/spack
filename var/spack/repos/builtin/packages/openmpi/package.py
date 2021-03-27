@@ -521,13 +521,17 @@ class Openmpi(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-        if 'schedulers=slurm' in self.spec:
+        # If we have slurm in spec use that as the resource manager, otherwise
+        # query for 'srun' in the environment and if it doesn't exist use
+        # either 'mpirun' or 'mpiexec'
+        if 'schedulers=slurm' in self.spec and 'slurm' in self.spec:
             self.spec.runner = MPIRunner(
                 self.spec['slurm'].prefix.bin.srun,
                 'slurm'
             )
         else:
-            self.spec.runner = MPIRunner.query_mpi_pref(
+            self.spec.runner = MPIRunner.query_mgr_pref(
+                'srun',
                 self.prefix.bin
             )
 
