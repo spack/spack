@@ -185,6 +185,12 @@ class OrderedLineDumper(RoundTripDumper):
         """Make the dumper NEVER print YAML aliases."""
         return True
 
+    def represent_data(self, data):
+        result = super(OrderedLineDumper, self).represent_data(data)
+        if data is None:
+            result.value = syaml_str("null")
+        return result
+
     def represent_str(self, data):
         if hasattr(data, 'override') and data.override:
             data = data + ':'
@@ -262,7 +268,9 @@ class LineAnnotationDumper(OrderedLineDumper):
     def represent_data(self, data):
         """Force syaml_str to be passed through with marks."""
         result = super(LineAnnotationDumper, self).represent_data(data)
-        if isinstance(result.value, string_types):
+        if data is None:
+            result.value = syaml_str("null")
+        elif isinstance(result.value, string_types):
             result.value = syaml_str(data)
         if markable(result.value):
             mark(result.value, data)
