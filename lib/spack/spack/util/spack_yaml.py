@@ -13,6 +13,7 @@
 
 """
 import ctypes
+import re
 import sys
 from typing import List  # novm
 
@@ -276,13 +277,10 @@ class LineAnnotationDumper(OrderedLineDumper):
             mark(result.value, data)
         return result
 
-    def write_stream_start(self):
-        super(LineAnnotationDumper, self).write_stream_start()
-        _annotations.append(colorize('@K{---}'))
-
     def write_line_break(self):
         super(LineAnnotationDumper, self).write_line_break()
-        if not self.saved:
+        if self.saved is None:
+            _annotations.append(colorize('@K{---}'))
             return
 
         # append annotations at the end of each line
@@ -330,7 +328,10 @@ def dump_annotated(data, stream=None, *args, **kwargs):
 
     sio = StringIO()
     yaml.dump(data, sio, *args, **kwargs)
-    lines = sio.getvalue().rstrip().split('\n')
+
+    # write_line_break() is not called by YAML for empty lines, so we
+    # skip empty lines here with \n+.
+    lines = re.split(r"\n+", sio.getvalue().rstrip())
 
     getvalue = None
     if stream is None:
