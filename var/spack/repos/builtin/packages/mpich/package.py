@@ -359,15 +359,18 @@ spack package at this time.''',
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-        if '+slurm' in spec:
+        # If we have slurm in spec use that as the resource manager, otherwise
+        # query for 'srun' in the environment and if it doesn't exist use
+        # either 'mpirun' or 'mpiexec'
+        if '+slurm' in spec and 'slurm' in spec:
             spec.runner = MPIRunner(
                 spec['slurm'].prefix.bin.srun,
                 'slurm'
             )
         else:
-            spec.runner = MPIRunner(
-                spec.prefix.bin.mpirun,
-                'mpirun'
+            self.spec.runner = MPIRunner.query_mgr_pref(
+                'srun',
+                self.prefix.bin
             )
 
     def autoreconf(self, spec, prefix):

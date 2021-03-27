@@ -67,6 +67,8 @@ class Mpt(Package):
             self.spec.mpifc = self.prefix.bin.mpif90
             self.spec.mpif77 = self.prefix.bin.mpif77
 
+        # First query for 'srun' in the environment and if it doesn't exist
+        # use either 'mpirun' or 'mpiexec'
         self.spec.runner = MPIRunner.query_mgr_pref(
             'srun',
             self.prefix.bin
