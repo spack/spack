@@ -12,7 +12,7 @@ class Nekrs(Package):
        element method targeting classical processors and hardware accelerators
        like GPUs"""
 
-    homepage = "https://github.com/Nek5000/nekRS.git"
+    homepage = "https://github.com/Nek5000/nekRS"
     git      = "https://github.com/Nek5000/nekRS.git"
 
     tags = ['cfd', 'flow', 'hpc', 'solver', 'navier-stokes',
@@ -23,6 +23,7 @@ class Nekrs(Package):
     # TODO: Make sure that we only use gcc
 
     version('develop', branch='master')
+    version('21.0', tag='v21.0')
 
     variant('cuda',
             default=False,
@@ -151,27 +152,6 @@ class Nekrs(Package):
         fc  = spec['mpi'].mpifc
         cxx = spec['mpi'].mpicxx
 
-        fflags = spec.compiler_flags['fflags']
-        cflags = spec.compiler_flags['cflags']
-        cxxflags = spec.compiler_flags['cxxflags']
-
-        if self.compiler.name in ['xl', 'xl_r']:
-            # Use '-qextname' to add underscores.
-            # Use '-WF,-qnotrigraph' to fix an error about a string: '... ??'
-            fflags += ['-qextname', '-WF,-qnotrigraph']
-
-        error = Executable(fc)('empty.f', output=str, error=str,
-                               fail_on_error=False)
-
-        if 'gfortran' in error or 'GNU' in error or 'gfortran' in fc:
-            # Use '-std=legacy' to suppress an error that used to be a
-            # warning in previous versions of gfortran.
-            fflags += ['-std=legacy']
-
-        fflags = ' '.join(fflags)
-        cflags = ' '.join(cflags)
-        cxxflags = ' '.join(cxxflags)
-
         with working_dir(script_dir):
             # Make sure nekmpi wrapper uses srun when we know OpenMPI
             # is not built with mpiexec
@@ -185,5 +165,6 @@ class Nekrs(Package):
         makenrs.add_default_env("NEKRS_CC", cc)
         makenrs.add_default_env("NEKRS_CXX", cxx)
         makenrs.add_default_env("NEKRS_FC", fc)
+        makenrs.add_default_env("TRAVIS", "true")
 
-        error = makenrs(output=str, error=str, fail_on_error=True)
+        makenrs(output=str, error=str, fail_on_error=True)
