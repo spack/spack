@@ -127,10 +127,7 @@ class Nekrs(Package):
         else:
             env.set('OCCA_HIP_ENABLED', '0')
 
-        if '+opencl' in spec:
-            env.set('OCCA_OPENCL_ENABLED', '1')
-        else:
-            env.set('OCCA_OPENCL_ENABLED', '0')
+        env.set('OCCA_OPENCL_ENABLED', if '+opencl' in spec else '0')
 
         # Setup run-time environment for testing.
         env.set('OCCA_VERBOSE', '1')
