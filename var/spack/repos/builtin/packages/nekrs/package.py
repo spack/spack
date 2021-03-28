@@ -121,13 +121,8 @@ class Nekrs(Package):
         else:
             env.set('OCCA_CUDA_ENABLED', '0')
 
-        # Disable hip autodetection for now since it fails on some machines.
-        if '+hip' in spec:
-            env.set('OCCA_HIP_ENABLED', '1')
-        else:
-            env.set('OCCA_HIP_ENABLED', '0')
-
         env.set('OCCA_OPENCL_ENABLED', '1' if '+opencl' in spec else '0')
+        env.set('OCCA_HIP_ENABLED', '1' if '+hip' in spec else '0')
 
         # Setup run-time environment for testing.
         env.set('OCCA_VERBOSE', '1')
@@ -145,10 +140,6 @@ class Nekrs(Package):
     def install(self, spec, prefix):
         script_dir = 'scripts'
 
-        cc  = spec['mpi'].mpicc
-        fc  = spec['mpi'].mpifc
-        cxx = spec['mpi'].mpicxx
-
         with working_dir(script_dir):
             # Make sure nekmpi wrapper uses srun when we know OpenMPI
             # is not built with mpiexec
@@ -158,10 +149,11 @@ class Nekrs(Package):
                 filter_file(r'mpirun -np', 'srun -n', 'nrsbmpi')
 
         makenrs = Executable(os.path.join(os.getcwd(), "makenrs"))
+
         makenrs.add_default_env("NEKRS_INSTALL_DIR", prefix)
-        makenrs.add_default_env("NEKRS_CC", cc)
-        makenrs.add_default_env("NEKRS_CXX", cxx)
-        makenrs.add_default_env("NEKRS_FC", fc)
+        makenrs.add_default_env("NEKRS_CC", spec['mpi'].mpicc)
+        makenrs.add_default_env("NEKRS_CXX", spec['mpi'].mpicxx)
+        makenrs.add_default_env("NEKRS_FC", spec['mpi'].mpifc)
         makenrs.add_default_env("TRAVIS", "true")
 
         makenrs(output=str, error=str, fail_on_error=True)
