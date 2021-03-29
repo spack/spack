@@ -10,6 +10,7 @@ from llnl.util.filesystem import mkdirp
 
 from spack.util.editor import editor
 from spack.util.executable import Executable, which
+from llnl.util.symlink import symlink
 
 
 def pre_install(spec):
@@ -179,6 +180,6 @@ def symlink_license(pkg):
             os.remove(link_name)
 
         if os.path.exists(target):
-            os.symlink(target, link_name)
+            symlink(target, link_name)
             tty.msg("Added local symlink %s to global license file" %
                     link_name)
