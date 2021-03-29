@@ -134,10 +134,15 @@ class Slepc(Package):
         # set up SLEPC_DIR for everyone using SLEPc package
         env.set('SLEPC_DIR', self.prefix)
 
-    def  run_pep_test11(self):
+    def run_pep_test11(self):
         """Run smoke test: pep test11"""
         tests_dir = self.prefix.share.slepc.examples.src.pep.tests
 
+        if not os.path.exists(tests_dir):
+            print("Does not exist")
+            return
+
+        output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
         exe = 'test11'
 
         expected_output = get_escaped_text_output(output_dir.join('test11_1.out'))
@@ -147,3 +152,4 @@ class Slepc(Package):
         output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
         var = get_escaped_text_output(output_dir.join('test11_1.out'))
         print(var)
+        self.run_pep_test11()
