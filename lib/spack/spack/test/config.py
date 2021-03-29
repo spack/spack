@@ -1135,7 +1135,7 @@ def test_single_file_scope_cache_clearing(env_yaml):
 
 
 @pytest.mark.regression('22611')
-def test_internal_config_cache():
+def test_internal_config_scope_cache_clearing():
     """
     An InternalConfigScope object is constructed from data that is already
     in memory, therefore it doesn't have any cache to clear. Here we ensure
