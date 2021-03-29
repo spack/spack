@@ -17,7 +17,7 @@ class Hiop(CMakePackage, CudaPackage):
     git = "https://github.com/LLNL/hiop.git"
 
     # Most recent tagged snapshot is the preferred version when profiling.
-    version('0.3.99.3', tag='v0.3.99.3', preferred=True)
+    version('0.3.99.3', tag='v0.3.99.3')
     version('0.3.99.2', tag='v0.3.99.2')
     version('0.3.99.1', tag='v0.3.99.1')
     version('0.3.99.0', tag='v0.3.99.0')
