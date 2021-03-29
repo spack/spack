@@ -1132,3 +1132,14 @@ def test_single_file_scope_cache_clearing(env_yaml):
     after = scope.get_section('config')
     assert after
     assert before == after
+
+
+def test_internal_config_cache():
+    config = spack.config.Configuration()
+    config.push_scope(spack.config.InternalConfigScope('internal', {
+        'config': {
+            'build_jobs': 10
+        }
+    }))
+    config.clear_caches()
+    assert config.get('config:build_jobs') == 10
