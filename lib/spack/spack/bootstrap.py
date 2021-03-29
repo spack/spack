@@ -207,7 +207,7 @@ def _bootstrap_config_scopes():
         )
         generic_scope = spack.config.ConfigScope(name, path)
         config_scopes.extend([generic_scope, platform_scope])
-        msg = '[BOOSTRAP CONFIG SCOPE] name={0}, path={1}'
+        msg = '[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}'
         tty.debug(msg.format(generic_scope.name, generic_scope.path))
         tty.debug(msg.format(platform_scope.name, platform_scope.path))
     return config_scopes
