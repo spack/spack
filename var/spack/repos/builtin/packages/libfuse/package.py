@@ -29,6 +29,7 @@ class Libfuse(MesonPackage):
 
     conflicts("+useroot", when='~system_install', msg="useroot requires system_install")
 
+    # Drops the install script which does system configuration
     patch('0001-Do-not-run-install-script.patch', when='~system_install')
 
     executables = ['^fusermount$']
