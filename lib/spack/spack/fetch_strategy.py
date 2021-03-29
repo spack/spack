@@ -46,6 +46,7 @@ from spack.util.compression import decompressor_for, extension
 from spack.util.executable import which, CommandNotFoundError
 from spack.util.string import comma_and, quote
 from spack.version import Version, ver
+from llnl.util.symlink import symlink
 
 #: List of all fetch strategies, created by FetchStrategy metaclass.
 all_strategies = []
@@ -624,11 +625,8 @@ class CacheURLFetchStrategy(URLFetchStrategy):
         if os.path.exists(filename):
             os.remove(filename)
 
-        if sys.platform == "win32":
-            shutil.copyfile(path, filename)
-        else:
-            # Symlink to local cached archive.
-            os.symlink(path, filename)
+        # Symlink to local cached archive.
+        symlink(path, filename)
 
         # Remove link if checksum fails, or subsequent fetchers
         # will assume they don't need to download.
