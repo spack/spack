@@ -57,17 +57,18 @@ class IntelOneApiPackage(Package):
             raise RuntimeError('install failed')
 
     def setup_run_environment(self, env):
-
         """Adds environment variables to the generated module file.
 
         These environment variables come from running:
 
         .. code-block:: console
 
-           $ source {prefix}/setvars.sh --force
+           $ source {prefix}/{component}/{version}/env/vars.sh
         """
         env.extend(EnvironmentModifications.from_sourcing_file(
-            join(self.prefix, self.component_dir, 'latest/env/vars.sh')))
+            join(self.prefix,
+                 self.component_dir,
+                 '{0}/env/vars.sh'.format(self.spec.version))))
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
@@ -75,12 +76,17 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
     @property
     def headers(self):
-        include_path = '%s/%s/latest/include' % (
-            self.prefix, self.component_dir)
+        include_path = '{0}/{1}/{2}/include'.format(
+            self.prefix,
+            self.component_dir,
+            self.spec.version
+        )
         return find_headers('*', include_path, recursive=True)
 
     @property
     def libs(self):
-        lib_path = '%s/%s/latest/lib/intel64' % (self.prefix, self.component_dir)
+        lib_path = '{0}/{1}/{2}/lib/intel64'.format(self.prefix,
+                                                    self.component_dir,
+                                                    self.spec.version)
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
         return find_libraries('*', root=lib_path, shared=True, recursive=True)
