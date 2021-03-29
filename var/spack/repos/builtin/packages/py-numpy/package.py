@@ -253,6 +253,35 @@ class PyNumpy(PythonPackage):
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
 
+            if '^fujitsu-ssl2' in spec:
+                if spec.satisfies('+blas'):
+                    f.write('[blas]\n')
+                    f.write('libraries = {0}\n'.format(spec['blas'].libs.names[0]))
+                    write_library_dirs(f, blas_lib_dirs)
+                    path = join_path(
+                        spec["blas"].prefix,
+                        "clang-comp",
+                        "lib64",
+                        "clang",
+                        "7.1.0",
+                        "include",
+                    )
+                    f.write('include_dirs = {0}\n'.format(path))
+
+                if spec.satisfies('+lapack'):
+                    f.write('[lapack]\n')
+                    f.write('libraries = {0}\n'.format(spec['lapack'].libs.names[0]))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    path = join_path(
+                        spec["lapack"].prefix,
+                        "clang-comp",
+                        "lib64",
+                        "clang",
+                        "7.1.0",
+                        "include",
+                    )
+                    f.write('include_dirs = {0}\n'.format(path))
+
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.
         # https://github.com/numpy/numpy/pull/13132
@@ -273,6 +302,9 @@ class PyNumpy(PythonPackage):
             blas = 'atlas'
         elif spec['blas'].name == 'veclibfort':
             blas = 'accelerate'
+        elif spec['blas'].name == 'fujitsu-ssl2':
+            blas = 'blas'
+            env.append_flags('LDFLAGS', self.spec["blas"].libs.ld_flags)
         else:
             blas = 'blas'
 
@@ -292,6 +324,9 @@ class PyNumpy(PythonPackage):
             lapack = 'atlas'
         elif spec['lapack'].name == 'veclibfort':
             lapack = 'accelerate'
+        elif spec['lapack'].name == 'fujitsu-ssl2':
+            lapack = 'lapack'
+            env.append_flags('LDFLAGS', self.spec["lapack"].libs.ld_flags)
         else:
             lapack = 'lapack'
 
