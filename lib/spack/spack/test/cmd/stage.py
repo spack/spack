@@ -13,8 +13,10 @@ from spack.version import Version
 stage = SpackCommand('stage')
 env = SpackCommand('env')
 
+pytestmark = pytest.mark.usefixtures('install_mockery', 'mock_packages')
 
-def test_stage_spec(mock_packages, monkeypatch):
+
+def test_stage_spec(monkeypatch):
     """Verify that staging specs works."""
 
     expected = set(['trivial-install-test-package', 'mpileaks'])
@@ -29,7 +31,7 @@ def test_stage_spec(mock_packages, monkeypatch):
     assert len(expected) == 0
 
 
-def test_stage_path(mock_packages, monkeypatch):
+def test_stage_path(monkeypatch):
     """Verify that --path only works with single specs."""
 
     def fake_stage(pkg, mirror_only=False):
@@ -40,7 +42,7 @@ def test_stage_path(mock_packages, monkeypatch):
     stage('--path=x', 'trivial-install-test-package')
 
 
-def test_stage_path_errors_multiple_specs(mock_packages, monkeypatch):
+def test_stage_path_errors_multiple_specs(monkeypatch):
     """Verify that --path only works with single specs."""
 
     def fake_stage(pkg, mirror_only=False):
@@ -52,7 +54,7 @@ def test_stage_path_errors_multiple_specs(mock_packages, monkeypatch):
         stage('--path=x', 'trivial-install-test-package', 'mpileaks')
 
 
-def test_stage_with_env_outside_env(mock_packages, mutable_mock_env_path, monkeypatch):
+def test_stage_with_env_outside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage concretizes specs not in environment instead of erroring."""
 
     def fake_stage(pkg, mirror_only=False):
@@ -69,7 +71,7 @@ def test_stage_with_env_outside_env(mock_packages, mutable_mock_env_path, monkey
         stage('trivial-install-test-package')
 
 
-def test_stage_with_env_inside_env(mock_packages, mutable_mock_env_path, monkeypatch):
+def test_stage_with_env_inside_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment instead of reconcretizing."""
 
     def fake_stage(pkg, mirror_only=False):
@@ -86,7 +88,7 @@ def test_stage_with_env_inside_env(mock_packages, mutable_mock_env_path, monkeyp
         stage('mpileaks')
 
 
-def test_stage_full_env(mock_packages, mutable_mock_env_path, monkeypatch):
+def test_stage_full_env(mutable_mock_env_path, monkeypatch):
     """Verify that stage filters specs in environment."""
 
     e = ev.create('test')
