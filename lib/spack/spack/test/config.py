@@ -1134,7 +1134,13 @@ def test_single_file_scope_cache_clearing(env_yaml):
     assert before == after
 
 
+@pytest.mark.regression('22611')
 def test_internal_config_cache():
+    """
+    An InternalConfigScope object is constructed from data that is already
+    in memory, therefore it doesn't have any cache to clear. Here we ensure
+    that calling the clear method is a no-op.
+    """
     config = spack.config.Configuration()
     config.push_scope(spack.config.InternalConfigScope('internal', {
         'config': {
