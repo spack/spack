@@ -14,6 +14,8 @@ import filecmp
 from llnl.util.filesystem import traverse_tree, mkdirp, touch
 import llnl.util.tty as tty
 
+from llnl.util.symlink import symlink
+
 __all__ = ['LinkTree']
 
 empty_file_name = '.spack-empty'
@@ -113,7 +115,7 @@ class LinkTree(object):
                     os.remove(marker)
 
     def merge(self, dest_root, ignore_conflicts=False, ignore=None,
-              link=os.symlink, relative=False):
+              link=symlink, relative=False):
         """Link all files in src into dest, creating directories
            if necessary.
 
@@ -125,7 +127,7 @@ class LinkTree(object):
         ignore (callable): callable that returns True if a file is to be
             ignored in the merge (by default ignore nothing)
 
-        link (callable): function to create links with (defaults to os.symlink)
+        link (callable): function to create links with (defaults to llnl.util.symlink)
 
         relative (bool): create all symlinks relative to the target
             (default False)

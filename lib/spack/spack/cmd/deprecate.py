@@ -26,6 +26,7 @@ import spack.environment as ev
 
 from spack.error import SpackError
 from spack.database import InstallStatuses
+from llnl.util.symlink import symlink
 
 description = "Replace one package with another via symlinks"
 section = "admin"
@@ -123,7 +124,7 @@ def deprecate(parser, args):
         if not answer:
             tty.die('Will not deprecate any packages.')
 
-    link_fn = os.link if args.link_type == 'hard' else os.symlink
+    link_fn = os.link if args.link_type == 'hard' else symlink
 
     for dcate, dcator in zip(all_deprecate, all_deprecators):
         dcate.package.do_deprecate(dcator, link_fn)
