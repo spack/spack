@@ -815,30 +815,29 @@ class TestConcretize(object):
             assert s.satisfies(constraint)
 
     @pytest.mark.regression('4635')
-    @pytest.mark.parametrize('spec_str,expected', [
-        ('cmake', ['%clang']),
-        ('cmake %gcc', ['%gcc']),
-        ('cmake %clang', ['%clang'])
+    @pytest.mark.parametrize('comp_spec,ext_comp_spec,expected', [
+        ('', '', ['%clang']),
+        ('%gcc', '', ['%gcc']),
+        ('%gcc@4.4.0', '%gcc', ['%gcc@4.4.0']),
+        ('%clang', '', ['%clang'])
     ])
     def test_external_package_and_compiler_preferences(
-            self, spec_str, expected
+            self, comp_spec, ext_comp_spec, expected
     ):
-        if spack.config.get('config:concretizer') == 'original':
-            pytest.xfail('Known failure of the original concretizer')
-
         packages_yaml = {
             'all': {
                 'compiler': ['clang', 'gcc'],
             },
             'cmake': {
                 'externals': [
-                    {'spec': 'cmake@3.4.3', 'prefix': '/usr'}
+                    {'spec': 'cmake@3.4.3{0}'.format(ext_comp_spec),
+                     'prefix': '/usr'}
                 ],
                 'buildable': False
             }
         }
         spack.config.set('packages', packages_yaml)
-        s = Spec(spec_str).concretized()
+        s = Spec('cmake {0}'.format(comp_spec)).concretized()
 
         assert s.external
         for condition in expected:
