@@ -220,6 +220,10 @@ class Opencv(CMakePackage, CudaPackage):
                 cuda_arch = spec.variants['cuda_arch'].value
                 args.append(self.define('CUDA_ARCH_BIN', ' '.join(cuda_arch)))
 
+        # TODO: this CMake flag is deprecated
+        if spec.target.family == 'ppc64le':
+            args.append(self.define('ENABLE_VSX', True))
+
         # Media I/O
         zlib = spec['zlib']
         args.extend([
