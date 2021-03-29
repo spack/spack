@@ -1,24 +1,14 @@
 --- spack-src/configure.ac	2021-01-21 03:04:56.000000000 +0900
 +++ spack-src-fj/configure.ac	2021-03-08 10:39:30.975059712 +0900
-@@ -2910,6 +2910,9 @@
-     if test "$pac_cv_have_float16" = "yes" ; then
-         AC_DEFINE(HAVE_FLOAT16,1,[Define if _Float16 is supported])
-     fi
-+    TYPE_FLOAT16=_Float16
-+else
-+    TYPE_FLOAT16=
+@@ -3390,7 +3390,7 @@
+ if test ${len_long_double__Complex} != 0 ; then
+     MPI_C_LONG_DOUBLE_COMPLEX=0x4c00${len_long_double__Complex}42
  fi
- 
- # ----------------------------------------------------------------------------
-@@ -3066,7 +3069,7 @@
- for type in short int long long_long float double long_double wchar_t \
-     float_int double_int long_int short_int two_int long_double_int     \
-     _Bool float__Complex double__Complex long_double__Complex \
--    _Float16; do
-+    $TYPE_FLOAT16; do
-     eval len=\$ac_cv_sizeof_$type
-     if test -z "$len" ; then
-        len=0
+-if test ${len__Float16} != 0 ; then
++if test ${len__Float16} != 0 -a "$MPID_NO_FLOAT16" != "yes"; then
+     MPIX_C_FLOAT16=0x4c000246
+ fi
+
 --- spack-src/autogen.sh	2021-01-21 03:04:56.000000000 +0900
 +++ spack-src-fj/autogen.sh	2021-03-08 13:16:57.458375128 +0900
 @@ -371,14 +371,14 @@
