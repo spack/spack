@@ -33,6 +33,11 @@ class IntelOneApiPackage(Package):
         """Subdirectory for this component in the install prefix."""
         raise NotImplementedError
 
+    @property
+    def component_path(self):
+        """Path to component <prefix>/<component>/<version>."""
+        return join(self.prefix, self.component_dir, str(self.spec.version))
+
     def install(self, spec, prefix, installer_path=None):
         """Shared install method for all oneapi packages."""
 
@@ -66,9 +71,7 @@ class IntelOneApiPackage(Package):
            $ source {prefix}/{component}/{version}/env/vars.sh
         """
         env.extend(EnvironmentModifications.from_sourcing_file(
-            join(self.prefix,
-                 self.component_dir,
-                 '{0}/env/vars.sh'.format(self.spec.version))))
+            join(self.component_path, 'env', 'vars.sh')))
 
 
 class IntelOneApiLibraryPackage(IntelOneApiPackage):
@@ -76,17 +79,11 @@ class IntelOneApiLibraryPackage(IntelOneApiPackage):
 
     @property
     def headers(self):
-        include_path = '{0}/{1}/{2}/include'.format(
-            self.prefix,
-            self.component_dir,
-            self.spec.version
-        )
+        include_path = join(self.component_path, 'include')
         return find_headers('*', include_path, recursive=True)
 
     @property
     def libs(self):
-        lib_path = '{0}/{1}/{2}/lib/intel64'.format(self.prefix,
-                                                    self.component_dir,
-                                                    self.spec.version)
+        lib_path = join(self.component_path, 'lib', 'intel64')
         lib_path = lib_path if isdir(lib_path) else dirname(lib_path)
         return find_libraries('*', root=lib_path, shared=True, recursive=True)

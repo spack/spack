@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from os import path
 import subprocess
 from sys import platform
 
@@ -34,7 +33,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         return 'mpi'
 
     def setup_dependent_package(self, module, dep_spec):
-        dir = join_path(self.prefix, 'mpi', 'latest', 'bin')
+        dir = join_path(self.component_path, 'bin')
         self.spec.mpicc  = join_path(dir, 'mpicc')
         self.spec.mpicxx = join_path(dir, 'mpicxx')
         self.spec.mpif77 = join_path(dir, 'mpif77')
@@ -48,7 +47,7 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
         env.set('MPICH_FC', spack_fc)
 
         # Set compiler wrappers for dependent build stage
-        dir = self._join_prefix('bin')
+        dir = join_path(self.component_path, 'bin')
         env.set('MPICC', join_path(dir, 'mpicc'))
         env.set('MPICXX', join_path(dir, 'mpicxx'))
         env.set('MPIF77', join_path(dir, 'mpif77'))
@@ -58,22 +57,19 @@ class IntelOneapiMpi(IntelOneApiLibraryPackage):
     @property
     def libs(self):
         libs = []
-        for dir in [path.join('lib', 'release_mt'),
+        for dir in [join_path('lib', 'release_mt'),
                     'lib',
-                    path.join('libfabric', 'lib')]:
-            lib_path = path.join(self.prefix, 'mpi', 'latest', dir)
+                    join_path('libfabric', 'lib')]:
+            lib_path = join_path(self.component_path, dir)
             ldir = find_libraries('*', root=lib_path, shared=True, recursive=False)
             libs += ldir
         return libs
-
-    def _join_prefix(self, path):
-        return join_path(self.prefix, 'mpi', 'latest', path)
 
     def install(self, spec, prefix):
         super(IntelOneapiMpi, self).install(spec, prefix)
 
         # need to patch libmpi.so so it can always find libfabric
-        libfabric_rpath = self._join_prefix(path.join('libfabric', 'lib'))
+        libfabric_rpath = join_path(self.component_path, 'libfabric', 'lib')
         for lib_version in ['debug', 'release', 'release_mt', 'debug_mt']:
-            file = self._join_prefix(path.join('lib', lib_version, 'libmpi.so'))
+            file = join_path(self.component_path, 'lib', lib_version, 'libmpi.so')
             subprocess.call(['patchelf', '--set-rpath', libfabric_rpath, file])
