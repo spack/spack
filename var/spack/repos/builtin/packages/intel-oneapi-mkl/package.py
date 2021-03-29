@@ -37,7 +37,7 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     @property
     def libs(self):
         lib_path = join_path(self.component_path, 'lib', 'intel64')
-        mkl_libs = ['libmkl_intel_ilp64', 'libmkl_sequential', 'libmkl_core']
+        mkl_libs = ['libmkl_intel_lp64', 'libmkl_sequential', 'libmkl_core']
         libs = find_libraries(mkl_libs, root=lib_path, shared=True, recursive=False)
         libs += find_system_libraries(['libpthread', 'libm', 'libdl'], shared=True)
         return libs
