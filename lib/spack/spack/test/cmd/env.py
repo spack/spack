@@ -26,7 +26,8 @@ from spack.util.path import substitute_path_variables
 
 # everything here uses the mock_env_path
 pytestmark = [
-    pytest.mark.usefixtures('mutable_mock_env_path', 'config'),
+    pytest.mark.usefixtures('mutable_mock_env_path', 'config',
+                            'mock_packages'),
     pytest.mark.maybeslow
 ]
 
