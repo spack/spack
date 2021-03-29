@@ -288,7 +288,7 @@ class Hdf5(AutotoolsPackage):
             ])
 
         # Fujitsu Compiler dose not add  Fortran runtime in rpath.
-        if self.spec.satisfies('%fj') and '+fortran' in self.spec:
+        if '+fortran %fj' in self.spec:
             extra_args.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
 
         if '+mpi' in self.spec:
