@@ -10,14 +10,14 @@ class Squashfuse(AutotoolsPackage):
     """squashfuse - Mount SquashFS archives using FUSE"""
 
     homepage = "https://github.com/vasi/squashfuse"
-    url      = "https://github.com/vasi/squashfuse/archive/refs/tags/0.1.104.tar.gz"
+    url      = "https://github.com/vasi/squashfuse/releases/download/0.1.104/squashfuse-0.1.104.tar.gz"
     git      = "https://github.com/vasi/squashfuse.git"
 
     maintainers = ['haampie']
 
     version('master', branch='master')
-    version('0.1.104', sha256='9e6f4fb65bb3e5de60c8714bb7f5cbb08b5534f7915d6a4aeea008e1c669bd35')
-    version('0.1.103', sha256='bba530fe435d8f9195a32c295147677c58b060e2c63d2d4204ed8a6c9621d0dd')
+    version('0.1.104', sha256='aa52460559e0d0b1753f6b1af5c68cfb777ca5a13913285e93f4f9b7aa894b3a')
+    version('0.1.103', sha256='42d4dfd17ed186745117cfd427023eb81effff3832bab09067823492b6b982e7')
 
     variant('zlib', default=True, description='Enable zlib/gzip compression support')
     variant('lz4', default=True, description='Enable LZ4 compression support')
@@ -41,10 +41,10 @@ class Squashfuse(AutotoolsPackage):
     depends_on('zstd', when='+zstd')
 
     # not all releases have a configure script
-    depends_on('m4',       type='build')
-    depends_on('autoconf', type='build')
-    depends_on('automake', type='build')
-    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build', when='master')
+    depends_on('autoconf', type='build', when='master')
+    depends_on('automake', type='build', when='master')
+    depends_on('libtool',  type='build', when='master')
 
     def configure_args(self):
         args = ['--disable-demo']
