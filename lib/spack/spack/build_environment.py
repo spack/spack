@@ -81,6 +81,9 @@ from spack.util.log_parse import make_log_context, parse_log_events
 from spack.util.module_cmd import load_module, module, path_from_modules
 from spack.util.string import plural
 
+from llnl.util.symlink import symlink
+
+
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -529,7 +532,7 @@ def _set_variables_for_single_module(pkg, module):
     m.makedirs = os.makedirs
     m.remove = os.remove
     m.removedirs = os.removedirs
-    m.symlink = os.symlink
+    m.symlink = symlink
 
     m.mkdirp = mkdirp
     m.install = install
@@ -652,11 +655,11 @@ def _static_to_shared_library(arch, compiler, static_lib, shared_lib=None,
     shared_lib_link = os.path.basename(shared_lib)
 
     if version or compat_version:
-        os.symlink(shared_lib_link, shared_lib_base)
+        symlink(shared_lib_link, shared_lib_base)
 
     if compat_version and compat_version != version:
-        os.symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
-                                                     compat_version))
+        symlink(shared_lib_link, '{0}.{1}'.format(shared_lib_base,
+                                                  compat_version))
 
     return compiler(*compiler_args, output=compiler_output)
 

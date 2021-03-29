@@ -28,8 +28,10 @@ import six
 
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
+from llnl.util.symlink import symlink
 
 from spack.util.executable import Executable
+
 
 if sys.version_info >= (3, 3):
     from collections.abc import Sequence  # novm
@@ -515,7 +517,7 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
                                       .format(target, new_target))
                             target = new_target
 
-                    os.symlink(target, d)
+                    symlink(target, d)
                 elif os.path.isdir(link_target):
                     mkdirp(d)
                 else:
@@ -806,10 +808,10 @@ def touchp(path):
 
 def force_symlink(src, dest):
     try:
-        os.symlink(src, dest)
+        symlink(src, dest)
     except OSError:
         os.remove(dest)
-        os.symlink(src, dest)
+        symlink(src, dest)
 
 
 def join_path(prefix, *args):
@@ -920,6 +922,10 @@ def traverse_tree(source_root, dest_root, rel_path='', **kwargs):
         source_child = os.path.join(source_path, f)
         dest_child = os.path.join(dest_path, f)
         rel_child = os.path.join(rel_path, f)
+        if sys.platform == "win32":
+            source_child = source_child.replace("\\", "/")
+            dest_child = dest_child.replace("\\", "/")
+            rel_child = rel_child.replace("\\", "/")
 
         # Treat as a directory
         # TODO: for symlinks, os.path.isdir looks for the link target. If the
@@ -1308,6 +1314,8 @@ class HeaderList(FileList):
             value = [value]
 
         self._directories = [os.path.normpath(x) for x in value]
+        if sys.platform == "win32":
+             self._directories = [d.replace("\\", "/") for d in self._directories]
 
     def _default_directories(self):
         """Default computation of directories based on the list of
@@ -1320,6 +1328,8 @@ class HeaderList(FileList):
             # there and don't add anything else to the path.
             m = self.include_regex.match(d)
             value = os.path.join(*m.group(1, 2)) if m else d
+            if sys.platform == "win32":
+                value = value.replace("\\", "/")
             values.append(value)
         return values
 
@@ -1776,7 +1786,14 @@ def partition_path(path, entry=None):
         # Derive the index of entry within paths, which will correspond to
         # the location of the entry in within the path.
         try:
-            entries = path.split(os.sep)
+            if sys.platform == "win32":
+                sep = "/"
+            else:
+                sep = os.sep
+            entries = path.split(sep)
+            if entries[0].endswith(":"):
+                # Handle drive letters e.g. C:/ on Windows
+                entries[0] = entries[0] + sep
             i = entries.index(entry)
             if '' in entries:
                 i -= 1
@@ -1800,6 +1817,9 @@ def prefixes(path):
     For example, path ``./hi/jkl/mn`` results in a list with the following
     paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
 
+    On Windows, paths will be normalized to use ``/`` and ``/`` will always
+    be used as the separator instead of ``os.sep``.
+
     Parameters:
         path (str): the string used to derive ancestor paths
 
@@ -1809,13 +1829,27 @@ def prefixes(path):
     if not path:
         return []
 
-    parts = path.strip(os.sep).split(os.sep)
-    if path.startswith(os.sep):
-        parts.insert(0, os.sep)
+    if sys.platform == "win32":
+      sep = "/"
+    else:
+      sep = os.sep()
+
+    if sys.platform == "win32":
+        path = path.replace("\\", "/")
+
+    parts = path.strip(sep).split(sep)
+    if path.startswith(sep):
+        parts.insert(0, sep)
+    elif parts[0].endswith(":"):
+      # Handle drive letters e.g. C:/ on Windows
+      parts[0] = parts[0] + sep
     paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
 
+    if sys.platform == "win32":
+        paths = [path.replace("\\", "/") for path in paths]
+
     try:
-        paths.remove(os.sep)
+        paths.remove(sep)
     except ValueError:
         pass
 

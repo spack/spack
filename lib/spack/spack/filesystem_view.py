@@ -30,6 +30,7 @@ from spack.directory_layout import (
     YamlViewExtensionsLayout,
 )
 from spack.error import SpackError
+from llnl.util.symlink import symlink
 
 # compatability
 if sys.version_info < (3, 0):
@@ -46,7 +47,7 @@ _projections_path = '.spack/projections.yaml'
 def view_symlink(src, dst, **kwargs):
     # keyword arguments are irrelevant
     # here to fit required call signature
-    os.symlink(src, dst)
+    symlink(src, dst)
 
 
 def view_hardlink(src, dst, **kwargs):
@@ -139,7 +140,7 @@ class FilesystemView(object):
             Initialize a filesystem view under the given `root` directory with
             corresponding directory `layout`.
 
-            Files are linked by method `link` (os.symlink by default).
+            Files are linked by method `link` (llnl.util.symlink by default).
         """
         self._root = root
         self.layout = layout

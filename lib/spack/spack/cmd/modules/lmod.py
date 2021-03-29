@@ -11,6 +11,8 @@ import llnl.util.filesystem
 import spack.cmd.common.arguments
 import spack.cmd.modules
 
+from llnl.util.symlink import symlink
+
 
 def add_command(parser, command_dict):
     lmod_parser = parser.add_parser(
@@ -49,4 +51,4 @@ def setdefault(module_type, specs, args):
     with llnl.util.filesystem.working_dir(module_folder):
         if os.path.exists('default') and os.path.islink('default'):
             os.remove('default')
-        os.symlink(module_basename, 'default')
+        symlink(module_basename, 'default')
