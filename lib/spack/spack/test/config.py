@@ -1139,13 +1139,17 @@ def test_internal_config_scope_cache_clearing():
     """
     An InternalConfigScope object is constructed from data that is already
     in memory, therefore it doesn't have any cache to clear. Here we ensure
-    that calling the clear method is a no-op.
+    that calling the clear method is consistent with that..
     """
-    config = spack.config.Configuration()
-    config.push_scope(spack.config.InternalConfigScope('internal', {
+    data = {
         'config': {
             'build_jobs': 10
         }
-    }))
-    config.clear_caches()
-    assert config.get('config:build_jobs') == 10
+    }
+    internal_scope = spack.config.InternalConfigScope('internal', data)
+    # Ensure that the initial object is properly set
+    assert internal_scope.sections['config'] == data
+    # Call the clear method
+    internal_scope.clear()
+    # Check that this didn't affect the scope object
+    assert internal_scope.sections['config'] == data
