@@ -31,9 +31,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
     variant('termlib', default=True,
             description='Enables termlib features. This is an extra '
                         'lib and optional internal dependency.')
-    variant('abi5', default=False,
-            description='Use application binary interface (ABI) for '
-                        'ncurses version 5')
+    # Build ncurses with ABI compaitibility.
+    variant('abi', default='none', description='choose abi compatibility', values=('none', '5', '6'), multi=False)
+
+    conflicts('abi=6', when='@:5.9', msg='6 is not compatible with this release')
 
     depends_on('pkgconfig', type='build')
 
@@ -110,8 +111,10 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
                          '--enable-getcap',
                          '--enable-tcap-names',
                          '--with-versioned-syms'))
-        if '+abi5' in self.spec:
-            opts.append('--with-abi-version=5')
+
+        abi = self.spec.variants['abi'].value
+        if abi != 'none':
+            opts.append('--with-abi-version=' + abi)
 
         prefix = '--prefix={0}'.format(prefix)
 
