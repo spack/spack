@@ -64,22 +64,27 @@ def setup_parser(subparser):
 
 def location(parser, args):
     if args.module_dir:
-        return print(spack.paths.module_path)
+        print(spack.paths.module_path)
+        return
 
     if args.spack_root:
-        return print(spack.paths.prefix)
+        print(spack.paths.prefix)
+        return
 
     if args.env:
         path = spack.environment.root(args.env)
         if not os.path.isdir(path):
             tty.die("no such environment: '%s'" % args.env)
-        return print(path)
+        print(path)
+        return
 
     if args.packages:
-        return print(spack.repo.path.first_repo().root)
+        print(spack.repo.path.first_repo().root)
+        return
 
     if args.stages:
-        return print(spack.stage.get_stage_root())
+        print(spack.stage.get_stage_root())
+        return
 
     specs = spack.cmd.parse_specs(args.spec)
 
@@ -93,33 +98,38 @@ def location(parser, args):
     if args.install_dir:
         env = ev.get_env(args, 'location')
         spec = spack.cmd.disambiguate_spec(specs[0], env)
-        return print(spec.prefix)
+        print(spec.prefix)
+        return
 
     spec = specs[0]
 
     # Package dir just needs the spec name
     if args.package_dir:
-        return print(spack.repo.path.dirname_for_package_name(spec.name))
+        print(spack.repo.path.dirname_for_package_name(spec.name))
+        return
 
     # Either concretize or filter from already concretized environment
     spec = spack.cmd.matching_spec_from_env(spec)
     pkg = spec.package
 
     if args.stage_dir:
-        return print(pkg.stage.path)
+        print(pkg.stage.path)
+        return
 
     if args.build_dir:
         # Out of source builds have build_directory defined
         if hasattr(pkg, 'build_directory'):
             # build_directory can be either absolute or relative to the stage path
             # in either case os.path.join makes it absolute
-            return print(os.path.normpath(os.path.join(
+            print(os.path.normpath(os.path.join(
                 pkg.stage.path,
                 pkg.build_directory
             )))
+            return
 
         # Otherwise assume in-source builds
-        return print(pkg.stage.source_path)
+        print(pkg.stage.source_path)
+        return
 
     # source and build dir remain, they require the spec to be staged
     if not pkg.stage.expanded:
@@ -128,4 +138,5 @@ def location(parser, args):
                 "spack stage " + " ".join(args.spec))
 
     if args.source_dir:
-        return print(pkg.stage.source_path)
+        print(pkg.stage.source_path)
+        return
