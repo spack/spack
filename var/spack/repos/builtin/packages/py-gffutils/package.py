@@ -16,11 +16,11 @@ class PyGffutils(PythonPackage):
     possible with plain-text methods alone."""
 
     homepage = "https://github.com/daler/gffutils"
-    url      = "https://github.com/daler/gffutils/archive/refs/tags/v0.10.1.tar.gz"
+    pypi     = "gffutils/gffutils-0.10.1.tar.gz"
 
     maintainers = ['dorton21']
 
-    version('0.10.1', sha256='c020f38d572a38227d575ca6b4a6781e10317c4231c7008f533bb6d9167f64d8')
+    version('0.10.1', sha256='a8fc39006d7aa353147238160640e2210b168f7849cb99896be3fc9441e351cb')
 
     depends_on('py-setuptools', type='build')
     depends_on('py-pyfaidx@0.5.5.2:', type=('build', 'run'))
