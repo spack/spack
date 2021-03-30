@@ -226,7 +226,8 @@ class Axom(CachedCMakePackage, CudaPackage):
             # non-system default stdlib
             _gcc_prefix = "/usr/tce/packages/gcc/gcc-4.9.3/lib64"
             if os.path.exists(_gcc_prefix):
-                _gcc_prefix2 = pjoin(_gcc_prefix,
+                _gcc_prefix2 = pjoin(
+                    _gcc_prefix,
                     "gcc/powerpc64le-unknown-linux-gnu/4.9.3")
                 _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
                 entries.append(cmake_cache_string(
@@ -245,17 +246,20 @@ class Axom(CachedCMakePackage, CudaPackage):
 
                 if not spec.satisfies('cuda_arch=none'):
                     cuda_arch = spec.variants['cuda_arch'].value[0]
-                    entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES",
-                                                      cuda_arch))
+                    entries.append(cmake_cache_string(
+                        "CMAKE_CUDA_ARCHITECTURES",
+                        cuda_arch))
                     cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
                 else:
-                    entries.append("# cuda_arch could not be determined\n\n")
+                    entries.append(
+                        "# cuda_arch could not be determined\n\n")
 
                 if "+cpp14" in spec:
                    cudaflags += " %s" % self.compiler.cxx14_flags
                 else:
                     cudaflags += " %s" % self.compiler.cxx11_flags
-                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
+                entries.append(
+                    cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
 
                 entries.append(
                     "# nvcc does not like gtest's 'pthreads' flag\n")
@@ -326,16 +330,17 @@ class Axom(CachedCMakePackage, CudaPackage):
             path2 = os.path.realpath(spec["doxygen"].prefix)
             devtools_root = os.path.commonprefix([path1, path2])[:-1]
             path_replacements[devtools_root] = "${DEVTOOLS_ROOT}"
-            entries.append("# Root directory for generated developer tools\n")
+            entries.append(
+                "# Root directory for generated developer tools\n")
             entries.append(cmake_cache_path("DEVTOOLS_ROOT", devtools_root))
 
             # Only turn on clangformat support if devtools is on
             clang_fmt_path = spec['llvm'].prefix.bin.join('clang-format')
-            strings.append(cmake_cache_path("CLANGFORMAT_EXECUTABLE",
+            entries.append(cmake_cache_path("CLANGFORMAT_EXECUTABLE",
                                              clang_fmt_path))
         else:
-            strings.append("# ClangFormat disabled due to disabled devtools\n")
-            strings.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
+            entries.append("# ClangFormat disabled due to disabled devtools\n")
+            entries.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
 
         if "+python" in spec or "+devtools" in spec:
             python_path = os.path.realpath(spec['python'].command.path)
