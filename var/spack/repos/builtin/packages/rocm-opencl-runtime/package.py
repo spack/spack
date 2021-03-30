@@ -8,7 +8,8 @@ from spack import *
 
 
 class RocmOpenclRuntime(CMakePackage):
-    """ROCm OpenCL 2.0 compatible language runtime.Supports offline and in-process/in-memory compilation"""
+    """ROCm OpenCL 2.0 compatible language runtime.
+       It Supports offline and in-process/in-memory compilation"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
     url      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-4.1.0.tar.gz"
@@ -40,7 +41,6 @@ class RocmOpenclRuntime(CMakePackage):
             flags.append('-I {0}/elf'.format(incl))
 
         return (flags, None, None)
-
 
     def cmake_args(self):
         args = [
