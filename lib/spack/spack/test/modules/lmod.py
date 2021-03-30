@@ -314,3 +314,20 @@ class TestLmod(object):
         assert writer.conf.projections == expected
         projection = writer.spec.format(writer.conf.projections['all'])
         assert projection in writer.layout.use_name
+
+    def test_config_backwards_compat(self, mutable_config):
+        settings = {
+            'enable': ['lmod'],
+            'lmod': {
+                'core_compilers': ['%gcc@0.0.0']
+            }
+        }
+
+        spack.config.set('modules:default', settings)
+        new_format = spack.modules.lmod.configuration('default')
+
+        spack.config.set('modules', settings)
+        old_format = spack.modules.lmod.configuration('default')
+
+        assert old_format == new_format
+        assert old_format == settings['lmod']
