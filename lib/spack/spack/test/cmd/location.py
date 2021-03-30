@@ -19,6 +19,7 @@ pytestmark = pytest.mark.usefixtures('config', 'database')
 
 # location prints out "locations of packages and spack directories"
 location = SpackCommand('location')
+env = SpackCommand('env')
 
 
 @pytest.fixture
@@ -82,6 +83,27 @@ def test_location_env(mock_test_env):
     """Tests spack location --env."""
     test_env_name, env_dir = mock_test_env
     assert location('--env', test_env_name).strip() == env_dir
+
+
+def test_location_env_flag_interference(mutable_mock_env_path, tmpdir):
+    """
+    Tests that specifying an active environment using `spack -e x location ...`
+    does not interfere with the location command flags.
+    """
+
+    # create two environments
+    env('create', 'first_env')
+    env('create', 'second_env')
+
+    global_args = ['-e', 'first_env']
+
+    # `spack -e first_env location -e second_env` should print the env
+    # path of second_env
+    assert 'first_env' not in location('-e', 'second_env', global_args=global_args)
+
+    # `spack -e first_env location --packages` should not print
+    # the environment path of first_env.
+    assert 'first_env' not in location('--packages', global_args=global_args)
 
 
 def test_location_env_missing():
