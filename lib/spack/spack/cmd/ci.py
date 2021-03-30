@@ -64,6 +64,9 @@ def setup_parser(subparser):
         '--dependencies', action='store_true', default=False,
         help="(Experimental) disable DAG scheduling; use "
              ' "plain" dependencies.')
+    generate.add_argument(
+        '--check-index-only', action='store_true', default=False,
+        help='(Deprecated) <has no effect>')
     prune_group = generate.add_mutually_exclusive_group()
     prune_group.add_argument(
         '--prune-dag', action='store_true', dest='prune_dag',
@@ -107,6 +110,10 @@ def ci_generate(args):
        for creating a build group for the generated workload and registering
        all generated jobs under that build group.  If this environment
        variable is not set, no build group will be created on CDash."""
+    if args.check_index_only:
+        tty.warn('--check-index-only is deprecated and no longer has any effect. '
+                 'See https://github.com/spack/spack/pull/22634 for details.')
+
     env = spack.cmd.require_active_env(cmd_name='ci generate')
 
     output_file = args.output_file
