@@ -145,9 +145,10 @@ class Axom(CachedCMakePackage, CudaPackage):
         )
 
     def initconfig_compiler_entries(self):
+        spec = self.spec
         entries = super(Axom, self).initconfig_compiler_entries()
 
-        if "+fortran" in self.spec or spack_fc is not None:
+        if "+fortran" in spec or spack_fc is not None:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
@@ -264,8 +265,8 @@ class Axom(CachedCMakePackage, CudaPackage):
         return entries
 
     def initconfig_mpi_entries(self):
-        entries = super(Axom, self).initconfig_mpi_entries()
         spec = self.spec
+        entries = super(Axom, self).initconfig_mpi_entries()
 
         if "+mpi" in spec:
             entries.append(cmake_cache_option("ENABLE_MPI", True))
@@ -278,6 +279,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         return entries
 
     def initconfig_package_entries(self):
+        spec = self.spec
         entries = []
 
         # TPL locations
@@ -285,7 +287,6 @@ class Axom(CachedCMakePackage, CudaPackage):
         entries.append("# TPLs\n")
         entries.append("#------------------{0}\n\n".format("-" * 60))
 
-        spec = self.spec
         # Try to find the common prefix of the TPL directory, including the
         # compiler. If found, we will use this in the TPL paths
         compiler_str = str(spec.compiler).replace('@', '-')
@@ -304,7 +305,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         # optional tpls
         for dep in ('mfem', 'hdf5', 'lua', 'scr', 'raja', 'umpire'):
             if '+%s' % dep in spec:
-                dep_dir = get_spec_path(self.spec, dep, path_replacements)
+                dep_dir = get_spec_path(spec, dep, path_replacements)
                 entries.append(cmake_cache_path('%s_DIR' % dep.upper(),
                                                 dep_dir))
             else:
