@@ -10,7 +10,8 @@ class MparkVariant(CMakePackage):
     """C++17 `std::variant` for C++11/14/17"""
 
     homepage = "https://github.com/mpark/variant"
-    git     = "https://github.com/mpark/variant.git"
+    url      = "https://github.com/mpark/variant/archive/v1.4.0.tar.gz"
+    git      = "https://github.com/mpark/variant.git"
     maintainers = ['ax3l']
 
     version('1.4.0', sha256='8f6b28ab3640b5d76d5b6664dda7257a4405ce59179220431b8fd196c79b2ecb')
