@@ -363,8 +363,8 @@ class Axom(CachedCMakePackage, CudaPackage):
         if "py-shroud" in spec:
             shroud_bin_dir = get_spec_path(spec, "py-shroud",
                                            path_replacements, use_bin=True)
-            entries.write(cmake_cache_path("SHROUD_EXECUTABLE",
-                                           pjoin(shroud_bin_dir, "shroud")))
+            entries.append(cmake_cache_path("SHROUD_EXECUTABLE",
+                                            pjoin(shroud_bin_dir, "shroud")))
 
         for dep in ('uncrustify', 'cppcheck', 'doxygen'):
             if dep in spec:
