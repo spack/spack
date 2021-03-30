@@ -26,7 +26,7 @@ import os
 import socket
 import sys
 import time
-from typing import Dict  # novm
+from typing import Dict, Optional  # novm
 
 import six
 
@@ -58,7 +58,7 @@ def nullcontext(*args, **kwargs):
     yield
 
 
-# TODO: Provide an API automatically retyring a build after detecting and
+# TODO: Provide an API to automatically retry a build after detecting and
 # TODO: clearing a failure.
 
 # DB goes in this directory underneath the root
@@ -298,6 +298,13 @@ _query_docstring = """
         """
 
 
+def _query_docvar(f):
+    if f.__doc__ is None:
+        f.__doc__ = ""
+    f.__doc__ += _query_docstring
+    return f
+
+
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
@@ -335,54 +342,71 @@ class Database(object):
         """
         self.root = root
 
-        # If the db_dir is not provided, default to within the db root.
-        self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
-
-        # Set up layout of database files within the db dir
-        self._index_path = os.path.join(self._db_dir, 'index.json')
-        self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
-        self._lock_path = os.path.join(self._db_dir, 'lock')
-
-        # This is for other classes to use to lock prefix directories.
-        self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
-
-        # Ensure a persistent location for dealing with parallel installation
-        # failures (e.g., across near-concurrent processes).
-        self._failure_dir = os.path.join(self._db_dir, 'failures')
-
-        # Support special locks for handling parallel installation failures
-        # of a spec.
-        self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
-
-        # Create needed directories and files
-        if not os.path.exists(self._db_dir):
-            fs.mkdirp(self._db_dir)
-
-        if not os.path.exists(self._failure_dir) and not is_upstream:
-            fs.mkdirp(self._failure_dir)
-
         self.is_upstream = is_upstream
         self.last_seen_verifier = ''
 
-        # initialize rest of state.
-        self.db_lock_timeout = (
-            spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
-        self.package_lock_timeout = (
-            spack.config.get('config:package_lock_timeout') or
-            _pkg_lock_timeout)
-        tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
-                  str(self.db_lock_timeout)))
-        timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
-                              if self.package_lock_timeout else 'No timeout')
-        tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
-                  str(timeout_format_str)))
+        if db_dir or self.root is not None:
+            # If the db_dir is not provided, default to within the db root.
+            self._db_dir = db_dir or os.path.join(self.root, _db_dirname)
 
-        if self.is_upstream:
-            self.lock = ForbiddenLock()
+            # Set up layout of database files within the db dir
+            self._index_path = os.path.join(self._db_dir, 'index.json')
+            self._verifier_path = os.path.join(self._db_dir, 'index_verifier')
+            self._lock_path = os.path.join(self._db_dir, 'lock')
+
+            # This is for other classes to use to lock prefix directories.
+            self.prefix_lock_path = os.path.join(self._db_dir, 'prefix_lock')
+
+            # Ensure a persistent location for dealing with parallel installation
+            # failures (e.g., across near-concurrent processes).
+            self._failure_dir = os.path.join(self._db_dir, 'failures')
+
+            # Support special locks for handling parallel installation failures
+            # of a spec.
+            self.prefix_fail_path = os.path.join(self._db_dir, 'prefix_failures')
+
+            # Create needed directories and files
+            if not os.path.exists(self._db_dir):
+                fs.mkdirp(self._db_dir)
+
+            if not os.path.exists(self._failure_dir) and not is_upstream:
+                fs.mkdirp(self._failure_dir)
+
+            # Initialize timeout state.
+            self.db_lock_timeout = (
+                spack.config.get('config:db_lock_timeout') or _db_lock_timeout)
+            self.package_lock_timeout = (
+                spack.config.get('config:package_lock_timeout') or
+                _pkg_lock_timeout)
+            tty.debug('DATABASE LOCK TIMEOUT: {0}s'.format(
+                      str(self.db_lock_timeout)))
+            timeout_format_str = ('{0}s'.format(str(self.package_lock_timeout))
+                                  if self.package_lock_timeout else 'No timeout')
+            tty.debug('PACKAGE LOCK TIMEOUT: {0}'.format(
+                      str(timeout_format_str)))
+
+            if self.is_upstream:
+                self.lock = ForbiddenLock()
+            else:
+                self.lock = lk.Lock(self._lock_path,
+                                    default_timeout=self.db_lock_timeout,
+                                    desc='database')
+
+            if enable_transaction_locking:
+                self._write_transaction_impl = lk.WriteTransaction
+                self._read_transaction_impl = lk.ReadTransaction
+            else:
+                self._write_transaction_impl = nullcontext
+                self._read_transaction_impl = nullcontext
         else:
-            self.lock = lk.Lock(self._lock_path,
-                                default_timeout=self.db_lock_timeout,
-                                desc='database')
+            if enable_transaction_locking:
+                raise TypeError('cannot enable db transaction locking when root=None')
+            if not is_upstream:
+                raise TypeError('is_upstream=True must be set when root=None')
+            self.lock = ForbiddenLock()
+            self._write_transaction_impl = nullcontext
+            self._read_transaction_impl = nullcontext
+
         self._data = {}
 
         # For every installed spec we keep track of its install prefix, so that
@@ -399,13 +423,6 @@ class Database(object):
         # dependencies are detected (rather than just printing a warning
         # message)
         self._fail_when_missing_deps = False
-
-        if enable_transaction_locking:
-            self._write_transaction_impl = lk.WriteTransaction
-            self._read_transaction_impl = lk.ReadTransaction
-        else:
-            self._write_transaction_impl = nullcontext
-            self._read_transaction_impl = nullcontext
 
         self._record_fields = record_fields
 
@@ -724,18 +741,22 @@ class Database(object):
 
                 spec._add_dependency(child, dtypes)
 
-    def _read_from_file(self, filename):
+    def fill_from_file(self, filename):
+        # type: (str) -> None
         """Fill database from file, do not maintain old data.
-        Translate the spec portions from node-dict form to spec form.
-
-        Does not do any locking.
-        """
+        Translate the spec portions from node-dict form to spec form."""
         try:
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
         except Exception as e:
             raise CorruptDatabaseError("error parsing database:", str(e))
 
+        self.fill_from_json(fdata)
+
+    def fill_from_json(self, fdata):
+        # type: (Optional[Dict]) -> None
+        """Fill database from json, do not maintain old data.
+        Translate the spec portions from node-dict form to spec form."""
         if fdata is None:
             return
 
@@ -841,7 +862,7 @@ class Database(object):
         def _read_suppress_error():
             try:
                 if os.path.isfile(self._index_path):
-                    self._read_from_file(self._index_path)
+                    self.fill_from_file(self._index_path)
             except CorruptDatabaseError as e:
                 self._error = e
                 self._data = {}
@@ -1037,7 +1058,7 @@ class Database(object):
                     (current_verifier == '')):
                 self.last_seen_verifier = current_verifier
                 # Read from file if a database exists
-                self._read_from_file(self._index_path)
+                self.fill_from_file(self._index_path)
             return
         elif self.is_upstream:
             raise UpstreamDatabaseLockingError(
@@ -1433,7 +1454,8 @@ class Database(object):
             (list): a list of specs matching the hash or hash prefix
 
         """
-
+        # TODO: generate some sort of trie mapping to avoid iterating over every
+        # entry here.
         spec = self.get_by_hash_local(
             dag_hash, default=default, installed=installed)
         if spec is not None:
@@ -1447,6 +1469,7 @@ class Database(object):
 
         return default
 
+    @_query_docvar
     def _query(
             self,
             query_spec=any,
@@ -1511,19 +1534,13 @@ class Database(object):
 
         return results
 
-    if _query.__doc__ is None:
-        _query.__doc__ = ""
-    _query.__doc__ += _query_docstring
-
+    @_query_docvar
     def query_local(self, *args, **kwargs):
         """Query only the local Spack database."""
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
-    if query_local.__doc__ is None:
-        query_local.__doc__ = ""
-    query_local.__doc__ += _query_docstring
-
+    @_query_docvar
     def query(self, *args, **kwargs):
         """Query the Spack database including all upstream databases."""
         upstream_results = []
@@ -1539,10 +1556,6 @@ class Database(object):
             x for x in upstream_results if x not in local_results)
 
         return sorted(results)
-
-    if query.__doc__ is None:
-        query.__doc__ = ""
-    query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):
         """Query for exactly one spec that matches the query spec.

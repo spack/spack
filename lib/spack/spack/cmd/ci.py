@@ -74,17 +74,6 @@ date on the mirror""")
         default=True, help="""Generate jobs for specs already up to date
 on the mirror""")
     generate.add_argument(
-        '--check-index-only', action='store_true', dest='index_only',
-        default=False, help="""Spack always check specs against configured
-binary mirrors when generating the pipeline, regardless of whether or not
-DAG pruning is enabled.  This flag controls whether it might attempt to
-fetch remote spec files directly (ensuring no spec is rebuilt if it
-is present on the mirror), or whether it should reduce pipeline generation time
-by assuming all remote buildcache indices are up to date and only use those
-to determine whether a given spec is up to date on mirrors.  In the latter
-case, specs might be needlessly rebuilt if remote buildcache indices are out
-of date.""")
-    generate.add_argument(
         '--artifacts-root', default=None,
         help="""Path to root of artifacts directory.  If provided, concrete
 environment files (spack.yaml, spack.lock) will be generated under this
@@ -125,7 +114,6 @@ def ci_generate(args):
     run_optimizer = args.optimize
     use_dependencies = args.dependencies
     prune_dag = args.prune_dag
-    index_only = args.index_only
     artifacts_root = args.artifacts_root
 
     if not output_file:
@@ -139,8 +127,10 @@ def ci_generate(args):
     # Generate the jobs
     spack_ci.generate_gitlab_ci_yaml(
         env, True, output_file, prune_dag=prune_dag,
-        check_index_only=index_only, run_optimizer=run_optimizer,
-        use_dependencies=use_dependencies, artifacts_root=artifacts_root)
+        run_optimizer=run_optimizer,
+        use_dependencies=use_dependencies,
+        artifacts_root=artifacts_root,
+    )
 
     if copy_yaml_to:
         copy_to_dir = os.path.dirname(copy_yaml_to)
@@ -549,9 +539,130 @@ def ci_rebuild(args):
         can_sign = spack_ci.can_sign_binaries()
         sign_binaries = can_sign and spack_is_pr_pipeline is False
 
-        # Create buildcache in either the main remote mirror, or in the
-        # per-PR mirror, if this is a PR pipeline
-        if buildcache_mirror_url:
+        can_verify = spack_ci.can_verify_binaries()
+        verify_binaries = can_verify and spack_is_pr_pipeline is False
+
+        spack_ci.configure_compilers(compiler_action)
+
+        spec_map = spack_ci.get_concrete_specs(
+            root_spec, job_spec_pkg_name, related_builds, compiler_action)
+
+        job_spec = spec_map[job_spec_pkg_name]
+
+        tty.debug('Here is the concrete spec: {0}'.format(job_spec))
+
+        with open(job_spec_yaml_path, 'w') as fd:
+            fd.write(job_spec.to_yaml(hash=ht.build_hash))
+
+        tty.debug('Done writing concrete spec')
+
+        # DEBUG
+        with open(job_spec_yaml_path) as fd:
+            tty.debug('Wrote spec file, read it back.  Contents:')
+            tty.debug(fd.read())
+
+        # DEBUG the root spec
+        root_spec_yaml_path = os.path.join(spec_dir, 'root.yaml')
+        with open(root_spec_yaml_path, 'w') as fd:
+            fd.write(spec_map['root'].to_yaml(hash=ht.build_hash))
+
+        # TODO: Refactor the spack install command so it's easier to use from
+        # python modules.  Currently we use "exe.which('spack')" to make it
+        # easier to install packages from here, but it introduces some
+        # problems, e.g. if we want the spack command to have access to the
+        # mirrors we're configuring, then we have to use the "spack" command
+        # to add the mirrors too, which in turn means that any code here *not*
+        # using the spack command does *not* have access to the mirrors.
+        spack_cmd = exe.which('spack')
+
+        def add_mirror(mirror_name, mirror_url):
+            m_args = ['mirror', 'add', mirror_name, mirror_url]
+            tty.debug('Adding mirror: spack {0}'.format(m_args))
+            mirror_add_output = spack_cmd(*m_args)
+            tty.debug('spack mirror add output: {0}'.format(mirror_add_output))
+
+        # Configure mirrors
+        if pr_mirror_url:
+            add_mirror('ci_pr_mirror', pr_mirror_url)
+        if pipeline_mirror_url:
+            add_mirror(spack_ci.TEMP_STORAGE_MIRROR_NAME, pipeline_mirror_url)
+
+        tty.debug('listing spack mirrors:')
+        spack_cmd('mirror', 'list')
+        spack_cmd('config', 'blame', 'mirrors')
+
+        # Checks all mirrors for a built spec with a matching full hash
+        bindist.binary_index.refresh_mirrors()
+        matches = bindist.binary_index.get_mirrors_for_spec(
+            job_spec, full_hash_match=True)
+
+        if matches:
+            # Got at full hash match on at least one configured mirror.  All
+            # matches represent the fully up-to-date spec, so should all be
+            # equivalent.  If artifacts mirror is enabled, we just pick one
+            # of the matches and download the buildcache files from there to
+            # the artifacts, so they're available to be used by dependent
+            # jobs in subsequent stages.
+            tty.debug('No need to rebuild {0}'.format(job_spec_pkg_name))
+            if enable_artifacts_mirror:
+                matching_mirror = matches[0]['mirror_url']
+                tty.debug('Getting {0} buildcache from {1}'.format(
+                    job_spec_pkg_name, matching_mirror))
+                tty.debug('Downloading to {0}'.format(build_cache_dir))
+                buildcache.download_buildcache_files(
+                    job_spec, build_cache_dir, True, matching_mirror)
+        else:
+            # No full hash match anywhere means we need to rebuild spec
+
+            # Build up common install arguments
+            install_args = [
+                '-d', '-v', '-k', 'install',
+                '--keep-stage',
+                '--require-full-hash-match',
+            ]
+
+            if not verify_binaries:
+                install_args.append('--no-check-signature')
+
+            # Add arguments to create + register a new build on CDash (if
+            # enabled)
+            if enable_cdash:
+                tty.debug('Registering build with CDash')
+                (cdash_build_id,
+                    cdash_build_stamp) = spack_ci.register_cdash_build(
+                    cdash_build_name, cdash_base_url, cdash_project,
+                    cdash_site, job_spec_buildgroup)
+
+                cdash_upload_url = '{0}/submit.php?project={1}'.format(
+                    cdash_base_url, cdash_project_enc)
+
+                install_args.extend([
+                    '--cdash-upload-url', cdash_upload_url,
+                    '--cdash-build', cdash_build_name,
+                    '--cdash-site', cdash_site,
+                    '--cdash-buildstamp', cdash_build_stamp,
+                ])
+
+            install_args.append(job_spec_yaml_path)
+
+            tty.debug('Installing {0} from source'.format(job_spec.name))
+
+            try:
+                tty.debug('spack install arguments: {0}'.format(
+                    install_args))
+                spack_cmd(*install_args)
+            finally:
+                spack_ci.copy_stage_logs_to_artifacts(job_spec, job_log_dir)
+
+            # Create buildcache on remote mirror, either on pr-specific
+            # mirror or on mirror defined in spack environment
+            if spack_is_pr_pipeline:
+                buildcache_mirror_url = pr_mirror_url
+            else:
+                buildcache_mirror_url = remote_mirror_url
+
+            # Create buildcache in either the main remote mirror, or in the
+            # per-PR mirror, if this is a PR pipeline
             spack_ci.push_mirror_contents(
                 env, job_spec, job_spec_yaml_path, buildcache_mirror_url,
                 sign_binaries)
