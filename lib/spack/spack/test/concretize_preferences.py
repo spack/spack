@@ -235,6 +235,8 @@ class TestConcretizePreferences(object):
     @pytest.mark.parametrize(
         'compiler,unsupported',
         [('gcc@bad', ['clingo']),
+         # We have gcc@4.5.0, not gcc@4.5
+         ('gcc@4.5', ['clingo']),
          ('gcc@4.5.0 target=bad', ['clingo', 'original'])])
     def test_ignore_externals_with_invalid_compilers(
             self, compiler, unsupported):
