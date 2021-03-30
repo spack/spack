@@ -24,7 +24,11 @@ from .common import BaseContext, BaseModuleFileWriter
 #: lmod specific part of the configuration
 def configuration(module_set_name):
     config_path = 'modules:%s:lmod' % module_set_name
-    return spack.config.get(config_path, {})
+    config = spack.config.get(config_path, {})
+    if not config and module_set_name == 'default':
+        # return old format for backward compatibility
+        return spack.config.get('modules:lmod', {})
+    return config
 
 
 #: Caches the configuration {spec_hash: configuration}

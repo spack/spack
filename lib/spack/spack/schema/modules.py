@@ -20,6 +20,10 @@ spec_regex = r'(?!hierarchy|core_specs|verbose|hash_length|whitelist|' \
              r'blacklist|projections|naming_scheme|core_compilers|all)' \
              r'(^\w[\w-]*)'
 
+#: Matches a valid name for a module set
+# Banned names are valid entries at that level in the previous schema
+set_regex = r'(?!enable|lmod|tcl|dotkit|prefix_inspections)^\w[\w-]*'
+
 #: Matches an anonymous spec, i.e. a spec without a root name
 anonymous_spec_regex = r'^[\^@%+~]'
 
@@ -112,93 +116,100 @@ module_type_configuration = {
 }
 
 
+top_level_properties = {
+    'prefix_inspections': {
+        'type': 'object',
+        'additionalProperties': False,
+        'properties': {
+            'use_view': {'anyOf': [
+                {'type': 'string'},
+                {'type': 'boolean'}
+            ]},
+        },
+        'patternProperties': {
+            # prefix-relative path to be inspected for existence
+            r'(?!use_view|-)[\w-]*': array_of_strings
+        }
+    },
+    'roots': {
+        'type': 'object',
+        'properties': {
+            'tcl': {'type': 'string'},
+            'lmod': {'type': 'string'},
+        },
+    },
+    'enable': {
+        'type': 'array',
+        'default': [],
+        'items': {
+            'type': 'string',
+            'enum': ['tcl', 'dotkit', 'lmod']
+        },
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'cannot enable "dotkit" in modules.yaml '
+            '[support for "dotkit" has been dropped '
+            'in v0.13.0]',
+            'error': False
+        },
+    },
+    'lmod': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {
+                'type': 'object',
+                'properties': {
+                    'core_compilers': array_of_strings,
+                    'hierarchy': array_of_strings,
+                    'core_specs': array_of_strings,
+                },
+            }  # Specific lmod extensions
+        ]
+    },
+    'tcl': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {}  # Specific tcl extensions
+        ]
+    },
+    'dotkit': {
+        'allOf': [
+            # Base configuration
+            module_type_configuration,
+            {}  # Specific dotkit extensions
+        ]
+    },
+}
+
+
 # Properties for inclusion into other schemas (requires definitions)
 properties = {
     'modules': {
         'type': 'object',
         'patternProperties': {
-            r'\w[\w-]*': {
+            set_regex: {
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
-                'properties': {
-                    'prefix_inspections': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {
-                            'use_view': {'anyOf': [
-                                {'type': 'string'},
-                                {'type': 'boolean'}
-                            ]},
-                        },
-                        'patternProperties': {
-                            # prefix-relative path to be inspected for existence
-                            r'(?!use_view|-)[\w-]*': array_of_strings
-                        }
-                    },
-                    'roots': {
-                        'type': 'object',
-                        'properties': {
-                            'tcl': {'type': 'string'},
-                            'lmod': {'type': 'string'},
-                        },
-                    },
-                    'enable': {
-                        'type': 'array',
-                        'default': [],
-                        'items': {
-                            'type': 'string',
-                            'enum': ['tcl', 'dotkit', 'lmod']
-                        },
-                        'deprecatedProperties': {
-                            'properties': ['dotkit'],
-                            'message': 'cannot enable "dotkit" in modules.yaml '
-                            '[support for "dotkit" has been dropped '
-                            'in v0.13.0]',
-                            'error': False
-                        },
-                    },
-                    'lmod': {
-                        'allOf': [
-                            # Base configuration
-                            module_type_configuration,
-                            {
-                                'type': 'object',
-                                'properties': {
-                                    'core_compilers': array_of_strings,
-                                    'hierarchy': array_of_strings,
-                                    'core_specs': array_of_strings,
-                                },
-                            }  # Specific lmod extensions
-                        ]
-                    },
-                    'tcl': {
-                        'allOf': [
-                            # Base configuration
-                            module_type_configuration,
-                            {}  # Specific tcl extensions
-                        ]
-                    },
-                    'dotkit': {
-                        'allOf': [
-                            # Base configuration
-                            module_type_configuration,
-                            {}  # Specific dotkit extensions
-                        ]
-                    },
-                },
+                'properties': top_level_properties,
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
                     'message': 'the "dotkit" section in modules.yaml has no effect'
                     ' [support for "dotkit" has been dropped in v0.13.0]',
                     'error': False
-                },
-
-
-            }
-
-
+                }
+            },
         },
+        # Available here for backwards compatibility
+        'properties': top_level_properties,
+        'deprecatedProperties': {
+            'properties': ['dotkit'],
+            'message': 'the "dotkit" section in modules.yaml has no effect'
+            ' [support for "dotkit" has been dropped in v0.13.0]',
+            'error': False
+        }
     }
 }
 
