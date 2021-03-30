@@ -22,5 +22,4 @@ class PyFlexmock(PythonPackage):
 
     version('0.10.4', sha256='5033ceb974d6452cf8716c2ff5059074b77e546df5c849fb44a53f98dfe0d82c')
 
-    depends_on('py-nose', type=('build', 'run'))
-    depends_on('py-pytest', type=('build', 'run'))
+    depends_on('py-setuptools', type=('build', 'run'))
