@@ -477,10 +477,8 @@ def determine_number_of_jobs(
 
     max_cpus = max_cpus or cpus_available()
 
-    config_default = config_default or spack.config.get('config:build_jobs')
-
-    if config_default is None:
-        return max_cpus
+    # in some rare cases _builtin config may not be set, so default to max 16
+    config_default = config_default or spack.config.get('config:build_jobs', 16)
 
     return min(max_cpus, config_default)
 
