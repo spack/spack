@@ -148,16 +148,16 @@ class Axom(CachedCMakePackage, CudaPackage):
         spec = self.spec
         entries = super(Axom, self).initconfig_compiler_entries()
 
-        if "+fortran" in spec or spack_fc is not None:
+        if "+fortran" in spec or self.compiler.fc is not None:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", True))
         else:
             entries.append(cmake_cache_option("ENABLE_FORTRAN", False))
 
-        if ((spack_fc is not None)
-           and ("gfortran" in spack_fc)
-           and ("clang" in spack_cxx)):
+        if ((self.compiler.fc is not None)
+           and ("gfortran" in self.compiler.fc)
+           and ("clang" in self.compiler.cxx)):
             libdir = pjoin(os.path.dirname(
-                           os.path.dirname(spack_cxx)), "lib")
+                           os.path.dirname(self.compiler.cxx)), "lib")
             flags = ""
             for _libpath in [libdir, libdir + "64"]:
                 if os.path.exists(_libpath):
@@ -172,13 +172,13 @@ class Axom(CachedCMakePackage, CudaPackage):
 
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
-        if (spack_fc is not None) and ("xlf" in spack_fc):
+        if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
             entries.append(cmake_cache_string("CMAKE_Fortran_COMPILER_ID", "XL",
                                               familymsg))
-        if "xlc" in spack_cc:
+        if "xlc" in self.compiler.cc:
             entries.append(cmake_cache_string("CMAKE_C_COMPILER_ID", "XL",
                                               familymsg))
-        if "xlC" in spack_cxx:
+        if "xlC" in self.compiler.cxx:
             entries.append(cmake_cache_string("CMAKE_CXX_COMPILER_ID", "XL",
                                               familymsg))
 
@@ -199,7 +199,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         ))
 
         if spec.satisfies('target=ppc64le:'):
-            if (spack_fc is not None) and ("xlf" in spack_fc):
+            if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
                 description = ("Converts C-style comments to Fortran style "
                                "in preprocessed files")
                 entries.append(cmake_cache_string(
@@ -207,7 +207,8 @@ class Axom(CachedCMakePackage, CudaPackage):
                     "-WF,-C!  -qxlf2003=polymorphic",
                     description))
                 # Grab lib directory for the current fortran compiler
-                libdir = pjoin(os.path.dirname(os.path.dirname(spack_fc)),
+                libdir = pjoin(os.path.dirname(
+                               os.path.dirname(self.compiler.fc)),
                                "lib")
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
@@ -359,7 +360,13 @@ class Axom(CachedCMakePackage, CudaPackage):
                                             pjoin(python_bin_dir,
                                                   "sphinx-build")))
 
-        for dep in ('py-shroud', 'uncrustify', 'cppcheck', 'doxygen'):
+        if "py-shroud" in spec:
+            shroud_bin_dir = get_spec_path(spec, "py-shroud",
+                                           path_replacements, use_bin=True)
+            entries.write(cmake_cache_path("SHROUD_EXECUTABLE",
+                                           pjoin(shroud_bin_dir, "shroud")))
+
+        for dep in ('uncrustify', 'cppcheck', 'doxygen'):
             if dep in spec:
                 dep_bin_dir = get_spec_path(spec, dep, path_replacements,
                                             use_bin=True)
