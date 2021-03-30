@@ -42,6 +42,3 @@ class Glfw(CMakePackage):
     depends_on('freetype', when='platform=linux')
     depends_on('fontconfig', when='platform=linux')
     depends_on('pkgconfig', type='build', when='platform=linux')
-
-
-
