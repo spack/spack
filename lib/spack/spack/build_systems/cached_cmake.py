@@ -168,15 +168,15 @@ class CachedCMakePackage(CMakePackage):
         entries = []
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
-        if "xlf" in (spack_fc or ''):  # noqa: F821
+        if "xlf" in (self.compiler.fc or ''):  # noqa: F821
             entries.append(cmake_cache_string(
                 "CMAKE_Fortran_COMPILER_ID", "XL",
                 familymsg))
-        if "xlc" in spack_cc:  # noqa: F821
+        if "xlc" in self.compiler.cc:  # noqa: F821
             entries.append(cmake_cache_string(
                 "CMAKE_C_COMPILER_ID", "XL",
                 familymsg))
-        if "xlC" in spack_cxx:  # noqa: F821
+        if "xlC" in self.compiler.cxx:  # noqa: F821
             entries.append(cmake_cache_string(
                 "CMAKE_CXX_COMPILER_ID", "XL",
                 familymsg))
