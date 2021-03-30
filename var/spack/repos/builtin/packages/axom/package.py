@@ -211,8 +211,8 @@ class Axom(CachedCMakePackage, CudaPackage):
                 description = ("Adds a missing rpath for libraries "
                                "associated with the fortran compiler")
                 linker_flags = "${BLT_EXE_LINKER_FLAGS} -Wl,-rpath," + libdir
-                entries.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS",
-                                                 linker_flags, description))
+                entries.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS",
+                                                  linker_flags, description))
                 if "+shared" in spec:
                     linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," \
                                    + libdir
@@ -305,8 +305,8 @@ class Axom(CachedCMakePackage, CudaPackage):
         for dep in ('mfem', 'hdf5', 'lua', 'scr', 'raja', 'umpire'):
             if '+%s' % dep in spec:
                 dep_dir = get_spec_path(self.spec, dep, path_replacements)
-                entries.append(cmake_cache_entry('%s_DIR' % dep.upper(),
-                                                 dep_dir))
+                entries.append(cmake_cache_path('%s_DIR' % dep.upper(),
+                                                dep_dir))
             else:
                 entries.append('# %s not build\n' % dep.upper())
 
