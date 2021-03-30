@@ -361,6 +361,10 @@ class InternalConfigScope(ConfigScope):
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
 
+    def clear(self):
+        # no cache to clear here.
+        pass
+
     @staticmethod
     def _process_dict_keyname_overrides(data):
         """Turn a trailing `:' in a key name into an override attribute."""
