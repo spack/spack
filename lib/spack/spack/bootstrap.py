@@ -216,12 +216,12 @@ def _bootstrap_config_scopes():
 @contextlib.contextmanager
 def ensure_bootstrap_configuration():
     with spack.architecture.use_platform(spack.architecture.real_platform()):
-        # Default configuration scopes excluding command line and builtin
-        # but accounting for platform specific scopes
-        config_scopes = _bootstrap_config_scopes()
-        with spack.config.use_configuration(*config_scopes):
-            with spack.repo.use_repositories(spack.paths.packages_path):
-                with spack.store.use_store(spack.paths.user_bootstrap_store):
+        with spack.repo.use_repositories(spack.paths.packages_path):
+            with spack.store.use_store(spack.paths.user_bootstrap_store):
+                # Default configuration scopes excluding command line
+                # and builtin but accounting for platform specific scopes
+                config_scopes = _bootstrap_config_scopes()
+                with spack.config.use_configuration(*config_scopes):
                     with spack_python_interpreter():
                         yield
 
