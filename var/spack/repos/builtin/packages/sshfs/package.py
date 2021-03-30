@@ -19,3 +19,7 @@ class Sshfs(MesonPackage):
 
     depends_on('glib')
     depends_on('libfuse@3.1.0:')
+
+    # used for libfuse; when libfuse is external, make sure that pkgconfig is
+    # external too, since spack's pkgconfig might not be able to locate libfuse.
+    depends_on('pkgconfig', type='build')
