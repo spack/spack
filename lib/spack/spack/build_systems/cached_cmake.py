@@ -11,9 +11,14 @@ from spack.build_systems.cmake import CMakePackage
 from spack.package import run_after
 
 
-def cmake_cache_entry(name, value, comment=""):
+def cmake_cache_path(name, value, comment=""):
     """Generate a string for a cmake cache variable"""
     return 'set({0} "{1}" CACHE PATH "{2}")\n'.format(name, value, comment)
+
+
+def cmake_cache_string(name, value, comment=""):
+    """Generate a string for a cmake cache variable"""
+    return 'set({0} "{1}" CACHE STRING "{2}")\n'.format(name, value, comment)
 
 
 def cmake_cache_option(name, boolean_value, comment=""):
