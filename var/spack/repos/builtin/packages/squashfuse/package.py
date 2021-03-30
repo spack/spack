@@ -40,7 +40,6 @@ class Squashfuse(AutotoolsPackage):
     depends_on('xz', when='+xz')
     depends_on('zstd', when='+zstd')
 
-    # not all releases have a configure script
     depends_on('m4',       type='build', when='master')
     depends_on('autoconf', type='build', when='master')
     depends_on('automake', type='build', when='master')
