@@ -213,7 +213,8 @@ class CachedCMakePackage(CMakePackage):
         ]
 
     def initconfig(self, spec, prefix):
-        cache_entries = (self.initconfig_compiler_entries() +
+        cache_entries = (self.std_initconfig_entries() +
+                         self.initconfig_compiler_entries() +
                          self.initconfig_mpi_entries() +
                          self.initconfig_hardware_entries() +
                          self.initconfig_package_entries())
