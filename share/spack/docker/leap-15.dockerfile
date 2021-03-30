@@ -34,6 +34,8 @@ RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
           /usr/local/bin/interactive-shell \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-named-env
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
           /usr/local/bin/spack-env
 
 RUN mkdir -p /root/.spack \

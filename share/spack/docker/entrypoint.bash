@@ -9,10 +9,18 @@ mode=oneshot
 
 if [ "$( basename "$0" )" '=' 'spack-env' ] ; then
     mode=spackenv
+elif [ "$( basename "$0" )" '=' 'spack-named-env' ] ; then
+    mode=namedenv
+    named_env="$1"
+    shift
 elif [ "$( basename "$0" )" '=' 'docker-shell' ] ; then
     mode=dockershell
 elif [ "$( basename "$0" )" '=' 'interactive-shell' ] ; then
     mode=interactiveshell
+elif [ "$1" '=' 'spack-named-env' ] ; then
+    mode=namedenv
+    named_env="$2"
+    shift 2
 elif [ "$1" '=' 'docker-shell' ] ; then
     mode=dockershell
     shift
@@ -38,8 +46,46 @@ case "$mode" in
         exec "$@"
         ;;
 
+    "namedenv")
+        # Scenario 2: Run within a defiend spack environment as if the image
+        # had no ENTRYPOINT
+        #
+        # Necessary for use cases where the command to run and all
+        # arguments must be accepted in the CMD portion and also needs a spack
+        # environment pre-loaded.
+        #
+        # Roughly equivalent to
+        #   docker run ... --entrypoint spack-env ... sh -c "spack activate <named-env> && .."
+        #
+        # The shell script runs with both spack and a given environment
+        # pre-loaded and ready to use.
+        if [ -z "$named_env" ] ; then
+            (
+                echo -n "It looks like you're trying to use a"
+                echo -n " named environment but didn't actually specify the"
+                echo -n " environment name to activate."
+                echo
+            ) >&2
+            exit 1
+        fi
+        . $SPACK_ROOT/share/spack/setup-env.sh
+        spack env activate $named_env
+        if [ $? -ne 0 ] ; then
+            (
+                echo -n "It looks like you're trying to use a"
+                echo -n " named environment but the specified environment"
+                echo -n " \"$named_env\" was not able to activate."
+                echo
+            ) >&2
+            exit 2
+        fi
+        unset CURRENTLY_BUILDING_DOCKER_IMAGE
+        echo "$@"
+        exec "$@"
+        ;;
+
     "dockershell")
-        # Scenario 2: Accept shell code from a RUN command in a
+        # Scenario 3: Accept shell code from a RUN command in a
         # Dockerfile
         #
         # For new Docker images that start FROM this image as its base.
@@ -56,7 +102,7 @@ case "$mode" in
         ;;
 
     "interactiveshell")
-        # Scenario 3: Run an interactive shell session with Spack
+        # Scenario 4: Run an interactive shell session with Spack
         # preloaded.
         #
         # Create a container meant for an interactive shell session.
@@ -91,7 +137,7 @@ case "$mode" in
         ;;
 
     "oneshot")
-        # Scenario 4: Run a one-shot Spack command from the host command
+        # Scenario 5: Run a one-shot Spack command from the host command
         # line.
         #
         # Triggered by providing arguments to `docker run`.  Arguments

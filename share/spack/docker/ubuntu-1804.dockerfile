@@ -46,6 +46,8 @@ RUN ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
           /usr/local/bin/interactive-shell \
  && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
+          /usr/local/bin/spack-named-env
+ && ln -s $SPACK_ROOT/share/spack/docker/entrypoint.bash \
           /usr/local/bin/spack-env
 
 # Add LANG default to en_US.UTF-8
