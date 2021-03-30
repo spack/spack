@@ -2284,8 +2284,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         extensions_layout = view.extensions_layout
 
-        extensions_layout.check_extension_conflict(
-            self.extendee_spec, self.spec)
+        try:
+            extensions_layout.check_extension_conflict(
+                self.extendee_spec, self.spec)
+        except spack.directory_layout.ExtensionAlreadyInstalledError as e:
+            # already installed, let caller know
+            tty.msg(e.message)
+            return
 
         # Activate any package dependencies that are also extensions.
         if with_dependencies:
