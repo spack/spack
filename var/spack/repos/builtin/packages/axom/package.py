@@ -56,7 +56,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     variant('debug',    default=False,
             description='Build debug instead of optimized version')
 
-    variant('cpp14',  default=True, description="Build with C++14 support")
+    variant('cpp14',    default=True, description="Build with C++14 support")
 
     variant('fortran',  default=True, description="Build with Fortran support")
 
@@ -102,7 +102,7 @@ class Axom(CachedCMakePackage, CudaPackage):
 
     depends_on("umpire~openmp", when="+umpire~openmp")
     depends_on("umpire+openmp", when="+umpire+openmp")
-    depends_on("umpire+cuda+deviceconst", when="+umpire+cuda")
+    depends_on("umpire+cuda", when="+umpire+cuda")
 
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('raja cuda_arch={0}'.format(sm_),
@@ -163,23 +163,23 @@ class Axom(CachedCMakePackage, CudaPackage):
                     flags += " -Wl,-rpath,{0}".format(_libpath)
             description = ("Adds a missing libstdc++ rpath")
             if flags:
-                entries.append(cmake_cache_entry("BLT_EXE_LINKER_FLAGS", flags,
-                                                 description))
+                entries.append(cmake_cache_string("BLT_EXE_LINKER_FLAGS", flags,
+                                                  description))
 
         if "+cpp14" in spec:
-            entries.append(cmake_cache_entry("BLT_CXX_STD", "c++14", ""))
+            entries.append(cmake_cache_string("BLT_CXX_STD", "c++14", ""))
 
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
         if (spack_fc is not None) and ("xlf" in spack_fc):
-            entries.append(cmake_cache_entry("CMAKE_Fortran_COMPILER_ID", "XL",
-                                             familymsg))
+            entries.append(cmake_cache_string("CMAKE_Fortran_COMPILER_ID", "XL",
+                                              familymsg))
         if "xlc" in spack_cc:
-            entries.append(cmake_cache_entry("CMAKE_C_COMPILER_ID", "XL",
-                                             familymsg))
+            entries.append(cmake_cache_string("CMAKE_C_COMPILER_ID", "XL",
+                                              familymsg))
         if "xlC" in spack_cxx:
-            entries.append(cmake_cache_entry("CMAKE_CXX_COMPILER_ID", "XL",
-                                             familymsg))
+            entries.append(cmake_cache_string("CMAKE_CXX_COMPILER_ID", "XL",
+                                              familymsg))
 
         return entries
 
@@ -201,7 +201,7 @@ class Axom(CachedCMakePackage, CudaPackage):
             if (spack_fc is not None) and ("xlf" in spack_fc):
                 description = ("Converts C-style comments to Fortran style "
                                "in preprocessed files")
-                entries.append(cmake_cache_entry(
+                entries.append(cmake_cache_string(
                     "BLT_FORTRAN_FLAGS",
                     "-WF,-C!  -qxlf2003=polymorphic",
                     description))
@@ -216,9 +216,20 @@ class Axom(CachedCMakePackage, CudaPackage):
                 if "+shared" in spec:
                     linker_flags = "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-rpath," \
                                    + libdir
-                    entries.append(cmake_cache_entry(
+                    entries.append(cmake_cache_string(
                         "CMAKE_SHARED_LINKER_FLAGS",
                         linker_flags, description))
+
+            # Fix for working around CMake adding implicit link directories
+            # returned by the BlueOS compilers to link executables with
+            # non-system default stdlib
+            _gcc_prefix = "/usr/tce/packages/gcc/gcc-4.9.3/lib64"
+            if os.path.exists(_gcc_prefix):
+                _gcc_prefix2 = pjoin(_gcc_prefix,
+                    "gcc/powerpc64le-unknown-linux-gnu/4.9.3")
+                _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
+                entries.append(cmake_cache_string(
+                    "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", _link_dirs))
 
             if "+cuda" in spec:
                 entries.append(cmake_cache_option("ENABLE_CUDA", True))
@@ -228,29 +239,22 @@ class Axom(CachedCMakePackage, CudaPackage):
                 entries.append(
                     cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
 
-                if "+cub" in spec:
-                    entries.append(
-                        cmake_cache_option("AXOM_ENABLE_CUB", True))
-                else:
-                    entries.append(
-                        cmake_cache_option("AXOM_ENABLE_CUB", False))
-
                 # CUDA_FLAGS
-                cudaflags = '-restrict '
+                cudaflags  = "-restrict --expt-extended-lambda "
 
                 if not spec.satisfies('cuda_arch=none'):
-                    cuda_arch = spec.variants['cuda_arch'].value
-                    axom_arch = 'sm_{0}'.format(cuda_arch[0])
-                    entries.append(
-                        cmake_cache_entry("AXOM_CUDA_ARCH", axom_arch))
-                    cudaflags += "-arch ${AXOM_CUDA_ARCH} "
+                    cuda_arch = spec.variants['cuda_arch'].value[0]
+                    entries.append(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES",
+                                                      cuda_arch))
+                    cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
                 else:
                     entries.append("# cuda_arch could not be determined\n\n")
 
-                cudaflags += " %s" % self.compiler.cxx11_flags
-                cudaflags += "--expt-extended-lambda -G "
-                entries.append(
-                    cmake_cache_entry("CMAKE_CUDA_FLAGS", cudaflags))
+                if "+cpp14" in spec:
+                   cudaflags += " %s" % self.compiler.cxx14_flags
+                else:
+                    cudaflags += " %s" % self.compiler.cxx11_flags
+                entries.append(cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
 
                 entries.append(
                     "# nvcc does not like gtest's 'pthreads' flag\n")
@@ -263,11 +267,11 @@ class Axom(CachedCMakePackage, CudaPackage):
         entries = super(Axom, self).initconfig_mpi_entries()
         spec = self.spec
 
-        if "+mpi" in self.spec:
+        if "+mpi" in spec:
             entries.append(cmake_cache_option("ENABLE_MPI", True))
             if spec['mpi'].name == 'spectrum-mpi':
-                entries.append(cmake_cache_entry("BLT_MPI_COMMAND_APPEND",
-                                                 "mpibind"))
+                entries.append(cmake_cache_string("BLT_MPI_COMMAND_APPEND",
+                                                  "mpibind"))
         else:
             entries.append(cmake_cache_option("ENABLE_MPI", False))
 
@@ -292,10 +296,10 @@ class Axom(CachedCMakePackage, CudaPackage):
             tpl_root = os.path.realpath(pjoin(prefix_paths[0], compiler_str))
             path_replacements[tpl_root] = "${TPL_ROOT}"
             entries.append("# Root directory for generated TPLs\n")
-            entries.append(cmake_cache_entry("TPL_ROOT", tpl_root))
+            entries.append(cmake_cache_path("TPL_ROOT", tpl_root))
 
         conduit_dir = get_spec_path(spec, "conduit", path_replacements)
-        entries.append(cmake_cache_entry("CONDUIT_DIR", conduit_dir))
+        entries.append(cmake_cache_path("CONDUIT_DIR", conduit_dir))
 
         # optional tpls
         for dep in ('mfem', 'hdf5', 'lua', 'scr', 'raja', 'umpire'):
@@ -322,11 +326,11 @@ class Axom(CachedCMakePackage, CudaPackage):
             devtools_root = os.path.commonprefix([path1, path2])[:-1]
             path_replacements[devtools_root] = "${DEVTOOLS_ROOT}"
             entries.append("# Root directory for generated developer tools\n")
-            entries.append(cmake_cache_entry("DEVTOOLS_ROOT", devtools_root))
+            entries.append(cmake_cache_path("DEVTOOLS_ROOT", devtools_root))
 
             # Only turn on clangformat support if devtools is on
             clang_fmt_path = spec['llvm'].prefix.bin.join('clang-format')
-            strings.append(cmake_cache_entry("CLANGFORMAT_EXECUTABLE",
+            strings.append(cmake_cache_path("CLANGFORMAT_EXECUTABLE",
                                              clang_fmt_path))
         else:
             strings.append("# ClangFormat disabled due to disabled devtools\n")
@@ -336,7 +340,7 @@ class Axom(CachedCMakePackage, CudaPackage):
             python_path = os.path.realpath(spec['python'].command.path)
             for key in path_replacements:
                 python_path = python_path.replace(key, path_replacements[key])
-            entries.append(cmake_cache_entry("PYTHON_EXECUTABLE", python_path))
+            entries.append(cmake_cache_path("PYTHON_EXECUTABLE", python_path))
 
         enable_docs = "doxygen" in spec or "py-sphinx" in spec
         entries.append(cmake_cache_option("ENABLE_DOCS", enable_docs))
@@ -345,16 +349,16 @@ class Axom(CachedCMakePackage, CudaPackage):
             python_bin_dir = get_spec_path(spec, "python",
                                            path_replacements,
                                            use_bin=True)
-            entries.append(cmake_cache_entry("SPHINX_EXECUTABLE",
-                                             pjoin(python_bin_dir,
-                                                   "sphinx-build")))
+            entries.append(cmake_cache_path("SPHINX_EXECUTABLE",
+                                            pjoin(python_bin_dir,
+                                                  "sphinx-build")))
 
         for dep in ('py-shroud', 'uncrustify', 'cppcheck', 'doxygen'):
             if dep in spec:
                 dep_bin_dir = get_spec_path(spec, dep, path_replacements,
                                             use_bin=True)
-                entries.append(cmake_cache_entry('%s_EXECUTABLE' % dep.upper(),
-                                                 pjoin(dep_bin_dir, dep)))
+                entries.append(cmake_cache_path('%s_EXECUTABLE' % dep.upper(),
+                                                pjoin(dep_bin_dir, dep)))
 
         return entries
 
