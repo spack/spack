@@ -37,7 +37,7 @@ def test_setting_jobs_flag(job_parser, ncores, monkeypatch):
 
 
 @pytest.mark.parametrize("ncores", [1, 2, 4, 8, 16, 32])
-def test_ommitted_job_flag(job_parser, ncores, monkeypatch):
+def test_omitted_job_flag(job_parser, ncores, monkeypatch):
     monkeypatch.setattr(multiprocessing, 'cpu_count', lambda: ncores)
     namespace = job_parser.parse_args([])
     assert namespace.jobs == min(ncores, 16)
