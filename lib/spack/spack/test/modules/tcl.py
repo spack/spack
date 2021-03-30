@@ -385,3 +385,22 @@ class TestTcl(object):
         # Test the mpileaks that should NOT have the autoloaded dependencies
         content = modulefile_content('mpileaks ^mpich')
         assert len([x for x in content if 'is-loaded' in x]) == 0
+
+    def test_config_backwards_compat(self, mutable_config):
+        settings = {
+            'enable': ['tcl'],
+            'tcl': {
+                'all': {
+                    'conflict': ['{name}']
+                }
+            }
+        }
+
+        spack.config.set('modules:default', settings)
+        new_format = spack.modules.tcl.configuration('default')
+
+        spack.config.set('modules', settings)
+        old_format = spack.modules.tcl.configuration('default')
+
+        assert old_format == new_format
+        assert old_format == settings['tcl']
