@@ -69,6 +69,15 @@ class Ncurses(AutotoolsPackage, GNUMirrorPackage):
                     break
             if usingSymlinks:
                 variants += '+symlinks'
+
+            abiVersion = 'none'
+            output = Executable(exe)('--abi-version', output=str, error=str)
+            if '6' in output:
+                abiVersion = '6'
+            elif '5' in output:
+                abiVersion = '5'
+            variants += ' abi=' + abiVersion
+
             results.append(variants)
         return results
 
