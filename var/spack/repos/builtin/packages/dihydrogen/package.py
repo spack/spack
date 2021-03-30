@@ -77,8 +77,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
     for val in ROCmPackage.amdgpu_targets:
         depends_on('aluminum amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
 
-    depends_on('cuda', when=('+cuda' or '+distconv'))
-    depends_on('cudnn', when=('+cuda' or '+distconv'))
+    for when in ['+cuda', '+distconv']:
+        depends_on('cuda', when=when)
+        depends_on('cudnn', when=when)
     depends_on('cub', when='^cuda@:10.99')
 
     # Note that #1712 forces us to enumerate the different blas variants
