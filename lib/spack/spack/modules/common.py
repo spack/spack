@@ -55,7 +55,11 @@ import spack.util.spack_yaml as syaml
 #: config section for this file
 def configuration(module_set_name):
     config_path = 'modules:%s' % module_set_name
-    return spack.config.get(config_path, {})
+    config = spack.config.get(config_path, {})
+    if not config and module_set_name == 'default':
+        # return old format for backward compatibility
+        return spack.config.get('modules', {})
+    return config
 
 
 #: Valid tokens for naming scheme and env variable names
