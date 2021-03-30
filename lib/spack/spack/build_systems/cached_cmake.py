@@ -69,18 +69,18 @@ class CachedCMakePackage(CMakePackage):
             "# Compiler Spec: {0}".format(spec.compiler),
             "#------------------{0}".format("-" * 60),
             'if(DEFINED ENV{SPACK_CC})',
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_C_COMPILER", os.environ['CC']),
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_CXX_COMPILER", os.environ['CXX']),
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_Fortran_COMPILER", os.environ['FC']),
             'else()',
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_C_COMPILER", spack_cc),  # noqa: F821
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_CXX_COMPILER", spack_cxx),  # noqa: F821
-            '  ' + cmake_cache_entry(
+            '  ' + cmake_cache_path(
                 "CMAKE_Fortran_COMPILER", spack_fc),  # noqa: F821
             'endif()'
         ]
@@ -92,13 +92,13 @@ class CachedCMakePackage(CMakePackage):
             cppflags += ' '
         cflags = cppflags + ' '.join(spec.compiler_flags['cflags'])
         if cflags:
-            entries.append(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
+            entries.append(cmake_cache_string("CMAKE_C_FLAGS", cflags))
         cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
         if cxxflags:
-            entries.append(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
+            entries.append(cmake_cache_string("CMAKE_CXX_FLAGS", cxxflags))
         fflags = ' '.join(spec.compiler_flags['fflags'])
         if fflags:
-            entries.append(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
+            entries.append(cmake_cache_string("CMAKE_Fortran_FLAGS", fflags))
 
         return entries
 
@@ -114,12 +114,12 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        entries.append(cmake_cache_entry("MPI_C_COMPILER",
-                                         spec['mpi'].mpicc))
-        entries.append(cmake_cache_entry("MPI_CXX_COMPILER",
-                                         spec['mpi'].mpicxx))
-        entries.append(cmake_cache_entry("MPI_Fortran_COMPILER",
-                                         spec['mpi'].mpifc))
+        entries.append(cmake_cache_path("MPI_C_COMPILER",
+                                        spec['mpi'].mpicc))
+        entries.append(cmake_cache_path("MPI_CXX_COMPILER",
+                                        spec['mpi'].mpicxx))
+        entries.append(cmake_cache_path("MPI_Fortran_COMPILER",
+                                        spec['mpi'].mpifc))
 
         # Check for slurm
         using_slurm = False
@@ -149,16 +149,16 @@ class CachedCMakePackage(CMakePackage):
             # starting with cmake 3.10, FindMPI expects MPIEXEC_EXECUTABLE
             # vs the older versions which expect MPIEXEC
             if self.spec["cmake"].satisfies('@3.10:'):
-                entries.append(cmake_cache_entry("MPIEXEC_EXECUTABLE",
-                                                 mpiexec))
+                entries.append(cmake_cache_path("MPIEXEC_EXECUTABLE",
+                                                mpiexec))
             else:
-                entries.append(cmake_cache_entry("MPIEXEC", mpiexec))
+                entries.append(cmake_cache_path("MPIEXEC", mpiexec))
 
         # Determine MPIEXEC_NUMPROC_FLAG
         if using_slurm:
-            entries.append(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-n"))
+            entries.append(cmake_cache_string("MPIEXEC_NUMPROC_FLAG", "-n"))
         else:
-            entries.append(cmake_cache_entry("MPIEXEC_NUMPROC_FLAG", "-np"))
+            entries.append(cmake_cache_string("MPIEXEC_NUMPROC_FLAG", "-np"))
 
         return entries
 
@@ -169,15 +169,15 @@ class CachedCMakePackage(CMakePackage):
         # Override XL compiler family
         familymsg = ("Override to proper compiler family for XL")
         if "xlf" in (spack_fc or ''):  # noqa: F821
-            entries.append(cmake_cache_entry(
+            entries.append(cmake_cache_string(
                 "CMAKE_Fortran_COMPILER_ID", "XL",
                 familymsg))
         if "xlc" in spack_cc:  # noqa: F821
-            entries.append(cmake_cache_entry(
+            entries.append(cmake_cache_string(
                 "CMAKE_C_COMPILER_ID", "XL",
                 familymsg))
         if "xlC" in spack_cxx:  # noqa: F821
-            entries.append(cmake_cache_entry(
+            entries.append(cmake_cache_string(
                 "CMAKE_CXX_COMPILER_ID", "XL",
                 familymsg))
 
@@ -187,18 +187,18 @@ class CachedCMakePackage(CMakePackage):
             entries.append("#------------------{0}\n".format("-" * 60))
 
             cudatoolkitdir = spec['cuda'].prefix
-            entries.append(cmake_cache_entry("CUDA_TOOLKIT_ROOT_DIR",
-                                             cudatoolkitdir))
+            entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR",
+                                            cudatoolkitdir))
             cudacompiler = "${CUDA_TOOLKIT_ROOT_DIR}/bin/nvcc"
-            entries.append(cmake_cache_entry("CMAKE_CUDA_COMPILER",
-                                             cudacompiler))
+            entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER",
+                                            cudacompiler))
 
             if "+mpi" in spec:
-                entries.append(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
-                                                 "${MPI_CXX_COMPILER}"))
+                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
+                                                "${MPI_CXX_COMPILER}"))
             else:
-                entries.append(cmake_cache_entry("CMAKE_CUDA_HOST_COMPILER",
-                                                 "${CMAKE_CXX_COMPILER}"))
+                entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
+                                                "${CMAKE_CXX_COMPILER}"))
 
         return entries
 
