@@ -13,8 +13,8 @@ class MparkVariant(CMakePackage):
     git     = "https://github.com/mpark/variant.git"
     maintainers = ['ax3l']
 
-    version('1.4.0', commit='4988879a9f5a95d72308eca2b1779db6ed9b135d')
-    version('1.3.0', commit='29319715a1f0eb0980d380db8a2fda5af8d58feb')
+    version('1.4.0', sha256='8f6b28ab3640b5d76d5b6664dda7257a4405ce59179220431b8fd196c79b2ecb')
+    version('1.3.0', sha256='d0f7e41f818fcc839797a8017e76b8b66b323651c304cff641a83a56ae9943c6')
 
     # Ref.: https://github.com/mpark/variant/pull/73
     patch('nvcc.patch', when='@:1.4.0')
