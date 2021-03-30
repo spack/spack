@@ -132,19 +132,18 @@ class Concretizer(object):
                 usable.append(cspec)
 
             externals = spec_externals(cspec)
-            if externals:
-                for ext in externals:
-                    if ext.satisfies(spec):
-                        # Check whether we have compilers that can satisfy the
-                        # external spec and ignore it if that is not the case.
-                        accept_compiler = (
-                            not self.check_for_compiler_existence or
-                            ext.compiler is None or
-                            any(ext.compiler.satisfies(c)
-                                for c in spack.compilers.all_compiler_specs()))
-                        # TODO: account for the architecture too
-                        if accept_compiler:
-                            usable.append(ext)
+            for ext in externals:
+                if ext.satisfies(spec):
+                    # Check whether we have compilers that can satisfy the
+                    # external spec and ignore it if that is not the case.
+                    accept_compiler = (
+                        not self.check_for_compiler_existence or
+                        ext.compiler is None or
+                        any(ext.compiler.satisfies(c)
+                            for c in spack.compilers.all_compiler_specs()))
+                    # TODO: account for the architecture too
+                    if accept_compiler:
+                        usable.append(ext)
 
         # If nothing is in the usable list now, it's because we aren't
         # allowed to build anything.
