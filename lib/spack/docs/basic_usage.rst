@@ -737,81 +737,46 @@ Since the only difference between these two is the hash, we provide the hashes:
 .. code-block::console
 
     $ spack diff /efzjziy /sl7m27m
-    ==> diff(zlib@1.2.11/efzjziy, zlib@1.2.11/sl7m27m)
-    VARIANT_SET
-      zlib optimize bool(False)
-    ==> diff(zlib@1.2.11/sl7m27m, zlib@1.2.11/efzjziy)
-    VARIANT_SET
-      zlib optimize bool(True)
+    zlib@1.2.11%gcc@9.3.0~optimize+pic+shared+optimize+pic+sharedarch=linux-ubuntu20.04-skylake
 
 
-Awesome! The above tells us that our first zlib was built without optimize (False)
-and the second was built with optimize (True). This is a small example, but there are
-actually several kinds of differences that you can view, a ``VARIANT_SET``
-being just one of them. The first package that you provide (A)
-being diffed against B means that we see what is in A but not B. Here is another example
-with an additional difference type, ``VERSION``:
+In the terminal output, the common attributes are your default color (e.g., white),
+the changed or removed attributes are crossed out in red, and the new attributes
+are in bright green. If you are interested in getting the attributes as data,
+then you likely want to add ``--json``:
 
-.. code-block::console
-
-    $ spack diff python@2.7.8 python@3.8.8
-    ==> diff(python@2.7.8/7oknfqf, python@3.8.8/vrp4fmj)
-    VARIANT_SET
-      python patches a8c52415a8b03c0e5f28b5d52ae498f7a7e602007db2b9554df28cd5685839b8
-    VERSION
-      openssl Version(1.0.2u)
-      python Version(2.7.8)
-    ==> diff(python@3.8.8/vrp4fmj, python@2.7.8/7oknfqf)
-    VARIANT_SET
-      python patches 0d98e93189bc278fbc37a50ed7f183bd8aaf249a8e1670a465f0db6bb4f8cf87
-    VERSION
-      openssl Version(1.1.1j)
-      python Version(3.8.8)
-
-
-Let's say that we were only interested in one kind of attribute above, versions!
-We could first see the options by asking the command for help:
 
 .. code-block:: console
 
-    $ spack diff --help
-    ...
-      -a     {all,version,concrete,node,node_compiler_set,node_compiler_version_set,
-      node_os_set,node_platform_set,node_target_set,variant_set}
-                        select the attributes to show (defaults to all)
+    $ spack diff --json /efzjziy /sl7m27m
+    {"intersect": [
+      [
+       "node",
+       "zlib"
+      ],
+      ...
+     ],
+     "a_not_b": [
+      [
+       "variant_set",
+       "zlib optimize bool(False)"
+      ]
+     ],
+     "b_not_a": [
+      [
+       "variant_set",
+       "zlib optimize bool(True)"
+      ]
+     ],
+     "a_name": "zlib@1.2.11/efzjziy",
+     "b_name": "zlib@1.2.11/sl7m27m"
+    }
 
+
+A subset of the intersect (common attributes) data is shown, but we can also
+easily see that the variant sets are different. Keep in mind that you can
+also compare completely different packages, if you are interested.
     
-We might then want to filter down to just a subset
-of a property type. To do this, you'd add the ``-a`` for attribute parameter,
-which defaults to all. Here is how you would filter to show just versions:
-
-
-.. code-block:: console
-
-    $ spack diff -a version python@2.7.8 python@3.8.8
-    ==> diff(python@2.7.8/7oknfqf, python@3.8.8/vrp4fmj)
-    VERSION
-      python Version(2.7.8)
-      openssl Version(1.0.2u)
-    ==> diff(python@3.8.8/vrp4fmj, python@2.7.8/7oknfqf)
-    VERSION
-      python Version(3.8.8)
-      openssl Version(1.1.1j)
-
-
-And you can add as many attributes as you'd like with multiple `-a`.
-Finally, if you want to view the data as json (and possibly pipe into an output file)
-just add ``--json``:
-
-
-.. code-block:: console
-   
-    $ spack diff --json python@2.7.8 python@3.8.8
-
-
-This data will be much longer because along with the differences for A vs. B and
-B vs. A, we also capture the intersection.
-
 
 ------------------------
 Using installed packages

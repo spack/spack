@@ -67,7 +67,8 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         diff('mpileaks', 'mpileaks+debug')
 
     # But if we tell it to use the first, it won't try to disambiguate
-    assert "VARIANT_SET" in diff('--first', 'mpileaks', 'mpileaks+debug')
+    variants = "~debug~opt+shared+static+debug~opt+shared"
+    assert variants in diff('--first', 'mpileaks', 'mpileaks+debug')
 
     # This matches them exactly
     output = diff("--json", "mpileaks@2.3/ysubb76", "mpileaks@2.3/ft5qff3")

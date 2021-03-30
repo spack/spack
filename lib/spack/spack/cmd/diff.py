@@ -5,6 +5,7 @@
 
 
 import spack.cmd
+
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.environment
@@ -13,7 +14,6 @@ import spack.solver.asp as asp
 import llnl.util.tty as tty
 import llnl.util.tty.color as color
 import spack.util.spack_json as sjson
-import operator
 import spack.cmd
 import sys
 
@@ -40,24 +40,6 @@ def setup_parser(subparser):
         dest='load_first',
         help="load the first match if multiple packages match the spec"
     )
-    subparser.add_argument(
-        '-a',
-        dest='attributes',
-        action='append',
-        choices=[
-            'all', 'version', 'concrete', 'node', 'node_compiler_set',
-            'node_compiler_version_set', 'node_os_set', 'node_platform_set',
-            'node_target_set', 'variant_set'
-        ],
-        help="select the attributes to show (defaults to all)"
-    )
-
-
-def bold(string):
-    """
-    Make a header string bold so we can easily see it
-    """
-    return color.colorize("@*{%s}" % string)
 
 
 def compare_specs(a, b, to_string=False, colorful=True):
@@ -131,38 +113,55 @@ def flatten(tuple_list):
     return updated
 
 
-def print_difference(diffset, attributes="all", out=None):
+def print_difference(spec1, spec2):
+    """Print a diff of the attributes.
     """
-    Print the difference.
+    atts1 = spec1.format(return_lookup=True)
+    atts2 = spec2.format(return_lookup=True)
 
-    Given a diffset and a user preference (e.g., print versions or print all)
-    print a tabular, organized version of the diffset
-    """
-    # Default to standard out unless another stream is provided
-    out = out or sys.stdout
+    # Assume we look for all attributes of the default format string
+    # This is also in the correct order. See spack.spec default_format
+    attrs = ['name', 'version', 'compiler.name', 'compiler.version',
+             'compiler_flags', 'variants', 'architecture']
 
-    # Cut out early if we don't have any differences!
-    if not diffset:
-        print("No differences\n")
-        return
+    # Our final string to print
+    final = ""
 
-    # Sort by name so they are grouped together
-    sorted_diffset = sorted(diffset, key=operator.itemgetter(0))
+    # Prefixes depend on variable name
+    prefixes = {'version': "@", "compiler.name": '%', 'compiler.version': '@',
+                'architecture': 'arch='}
 
-    # Always print a new category
-    category = None
-    for entry in sorted_diffset:
-        if "all" in attributes or entry[0] in attributes:
+    # Loop through attributes (changes from one to the next) and prepare
+    # string that shows second as newer, first as older
+    for attr in attrs:
+        att1 = atts1.get(attr)
+        att2 = atts2.get(attr)
 
-            # If we have a new category, create a new section
-            if category != entry[0]:
-                category = entry[0]
+        # Printing prefix
+        prefix = "" if attr not in prefixes else prefixes[attr]
 
-                # print category in bold, colorized
-                out.write(bold("%s\n" % category.upper()))
+        # Case 1: it's in neither
+        if not att1 and not att2:
+            continue
 
-            # Write the attribute
-            out.write("%s\n" % entry[1])
+        # Case 2: it's missing entirely in our first, this is new (GREEN)
+        elif not att1 and att2:
+            final += color.colorize("@G{%s%s}" % (prefix, att2))
+
+        # Case 3: it's missing entirely in our second, not present first (RED)
+        elif not att2 and att1:
+            final += color.colorize("@-R{%s%s}" % (prefix, att1))
+
+        # Case 4: both are defined and equal (keep as regular color)
+        elif att1 == att2:
+            final += "%s%s" % (prefix, att1)
+
+        # Case 5: both are defined and different
+        elif att1 != att2:
+            # TODO: we could do another level of comparison here
+            final += color.colorize("@-R{%s%s}@G{%s}" % (prefix, att1, att2))
+
+    print(final)
 
 
 def diff(parser, args):
@@ -174,20 +173,18 @@ def diff(parser, args):
     specs = [spack.cmd.disambiguate_spec(spec, env, first=args.load_first)
              for spec in spack.cmd.parse_specs(args.specs)]
 
-    # Calculate the comparison (c)
-    c = compare_specs(specs[0], specs[1], to_string=True,
-                      colorful=not args.dump_json)
-
-    # Default to all attributes
-    attributes = args.attributes or ["all"]
-
+    # Calculate the comparison to dump as json
     if args.dump_json:
+        c = compare_specs(specs[0], specs[1], to_string=True,
+                          colorful=not args.dump_json)
         print(sjson.dump(c))
-    else:
-        tty.warn("This interface is subject to change.\n")
 
-        # For each spec, print the differences wanted by the user
-        tty.info("diff(%s, %s)" % (c['a_name'], c['b_name']))
-        print_difference(c['a_not_b'], attributes)
-        tty.info("diff(%s, %s)" % (c['b_name'], c['a_name']))
-        print_difference(c['b_not_a'], attributes)
+    # or print a colored diff
+    else:
+
+        # Cut out early if the specs are the same
+        if specs[0] == specs[1]:
+            tty.info("No differences.")
+            sys.exit(0)
+
+        print_difference(specs[0], specs[1])

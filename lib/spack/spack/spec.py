@@ -3720,7 +3720,9 @@ class Spec(object):
             color (bool): True if returned string is colored
             transform (dict): maps full-string formats to a callable \
                 that accepts a string and returns another one
-
+            return_lookup (bool): Instead of returning the string, return
+                 a lookup of attributes that can be used easily for
+                 printing a colored diff (defaults to False)
         """
         # If we have an unescaped $ sigil, use the deprecated format strings
         if re.search(r'[^\\]*\$', format_string):
@@ -3728,8 +3730,12 @@ class Spec(object):
 
         color = kwargs.get('color', False)
         transform = kwargs.get('transform', {})
+        return_lookup = kwargs.get('return_lookup', False)
 
         out = six.StringIO()
+
+        # Keep a record of attributes to return, for diffs
+        attributes = {}
 
         def write(s, c=None):
             f = clr.cescape(s)
@@ -3844,6 +3850,8 @@ class Spec(object):
             elif 'version' in parts:
                 col = '@'
 
+            # Keep track of the attribute
+            attributes[attribute] = current
             # Finally, write the ouptut
             write(sig + morph(spec, str(current)), col)
 
@@ -3878,6 +3886,9 @@ class Spec(object):
                 'Format string terminated while reading attribute.'
                 'Missing terminating }.'
             )
+
+        if return_lookup:
+            return attributes
         return out.getvalue()
 
     def old_format(self, format_string='$_$@$%@+$+$=', **kwargs):
