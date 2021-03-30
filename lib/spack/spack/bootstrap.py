@@ -196,7 +196,10 @@ def get_executable(exe, spec=None, install=False):
 
 
 def _bootstrap_config_scopes():
-    config_scopes = []
+    tty.debug('[BOOTSTRAP CONFIG SCOPE] name=_builtin')
+    config_scopes = [
+        spack.config.InternalConfigScope('_builtin', spack.config.config_defaults)
+    ]
     for name, path in spack.config.configuration_paths:
         platform = spack.architecture.platform().name
         platform_scope = spack.config.ConfigScope(
@@ -204,7 +207,7 @@ def _bootstrap_config_scopes():
         )
         generic_scope = spack.config.ConfigScope(name, path)
         config_scopes.extend([generic_scope, platform_scope])
-        msg = '[BOOSTRAP CONFIG SCOPE] name={0}, path={1}'
+        msg = '[BOOTSTRAP CONFIG SCOPE] name={0}, path={1}'
         tty.debug(msg.format(generic_scope.name, generic_scope.path))
         tty.debug(msg.format(platform_scope.name, platform_scope.path))
     return config_scopes
