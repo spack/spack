@@ -142,3 +142,12 @@ class FujitsuSsl2(Package):
         env.append_flags(
             "FCC_ENV", "-idirafter " + path
         )
+
+    @property
+    def headers(self):
+        path = join_path(
+            self.spec.prefix, "clang-comp", "lib64", "clang", "7.1.0", "include"
+        )
+        headers = find_all_headers(path)
+        headers.directories = [path]
+        return headers
