@@ -244,9 +244,9 @@ class Axom(CachedCMakePackage, CudaPackage):
                         "# cuda_arch could not be determined\n\n")
 
                 if "+cpp14" in spec:
-                   cudaflags += " %s" % self.compiler.cxx14_flag
+                    cudaflags += " -std=c++14"
                 else:
-                    cudaflags += " %s" % self.compiler.cxx11_flag
+                    cudaflags += " -std=c++11"
                 entries.append(
                     cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
 
