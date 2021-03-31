@@ -919,7 +919,7 @@ def test_query_explicit(mutable_database, spec, is_explicit, concretize,
 
 @pytest.mark.parametrize("concretize", [True, False])
 @pytest.mark.parametrize("hashes, expect_result", [(None, True),
-                                                   ({"nonsense"}, False)])
+                                                   (["nonsense"], False)])
 def test_query_hashes(mutable_database, concretize, hashes, expect_result):
     # Test that Database.query() respects the hashes parameter
     s = spack.spec.Spec("mpich@3.0.4")
