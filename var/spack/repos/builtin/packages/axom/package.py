@@ -176,6 +176,45 @@ class Axom(CachedCMakePackage, CudaPackage):
         spec = self.spec
         entries = super(Axom, self).initconfig_hardware_entries()
 
+        if spec.satisfies('target=ppc64le:'):
+            if "+cuda" in spec:
+                entries.append(cmake_cache_option("ENABLE_CUDA", True))
+                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
+                                                  True))
+
+                entries.append(
+                    cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
+
+                # CUDA_FLAGS
+                cudaflags  = "-restrict --expt-extended-lambda "
+
+                if not spec.satisfies('cuda_arch=none'):
+                    cuda_arch = spec.variants['cuda_arch'].value[0]
+                    entries.append(cmake_cache_string(
+                        "CMAKE_CUDA_ARCHITECTURES",
+                        cuda_arch))
+                    cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
+                else:
+                    entries.append(
+                        "# cuda_arch could not be determined\n\n")
+
+                if "+cpp14" in spec:
+                    cudaflags += " -std=c++14"
+                else:
+                    cudaflags += " -std=c++11"
+                entries.append(
+                    cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
+
+                entries.append(
+                    "# nvcc does not like gtest's 'pthreads' flag\n")
+                entries.append(
+                    cmake_cache_option("gtest_disable_pthreads", True))
+
+
+        entries.append("#------------------{0}".format("-" * 30))
+        entries.append("# Hardware Specifics")
+        entries.append("#------------------{0}\n".format("-" * 30))
+
         # OpenMP
         entries.append(cmake_cache_option("ENABLE_OPENMP",
                                           spec.satisfies('+openmp')))
@@ -221,39 +260,6 @@ class Axom(CachedCMakePackage, CudaPackage):
                 _link_dirs = "{0};{1}".format(_gcc_prefix, _gcc_prefix2)
                 entries.append(cmake_cache_string(
                     "BLT_CMAKE_IMPLICIT_LINK_DIRECTORIES_EXCLUDE", _link_dirs))
-
-            if "+cuda" in spec:
-                entries.append(cmake_cache_option("ENABLE_CUDA", True))
-                entries.append(cmake_cache_option("CUDA_SEPARABLE_COMPILATION",
-                                                  True))
-
-                entries.append(
-                    cmake_cache_option("AXOM_ENABLE_ANNOTATIONS", True))
-
-                # CUDA_FLAGS
-                cudaflags  = "-restrict --expt-extended-lambda "
-
-                if not spec.satisfies('cuda_arch=none'):
-                    cuda_arch = spec.variants['cuda_arch'].value[0]
-                    entries.append(cmake_cache_string(
-                        "CMAKE_CUDA_ARCHITECTURES",
-                        cuda_arch))
-                    cudaflags += '-arch sm_${CMAKE_CUDA_ARCHITECTURES} '
-                else:
-                    entries.append(
-                        "# cuda_arch could not be determined\n\n")
-
-                if "+cpp14" in spec:
-                    cudaflags += " -std=c++14"
-                else:
-                    cudaflags += " -std=c++11"
-                entries.append(
-                    cmake_cache_string("CMAKE_CUDA_FLAGS", cudaflags))
-
-                entries.append(
-                    "# nvcc does not like gtest's 'pthreads' flag\n")
-                entries.append(
-                    cmake_cache_option("gtest_disable_pthreads", True))
 
         return entries
 

@@ -78,13 +78,13 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}".format("-" * 60),
             "# Compiler Spec: {0}".format(spec.compiler),
             "#------------------{0}".format("-" * 60),
-            'if(DEFINED ENV{SPACK_CC})',
+            'if(DEFINED ENV{SPACK_CC})\n',
             '  ' + cmake_cache_path(
                 "CMAKE_C_COMPILER", os.environ['CC']),
             '  ' + cmake_cache_path(
                 "CMAKE_CXX_COMPILER", os.environ['CXX']),
             '  ' + spack_fc_entry,
-            'else()',
+            'else()\n',
             '  ' + cmake_cache_path(
                 "CMAKE_C_COMPILER", self.compiler.cc),
             '  ' + cmake_cache_path(
@@ -188,11 +188,16 @@ class CachedCMakePackage(CMakePackage):
     def initconfig_hardware_entries(self):
         spec = self.spec
 
-        entries = []
+        entries = [
+            "#------------------{0}".format("-" * 60),
+            "# Hardware",
+            "#------------------{0}\n".format("-" * 60),
+        ]
+
         if '+cuda' in spec:
-            entries.append("#------------------{0}".format("-" * 60))
+            entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
-            entries.append("#------------------{0}\n".format("-" * 60))
+            entries.append("#------------------{0}\n".format("-" * 30))
 
             cudatoolkitdir = spec['cuda'].prefix
             entries.append(cmake_cache_path("CUDA_TOOLKIT_ROOT_DIR",
