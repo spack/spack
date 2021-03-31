@@ -14,6 +14,7 @@ class Zstd(MakefilePackage):
     homepage = "http://facebook.github.io/zstd/"
     url      = "https://github.com/facebook/zstd/archive/v1.4.3.tar.gz"
 
+    version('1.4.9', sha256='acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8')
     version('1.4.5', sha256='734d1f565c42f691f8420c8d06783ad818060fc390dee43ae0a89f86d0a4f8c2')
     version('1.4.4', sha256='a364f5162c7d1a455cc915e8e3cf5f4bd8b75d09bc0f53965b0c9ca1383c52c8')
     version('1.4.3', sha256='5eda3502ecc285c3c92ee0cc8cd002234dee39d539b3f692997a0e80de1d33de')
