@@ -751,7 +751,9 @@ class winlog:
         self.stdout = StreamWrapper('stdout')
         self.stderr = StreamWrapper('stderr')
         self._active = False
-        self._ioflag = False 
+        self._ioflag = False
+        self.old_stdout = sys.stdout
+        self.old_stderr = sys.stderr
 
     def __enter__(self):
         if self._active:
@@ -765,13 +767,12 @@ class winlog:
         if type(self.logfile) == StringIO:
             self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
-            self.writer = open('temp.txt', mode='wb+')
-            self.reader = open('temp.txt', mode='rb+')
+            sys.stdout = self.logfile
+            sys.stderr = self.logfile
         else:
             self.writer = open(self.logfile, mode='wb+')
             self.reader = open(self.logfile, mode='rb+')
 
-        if cap_alt is None:
             # Dup stdout so we can still write to it after redirection
             self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
             # Redirect stdout and stderr to write to logfile
@@ -788,8 +789,6 @@ class winlog:
                     self.stdout.flush()
                     line = reader.readline()
                     while line:
-                        if self._ioflag:
-                            self.logfile.write(line.decode())
                         if self.echo:
                             self.echo_writer.write('{0}'.format(line.decode()))
                             self.echo_writer.flush()
@@ -802,21 +801,21 @@ class winlog:
             with replace_environment(self.env):
                 self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
                 self._thread.start()
-        else:
-            logfile = cap_alt
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.writer.close()
-        self.reader.close()
-        if os.path.exists("temp.txt"):
-            os.remove("temp.txt")
-        self.echo_writer.flush()
-        self.stdout.flush()
-        self.stderr.flush()
-        self._kill.set()
-        self._thread.join()
-        self.stdout.close()
-        self.stderr.close()
+        if self._ioflag:
+            sys.stdout = self.old_stdout
+            sys.stderr = self.old_stderr
+        else:
+            self.writer.close()
+            self.reader.close()
+            self.echo_writer.flush()
+            self.stdout.flush()
+            self.stderr.flush()
+            self._kill.set()
+            self._thread.join()
+            self.stdout.close()
+            self.stderr.close()
         self._active = False
 
     @contextmanager
