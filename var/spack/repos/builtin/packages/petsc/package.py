@@ -277,7 +277,7 @@ class Petsc(Package):
     # * petsc-lite-3.13, petsc-lite-3.14 (without docs)
     # * petsc-3.15 and newer (without docs)
     def url_for_version(self, version):
-        if version >= Version('3.13.0') and version < Version('3.15.0'):
+        if self.spec.satisfies('@3.13.0:3.14.6'):
             return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-{0}.tar.gz".format(version)
         else:
             return "http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-{0}.tar.gz".format(version)
