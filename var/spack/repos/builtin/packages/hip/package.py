@@ -117,7 +117,7 @@ class Hip(CMakePackage):
         # hipcc recognizes HIP_PLATFORM == hcc and HIP_COMPILER == clang, even
         # though below we specified HIP_PLATFORM=rocclr and HIP_COMPILER=clang
         # in the CMake args.
-        if '@:4.0.0' in self.spec:
+        if self.spec.satisfies('@:4.0.0'):
             env.set('HIP_PLATFORM', 'hcc')
         else:
             env.set('HIP_PLATFORM', 'amd')
@@ -149,7 +149,8 @@ class Hip(CMakePackage):
         # hiprtcCreateProgram:
         # https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
         env.set('LLVM_PATH', paths['llvm-amdgpu'])
-        if '@4.1.0' in self.spec:
+
+        if self.spec.satisfies('@4.1.0:'):
             env.set('HIP_ROCCLR_HOME', paths['hip-rocclr'])
 
         # Finally we have to set --rocm-path=<prefix> ourselves, which is not
@@ -195,7 +196,8 @@ class Hip(CMakePackage):
         with working_dir('bin'):
             match = '^#!/usr/bin/perl'
             substitute = "#!{perl}".format(perl=perl)
-            if '@:4.0.0' in self.spec:
+
+            if self.spec.satisfies('@:4.0.0'):
                 files = [
                     'hipify-perl', 'hipcc', 'extractkernel',
                     'hipconfig', 'hipify-cmakefile'
@@ -235,12 +237,12 @@ class Hip(CMakePackage):
             self.define('HIP_COMPILER', 'clang'),
             self.define('HSA_PATH', self.spec['hsa-rocr-dev'].prefix)
         ]
-        if '@:4.0.0' in self.spec:
+        if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_RUNTIME', 'ROCclr'))
         else:
             args.append(self.define('HIP_RUNTIME', 'rocclr'))
 
-        if '@:4.0.0' in self.spec:
+        if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_PLATFORM', 'rocclr'))
         else:
             args.append(self.define('HIP_PLATFORM', 'amd'))
