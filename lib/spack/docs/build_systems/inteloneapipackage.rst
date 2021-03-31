@@ -44,7 +44,7 @@ Examples
 Building a Package With icx
 ---------------------------
 
-In this example, we buid patchelf with ``icc`` and ``icx``. The
+In this example, we build patchelf with ``icc`` and ``icx``. The
 compilers are installed with spack.
 
 Install the oneAPI compilers::
