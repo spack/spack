@@ -176,7 +176,7 @@ class AutotoolsPackage(PackageBase):
         for abs_path in to_be_patched:
             name = os.path.basename(abs_path)
             mode = os.stat(abs_path).st_mode
-            os.chmod(abs_path, mode & 0o777 | stat.S_IWUSR)
+            os.chmod(abs_path, stat.S_IWUSR)
             fs.copy(substitutes[name], abs_path)
             os.chmod(abs_path, mode)
 
