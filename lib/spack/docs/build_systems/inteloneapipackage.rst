@@ -51,7 +51,7 @@ Install the oneAPI compilers::
 
   spack install intel-oneapi-compilers
 
-Add the compilers to your ``compilers.yaml`` so spack can use it::
+Add the compilers to your ``compilers.yaml`` so spack can use them::
 
   spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin/intel64
   spack compiler add `spack location -i intel-oneapi-compilers`/compiler/latest/linux/bin
