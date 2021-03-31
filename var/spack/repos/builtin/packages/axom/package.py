@@ -210,7 +210,6 @@ class Axom(CachedCMakePackage, CudaPackage):
                 entries.append(
                     cmake_cache_option("gtest_disable_pthreads", True))
 
-
         entries.append("#------------------{0}".format("-" * 30))
         entries.append("# Hardware Specifics")
         entries.append("#------------------{0}\n".format("-" * 30))
@@ -331,8 +330,8 @@ class Axom(CachedCMakePackage, CudaPackage):
 
             # Only turn on clangformat support if devtools is on
             clang_fmt_path = spec['llvm'].prefix.bin.join('clang-format')
-            entries.append(cmake_cache_path("CLANGFORMAT_EXECUTABLE",
-                                             clang_fmt_path))
+            entries.append(cmake_cache_path(
+                "CLANGFORMAT_EXECUTABLE", clang_fmt_path))
         else:
             entries.append("# ClangFormat disabled due to disabled devtools\n")
             entries.append(cmake_cache_option("ENABLE_CLANGFORMAT", False))
