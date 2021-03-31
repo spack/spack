@@ -3,9 +3,10 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-from spack import *
-
 from collections import defaultdict
+
+from spack import *
+from spack.util.environment import is_system_path
 
 
 class Cdo(AutotoolsPackage):
@@ -89,24 +90,28 @@ class Cdo(AutotoolsPackage):
 
         flags = defaultdict(list)
 
+        def yes_or_prefix(spec_name):
+            prefix = self.spec[spec_name].prefix
+            return 'yes' if is_system_path(prefix) else prefix
+
         if '+netcdf' in self.spec:
-            config_args.append('--with-netcdf=' + self.spec['netcdf-c'].prefix)
+            config_args.append('--with-netcdf=' + yes_or_prefix('netcdf-c'))
             # We need to make sure that the libtool script of libcdi - the
             # internal library of CDO - finds the correct version of hdf5.
             # Note that the argument of --with-hdf5 is not passed to the
             # configure script of libcdi, therefore we have to provide
             # additional flags regardless of whether hdf5 support is enabled.
-            flags['LDFLAGS'].append(self.spec['hdf5'].libs.search_flags)
+            hdf5_spec = self.spec['hdf5']
+            if not is_system_path(hdf5_spec.prefix):
+                flags['LDFLAGS'].append(self.spec['hdf5'].libs.search_flags)
         else:
             config_args.append('--without-netcdf')
 
         if self.spec.variants['grib2'].value == 'eccodes':
-            config_args.append('--with-eccodes=' +
-                               self.spec['eccodes'].prefix)
+            config_args.append('--with-eccodes=' + yes_or_prefix('eccodes'))
             config_args.append('--without-grib_api')
         elif self.spec.variants['grib2'].value == 'grib-api':
-            config_args.append('--with-grib_api=' +
-                               self.spec['grib-api'].prefix)
+            config_args.append('--with-grib_api=' + yes_or_prefix('grib-api'))
             if self.spec.satisfies('@1.9:'):
                 config_args.append('--without-eccodes')
         else:
@@ -120,28 +125,39 @@ class Cdo(AutotoolsPackage):
             config_args.append('--enable-cgribex')
 
         if '+szip' in self.spec:
-            config_args.append('--with-szlib=' + self.spec['szip'].prefix)
+            config_args.append('--with-szlib=' + yes_or_prefix('szip'))
         else:
             config_args.append('--without-szlib')
 
         config_args += self.with_or_without('hdf5',
-                                            activation_value='prefix')
+                                            activation_value=yes_or_prefix)
 
         config_args += self.with_or_without(
             'udunits2',
-            activation_value=lambda x: self.spec['udunits'].prefix)
+            activation_value=lambda x: yes_or_prefix('udunits'))
 
-        config_args += self.with_or_without('libxml2',
-                                            activation_value='prefix')
+        if '+libxml2' in self.spec:
+            libxml2_spec = self.spec['libxml2']
+            if is_system_path(libxml2_spec.prefix):
+                config_args.append('--with-libxml2=yes')
+                # Spack does not inject the header search flag in this case,
+                # which is still required, unless libxml2 is installed to '/usr'
+                # (handled by the configure script of CDO).
+                if libxml2_spec.prefix != '/usr':
+                    flags['CPPFLAGS'].append(libxml2_spec.headers.include_flags)
+            else:
+                config_args.append('--with-libxml2=' + libxml2_spec.prefix)
+        else:
+            config_args.append('--without-libxml2')
 
         config_args += self.with_or_without('proj',
-                                            activation_value='prefix')
+                                            activation_value=yes_or_prefix)
 
         config_args += self.with_or_without('curl',
-                                            activation_value='prefix')
+                                            activation_value=yes_or_prefix)
 
         config_args += self.with_or_without('magics',
-                                            activation_value='prefix')
+                                            activation_value=yes_or_prefix)
 
         config_args += self.with_or_without('fftw3')
 
