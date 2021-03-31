@@ -103,7 +103,12 @@ class Cuda(Package):
     # Mojave support -- only macOS High Sierra 10.13 is supported.
     conflicts('arch=darwin-mojave-x86_64')
 
+    variant('dev', default=False, description='Enable development dependencies, i.e to use cuda-gdb')
+
     depends_on('libxml2', when='@10.1.243:')
+    # cuda-gdb needs libncurses.so.5
+    # see https://docs.nvidia.com/cuda/cuda-gdb/index.html#common-issues-oss
+    depends_on('ncurses abi=5', type='run', when='+dev')
 
     provides('opencl@:1.2', when='@7:')
     provides('opencl@:1.1', when='@:6')

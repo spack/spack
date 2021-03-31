@@ -123,6 +123,23 @@ class Nvhpc(Package):
             env.prepend_path('CPATH', mpi_prefix.include)
             env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        prefix = Prefix(join_path(self.prefix,
+                                  'Linux_%s' % self.spec.target.family,
+                                  self.version, 'compilers'))
+
+        env.prepend_path('CPATH',           prefix.include)
+        env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+
+        if '+mpi' in self.spec:
+            mpi_prefix = Prefix(join_path(self.prefix,
+                                          'Linux_%s' % self.spec.target.family,
+                                          self.version, 'comm_libs', 'mpi'))
+
+            env.prepend_path('CPATH', mpi_prefix.include)
+            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+
     def setup_dependent_package(self, module, dependent_spec):
         if '+mpi' in self.spec or self.provides('mpi'):
             mpi_prefix = Prefix(join_path(self.prefix,
