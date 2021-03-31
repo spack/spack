@@ -78,8 +78,6 @@ class Cdo(AutotoolsPackage):
     depends_on('magics', when='+magics')
     depends_on('uuid')
 
-    conflicts('grib2=eccodes', when='@:1.8',
-              msg='Eccodes is supported starting version 1.9.0')
     conflicts('+szip', when='+external-grib1 grib2=none',
               msg='The configuration does not support GRIB1')
     conflicts('%gcc@9:', when='@:1.9.6',
@@ -108,8 +106,16 @@ class Cdo(AutotoolsPackage):
             config_args.append('--without-netcdf')
 
         if self.spec.variants['grib2'].value == 'eccodes':
-            config_args.append('--with-eccodes=' + yes_or_prefix('eccodes'))
-            config_args.append('--without-grib_api')
+            if self.spec.satisfies('@1.9:'):
+                config_args.append('--with-eccodes=' + yes_or_prefix('eccodes'))
+                config_args.append('--without-grib_api')
+            else:
+                config_args.append('--with-grib_api=yes')
+                eccodes_spec = self.spec['eccodes']
+                eccodes_libs = eccodes_spec.libs
+                flags['LIBS'].append(eccodes_libs.link_flags)
+                if not is_system_path(eccodes_spec.prefix):
+                    flags['LDFLAGS'].append(eccodes_libs.search_flags)
         elif self.spec.variants['grib2'].value == 'grib-api':
             config_args.append('--with-grib_api=' + yes_or_prefix('grib-api'))
             if self.spec.satisfies('@1.9:'):
