@@ -80,6 +80,9 @@ class Libxc(AutotoolsPackage, CudaPackage):
         if '%intel' in self.spec and which('xiar'):
             env.set('AR', 'xiar')
 
+        if '%aocc' in self.spec:
+            env.append_flags('FCFLAGS', '-fPIC')
+
         if '+cuda' in self.spec:
             nvcc = self.spec['cuda'].prefix.bin.nvcc
             env.set('CCLD', '{0} -ccbin {1}'.format(nvcc, spack_cc))
@@ -99,6 +102,15 @@ class Libxc(AutotoolsPackage, CudaPackage):
         ]
 
         return args
+
+    @run_after('configure')
+    def patch_libtool(self):
+        """AOCC support for LIBXC"""
+        if '%aocc' in self.spec:
+            filter_file(
+                r'\$wl-soname \$wl\$soname',
+                r'-fuse-ld=ld -Wl,-soname,\$soname',
+                'libtool', string=True)
 
     def check(self):
         # libxc provides a testsuite, but many tests fail
