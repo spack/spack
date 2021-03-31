@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Papyrus(CMakePackage):
     """Parallel Aggregate Persistent Storage"""
 
@@ -29,4 +30,3 @@ class Papyrus(CMakePackage):
         env.prepend_path('CPATH', self.prefix.include)
         env.prepend_path('LIBRARY_PATH', lib_dir)
         env.prepend_path('LD_LIBRARY_PATH', lib_dir)
-
