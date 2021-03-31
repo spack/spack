@@ -560,6 +560,7 @@ class SpackCommand(object):
             """
             scopes = spack.config.scopes()
             if 'command_line' not in scopes:
+                yield
                 return
             command_line = spack.config.config.pop_scope()
             spack.config.config.push_scope(
