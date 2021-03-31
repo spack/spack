@@ -139,7 +139,7 @@ def test_dont_add_patches_to_installed_package(install_mockery, mock_fetch):
 
 
 def test_installed_dependency_request_conflicts(
-        install_mockery, mock_fetch, mutable_mock_repo):
+        install_mockery, mock_fetch, mock_packages):
     dependency = Spec('dependency-install')
     dependency.concretize()
     dependency.package.do_install()
@@ -152,7 +152,7 @@ def test_installed_dependency_request_conflicts(
 
 
 def test_install_dependency_symlinks_pkg(
-        install_mockery, mock_fetch, mutable_mock_repo):
+        install_mockery, mock_fetch, mock_packages):
     """Test dependency flattening/symlinks mock package."""
     spec = Spec('flatten-deps')
     spec.concretize()
@@ -165,7 +165,7 @@ def test_install_dependency_symlinks_pkg(
 
 
 def test_flatten_deps(
-        install_mockery, mock_fetch, mutable_mock_repo):
+        install_mockery, mock_fetch, mock_packages):
     """Explicitly test the flattening code for coverage purposes."""
     # Unfortunately, executing the 'flatten-deps' spec's installation does
     # not affect code coverage results, so be explicit here.
