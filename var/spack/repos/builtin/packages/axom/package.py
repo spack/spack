@@ -170,18 +170,6 @@ class Axom(CachedCMakePackage, CudaPackage):
         if "+cpp14" in spec:
             entries.append(cmake_cache_string("BLT_CXX_STD", "c++14", ""))
 
-        # Override XL compiler family
-        familymsg = ("Override to proper compiler family for XL")
-        if (self.compiler.fc is not None) and ("xlf" in self.compiler.fc):
-            entries.append(cmake_cache_string("CMAKE_Fortran_COMPILER_ID", "XL",
-                                              familymsg))
-        if "xlc" in self.compiler.cc:
-            entries.append(cmake_cache_string("CMAKE_C_COMPILER_ID", "XL",
-                                              familymsg))
-        if "xlC" in self.compiler.cxx:
-            entries.append(cmake_cache_string("CMAKE_CXX_COMPILER_ID", "XL",
-                                              familymsg))
-
         return entries
 
     def initconfig_hardware_entries(self):
