@@ -27,10 +27,3 @@ class Igprof(CMakePackage):
             flags.extend(('-Wno-unused-variable', '-Wno-error=unused-result'))
 
         return (None, None, flags)
-
-#    def cmake_args(self):
-        # FIXME: Add arguments other than
-        # FIXME: CMAKE_INSTALL_PREFIX and CMAKE_BUILD_TYPE
-        # FIXME: If not needed delete this function
-#        args = []
-#        return args
