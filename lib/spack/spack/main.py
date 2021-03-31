@@ -467,7 +467,7 @@ def setup_main_options(args):
 
     # Use the spack config command to handle parsing the config strings
     for config_var in (args.config_vars or []):
-        spack.config.add(path=config_var, scope="command_line")
+        spack.config.add(fullpath=config_var, scope="command_line")
 
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
@@ -528,6 +528,8 @@ class SpackCommand(object):
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
+            global_args (optional list): List of global spack arguments:
+                simulates ``spack [global_args] [command] [*argv]``
 
         Returns:
             (str): combined output and error as a string
@@ -540,8 +542,10 @@ class SpackCommand(object):
         self.returncode = None
         self.error = None
 
+        prepend = kwargs['global_args'] if 'global_args' in kwargs else []
+
         args, unknown = self.parser.parse_known_args(
-            [self.command_name] + list(argv))
+            prepend + [self.command_name] + list(argv))
 
         fail_on_error = kwargs.get('fail_on_error', True)
 

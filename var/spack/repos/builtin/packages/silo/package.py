@@ -119,3 +119,10 @@ class Silo(AutotoolsPackage):
             config_args.append('FC=%s' % spec['mpi'].mpifc)
 
         return config_args
+
+    @property
+    def libs(self):
+        shared = "+shared" in self.spec
+        return find_libraries(
+            "libsilo*", root=self.prefix, shared=shared, recursive=True
+        )

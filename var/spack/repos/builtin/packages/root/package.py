@@ -248,6 +248,10 @@ class Root(CMakePackage):
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
+    # See: https://github.com/root-project/root/issues/6933
+    conflicts('^intel-tbb@2021.1:', when='@:6.22',
+              msg='Please use an older intel-tbb version')
+    # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on('unuran',    when='+unuran')
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')

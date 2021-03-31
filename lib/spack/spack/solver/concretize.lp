@@ -19,12 +19,14 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight),
     not preferred_version_declared(Package, Version, _).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -350,6 +352,15 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 :- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
 
+% Some multi valued variants accept multiple values from disjoint sets.
+% Ensure that we respect that constraint and we don't pick values from more
+% than one set at once
+:- variant_value(Package, Variant, Value1),
+   variant_value(Package, Variant, Value2),
+   variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
+   variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
+   Set1 != Set2.
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -357,23 +368,40 @@ variant_value(Package, Variant, Value)
     variant(Package, Variant),
     variant_set(Package, Variant, Value).
 
-% prefer default values.
+% The rules below allow us to prefer default values for variants
+% whenever possible. If a variant is set in a spec, or if it is
+% specified in an external, we score it as if it was a default value.
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
     not variant_set(Package, Variant, Value),
+    not external_with_variant_set(Package, Variant, Value),
     node(Package).
 
+% We are using the default value for a variant
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
 
+% The variant is set in the spec
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_set(Package, Variant, Value),
     node(Package).
 
+% The variant is set in an external spec
+external_with_variant_set(Package, Variant, Value)
+ :- variant_value(Package, Variant, Value),
+    condition_requirement(ID, "variant_value", Package, Variant, Value),
+    possible_external(ID, Package, _),
+    external(Package),
+    node(Package).
+
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    external_with_variant_set(Package, Variant, Value),
+    node(Package).
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
@@ -409,6 +437,7 @@ variant_single_value(Package, "dev_path")
 #defined variant_possible_value/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
+#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics

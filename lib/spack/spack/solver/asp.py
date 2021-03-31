@@ -253,14 +253,11 @@ class PyclingoDriver(object):
             # TODO: Find a way to vendor the concrete spec
             # in a cross-platform way
             with spack.bootstrap.ensure_bootstrap_configuration():
-                generic_target = archspec.cpu.host().family
-                spec_str = 'clingo-bootstrap@spack+python target={0}'.format(
-                    str(generic_target)
-                )
-                clingo_spec = spack.spec.Spec(spec_str)
+                clingo_spec = spack.bootstrap.clingo_root_spec()
                 clingo_spec._old_concretize()
                 spack.bootstrap.make_module_available(
-                    'clingo', spec=clingo_spec, install=True)
+                    'clingo', spec=clingo_spec, install=True
+                )
                 import clingo
         self.out = asp or llnl.util.lang.Devnull()
         self.cores = cores
@@ -396,6 +393,8 @@ class SpackSolverSetup(object):
     def __init__(self):
         self.gen = None  # set by setup()
         self.possible_versions = {}
+        self.versions_in_package_py = {}
+        self.versions_from_externals = {}
         self.possible_virtuals = None
         self.possible_compilers = []
         self.variant_values_from_specs = set()
@@ -449,9 +448,18 @@ class SpackSolverSetup(object):
             #    c) Numeric or string comparison
             v)
 
-        most_to_least_preferred = sorted(
-            self.possible_versions[pkg.name], key=keyfn, reverse=True
-        )
+        # Compute which versions appear only in packages.yaml
+        from_externals = self.versions_from_externals[pkg.name]
+        from_package_py = self.versions_in_package_py[pkg.name]
+        only_from_externals = from_externals - from_package_py
+
+        # These versions don't need a default weight, as they are
+        # already weighted in a more favorable way when accounting
+        # for externals. Assigning them a default weight would be
+        # equivalent to state that they are also declared in
+        # the package.py file
+        considered = self.possible_versions[pkg.name] - only_from_externals
+        most_to_least_preferred = sorted(considered, key=keyfn, reverse=True)
 
         for i, v in enumerate(most_to_least_preferred):
             self.gen.fact(fn.version_declared(pkg.name, v, i))
@@ -593,11 +601,16 @@ class SpackSolverSetup(object):
                 values = []
             elif isinstance(values, spack.variant.DisjointSetsOfValues):
                 union = set()
-                for s in values.sets:
+                # Encode the disjoint sets in the logic program
+                for sid, s in enumerate(values.sets):
+                    for value in s:
+                        self.gen.fact(fn.variant_value_from_disjoint_sets(
+                            pkg.name, name, value, sid
+                        ))
                     union.update(s)
                 values = union
 
-            # make sure that every variant has at least one posisble value
+            # make sure that every variant has at least one possible value
             if not values:
                 values = [variant.default]
 
@@ -778,6 +791,7 @@ class SpackSolverSetup(object):
                 self.gen.fact(
                     fn.possible_external(condition_id, pkg_name, local_idx)
                 )
+                self.versions_from_externals[spec.name].add(spec.version)
                 self.possible_versions[spec.name].add(spec.version)
                 self.gen.newline()
 
@@ -986,11 +1000,14 @@ class SpackSolverSetup(object):
 
     def build_version_dict(self, possible_pkgs, specs):
         """Declare any versions in specs not declared in packages."""
-        self.possible_versions = collections.defaultdict(lambda: set())
+        self.possible_versions = collections.defaultdict(set)
+        self.versions_in_package_py = collections.defaultdict(set)
+        self.versions_from_externals = collections.defaultdict(set)
 
         for pkg_name in possible_pkgs:
             pkg = spack.repo.get(pkg_name)
             for v in pkg.versions:
+                self.versions_in_package_py[pkg_name].add(v)
                 self.possible_versions[pkg_name].add(v)
 
         for spec in specs:

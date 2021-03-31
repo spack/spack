@@ -389,6 +389,7 @@ def test_cce_flags():
     supported_flag_test("cxx_pic_flag", "-fPIC", "cce@9.1.0")
     supported_flag_test("f77_pic_flag", "-fPIC", "cce@9.1.0")
     supported_flag_test("fc_pic_flag",  "-fPIC", "cce@9.1.0")
+    supported_flag_test("stdcxx_libs", (), "cce@1.0")
     supported_flag_test("debug_flags", ['-g', '-G0', '-G1', '-G2', '-Gfast'],
                         'cce@1.0')
 
@@ -612,6 +613,7 @@ def test_pgi_flags():
     supported_flag_test("cxx_pic_flag", "-fpic", "pgi@1.0")
     supported_flag_test("f77_pic_flag", "-fpic", "pgi@1.0")
     supported_flag_test("fc_pic_flag",  "-fpic", "pgi@1.0")
+    supported_flag_test("stdcxx_libs", ("-pgc++libs",), "pgi@1.0")
     supported_flag_test("debug_flags", ['-g', '-gopt'], 'pgi@1.0')
     supported_flag_test("opt_flags", ['-O', '-O0', '-O1', '-O2', '-O3', '-O4'],
                         'pgi@1.0')

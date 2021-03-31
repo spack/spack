@@ -29,7 +29,7 @@ class Openmpi(AutotoolsPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ['hppritcha']
+    maintainers = ['hppritcha', 'naughtont3']
 
     executables = ['^ompi_info$']
 
@@ -188,6 +188,9 @@ class Openmpi(AutotoolsPackage):
     # The second patch was applied starting version v4.0.0 and backported to
     # v2.x, v3.0.x, and v3.1.x.
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
+    # To fix performance regressions introduced while fixing a bug in older
+    # gcc versions on x86_64, Refs. open-mpi/ompi#8603
+    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
 
     variant(
         'fabrics',
@@ -270,7 +273,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('libevent@2.0:', when='@4:')
 
-    depends_on('hwloc@2.0:', when='@4: ~internal-hwloc')
+    depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
@@ -302,6 +305,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('lsf', when='schedulers=lsf')
     depends_on('openpbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
+
+    depends_on('openssh', type='run')
 
     # CUDA support was added in 1.7
     conflicts('+cuda', when='@:1.6')

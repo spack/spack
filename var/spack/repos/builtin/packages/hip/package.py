@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack.util.prefix import Prefix
+from spack.hooks.sbang import filter_shebang
 import os
 
 
@@ -189,6 +190,10 @@ class Hip(CMakePackage):
                 'hipconfig', 'hipify-cmakefile'
             ]
             filter_file(match, substitute, *files, **kwargs)
+
+            # This guy is used during the cmake phase, so we have to fix the
+            # shebang already here in case it is too long.
+            filter_shebang('hipconfig')
 
         if '@3.7.0:' in self.spec:
             numactl = self.spec['numactl'].prefix.lib
