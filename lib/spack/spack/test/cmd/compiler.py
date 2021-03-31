@@ -62,7 +62,7 @@ done
 
 
 @pytest.mark.regression('11678,13138')
-def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir, capsys):
+def test_compiler_find_without_paths(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
         with open('gcc', 'w') as f:
             f.write("""\
@@ -72,13 +72,13 @@ echo "0.0.0"
         os.chmod('gcc', 0o700)
 
     os.environ['PATH'] = str(tmpdir)
-    output = compiler('find', '--scope=site', out=capsys)
+    output = compiler('find', '--scope=site')
 
     assert 'gcc' in output
 
 
 @pytest.mark.regression('17589')
-def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, tmpdir, capsys):
+def test_compiler_find_no_apple_gcc(no_compilers_yaml, working_env, tmpdir):
     with tmpdir.as_cwd():
         # make a script to emulate apple gcc's version args
         with open('gcc', 'w') as f:
@@ -99,7 +99,7 @@ fi
         os.chmod('gcc', 0o700)
 
     os.environ['PATH'] = str(tmpdir)
-    output = compiler('find', '--scope=site', out=capsys)
+    output = compiler('find', '--scope=site')
 
     assert 'gcc' not in output
 
@@ -194,11 +194,11 @@ fi
 
 @pytest.mark.regression('17590')
 def test_compiler_find_mixed_suffixes(
-        no_compilers_yaml, working_env, clangdir, capsys):
+        no_compilers_yaml, working_env, clangdir):
     """Ensure that we'll mix compilers with different suffixes when necessary.
     """
     os.environ['PATH'] = str(clangdir)
-    output = compiler('find', '--scope=site', out=capsys)
+    output = compiler('find', '--scope=site')
 
     assert 'clang@11.0.0' in output
     assert 'gcc@8.4.0' in output
@@ -229,7 +229,7 @@ def test_compiler_find_mixed_suffixes(
 
 @pytest.mark.regression('17590')
 def test_compiler_find_prefer_no_suffix(
-        no_compilers_yaml, working_env, clangdir, capsys):
+        no_compilers_yaml, working_env, clangdir):
     """Ensure that we'll pick 'clang' over 'clang-gpu' when there is a choice.
     """
     with clangdir.as_cwd():
@@ -239,7 +239,7 @@ def test_compiler_find_prefer_no_suffix(
         os.chmod('clang++-gpu', 0o700)
 
     os.environ['PATH'] = str(clangdir)
-    output = compiler('find', '--scope=site', out=capsys)
+    output = compiler('find', '--scope=site')
 
     assert 'clang@11.0.0' in output
     assert 'gcc@8.4.0' in output

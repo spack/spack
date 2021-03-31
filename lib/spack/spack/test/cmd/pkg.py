@@ -135,94 +135,94 @@ def test_pkg_add(mock_pkg_git_repo):
         pkg('add', 'does-not-exist')
 
 
-def test_pkg_list(mock_pkg_git_repo, mock_pkg_names, capsys):
-    out = split(pkg('list', 'HEAD^^', out=capsys))
+def test_pkg_list(mock_pkg_git_repo, mock_pkg_names):
+    out = split(pkg('list', 'HEAD^^'))
     assert sorted(mock_pkg_names) == sorted(out)
 
-    out = split(pkg('list', 'HEAD^', out=capsys))
+    out = split(pkg('list', 'HEAD^'))
     assert sorted(
         mock_pkg_names.union(['pkg-a', 'pkg-b', 'pkg-c'])) == sorted(out)
 
-    out = split(pkg('list', 'HEAD', out=capsys))
+    out = split(pkg('list', 'HEAD'))
     assert sorted(
         mock_pkg_names.union(['pkg-a', 'pkg-b', 'pkg-d'])) == sorted(out)
 
     # test with three dots to make sure pkg calls `git merge-base`
-    out = split(pkg('list', 'HEAD^^...', out=capsys))
+    out = split(pkg('list', 'HEAD^^...'))
     assert sorted(mock_pkg_names) == sorted(out)
 
 
-def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names, capsys):
-    out = split(pkg('diff', 'HEAD^^', 'HEAD^', out=capsys))
+def test_pkg_diff(mock_pkg_git_repo, mock_pkg_names):
+    out = split(pkg('diff', 'HEAD^^', 'HEAD^'))
     assert out == ['HEAD^:', 'pkg-a', 'pkg-b', 'pkg-c']
 
-    out = split(pkg('diff', 'HEAD^^', 'HEAD', out=capsys))
+    out = split(pkg('diff', 'HEAD^^', 'HEAD'))
     assert out == ['HEAD:', 'pkg-a', 'pkg-b', 'pkg-d']
 
-    out = split(pkg('diff', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('diff', 'HEAD^', 'HEAD'))
     assert out == ['HEAD^:', 'pkg-c', 'HEAD:', 'pkg-d']
 
 
-def test_pkg_added(mock_pkg_git_repo, capsys):
-    out = split(pkg('added', 'HEAD^^', 'HEAD^', out=capsys))
+def test_pkg_added(mock_pkg_git_repo):
+    out = split(pkg('added', 'HEAD^^', 'HEAD^'))
     assert out == ['pkg-a', 'pkg-b', 'pkg-c']
 
-    out = split(pkg('added', 'HEAD^^', 'HEAD', out=capsys))
+    out = split(pkg('added', 'HEAD^^', 'HEAD'))
     assert out == ['pkg-a', 'pkg-b', 'pkg-d']
 
-    out = split(pkg('added', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('added', 'HEAD^', 'HEAD'))
     assert out == ['pkg-d']
 
-    out = split(pkg('added', 'HEAD', 'HEAD', out=capsys))
+    out = split(pkg('added', 'HEAD', 'HEAD'))
     assert out == []
 
 
-def test_pkg_removed(mock_pkg_git_repo, capsys):
-    out = split(pkg('removed', 'HEAD^^', 'HEAD^', out=capsys))
+def test_pkg_removed(mock_pkg_git_repo):
+    out = split(pkg('removed', 'HEAD^^', 'HEAD^'))
     assert out == []
 
-    out = split(pkg('removed', 'HEAD^^', 'HEAD', out=capsys))
+    out = split(pkg('removed', 'HEAD^^', 'HEAD'))
     assert out == []
 
-    out = split(pkg('removed', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('removed', 'HEAD^', 'HEAD'))
     assert out == ['pkg-c']
 
 
-def test_pkg_changed(mock_pkg_git_repo, capsys):
-    out = split(pkg('changed', 'HEAD^^', 'HEAD^', out=capsys))
+def test_pkg_changed(mock_pkg_git_repo):
+    out = split(pkg('changed', 'HEAD^^', 'HEAD^'))
     assert out == []
 
-    out = split(pkg('changed', '--type', 'c', 'HEAD^^', 'HEAD^', out=capsys))
+    out = split(pkg('changed', '--type', 'c', 'HEAD^^', 'HEAD^'))
     assert out == []
 
-    out = split(pkg('changed', '--type', 'a', 'HEAD^^', 'HEAD^', out=capsys))
+    out = split(pkg('changed', '--type', 'a', 'HEAD^^', 'HEAD^'))
     assert out == ['pkg-a', 'pkg-b', 'pkg-c']
 
-    out = split(pkg('changed', '--type', 'r', 'HEAD^^', 'HEAD^', out=capsys))
+    out = split(pkg('changed', '--type', 'r', 'HEAD^^', 'HEAD^'))
     assert out == []
 
-    out = split(pkg('changed', '--type', 'ar', 'HEAD^^', 'HEAD^', out=capsys))
+    out = split(pkg('changed', '--type', 'ar', 'HEAD^^', 'HEAD^'))
     assert out == ['pkg-a', 'pkg-b', 'pkg-c']
 
-    out = split(pkg('changed', '--type', 'arc', 'HEAD^^', 'HEAD^', out=capsys))
+    out = split(pkg('changed', '--type', 'arc', 'HEAD^^', 'HEAD^'))
     assert out == ['pkg-a', 'pkg-b', 'pkg-c']
 
-    out = split(pkg('changed', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', 'HEAD^', 'HEAD'))
     assert out == ['pkg-b']
 
-    out = split(pkg('changed', '--type', 'c', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', '--type', 'c', 'HEAD^', 'HEAD'))
     assert out == ['pkg-b']
 
-    out = split(pkg('changed', '--type', 'a', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', '--type', 'a', 'HEAD^', 'HEAD'))
     assert out == ['pkg-d']
 
-    out = split(pkg('changed', '--type', 'r', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', '--type', 'r', 'HEAD^', 'HEAD'))
     assert out == ['pkg-c']
 
-    out = split(pkg('changed', '--type', 'ar', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', '--type', 'ar', 'HEAD^', 'HEAD'))
     assert out == ['pkg-c', 'pkg-d']
 
-    out = split(pkg('changed', '--type', 'arc', 'HEAD^', 'HEAD', out=capsys))
+    out = split(pkg('changed', '--type', 'arc', 'HEAD^', 'HEAD'))
     assert out == ['pkg-b', 'pkg-c', 'pkg-d']
 
     # invalid type argument

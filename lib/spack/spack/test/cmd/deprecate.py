@@ -30,19 +30,19 @@ def test_deprecate(mock_packages, mock_archive, mock_fetch, install_mockery):
 
 
 def test_deprecate_fails_no_such_package(mock_packages, mock_archive,
-                                         mock_fetch, install_mockery, capsys):
+                                         mock_fetch, install_mockery):
     """Tests that deprecating a spec that is not installed fails.
 
     Tests that deprecating without the ``-i`` option in favor of a spec that
     is not installed fails."""
     output = deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13',
-                       fail_on_error=False, out=capsys)
+                       fail_on_error=False)
     assert "Spec 'libelf@0.8.10' matches no installed packages" in output
 
     install('libelf@0.8.10')
 
     output = deprecate('-y', 'libelf@0.8.10', 'libelf@0.8.13',
-                       fail_on_error=False, out=capsys)
+                       fail_on_error=False)
     assert "Spec 'libelf@0.8.13' matches no installed packages" in output
 
 
@@ -89,7 +89,7 @@ def test_deprecate_deps(mock_packages, mock_archive, mock_fetch,
 
 
 def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
-                                           mock_fetch, install_mockery, capsys):
+                                           mock_fetch, install_mockery):
     """Tests that active extensions and their extendees cannot be
     deprecated."""
     install('extendee')
@@ -97,12 +97,12 @@ def test_deprecate_fails_active_extensions(mock_packages, mock_archive,
     activate('extension1')
 
     output = deprecate('-yi', 'extendee', 'extendee@nonexistent',
-                       fail_on_error=False, out=capsys)
+                       fail_on_error=False)
     assert 'extension1' in output
     assert "Deactivate extensions before deprecating" in output
 
     output = deprecate('-yiD', 'extension1', 'extension1@notaversion',
-                       fail_on_error=False, out=capsys)
+                       fail_on_error=False)
     assert 'extendee' in output
     assert 'is an active extension of' in output
 

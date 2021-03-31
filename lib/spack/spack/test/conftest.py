@@ -39,10 +39,12 @@ import spack.util.executable
 import spack.util.gpg
 import spack.subprocess_context
 import spack.util.spack_yaml as syaml
+from llnl.util.tty.log import winlog
 
 from spack.util.pattern import Bunch
 from spack.fetch_strategy import FetchStrategyComposite, URLFetchStrategy
 from spack.fetch_strategy import FetchError
+
 
 
 @pytest.fixture(autouse=True)
@@ -166,6 +168,12 @@ def no_chdir():
     yield
     if os.path.isdir(original_wd):
         assert os.getcwd() == original_wd
+
+
+@pytest.fixture(scope='function', autouse=True)
+def win_alt_capture(monkeypatch, capsys):
+    monkeypatch.setattr(winlog, "cap_alt", capsys)
+    yield
 
 
 @pytest.fixture(scope='function', autouse=True)

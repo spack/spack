@@ -28,29 +28,29 @@ def test_reuse_after_help():
     help_cmd()
 
 
-def test_help(capsys):
+def test_help():
     """Sanity check the help command to make sure it works."""
     help_cmd = SpackCommand('help')
-    out = help_cmd(out=capsys)
+    out = help_cmd()
     assert 'These are common spack commands:' in out
 
 
-def test_help_all(capsys):
+def test_help_all():
     """Test the spack help --all flag"""
     help_cmd = SpackCommand('help')
-    out = help_cmd('--all', out=capsys)
+    out = help_cmd('--all')
     assert 'Complete list of spack commands:' in out
 
 
-def test_help_spec(capsys):
+def test_help_spec():
     """Test the spack help --spec flag"""
     help_cmd = SpackCommand('help')
-    out = help_cmd('--spec', out=capsys)
+    out = help_cmd('--spec')
     assert 'spec expression syntax:' in out
 
 
-def test_help_subcommand(capsys):
+def test_help_subcommand():
     """Test the spack help subcommand argument"""
     help_cmd = SpackCommand('help')
-    out = help_cmd('help', out=capsys)
+    out = help_cmd('help')
     assert 'get help on spack and its commands' in out

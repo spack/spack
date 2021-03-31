@@ -10,51 +10,51 @@ from spack.main import SpackCommand
 list = SpackCommand('list')
 
 
-def test_list(capsys):
-    output = list(out=capsys)
+def test_list():
+    output = list()
     assert 'cloverleaf3d' in output
     assert 'hdf5' in output
 
 
-def test_list_filter(capsys):
-    output = list('py-*', out=capsys)
+def test_list_filter():
+    output = list('py-*')
     assert 'py-numpy' in output
     assert 'perl-file-copy-recursive' not in output
 
-    output = list('py-', out=capsys)
+    output = list('py-')
     assert 'py-numpy' in output
     assert 'perl-file-copy-recursive' in output
 
 
 @pytest.mark.maybeslow
-def test_list_search_description(capsys):
-    output = list('--search-description', 'xml', out=capsys)
+def test_list_search_description():
+    output = list('--search-description', 'xml')
     assert 'expat' in output
 
 
-def test_list_tags(capsys):
-    output = list('--tag', 'proxy-app', out=capsys)
+def test_list_tags():
+    output = list('--tag', 'proxy-app')
     assert 'cloverleaf3d' in output
     assert 'hdf5' not in output
 
-    output = list('--tag', 'hpc', out=capsys)
+    output = list('--tag', 'hpc')
     assert 'nek5000' in output
     assert 'mfem' in output
 
-    output = list('--tag', 'HPC', out=capsys)
+    output = list('--tag', 'HPC')
     assert 'nek5000' in output
     assert 'mfem' in output
 
 
-def test_list_format_name_only(capsys):
-    output = list('--format', 'name_only', out=capsys)
+def test_list_format_name_only():
+    output = list('--format', 'name_only')
     assert 'cloverleaf3d' in output
     assert 'hdf5' in output
 
 
 @pytest.mark.maybeslow
-def test_list_format_version_json(capsys):
-    output = list('--format', 'version_json', out=capsys)
+def test_list_format_version_json():
+    output = list('--format', 'version_json')
     assert '  {"name": "cloverleaf3d",' in output
     assert '  {"name": "hdf5",' in output
     import json
@@ -62,8 +62,8 @@ def test_list_format_version_json(capsys):
 
 
 @pytest.mark.maybeslow
-def test_list_format_html(capsys):
-    output = list('--format', 'html', out=capsys)
+def test_list_format_html():
+    output = list('--format', 'html')
     assert '<div class="section" id="cloverleaf3d">' in output
     assert '<h1>cloverleaf3d' in output
 

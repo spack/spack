@@ -742,6 +742,7 @@ class StreamWrapper:
 
 
 class winlog:
+    cap_alt = None
     def __init__(self, logfile, echo=False, debug=0, env=None):
         self.env = env
         self.debug = debug
@@ -759,7 +760,7 @@ class winlog:
         if self.logfile is None:
             raise RuntimeError(
                 "file argument must be set by __init__ ")
-
+        
         # Open both write and reading on logfile
         if type(self.logfile) == StringIO:
             self._ioflag = True
@@ -769,36 +770,40 @@ class winlog:
         else:
             self.writer = open(self.logfile, mode='wb+')
             self.reader = open(self.logfile, mode='rb+')
-        # Dup stdout so we can still write to it after redirection
-        self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
-        # Redirect stdout and stderr to write to logfile
-        self.stderr.redirect_stream(self.writer.fileno())
-        self.stdout.redirect_stream(self.writer.fileno())
-        self._kill = threading.Event()
 
-        def background_reader(reader, echo_writer, _kill):
-            # for each line printed to logfile, read it
-            # if echo: write line to user
-            while True:
-                is_killed = _kill.wait(.1)
-                self.stderr.flush()
-                self.stdout.flush()
-                line = reader.readline()
-                while line:
-                    if self._ioflag:
-                        self.logfile.write(line.decode())
-                    if self.echo:
-                        self.echo_writer.write('{0}'.format(line.decode()))
-                        self.echo_writer.flush()
+        if cap_alt is None && :
+            # Dup stdout so we can still write to it after redirection
+            self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
+            # Redirect stdout and stderr to write to logfile
+            self.stderr.redirect_stream(self.writer.fileno())
+            self.stdout.redirect_stream(self.writer.fileno())
+            self._kill = threading.Event()
+
+            def background_reader(reader, echo_writer, _kill):
+                # for each line printed to logfile, read it
+                # if echo: write line to user
+                while True:
+                    is_killed = _kill.wait(.1)
+                    self.stderr.flush()
+                    self.stdout.flush()
                     line = reader.readline()
+                    while line:
+                        if self._ioflag:
+                            self.logfile.write(line.decode())
+                        if self.echo:
+                            self.echo_writer.write('{0}'.format(line.decode()))
+                            self.echo_writer.flush()
+                        line = reader.readline()
 
-                if is_killed:
-                    break
+                    if is_killed:
+                        break
 
-        self._active = True
-        with replace_environment(self.env):
-            self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
-            self._thread.start()
+            self._active = True
+            with replace_environment(self.env):
+                self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
+                self._thread.start()
+        else:
+            logfile = cap_alt
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.writer.close()

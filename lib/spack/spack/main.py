@@ -549,13 +549,9 @@ class SpackCommand(object):
         out = StringIO()
         try:
             if sys.platform == 'win32':
-                if self.log:
-                    with winlog(out):
-                        self.returncode = _invoke_command(
-                            self.command, self.parser, args, unknown)
-                else:
+                with winlog(out):
                     self.returncode = _invoke_command(
-                            self.command, self.parser, args, unknown)
+                        self.command, self.parser, args, unknown)
             else:
                 with log_output(out):
                     self.returncode = _invoke_command(
@@ -578,13 +574,8 @@ class SpackCommand(object):
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
 
-        if sys.platform == 'win32':
-            capsys = kwargs.get('out')
-            if capsys is None:
-                return ""
-            return "".join(capsys.readouterr())
-        else:
-            return out.getvalue()
+   
+        return out.getvalue()
 
     def _log_command_output(self, out):
         if tty.is_verbose():

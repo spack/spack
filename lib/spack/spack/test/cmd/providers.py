@@ -36,8 +36,8 @@ def test_it_just_runs(pkg):
                 'spectrum-mpi']),
     (('D', 'awk'), ['ldc', 'gawk', 'mawk'])  # Call 2 virtual packages at once
 ])
-def test_provider_lists(vpkg, provider_list, capsys):
-    output = providers(*vpkg, out=capsys)
+def test_provider_lists(vpkg, provider_list):
+    output = providers(*vpkg)
     for item in provider_list:
         assert item in output
 

@@ -88,12 +88,12 @@ def test_env_add_nonexistant_fails():
         e.add('thispackagedoesnotexist')
 
 
-def test_env_list(mutable_mock_env_path, capsys):
+def test_env_list(mutable_mock_env_path):
     env('create', 'foo')
     env('create', 'bar')
     env('create', 'baz')
 
-    out = env('list', out=capsys)
+    out = env('list')
 
     assert 'foo' in out
     assert 'bar' in out
@@ -101,7 +101,7 @@ def test_env_list(mutable_mock_env_path, capsys):
 
     # make sure `spack env list` skips invalid things in var/spack/env
     mutable_mock_env_path.join('.DS_Store').ensure(file=True)
-    out = env('list', out=capsys)
+    out = env('list')
 
     assert 'foo' in out
     assert 'bar' in out
@@ -109,11 +109,11 @@ def test_env_list(mutable_mock_env_path, capsys):
     assert '.DS_Store' not in out
 
 
-def test_env_remove(capfd, capsys):
+def test_env_remove(capfd):
     env('create', 'foo')
     env('create', 'bar')
 
-    out = env('list', out=capsys)
+    out = env('list')
     assert 'foo' in out
     assert 'bar' in out
 
@@ -125,12 +125,12 @@ def test_env_remove(capfd, capsys):
         assert 'foo' in env('list')
 
     env('remove', '-y', 'foo')
-    out = env('list', out=capsys)
+    out = env('list')
     assert 'foo' not in out
     assert 'bar' in out
 
     env('remove', '-y', 'bar')
-    out = env('list', out=capsys)
+    out = env('list')
     assert 'foo' not in out
     assert 'bar' not in out
 
@@ -206,17 +206,17 @@ def test_env_modifications_error_on_activate(
     assert "Warning: couldn't get environment settings" in err
 
 
-def test_env_install_same_spec_twice(install_mockery, mock_fetch, capsys):
+def test_env_install_same_spec_twice(install_mockery, mock_fetch):
     env('create', 'test')
 
     e = ev.read('test')
     with e:
         # The first installation outputs the package prefix, updates the view
-        out = install('cmake-client', out=capsys)
+        out = install('cmake-client')
         assert 'Updating view at' in out
 
         # The second installation reports all packages already installed
-        out = install('cmake-client', out=capsys)
+        out = install('cmake-client')
         assert 'already installed' in out
 
 
@@ -345,7 +345,7 @@ def test_environment_status(capsys, tmpdir):
                     reason='Not supported on Windows (yet)')
 def test_env_status_broken_view(
     mutable_mock_env_path, mock_archive, mock_fetch, mock_packages,
-    install_mockery, capsys
+    install_mockery
 ):
     with ev.create('test'):
         install('trivial-install-test-package')
@@ -354,12 +354,12 @@ def test_env_status_broken_view(
         # test that Spack detects the missing package and warns the user
         new_repo = MockPackageMultiRepo()
         with spack.repo.use_repositories(new_repo):
-            output = env('status', out=capsys)
+            output = env('status')
             assert 'In environment test' in output
             assert 'Environment test includes out of date' in output
 
         # Test that the warning goes away when it's fixed
-        output = env('status', out=capsys)
+        output = env('status')
         assert 'In environment test' in output
         assert 'Environment test includes out of date' not in output
 
@@ -548,7 +548,7 @@ packages:
         )
 
 
-def test_init_with_file_and_remove(tmpdir, capsys):
+def test_init_with_file_and_remove(tmpdir):
     """Ensure a user can remove from any position in the spack.yaml file."""
     path = tmpdir.join('spack.yaml')
 
@@ -562,7 +562,7 @@ env:
 
         env('create', 'test', 'spack.yaml')
 
-    out = env('list', out=capsys)
+    out = env('list')
     assert 'test' in out
 
     with ev.read('test'):
@@ -570,7 +570,7 @@ env:
 
     env('remove', '-y', 'test')
 
-    out = env('list', out=capsys)
+    out = env('list')
     assert 'test' not in out
 
 
@@ -896,13 +896,13 @@ def test_env_commands_die_with_no_env_arg():
     env('status')
 
 
-def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery, capsys):
+def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
         install('--fake')
 
-    out = uninstall('mpileaks', fail_on_error=False, out=capsys)
+    out = uninstall('mpileaks', fail_on_error=False)
     assert uninstall.returncode == 1
     assert 'used by the following environments' in out
 
@@ -1262,9 +1262,9 @@ def test_env_updates_view_force_remove(
 
 
 def test_env_activate_view_fails(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate, capsys):
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate):
     """Sanity check on env activate to make sure it requires shell support"""
-    out = env('activate', 'test', out=capsys)
+    out = env('activate', 'test')
     assert "To set up shell support" in out
 
 
@@ -1418,7 +1418,7 @@ env:
         with ev.read('test'):
             concretize()
             remove('-f', '-l', 'packages', 'mpileaks')
-            find_output = find('-c', out=capsys)
+            find_output = find('-c')
 
         assert 'mpileaks' not in find_output
 
@@ -2095,7 +2095,7 @@ env:
 
 
 def test_env_activate_sh_prints_shell_output(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate, capsys
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
 ):
     """Check the shell commands output by ``spack env activate --sh``.
 
@@ -2104,36 +2104,36 @@ def test_env_activate_sh_prints_shell_output(
     """
     env('create', 'test', add_view=True)
 
-    out = env('activate', '--sh', 'test', out=capsys)
+    out = env('activate', '--sh', 'test')
     assert "export SPACK_ENV=" in out
     assert "export PS1=" not in out
     assert "alias despacktivate=" in out
 
-    out = env('activate', '--sh', '--prompt', 'test', out=capsys)
+    out = env('activate', '--sh', '--prompt', 'test')
     assert "export SPACK_ENV=" in out
     assert "export PS1=" in out
     assert "alias despacktivate=" in out
 
 
 def test_env_activate_csh_prints_shell_output(
-        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate, capsys
+        tmpdir, mock_stage, mock_fetch, install_mockery, env_deactivate
 ):
     """Check the shell commands output by ``spack env activate --csh``."""
     env('create', 'test', add_view=True)
 
-    out = env('activate', '--csh', 'test', out=capsys)
+    out = env('activate', '--csh', 'test')
     assert "setenv SPACK_ENV" in out
     assert "setenv set prompt" not in out
     assert "alias despacktivate" in out
 
-    out = env('activate', '--csh', '--prompt', 'test', out=capsys)
+    out = env('activate', '--csh', '--prompt', 'test')
     assert "setenv SPACK_ENV" in out
     assert "set prompt=" in out
     assert "alias despacktivate" in out
 
 
 @pytest.mark.regression('12719')
-def test_env_activate_default_view_root_unconditional(env_deactivate, capsys,
+def test_env_activate_default_view_root_unconditional(env_deactivate,
                                                       mutable_mock_env_path):
     """Check that the root of the default view in the environment is added
     to the shell unconditionally."""
@@ -2142,7 +2142,7 @@ def test_env_activate_default_view_root_unconditional(env_deactivate, capsys,
     with ev.read('test') as e:
         viewdir = e.default_view.root
 
-    out = env('activate', '--sh', 'test', out=capsys)
+    out = env('activate', '--sh', 'test')
     viewdir_bin = os.path.join(viewdir, 'bin')
 
     assert "export PATH={0}".format(viewdir_bin) in out or \

@@ -69,8 +69,8 @@ def test_extensions(mock_packages, python_database, config, capsys):
     check_output(1, 1)
 
 
-def test_extensions_no_arguments(mock_packages, capsys):
-    out = extensions(out=capsys)
+def test_extensions_no_arguments(mock_packages):
+    out = extensions()
     assert 'python' in out
 
 

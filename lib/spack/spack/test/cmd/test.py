@@ -67,12 +67,12 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
 
 def test_test_output_on_error(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage, capsys
+    capfd, mock_test_stage
 ):
     install('test-error')
     # capfd interferes with Spack's capturing
     with capfd.disabled():
-        out = spack_test('run', 'test-error', fail_on_error=False, out=capsys)
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert "TestFailure" in out
     assert "Command exited with status 1" in out
@@ -80,24 +80,24 @@ def test_test_output_on_error(
 
 def test_test_output_on_failure(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage, capsys
+    capfd, mock_test_stage
 ):
     install('test-fail')
     with capfd.disabled():
-        out = spack_test('run', 'test-fail', fail_on_error=False, out=capsys)
+        out = spack_test('run', 'test-fail', fail_on_error=False)
 
     assert "Expected 'not in the output' to match output of `true`" in out
     assert "TestFailure" in out
 
 
 def test_show_log_on_error(
-    mock_packages, mock_archive, mock_fetch, capsys,
+    mock_packages, mock_archive, mock_fetch,
     install_mockery_mutable_config, capfd, mock_test_stage
 ):
     """Make sure spack prints location of test log on failure."""
     install('test-error')
     with capfd.disabled():
-        out = spack_test('run', 'test-error', fail_on_error=False, out=capsys)
+        out = spack_test('run', 'test-error', fail_on_error=False)
 
     assert 'See test log' in out
     assert mock_test_stage in out
@@ -179,9 +179,9 @@ def test_test_help_does_not_show_cdash_options(mock_test_stage, capsys):
         assert 'CDash URL' not in captured.out
 
 
-def test_test_help_cdash(mock_test_stage, capsys):
+def test_test_help_cdash(mock_test_stage):
     """Make sure `spack test --help-cdash` describes CDash arguments"""
-    out = spack_test('run', '--help-cdash', out=capsys)
+    out = spack_test('run', '--help-cdash')
     assert 'CDash URL' in out
 
 
@@ -198,11 +198,11 @@ def test_test_list_all(mock_packages):
 
 
 def test_test_list(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, capsys
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
 ):
     pkg_with_tests = 'printing-package'
     install(pkg_with_tests)
-    output = spack_test("list", out=capsys)
+    output = spack_test("list")
     assert pkg_with_tests in output
 
 
