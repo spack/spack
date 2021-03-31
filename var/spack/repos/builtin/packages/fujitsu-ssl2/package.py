@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-import os
 
 
 class FujitsuSsl2(Package):
@@ -150,5 +149,4 @@ class FujitsuSsl2(Package):
             self.spec.prefix, "clang-comp"
         )
         headers = find_headers('cssl', path, recursive=True)
-        headers.directories = os.path.dirname(headers[0])
         return headers
