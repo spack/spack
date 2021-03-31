@@ -16,20 +16,6 @@ install = spack.main.SpackCommand('install')
 diff = spack.main.SpackCommand('diff')
 
 
-def test_spec_differ(install_mockery, mock_fetch, mock_archive, mock_packages):
-    """Test that we can install two packages and diff them"""
-
-    # Specs should be the same as themselves
-    differ = spack.diff.SpecDiff('mpileaks', 'mpileaks')
-    assert len(differ.a_not_b) == 0
-    assert len(differ.b_not_a) == 0
-
-    # Calculate the comparison to a different spec
-    differ = spack.diff.SpecDiff('mpileaks', 'mpileaks+debug')
-    assert len(differ.a_not_b) == 1
-    assert len(differ.b_not_a) == 1
-
-
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test with and without the --first option"""
     install('mpileaks')
@@ -63,7 +49,7 @@ def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):
         diff('mpileaks', 'mpileaks+debug')
 
     # But if we tell it to use the first, it won't try to disambiguate
-    variants = "~debug~opt+shared+static+debug~opt+shared"
+    variants = "+debug~opt+shared+static~debug~opt+shared+static"
     assert variants in diff('--first', 'mpileaks', 'mpileaks+debug')
 
     # This matches them exactly

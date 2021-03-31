@@ -737,13 +737,47 @@ Since the only difference between these two is the hash, we provide the hashes:
 .. code-block::console
 
     $ spack diff /efzjziy /sl7m27m
-    zlib@1.2.11%gcc@9.3.0~optimize+pic+shared+optimize+pic+sharedarch=linux-ubuntu20.04-skylake
+    ==> Showing zlib@1.2.11/efzjziy TO zlib@1.2.11/sl7m27m
+    zlib@1.2.11%gcc@9.3.0+optimize+pic+shared~optimize+pic+shared arch=linux-ubuntu20.04-skylake
 
 
-In the terminal output, the common attributes are your default color (e.g., white),
-the changed or removed attributes are crossed out in red, and the new attributes
-are in bright green. If you are interested in getting the attributes as data,
-then you likely want to add ``--json``:
+The documentation here cannot show the colored output or strike throughs, but in the
+above, the first section ``zlib@1.2.11%gcc@9.3.0`` is in white because is has
+not changed between versions, and ``+optimize+pic+shared`` is crossed out and in
+red to indicate that it was removed in favor of the variant (in bright green)
+``~optimize+pic+shared``. The last section for the architecture is also white
+because it has not changed. To make it easy for you to remember the direction
+of the diff, the first line tells you that spack is showing changes from zlib
+with hash ``efzjziy`` to zlib with hash ``sl7m27m``. This means that the second
+hash, ``sl7m27m`` is the newer one. Anything present in the second that is not
+present in the first is new, and will be shown in green. Anything removed from
+the second but present in the first will be bright red and crossed out.
+When you run a diff, you can read the command as follows:
+
+.. code-block::console
+
+    # Show me changes from /efzjziy TO /sl7m27m
+    $ spack diff /efzjziy /sl7m27m
+
+
+And then the terminal output, the common or unchanged attributes are your default color (e.g., white),
+the changed or removed attributes that are present in ``/sl7m27m`` but not 
+``/efzjziy`` are in green, and removed are in red. For zlib, since we
+don't have additional dependencies, by default you are just seeing one line.
+However, ``spack diff`` call shown above will typically print an entire diff
+tree, akin to ``spack spec`` but colored in red and green. But this may not be
+what you want. If you want to force a one line output to only compare the top level
+attributes, add ``--oneline``. Here is an example to look at changes from an old
+version of Singularity to a new one:
+
+.. code-block::console
+
+    $ spack diff --oneline singularity-legacy singularity
+    ==> Showing singularity-legacy@2.6.1/ghrxxnm TO singularity@3.7.2/pueh4ln
+    singularity-legacysingularity@2.6.13.7.2%gcc@9.3.0+network+suidarch=linux-ubuntu20.04-skylake
+
+Remove ``--oneline`` to see the entire tree output. Finally, if you are interested
+in getting the attributes as data, then you likely want to add ``--json``:
 
 
 .. code-block:: console
@@ -776,6 +810,7 @@ then you likely want to add ``--json``:
 A subset of the intersect (common attributes) data is shown, but we can also
 easily see that the variant sets are different. Keep in mind that you can
 also compare completely different packages, if you are interested.
+Finally, if
     
 
 ------------------------

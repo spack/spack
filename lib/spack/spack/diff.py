@@ -35,7 +35,7 @@ class SpecDiff:
 
     # Prefixes depend on variable name
     prefixes = {'version': "@", "compiler.name": '%',
-                'compiler.version': '@', 'architecture': 'arch='}
+                'compiler.version': '@', 'architecture': ' arch='}
 
     def __init__(self, a, b, fmt=None):
         """Compare an old spec (a) against a new spec (b).
@@ -64,8 +64,8 @@ class SpecDiff:
     def b_name(self):
         return self.b.format(self.fmt, color=clr.get_color_when())
 
-    def __str__(self, spec1, spec2):
-        return "[spec-diff: %s vs. %s]" % (self.a_name, self.b_name)
+    def __str__(self):
+        return "[spec-diff: %s TO %s]" % (self.a_name, self.b_name)
 
     def _load_spec(self, spec):
         """
@@ -237,26 +237,26 @@ class SpecDiff:
                 out += "^"
             return out
 
-        # We are going to show the diff in context of A, so we loop through it
-        for name, meta in a_edges.items():
+        # We are going to show differences from a TO b (b is newer)
+        for name, meta in b_edges.items():
             node = meta['edge'].spec
             out = print_spacing(out, meta['depth'])
 
             # If we have the spec in the second, generate the colored output
-            if node.name in b_edges:
-                bnode = b_edges[node.name]['edge'].spec
-                out += self.colored_diff(spec1=node, spec2=bnode) + "\n"
+            if node.name in a_edges:
+                anode = a_edges[node.name]['edge'].spec
+                out += self.colored_diff(spec1=node, spec2=anode) + "\n"
 
             # If we don't have the spec in the second, it's all new (green)
             else:
                 out += self.colored_spec(node, fmt="@G") + "\n"
 
         # Finally, we need to add the specs in b not in a
-        for name, meta in b_edges.items():
+        for name, meta in a_edges.items():
             node = meta['edge'].spec
 
             # Don't print what we've already seen
-            if node.name in a_edges:
+            if node.name in b_edges:
                 continue
 
             # Print in red

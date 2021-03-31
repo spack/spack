@@ -38,6 +38,13 @@ def setup_parser(subparser):
         dest='load_first',
         help="load the first match if multiple packages match the spec"
     )
+    subparser.add_argument(
+        '--oneline',
+        action='store_true',
+        default=False,
+        dest='one_line',
+        help="Show a one line diff, only comparing the top level attributes."
+    )
 
 
 def diff(parser, args):
@@ -65,4 +72,10 @@ def diff(parser, args):
             tty.info("No differences.")
             sys.exit(0)
 
-        print(differ.tree())
+        tty.info("Showing %s TO %s" % (differ.a_name, differ.b_name))
+
+        # A single line diff shows only top level differences in the specs
+        if args.one_line:
+            print(differ.colored_diff())
+        else:
+            print(differ.tree())
