@@ -416,14 +416,13 @@ class QuantumEspresso(Package):
                 options.extend([
                     '--with-elpa-lib={0}'.format(
                         join_path(elpa.prefix.lib,
-                            'libelpa{elpa_suffix}.a'
-                            .format(elpa_suffix=elpa_suffix)))
+                                  'libelpa{elpa_suffix}.a'
+                                  .format(elpa_suffix=elpa_suffix)))
                 ])
             else:
                 options.extend([
                     '--with-elpa-lib={0}'.format(elpa.libs[0])
                 ])
-
 
         if spec.variants['hdf5'].value != 'none':
             options.append('--with-hdf5={0}'.format(spec['hdf5'].prefix))
