@@ -11,7 +11,7 @@ class Molden(MakefilePackage):
        Ab Initio packages"""
 
     homepage = "https://www3.cmbi.umcn.nl/molden/"
-    url      = "ftp://ftp.cmbi.ru.nl/pub/molgraph/molden/molden6.5.tar.gz"
+    url      = "ftp://ftp.cmbi.umcn.nl/pub/molgraph/molden/molden6.5.tar.gz"
 
     maintainers = ['dev-zero']
 
