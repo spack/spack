@@ -5,6 +5,8 @@
 
 from spack import *
 
+from collections import defaultdict
+
 
 class Cdo(AutotoolsPackage):
     """CDO is a collection of command line Operators to manipulate and analyse
@@ -54,8 +56,8 @@ class Cdo(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
 
     depends_on('netcdf-c', when='+netcdf')
-    # In this case CDO does not depend on hdf5 directly but we need the backend
-    # of netcdf to be thread safe.
+    # The internal library of CDO implicitly links to hdf5.
+    # We also need the backend of netcdf to be thread safe.
     depends_on('hdf5+threadsafe', when='+netcdf')
 
     depends_on('grib-api', when='grib2=grib-api')
@@ -83,9 +85,20 @@ class Cdo(AutotoolsPackage):
               msg='GCC 9 changed OpenMP data sharing behavior')
 
     def configure_args(self):
-        config_args = self.with_or_without(
-            'netcdf',
-            activation_value=lambda x: self.spec['netcdf-c'].prefix)
+        config_args = []
+
+        flags = defaultdict(list)
+
+        if '+netcdf' in self.spec:
+            config_args.append('--with-netcdf=' + self.spec['netcdf-c'].prefix)
+            # We need to make sure that the libtool script of libcdi - the
+            # internal library of CDO - finds the correct version of hdf5.
+            # Note that the argument of --with-hdf5 is not passed to the
+            # configure script of libcdi, therefore we have to provide
+            # additional flags regardless of whether hdf5 support is enabled.
+            flags['LDFLAGS'].append(self.spec['hdf5'].libs.search_flags)
+        else:
+            config_args.append('--without-netcdf')
 
         if self.spec.variants['grib2'].value == 'eccodes':
             config_args.append('--with-eccodes=' +
@@ -140,7 +153,9 @@ class Cdo(AutotoolsPackage):
         # following flags. This works for OpenMPI, MPICH, MVAPICH, Intel MPI,
         # IBM Spectrum MPI, bullx MPI, and Cray MPI.
         if self.spec.satisfies('@1.9:+hdf5^hdf5+mpi'):
-            config_args.append(
-                'CPPFLAGS=-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX')
+            flags['CPPFLAGS'].append('-DOMPI_SKIP_MPICXX -DMPICH_SKIP_MPICXX')
+
+        config_args.extend(['{0}={1}'.format(var, ' '.join(val))
+                            for var, val in flags.items()])
 
         return config_args
