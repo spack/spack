@@ -40,7 +40,7 @@ class CachedCMakePackage(CMakePackage):
 
     @property
     def cache_name(self):
-        return "{0}-{1}-{2}-{3}.cmake".format(
+        return "{0}-{1}-{2}@{3}.cmake".format(
             self.name,
             self.spec.architecture,
             self.spec.compiler.name,
