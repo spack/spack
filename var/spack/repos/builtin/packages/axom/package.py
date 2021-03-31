@@ -288,9 +288,9 @@ class Axom(CachedCMakePackage, CudaPackage):
         entries = []
 
         # TPL locations
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# TPLs")
         entries.append("#------------------{0}\n".format("-" * 60))
-        entries.append("# TPLs\n")
-        entries.append("#------------------{0}\n\n".format("-" * 60))
 
         # Try to find the common prefix of the TPL directory, including the
         # compiler. If found, we will use this in the TPL paths
@@ -320,9 +320,9 @@ class Axom(CachedCMakePackage, CudaPackage):
         # Devtools
         ##################################
 
+        entries.append("#------------------{0}".format("-" * 60))
+        entries.append("# Devtools")
         entries.append("#------------------{0}\n".format("-" * 60))
-        entries.append("# Devtools\n")
-        entries.append("#------------------{0}\n\n".format("-" * 60))
 
         # Add common prefix to path replacement list
         if "+devtools" in spec:

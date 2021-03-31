@@ -61,11 +61,21 @@ class CachedCMakePackage(CMakePackage):
         # through Spack, but use the underlying compiler when run outside of
         # Spack
         spec = self.spec
+
+        # Fortran compiler is optional
+        if "FC" in os.environ:
+            spack_fc_entry = cmake_cache_path(
+                "CMAKE_Fortran_COMPILER", os.environ['FC'])
+            system_fc_entry = cmake_cache_path(
+                "CMAKE_Fortran_COMPILER", self.compiler.fc)
+        else:
+            spack_fc_entry = "# No Fortran compiler defined in spec"
+            system_fc_entry = "# No Fortran compiler defined in spec"
+
         entries = [
             "#------------------{0}".format("-" * 60),
             "# Compilers",
-            "#------------------{0}\n".format("-" * 60),
-
+            "#------------------{0}".format("-" * 60),
             "# Compiler Spec: {0}".format(spec.compiler),
             "#------------------{0}".format("-" * 60),
             'if(DEFINED ENV{SPACK_CC})',
@@ -73,16 +83,14 @@ class CachedCMakePackage(CMakePackage):
                 "CMAKE_C_COMPILER", os.environ['CC']),
             '  ' + cmake_cache_path(
                 "CMAKE_CXX_COMPILER", os.environ['CXX']),
-            '  ' + cmake_cache_path(
-                "CMAKE_Fortran_COMPILER", os.environ['FC']),
+            '  ' + spack_fc_entry,
             'else()',
             '  ' + cmake_cache_path(
-                "CMAKE_C_COMPILER", self.compiler.cc),  # noqa: F821
+                "CMAKE_C_COMPILER", self.compiler.cc),
             '  ' + cmake_cache_path(
-                "CMAKE_CXX_COMPILER", self.compiler.cxx),  # noqa: F821
-            '  ' + cmake_cache_path(
-                "CMAKE_Fortran_COMPILER", self.compiler.fc),  # noqa: F821
-            'endif()'
+                "CMAKE_CXX_COMPILER", self.compiler.cxx),
+            '  ' + system_fc_entry,
+            'endif()\n'
         ]
 
         # use global spack compiler flags
@@ -110,7 +118,7 @@ class CachedCMakePackage(CMakePackage):
 
         entries = [
             "#------------------{0}".format("-" * 60),
-            "# MPI\n",
+            "# MPI",
             "#------------------{0}\n".format("-" * 60),
         ]
 
