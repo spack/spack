@@ -96,6 +96,7 @@ class Abinit(AutotoolsPackage):
 
     patch('rm_march_settings.patch')
 
+    # Fix detection of Fujitsu compiler
     # Fix configure not to collect the option that causes an error
     # Fix intent(out) and unnecessary rewind to avoid compile error
     patch('fix_for_fujitsu.patch', when='%fj')

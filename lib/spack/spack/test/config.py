@@ -73,6 +73,25 @@ def write_config_file(tmpdir):
     return _write
 
 
+@pytest.fixture()
+def env_yaml(tmpdir):
+    """Return a sample env.yaml for test purposes"""
+    env_yaml = str(tmpdir.join("env.yaml"))
+    with open(env_yaml, 'w') as f:
+        f.write("""\
+env:
+    config:
+        verify_ssl: False
+        dirty: False
+    packages:
+        libelf:
+            compiler: [ 'gcc@4.5.3' ]
+    repos:
+        - /x/y/z
+""")
+    return env_yaml
+
+
 def check_compiler_config(comps, *compiler_names):
     """Check that named compilers in comps match Spack's config."""
     config = spack.config.get('compilers')
@@ -257,6 +276,37 @@ def test_write_to_same_priority_file(mock_low_high_config, compiler_specs):
 #
 repos_low = {'repos': ["/some/path"]}
 repos_high = {'repos': ["/some/other/path"]}
+
+# Test setting config values via path in filename
+
+
+def test_add_config_path():
+
+    # Try setting a new install tree root
+    path = "config:install_tree:root:/path/to/config.yaml"
+    spack.config.add(path, scope="command_line")
+    set_value = spack.config.get('config')['install_tree']['root']
+    assert set_value == '/path/to/config.yaml'
+
+    # Now a package:all setting
+    path = "packages:all:compiler:[gcc]"
+    spack.config.add(path, scope="command_line")
+    compilers = spack.config.get('packages')['all']['compiler']
+    assert "gcc" in compilers
+
+
+def test_add_config_filename(mock_low_high_config, tmpdir):
+
+    config_yaml = tmpdir.join('config-filename.yaml')
+    config_yaml.ensure()
+    with config_yaml.open('w') as f:
+        syaml.dump_config(config_low, f)
+
+    spack.config.add_from_file(str(config_yaml), scope="low")
+    assert "build_stage" in spack.config.get('config')
+    build_stages = spack.config.get('config')['build_stage']
+    for stage in config_low['config']['build_stage']:
+        assert stage in build_stages
 
 
 # repos
@@ -830,23 +880,10 @@ config:
         scope._write_section('config')
 
 
-def test_single_file_scope(tmpdir, config):
-    env_yaml = str(tmpdir.join("env.yaml"))
-    with open(env_yaml, 'w') as f:
-        f.write("""\
-env:
-    config:
-        verify_ssl: False
-        dirty: False
-    packages:
-        libelf:
-            compiler: [ 'gcc@4.5.3' ]
-    repos:
-        - /x/y/z
-""")
-
+def test_single_file_scope(config, env_yaml):
     scope = spack.config.SingleFileScope(
-        'env', env_yaml, spack.schema.env.schema, ['env'])
+        'env', env_yaml, spack.schema.env.schema, ['env']
+    )
 
     with spack.config.override(scope):
         # from the single-file config
@@ -1078,3 +1115,41 @@ def test_bad_path_double_override(config):
                        match='Meaningless second override'):
         with spack.config.override('bad::double:override::directive', ''):
             pass
+
+
+@pytest.mark.regression('22547')
+def test_single_file_scope_cache_clearing(env_yaml):
+    scope = spack.config.SingleFileScope(
+        'env', env_yaml, spack.schema.env.schema, ['env']
+    )
+    # Check that we can retrieve data from the single file scope
+    before = scope.get_section('config')
+    assert before
+    # Clear the cache of the Single file scope
+    scope.clear()
+    # Check that the section can be retireved again and it's
+    # the same as before
+    after = scope.get_section('config')
+    assert after
+    assert before == after
+
+
+@pytest.mark.regression('22611')
+def test_internal_config_scope_cache_clearing():
+    """
+    An InternalConfigScope object is constructed from data that is already
+    in memory, therefore it doesn't have any cache to clear. Here we ensure
+    that calling the clear method is consistent with that..
+    """
+    data = {
+        'config': {
+            'build_jobs': 10
+        }
+    }
+    internal_scope = spack.config.InternalConfigScope('internal', data)
+    # Ensure that the initial object is properly set
+    assert internal_scope.sections['config'] == data
+    # Call the clear method
+    internal_scope.clear()
+    # Check that this didn't affect the scope object
+    assert internal_scope.sections['config'] == data

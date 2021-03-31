@@ -11,6 +11,7 @@ class PyPromptToolkit(PythonPackage):
 
     pypi = "prompt_toolkit/prompt_toolkit-1.0.9.tar.gz"
 
+    version('3.0.17', sha256='9397a7162cf45449147ad6042fa37983a081b8a73363a5253dd4072666333137')
     version('3.0.16', sha256='0fa02fa80363844a4ab4b8d6891f62dd0645ba672723130423ca4037b80c1974')
     version('3.0.7',  sha256='822f4605f28f7d2ba6b0b09a31e25e140871e96364d1d377667b547bb3bf4489')
     version('2.0.10', sha256='f15af68f66e664eaa559d4ac8a928111eebd5feda0c11738b5998045224829db')

@@ -85,7 +85,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('blas=accelerate +openmp_blas')
 
     depends_on('essl', when='blas=essl')
-    depends_on('essl -cuda', when='blas=essl -openmp_blas')
     depends_on('essl +ilp64', when='blas=essl +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
@@ -93,8 +92,8 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     # Specify the correct version of Aluminum
     depends_on('aluminum@:0.3.99', when='@:1.3.99 +al')
     depends_on('aluminum@0.4:0.4.99', when='@1.4:1.4.99 +al')
-    depends_on('aluminum@0.5:', when='@1.5.0:1.5.1 +al')
-    depends_on('aluminum@0.7:', when='@:1.0,1.5.2: +al')
+    depends_on('aluminum@0.5.0:0.5.99', when='@1.5.0:1.5.1 +al')
+    depends_on('aluminum@0.7.0:', when='@:1.0,1.5.2: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')

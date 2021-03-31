@@ -38,6 +38,9 @@ buildcache_cmd = spack.main.SpackCommand('buildcache')
 git = exe.which('git', required=True)
 
 
+pytestmark = pytest.mark.maybeslow
+
+
 @pytest.fixture()
 def env_deactivate():
     yield
