@@ -136,7 +136,10 @@ class Legion(CMakePackage):
             values=cuda_arch_list,
             description="GPU/CUDA architecture to build for.",
             multi=False)
+    variant('cuda_unsupported_compiler', default=False,
+            description="Disable nvcc compiler version check (--allow-unsupported-compiler).")
 
+    depends_on('cuda@10:11', when='+cuda_unsupported_compiler')
     depends_on('cuda@10:11', when='+cuda')
     conflicts('+cuda_hijack', when='~cuda')
 
@@ -154,14 +157,14 @@ class Legion(CMakePackage):
     variant('kokkos', default=False,
             description="Enable support for interoperability with Kokkos.")
 
-    depends_on('kokkos@3.2~cuda', when='+kokkos~cuda')
+    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
     for nvarch in cuda_arch_list:
-        depends_on('kokkos@3.2+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
+        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
                    when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
-        depends_on("kokkos@3.2+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
+        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
                    when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
 
-    depends_on("kokkos@3.3~cuda+openmp", when='kokkos+openmp')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
 
     variant('bindings', default=False,
             description="Build runtime language bindings (excl. Fortran).")
@@ -254,6 +257,9 @@ class Legion(CMakePackage):
                 options.append('-DLegion_HIJACK_CUDART=ON')
             else:
                 options.append('-DLegion_HIJACK_CUDART=OFF')
+            
+            if '+cuda_unsupported_compiler' in spec: 
+                options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
         if '+fortran' in spec:
             # default is off.
