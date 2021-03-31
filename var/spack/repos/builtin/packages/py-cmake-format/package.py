@@ -22,3 +22,4 @@ class PyCmakeFormat(PythonPackage):
 
     depends_on('py-setuptools',  type=('build', 'run'))
     depends_on('py-six@1.13.0:', type=('build', 'run'))
+    depends_on('py-pyyaml', type=('run'))
