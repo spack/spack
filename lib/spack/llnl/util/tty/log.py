@@ -771,7 +771,7 @@ class winlog:
             self.writer = open(self.logfile, mode='wb+')
             self.reader = open(self.logfile, mode='rb+')
 
-        if cap_alt is None && :
+        if cap_alt is None:
             # Dup stdout so we can still write to it after redirection
             self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
             # Redirect stdout and stderr to write to logfile
