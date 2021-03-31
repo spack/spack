@@ -25,7 +25,7 @@ class Igprof(CMakePackage):
     def build_system_flags(pkg, name, flags):
         if name == 'cxxflags':
             flags.extend(('-Wno-unused-variable', '-Wno-error=unused-result'))
-        
+
         return (None, None, flags)
 
 #    def cmake_args(self):
