@@ -137,7 +137,7 @@ class Legion(CMakePackage):
             description="GPU/CUDA architecture to build for.",
             multi=False)
     variant('cuda_unsupported_compiler', default=False,
-            description="Disable nvcc compiler version check (--allow-unsupported-compiler).")
+            description="Disable nvcc version check (--allow-unsupported-compiler).")
 
     depends_on('cuda@10:11', when='+cuda_unsupported_compiler')
     depends_on('cuda@10:11', when='+cuda')
@@ -257,8 +257,8 @@ class Legion(CMakePackage):
                 options.append('-DLegion_HIJACK_CUDART=ON')
             else:
                 options.append('-DLegion_HIJACK_CUDART=OFF')
-            
-            if '+cuda_unsupported_compiler' in spec: 
+
+            if '+cuda_unsupported_compiler' in spec:
                 options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
         if '+fortran' in spec:
