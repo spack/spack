@@ -254,13 +254,13 @@ class SpecDiff:
         # Finally, we need to add the specs in b not in a
         for name, meta in b_edges.items():
             node = meta['edge'].spec
-            out = print_spacing(out, meta['depth'])
 
             # Don't print what we've already seen
             if node.name in a_edges:
                 continue
 
             # Print in red
+            out = print_spacing(out, meta['depth'])
             out += self.colored_spec(node, fmt="@-R") + "\n"
 
         return out
