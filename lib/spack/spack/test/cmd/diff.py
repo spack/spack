@@ -9,29 +9,25 @@ import spack.config
 import spack.store
 import spack.cmd.diff
 import spack.main
+import spack.diff
 import spack.util.spack_json as sjson
 
 install = spack.main.SpackCommand('install')
 diff = spack.main.SpackCommand('diff')
 
 
-def test_diff(install_mockery, mock_fetch, mock_archive, mock_packages):
+def test_spec_differ(install_mockery, mock_fetch, mock_archive, mock_packages):
     """Test that we can install two packages and diff them"""
 
-    specA = spack.spec.Spec('mpileaks').concretized()
-    specB = spack.spec.Spec('mpileaks+debug').concretized()
-
     # Specs should be the same as themselves
-    c = spack.cmd.diff.compare_specs(specA, specA, to_string=True)
-    assert len(c['a_not_b']) == 0
-    assert len(c['b_not_a']) == 0
+    differ = spack.diff.SpecDiff('mpileaks', 'mpileaks')
+    assert len(differ.a_not_b) == 0
+    assert len(differ.b_not_a) == 0
 
-    # Calculate the comparison (c)
-    c = spack.cmd.diff.compare_specs(specA, specB, to_string=True)
-    assert len(c['a_not_b']) == 1
-    assert len(c['b_not_a']) == 1
-    assert c['a_not_b'][0] == ['variant_set', 'mpileaks debug bool(False)']
-    assert c['b_not_a'][0] == ['variant_set', 'mpileaks debug bool(True)']
+    # Calculate the comparison to a different spec
+    differ = spack.diff.SpecDiff('mpileaks', 'mpileaks+debug')
+    assert len(differ.a_not_b) == 1
+    assert len(differ.b_not_a) == 1
 
 
 def test_load_first(install_mockery, mock_fetch, mock_archive, mock_packages):

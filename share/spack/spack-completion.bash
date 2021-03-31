@@ -758,7 +758,7 @@ _spack_develop() {
 _spack_diff() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --json --first -a"
+        SPACK_COMPREPLY="-h --help --json --first"
     else
         _all_packages
     fi
