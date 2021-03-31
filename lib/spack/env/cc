@@ -311,6 +311,14 @@ while [ -n "$1" ]; do
             fi
             ;;
         -l*)
+            # -loopopt=0 is passed to the linker erroneously in
+            # autoconf <= 2.69. Filter it out.
+            # TODO: generalize filtering of args with an env var, so that
+            # TODO: we do not have to special case this here.
+            if [ "$mode" = "ld" ] && [ "$1" != "${1#-loopopt}" ]; then
+                shift
+                continue
+            fi
             arg="${1#-l}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             other_args+=("-l$arg")
