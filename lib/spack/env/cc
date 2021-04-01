@@ -285,6 +285,7 @@ while [ $# -ne 0 ]; do
     # Multiple consecutive spaces in the command line can
     # result in blank arguments
     if [ -z "$1" ]; then
+        shift
         continue
     fi
 
