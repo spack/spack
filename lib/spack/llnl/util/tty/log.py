@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,17 @@ from contextlib import contextmanager
 from six import string_types
 from six import StringIO
 
+from typing import Optional  # novm
+from types import ModuleType  # novm
+
 import llnl.util.tty as tty
 
+termios = None  # type: Optional[ModuleType]
 try:
-    import termios
+    import termios as term_mod
+    termios = term_mod
 except ImportError:
-    termios = None
+    pass
 
 
 # Use this to strip escape sequences

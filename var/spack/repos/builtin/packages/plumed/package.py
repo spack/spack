@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,7 @@ class Plumed(AutotoolsPackage):
     git = 'https://github.com/plumed/plumed2.git'
 
     version('master', branch='master')
+    version('2.7.0', sha256='14450ea566c25ac9bf71fd77bb9c0c95e9038462b5739c73a515be82e2011cd6')
     version('2.6.2', preferred=True, sha256='bbc2ef0cb08d404513b8b737c72333b6656389e15effd6a0f9ace2a5758c9a4a')
     version('2.6.1', sha256='c1b3c397b2d971140aa240dde50e48a04ce78e3dedb02b6dca80fa53f8026e4e')
     version('2.6.0', sha256='3d57ae460607a49547ef38a52c4ac93493a3966857c352280a9c05f5dcdb1820')
@@ -57,6 +58,9 @@ class Plumed(AutotoolsPackage):
     variant('shared', default=True, description='Builds shared libraries')
     variant('mpi', default=True, description='Activates MPI support')
     variant('gsl', default=True, description='Activates GSL support')
+    variant('arrayfire', default='none',
+            values=('none', 'cpu', 'cuda', 'opencl'),
+            description='Activates FireArray support')
 
     # Dependencies. LAPACK and BLAS are recommended but not essential.
     depends_on('zlib')
@@ -65,6 +69,9 @@ class Plumed(AutotoolsPackage):
     # For libmatheval support through the 'function' module
     # which is enabled by default (or when optional_modules=all)
     depends_on('libmatheval', when='@:2.4.99')
+    depends_on('arrayfire', when='arrayfire=cpu')
+    depends_on('arrayfire+cuda', when='arrayfire=cuda')
+    depends_on('arrayfire+opencl', when='arrayfire=opencl')
 
     depends_on('mpi', when='+mpi')
     depends_on('gsl', when='+gsl')
@@ -127,6 +134,14 @@ class Plumed(AutotoolsPackage):
         # provided by optimized libraries due to linking order
         filter_file('-lgslcblas', '', 'configure.ac')
 
+    def patch(self):
+        # Ensure Spack's wrappers are used to compile the Python interface
+        env = 'CXX={0} LDSHARED="{0} -pthread -shared" ' \
+              'LDCXXSHARED="{0} -pthread -shared"'.format(spack_cxx)
+        filter_file('plumed_program_name=plumed',
+                    '{0} plumed_program_name=plumed'.format(env),
+                    'src/lib/Makefile', 'python/Makefile')
+
     def configure_args(self):
         spec = self.spec
 
@@ -159,18 +174,31 @@ class Plumed(AutotoolsPackage):
                     'STATIC_LIBS=-mt_mpi'
                 ])
 
+        extra_libs = []
         # Set flags to help find gsl
-        if '+gsl' in self.spec:
-            gsl_libs = self.spec['gsl'].libs
-            blas_libs = self.spec['blas'].libs
-            configure_opts.append('LDFLAGS={0}'.format(
+        if '+gsl' in spec:
+            gsl_libs = spec['gsl'].libs
+            blas_libs = spec['blas'].libs
+            extra_libs.append(
                 (gsl_libs + blas_libs).ld_flags
+            )
+        # Set flags to help with ArrayFire
+        if 'arrayfire=none' not in spec:
+            libaf = 'arrayfire:{0}'.format(spec.variants['arrayfire'].value)
+            extra_libs.append(spec[libaf].libs.search_flags)
+
+        if extra_libs:
+            configure_opts.append('LDFLAGS={0}'.format(
+                ' '.join(extra_libs)
             ))
 
         # Additional arguments
         configure_opts.extend([
             '--enable-shared={0}'.format('yes' if '+shared' in spec else 'no'),
-            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no')
+            '--enable-gsl={0}'.format('yes' if '+gsl' in spec else 'no'),
+            '--enable-af_cpu={0}'.format('yes' if 'arrayfire=cpu' in spec else 'no'),
+            '--enable-af_cuda={0}'.format('yes' if 'arrayfire=cuda' in spec else 'no'),
+            '--enable-af_ocl={0}'.format('yes' if 'arrayfire=ocl' in spec else 'no')
         ])
 
         # Construct list of optional modules

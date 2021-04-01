@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -21,6 +21,8 @@ class Lammps(CMakePackage, CudaPackage):
     tags = ['ecp', 'ecp-apps']
 
     version('master', branch='master')
+    version('20210310', sha256='25708378dbeccf794bc5045aceb84380bf4a3ca03fc8e5d150a26ca88d371474')
+    version('20201029', sha256='759705e16c1fedd6aa6e07d028cc0c78d73c76b76736668420946a74050c3726')
     version('20200721', sha256='845bfeddb7b667799a1a5dbc166b397d714c3d2720316604a979d3465b4190a9')
     version('20200630', sha256='413cbfabcc1541a339c7a4ab5693fbeb768f46bb1250640ba94686c6e90922fc')
     version('20200505', sha256='c49d77fd602d28ebd8cf10f7359b9fc4d14668c72039028ed7792453d416de73')
@@ -60,11 +62,19 @@ class Lammps(CMakePackage, CudaPackage):
     supported_packages = ['asphere', 'body', 'class2', 'colloid', 'compress',
                           'coreshell', 'dipole', 'granular', 'kspace',
                           'kokkos', 'latte', 'manybody', 'mc', 'meam', 'misc',
-                          'molecule', 'mpiio', 'peri', 'poems', 'python',
-                          'qeq', 'replica', 'rigid', 'shock', 'snap', 'spin',
-                          'srd', 'user-atc', 'user-h5md', 'user-lb',
-                          'user-meamc', 'user-misc', 'user-netcdf', 'user-omp',
-                          'user-reaxc', 'voronoi', 'opt']
+                          'mliap', 'molecule', 'mpiio', 'opt', 'peri', 'poems',
+                          'python', 'qeq', 'replica', 'rigid', 'shock', 'snap',
+                          'spin', 'srd', 'user-atc', 'user-adios',
+                          'user-awpmd', 'user-bocs', 'user-cgsdk',
+                          'user-colvars', 'user-diffraction', 'user-dpd',
+                          'user-drude', 'user-eff', 'user-fep', 'user-h5md',
+                          'user-lb', 'user-manifold', 'user-meamc',
+                          'user-mesodpd', 'user-mesont', 'user-mgpt',
+                          'user-misc', 'user-mofff', 'user-netcdf', 'user-omp',
+                          'user-phonon', 'user-plumed', 'user-ptm', 'user-qtb',
+                          'user-reaction', 'user-reaxc', 'user-sdpd',
+                          'user-smd', 'user-smtbq', 'user-sph', 'user-tally',
+                          'user-uef', 'user-yaff', 'voronoi']
 
     for pkg in supported_packages:
         variant(pkg, default=False,
@@ -79,6 +89,8 @@ class Lammps(CMakePackage, CudaPackage):
             description='Build with png support')
     variant('ffmpeg', default=True,
             description='Build with ffmpeg support')
+    variant('kim', default=True,
+            description='Build with KIM support')
     variant('openmp', default=True, description='Build with OpenMP')
     variant('opencl', default=False, description='Build with OpenCL')
     variant('exceptions', default=False,
@@ -106,10 +118,14 @@ class Lammps(CMakePackage, CudaPackage):
     depends_on('mpi', when='+user-h5md')
     depends_on('hdf5', when='+user-h5md')
     depends_on('jpeg', when='+jpeg')
+    depends_on('kim-api', when='+kim')
     depends_on('libpng', when='+png')
     depends_on('ffmpeg', when='+ffmpeg')
     depends_on('kokkos+deprecated_code+shared@3.0', when='@20200303+kokkos')
     depends_on('kokkos+shared@3.1:', when='@20200505:+kokkos')
+    depends_on('adios2', when='+user-adios')
+    depends_on('plumed', when='+user-plumed')
+    depends_on('eigen@3:', when='+user-smd')
 
     conflicts('+cuda', when='+opencl')
     conflicts('+body', when='+poems@:20180628')
@@ -122,11 +138,28 @@ class Lammps(CMakePackage, CudaPackage):
     conflicts('+user-misc', when='~manybody')
     conflicts('%gcc@9:', when='@:20200303+openmp')
     conflicts('+kokkos', when='@:20200227')
-    conflicts('+meam', when='@20181212:')
-    conflicts('+user-meamc', when='@:20181212')
+    conflicts(
+        '+meam', when='@20181212:',
+        msg='+meam was removed after @20181212, use +user-meamc instead')
+    conflicts(
+        '+user-meamc', when='@:20181212',
+        msg='+user-meamc only added @20181212, use +meam instead')
+    conflicts(
+        '+user-reaction', when='@:20200303',
+        msg='+user-reaction only supported for version 20200505 and later')
+    conflicts('+mliap', when='~snap')
+    conflicts(
+        '+adios +mpi', when='^adios2~mpi',
+        msg='With +adios, mpi setting for adios2 and lammps must be the same')
+    conflicts(
+        '+adios ~mpi', when='^adios2+mpi',
+        msg='With +adios, mpi setting for adios2 and lammps must be the same')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
+    patch("https://github.com/lammps/lammps/commit/562300996285fdec4ef74542383276898555af06.patch",
+          sha256="7e1610dad4d8203b45ca6dc2c1f97d02a40f98a5e9778f51a3dbcc30ea1dc717",
+          when="@20200721 +cuda")
 
     root_cmakelists_dir = 'cmake'
 
@@ -180,6 +213,8 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('{0}=ON'.format(opt))
             else:
                 args.append('{0}=OFF'.format(opt))
+        if '+kim' in spec:
+            args.append('-DPKG_KIM=ON')
         if '+kspace' in spec:
             if '^fftw' in spec:
                 args.append('-DFFT=FFTW3')
@@ -193,6 +228,18 @@ class Lammps(CMakePackage, CudaPackage):
                 args.append('-DFFTW_LIBRARY_DIRS={0}'.format(fftw_prefix.lib))
         if '+kokkos' in spec:
             args.append('-DEXTERNAL_KOKKOS=ON')
+        if '+user-adios' in spec:
+            args.append('-DADIOS2_DIR={0}'.format(self.spec['adios2'].prefix))
+        if '+user-plumed' in spec:
+            args.append('-DDOWNLOAD_PLUMED=no')
+            if '+shared' in self.spec['plumed']:
+                args.append('-DPLUMED_MODE=shared')
+            else:
+                args.append('-DPLUMED_MODE=static')
+        if '+user-smd' in spec:
+            args.append('-DDOWNLOAD_EIGEN3=no')
+            args.append('-DEIGEN3_INCLUDE_DIR={0}'.format(
+                self.spec['eigen'].prefix.include))
 
         return args
 

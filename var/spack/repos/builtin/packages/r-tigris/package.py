@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,13 +7,16 @@ from spack import *
 
 
 class RTigris(RPackage):
-    """Download TIGER/Line shapefiles from the United States Census Bureau
+    """Load Census TIGER/Line Shapefiles
+
+    Download TIGER/Line shapefiles from the United States Census Bureau
     and load into R as 'SpatialDataFrame' or 'sf' objects."""
 
     homepage = "https://cloud.r-project.org/package=tigris"
     url      = "https://cloud.r-project.org/src/contrib/tigris_0.5.3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tigris"
 
+    version('1.0', sha256='97c76568c7cf0615abcbf923a0b4387f6b8c1915b9eb42d0c34cb0f707654403')
     version('0.8.2', sha256='ed8d6ab25332c2cc800858d58324bd8264772d8a916a3f0a8d489250a7e7140e')
     version('0.5.3', sha256='6ecf76f82216798465cd9704acb432caea47469ffc4953f1aaefa4d642a28445')
 
@@ -22,7 +25,6 @@ class RTigris(RPackage):
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-magrittr', type=('build', 'run'))
     depends_on('r-rgdal', type=('build', 'run'))
-    depends_on('r-rgeos', when='@:0.5.3', type=('build', 'run'))
     depends_on('r-sp', type=('build', 'run'))
     depends_on('r-rappdirs', type=('build', 'run'))
     depends_on('r-maptools', type=('build', 'run'))
@@ -30,3 +32,4 @@ class RTigris(RPackage):
     depends_on('r-uuid', type=('build', 'run'))
     depends_on('r-sf', type=('build', 'run'))
     depends_on('r-dplyr', type=('build', 'run'))
+    depends_on('r-rgeos', when='@:0.5.3', type=('build', 'run'))

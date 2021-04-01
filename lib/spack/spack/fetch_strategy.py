@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -29,6 +29,7 @@ import os.path
 import re
 import shutil
 import sys
+from typing import Optional, List  # novm
 
 import llnl.util.tty as tty
 import six
@@ -92,11 +93,12 @@ class FetchStrategy(object):
     #: The URL attribute must be specified either at the package class
     #: level, or as a keyword argument to ``version()``.  It is used to
     #: distinguish fetchers for different versions in the package DSL.
-    url_attr = None
+    url_attr = None  # type: Optional[str]
 
     #: Optional attributes can be used to distinguish fetchers when :
     #: classes have multiple ``url_attrs`` at the top-level.
-    optional_attrs = []  # optional attributes in version() args.
+    # optional attributes in version() args.
+    optional_attrs = []  # type: List[str]
 
     def __init__(self, **kwargs):
         # The stage is initialized late, so that fetch strategies can be
@@ -324,6 +326,8 @@ class URLFetchStrategy(FetchStrategy):
         # Telling curl to fetch the first byte (-r 0-0) is supposed to be
         # portable.
         curl_args = ['--stderr', '-', '-s', '-f', '-r', '0-0', url]
+        if not spack.config.get('config:verify_ssl'):
+            curl_args.append('-k')
         _ = curl(*curl_args, fail_on_error=False, output=os.devnull)
         return curl.returncode == 0
 
@@ -420,7 +424,7 @@ class URLFetchStrategy(FetchStrategy):
             warn_content_type_mismatch(self.archive_file or "the archive")
         return partial_file, save_file
 
-    @property
+    @property  # type: ignore # decorated properties unsupported in mypy
     @_needs_stage
     def archive_file(self):
         """Path to the source archive within this stage directory."""
@@ -773,6 +777,12 @@ class GitFetchStrategy(VCSFetchStrategy):
     def git(self):
         if not self._git:
             self._git = which('git', required=True)
+
+            # Disable advice for a quieter fetch
+            # https://github.com/git/git/blob/master/Documentation/RelNotes/1.7.2.txt
+            if self.git_version >= Version('1.7.2'):
+                self._git.add_default_arg('-c')
+                self._git.add_default_arg('advice.detachedHead=false')
 
             # If the user asked for insecure fetching, make that work
             # with git as well.

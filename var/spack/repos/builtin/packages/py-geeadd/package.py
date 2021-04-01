@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyGeeadd(PythonPackage):
     """Google Earth Engine Batch Assets Manager with Addons."""
 
     homepage = "https://github.com/samapriya/gee_asset_manager_addon"
-    url      = "https://pypi.io/packages/source/g/geeadd/geeadd-0.3.0.tar.gz"
+    pypi = "geeadd/geeadd-0.3.0.tar.gz"
 
     version('0.3.0', sha256='591e6ff2847122598ed5b0452a892a76e332ce227d4ba75e4d03eca2c7a4beea')
 

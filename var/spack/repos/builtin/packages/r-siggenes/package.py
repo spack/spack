@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RSiggenes(RPackage):
-    """Multiple Testing using SAM and Efron's Empirical Bayes Approaches.
+    """Multiple Testing using SAM and Efron's Empirical Bayes Approaches
 
        Identification of differentially expressed genes and estimation of the
        False Discovery Rate (FDR) using both the Significance Analysis of
@@ -17,6 +17,7 @@ class RSiggenes(RPackage):
     homepage = "https://bioconductor.org/packages/siggenes"
     git      = "https://git.bioconductor.org/packages/siggenes.git"
 
+    version('1.64.0', commit='3b528d37c16fc41bbc5c98165f606394313aa050')
     version('1.58.0', commit='69500158d69942cf7c62f583830933cf8baf89a1')
     version('1.56.0', commit='3e929feaa76311be07ff51ad807e657b0b521f6f')
     version('1.54.0', commit='1630e42652192e3e4e48e9e78e53665a120cfc7f')
@@ -25,5 +26,4 @@ class RSiggenes(RPackage):
 
     depends_on('r-biobase', type=('build', 'run'))
     depends_on('r-multtest', type=('build', 'run'))
-
     depends_on('r-scrime@1.2.5:', when='@1.58.0:', type=('build', 'run'))

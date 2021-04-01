@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,9 +10,10 @@ class PyLxml(PythonPackage):
     """lxml is the most feature-rich and easy-to-use library for processing
     XML and HTML in the Python language."""
 
-    homepage = "http://lxml.de/"
-    url      = "https://pypi.io/packages/source/l/lxml/lxml-4.4.1.tar.gz"
+    homepage = "https://lxml.de/"
+    pypi = "lxml/lxml-4.6.1.tar.gz"
 
+    version('4.6.1', sha256='c152b2e93b639d1f36ec5a8ca24cde4a8eefb2b6b83668fcd8e83a67badcb367')
     version('4.5.2', sha256='cdc13a1682b2a6241080745b1953719e7fe0850b40a5c71ca574f090a1391df6')
     version('4.4.1', sha256='c81cb40bff373ab7a7446d6bbca0190bccc5be3448b47b51d729e37799bb5692')
     version('4.3.3', sha256='4a03dd682f8e35a10234904e0b9508d705ff98cf962c5851ed052e9340df3d90')

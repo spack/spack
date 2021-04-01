@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -155,7 +155,7 @@ def path_from_modules(modules):
 
         if candidate_path and not os.path.exists(candidate_path):
             msg = ("Extracted path from module does not exist "
-                   "[module={0}, path={0}]")
+                   "[module={0}, path={1}]")
             tty.warn(msg.format(module_name, candidate_path))
 
         # If anything is found, then it's the best choice. This means

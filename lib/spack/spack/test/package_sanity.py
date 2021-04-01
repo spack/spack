@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ import spack.util.executable as executable
 import spack.variant
 # A few functions from this module are used to
 # do sanity checks only on packagess modified by a PR
-import spack.cmd.flake8 as flake8
+import spack.cmd.style as style
 import spack.util.crypto as crypto
 import pickle
 
@@ -73,7 +73,7 @@ def test_repo_getpkg_names_and_classes():
 def test_get_all_mock_packages():
     """Get the mock packages once each too."""
     db = spack.repo.RepoPath(spack.paths.mock_packages_path)
-    with spack.repo.swap(db):
+    with spack.repo.use_repositories(db):
         check_repo()
 
 
@@ -207,7 +207,7 @@ def test_prs_update_old_api():
     deprecated calls to any method.
     """
     changed_package_files = [
-        x for x in flake8.changed_files() if flake8.is_package(x)
+        x for x in style.changed_files() if style.is_package(x)
     ]
     failing = []
     for file in changed_package_files:

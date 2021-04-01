@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,8 @@ class Spfft(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('master', branch='master')
 
+    version('1.0.1', sha256='f8ab706309776cfbd2bfd8e29a6a9ffb5c8f3cd62399bf82db1e416ae5c490c8')
+    version('1.0.0', sha256='bd98897aa6734563ec63cd84168e731ef2e2bbc01a574c6dc59b74475742b6ee')
     version('0.9.13', sha256='5ccc93c9362bec14cfb6e31dd0e7ae7e48db0453ab49ebc9722041b69db759ef')
     version('0.9.12', sha256='1f7bf5164dcceb0e3bbce7d6ff9faef3145ad17cf3430149d40a98c43c010acc')
     version('0.9.11', sha256='36542a60378e8672654188dee006975ef9e10f502791459ff7ebf4b38451cb9b')
@@ -55,27 +57,30 @@ class Spfft(CMakePackage, CudaPackage):
 
     def cmake_args(self):
         spec = self.spec
-        args = []
-        if spec.satisfies('+openmp'):
-            args += ["-DSPFFT_OMP=On"]
-        if spec.satisfies('+mpi'):
-            args += ["-DSPFFT_MPI=On"]
-        if spec.satisfies('+single_precision'):
-            args += ["-DSPFFT_SINGLE_PRECISION=On"]
-        if spec.satisfies('+gpu_direct'):
-            args += ["-DSPFFT_GPU_DIRECT=On"]
+        args = [
+            self.define_from_variant('SPFFT_OMP', 'openmp'),
+            self.define_from_variant('SPFFT_MPI', 'mpi'),
+            self.define_from_variant('SPFFT_SINGLE_PRECISION', 'single_precision'),
+            self.define_from_variant('SPFFT_GPU_DIRECT', 'gpu_direct'),
+            self.define_from_variant('SPFFT_FORTRAN', 'fortran'),
+            self.define_from_variant('SPFFT_STATIC', 'static')
+        ]
+
         if spec.satisfies('+cuda'):
             args += ["-DSPFFT_GPU_BACKEND=CUDA"]
+
         if spec.satisfies('+rocm'):
             archs = ",".join(self.spec.variants['amdgpu_target'].value)
             args += [
                 '-DSPFFT_GPU_BACKEND=ROCM',
                 '-DHIP_ROOT_DIR={0}'.format(spec['hip'].prefix),
-                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs)
+                '-DHIP_HCC_FLAGS=--amdgpu-target={0}'.format(archs),
+                '-DHIP_CXX_COMPILER={0}'.format(self.spec['hip'].hipcc)
             ]
-        if spec.satisfies('+fortran'):
-            args += ["-DSPFFT_FORTAN=On"]
-        if spec.satisfies('+static'):
-            args += ["-DSPFFT_STATIC=On"]
+
+        if 'fftw' in spec:
+            args += ["-DSPFFT_FFTW_LIB=FFTW"]
+        elif 'intel-mkl' in spec:
+            args += ["-DSPFFT_FFTW_LIB=MKL"]
 
         return args

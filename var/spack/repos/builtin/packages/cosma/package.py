@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,6 +20,7 @@ class Cosma(CMakePackage, CudaPackage):
     # note: The default archives produced with github do not have the archives
     #       of the submodules.
     version('master', branch='master', submodules=True)
+    version('2.3.0', sha256='0c01c2deb5a0cd177952178350188a62c42ce55e604d7948ac472f55bf0d4815')
     version('2.2.0', sha256='1eb92a98110df595070a12193b9221eecf9d103ced8836c960f6c79a2bd553ca')
     version('2.0.7', sha256='8d70bfcbda6239b6a8fbeaca138790bbe58c0c3aa576879480d2632d4936cf7e')
     version('2.0.2', sha256='4f3354828bc718f3eef2f0098c3bdca3499297497a220da32db1acd57920c68d')

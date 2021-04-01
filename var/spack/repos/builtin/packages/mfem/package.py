@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Mfem(Package, ROCmPackage):
 
     maintainers = ['v-dobrev', 'tzanio', 'acfisher',
                    'goxberry', 'markcmiller86']
+
+    test_requires_compiler = True
 
     # Recommended mfem builds to test when updating this file: see the shell
     # script 'test_builds.sh' in the same directory as this file.
@@ -770,6 +772,34 @@ class Mfem(Package, ROCmPackage):
         if install_em:
             install_tree('data', join_path(prefix_share, 'data'))
 
+    examples_src_dir = 'examples'
+    examples_data_dir = 'data'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir,
+                                       self.examples_data_dir])
+
+    def test(self):
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        with working_dir(test_dir, create=False):
+            # MFEM has many examples to serve as a suitable smoke check. ex10
+            # was chosen arbitrarily among the examples that work both with
+            # MPI and without it
+            test_exe = 'ex10p' if ('+mpi' in self.spec) else 'ex10'
+            make('CONFIG_MK={0}/share/mfem/config.mk'.format(self.prefix),
+                 test_exe, parallel=False)
+            self.run_test('./{0}'.format(test_exe),
+                          ['--mesh', '../{0}/beam-quad.mesh'.format(
+                              self.examples_data_dir)],
+                          [], installed=True, purpose='Smoke test for mfem',
+                          skip_missing=False, work_dir='.')
+            make('clean')
+
+    # this patch is only needed for mfem 4.1, where a few
+    # released files include byte order marks
     @when('@4.1.0')
     def patch(self):
         # Remove the byte order mark since it messes with some compilers

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,7 @@ class Pgi(Package):
     set up a mirror, see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.pgroup.com/"
+    manual_download = True
 
     version('20.4',  sha256='f3ecc2104b304cd5c8b20e3ffdb5da88f2b5f7cc148e8daf00561928a5cbbc2e')
     version('19.10', sha256='ac9db73ba80a66fe3bc875f63aaa9e16f54674a4e88b25416432430ba8cf203d')

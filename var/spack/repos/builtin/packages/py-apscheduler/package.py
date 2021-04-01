@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyApscheduler(PythonPackage):
     """In-process task scheduler with Cron-like capabilities."""
 
     homepage = "https://github.com/agronholm/apscheduler"
-    url      = "https://pypi.io/packages/source/A/APScheduler/APScheduler-3.3.1.tar.gz"
+    pypi = "APScheduler/APScheduler-3.3.1.tar.gz"
 
     version('3.3.1', sha256='f68874dff1bdffcc6ce3adb7840c1e4d162c609a3e3f831351df30b75732767b')
     version('2.1.0', sha256='3b4b44387616902ad6d13122961013630eb25519937e5aa7c450de85656c9753')

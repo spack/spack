@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
+from typing import Dict, Callable  # novm
 
 import llnl.util.tty as tty
 
@@ -15,7 +16,7 @@ section = "user environment"
 level = "short"
 
 
-_subcommands = {}
+_subcommands = {}  # type: Dict[str, Callable]
 
 _deprecated_commands = ('refresh', 'find', 'rm', 'loads')
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RGdsfmt(RPackage):
-    """R Interface to CoreArray Genomic Data Structure (GDS) Files.
+    """R Interface to CoreArray Genomic Data Structure (GDS) Files
 
        This package provides a high-level R interface to CoreArray Genomic Data
        Structure (GDS) data files, which are portable across platforms with
@@ -25,6 +25,7 @@ class RGdsfmt(RPackage):
     homepage = "https://bioconductor.org/packages/gdsfmt"
     git      = "https://git.bioconductor.org/packages/gdsfmt.git"
 
+    version('1.26.1', commit='bd180b21b1ace120035f0da255cbf6f13088f069')
     version('1.20.0', commit='b1fbaba0a5ace3dc45daecc85168651cd85dce00')
     version('1.18.1', commit='b911b953e9db7988e93ec2010b0ab1e384d073c9')
     version('1.16.0', commit='49b011452585e432b983b68466a230c9b71d8a95')

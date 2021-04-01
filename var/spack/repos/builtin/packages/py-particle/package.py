@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyParticle(PythonPackage):
     particle information and extra goodies."""
 
     git = "https://github.com/scikit-hep/particle.git"
-    url = "https://pypi.io/packages/source/p/particle/particle-0.11.0.tar.gz"
+    pypi = "particle/particle-0.11.0.tar.gz"
     homepage = "https://github.com/scikit-hep/particle"
 
     maintainers = ['vvolkl']

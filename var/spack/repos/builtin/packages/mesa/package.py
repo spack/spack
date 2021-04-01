@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,8 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.0.0', sha256='e6204e98e6a8d77cf9dc5d34f99dd8e3ef7144f3601c808ca0dd26ba522e0d84')
+    version('20.3.4', sha256='dc21a987ec1ff45b278fe4b1419b1719f1968debbb80221480e44180849b4084')
     version('20.2.1', sha256='d1a46d9a3f291bc0e0374600bdcb59844fa3eafaa50398e472a36fc65fd0244a')
 
     depends_on('meson@0.52:', type='build')
@@ -26,10 +28,13 @@ class Mesa(MesonPackage):
     depends_on('pkgconfig', type='build')
     depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
+    depends_on('cmake', type='build')
     depends_on('flex', type='build')
     depends_on('gettext', type='build')
     depends_on('python@3:', type='build')
     depends_on('py-mako@0.8.0:', type='build')
+    depends_on('expat')
+    depends_on('zlib@1.2.3:')
 
     # Internal options
     variant('llvm', default=True, description="Enable LLVM.")
@@ -70,7 +75,11 @@ class Mesa(MesonPackage):
     depends_on('libxext', when='+glx')
     depends_on('libxt',  when='+glx')
     depends_on('xrandr', when='+glx')
-    depends_on('glproto@1.4.14:', when='+glx', type='build')
+    depends_on('glproto@1.4.14:', when='+glx')
+
+    # version specific issue
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
+    conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
 
     # Require at least 1 front-end
     # TODO: Add egl to this conflict once made available
@@ -82,6 +91,14 @@ class Mesa(MesonPackage):
 
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
+
+    # 'auto' needed when shared llvm is built
+    @when('^llvm~shared_libs')
+    def patch(self):
+        filter_file(
+            r"_llvm_method = 'auto'",
+            "_llvm_method = 'config-tool'",
+            "meson.build")
 
     def meson_args(self):
         spec = self.spec
@@ -106,11 +123,17 @@ class Mesa(MesonPackage):
             args.append('-Dlibunwind=disabled')
 
         num_frontends = 0
+
+        if spec.satisfies('@:20.3'):
+            osmesa_enable, osmesa_disable = ('gallium', 'none')
+        else:
+            osmesa_enable, osmesa_disable = ('true', 'false')
+
         if '+osmesa' in spec:
             num_frontends += 1
-            args.append('-Dosmesa=gallium')
+            args.append('-Dosmesa={0}'.format(osmesa_enable))
         else:
-            args.append('-Dosmesa=none')
+            args.append('-Dosmesa={0}'.format(osmesa_disable))
 
         if '+glx' in spec:
             num_frontends += 1

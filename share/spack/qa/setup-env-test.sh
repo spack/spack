@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -109,7 +109,6 @@ succeeds spack -m load b
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
 contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
-contains "export LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
 succeeds spack -m load --only dependencies a
 succeeds spack -m load --only package a
 fails spack -m load d

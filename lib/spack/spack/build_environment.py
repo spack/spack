@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -70,8 +70,7 @@ from spack.error import NoLibrariesError, NoHeadersError
 from spack.util.executable import Executable
 from spack.util.module_cmd import load_module, path_from_modules, module
 from spack.util.log_parse import parse_log_events, make_log_context
-
-
+from spack.util.cpus import cpus_available
 #
 # This can be set by the user to globally disable parallel builds.
 #
@@ -149,11 +148,16 @@ def clean_environment():
     # can affect how some packages find libraries.  We want to make
     # sure that builds never pull in unintended external dependencies.
     env.unset('LD_LIBRARY_PATH')
-    env.unset('LIBRARY_PATH')
-    env.unset('CPATH')
     env.unset('LD_RUN_PATH')
     env.unset('DYLD_LIBRARY_PATH')
     env.unset('DYLD_FALLBACK_LIBRARY_PATH')
+
+    # These vars affect how the compiler finds libraries and include dirs.
+    env.unset('LIBRARY_PATH')
+    env.unset('CPATH')
+    env.unset('C_INCLUDE_PATH')
+    env.unset('CPLUS_INCLUDE_PATH')
+    env.unset('OBJC_INCLUDE_PATH')
 
     # On Cray "cluster" systems, unset CRAY_LD_LIBRARY_PATH to avoid
     # interference with Spack dependencies.
@@ -412,7 +416,7 @@ def set_build_environment_variables(pkg, env, dirty):
     # directory.  Add that to the path too.
     env_paths = []
     compiler_specific = os.path.join(
-        spack.paths.build_env_path, pkg.compiler.name)
+        spack.paths.build_env_path, os.path.dirname(pkg.compiler.link_paths['cc']))
     for item in [spack.paths.build_env_path, compiler_specific]:
         env_paths.append(item)
         ci = os.path.join(item, 'case-insensitive')
@@ -447,6 +451,38 @@ def set_build_environment_variables(pkg, env, dirty):
     return env
 
 
+def determine_number_of_jobs(
+        parallel=False, command_line=None, config_default=None, max_cpus=None):
+    """
+    Packages that require sequential builds need 1 job. Otherwise we use the
+    number of jobs set on the command line. If not set, then we use the config
+    defaults (which is usually set through the builtin config scope), but we
+    cap to the number of CPUs available to avoid oversubscription.
+
+    Parameters:
+        parallel (bool): true when package supports parallel builds
+        command_line (int/None): command line override
+        config_default (int/None): config default number of jobs
+        max_cpus (int/None): maximum number of CPUs available. When None, this
+                             value is automatically determined.
+    """
+    if not parallel:
+        return 1
+
+    if command_line is None and 'command_line' in spack.config.scopes():
+        command_line = spack.config.get('config:build_jobs', scope='command_line')
+
+    if command_line is not None:
+        return command_line
+
+    max_cpus = max_cpus or cpus_available()
+
+    # in some rare cases _builtin config may not be set, so default to max 16
+    config_default = config_default or spack.config.get('config:build_jobs', 16)
+
+    return min(max_cpus, config_default)
+
+
 def _set_variables_for_single_module(pkg, module):
     """Helper function to set module variables for single module."""
     # Put a marker on this module so that it won't execute the body of this
@@ -455,8 +491,7 @@ def _set_variables_for_single_module(pkg, module):
     if getattr(module, marker, False):
         return
 
-    jobs = spack.config.get('config:build_jobs', 16) if pkg.parallel else 1
-    jobs = min(jobs, multiprocessing.cpu_count())
+    jobs = determine_number_of_jobs(parallel=pkg.parallel)
 
     m = module
     m.make_jobs = jobs

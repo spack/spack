@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,9 @@ from spack import *
 
 
 class RRsvd(RPackage):
-    """Low-rank matrix decompositions are fundamental tools and widely used for
+    """Randomized Singular Value Decomposition
+
+    Low-rank matrix decompositions are fundamental tools and widely used for
     data analysis, dimension reduction, and data compression. Classically,
     highly accurate deterministic matrix algorithms are used for this task.
     However, the emergence of large-scale data has severely challenged our
@@ -26,6 +28,7 @@ class RRsvd(RPackage):
     url      = "https://cloud.r-project.org/src/contrib/rsvd_1.0.2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/rsvd"
 
+    version('1.0.3', sha256='13560e0fc3ae6927c4cc4d5ad816b1f640a2a445b712a5a612ab17ea0ce179bb')
     version('1.0.2', sha256='c8fe5c18bf7bcfe32604a897e3a7caae39b49e47e93edad9e4d07657fc392a3a')
 
     depends_on('r@3.2.2:', type=('build', 'run'))

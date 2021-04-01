@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,6 +12,12 @@ import inspect
 import itertools
 import re
 from six import StringIO
+import sys
+
+if sys.version_info >= (3, 5):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
 
 import llnl.util.tty.color
 import llnl.util.lang as lang
@@ -19,11 +25,6 @@ import llnl.util.lang as lang
 from spack.util.string import comma_or
 import spack.directives
 import spack.error as error
-
-try:
-    from collections.abc import Sequence  # novm
-except ImportError:
-    from collections import Sequence
 
 special_variant_values = [None, 'none', '*']
 
@@ -200,7 +201,7 @@ def implicit_variant_conversion(method):
     return convert
 
 
-@lang.key_ordering
+@lang.lazy_lexicographic_ordering
 class AbstractVariant(object):
     """A variant that has not yet decided who it wants to be. It behaves like
     a multi valued variant which **could** do things.
@@ -281,8 +282,14 @@ class AbstractVariant(object):
         # to a set
         self._value = tuple(sorted(set(value)))
 
-    def _cmp_key(self):
-        return self.name, self.value
+    def _cmp_iter(self):
+        yield self.name
+
+        value = self._value
+        if not isinstance(value, tuple):
+            value = (value,)
+        value = tuple(str(x) for x in value)
+        yield value
 
     def copy(self):
         """Returns an instance of a variant equivalent to self

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,6 +8,12 @@ package.
 """
 import collections
 import os
+import sys
+from typing import Callable, DefaultDict, Dict, List  # novm
+if sys.version_info >= (3, 5):
+    CallbackDict = DefaultDict[str, List[Callable]]
+else:
+    CallbackDict = None
 
 import llnl.util.filesystem
 
@@ -26,12 +32,12 @@ class PackageMixinsMeta(type):
     gets implicitly attached to the package class by calling the mixin.
     """
 
-    _methods_to_be_added = {}
-    _add_method_before = collections.defaultdict(list)
-    _add_method_after = collections.defaultdict(list)
+    _methods_to_be_added = {}  # type: Dict[str, Callable]
+    _add_method_before = collections.defaultdict(list)  # type: CallbackDict
+    _add_method_after = collections.defaultdict(list)  # type: CallbackDict
 
     @staticmethod
-    def register_method_before(fn, phase):
+    def register_method_before(fn, phase):  # type: (Callable, str) -> None
         """Registers a method to be run before a certain phase.
 
         Args:
@@ -42,7 +48,7 @@ class PackageMixinsMeta(type):
         PackageMixinsMeta._add_method_before[phase].append(fn)
 
     @staticmethod
-    def register_method_after(fn, phase):
+    def register_method_after(fn, phase):  # type: (Callable, str) -> None
         """Registers a method to be run after a certain phase.
 
         Args:

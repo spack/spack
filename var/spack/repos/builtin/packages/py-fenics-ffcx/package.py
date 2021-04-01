@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,5 +19,5 @@ class PyFenicsFfcx(PythonPackage):
     depends_on("py-setuptools", type=("build", "run"))
     depends_on("py-cffi", type=("build", "run"))
     depends_on("py-fenics-ufl@master", type=("build", "run"))
-    depends_on("py-fenics-fiat@master", type=("build", "run"))
+    depends_on("py-fenics-basix@main", type=("build", "run"))
     depends_on("py-numpy", type=("build", "run"))

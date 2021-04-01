@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,17 +13,17 @@ import itertools
 import os
 import re
 import shutil
+import six
 import stat
 import sys
 import traceback
 import types
+from typing import Dict  # novm
 
-try:
+if sys.version_info >= (3, 5):
     from collections.abc import Mapping  # novm
-except ImportError:
+else:
     from collections import Mapping
-
-import six
 
 import ruamel.yaml as yaml
 
@@ -118,7 +118,11 @@ class SpackNamespace(types.ModuleType):
     def __getattr__(self, name):
         """Getattr lazily loads modules if they're not already loaded."""
         submodule = self.__package__ + '.' + name
-        setattr(self, name, __import__(submodule))
+        try:
+            setattr(self, name, __import__(submodule))
+        except ImportError:
+            msg = "'{0}' object has no attribute {1}"
+            raise AttributeError(msg.format(type(self), name))
         return getattr(self, name)
 
 
@@ -131,7 +135,7 @@ class FastPackageChecker(Mapping):
     during instance initialization.
     """
     #: Global cache, reused by every instance
-    _paths_cache = {}
+    _paths_cache = {}  # type: Dict[str, Dict[str, os.stat_result]]
 
     def __init__(self, packages_path):
         # The path of the repository managed by this instance
@@ -149,7 +153,7 @@ class FastPackageChecker(Mapping):
         self._paths_cache[self.packages_path] = self._create_new_cache()
         self._packages_to_stats = self._paths_cache[self.packages_path]
 
-    def _create_new_cache(self):
+    def _create_new_cache(self):  # type: () -> Dict[str, os.stat_result]
         """Create a new cache for packages in a repo.
 
         The implementation here should try to minimize filesystem
@@ -159,7 +163,7 @@ class FastPackageChecker(Mapping):
         """
         # Create a dictionary that will store the mapping between a
         # package name and its stat info
-        cache = {}
+        cache = {}  # type: Dict[str, os.stat_result]
         for pkg_name in os.listdir(self.packages_path):
             # Skip non-directories in the package root.
             pkg_dir = os.path.join(self.packages_path, pkg_name)
@@ -341,7 +345,7 @@ class PatchIndexer(Indexer):
     def _create(self):
         return spack.patch.PatchCache()
 
-    def needs_update():
+    def needs_update(self):
         # TODO: patches can change under a package and we should handle
         # TODO: it, but we currently punt. This should be refactored to
         # TODO: check whether patches changed each time a package loads,
@@ -1256,23 +1260,6 @@ def set_path(repo):
 
 
 @contextlib.contextmanager
-def swap(repo_path):
-    """Temporarily use another RepoPath."""
-    global path
-
-    # swap out _path for repo_path
-    saved = path
-    remove_from_meta = set_path(repo_path)
-
-    yield
-
-    # restore _path and sys.meta_path
-    if remove_from_meta:
-        sys.meta_path.remove(repo_path)
-    path = saved
-
-
-@contextlib.contextmanager
 def additional_repository(repository):
     """Adds temporarily a repository to the default one.
 
@@ -1282,6 +1269,34 @@ def additional_repository(repository):
     path.put_first(repository)
     yield
     path.remove(repository)
+
+
+@contextlib.contextmanager
+def use_repositories(*paths_and_repos):
+    """Use the repositories passed as arguments within the context manager.
+
+    Args:
+        *paths_and_repos: paths to the repositories to be used, or
+            already constructed Repo objects
+
+    Returns:
+        Corresponding RepoPath object
+    """
+    global path
+
+    # Construct a temporary RepoPath object from
+    temporary_repositories = RepoPath(*paths_and_repos)
+
+    # Swap the current repository out
+    saved = path
+    remove_from_meta = set_path(temporary_repositories)
+
+    yield temporary_repositories
+
+    # Restore _path and sys.meta_path
+    if remove_from_meta:
+        sys.meta_path.remove(temporary_repositories)
+    path = saved
 
 
 class RepoError(spack.error.SpackError):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -46,6 +46,13 @@ class Claw(CMakePackage):
     conflicts('%nag', when='@:2.0.1')
 
     filter_compiler_wrappers('claw_f.conf', relative_root='etc')
+
+    def flag_handler(self, name, flags):
+        # https://gcc.gnu.org/gcc-10/porting_to.html
+        if name == 'cflags' and self.spec.satisfies('%gcc@10:'):
+            flags.append('-fcommon')
+
+        return flags, None, None
 
     def cmake_args(self):
         args = [

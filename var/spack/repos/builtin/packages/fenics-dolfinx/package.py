@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -33,8 +33,9 @@ class FenicsDolfinx(CMakePackage):
     depends_on("slepc", when="+slepc")
 
     depends_on("py-fenics-ffcx", type=("build", "run"))
+    depends_on("py-fenics-basix", type=("build", "run"))
 
-    conflicts('%gcc@:6', msg='C++17 support required')
+    conflicts('%gcc@:8', msg='Improved C++17 support required')
 
     root_cmakelists_dir = "cpp"
 

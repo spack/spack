@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyXopen(PythonPackage):
     recognized by their file extensions .gz, .bz2 or .xz."""
 
     homepage = "https://github.com/marcelm/xopen"
-    url      = "https://pypi.io/packages/source/x/xopen/xopen-0.1.1.tar.gz"
+    pypi = "xopen/xopen-0.1.1.tar.gz"
 
     version('1.0.1', sha256='79d7e425fb0930b0153eb6beba9a540ca3e07ac254ca828577ad2e8fa24105dc')
     version('0.9.0', sha256='1e3918c8a5cd2bd128ba05b3b883ee322349219c99c305e10114638478e3162a')

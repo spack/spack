@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -408,9 +408,6 @@ class Qt(Package):
             use_spack_dep('freetype')
             if not MACOS_VERSION:
                 config_args.append('-fontconfig')
-            elif version < Version('5.15'):
-                # Linux-only QT5 dependencies
-                config_args.append('-system-xcb')
         else:
             config_args.append('-no-freetype')
             config_args.append('-no-gui')
@@ -552,6 +549,9 @@ class Qt(Package):
             ])
             if version < Version('5.12'):
                 config_args.append('-no-xinput2')
+        elif version < Version('5.15') and '+gui' in spec:
+            # Linux-only QT5 dependencies
+            config_args.append('-system-xcb')
 
         if '~webkit' in spec:
             config_args.extend([

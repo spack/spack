@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPid(PythonPackage):
     """Pidfile featuring stale detection and file-locking, can also be
     used as context-manager or decorator."""
 
-    homepage = "https://pypi.org/project/pid/"
+    homepage = "https://github.com/trbs/pid/"
     url      = "https://github.com/trbs/pid/archive/3.0.3.tar.gz"
 
     version('3.0.3', sha256='082281e2f6b99b4aaa02a24ae4796c604ac17f19cdd0327b8c1ba9c2e73aadc8')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyDadi(PythonPackage):
 
     homepage = "https://bitbucket.org/gutenkunstlab/dadi/src/master/"
     git      = "https://bitbucket.org/gutenkunstlab/dadi.git"
-    url      = "https://files.pythonhosted.org/packages/ef/2d/b8636392a28b5d7fe2665a15ab9899651ed7e2af7264c8685e648371aa5c/dadi-2.1.0.tar.gz"
+    pypi = "dadi/dadi-2.1.0.tar.gz"
 
     maintainers = ['dorton21']
 

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,12 +19,12 @@ class Libx11(AutotoolsPackage, XorgPackage):
 
     depends_on('libxcb@1.1.92:')
 
-    depends_on('xproto@7.0.25:', type='build', when='@1.7.0:')
-    depends_on('xproto@7.0.17:', type='build')
-    depends_on('xextproto', type=('build', 'link'))
-    depends_on('xtrans', type='build')
-    depends_on('kbproto', type=('build', 'link'))
-    depends_on('inputproto', type='build')
+    depends_on('xproto@7.0.25:', when='@1.7.0:')
+    depends_on('xproto@7.0.17:')
+    depends_on('xextproto')
+    depends_on('xtrans')
+    depends_on('kbproto')
+    depends_on('inputproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')
     depends_on('perl', type='build')

@@ -1,9 +1,10 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class ParallelNetcdf(AutotoolsPackage):
@@ -18,6 +19,8 @@ class ParallelNetcdf(AutotoolsPackage):
     list_url = "https://parallel-netcdf.github.io/wiki/Download.html"
 
     maintainers = ['skosukhin']
+
+    test_requires_compiler = True
 
     def url_for_version(self, version):
         if version >= Version('1.11.0'):
@@ -169,3 +172,32 @@ class ParallelNetcdf(AutotoolsPackage):
             args.append('--enable-burst-buffering')
 
         return args
+
+    examples_src_dir = 'examples/CXX'
+
+    @run_after('install')
+    def cache_test_sources(self):
+        """Copy the example source files after the package is installed to an
+        install test subdirectory for use during `spack test run`."""
+        self.cache_extra_test_sources([self.examples_src_dir])
+
+    def test(self):
+        test_dir = join_path(self.install_test_root, self.examples_src_dir)
+        # pnetcdf has many examples to serve as a suitable smoke check.
+        # column_wise was chosen based on the E4S test suite. Other
+        # examples should work as well.
+        test_exe = 'column_wise'
+        options = ['{0}.cpp'.format(test_exe), '-o', test_exe, '-lpnetcdf']
+        reason = 'test: compiling and linking pnetcdf example'
+        self.run_test(self.spec['mpi'].mpicxx, options, [],
+                      installed=False, purpose=reason, work_dir=test_dir)
+        mpiexe_list = ['mpirun', 'mpiexec', 'srun']
+        for mpiexe in mpiexe_list:
+            if os.path.isfile(mpiexe):
+                self.run_test(mpiexe, ['-n', '4', test_exe], [],
+                              installed=False,
+                              purpose='test: pnetcdf smoke test',
+                              skip_missing=True,
+                              work_dir=test_dir)
+                break
+        self.run_test('rm', ['-f', test_exe], work_dir=test_dir)

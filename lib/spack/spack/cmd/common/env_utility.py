@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -53,10 +53,12 @@ def emulate_env_utility(cmd_name, context, args):
         spec = args.spec[0]
         cmd = args.spec[1:]
 
-    specs = spack.cmd.parse_specs(spec, concretize=True)
+    specs = spack.cmd.parse_specs(spec, concretize=False)
     if len(specs) > 1:
         tty.die("spack %s only takes one spec." % cmd_name)
     spec = specs[0]
+
+    spec = spack.cmd.matching_spec_from_env(spec)
 
     build_environment.setup_package(spec.package, args.dirty, context)
 

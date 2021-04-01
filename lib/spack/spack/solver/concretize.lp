@@ -1,5 +1,10 @@
+% Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+% Spack Project Developers. See the top-level COPYRIGHT file for details.
+%
+% SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 %=============================================================================
-% Generate
+% This logic program implements Spack's concretizer
 %=============================================================================
 
 %-----------------------------------------------------------------------------
@@ -14,12 +19,14 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight),
     not preferred_version_declared(Package, Version, _).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -32,42 +39,143 @@ version_satisfies(Package, Constraint)
 #defined version_satisfies/3.
 
 %-----------------------------------------------------------------------------
+% Spec conditions and imposed constraints
+%
+% Given Spack directives like these:
+%    depends_on("foo@1.0+bar", when="@2.0+variant")
+%    provides("mpi@2:", when="@1.9:")
+%
+% The conditions are `@2.0+variant` and `@1.9:`, and the imposed constraints
+% are `@1.0+bar` on `foo` and `@2:` on `mpi`.
+%-----------------------------------------------------------------------------
+% conditions are specified with `condition_requirement` and hold when
+% corresponding spec attributes hold.
+condition_holds(ID) :-
+  condition(ID);
+  attr(Name, A1)         : condition_requirement(ID, Name, A1);
+  attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
+  attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
+
+% condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
+% is derived. This allows imposed constraints to be canceled in special cases.
+impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+
+% conditions that hold impose constraints on other specs
+attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+
+#defined condition/1.
+#defined condition_requirement/3.
+#defined condition_requirement/4.
+#defined condition_requirement/5.
+#defined imposed_constraint/3.
+#defined imposed_constraint/4.
+#defined imposed_constraint/5.
+
+%-----------------------------------------------------------------------------
 % Dependency semantics
 %-----------------------------------------------------------------------------
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
+% a dependency holds if its condition holds
+dependency_holds(Package, Dependency, Type) :-
+  dependency_condition(ID, Package, Dependency),
+  dependency_type(ID, Type),
+  condition_holds(ID),
+  not external(Package).
+
+% We cut off dependencies of externals (as we don't really know them).
+% Don't impose constraints on dependencies that don't exist.
+do_not_impose(ID) :-
+  not dependency_holds(Package, Dependency, _),
+  dependency_condition(ID, Package, Dependency).
+
 % declared dependencies are real if they're not virtual AND
-% the package is not an external
+% the package is not an external.
+% They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
- :- declared_dependency(Package, Dependency, Type),
-    node(Package),
-    not virtual(Dependency),
-    not external(Package).
+ :- dependency_holds(Package, Dependency, Type),
+    not virtual(Dependency).
 
-% if you declare a dependency on a virtual AND the package is not an external,
-% you depend on one of its providers
-1 {
-  depends_on(Package, Provider, Type)
-  : provides_virtual(Provider, Virtual)
-} 1
- :- declared_dependency(Package, Virtual, Type),
-    virtual(Virtual),
-    not external(Package),
-    node(Package).
+% every root must be a node
+node(Package) :- root(Package).
 
-% if a virtual was required by some root spec, one provider is in the DAG
-1 { node(Package) : provides_virtual(Package, Virtual) } 1
+% dependencies imply new nodes
+node(Dependency) :- node(Package), depends_on(Package, Dependency).
+
+% all nodes in the graph must be reachable from some root
+% this ensures a user can't say `zlib ^libiconv` (neither of which have any
+% dependencies) and get a two-node unconnected graph
+needed(Package) :- root(Package).
+needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
+:- node(Package), not needed(Package).
+
+% Avoid cycles in the DAG
+% some combinations of conditional dependencies can result in cycles;
+% this ensures that we solve around them
+path(Parent, Child) :- depends_on(Parent, Child).
+path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
+:- path(A, B), path(B, A).
+
+#defined dependency_type/2.
+#defined dependency_condition/3.
+
+%-----------------------------------------------------------------------------
+% Conflicts
+%-----------------------------------------------------------------------------
+:- node(Package),
+   not external(Package),
+   conflict(Package, TriggerID, ConstraintID),
+   condition_holds(TriggerID),
+   condition_holds(ConstraintID).
+
+#defined conflict/3.
+
+%-----------------------------------------------------------------------------
+% Virtual dependencies
+%-----------------------------------------------------------------------------
+
+% if a package depends on a virtual, it's not external and we have a
+% provider for that virtual then it depends on the provider
+depends_on(Package, Provider, Type)
+  :- dependency_holds(Package, Virtual, Type),
+     provides_virtual(Provider, Virtual),
+     not external(Package).
+
+% dependencies on virtuals also imply that the virtual is a virtual node
+virtual_node(Virtual)
+  :- dependency_holds(Package, Virtual, Type),
+     virtual(Virtual), not external(Package).
+
+% if there's a virtual node, we must select one provider
+1 { provides_virtual(Package, Virtual) : possible_provider(Package, Virtual) } 1
  :- virtual_node(Virtual).
+
+% virtual roots imply virtual nodes, and that one provider is a root
+virtual_node(Virtual) :- virtual_root(Virtual).
+1 { root(Package) : provides_virtual(Package, Virtual) } 1
+  :- virtual_root(Virtual).
+
+% The provider provides the virtual if some provider condition holds.
+provides_virtual(Provider, Virtual) :-
+   provider_condition(ID, Provider, Virtual),
+   condition_holds(ID),
+   virtual(Virtual).
 
 % a node that provides a virtual is a provider
 provider(Package, Virtual)
   :- node(Package), provides_virtual(Package, Virtual).
 
 % for any virtual, there can be at most one provider in the DAG
-0 { provider(Package, Virtual) :
-    node(Package), provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
+0 { node(Package) : provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
 
+#defined possible_provider/2.
+
+%-----------------------------------------------------------------------------
+% Virtual dependency weights
+%-----------------------------------------------------------------------------
 % give dependents the virtuals they want
 provider_weight(Dependency, 0)
  :- virtual(Virtual), depends_on(Package, Dependency),
@@ -108,23 +216,53 @@ provider_weight(Package, 100)
     provider(Package, Virtual),
     not default_provider_preference(Virtual, Package, _).
 
-% all nodes must be reachable from some root
-node(Package) :- root(Package).
+#defined possible_provider/2.
+#defined provider_condition/3.
+#defined required_provider_condition/3.
+#defined required_provider_condition/4.
+#defined required_provider_condition/5.
 
-1 { root(Package) : provides_virtual(Package, Virtual) } 1
-  :- virtual_root(Virtual).
+%-----------------------------------------------------------------------------
+% Spec Attributes
+%-----------------------------------------------------------------------------
+% Equivalencies of the form:
+%
+%   name(Arg1, Arg2, ...) :- attr("name", Arg1, Arg2, ...).
+%   attr("name", Arg1, Arg2, ...) :- name(Arg1, Arg2, ...).
+%
+% These allow us to easily define conditional dependency and conflict rules
+% without enumerating all spec attributes every time.
+node(Package)                          :- attr("node", Package).
+version(Package, Version)              :- attr("version", Package, Version).
+version_satisfies(Package, Constraint) :- attr("version_satisfies", Package, Constraint).
+node_platform(Package, Platform)       :- attr("node_platform", Package, Platform).
+node_os(Package, OS)                   :- attr("node_os", Package, OS).
+node_target(Package, Target)           :- attr("node_target", Package, Target).
+node_target_satisfies(Package, Target) :- attr("node_target_satisfies", Package, Target).
+variant_value(Package, Variant, Value) :- attr("variant_value", Package, Variant, Value).
+variant_set(Package, Variant, Value)   :- attr("variant_set", Package, Variant, Value).
+node_flag(Package, FlagType, Flag)     :- attr("node_flag", Package, FlagType, Flag).
+node_compiler(Package, Compiler)       :- attr("node_compiler", Package, Compiler).
+node_compiler_version(Package, Compiler, Version)
+  :- attr("node_compiler_version", Package, Compiler, Version).
+node_compiler_version_satisfies(Package, Compiler, Version)
+  :- attr("node_compiler_version_satisfies", Package, Compiler, Version).
 
-needed(Package) :- root(Package).
-needed(Dependency) :- needed(Package), depends_on(Package, Dependency).
-:- node(Package), not needed(Package).
-
-% real dependencies imply new nodes.
-node(Dependency) :- node(Package), depends_on(Package, Dependency).
-
-% Avoid cycles in the DAG
-path(Parent, Child) :- depends_on(Parent, Child).
-path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
-:- path(A, B), path(B, A).
+attr("node", Package)                          :- node(Package).
+attr("version", Package, Version)              :- version(Package, Version).
+attr("version_satisfies", Package, Constraint) :- version_satisfies(Package, Constraint).
+attr("node_platform", Package, Platform)       :- node_platform(Package, Platform).
+attr("node_os", Package, OS)                   :- node_os(Package, OS).
+attr("node_target", Package, Target)           :- node_target(Package, Target).
+attr("node_target_satisfies", Package, Target) :- node_target_satisfies(Package, Target).
+attr("variant_value", Package, Variant, Value) :- variant_value(Package, Variant, Value).
+attr("variant_set", Package, Variant, Value)   :- variant_set(Package, Variant, Value).
+attr("node_flag", Package, FlagType, Flag)     :- node_flag(Package, FlagType, Flag).
+attr("node_compiler", Package, Compiler)       :- node_compiler(Package, Compiler).
+attr("node_compiler_version", Package, Compiler, Version)
+  :- node_compiler_version(Package, Compiler, Version).
+attr("node_compiler_version_satisfies", Package, Compiler, Version)
+  :- node_compiler_version_satisfies(Package, Compiler, Version).
 
 % do not warn if generated program contains none of these.
 #defined depends_on/3.
@@ -139,6 +277,8 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 #defined external_only/1.
 #defined pkg_provider_preference/4.
 #defined default_provider_preference/3.
+#defined version_satisfies/2.
+#defined node_compiler_version_satisfies/3.
 #defined root/1.
 
 %-----------------------------------------------------------------------------
@@ -157,15 +297,33 @@ external(Package) :- external_only(Package), node(Package).
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
 
-% if an external version is selected, the package is external and
-% we are using the corresponding spec
-external(Package) :-
-    version(Package, Version), version_weight(Package, Weight),
-    external_version_declared(Package, Version, Weight, ID).
+% a package is external if we are using an external spec for it
+external(Package) :- external_spec_selected(Package, _).
 
-external_spec(Package, ID) :-
-    version(Package, Version), version_weight(Package, Weight),
-    external_version_declared(Package, Version, Weight, ID).
+% we can't use the weight for an external version if we don't use the
+% corresponding external spec.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   external_version_declared(Package, Version, Weight, ID),
+   not external(Package).
+
+% determine if an external spec has been selected
+external_spec_selected(Package, LocalIndex) :-
+    external_conditions_hold(Package, LocalIndex),
+    node(Package).
+
+external_conditions_hold(Package, LocalIndex) :-
+    possible_external(ID, Package, LocalIndex), condition_holds(ID).
+
+% it cannot happen that a spec is external, but none of the external specs
+% conditions hold.
+:- external(Package), not external_conditions_hold(Package, _).
+
+#defined possible_external/3.
+#defined external_spec_index/3.
+#defined external_spec_condition/3.
+#defined external_spec_condition/4.
+#defined external_spec_condition/5.
 
 %-----------------------------------------------------------------------------
 % Variant semantics
@@ -194,6 +352,15 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 :- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
 
+% Some multi valued variants accept multiple values from disjoint sets.
+% Ensure that we respect that constraint and we don't pick values from more
+% than one set at once
+:- variant_value(Package, Variant, Value1),
+   variant_value(Package, Variant, Value2),
+   variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
+   variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
+   Set1 != Set2.
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -201,23 +368,40 @@ variant_value(Package, Variant, Value)
     variant(Package, Variant),
     variant_set(Package, Variant, Value).
 
-% prefer default values.
+% The rules below allow us to prefer default values for variants
+% whenever possible. If a variant is set in a spec, or if it is
+% specified in an external, we score it as if it was a default value.
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
     not variant_set(Package, Variant, Value),
+    not external_with_variant_set(Package, Variant, Value),
     node(Package).
 
+% We are using the default value for a variant
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
 
+% The variant is set in the spec
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_set(Package, Variant, Value),
     node(Package).
 
+% The variant is set in an external spec
+external_with_variant_set(Package, Variant, Value)
+ :- variant_value(Package, Variant, Value),
+    condition_requirement(ID, "variant_value", Package, Variant, Value),
+    possible_external(ID, Package, _),
+    external(Package),
+    node(Package).
+
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    external_with_variant_set(Package, Variant, Value),
+    node(Package).
 
 % The default value for a variant in a package is what is written
 % in the package.py file, unless some preference is set in packages.yaml
@@ -238,7 +422,7 @@ variant_default_value(Package, Variant, Value)
 % when assigned a value.
 auto_variant("dev_path").
 auto_variant("patches").
-variant(Package, "dev_path")
+variant(Package, Variant)
   :- variant_set(Package, Variant, _), auto_variant(Variant).
 variant_single_value(Package, "dev_path")
   :- variant_set(Package, "dev_path", _).
@@ -253,13 +437,14 @@ variant_single_value(Package, "dev_path")
 #defined variant_possible_value/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
+#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
 %-----------------------------------------------------------------------------
+
 % one platform per node
-1 { node_platform(Package, Platform) : node_platform(Packagee, Platform) } 1
-  :- node(Package).
+:- M = #count { Platform : node_platform(Package, Platform) }, M !=1, node(Package).
 
 % if no platform is set, fall back to the default
 node_platform(Package, Platform)
@@ -378,13 +563,20 @@ derive_target_from_parent(Parent, Package)
 %-----------------------------------------------------------------------------
 % Compiler semantics
 %-----------------------------------------------------------------------------
+compiler(Compiler) :- compiler_version(Compiler, _).
 
-% one compiler per node
-1 { node_compiler(Package, Compiler) : compiler(Compiler) } 1 :- node(Package).
+% There must be only one compiler set per node. The compiler
+% is chosen among available versions.
 1 { node_compiler_version(Package, Compiler, Version)
     : compiler_version(Compiler, Version) } 1 :- node(Package).
-1 { compiler_weight(Package, Weight) : compiler_weight(Package, Weight) } 1
- :- node(Package).
+
+% Sometimes we just need to know the compiler and not the version
+node_compiler(Package, Compiler) :- node_compiler_version(Package, Compiler, _).
+
+% We can't have a compiler be enforced and select the version from another compiler
+:- node_compiler(Package, Compiler1),
+   node_compiler_version(Package, Compiler2, _),
+   Compiler1 != Compiler2.
 
 % define node_compiler_version_satisfies/3 from node_compiler_version_satisfies/4
 % version_satisfies implies that exactly one of the satisfying versions
@@ -395,11 +587,12 @@ derive_target_from_parent(Parent, Package)
 node_compiler_version_satisfies(Package, Compiler, Constraint)
   :- node_compiler_version(Package, Compiler, Version),
      node_compiler_version_satisfies(Package, Compiler, Constraint, Version).
+
 #defined node_compiler_version_satisfies/4.
 
 % If the compiler version was set from the command line,
 % respect it verbatim
-node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(Package, Compiler, Version).
+node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(Package, Compiler, Version).
 
 % Cannot select a compiler if it is not supported on the OS
 % Compilers that are explicitly marked as allowed
@@ -413,7 +606,7 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_hard(
 
 % Compiler prescribed in the root spec
 node_compiler_version_match_pref(Package, Compiler, V)
- :- node_compiler_hard(Package, Compiler),
+ :- node_compiler_set(Package, Compiler),
     node_compiler_version(Package, Compiler, V),
     not external(Package).
 
@@ -422,37 +615,34 @@ node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version_match_pref(Package, Compiler, V),
     node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_hard(Dependency, Compiler).
+    not node_compiler_set(Dependency, Compiler).
 
 % Compiler inherited from the root package
 node_compiler_version_match_pref(Dependency, Compiler, V)
  :- depends_on(Package, Dependency),
     node_compiler_version(Package, Compiler, V), root(Package),
     node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_hard(Dependency, Compiler).
+    not node_compiler_set(Dependency, Compiler).
 
 compiler_version_match(Package, 1)
  :- node_compiler_version(Package, Compiler, V),
     node_compiler_version_match_pref(Package, Compiler, V).
 
-#defined node_compiler_hard/2.
-#defined node_compiler_version_hard/3.
+#defined node_compiler_set/2.
+#defined node_compiler_version_set/3.
 #defined compiler_supports_os/3.
 #defined allow_compiler/2.
 
 % compilers weighted by preference according to packages.yaml
 compiler_weight(Package, Weight)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
+ :- node_compiler_version(Package, Compiler, V),
     node_compiler_preference(Package, Compiler, V, Weight).
 compiler_weight(Package, Weight)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
+ :- node_compiler_version(Package, Compiler, V),
     not node_compiler_preference(Package, Compiler, V, _),
     default_compiler_preference(Compiler, V, Weight).
 compiler_weight(Package, 100)
- :- node_compiler(Package, Compiler),
-    node_compiler_version(Package, Compiler, Version),
+ :- node_compiler_version(Package, Compiler, Version),
     not node_compiler_preference(Package, Compiler, Version, _),
     not default_compiler_preference(Compiler, Version, _).
 
@@ -486,7 +676,6 @@ node_flag_source(Dependency, Q)
 node_flag(Package, FlagType, Flag)
  :- not node_flag_set(Package),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
-    node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
@@ -495,7 +684,6 @@ node_flag(Package, FlagType, Flag)
 node_flag_compiler_default(Package)
  :- not node_flag_set(Package),
     compiler_version_flag(Compiler, Version, FlagType, Flag),
-    node_compiler(Package, Compiler),
     node_compiler_version(Package, Compiler, Version),
     flag_type(FlagType),
     compiler(Compiler),
@@ -517,26 +705,6 @@ no_flags(Package, FlagType)
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
-% weight root preferences higher
-%
-% TODO: how best to deal with this issue?  It's not clear how best to
-% weight all the constraints. Without this root preference, `spack solve
-% hdf5` will pick mpich instead of openmpi, even if openmpi is the
-% preferred provider, because openmpi has a version constraint on hwloc.
-% It ends up choosing between settling for an old version of hwloc, or
-% picking the second-best provider.  This workaround weights root
-% preferences higher so that hdf5's prefs are more important, but it's
-% not clear this is a general solution.  It would be nice to weight by
-% distance to root, but that seems to slow down the solve a lot.
-%
-% One option is to make preferences hard constraints.  Or maybe we need
-% to look more closely at where a constraint came from and factor that
-% into our weights.  e.g., a non-default variant resulting from a version
-% constraint counts like a version constraint.  Needs more thought later.
-%
-
-root(Package, 2) :- root(Package), node(Package).
-root(Dependency, 1) :- not root(Dependency), node(Dependency).
 
 % The highest priority is to minimize the:
 % 1. Version weight

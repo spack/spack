@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,6 +27,8 @@ import six
 import socket
 import sys
 import time
+from typing import Dict  # novm
+
 try:
     import uuid
     _use_uuid = True
@@ -289,10 +291,10 @@ _query_docstring = """
 class Database(object):
 
     """Per-process lock objects for each install prefix."""
-    _prefix_locks = {}
+    _prefix_locks = {}  # type: Dict[str, lk.Lock]
 
     """Per-process failure (lock) objects for each install prefix."""
-    _prefix_failures = {}
+    _prefix_failures = {}  # type: Dict[str, lk.Lock]
 
     def __init__(self, root, db_dir=None, upstream_dbs=None,
                  is_upstream=False, enable_transaction_locking=True,
@@ -793,7 +795,7 @@ class Database(object):
         # do it *while* we're constructing specs,it causes hashes to be
         # cached prematurely.
         for hash_key, rec in data.items():
-            rec.spec._mark_concrete()
+            rec.spec._mark_root_concrete()
 
         self._data = data
 
@@ -1452,11 +1454,12 @@ class Database(object):
                     rec.spec.name) != known:
                 continue
 
-            inst_date = datetime.datetime.fromtimestamp(
-                rec.installation_time
-            )
-            if not (start_date < inst_date < end_date):
-                continue
+            if start_date or end_date:
+                inst_date = datetime.datetime.fromtimestamp(
+                    rec.installation_time
+                )
+                if not (start_date < inst_date < end_date):
+                    continue
 
             if (query_spec is any or
                 rec.spec.satisfies(query_spec, strict=True)):
@@ -1464,6 +1467,8 @@ class Database(object):
 
         return results
 
+    if _query.__doc__ is None:
+        _query.__doc__ = ""
     _query.__doc__ += _query_docstring
 
     def query_local(self, *args, **kwargs):
@@ -1471,6 +1476,8 @@ class Database(object):
         with self.read_transaction():
             return sorted(self._query(*args, **kwargs))
 
+    if query_local.__doc__ is None:
+        query_local.__doc__ = ""
     query_local.__doc__ += _query_docstring
 
     def query(self, *args, **kwargs):
@@ -1489,6 +1496,8 @@ class Database(object):
 
         return sorted(results)
 
+    if query.__doc__ is None:
+        query.__doc__ = ""
     query.__doc__ += _query_docstring
 
     def query_one(self, query_spec, known=any, installed=True):
