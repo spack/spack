@@ -31,7 +31,7 @@ class Squashfuse(AutotoolsPackage):
     # Note: typically libfuse is external, but this implies that you have to make
     # pkg-config external too, because spack's pkg-config doesn't know how to
     # locate system pkg-config's fuse.pc/fuse3.pc
-    depends_on('pkg-config', type='build')
+    depends_on('pkgconfig', type='build')
 
     # compression libs
     depends_on('zlib', when='+zlib')
