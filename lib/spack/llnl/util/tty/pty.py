@@ -19,9 +19,14 @@ import os
 import re
 import signal
 import sys
-import termios
 import time
 import traceback
+termios = None  # type: Optional[ModuleType]
+try:
+    import termios as term_mod
+    termios = term_mod
+except ImportError:
+    pass
 
 import llnl.util.tty.log as log
 
