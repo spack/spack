@@ -578,4 +578,3 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
 fi
 
 exec "${full_command[@]}"
-
