@@ -5,6 +5,7 @@
 
 import os
 
+
 class Gdal(AutotoolsPackage):
     """GDAL (Geospatial Data Abstraction Library) is a translator library for
     raster and vector geospatial data formats that is released under an X/MIT
