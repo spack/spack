@@ -33,7 +33,7 @@ spack:
     - cli-tools
     - cmake@3.15.7
     - cuda@10.1.243
-    - cuda@11.1.0
+    - cuda@11.0.2
     - cudnn@7.3.0.29-9.0-linux-x64
     - darshan-runtime
     - darshan-util
