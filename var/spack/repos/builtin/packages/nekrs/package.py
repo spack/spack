@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Nekrs(Package):
+class Nekrs(Package, CudaPackage, ROCmPackage):
     """nekRS is an open-source Navier Stokes solver based on the spectral
        element method targeting classical processors and hardware accelerators
        like GPUs"""
@@ -20,9 +20,6 @@ class Nekrs(Package):
 
     maintainers = ['thilinarmtb', 'stgeke']
 
-    # TODO: Make sure that we only use gcc
-
-    version('develop', branch='master')
     version('21.0', tag='v21.0')
 
     variant('cuda',
@@ -41,7 +38,7 @@ class Nekrs(Package):
     depends_on('cmake')
 
     depends_on('cuda', when='+cuda')
-    depends_on('hip', when='+hip')
+    depends_on('hip', when='+rocm')
 
     @run_before('install')
     def fortran_check(self):
@@ -72,7 +69,7 @@ class Nekrs(Package):
             ethier(output=str, error=str, fail_on_error=True)
 
     # Following 4 methods are stolen from OCCA since we are using OCCA
-    # shipped with nekRS not as a dependency.
+    # shipped with nekRS.
     def _setup_runtime_flags(self, s_env):
         spec = self.spec
         s_env.set('OCCA_CXX', self.compiler.cxx)
@@ -122,7 +119,7 @@ class Nekrs(Package):
             env.set('OCCA_CUDA_ENABLED', '0')
 
         env.set('OCCA_OPENCL_ENABLED', '1' if '+opencl' in spec else '0')
-        env.set('OCCA_HIP_ENABLED', '1' if '+hip' in spec else '0')
+        env.set('OCCA_HIP_ENABLED', '1' if '+rocm' in spec else '0')
 
         # Setup run-time environment for testing.
         env.set('OCCA_VERBOSE', '1')
