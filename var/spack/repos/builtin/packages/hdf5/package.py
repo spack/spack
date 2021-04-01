@@ -245,7 +245,7 @@ class Hdf5(AutotoolsPackage):
         # sanity check in configure, so this doesn't merit a variant.
         extra_args = ['--enable-unsupported',
                       '--enable-symbols=yes',
-                      '--with-zlib=%s' % self.spec['zlib'].prefix]
+                      '--with-zlib']
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
