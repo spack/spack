@@ -572,7 +572,7 @@ class SpackCommand(object):
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
-   
+
         return out.getvalue()
 
     def _log_command_output(self, out):
