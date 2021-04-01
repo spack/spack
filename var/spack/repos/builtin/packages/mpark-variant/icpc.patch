@@ -1,0 +1,10 @@
+--- ./config.hpp 2021-01-26 09:42:45.000000000 -0700
++++ ./config.hpp.new 2021-01-26 09:42:23.000000000 -0700
+@@ -50,7 +50,7 @@
+ #define MPARK_BUILTIN_UNREACHABLE
+ #endif
+
+-#if __has_builtin(__type_pack_element)
++#if __has_builtin(__type_pack_element) && !(defined(__ICC))
+ #define MPARK_TYPE_PACK_ELEMENT
+ #endif
