@@ -13,6 +13,7 @@ class PyKeras(PythonPackage):
     homepage = "http://keras.io"
     pypi = "Keras/Keras-1.2.2.tar.gz"
 
+    version('2.4.3', sha256='fedd729b52572fb108a98e3d97e1bac10a81d3917d2103cc20ab2a5f03beb973')
     version('2.2.4', sha256='90b610a3dbbf6d257b20a079eba3fdf2eed2158f64066a7c6f7227023fd60bc9')
     version('2.2.3', sha256='694aee60a6f8e0d3d6d3e4967e063b4623e3ca90032f023fd6d16bb5f81d18de')
     version('2.2.2', sha256='468d98da104ec5c3dbb10c2ef6bb345ab154f6ca2d722d4c250ef4d6105de17a')
