@@ -95,7 +95,7 @@ A typical usage of these methods may look something like this:
        # This spec has an MPI variant, and we need to enable MPI when it is on.
        # This hypothetical package controls MPI with the ``FOO_MPI`` option to
        # cmake.
-       if `+mpi` in self.spec:
+       if '+mpi' in self.spec:
            entries.append(cmake_cache_option('FOO_MPI', True, "enable mpi"))
        else:
            entries.append(cmake_cache_option('FOO_MPI', False, "disable mpi"))
