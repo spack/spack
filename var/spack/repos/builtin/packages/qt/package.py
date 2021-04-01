@@ -118,7 +118,7 @@ class Qt(Package):
     patch('qt5-11-intel-overflow.patch', when='@5.11 %intel')
     patch('qt5-12-intel-overflow.patch', when='@5.12:5.14.0 %intel')
     # https://bugreports.qt.io/browse/QTBUG-78937
-    patch('qt5-12-configure.patch', when='@5.12')
+    patch('qt5-12-configure.patch', when='@5.12.7')
     # https://bugreports.qt.io/browse/QTBUG-93402
     patch('qt5-15-gcc-10.patch', when='@5.12.7:5.15 %gcc@8:')
     patch('qt514.patch', when='@5.14')
