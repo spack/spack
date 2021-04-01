@@ -18,7 +18,7 @@ from typing import Dict, Iterable, Iterator, List, Optional, Tuple, Union  # nov
 from contextlib import closing
 
 import ruamel.yaml as yaml
-from six.moves.urllib.error import HTTPError, URLError
+from six.moves.urllib.error import URLError, HTTPError
 
 import llnl.util.lang
 import llnl.util.tty as tty
@@ -49,124 +49,71 @@ _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
 
 
-def _binary_index_location():
-    """Share a merged BinaryCacheIndex for remote buildcaches, in the user's homedir."""
-    cache_root = os.path.join(misc_cache_location(), 'indices')
-    cache_root = spack.util.path.canonicalize_path(cache_root)
-    return cache_root
-
-
-class WebFailure(Exception):
-    """An internal error due to network failure."""
-
-    def __init__(self, msg, base):
-        merged = '{0}: {1}'.format(msg, base)
-        super(WebFailure, self).__init__(merged)
-
-
-class InvalidIndexHash(Exception):
-    """An index did not match an expected checksum."""
-
-    def __init__(self, expected, received, entity_description, msg):
-        merged = 'expected checksum {0} for {1}, but received {2}: {3}'.format(
-            expected, entity_description, received, msg)
-        super(InvalidIndexHash, self).__init__(merged)
-
-
-def fetch_index_hash(mirror_url):
-    # type: (str) -> str
-    """Fetch a checksum for an index from a mirror."""
-    hash_fetch_url = url_util.join(
-        mirror_url, _build_cache_relative_path, 'index.json.hash')
-
-    tty.debug('Fetching hash for index from {0}'.format(hash_fetch_url))
-
-    try:
-        _, _, fs = web_util.read_from_url(hash_fetch_url)
-    except (URLError, web_util.SpackWebError) as e:
-        raise WebFailure('Unable to read index hash {0}'.format(hash_fetch_url), e)
-    return codecs.getreader('utf-8')(fs).read()
-
-
-def fetch_index(mirror_url, expect_hash):
-    # type: (str, str) -> str
-    """Fetch an index from a mirror and validate its checksum."""
-    index_fetch_url = url_util.join(
-        mirror_url, _build_cache_relative_path, 'index.json')
-
-    tty.debug('Fetching index from {0}'.format(index_fetch_url))
-
-    try:
-        _, _, fs = web_util.read_from_url(index_fetch_url)
-        index_object_str = codecs.getreader('utf-8')(fs).read()
-    except (URLError, web_util.SpackWebError) as e:
-        raise WebFailure('Unable to read index {0}'.format(index_fetch_url), e)
-
-    locally_computed_hash = compute_hash(index_object_str)
-
-    if locally_computed_hash != expect_hash:
-        raise InvalidIndexHash(expect_hash, locally_computed_hash,
-                               'remote index at {0}'.format(mirror_url),
-                               'this indicates an error in index tranmission')
-
-    return index_object_str
-
-
 class BinaryCacheIndex(object):
-    """
-    Wraps a set of Database instances fetched from remote mirrors.
+    """Wraps a set of Database instances fetched from remote mirrors.
 
-    Takes care of updating the Database json files upon every Spack invocation if the
-    hash changes, as well as deleting json files for mirrors which have been removed.
+    The BinaryCacheIndex tracks what specs are available on (usually remote)
+    binary caches.
+
+    This index is "best effort", in the sense that whenever we don't find
+    what we're looking for here, we will attempt to fetch it directly from
+    configured mirrors anyway.  Thus, it has the potential to speed things
+    up, but cache misses shouldn't break any spack functionality.
+
+    At the moment, everything in this class is initialized as lazily as
+    possible, so that it avoids slowing anything in spack down until
+    absolutely necessary.
+
+    TODO: What's the cost if, e.g., we realize in the middle of a spack
+    install that the cache is out of date, and we fetch directly?  Does it
+    mean we should have paid the price to update the cache earlier?
     """
     _index_contents_key = None                              # type: str
     _index_cache_root = None                                # type: str
     _index_file_cache = None                                # type: file_cache.FileCache
     _local_index_cache = None                               # type: Dict
 
-    def __init__(self, root=None, filename='contents.json'):
-        self._index_contents_key = filename
-        self._index_cache_root = root or _binary_index_location()
+    def __init__(self):
+        # type: () -> None
+        self._index_contents_key = 'contents.json'
+        self._index_cache_root = binary_index_location()
 
-        # a FileCache instance storing copies of remote binary cache indices
+        # Manages local copies of remote binary cache indices.
         self._index_file_cache = file_cache.FileCache(self._index_cache_root)
 
-        # stores a map of mirror URL to index hash and cache key (index path)
-        self._local_index_cache = None
+        # A map of mirror URL to index hash and cache key (index path).
+        self._local_index_cache = self._init_local_index_cache()
 
-        self._initialize_local_index_cache()
-
-    def _initialize_local_index_cache(self):
+    def _init_local_index_cache(self):
+        # type: () -> Dict
         self._index_file_cache.init_entry(self._index_contents_key)
         cache_path = self._index_file_cache.cache_path(self._index_contents_key)
 
-        if os.path.isfile(cache_path):
-            with self._index_file_cache.read_transaction(
-                    self._index_contents_key) as cache_file:
-                self._local_index_cache = json.load(cache_file)
-        else:
-            self._local_index_cache = {}
+        if not os.path.isfile(cache_path):
+            return {}
+        with self._index_file_cache.read_transaction(
+                self._index_contents_key) as cache_file:
+            return json.load(cache_file)
 
-    @classmethod
-    def with_spack_configured_mirrors(cls):
-        # type: () -> BinaryCacheIndex
-        ret = cls()
-        ret.refresh_mirrors()
-        return ret
+    @llnl.util.lang.memoized
+    def _read_local_db(self, index_path):
+        # type: (str) -> spack_db.Database
+        absolute_index_file_path = self._index_file_cache.cache_path(index_path)
+        return spack_db.Database.from_file(absolute_index_file_path)
 
-    def _mirror_dbs(self):
+    def _local_mirror_dbs(self):
         # type: () -> Iterator[Tuple[str, spack_db.Database]]
         for url, cache_entry in self._local_index_cache.items():
-            yield (url, self.fetch_mirror_database(url, cache_entry['index_hash']))
+            yield url, self._read_local_db(cache_entry['index_path'])
 
-    def wipe_index(self):
-        """Empty the cache and clear associated data structures.
-
-        This is expected to be used for testing purposes."""
-        self.fetch_mirror_database.cache.clear()
+    def clear(self):
+        # type: () -> None
+        """ For testing purposes we need to be able to empty the cache and
+        clear associated data structures. """
+        self._read_local_db.cache.clear()
         self._index_file_cache.destroy()
         self._index_file_cache = file_cache.FileCache(self._index_cache_root)
-        self._initialize_local_index_cache()
+        self._local_index_cache = self._init_local_index_cache()
 
     def query_remote_dbs(self, query_spec):
         # type: (Optional[Spec]) -> List[Spec]
@@ -174,17 +121,22 @@ class BinaryCacheIndex(object):
 
         If ``query_spec`` is None, return all specs from all mirrors."""
         results = []
-        for _url, db in self._mirror_dbs():
+        for _url, db in self._local_mirror_dbs():
             # TODO: allow providing multiple query_specs at once!
             # TODO: allow specifying whether to match all architectures!
             results.extend(db.query(query_spec=query_spec, installed=any))
         return results
 
-    def get_mirrors_for_spec(self, spec=None, full_hash_match=False):
-        # type: (Optional[Spec], bool) -> List[Dict[str, Union[str, Spec]]]
-        """
-        Check if concrete spec exists on mirrors and return a list
-        indicating the mirrors on which it can be found.
+    def get_mirrors_for_spec(self, spec=None, full_hash_match=False, index_only=False):
+        # type: (Optional[Spec], bool, bool) -> List[Dict[str, Union[str, Spec]]]
+        """Check if a concrete spec exists on any mirrors.
+
+        This method will *not* re-read Database instances from disk or fetch them from
+        any mirror urls. However, since we assert that the provided spec must be
+        concrete, we can attempt a "direct fetch" of the spec.yaml if it is not found
+        within the locally cached Database instances. This direct fetch will fail
+        quickly if the local dbs *were* up to date, and will succeed quickly if not
+        (much more quickly than re-fetching the entire db corresponding to the mirror).
 
         Args:
             spec (Spec): The concrete spec to look for in binary mirrors.
@@ -192,27 +144,48 @@ class BinaryCacheIndex(object):
                 full hash matches the locally computed full hash of the ``spec``
                 argument.  If False, any mirror which has a matching DAG hash
                 is included in the results.
+            index_only (bool): Do not attempt direct fetching of ``spec.yaml``
+                files from remote mirrors, only consider the indices.
 
         Return:
             A list of objects, each containing a ``mirror_url`` and ``spec`` key
                 indicating all mirrors where the spec can be found.
         """
+        results = []  # type: List[Dict[str, Union[str, Spec]]]
         if spec is None:
-            return []
+            return results
         if not spec.concrete:
             raise TypeError('spec {0} was not concrete'.format(spec))
 
-        results = []  # type: List[Dict[str, Union[str, Spec]]]
-        for url, db in self._mirror_dbs():
+        def maybe_add_result(url, candidate_spec):
+            # type: (str, Spec) -> None
+            assert spec is not None               # mypy's local inference is not great.
+            if full_hash_match and candidate_spec.full_hash() != spec.full_hash():
+                return
+            results.append(dict(mirror_url=url, spec=candidate_spec))
+
+        for url, db in self._local_mirror_dbs():
             _, maybe_record = db.query_by_spec_hash(spec.dag_hash())
             if maybe_record is not None:
-                if full_hash_match:
-                    if maybe_record.spec.full_hash() != spec.full_hash():
-                        continue
-                results.append(dict(mirror_url=url, spec=spec))
+                maybe_add_result(url, maybe_record.spec)
 
-        if not results and not spack.mirror.MirrorCollection().values():
+        # If we found any results in the local mirror dbs, return those without
+        # performing any network calls.
+        if results:
+            return results
+
+        if not spack.mirror.MirrorCollection():
             tty.debug("No Spack mirrors are currently configured")
+            return results
+
+        # If we have no results, try fetching directly from the configured mirrors
+        # unless index_only=True was specified.
+        if index_only:
+            return results
+        for mirror in spack.mirror.MirrorCollection().values():
+            directly_fetched = try_direct_fetch(spec, mirror)
+            if directly_fetched is not None:
+                maybe_add_result(mirror.fetch_url, directly_fetched)
         return results
 
     def _prune_old_cached_mirrors(self, configured_mirror_urls):
@@ -225,58 +198,93 @@ class BinaryCacheIndex(object):
             try:
                 self._index_file_cache.remove(cache_entry['index_path'])
             except OSError as e:
-                tty.debug('directory for url {0} did not exist; skipping'.format(e))
+                tty.debug('Local index {0} for url {1} did not exist; skipping'
+                          .format(cache_entry['index_path'], url),
+                          e)
             del self._local_index_cache[url]
 
     def refresh_mirrors(self):
         # type: () -> None
-        """Point the local cache to the configured mirrors, and re-fetch them."""
+        """Point the local cache to the configured mirrors, and prune old mirror dbs."""
+        # Re-read the mirror configuration.
         configured_mirror_urls = [
             mirror.fetch_url
             for mirror in spack.mirror.MirrorCollection().values()
         ]
+
+        # Remove cached index.json files for mirrors which are no longer configured.
         self._prune_old_cached_mirrors(configured_mirror_urls)
+
+        # Now re-fetch any updated indices for the configured URLs.
         for url in configured_mirror_urls:
+            # (1) We fetch the index hash first in order to quickly no-op if the index
+            # has not changed since we last fetched. The index hash is often
+            # significantly smaller and quicker to download than the entire
+            # index.json itself.
             try:
                 fresh_hash = fetch_index_hash(url)
-                # NB: self.fetch_mirror_database() is @memoized, so we can simply drop
-                # this value.
-                _ = self.fetch_mirror_database(url, fresh_hash)
             except WebFailure as e:
+                # If we fail to reach a configured mirror, make sure the user knows, and
+                # move on to the next one. We will continue using the cached index.json
+                # from before this method was called.
                 tty.warn(e)
+                continue
 
-    @llnl.util.lang.memoized
-    def fetch_mirror_database(self, mirror_url, expected_hash):
-        # type: (str, str) -> spack_db.Database
-        index_object_str = fetch_index(mirror_url, expected_hash)
+            # (2) Compare the hash to any previous entry for this url. If the hash is
+            # different, clean up the old entry. If not, don't re-fetch the index or
+            # re-read the Database from disk.
+            existing_entry = self._local_index_cache.pop(url, None)
+            if existing_entry is not None:
+                # TODO: add testing for this branch!
+                if existing_entry['index_hash'] == fresh_hash:
+                    # Re-add the entry, since it remains valid.
+                    self._local_index_cache[url] = existing_entry
+                    continue
+                self._index_file_cache.remove(existing_entry['index_path'])
+                # self._read_local_db() memoizes Database instances, but those can take
+                # up a nontrivial amount of memory. Since we know we'll need to re-fetch
+                # this, delete the old entry, if there was any cached entry. This is
+                # *not* necessary for correctness, because the index_path argument
+                # provided to self._read_local_db() is constructed from the index hash.
+                # TODO: Determine whether python actually frees memory immediately upon
+                # deleting a dict entry, or whether there's anything further we need
+                # to do.
+                self._read_local_db.cache.pop(existing_entry['index_path'], None)
 
-        url_hash = compute_hash(mirror_url)
-        cache_key = '{0}_{1}'.format(url_hash[:10], expected_hash[:10])
-        json_index_file = '{0}.json'.format(cache_key)
+            # (3) Fetch the index and verify the hash matches. This will block on
+            # synchronous network I/O. We successfully retrieved the index hash just
+            # above, so we do not attempt to catch any network error.
+            # TODO: do this all in parallel with subprocesses!
+            index_object_str = fetch_index(url, fresh_hash)
 
-        # If we replace our entry for this mirror, we should clean up the existing
-        # cache file.
-        existing_entry = self._local_index_cache.pop(mirror_url, None)
-        if existing_entry and existing_entry['index_hash'] != expected_hash:
-            self._index_file_cache.remove(existing_entry['index_path'])
+            # (4) Calculate a filename from the hash of the url and of the downloaded
+            # index.json.
+            url_hash = compute_hash(url)
+            cache_key = '{0}_{1}'.format(url_hash[:10], fresh_hash[:10])
+            json_index_file = '{0}.json'.format(cache_key)
 
-        self._index_file_cache.init_entry(json_index_file)
-        with self._index_file_cache.write_transaction(json_index_file) as (old, new):
-            new.write(index_object_str)
+            # (5) Write the index.json contents to our persistent caching location.
+            self._index_file_cache.init_entry(json_index_file)
+            with self._index_file_cache.write_transaction(json_index_file) as (_, new):
+                new.write(index_object_str)
 
-        self._local_index_cache[mirror_url] = {
-            'index_hash': expected_hash,
-            'index_path': json_index_file,
-        }
+            # (6) Point this object's registry to the newly fetched index file so that
+            # the Database gets re-read from disk.
+            self._local_index_cache[url] = {
+                'index_hash': fresh_hash,
+                'index_path': json_index_file,
+            }
 
-        db = spack_db.Database(None, is_upstream=True, enable_transaction_locking=False)
-        db.fill_from_json(json.loads(index_object_str))
 
-        return db
+def binary_index_location():
+    """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
+    cache_root = os.path.join(misc_cache_location(), 'indices')
+    cache_root = spack.util.path.canonicalize_path(cache_root)
+    return cache_root
 
 
 #: Singleton binary_index instance
-binary_index = llnl.util.lang.Singleton(BinaryCacheIndex.with_spack_configured_mirrors)
+binary_index = llnl.util.lang.Singleton(BinaryCacheIndex)
 
 
 class NoOverwriteException(spack.error.SpackError):
@@ -1257,8 +1265,92 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
+def try_direct_fetch(spec, mirror):
+    # type: (Spec, spack.mirror.Mirror) -> Optional[Spec]
+    """Fetch a concrete spec's spec.yaml from the given mirror.
+
+    Return None if it cannot be found on the mirror."""
+    if not spec.concrete:
+        raise TypeError('spec {0} was not concrete'.format(spec))
+
+    specfile_name = tarball_name(spec, '.spec.yaml')
+    buildcache_fetch_url = url_util.join(
+        mirror.fetch_url, _build_cache_relative_path, specfile_name)
+
+    try:
+        _, _, fs = web_util.read_from_url(buildcache_fetch_url)
+        fetched_spec_yaml = codecs.getreader('utf-8')(fs).read()
+    except (URLError, web_util.SpackWebError, HTTPError) as url_err:
+        tty.debug('Did not find {0} on {1}'.format(specfile_name, buildcache_fetch_url),
+                  url_err)
+        return None
+
+    fetched_spec = Spec.from_yaml(fetched_spec_yaml)
+    # TODO: Spec.from_yaml() should really be able to detect whether a spec.yaml is
+    # already concrete instead of having to invoke a private method here.
+    fetched_spec._mark_concrete()
+
+    return fetched_spec
+
+
+class WebFailure(Exception):
+    """An internal error due to network failure."""
+
+    def __init__(self, msg, base):
+        merged = '{0}: {1}'.format(msg, base)
+        super(WebFailure, self).__init__(merged)
+
+
+class InvalidIndexHash(Exception):
+    """An index did not match an expected checksum."""
+
+    def __init__(self, expected, received, entity_description, msg):
+        merged = 'expected checksum {0} for {1}, but received {2}: {3}'.format(
+            expected, entity_description, received, msg)
+        super(InvalidIndexHash, self).__init__(merged)
+
+
+def fetch_index_hash(mirror_url):
+    # type: (str) -> str
+    """Fetch a checksum for an index from a mirror."""
+    hash_fetch_url = url_util.join(
+        mirror_url, _build_cache_relative_path, 'index.json.hash')
+
+    tty.debug('Fetching hash for index from {0}'.format(hash_fetch_url))
+
+    try:
+        _, _, fs = web_util.read_from_url(hash_fetch_url)
+    except (URLError, web_util.SpackWebError) as e:
+        raise WebFailure('Unable to read index hash {0}'.format(hash_fetch_url), e)
+    return codecs.getreader('utf-8')(fs).read()
+
+
+def fetch_index(mirror_url, expect_hash):
+    # type: (str, str) -> str
+    """Fetch an index from a mirror and validate its checksum."""
+    index_fetch_url = url_util.join(
+        mirror_url, _build_cache_relative_path, 'index.json')
+
+    tty.debug('Fetching index from {0}'.format(index_fetch_url))
+
+    try:
+        _, _, fs = web_util.read_from_url(index_fetch_url)
+        index_object_str = codecs.getreader('utf-8')(fs).read()
+    except (URLError, web_util.SpackWebError) as e:
+        raise WebFailure('Unable to read index {0}'.format(index_fetch_url), e)
+
+    locally_computed_hash = compute_hash(index_object_str)
+
+    if locally_computed_hash != expect_hash:
+        raise InvalidIndexHash(expect_hash, locally_computed_hash,
+                               'remote index at {0}'.format(mirror_url),
+                               'this indicates an error in index tranmission')
+
+    return index_object_str
+
+
 def clear_spec_cache():
-    binary_index.wipe_index()
+    binary_index.clear()
 
 
 def get_keys(install=False, trust=False, force=False, mirrors=None):

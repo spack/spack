@@ -589,6 +589,9 @@ def install_tarball(spec, args):
 
 def listspecs(args):
     """list binary packages available from mirrors"""
+    # Ensure the local databases for the configured mirrors are up to date.
+    bindist.binary_index.refresh_mirrors()
+
     # A None spec will produce all concrete specs from all mirrors.
     specs = bindist.binary_index.query_remote_dbs(None)
     if not args.allarch:

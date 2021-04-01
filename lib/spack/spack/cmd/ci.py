@@ -64,9 +64,6 @@ def setup_parser(subparser):
         '--dependencies', action='store_true', default=False,
         help="(Experimental) disable DAG scheduling; use "
              ' "plain" dependencies.')
-    generate.add_argument(
-        '--check-index-only', action='store_true', default=False,
-        help='(Deprecated) <has no effect>')
     prune_group = generate.add_mutually_exclusive_group()
     prune_group.add_argument(
         '--prune-dag', action='store_true', dest='prune_dag',
@@ -76,6 +73,17 @@ date on the mirror""")
         '--no-prune-dag', action='store_false', dest='prune_dag',
         default=True, help="""Generate jobs for specs already up to date
 on the mirror""")
+    generate.add_argument(
+        '--check-index-only', action='store_true', dest='index_only',
+        default=False, help="""Spack always check specs against configured
+binary mirrors when generating the pipeline, regardless of whether or not
+DAG pruning is enabled.  This flag controls whether it might attempt to
+fetch remote spec.yaml files directly (ensuring no spec is rebuilt if it is
+present on the mirror), or whether it should reduce pipeline generation time
+by assuming all remote buildcache indices are up to date and only use those
+to determine whether a given spec is up to date on mirrors.  In the latter
+case, specs might be needlessly rebuilt if remote buildcache indices are out
+of date.""")
     generate.add_argument(
         '--artifacts-root', default=None,
         help="""Path to root of artifacts directory.  If provided, concrete

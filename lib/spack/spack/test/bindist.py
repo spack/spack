@@ -252,6 +252,12 @@ def test_default_rpaths_install_nondefault_layout(mirror_dir):
     # This guy tests for symlink relocation
     sy_spec = Spec('symly').concretized()
 
+    # Install 'corge' into the buildcache.
+    install_cmd('--no-cache', cspec.name)
+    buildcache_cmd('create', '-au', '--rebuild-index', '-d', mirror_dir, cspec.name)
+    bindist.binary_index.refresh_mirrors()
+    uninstall_cmd('-y', cspec.name)
+
     # Install some packages with dependent packages
     # test install in non-default install path scheme
     buildcache_cmd('install', '-au', cspec.name, sy_spec.name)
