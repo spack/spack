@@ -277,9 +277,17 @@ other_args=()
 isystem_system_includes=()
 isystem_includes=()
 
-while [ -n "$1" ]; do
+while [ $# -ne 0 ]; do
+
     # an RPATH to be added after the case statement.
     rp=""
+
+    # Multiple consecutive spaces in the command line can
+    # result in blank arguments
+    if [ -z "$1" ]; then
+        shift
+        continue
+    fi
 
     case "$1" in
         -isystem*)
