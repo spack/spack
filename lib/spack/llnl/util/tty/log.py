@@ -8,20 +8,19 @@
 from __future__ import unicode_literals
 
 import atexit
+import ctypes
 import errno
+import io
 import multiprocessing
 import os
 import re
-import io
 import select
 import signal
 import sys
-import ctypes
-import traceback
-import tempfile
 import threading
-from threading import Thread
+import traceback
 from contextlib import contextmanager
+from threading import Thread
 from types import ModuleType  # novm
 from typing import Optional  # novm
 
@@ -757,6 +756,9 @@ class winlog:
         self.stdout = StreamWrapper('stdout')
         self.stderr = StreamWrapper('stderr')
         self._active = False
+        self._ioflag = False
+        self.old_stdout = sys.stdout
+        self.old_stderr = sys.stderr
 
     def __enter__(self):
         if self._active:
@@ -768,51 +770,59 @@ class winlog:
 
         # Open both write and reading on logfile
         if type(self.logfile) == StringIO:
+            self._ioflag = True
             # cannot have two streams on tempfile, so we must make our own
-            self.writer = open('temp.txt', mode='wb+')
-            self.reader = open('temp.txt', mode='rb+')
+            sys.stdout = self.logfile
+            sys.stderr = self.logfile
         else:
             self.writer = open(self.logfile, mode='wb+')
             self.reader = open(self.logfile, mode='rb+')
-        # Dup stdout so we can still write to it after redirection
-        self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
-        # Redirect stdout and stderr to write to logfile
-        self.stderr.redirect_stream(self.writer.fileno())
-        self.stdout.redirect_stream(self.writer.fileno())
-        self._kill = threading.Event()
 
-        def background_reader(reader, echo_writer, _kill):
-            # for each line printed to logfile, read it
-            # if echo: write line to user
-            while True:
-                is_killed = _kill.wait(.1)
-                self.stderr.flush()
-                self.stdout.flush()
-                line = reader.readline()
-                while line:
-                    if self.echo:
-                        self.echo_writer.write('{0}'.format(line.decode()))
-                        self.echo_writer.flush()
+            # Dup stdout so we can still write to it after redirection
+            self.echo_writer = open(os.dup(sys.stdout.fileno()), "w")
+            # Redirect stdout and stderr to write to logfile
+            self.stderr.redirect_stream(self.writer.fileno())
+            self.stdout.redirect_stream(self.writer.fileno())
+            self._kill = threading.Event()
+
+            def background_reader(reader, echo_writer, _kill):
+                # for each line printed to logfile, read it
+                # if echo: write line to user
+                while True:
+                    is_killed = _kill.wait(.1)
+                    self.stderr.flush()
+                    self.stdout.flush()
                     line = reader.readline()
+                    while line:
+                        if self.echo:
+                            self.echo_writer.write('{0}'.format(line.decode()))
+                            self.echo_writer.flush()
+                        line = reader.readline()
 
-                if is_killed:
-                    break
+                    if is_killed:
+                        break
 
-        self._active = True
-        with replace_environment(self.env):
-            self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
-            self._thread.start()
+            self._active = True
+            with replace_environment(self.env):
+                self._thread = Thread(target=background_reader,
+                                      args=(self.reader, self.echo_writer, self._kill))
+                self._thread.start()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.echo_writer.flush()
-        self.stdout.flush()
-        self.stderr.flush()
-        self._kill.set()
-        self._thread.join()
-        self.stdout.close()
-        self.stderr.close()
-        if os.path.exists("temp.txt"):
-            os.remove("temp.txt")
+        if self._ioflag:
+            sys.stdout = self.old_stdout
+            sys.stderr = self.old_stderr
+            self._ioflag = False
+        else:
+            self.writer.close()
+            self.reader.close()
+            self.echo_writer.flush()
+            self.stdout.flush()
+            self.stderr.flush()
+            self._kill.set()
+            self._thread.join()
+            self.stdout.close()
+            self.stderr.close()
         self._active = False
 
     @contextmanager
@@ -833,7 +843,6 @@ class winlog:
         finally:
             sys.stdout.write(xoff)
             sys.stdout.flush()
-
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
