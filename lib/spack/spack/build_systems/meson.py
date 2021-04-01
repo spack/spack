@@ -100,10 +100,7 @@ class MesonPackage(PackageBase):
         except KeyError:
             build_type = 'release'
 
-        try:
-            strip = 'true' if pkg.spec.variants['strip'].value else 'false'
-        except KeyError:
-            strip = 'false'
+        strip = 'true' if '+strip' in pkg.spec else 'false'
 
         try:
             default_library = pkg.spec.variants['default_library'].value
