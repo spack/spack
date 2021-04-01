@@ -179,7 +179,9 @@ class Changing(Package):
     {'add_variant': False, 'delete_variant': True},
     {'add_variant': True, 'delete_variant': True}
 ])
-@pytest.mark.xfail()
+@pytest.mark.skipif(
+    True, reason='Uses mock_packages and mutable_mock_repo fixtures'
+)
 def test_reuse_installed_packages(
         self, context, mutable_config, mutable_database,
         repo_with_changing_recipe
