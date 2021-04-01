@@ -745,6 +745,8 @@ class Database(object):
         # type: (str) -> None
         """Fill database from file, do not maintain old data.
         Translate the spec portions from node-dict form to spec form."""
+        if not os.path.isabs(filename):
+            raise TypeError('Expected absolute path, received {0}'.format(filename))
         try:
             with open(filename, 'r') as f:
                 fdata = sjson.load(f)
@@ -752,6 +754,14 @@ class Database(object):
             raise CorruptDatabaseError("error parsing database:", str(e))
 
         self.fill_from_json(fdata)
+
+    @classmethod
+    def from_file(cls, filename):
+        # type: (str) -> Database
+        """Return a Database instance purely from a json file, without any db_dir."""
+        db = cls(None, is_upstream=True, enable_transaction_locking=False)
+        db.fill_from_file(filename)
+        return db
 
     def fill_from_json(self, fdata):
         # type: (Optional[Dict]) -> None
