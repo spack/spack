@@ -57,6 +57,7 @@ def test_location_source_dir(mock_spec):
     """Tests spack location --source-dir."""
     spec, pkg = mock_spec
     assert location('--source-dir', spec.name).strip() == pkg.stage.source_path
+    assert location(spec.name).strip() == pkg.stage.source_path
 
 
 def test_location_source_dir_missing():
