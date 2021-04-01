@@ -108,9 +108,9 @@ spack:
     - py-pre-commit
     - py-progress
     - py-py4j
-    - py-pyarrow+parquet@0.15.1
+    - py-pyarrow+parquet
     - py-pylru
-    - py-pyspark@3.0.0
+    - py-pyspark
     - py-pytest
     - py-pyyaml
     - py-regex
@@ -140,6 +140,6 @@ spack:
     - range-v3
     - rockets
     - rocksdb~static
-    - spark@3.0.0
+    - spark
     - sundials+int64
     - superlu-dist@5.4.0
