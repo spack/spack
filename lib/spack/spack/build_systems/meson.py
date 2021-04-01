@@ -52,7 +52,7 @@ class MesonPackage(PackageBase):
 
     build_time_test_callbacks = ['check']
 
-    variant('buildtype', default='release',
+    variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
 
