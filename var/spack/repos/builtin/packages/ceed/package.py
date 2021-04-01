@@ -76,7 +76,7 @@ class Ceed(BundlePackage):
     depends_on('occa@1.0.0-alpha.5+cuda', when='@1.0.0+occa+cuda')
 
     # NekRS
-    #depends_on('nekrs@21', when='@4.0:4.99+nekrs') # TODO
+    # depends_on('nekrs@21', when='@4.0:4.99+nekrs') # TODO
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-3.0 and ceed-4.0
@@ -154,7 +154,7 @@ class Ceed(BundlePackage):
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
-    depends_on('pumi@2.2.3', when='@4.0.0+pumi') # TODO: 2.2.5
+    depends_on('pumi@2.2.3', when='@4.0.0+pumi')  # TODO: 2.2.5
     # ceed-3.0
     depends_on('pumi@2.2.2', when='@3.0.0+pumi')
     # ceed-2.0
