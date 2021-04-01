@@ -277,14 +277,21 @@ other_args=()
 isystem_system_includes=()
 isystem_includes=()
 
-while [ -n "$1" ]; do
+while [ $# -ne 0 ]; do
+
     # an RPATH to be added after the case statement.
     rp=""
+
+    # Multiple consecutive spaces in the command line can
+    # result in blank arguments
+    if [ -z "$1" ]; then
+        continue
+    fi
 
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
-	    isystem_was_used=true
+            isystem_was_used=true
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if system_dir "$arg"; then
                 isystem_system_includes+=("$arg")
@@ -497,19 +504,33 @@ args+=("${flags[@]}")
 # Insert include directories just prior to any system include directories
 
 for dir in "${includes[@]}";         do args+=("-I$dir"); done
+<<<<<<< HEAD
 for dir in "${isystem_includes[@]}";         do args+=("-isystem$dir"); done
+=======
+for dir in "${isystem_includes[@]}";         do args+=("-isystem" "$dir"); done
+>>>>>>> 49a5f143f3... Fixed compiler wrapper in the face of extra spaces between arguments
 
 IFS=':' read -ra spack_include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
     if [[ "$isystem_was_used" == "true" ]] ; then
+<<<<<<< HEAD
 	for dir in "${spack_include_dirs[@]}";  do args+=("-isystem$dir"); done
     else
 	for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+=======
+        for dir in "${spack_include_dirs[@]}";  do args+=("-isystem" "$dir"); done
+    else
+        for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+>>>>>>> 49a5f143f3... Fixed compiler wrapper in the face of extra spaces between arguments
     fi
 fi
 
 for dir in "${system_includes[@]}";  do args+=("-I$dir"); done
+<<<<<<< HEAD
 for dir in "${isystem_system_includes[@]}";  do args+=("-isystem$dir"); done
+=======
+for dir in "${isystem_system_includes[@]}";  do args+=("-isystem" "$dir"); done
+>>>>>>> 49a5f143f3... Fixed compiler wrapper in the face of extra spaces between arguments
 
 # Library search paths
 for dir in "${libdirs[@]}";          do args+=("-L$dir"); done
@@ -570,4 +591,8 @@ if [[ $SPACK_DEBUG == TRUE ]]; then
     echo "[$mode] ${full_command[*]}" >> "$output_log"
 fi
 
+echo "XX1: INPUT_COMMAND [$mode] $command $input_command"
+echo "XX2: FULL_COMMAND [$mode] ${full_command[*]}"
+
 exec "${full_command[@]}"
+
