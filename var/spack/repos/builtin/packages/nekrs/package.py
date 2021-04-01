@@ -46,28 +46,6 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
             msg = 'Cannot build NekRS without a Fortran 77 compiler.'
             raise RuntimeError(msg)
 
-    @run_after('install')
-    def test_install(self):
-        with working_dir(os.path.join('examples', 'ethier')):
-            # Update ethier.par to use Serial backend
-            f = open('ethier.par', 'r')
-            par = f.read()
-            f.close()
-
-            par = par.replace('CUDA', 'Serial')
-
-            f = open('ethier.par', 'w')
-            f.write(par)
-            f.close()
-
-            ethier = Executable(os.path.join(prefix.bin, 'nrsmpi'))
-            ethier.add_default_env("TRAVIS", "true")
-            ethier.add_default_arg("ethier")
-            ethier.add_default_arg("4")
-            ethier.add_default_arg("1")
-
-            ethier(output=str, error=str, fail_on_error=True)
-
     # Following 4 methods are stolen from OCCA since we are using OCCA
     # shipped with nekRS.
     def _setup_runtime_flags(self, s_env):
