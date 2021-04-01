@@ -11,11 +11,11 @@ class Exago(CMakePackage, CudaPackage):
     problems on parallel and distributed architectures, particularly targeted
     for exascale machines."""
 
-    # PNNL links
     homepage = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago'
     git = 'https://gitlab.pnnl.gov/exasgd/frameworks/exago.git'
 
-    version('0.99.2', tag='v0.99.2', preferred=True)
+    version('1.0.0', tag='v1.0.0')
+    version('0.99.2', tag='v0.99.2')
     version('0.99.1', tag='v0.99.1')
     version('master', branch='master')
 
@@ -71,9 +71,6 @@ class Exago(CMakePackage, CudaPackage):
         else:
             args.append("-DEXAGO_ENABLE_MPI=OFF")
 
-        # HIP is a part of the build system, but is not ready for public release
-        args.append("-DEXAGO_ENABLE_HIP=OFF")
-
         if '+cuda' in spec:
             args.append("-DEXAGO_ENABLE_GPU=ON")
 
@@ -83,7 +80,6 @@ class Exago(CMakePackage, CudaPackage):
                 args.append(
                     "-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
             args.append("-DEXAGO_ENABLE_CUDA=ON")
-
         else:
             args.append("-DEXAGO_ENABLE_GPU=OFF")
             args.append("-DEXAGO_ENABLE_CUDA=OFF")
