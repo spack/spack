@@ -16,6 +16,7 @@ class PySlepc4py(PythonPackage):
 
     maintainers = ['dalcinl', 'joseeroman', 'balay']
 
+    version('main', branch='main')
     version('3.15.0', sha256='b1948a325f61e7acebc8a79eae4f31991dd1d4eb508437aced1085c4f76918ce')
     version('3.13.0', sha256='780eff0eea1a5217642d23cd563786ef22df27e1d772a1b0bb4ccc5701df5ea5')
     version('3.12.0', sha256='d8c06953b7d00f529a9a7fd016dfa8efdf1d05995baeea7688d1d59611f424f7')
@@ -25,6 +26,10 @@ class PySlepc4py(PythonPackage):
     version('3.8.0',  sha256='988815b3650b69373be9abbf2355df512dfd200aa74b1785b50a484d6dfee971')
     version('3.7.0',  sha256='139f8bb325dad00a0e8dbe5b3e054050c82547936c1b6e7812fb1a3171c9ad0b')
 
+    patch('ldshared.patch', when='@:99')
+    patch('ldshared-dev.patch', when='@main')
+
+    depends_on('py-cython', type='build', when='@main')
     depends_on('py-setuptools', type='build')
 
     depends_on('py-petsc4py', type=('build', 'run'))
@@ -48,3 +53,11 @@ class PySlepc4py(PythonPackage):
     depends_on('slepc@3.8:3.8.99', when='@3.8:3.8.99')
     depends_on('slepc@3.7:3.7.99', when='@3.7:3.7.99')
     depends_on('slepc@3.6:3.6.99', when='@3.6:3.6.99')
+
+    @property
+    def build_directory(self):
+        import os
+        if self.spec.satisfies('@main'):
+            return os.path.join(self.stage.source_path, 'src', 'binding', 'slepc4py')
+        else:
+            return self.stage.source_path
