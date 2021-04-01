@@ -76,6 +76,7 @@ class Salmon(CMakePackage):
                         'scripts/fetchPufferfish.sh')
             symlink('./salmon-v{0}.zip'.format(self.version),
                     './external/pufferfish.zip')
+            #Fix issues related to lto-wrapper during install with newer gcc
             filter_file('INTERPROCEDURAL_OPTIMIZATION True', 
                     'INTERPROCEDURAL_OPTIMIZATION False',
                     'src/CMakeLists.txt', string=True)
