@@ -742,7 +742,6 @@ class StreamWrapper:
 
 
 class winlog:
-    cap_alt = None
     def __init__(self, logfile, echo=False, debug=0, env=None):
         self.env = env
         self.debug = debug
@@ -762,7 +761,7 @@ class winlog:
         if self.logfile is None:
             raise RuntimeError(
                 "file argument must be set by __init__ ")
-        
+
         # Open both write and reading on logfile
         if type(self.logfile) == StringIO:
             self._ioflag = True
@@ -806,6 +805,7 @@ class winlog:
         if self._ioflag:
             sys.stdout = self.old_stdout
             sys.stderr = self.old_stderr
+            self._ioflag = False
         else:
             self.writer.close()
             self.reader.close()

@@ -510,7 +510,7 @@ class SpackCommand(object):
     Use this to invoke Spack commands directly from Python and check
     their output.
     """
-    def __init__(self, command_name, log=False):
+    def __init__(self, command_name):
         """Create a new SpackCommand that invokes ``command_name`` when called.
 
         Args:
@@ -519,7 +519,6 @@ class SpackCommand(object):
         self.parser = make_argument_parser()
         self.command = self.parser.add_command(command_name)
         self.command_name = command_name
-        self.log = log
 
     def __call__(self, *argv, **kwargs):
         """Invoke this SpackCommand.
@@ -573,7 +572,6 @@ class SpackCommand(object):
                 "Command exited with code %d: %s(%s)" % (
                     self.returncode, self.command_name,
                     ', '.join("'%s'" % a for a in argv)))
-
    
         return out.getvalue()
 
