@@ -15,6 +15,7 @@ class Libceed(Package):
     maintainers = ['jedbrown', 'v-dobrev', 'tzanio']
 
     version('develop', branch='main')
+    version('0.8', tag='v0.8')
     version('0.7', tag='v0.7')
     version('0.6', commit='c7f533e01e2f3f6720fbf37aac2af2ffed225f60')  # tag v0.6 + small portability fixes
     version('0.5', tag='v0.5')
@@ -22,7 +23,7 @@ class Libceed(Package):
     version('0.2', tag='v0.2')
     version('0.1', tag='v0.1')
 
-    variant('occa', default=True, description='Enable OCCA backends')
+    variant('occa', default=False, description='Enable OCCA backends')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('hip', default=False, description='Enable HIP support')
     variant('debug', default=False, description='Enable debug build')
@@ -77,6 +78,8 @@ class Libceed(Package):
                 opt = '-O3 -g -ffp-contract=fast'
                 if compiler.version >= ver(4.9):
                     opt += ' -fopenmp-simd'
+                if self.spec.target.family in ['x86_64', 'aarch64']:
+                    opt += ' -march=native'
             elif compiler.name == 'apple-clang':
                 opt = '-O3 -g -march=native -ffp-contract=fast'
                 if compiler.version >= ver(10):
@@ -90,9 +93,6 @@ class Libceed(Package):
             else:
                 opt = '-O -g'
             makeopts += ['OPT=%s' % opt]
-
-            if 'avx' in self.spec.target:
-                makeopts.append('AVX=1')
 
             if '+cuda' in spec:
                 makeopts += ['CUDA_DIR=%s' % spec['cuda'].prefix]
