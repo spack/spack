@@ -12,11 +12,11 @@ import sys
 import textwrap
 import traceback
 from datetime import datetime
+from sys import platform as _platform
 
 import six
 from six import StringIO
 from six.moves import input
-from sys import platform as _platform
 
 if _platform != "win32":
     import fcntl
