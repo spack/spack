@@ -19,13 +19,19 @@ import os
 import re
 import signal
 import sys
-import termios
 import time
 import traceback
 
 import llnl.util.tty.log as log
 
 from spack.util.executable import which
+
+termios = None
+try:
+    import termios as term_mod
+    termios = term_mod
+except ImportError:
+    pass
 
 
 class ProcessController(object):
