@@ -55,7 +55,7 @@ _bash_completion_spack() {
     # For our purposes, flags should not affect tab completion. For instance,
     # `spack install []` and `spack -d install --jobs 8 []` should both give the same
     # possible completions. Therefore, we need to ignore any flags in COMP_WORDS.
-    local COMP_WORDS_NO_FLAGS=()
+    local -a COMP_WORDS_NO_FLAGS
     local index=0
     while [[ "$index" -lt "$COMP_CWORD" ]]
     do
@@ -331,7 +331,7 @@ _spacktivate() {
 _spack() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -H --all-help --color -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
+        SPACK_COMPREPLY="-h --help -H --all-help --color -c --config -C --config-scope -d --debug --timestamp --pdb -e --env -D --env-dir -E --no-env --use-env-repo -k --insecure -l --enable-locks -L --disable-locks -m --mock -p --profile --sorted-profile --lines -v --verbose --stacktrace -V --version --print-shell-vars"
     else
         SPACK_COMPREPLY="activate add arch blame build-env buildcache cd checksum ci clean clone commands compiler compilers concretize config containerize create deactivate debug dependencies dependents deprecate dev-build develop docs edit env extensions external fetch find flake8 gc gpg graph help info install license list load location log-parse maintainers mark mirror module patch pkg providers pydoc python reindex remove rm repo resource restage solve spec stage style test test-env tutorial undevelop uninstall unit-test unload url verify versions view"
     fi
@@ -453,7 +453,7 @@ _spack_buildcache_update_index() {
 _spack_cd() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env"
     else
         _all_packages
     fi
@@ -492,7 +492,7 @@ _spack_ci_rebuild_index() {
 _spack_clean() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -a --all"
+        SPACK_COMPREPLY="-h --help -s --stage -d --downloads -f --failures -m --misc-cache -p --python-cache -b --bootstrap -a --all"
     else
         _all_packages
     fi
@@ -579,7 +579,7 @@ _spack_compilers() {
 }
 
 _spack_concretize() {
-    SPACK_COMPREPLY="-h --help -f --force"
+    SPACK_COMPREPLY="-h --help -f --force --test"
 }
 
 _spack_config() {
@@ -793,7 +793,7 @@ _spack_env_deactivate() {
 _spack_env_create() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -d --dir --without-view --with-view"
+        SPACK_COMPREPLY="-h --help -d --dir --keep-relative --without-view --with-view"
     else
         _environments
     fi
@@ -912,7 +912,7 @@ _spack_fetch() {
 _spack_find() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date"
+        SPACK_COMPREPLY="-h --help --format --json -d --deps -p --paths --groups --no-groups -l --long -L --very-long -t --tag -c --show-concretized -f --show-flags --show-full-compiler -x --explicit -X --implicit -u --unknown -m --missing -v --variants --loaded -M --only-missing --deprecated --only-deprecated -N --namespace --start-date --end-date -b --bootstrap"
     else
         _installed_packages
     fi
@@ -1089,7 +1089,7 @@ _spack_load() {
 _spack_location() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages -b --build-dir -e --env"
+        SPACK_COMPREPLY="-h --help -m --module-dir -r --spack-root -i --install-dir -p --package-dir -P --packages -s --stage-dir -S --stages --source-dir -b --build-dir -e --env"
     else
         _all_packages
     fi
@@ -1385,7 +1385,7 @@ _spack_pydoc() {
 _spack_python() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -V --version -c -i -m"
+        SPACK_COMPREPLY="-h --help -V --version -c -i -m --path"
     else
         SPACK_COMPREPLY=""
     fi
@@ -1548,7 +1548,7 @@ _spack_test_run() {
 }
 
 _spack_test_list() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help -a --all"
 }
 
 _spack_test_find() {

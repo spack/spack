@@ -54,6 +54,8 @@ class Unifyfs(AutotoolsPackage):
     depends_on('gotcha@0.0.2', when='@:0.9.0')
     depends_on('leveldb', when='@:0.9.0')
 
+    patch('unifyfs-sysio.c.patch', when='@0.9.1')
+
     conflicts('^mercury~bmi')
     conflicts('^mercury~sm')
     # Known compatibility issues with ifort and xlf. Fixes coming.

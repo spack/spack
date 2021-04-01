@@ -23,11 +23,12 @@ class Blaspp(CMakePackage, CudaPackage):
     version('2020.10.00', sha256='ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795')
 
     variant('openmp', default=True, description='Use OpenMP internally.')
-    variant('cuda',   default=True, description='Build with CUDA')
+    variant('cuda',   default=False, description='Build with CUDA')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
+    depends_on('llvm-openmp', when='%apple-clang +openmp')
 
     # only supported with clingo solver: virtual dependency preferences
     # depends_on('openblas threads=openmp', when='+openmp ^openblas')

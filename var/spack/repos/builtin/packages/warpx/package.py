@@ -67,6 +67,7 @@ class Warpx(CMakePackage):
     depends_on('ascent +cuda', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('blaspp', when='+psatd dims=rz')
+    depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
@@ -92,6 +93,7 @@ class Warpx(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
             '-DWarpX_APP:BOOL={0}'.format(
                 'ON' if '+app' in spec else 'OFF'),
@@ -122,3 +124,12 @@ class Warpx(CMakePackage):
         ]
 
         return args
+
+    @property
+    def libs(self):
+        libsuffix = {'2': '2d', '3': '3d', 'rz': 'rz'}
+        dims = self.spec.variants['dims'].value
+        return find_libraries(
+            ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
+            shared=True
+        )

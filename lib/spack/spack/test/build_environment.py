@@ -13,9 +13,9 @@ import spack.config
 import spack.spec
 from spack.paths import build_env_path
 from spack.build_environment import dso_suffix, _static_to_shared_library
+from spack.build_environment import determine_number_of_jobs
 from spack.util.executable import Executable
 from spack.util.environment import EnvironmentModifications
-
 from llnl.util.filesystem import LibraryList, HeaderList
 
 
@@ -339,3 +339,22 @@ def test_setting_dtags_based_on_config(
 
         dtags_to_add = modifications['SPACK_DTAGS_TO_ADD'][0]
         assert dtags_to_add.value == expected_flag
+
+
+def test_build_jobs_sequential_is_sequential():
+    assert determine_number_of_jobs(
+        parallel=False, command_line=8, config_default=8, max_cpus=8) == 1
+
+
+def test_build_jobs_command_line_overrides():
+    assert determine_number_of_jobs(
+        parallel=True, command_line=10, config_default=1, max_cpus=1) == 10
+    assert determine_number_of_jobs(
+        parallel=True, command_line=10, config_default=100, max_cpus=100) == 10
+
+
+def test_build_jobs_defaults():
+    assert determine_number_of_jobs(
+        parallel=True, command_line=None, config_default=1, max_cpus=10) == 1
+    assert determine_number_of_jobs(
+        parallel=True, command_line=None, config_default=100, max_cpus=10) == 10
