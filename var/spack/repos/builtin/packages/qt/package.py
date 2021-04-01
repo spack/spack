@@ -242,9 +242,15 @@ class Qt(Package):
 
     def setup_run_environment(self, env):
         env.set('QTDIR', self.prefix)
+        env.set('QTINC', self.prefix.inc)
+        env.set('QTLIB', self.prefix.lib)
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         env.set('QTDIR', self.prefix)
+        env.set('QTINC', self.prefix.inc)
+        env.set('QTLIB', self.prefix.lib)
+        env.prepend_path('QT_PLUGIN_PATH', self.prefix.plugins)
 
     def setup_dependent_package(self, module, dependent_spec):
         module.qmake = Executable(join_path(self.spec.prefix.bin, 'qmake'))
