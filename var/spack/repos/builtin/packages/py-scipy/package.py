@@ -101,3 +101,10 @@ class PyScipy(PythonPackage):
     def install_test(self):
         with working_dir('spack-test', create=True):
             python('-c', 'import scipy; scipy.test("full", verbose=2)')
+
+    def setup_build_environment(self, env):
+        # Scipy needs F90 to be set, not FC
+        # https://github.com/scipy/scipy/issues/9080
+        # https://github.com/spack/spack/issues/8897
+        env.set('F90', spack_fc)
+
