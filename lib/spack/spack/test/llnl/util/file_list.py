@@ -265,14 +265,14 @@ def test_searching_order(search_fn, search_list, root, kwargs):
 
 @pytest.mark.parametrize('root,search_list,kwargs,expected', [
     (search_dir, '*/*bar.tx?', {'recursive': False}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        os.path.join(search_dir, 'a'+os.sep+'foobar.txt'),
+        os.path.join(search_dir, 'b'+os.sep+'bar.txp'),
+        os.path.join(search_dir, 'c'+os.sep+'bar.txt'),
     ]),
     (search_dir, '*/*bar.tx?', {'recursive': True}, [
-        os.path.join(search_dir, 'a/foobar.txt'),
-        os.path.join(search_dir, 'b/bar.txp'),
-        os.path.join(search_dir, 'c/bar.txt'),
+        os.path.join(search_dir, 'a'+os.sep+'foobar.txt'),
+        os.path.join(search_dir, 'b'+os.sep+'bar.txp'),
+        os.path.join(search_dir, 'c'+os.sep+'bar.txt'),
     ])
 ])
 def test_find_with_globbing(root, search_list, kwargs, expected):

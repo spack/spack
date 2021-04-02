@@ -6,28 +6,29 @@
 """Tests various features of :py:class:`spack.util.prefix.Prefix`"""
 
 from spack.util.prefix import Prefix
+import os
 
 
 def test_prefix_attributes():
     """Test normal prefix attributes like ``prefix.bin``"""
-    prefix = Prefix('/usr')
+    prefix = Prefix(os.sep+'usr')
 
-    assert prefix.bin     == '/usr/bin'
-    assert prefix.lib     == '/usr/lib'
-    assert prefix.include == '/usr/include'
+    assert prefix.bin     == os.sep+'usr'+os.sep+'bin'
+    assert prefix.lib     == os.sep+'usr'+os.sep+'lib'
+    assert prefix.include == os.sep+'usr'+os.sep+'include'
 
 
 def test_prefix_join():
     """Test prefix join  ``prefix.join(...)``"""
-    prefix = Prefix('/usr')
+    prefix = Prefix(os.sep+'usr')
 
     a1 = prefix.join('a_{0}'.format(1)).lib64
     a2 = prefix.join('a-{0}'.format(1)).lib64
     a3 = prefix.join('a.{0}'.format(1)).lib64
 
-    assert a1 == '/usr/a_1/lib64'
-    assert a2 == '/usr/a-1/lib64'
-    assert a3 == '/usr/a.1/lib64'
+    assert a1 == os.sep+'usr'+os.sep+'a_1'+os.sep+'lib64'
+    assert a2 == os.sep+'usr'+os.sep+'a-1'+os.sep+'lib64'
+    assert a3 == os.sep+'usr'+os.sep+'a.1'+os.sep+'lib64'
 
     assert isinstance(a1, Prefix)
     assert isinstance(a2, Prefix)
@@ -37,9 +38,9 @@ def test_prefix_join():
     p2 = prefix.share.join('pkg-config').join('foo.pc')
     p3 = prefix.join('dashed-directory').foo
 
-    assert p1 == '/usr/bin/executable.sh'
-    assert p2 == '/usr/share/pkg-config/foo.pc'
-    assert p3 == '/usr/dashed-directory/foo'
+    assert p1 == os.sep+'usr'+os.sep+'bin'+os.sep+'executable.sh'
+    assert p2 == os.sep+'usr'+os.sep+'share'+os.sep+'pkg-config'+os.sep+'foo.pc'
+    assert p3 == os.sep+'usr'+os.sep+'dashed-directory'+os.sep+'foo'
 
     assert isinstance(p1, Prefix)
     assert isinstance(p2, Prefix)
@@ -48,16 +49,16 @@ def test_prefix_join():
 
 def test_multilevel_attributes():
     """Test attributes of attributes, like ``prefix.share.man``"""
-    prefix = Prefix('/usr/')
+    prefix = Prefix(os.sep+'usr'+os.sep)
 
-    assert prefix.share.man   == '/usr/share/man'
-    assert prefix.man.man8    == '/usr/man/man8'
-    assert prefix.foo.bar.baz == '/usr/foo/bar/baz'
+    assert prefix.share.man   == os.sep+'usr'+os.sep+'share'+os.sep+'man'
+    assert prefix.man.man8    == os.sep+'usr'+os.sep+'man'+os.sep+'man8'
+    assert prefix.foo.bar.baz == os.sep+'usr'+os.sep+'foo'+os.sep+'bar'+os.sep+'baz'
 
     share = prefix.share
 
     assert isinstance(share, Prefix)
-    assert share.man == '/usr/share/man'
+    assert share.man == os.sep+'usr'+os.sep+'share'+os.sep+'man'
 
 
 def test_string_like_behavior():
