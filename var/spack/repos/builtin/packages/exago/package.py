@@ -66,13 +66,13 @@ class Exago(CMakePackage, CudaPackage):
 
         args.append("-DEXAGO_RUN_TESTS=ON")
 
-        args.append(self.define_from_variant('EXAGO_ENABLE_MPI','mpi'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_RAJA','raja'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_HIOP','hiop'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_PETSC','petsc'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_IPOPT','ipopt'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_GPU','cuda'))
-        args.append(self.define_from_variant('EXAGO_ENABLE_CUDA','cuda'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_MPI', 'mpi'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_RAJA', 'raja'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_HIOP', 'hiop'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_PETSC', 'petsc'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_IPOPT', 'ipopt'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_GPU', 'cuda'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_CUDA', 'cuda'))
 
         if '+cuda' in spec:
             cuda_arch_list = spec.variants['cuda_arch'].value
@@ -80,5 +80,8 @@ class Exago(CMakePackage, CudaPackage):
             if cuda_arch != 'none':
                 args.append(
                     "-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
+
+        if '+petsc' in spec:
+            args.append("-DPETSC_DIR='{0}'".format(spec['petsc'].prefix))
 
         return args
