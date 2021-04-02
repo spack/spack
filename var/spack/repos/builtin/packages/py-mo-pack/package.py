@@ -18,3 +18,7 @@ class PyMoPack(PythonPackage):
     depends_on('libmo-unpack')
     depends_on('py-numpy', type=('build', 'run'))
     depends_on('py-cython', type=('build', 'run'))
+
+    def setup_build_environment(self, env):
+        env.append_flags('LDFLAGS', '-L{0}'.format(
+            self.spec['libmo-unpack'].prefix.lib))
