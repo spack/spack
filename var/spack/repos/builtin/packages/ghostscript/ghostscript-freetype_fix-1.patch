@@ -1,0 +1,39 @@
+Submitted By: Ken Moffat <ken at linuxfromscratch dot org>
+Date: 2020-10-20
+Initial Package Version: 9.53.3
+Upstream Status: Applied
+Origin: https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff;h=41ef9a0bc36b#patch1
+Description: Fixes build failure with freetype-2.10.3 and later.
+
+diff --git a/base/fapi_ft.c b/base/fapi_ft.c
+index 65fa6dc..21aef2f 100644 (file)
+--- a/base/fapi_ft.c
++++ b/base/fapi_ft.c
+@@ -125,7 +125,7 @@ static void
+ delete_inc_int_info(gs_fapi_server * a_server,
+                     FT_IncrementalRec * a_inc_int_info);
+ 
+-FT_CALLBACK_DEF(void *)
++static void *
+ FF_alloc(FT_Memory memory, long size)
+ {
+     gs_memory_t *mem = (gs_memory_t *) memory->user;
+@@ -133,7 +133,7 @@ FF_alloc(FT_Memory memory, long size)
+     return (gs_malloc(mem, size, 1, "FF_alloc"));
+ }
+ 
+-FT_CALLBACK_DEF(void *)
++static void *
+     FF_realloc(FT_Memory memory, long cur_size, long new_size, void *block)
+ {
+     gs_memory_t *mem = (gs_memory_t *) memory->user;
+@@ -153,7 +153,7 @@ FT_CALLBACK_DEF(void *)
+     return (tmp);
+ }
+ 
+-FT_CALLBACK_DEF(void)
++static void
+     FF_free(FT_Memory memory, void *block)
+ {
+     gs_memory_t *mem = (gs_memory_t *) memory->user;
+
