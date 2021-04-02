@@ -44,7 +44,7 @@ class Exago(CMakePackage, CudaPackage):
     # camp
     depends_on('camp+cuda', when='+cuda')
 
-    depends_on('cmake@3.15:', type='build')
+    depends_on('cmake@3.18:', type='build')
 
     # HiOp dependency logic
     depends_on('hiop+shared', when='+hiop')
@@ -66,47 +66,19 @@ class Exago(CMakePackage, CudaPackage):
 
         args.append("-DEXAGO_RUN_TESTS=ON")
 
-        if '+mpi' in spec:
-            args.append("-DEXAGO_ENABLE_MPI=ON")
-        else:
-            args.append("-DEXAGO_ENABLE_MPI=OFF")
+        args.append(self.define_from_variant('EXAGO_ENABLE_MPI','mpi'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_RAJA','raja'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_HIOP','hiop'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_PETSC','petsc'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_IPOPT','ipopt'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_GPU','cuda'))
+        args.append(self.define_from_variant('EXAGO_ENABLE_CUDA','cuda'))
 
         if '+cuda' in spec:
-            args.append("-DEXAGO_ENABLE_GPU=ON")
-
             cuda_arch_list = spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != 'none':
                 args.append(
                     "-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
-            args.append("-DEXAGO_ENABLE_CUDA=ON")
-        else:
-            args.append("-DEXAGO_ENABLE_GPU=OFF")
-            args.append("-DEXAGO_ENABLE_CUDA=OFF")
-
-        if '+raja' in spec:
-            args.append("-DEXAGO_ENABLE_RAJA=ON")
-            args.append("-Dumpire_DIR='{0}'".format(spec['umpire'].prefix))
-            args.append("-DRAJA_DIR='{0}'".format(spec['raja'].prefix))
-        else:
-            args.append("-DEXAGO_ENABLE_RAJA=OFF")
-
-        if '+hiop' in spec:
-            args.append("-DEXAGO_ENABLE_HIOP=ON")
-            args.append("-DHIOP_DIR='{0}'".format(spec['hiop'].prefix))
-        else:
-            args.append("-DEXAGO_ENABLE_HIOP=OFF")
-
-        if '+petsc' in spec:
-            args.append("-DEXAGO_ENABLE_PETSC=ON")
-            args.append("-DPETSC_DIR='{0}'".format(spec['petsc'].prefix))
-        else:
-            args.append("-DEXAGO_ENABLE_PETSC=OFF")
-
-        if '+ipopt' in spec:
-            args.append("-DEXAGO_ENABLE_IPOPT=ON")
-            args.append("-DIPOPT_DIR='{0}'".format(spec['ipopt'].prefix))
-        else:
-            args.append("-DEXAGO_ENABLE_IPOPT=OFF")
 
         return args
