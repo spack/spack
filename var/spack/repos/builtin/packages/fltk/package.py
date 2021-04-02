@@ -53,6 +53,9 @@ class Fltk(Package):
         if '+shared' in spec:
             options.append('--enable-shared')
 
+        if '~gl' in spec:
+            options.append('--disable-gl')
+
         # FLTK needs to be built in-source
         configure(*options)
         make()
