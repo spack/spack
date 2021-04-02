@@ -7,7 +7,9 @@ from spack import *
 
 
 class RPheatmap(RPackage):
-    """Implementation of heatmaps that offers more control over dimensions and
+    """Pretty Heatmaps
+
+    Implementation of heatmaps that offers more control over dimensions and
     appearance."""
 
     homepage = "https://cloud.r-project.org/package=pheatmap"
