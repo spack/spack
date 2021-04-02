@@ -9,7 +9,7 @@ from spack import *
 class RAmelia(RPackage):
     """Amelia: A Program for Missing Data"""
 
-    homepage = "https://cloud.r-project.org/package=Amelia"
+    homepage = "http://gking.harvard.edu/amelia"
     url      = "https://cloud.r-project.org/src/contrib/Amelia_1.7.6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Amelia"
 
