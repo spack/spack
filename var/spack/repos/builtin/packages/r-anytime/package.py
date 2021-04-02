@@ -7,10 +7,12 @@ from spack import *
 
 
 class RAnytime(RPackage):
-    """Convert input in any one of character, integer,
-    numeric, factor, or ordered type into 'POSIXct' (or 'Date') objects, using one
-    of a number of predefined formats, and relying on Boost facilities for date and
-    time parsing."""
+    """Anything to 'POSIXct' or 'Date' Converter
+    
+    Convert input in any one of character, integer, numeric,
+    factor, or ordered type into 'POSIXct' (or 'Date') objects,
+    using one of a number of predefined formats, and relying on
+    Boost facilities for date and time parsing."""
 
     homepage = "https://cloud.r-project.org/package=anytime"
     url      = "https://cloud.r-project.org/src/contrib/anytime_0.3.9.tar.gz"
