@@ -66,7 +66,10 @@ class Warpx(CMakePackage):
             description='Enable tiny profiling features')
 
     depends_on('ascent', when='+ascent')
-    depends_on('ascent +cuda', when='+ascent compute=cuda')
+    # note: ~shared is only needed until the new concretizer is in and
+    #       honors the conflict inside the Ascent package to find this
+    #       automatically
+    depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('blaspp', when='+psatd dims=rz')
     depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
