@@ -32,6 +32,13 @@ class Nekrs(Package, CudaPackage, ROCmPackage):
             default=False,
             description='Activates support for HIP')
 
+    # Conflicts:
+    # nekrs includes following packages, but in order to build as part of
+    # CEED we can't leave them in as conflicts. They should be enabled
+    # sometime in future.
+    # for pkg in ['occa', 'hyper', 'nek5000', 'blas', 'lapack', 'gslib']:
+    #     conflicts('^' + pkg, msg=(pkg + " is built into nekRS"))
+
     # Dependencies
     depends_on('mpi')
     depends_on('git')
