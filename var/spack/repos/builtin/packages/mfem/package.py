@@ -276,6 +276,7 @@ class Mfem(Package, ROCmPackage):
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
     patch('mfem-4.2-slepc.patch', when='@4.2.0+slepc')
+    patch('mfem-4.2-petsc-3.15.0.patch', when='@4.2.0+petsc ^petsc@3.15.0:')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
