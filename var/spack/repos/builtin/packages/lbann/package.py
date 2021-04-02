@@ -361,7 +361,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
                 cxxflags_str = " ".join(self.spec.compiler_flags['cxxflags'])
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(arch_str, cxxflags_str)
+                    ' -g -fsized-deallocation -fPIC -std=c++17 {1}'.format(
+                        arch_str, cxxflags_str)
                 )
 
         return args
