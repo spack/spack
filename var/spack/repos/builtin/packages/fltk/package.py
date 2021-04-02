@@ -38,6 +38,12 @@ class Fltk(Package):
     variant('shared', default=True,
             description='Enables the build of shared libraries')
 
+    variant('gl', default=True,
+            description='Enables opengl support')
+
+    # variant dependencies
+    depends_on('gl', when='+gl')
+
     def install(self, spec, prefix):
         options = ['--prefix=%s' % prefix,
                    '--enable-localjpeg',
