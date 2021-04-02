@@ -4,10 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import argparse
-import multiprocessing
 
 import pytest
-
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -27,20 +25,15 @@ def job_parser():
         yield p
 
 
-@pytest.mark.parametrize("ncores", [1, 2, 4, 8, 16, 32])
-def test_setting_jobs_flag(job_parser, ncores, monkeypatch):
-    monkeypatch.setattr(multiprocessing, 'cpu_count', lambda: ncores)
+def test_setting_jobs_flag(job_parser):
     namespace = job_parser.parse_args(['-j', '24'])
-    expected = min(24, ncores)
-    assert namespace.jobs == expected
-    assert spack.config.get('config:build_jobs') == expected
+    assert namespace.jobs == 24
+    assert spack.config.get('config:build_jobs', scope='command_line') == 24
 
 
-@pytest.mark.parametrize("ncores", [1, 2, 4, 8, 16, 32])
-def test_omitted_job_flag(job_parser, ncores, monkeypatch):
-    monkeypatch.setattr(multiprocessing, 'cpu_count', lambda: ncores)
+def test_omitted_job_flag(job_parser):
     namespace = job_parser.parse_args([])
-    assert namespace.jobs == min(ncores, 16)
+    assert namespace.jobs is None
     assert spack.config.get('config:build_jobs') is None
 
 
