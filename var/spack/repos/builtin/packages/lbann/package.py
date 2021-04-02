@@ -108,8 +108,10 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('aluminum@0.5.0:', when='@:0.90,0.102: +al')
 
     # Add Aluminum variants
-    depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
-    depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    # depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
+    # depends_on('aluminum +rocm +rccl +ht', when='+al +rocm')
+    depends_on('aluminum +cuda +ht', when='+al +cuda')
+    depends_on('aluminum +rocm +ht', when='+al +rocm')
 
     depends_on('dihydrogen@0.2.0:', when='@:0.90,0.102:')
     depends_on('dihydrogen +openmp', when='+dihydrogen')
