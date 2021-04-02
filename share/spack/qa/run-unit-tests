@@ -47,4 +47,4 @@ if [[ "$ONLY_PACKAGES" == "true" ]]; then
   export PYTEST_ADDOPTS='-k "package_sanity" -m "not maybeslow"'
 fi
 
-$coverage_run $(which spack) unit-test -x --verbose
+$coverage_run $(which spack) unit-test --verbose
