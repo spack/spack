@@ -8,7 +8,7 @@ from spack import *
 
 class RAnytime(RPackage):
     """Anything to 'POSIXct' or 'Date' Converter
-    
+
     Convert input in any one of character, integer, numeric,
     factor, or ordered type into 'POSIXct' (or 'Date') objects,
     using one of a number of predefined formats, and relying on
