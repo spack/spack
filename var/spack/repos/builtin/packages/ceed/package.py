@@ -65,6 +65,10 @@ class Ceed(BundlePackage):
     depends_on('libceed@0.2~occa', when='@1.0.0~occa')
 
     # OCCA
+    # ceed-4.0
+    # TODO: add hip variant to occa and enable it here when appropriate
+    depends_on('occa@1.1.0~cuda', when='@4.0.0+occa~cuda')
+    depends_on('occa@1.1.0+cuda', when='@4.0.0+occa+cuda')
     # ceed-3.0
     depends_on('occa@1.0.9~cuda', when='@3.0.0+occa~cuda')
     depends_on('occa@1.0.9+cuda', when='@3.0.0+occa+cuda')
@@ -144,6 +148,7 @@ class Ceed(BundlePackage):
     depends_on('hpgmg@a0a5510df23b+fe', when='@1.0.0+petsc')
 
     # MAGMA
+    # ceed-4.0
     depends_on('magma@2.5.4', when='@4.0.0+cuda')
     depends_on('magma@2.5.4+hip', when='@4.0.0+hip')
     # ceed-3.0
@@ -172,6 +177,7 @@ class Ceed(BundlePackage):
     depends_on('mfem@4.2.0+gslib', when='@4.0.0+mfem+nek')
     depends_on('mfem@4.2.0+libceed', when='@4.0.0+mfem')
     depends_on('mfem@4.2.0+cuda', when='@4.0.0+mfem+cuda')
+    depends_on('mfem@4.2.0+rocm', when='@4.0.0+mfem+hip')
     depends_on('mfem@4.2.0+occa', when='@4.0.0+mfem+occa')
     depends_on('laghos@3.1', when='@4.0.0+mfem')
     depends_on('remhos@1.0', when='@4.0.0+mfem')
