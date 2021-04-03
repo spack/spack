@@ -134,7 +134,7 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
         depends_on('hydrogen cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
         depends_on('aluminum cuda_arch=%s' % arch, when='+al +cuda cuda_arch=%s' % arch)
         depends_on('dihydrogen cuda_arch=%s' % arch, when='+dihydrogen +cuda cuda_arch=%s' % arch)
-        depends_on('nccl cuda_arch=%s' % arch, when='+cuda cuda_arch=%s' % arch)
+        depends_on('nccl cuda_arch=%s' % arch, when='@0.94:0.98.2 +cuda cuda_arch=%s' % arch)
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
