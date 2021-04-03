@@ -9,12 +9,12 @@ from spack import *
 class PyUproot3(PythonPackage):
     """ROOT I/O in pure Python and Numpy.
 
-    uproot (originally μproot, for "micro-Python ROOT") is a reader and a
-    writer of the ROOT file format using only Python and Numpy. Unlike the
-    standard C++ ROOT implementation, uproot is only an I/O library, primarily
-    intended to stream data into machine learning libraries in Python. Unlike
-    PyROOT and root_numpy, uproot does not depend on C++ ROOT. Instead, it uses
-    Numpy to cast blocks of data from the ROOT file as Numpy arrays."""
+    uproot is a reader and a writer of the ROOT file format using only Python
+    and Numpy. Unlike the standard C++ ROOT implementation, uproot is only an
+    I/O library, primarily intended to stream data into machine learning
+    libraries in Python. Unlike PyROOT and root_numpy, uproot does not depend
+    on C++ ROOT. Instead, it uses Numpy to cast blocks of data from the ROOT
+    file as Numpy arrays."""
 
     homepage = "https://github.com/scikit-hep/uproot3"
     pypi     = "uproot3/uproot3-3.14.4.tar.gz"
