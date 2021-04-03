@@ -90,8 +90,13 @@ class Libceed(Package):
                     opt += ' -fopenmp-simd'
             elif compiler.name in ['xl', 'xl_r']:
                 opt = '-O -g -qsimd=auto'
+            elif compiler.name == 'intel':
+                opt = '-O3 -g'
+                makeopts += ['CC_VENDOR=icc']
             else:
                 opt = '-O -g'
+            # Note: spack will inject additional target-specific flags through
+            # the compiler wrapper.
             makeopts += ['OPT=%s' % opt]
 
             if spec.satisfies('@0.7') and compiler.name in ['xl', 'xl_r']:
