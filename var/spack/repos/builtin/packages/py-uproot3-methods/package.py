@@ -12,7 +12,7 @@ class PyUproot3Methods(PythonPackage):
     This package is typically used as a dependency for uproot 3.x, to define
     methods on the classes that are automatically generated from ROOT files.
     This includes histograms (TH*) and physics objects like TLorentzVectors.
-    The reason it’s a separate library is so that we can add physics-specific
+    The reason it's a separate library is so that we can add physics-specific
     functionality on a shorter timescale than we can update Uproot 3 itself,
     which is purely an I/O package."""
 
