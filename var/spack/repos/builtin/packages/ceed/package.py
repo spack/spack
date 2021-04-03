@@ -154,7 +154,8 @@ class Ceed(BundlePackage):
     depends_on('magma@2.3.0', when='@1.0.0+cuda')
 
     # PUMI
-    depends_on('pumi@2.2.3', when='@4.0.0+pumi')  # TODO: 2.2.5
+    # ceed-4.0
+    depends_on('pumi@2.2.5', when='@4.0.0+pumi')
     # ceed-3.0
     depends_on('pumi@2.2.2', when='@3.0.0+pumi')
     # ceed-2.0

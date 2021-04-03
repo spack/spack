@@ -212,7 +212,7 @@ class Mfem(Package, ROCmPackage):
     depends_on('sundials@5.0.0:', when='@4.0.1-xsdk:+sundials~mpi')
     depends_on('sundials@5.0.0:+mpi+hypre', when='@4.0.1-xsdk:+sundials+mpi')
     depends_on('sundials@5.4.0:+cuda', when='@4.2.0:+sundials+cuda')
-    depends_on('pumi@2.2.3', when='@4.2.0:+pumi')
+    depends_on('pumi@2.2.3:', when='@4.2.0:+pumi')
     depends_on('pumi', when='+pumi~shared')
     depends_on('pumi+shared', when='+pumi+shared')
     depends_on('gslib@1.0.5:+mpi', when='+gslib+mpi')
