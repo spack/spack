@@ -28,26 +28,12 @@ class GpuBurn(MakefilePackage, CudaPackage):
         if '+cuda' in self.spec:
             cuda_arch = self.spec.variants['cuda_arch'].value
             archflag = " ".join(CudaPackage.cuda_flags(cuda_arch))
-            archflag = archflag + " -fatbin "
-            filter_file('^CUDAPATH.*',
-                        'CUDAPATH={0}'.format(self.spec['cuda'].prefix),
-                        'Makefile')
-            filter_file('^GCCPATH.*',
-                        '',
-                        'Makefile')
-            filter_file('^CCPATH.*',
-                        '',
-                        'Makefile')
-            filter_file('^NVCC.*',
-                        '',
-                        'Makefile')
-            filter_file('.*PATH=.*\ \$\{NVCC\}',
-                        '\t nvcc',
-                        'Makefile')
-            filter_file('-arch=compute_30 -ptx', archflag,
-                        'Makefile', string=True)
-            filter_file('${NVCCFLAGS} -ptx', archflag,
-                        'Makefile', string=True)
+            with open('Makefile', 'w') as fh:
+                fh.write('drv:\n')
+                fh.write('\tnvcc {0} -fatbin compare.cu -o compare.ptx\n'.format(archflag))
+                fh.write('\tg++ -O3 -c gpu_burn-drv.cpp\n')
+                fh.write('\tg++ -o gpu_burn gpu_burn-drv.o -O3 -lcuda -lcublas -lcudart -o gpu_burn\n')
+
             filter_file('compare.ptx',
                         join_path(prefix.share,
                                   'compare.ptx'),
