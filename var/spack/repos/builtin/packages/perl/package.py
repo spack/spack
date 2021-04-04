@@ -82,6 +82,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     conflicts('@5.32.0:', when='%nvhpc',
               msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
+    # Avoid build of 5.32.1 with intel@19.1.2.254 
+    conflicts('%intel@19.1.2.254', when='@5.32.1')
+
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
     # having it in core increases the "energy of activation" for doing
