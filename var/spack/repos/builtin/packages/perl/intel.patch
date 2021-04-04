@@ -1,0 +1,19 @@
+commit 1fc28a26d20f66ca117b25336f65c3e652afb520 (HEAD -> my5.32.1)
+Author: Itaru Kitayama <itaru.kitayama@riken.jp>
+Date:   Sun Apr 4 01:52:49 2021 +0200
+
+    Intel compiler option adjustment.
+
+diff --git a/hints/linux.sh b/hints/linux.sh
+index c749f0f64a..b7e7c195f6 100644
+--- a/hints/linux.sh
++++ b/hints/linux.sh
+@@ -94,7 +94,7 @@ case "`${cc:-cc} -V 2>&1`" in
+     # This is needed for Configure's prototype checks to work correctly
+     # The -mp flag is needed to pass various floating point related tests
+     # The -no-gcc flag is needed otherwise, icc pretends (poorly) to be gcc
+-    ccflags="-we147 -mp -no-gcc $ccflags"
++    ccflags="-we147 $ccflags"
+     # Prevent relocation errors on 64bits arch
+     case "$uname_minus_m" in
+        *ia64*|*x86_64*)

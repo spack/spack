@@ -64,6 +64,9 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     depends_on('gdbm')
     depends_on('berkeley-db')
 
+    # for work-around when Intel compiler is used
+    patch('intel.patch', when='@5.32.1')
+
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
     # https://rt.perl.org/Public/Bug/Display.html?id=126468
