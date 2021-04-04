@@ -7,6 +7,7 @@ import itertools
 import os
 import os.path
 import stat
+import re
 from subprocess import PIPE
 from subprocess import check_call
 from typing import List  # novm
@@ -16,6 +17,9 @@ import llnl.util.filesystem as fs
 from llnl.util.filesystem import working_dir, force_remove
 from spack.package import PackageBase, run_after, run_before
 from spack.util.executable import Executable
+# enable build_type interface for autotools (will add default
+# variants to Autotools Packages)
+from spack.directives import variant
 
 
 class AutotoolsPackage(PackageBase):
@@ -82,6 +86,26 @@ class AutotoolsPackage(PackageBase):
     #: If False deletes all the .la files in the prefix folder
     #: after the installation. If True instead it installs them.
     install_libtool_archives = False
+
+    # provide a means for setting optimization or debug flags consistently
+    # across autotools packages. Model it after CMake.
+
+    # to preserve existing behavior, define 'undefined' as the default,
+    # which will set nothing.
+    _desc = ['Allow parity with CMake projects. '
+             'Flags will be applied to all compilers (CFLAGS, CXXFLAGS,...)'
+             '  Release (-O3)',
+             '  RelWithDebug (-O3 -g)',
+             '  Debug (-g)',
+             '  MinSizeRel (-Os)',
+             '  Undefined (do nothing, preserving existing behavior)',
+             ]
+    variant('build_type',
+            default='Undefined',
+            values=('Release', 'RelWithDebug',
+                    'Debug', 'MinSizeRel', 'Undefined'),
+            multi=False,
+            description=os.linesep.join(_desc))
 
     @property
     def _removed_la_files_log(self):
@@ -329,14 +353,299 @@ class AutotoolsPackage(PackageBase):
             values_str = 'FCFLAGS={0}'.format(' '.join(values))
             self.configure_flag_args.append(values_str)
 
+    def _configure_check_flags(self, spec, configure_args, arg_src):
+        '''Check a list of configure args from `arg_src` for logical
+        errors (such as variables set multiple times). Enforce that
+        user provided flags are respected See `_enforce_user_flags`
+
+        Args:
+            spec (Spec): the spec being evaluated
+            configure_args (list): configure args
+            arg_src (str): Identify where the `var_map` came from. AutoTools
+                uses two places to generate configure args. One assembles
+                `build_environment` variables to pass to the configure line,
+                and `configure_args` which the packager may directly set.
+                This parameter is used to provide meaningful feedback in
+                the event of error.
+
+        Return:
+            flag_map (dict): dictionary of VAR : VALUE where VAR is variable
+                Autotools respects (and spack allows the user to set).
+                See `_get_spack_autotool_flag_map`. Examples are `CFLAGS` and
+                `cflags`
+                The flags may be modified as passed in from `configure_args`.
+                (user flags may be prepended)
+                Moroever, if the package erroneously sets variables multiple
+                times, this state is revolved by combining the values.
+
+            reg_args (list): the other args from `configure_args` that are
+                not `VAR=`. (unmodified)
+
+            This method may throw a ValueError if it fails to parse
+            `VAR=VAL`, this should be impossible because the values are
+            from `_split_configure_args`, which only returns values that
+            sucessfuly match `VAR=` format.
+        '''
+        pre = '{s.name}@{s.version} [{src}]:'.format(s=spec, src=arg_src)
+        # a mapping of VAR to spack names (CFLAGS->cflags)
+        flag_var_names = AutotoolsPackage._get_spack_autotool_flag_map()
+
+        tty.msg("Testing configure flags for {0}".format(spec.name))
+        # split the args into VAR=VAL and all others
+        # we only consider names for VAR in `flag_var_names`
+        flag_args, reg_args = self._split_configure_args(configure_args,
+                                                         flag_var_names)
+        # flag args is a list, which could have duplicate variables, e.g.,
+        # CFLAGS twice convert to a map, and report problems...
+        var_re = re.compile(r'^(?P<env>[^=]+)=(?P<value>.*)$')
+        flag_map = {}
+        for arg in flag_args:
+            # we should have the proper format
+            m = var_re.match(arg)
+            if not m:
+                # this shouldn't be possible..
+                tty.debug("Split configure args into variables, but {0} does"
+                          " not satisfy the format VAR=VALUE".format(arg))
+                raise ValueError
+            var_name = m.group("env")
+            var_value = m.group("value")
+
+            # if we already have the var in flag_map, then the package has
+            # set this variable multiple times!
+            if var_name in flag_map:
+                tty.warn('**************************************************')
+                tty.warn("* {0} has set variable {1} multiple times,"
+                         " values will be concatenated".format(pre, var_name))
+                tty.warn("*  {0} = {1}".format(var_name, var_value))
+                tty.warn("*  Prior: {0} = {1}".format(var_name,
+                                                      flag_map[var_name]))
+                tty.warn('**************************************************')
+                flag_map[var_name] += ' {0}'.format(var_value)
+            else:
+                # The expected case, with the package behaving as expected
+                flag_map[var_name] = var_value
+
+        # now enforce that any user provided flags are set
+        flag_map = self._enforce_user_flags(spec,
+                                            var_map=flag_map,
+                                            var_to_spack_map=flag_var_names,
+                                            arg_src=arg_src)
+        # optional: Dedupe flags... be careful though!
+        return flag_map, reg_args
+
+    def _enforce_user_flags(self,
+                            spec,
+                            var_map,
+                            var_to_spack_map,
+                            arg_src):
+        ''' Given a dict of variables and values, determine if the package
+        respected user provided flags and add user provided flags.
+
+        Args:
+            spec (Spec): spec being evaluated
+            var_map (dict): a map of VAR : VALUE where the keys are also
+                keys in the var_to_spack_map. See `_configure_check_flags`,
+                which returns a flag_map suitable for use.
+            var_to_spack_map (dict): dictionary mapping VARs to spack.
+                See `_get_spack_autotool_flag_map` for a means to generate
+                var_to_spack_map.
+            arg_src (str): Identify where the `var_map` came from. AutoTools
+                uses two places to generate configure args. One assembles
+                `build_environment` variables to pass to the configure line,
+                and `configure_args` which the packager may directly set.
+                This parameter is used to provide meaningful feedback in
+                the event of error.
+        Return:
+            var_map (dict): modified `var_map` with user provided flags
+                added if omitted
+        '''
+        import copy
+
+        pre = '{s.name}@{s.version} [{src}]:'.format(s=spec, src=arg_src)
+        new_var_map = copy.deepcopy(var_map)
+
+        # be careful about reordering flags
+        for var_name, var_value in var_map.items():
+
+            spack_flag_name = var_to_spack_map[var_name]
+            spack_flags = spec.compiler_flags[spack_flag_name]
+            user_flags = var_value.split()
+
+            spack_set = set(spack_flags)
+            user_set = set(user_flags)
+
+            if spack_set.issubset(user_set):
+                continue
+
+            # the spack provided flags are not in the package's provided
+            # flags... warn the user
+            tty.warn("{0} set {1} but did not include user flags ({2})"
+                     "".format(pre, var_name, spack_flag_name))
+            tty.warn("Spack    Flags: {0}".format(' '.join(spack_flags)))
+            tty.warn("Packgage Flags: {0}".format(' '.join(user_flags)))
+
+            # The safest method could be to simply prepend spack + package
+            # flags compilers typically will respect the final flag if
+            # contradictory ones are present... this is messy (and the
+            # package) should fix this stuff
+            new_var_map[var_name] = ' '.join(spack_flags + user_flags)
+
+        # return the new map with spack flags added
+        return new_var_map
+
+    def _split_configure_args(self, configure_args, env_var_names):
+        '''Given a list of args for configure and an iterable of variables
+        that spack provides interfaces to provide, e.g., ldflags => LDFLAGS
+
+        Split the list of configure args into 2 lists. One containing all args
+        that have VAR= format (where VAR is defined in env_var_names). The
+        second list containing the other args.
+
+        Args:
+            configure_args (list): configure args
+            env_var_names (iterable): List of VARs that will be split from the
+                other args.
+
+        Returns:
+            env_args (list): any args that startwith `VAR=` format
+            reg_args (list): all other args
+        '''
+        tty.msg("Splitting configure args in ENV and non-env")
+        env_args = []
+        reg_args = []
+        tty.msg("input_args: {0}".format(' '.join(configure_args)))
+
+        pre = tuple(['{0}='.format(e) for e in env_var_names])
+        env_args = [arg for arg in configure_args if arg.startswith(pre)]
+        reg_args = [arg for arg in configure_args if not arg.startswith(pre)]
+
+        tty.debug("sizes {0} (env) + {1} (reg) = {2} , orig size: {3}"
+                  "".format(len(env_args), len(reg_args),
+                            len(env_args) + len(reg_args),
+                            len(configure_args)))
+
+        tty.debug("env_args [{0}]: {1}".format(len(env_args),
+                                               os.linesep.join(env_args)))
+        tty.debug("reg_args [{0}]: {1}".format(len(reg_args),
+                                               os.linesep.join(reg_args)))
+        return env_args, reg_args
+
+    @staticmethod
+    def _get_spack_autotool_flag_map():
+        '''Provide mapping between autotool's ENV variables and spack's
+           variable names.
+
+           Return: [dict] of autotool to spack mapping
+        '''
+        # the API code path for setting flags
+        flag_names = {'CFLAGS':   'cflags',
+                      'CXXFLAGS': 'cxxflags',
+                      'F77FLAGS': 'fflags',
+                      'F90FLAGS': 'fflags',
+                      'FCFLAGS':  'fflags',
+                      'FFLAGS':   'fflags',
+                      'LDFLAGS':  'ldflags',
+                      }
+        return flag_names
+
+    def _reconcile_var_args(self,
+                            spec,
+                            build_var_flag_map,
+                            configure_var_flag_map):
+        '''Given two dicts of VAR=VAL,
+            1. determine if the package sets VAR in both setup_build_env
+               and configure_args.
+            2. resolve the conflict above if needed
+               Policy: combine the values as well (could be weird!)
+            3. Unify the build and configure_args variable setting
+               arguments. This entails taking the non-duplciated args
+               from both and placing them into a single dict of VAR : VAL
+               Step (2) ensures we will not have any conflicts
+        '''
+        # this is returning keys to a dict, which are
+        # the env variable names for setting these flags
+        # we need to be careful with ordering.
+        # A goal is to preserver the flag order in the early phases
+        # ( that means no set -> list -> string (join) )
+        be_var_names = set(build_var_flag_map)
+        conf_var_names = set(configure_var_flag_map)
+        duplicate_vars_names_set = be_var_names.intersection(conf_var_names)
+        unified_flags = {}
+        # Handle point #1 above. This ensures that we have only one variable
+        # We resolve conflicts using combine
+        if duplicate_vars_names_set:
+            pre = '{s.name}@{s.version} :'.format(s=spec)
+            tty.warn("{0} Detected flags set in both build environment "
+                     " AND passed to configure. This is a bug in the"
+                     " package.".format(pre))
+            for dupe_flag in duplicate_vars_names_set:
+                tty.warn("{0} {1} ".format(pre, dupe_flag))
+                tty.warn("    setup_build_environment: {0}"
+                         "".format(build_var_flag_map[dupe_flag]))
+                tty.warn("    configure_args         : {0}"
+                         "".format(configure_var_flag_map[dupe_flag]))
+                # define some policy... combine both ...
+                unified_flags[dupe_flag] = configure_var_flag_map[dupe_flag]
+                unified_flags[dupe_flag] += ' '
+                unified_flags[dupe_flag] += build_var_flag_map[dupe_flag]
+
+        # handle the build enviroment flags
+        for flag in be_var_names.difference(duplicate_vars_names_set):
+            tty.debug("Setting {0}={1} (from setup_build_environment)"
+                      .format(flag, build_var_flag_map[flag]))
+            unified_flags[flag] = build_var_flag_map[flag]
+
+        # handle the package provided flags
+        for flag in conf_var_names.difference(duplicate_vars_names_set):
+            tty.debug("Setting {0}={1} (from configure_args)"
+                      .format(flag, configure_var_flag_map[flag]))
+            unified_flags[flag] = configure_var_flag_map[flag]
+
+        return unified_flags
+
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
         :py:meth:`~.AutotoolsPackage.configure_args`
         and an appropriately set prefix.
         """
-        options = getattr(self, 'configure_flag_args', [])
-        options += ['--prefix={0}'.format(prefix)]
-        options += self.configure_args()
+        options = ['--prefix={0}'.format(prefix)]
+
+        tty.debug("Testing configure_flag_args for user provided flags")
+        build_env_flag_args = getattr(self, 'configure_flag_args', [])
+        # given some args to configure, test them for bad flag behavior
+        # return a split list of args for configure:
+        #   The flag args (fargs) and the non-flag configure args (cargs)
+        # Return value is a dict for fargs and list for others
+        arg_src = 'setup_build_environment'
+        be_fargs, be_cargs = self._configure_check_flags(spec,
+                                                         build_env_flag_args,
+                                                         arg_src)
+
+        tty.debug("Testing configure_args for user provided flags")
+        # gather the package defined configured args
+        pkg_configure_args = self.configure_args()
+        # Test the package configure_args for bad flag behavior
+        # return a split list of args for configure
+        # Return value is a dict for flag args (fargs), and list for others
+        arg_src = 'configure_args'
+        pkg_fargs, pkg_cargs = self._configure_check_flags(spec,
+                                                           pkg_configure_args,
+                                                           arg_src)
+
+        # reconcile build env flags and pkg configure_args ... better not
+        # exist in both! It would mean setup_build_environment defined an
+        # ENV, then configure was passed something else
+        unified_flags = self._reconcile_var_args(
+            spec,
+            build_var_flag_map=be_fargs,
+            configure_var_flag_map=pkg_fargs)
+
+        # this is where we can apply uniform flags (such as build_system)
+
+        # we could apply some deduplication (but that is tricky)
+        # for now, flatten the dict of VAR : VAL to a list of [ "VAR=VAL" ]
+        flag_args = ['{0}={1}'.format(k, v) for k, v in unified_flags.items()]
+        options += be_cargs + pkg_cargs + flag_args
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
