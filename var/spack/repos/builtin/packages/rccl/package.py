@@ -37,6 +37,8 @@ class Rccl(CMakePackage):
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         if ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0' '4.1.0']:
             depends_on('numactl@2.0.12', type=('build', 'link'), when='@' + ver)
+        if ver in ['4.1.0']:
+            depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
