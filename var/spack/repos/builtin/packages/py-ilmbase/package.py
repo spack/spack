@@ -24,7 +24,8 @@ class PyIlmbase(AutotoolsPackage):
         spec = self.spec
 
         args = [
-            '--with-boost-python-libname=boost_python{0}'.format(spec['python'].version.up_to(2).joined)
+            '--with-boost-python-libname=boost_python{0}'.format(
+                spec['python'].version.up_to(2).joined)
         ]
 
         return args
