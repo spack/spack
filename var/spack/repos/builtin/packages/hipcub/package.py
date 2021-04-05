@@ -34,7 +34,6 @@ class Hipcub(CMakePackage):
         depends_on('rocprim@' + ver, type='build', when='@' + ver)
     for ver in ['4.1.0']:
         depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
-   
 
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)

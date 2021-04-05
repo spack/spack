@@ -36,8 +36,8 @@ class Rocrand(CMakePackage):
         depends_on('rocminfo@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
     for ver in ['4.1.0']:
-        depends_on('hip-rocclr@'+ ver, type='link', when='@' + ver)
-        
+        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+
     def setup_build_environment(self, env):
         env.set('CXX', self.spec['hip'].hipcc)
 

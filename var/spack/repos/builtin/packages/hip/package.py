@@ -202,7 +202,7 @@ class Hip(CMakePackage):
                 files = [
                     'hipify-perl', 'hipcc', 'roc-obj-extract',
                     'hipconfig', 'hipify-cmakefile',
-                    'roc-obj-ls','hipvars.pm'
+                    'roc-obj-ls', 'hipvars.pm'
                 ]
 
             filter_file(match, substitute, *files, **kwargs)
