@@ -7,7 +7,9 @@ from spack import *
 
 
 class RDeriv(RPackage):
-    """R-based solution for symbolic differentiation. It admits user-defined
+    """Deriv: Symbolic Differentiation
+
+    R-based solution for symbolic differentiation. It admits user-defined
     function as well as function substitution in arguments of functions to be
     differentiated. Some symbolic simplification is part of the work."""
 
