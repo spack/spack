@@ -16,7 +16,7 @@ index b775477..fb89d30 100755
      for curses in ncurses curses
      do
 -      for lib in "" -ltermcap -l${curses}w -l$curses
-+      for lib in "" -ltermcap -l${curses}w -l$curses -ltinfo
++      for lib in "" -l${curses}w -l$curses -ltinfo -ltermcap
        do
          { $as_echo "$as_me:${as_lineno-$LINENO}: checking termcap support using $curses and $lib" >&5
  $as_echo_n "checking termcap support using $curses and $lib... " >&6; }
