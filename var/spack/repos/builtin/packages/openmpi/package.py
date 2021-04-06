@@ -337,7 +337,7 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2.999.999',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
@@ -631,7 +631,11 @@ class Openmpi(AutotoolsPackage):
         # for versions older than 3.0.3,3.1.3,4.0.0
         # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
-            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('+pmi'):
+                config_args.append('--with-pmi={0}'.format(
+                    spec['slurm'].prefix))
+            else:
+                config_args.extend(self.with_or_without('pmi'))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
