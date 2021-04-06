@@ -41,7 +41,7 @@ class OracleInstantClient(Package):
                 continue
             url, sha256 = atts
             condition = "@{0}".format(oracle_version)
-            resource(name=name, url=url, sha256=sha256, when=condition, placement=name)
+            resource(url=url, sha256=sha256, when=condition, placement=name)
 
     def patch(self):
         pass
@@ -88,7 +88,8 @@ class OracleInstantClient(Package):
                           'jdbc': ('JDBC_LICENSE', 'JDBC_README'),
                           'odbc': ('ODBC_LICENSE', 'ODBC_README'),
                           'sdk': ('SDK_LICENSE', 'SDK_README'),
-                          'tools': ('TOOLS_LICENSE', 'TOOLS_README')}:
+                          'tools': ('TOOLS_LICENSE', 'TOOLS_README')
+                          }.items():
             for fn in fns:
                 install(join_path(dirn, fn), prefix.doc)
 
