@@ -38,7 +38,7 @@ class OracleInstantClient(Package):
         # define resources for the other tarballs
         for name, atts in release['components'].items():
             # skip the tarball used for the version(...) call
-            if name == main_pkg:
+            if name == 'basic':
                 continue
             url, sha256 = atts
             condition = "@{0}".format(oracle_version)
