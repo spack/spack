@@ -5,7 +5,6 @@
 """This test does sanity checks on Spack's builtin package database."""
 import os.path
 import re
-import sys
 
 import pytest
 
@@ -51,8 +50,6 @@ def test_packages_are_pickleable():
     if failed_to_pickle:
         tty.msg('The following packages failed to pickle: ' +
                 ', '.join(failed_to_pickle))
-
-        tty.msg('sys.meta_path: ' + str(sys.meta_path))
 
         for name in failed_to_pickle:
             pkg = spack.repo.get(name)
