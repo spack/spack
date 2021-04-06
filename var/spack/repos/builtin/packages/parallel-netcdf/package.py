@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import llnl.util.tty as tty
 import os
 
 
@@ -128,8 +129,49 @@ class ParallelNetcdf(AutotoolsPackage):
             autoreconf('-iv')
 
     def configure_args(self):
-        args = ['--with-mpi=%s' % self.spec['mpi'].prefix,
-                'SEQ_CC=%s' % spack_cc]
+        # for convenience
+        spec = self.spec
+
+        # mvapich2 will set the MPI env variables,
+        # but that may not be a given. So set them for safety
+        args = ['--with-mpi=%s' % spec['mpi'].prefix,
+                'SEQ_CC=%s' % spack_cc,
+                'MPICC=%s'  % spec['mpi'].mpicc,
+                'MPICXX=%s' % spec['mpi'].mpicxx,
+                'MPIF77=%s' % spec['mpi'].mpifc,
+                'MPIF90=%s' % spec['mpi'].mpifc,
+                ]
+
+        # setup testing (required at configure time)
+        mpiexec = ''
+        mpiexec_flags = ''
+        # this will be an ordered search.
+        # that isn't great - for example, some HPC machines may use
+        # slurm to manage jobs, but another process launcher to run
+        # e.g., Cray can use aprun + slurm, or mpirun + slurm.
+        mpiexecs = ['srun', 'aprun', 'jsrun', 'mpiexec', 'mpirun']
+        mpiexecs_flags = {'srun': '--cpu-bind=cores -c1 -n',
+                          'aprun': '-n',
+                          'jsrun': '-p',
+                          'mpiexec': '-n',
+                          'mpirun': 'np',
+                          }
+
+        for candidate_mpiexec in mpiexecs:
+            x = which(candidate_mpiexec)
+            if x:
+                mpiexec = x
+                mpiexec_flags = mpiexecs_flags[candidate_mpiexec]
+                testseq = '{0} {1} 1'.format(mpiexec, mpiexec_flags)
+                testmpi = '{0} {1} NP'.format(mpiexec, mpiexec_flags)
+                tty.debug("Guessing mpiexec to be : {0}".format(mpiexec))
+                tty.debug("Guessing TESTMPIRUN to be : {0}".format(testmpi))
+                tty.debug("Guessing TESTSEQRUN to be : {0}".format(testseq))
+                # this only sets these variables if we detect a valid launcher
+                # the prior behavior of using whatever Configure found is preserved
+                args += ['TESTMPIRUN=%s' % testmpi,
+                         'TESTSEQRUN=%s' % testseq]
+                break
 
         args += self.enable_or_disable('cxx')
         args += self.enable_or_disable('fortran')
