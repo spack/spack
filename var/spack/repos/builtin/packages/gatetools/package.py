@@ -28,7 +28,6 @@ class Gatetools(PythonPackage):
     depends_on('py-itk@5.1.0:', type=('build', 'run'))
     depends_on('py-uproot3', type=('build', 'run'))
     depends_on('py-wget', type=('build', 'run'))
-    depends_on('py-python-box', type=('build', 'run'))
     depends_on('gate+rtk', type='run')
 
     # The readme.md file is not in the distribution, so fake it.
