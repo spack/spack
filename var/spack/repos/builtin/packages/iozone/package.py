@@ -14,6 +14,7 @@ class Iozone(MakefilePackage):
     homepage = "http://www.iozone.org/"
     url      = "http://www.iozone.org/src/current/iozone3_465.tar"
 
+    version('3_491', sha256='2cc4842d382e46a585d1df9ae1e255695480dcc0fc05c3b1cb32ef3493d0ec9a')
     version('3_465', sha256='2e3d72916e7d7340a7c505fc0c3d28553fcc5ff2daf41d811368e55bd4e6a293')
 
     # TODO: Add support for other architectures as necessary
@@ -22,6 +23,8 @@ class Iozone(MakefilePackage):
     build_directory = 'src/current'
 
     def edit(self, spec, prefix):
+        chmod = which('chmod')
+        chmod('-R', '755', self.stage.source_path)
         with working_dir(self.build_directory):
             filter_file(r'^CC\t= cc',
                         r'CC\t= {0}'.format(spack_cc),
