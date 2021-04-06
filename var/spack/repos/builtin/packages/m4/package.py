@@ -48,6 +48,15 @@ class M4(AutotoolsPackage, GNUMirrorPackage):
         match = re.search(r'GNU M4\)?\s+(\S+)', output)
         return match.group(1) if match else None
 
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        # Inform autom4te if it wasn't built correctly (some external
+        # installations such as homebrew). See
+        # https://www.gnu.org/software/autoconf/manual/autoconf-2.67/html_node/autom4te-Invocation.html
+        env.set('M4', self.prefix.bin.m4)
+
+    def setup_run_environment(self, env):
+        env.set('M4', self.prefix.bin.m4)
+
     def configure_args(self):
         spec = self.spec
         args = ['--enable-c++']
