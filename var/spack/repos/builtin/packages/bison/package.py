@@ -51,6 +51,8 @@ class Bison(AutotoolsPackage, GNUMirrorPackage):
     depends_on('help2man', type='build')
 
     patch('pgi.patch', when='@3.0.4')
+    # The NVIDIA compilers do not currently support some GNU builtins.
+    # Detect this case and use the fallback path.
     patch('nvhpc-3.6.patch', when='@3.6.0:3.6.99 %nvhpc')
     patch('nvhpc-3.7.patch', when='@3.7.0:3.7.99 %nvhpc')
 
