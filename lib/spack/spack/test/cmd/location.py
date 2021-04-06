@@ -52,10 +52,12 @@ def test_location_build_dir(mock_spec):
     assert location('--build-dir', spec.name).strip() == pkg.stage.source_path
 
 
+@pytest.mark.regression('22738')
 def test_location_source_dir(mock_spec):
     """Tests spack location --source-dir."""
     spec, pkg = mock_spec
     assert location('--source-dir', spec.name).strip() == pkg.stage.source_path
+    assert location(spec.name).strip() == pkg.stage.source_path
 
 
 def test_location_source_dir_missing():
