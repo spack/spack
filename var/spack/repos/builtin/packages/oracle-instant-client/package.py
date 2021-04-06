@@ -36,12 +36,12 @@ class OracleInstantClient(Package):
         main_pkg = release['components']['basic']
         url, sha256 = main_pkg
         version(oracle_version, sha256=sha256, url=url)
-        for name, atts in release['components'].items():
-            if name == 'basic':
+        for rname, atts in release['components'].items():
+            if rname == 'basic':
                 continue
             url, sha256 = atts
             condition = "@{0}".format(oracle_version)
-            resource(name=name, url=url, sha256=sha256, when=condition, placement=name)
+            resource(name=rname, url=url, sha256=sha256, when=condition, placement=rname)
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
