@@ -43,9 +43,6 @@ class OracleInstantClient(Package):
             condition = "@{0}".format(oracle_version)
             resource(name=name, url=url, sha256=sha256, when=condition, placement=name)
 
-    def patch(self):
-        pass
-
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
         mkdirp(prefix.include)
