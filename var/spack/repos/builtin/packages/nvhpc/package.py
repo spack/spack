@@ -21,6 +21,10 @@ import platform
 #  - package key must be in the form '{os}-{arch}' where 'os' is in the
 #    format returned by platform.system() and 'arch' by platform.machine()
 _versions = {
+    '21.2': {
+        'Linux-aarch64': ('fe19c0232f7c9534f8699b7432483c9cc649f1e92e7f0961d1aa7c54d83297ff', 'https://developer.download.nvidia.com/hpc-sdk/21.2/nvhpc_2021_212_Linux_aarch64_cuda_multi.tar.gz'),
+        'Linux-ppc64le': ('6b69b6e4ebec6a91b9f1627384c50adad79ebdd25dfb20a5f64cf01c3a07f11a', 'https://developer.download.nvidia.com/hpc-sdk/21.2/nvhpc_2021_212_Linux_ppc64le_cuda_multi.tar.gz'),
+        'Linux-x86_64': ('a3e3393040185ae844002fbc6c8eb4ffdfb97ce8b2ce29d796fe7e9a521fdc59', 'https://developer.download.nvidia.com/hpc-sdk/21.2/nvhpc_2021_212_Linux_x86_64_cuda_multi.tar.gz')},
     '21.1': {
         'Linux-aarch64': ('b276e7c0ff78cee837a597d9136cd1d8ded27a9d1fdae1e7d674e2a072a9a6aa', 'https://developer.download.nvidia.com/hpc-sdk/21.1/nvhpc_2021_211_Linux_aarch64_cuda_multi.tar.gz'),
         'Linux-ppc64le': ('bc236c212097bac6b7d04d627d9cc6b75bb6cd473a0b6a1bf010559ce328a2b0', 'https://developer.download.nvidia.com/hpc-sdk/21.1/nvhpc_2021_211_Linux_ppc64le_cuda_multi.tar.gz'),
@@ -106,7 +110,6 @@ class Nvhpc(Package):
         env.set('FC',  join_path(prefix.bin, 'nvfortran'))
 
         env.prepend_path('PATH',            prefix.bin)
-        env.prepend_path('CPATH',           prefix.include)
         env.prepend_path('LIBRARY_PATH',    prefix.lib)
         env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
         env.prepend_path('MANPATH',         prefix.man)
@@ -116,7 +119,21 @@ class Nvhpc(Package):
                                           'Linux_%s' % self.spec.target.family,
                                           self.version, 'comm_libs', 'mpi'))
             env.prepend_path('PATH', mpi_prefix.bin)
-            env.prepend_path('CPATH', mpi_prefix.include)
+            env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        prefix = Prefix(join_path(self.prefix,
+                                  'Linux_%s' % self.spec.target.family,
+                                  self.version, 'compilers'))
+
+        env.prepend_path('LIBRARY_PATH',    prefix.lib)
+        env.prepend_path('LD_LIBRARY_PATH', prefix.lib)
+
+        if '+mpi' in self.spec:
+            mpi_prefix = Prefix(join_path(self.prefix,
+                                          'Linux_%s' % self.spec.target.family,
+                                          self.version, 'comm_libs', 'mpi'))
+
             env.prepend_path('LD_LIBRARY_PATH', mpi_prefix.lib)
 
     def setup_dependent_package(self, module, dependent_spec):

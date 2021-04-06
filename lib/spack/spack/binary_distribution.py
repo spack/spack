@@ -37,12 +37,10 @@ import spack.util.spack_yaml as syaml
 import spack.mirror
 import spack.util.url as url_util
 import spack.util.web as web_util
+from spack.caches import misc_cache_location
 from spack.spec import Spec
 from spack.stage import Stage
 
-
-#: default root, relative to the Spack install path
-default_binary_index_root = os.path.join(spack.paths.opt_path, 'spack')
 
 _build_cache_relative_path = 'build_cache'
 _build_cache_keys_relative_path = '_pgp'
@@ -67,9 +65,8 @@ class BinaryCacheIndex(object):
     mean we should have paid the price to update the cache earlier?
     """
 
-    def __init__(self, cache_root=None):
-        self._cache_root = cache_root or default_binary_index_root
-        self._index_cache_root = os.path.join(self._cache_root, 'indices')
+    def __init__(self, cache_root):
+        self._index_cache_root = cache_root
 
         # the key associated with the serialized _local_index_cache
         self._index_contents_key = 'contents.json'
@@ -440,13 +437,15 @@ class BinaryCacheIndex(object):
         return True
 
 
+def binary_index_location():
+    """Set up a BinaryCacheIndex for remote buildcache dbs in the user's homedir."""
+    cache_root = os.path.join(misc_cache_location(), 'indices')
+    return spack.util.path.canonicalize_path(cache_root)
+
+
 def _binary_index():
     """Get the singleton store instance."""
-    cache_root = spack.config.get(
-        'config:binary_index_root', default_binary_index_root)
-    cache_root = spack.util.path.canonicalize_path(cache_root)
-
-    return BinaryCacheIndex(cache_root)
+    return BinaryCacheIndex(binary_index_location())
 
 
 #: Singleton binary_index instance
@@ -763,6 +762,10 @@ def generate_package_index(cache_prefix):
             url_util.join(cache_prefix, 'index.json.hash'),
             keep_original=False,
             extra_args={'ContentType': 'text/plain'})
+    except Exception as err:
+        msg = 'Encountered problem pushing package index to {0}: {1}'.format(
+            cache_prefix, err)
+        tty.warn(msg)
     finally:
         shutil.rmtree(tmpdir)
 
@@ -823,6 +826,10 @@ def generate_key_index(key_prefix, tmpdir=None):
                 url_util.join(key_prefix, 'index.json'),
                 keep_original=False,
                 extra_args={'ContentType': 'application/json'})
+        except Exception as err:
+            msg = 'Encountered problem pushing key index to {0}: {1}'.format(
+                key_prefix, err)
+            tty.warn(msg)
         finally:
             if remove_tmpdir:
                 shutil.rmtree(tmpdir)
@@ -1081,6 +1088,8 @@ def relocate_package(spec, allow_root):
     """
     Relocate the given package
     """
+    import spack.hooks.sbang as sbang
+
     workdir = str(spec.prefix)
     buildinfo = read_buildinfo_file(workdir)
     new_layout_root = str(spack.store.layout.root)
@@ -1119,7 +1128,6 @@ def relocate_package(spec, allow_root):
     prefix_to_prefix_bin = OrderedDict({})
 
     if old_sbang_install_path:
-        import spack.hooks.sbang as sbang
         prefix_to_prefix_text[old_sbang_install_path] = sbang.sbang_install_path()
 
     prefix_to_prefix_text[old_prefix] = new_prefix
@@ -1133,7 +1141,6 @@ def relocate_package(spec, allow_root):
     # sbang was a bash script, and it lived in the spack prefix. It is
     # now a POSIX script that lives in the install prefix. Old packages
     # will have the old sbang location in their shebangs.
-    import spack.hooks.sbang as sbang
     orig_sbang = '#!/bin/bash {0}/bin/sbang'.format(old_spack_prefix)
     new_sbang = sbang.sbang_shebang_line()
     prefix_to_prefix_text[orig_sbang] = new_sbang
@@ -1152,7 +1159,7 @@ def relocate_package(spec, allow_root):
         if not is_backup_file(text_name):
             text_names.append(text_name)
 
-# If we are not installing back to the same install tree do the relocation
+    # If we are not installing back to the same install tree do the relocation
     if old_layout_root != new_layout_root:
         files_to_relocate = [os.path.join(workdir, filename)
                              for filename in buildinfo.get('relocate_binaries')
@@ -1322,7 +1329,7 @@ def extract_tarball(spec, filename, allow_root=False, unsigned=False,
             os.remove(filename)
 
 
-def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
+def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
@@ -1360,11 +1367,26 @@ def try_direct_fetch(spec, force=False, full_hash_match=False, mirrors=None):
     return found_specs
 
 
-def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False,
-                         mirrors_to_check=None):
+def get_mirrors_for_spec(spec=None, full_hash_match=False,
+                         mirrors_to_check=None, index_only=False):
     """
     Check if concrete spec exists on mirrors and return a list
     indicating the mirrors on which it can be found
+
+    Args:
+        spec (Spec): The spec to look for in binary mirrors
+        full_hash_match (bool): If True, only includes mirrors where the spec
+            full hash matches the locally computed full hash of the ``spec``
+            argument.  If False, any mirror which has a matching DAG hash
+            is included in the results.
+        mirrors_to_check (dict): Optionally override the configured mirrors
+            with the mirrors in this dictionary.
+        index_only (bool): Do not attempt direct fetching of ``spec.yaml``
+            files from remote mirrors, only consider the indices.
+
+    Return:
+        A list of objects, each containing a ``mirror_url`` and ``spec`` key
+            indicating all mirrors where the spec can be found.
     """
     if spec is None:
         return []
@@ -1390,10 +1412,9 @@ def get_mirrors_for_spec(spec=None, force=False, full_hash_match=False,
         results = filter_candidates(candidates)
 
     # Maybe we just didn't have the latest information from the mirror, so
-    # try to fetch directly.
-    if not results:
+    # try to fetch directly, unless we are only considering the indices.
+    if not results and not index_only:
         results = try_direct_fetch(spec,
-                                   force=force,
                                    full_hash_match=full_hash_match,
                                    mirrors=mirrors_to_check)
 

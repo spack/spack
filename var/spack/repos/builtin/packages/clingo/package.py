@@ -21,7 +21,7 @@ class Clingo(CMakePackage):
     url      = "https://github.com/potassco/clingo/archive/v5.2.2.tar.gz"
     git      = 'https://github.com/potassco/clingo.git'
 
-    maintainers = ["tgamblin"]
+    maintainers = ["tgamblin", "alalazo"]
 
     version('master', branch='master', submodules=True, preferred=True)
     version('spack', commit='2a025667090d71b2c9dce60fe924feb6bde8f667', submodules=True)
@@ -30,7 +30,7 @@ class Clingo(CMakePackage):
     version('5.3.0', sha256='b0d406d2809352caef7fccf69e8864d55e81ee84f4888b0744894977f703f976')
     version('5.2.2', sha256='da1ef8142e75c5a6f23c9403b90d4f40b9f862969ba71e2aaee9a257d058bfcf')
 
-    variant("docs", default=False, description="build documentation with Doxyegen")
+    variant("docs", default=False, description="build documentation with Doxygen")
     variant("python", default=True, description="build with python bindings")
 
     depends_on('doxygen', type="build", when="+docs")
@@ -56,9 +56,16 @@ class Clingo(CMakePackage):
         """Return standard CMake defines to ensure that the
         current spec is the one found by CMake find_package(Python, ...)
         """
+        python_spec = self.spec['python']
+        include_dir = python_spec.package.get_python_inc()
         return [
-            '-DPython_EXECUTABLE={0}'.format(str(self.spec['python'].command))
+            self.define('Python_EXECUTABLE', str(python_spec.command)),
+            self.define('Python_INCLUDE_DIR', include_dir)
         ]
+
+    @property
+    def cmake_py_shared(self):
+        return self.define('CLINGO_BUILD_PY_SHARED', 'ON')
 
     def cmake_args(self):
         try:
@@ -69,10 +76,10 @@ class Clingo(CMakePackage):
         args = [
             '-DCLINGO_REQUIRE_PYTHON=ON',
             '-DCLINGO_BUILD_WITH_PYTHON=ON',
-            '-DCLINGO_BUILD_PY_SHARED=ON',
             '-DPYCLINGO_USER_INSTALL=OFF',
             '-DPYCLINGO_USE_INSTALL_PREFIX=ON',
-            '-DCLINGO_BUILD_WITH_LUA=OFF'
+            '-DCLINGO_BUILD_WITH_LUA=OFF',
+            self.cmake_py_shared
         ]
         if self.spec['cmake'].satisfies('@3.16.0:'):
             args += self.cmake_python_hints
