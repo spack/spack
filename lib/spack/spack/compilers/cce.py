@@ -66,6 +66,20 @@ class Cce(Compiler):
         return "-h std=c++11"
 
     @property
+    def cxx14_flag(self):
+        if self.is_clang_based:
+            return '-std=c++14'
+        raise UnsupportedCompilerFlag(self,
+                                      '-std=c++14')
+
+    @property
+    def cxx17_flag(self):
+        if self.is_clang_based:
+            return '-std=c++17'
+        raise UnsupportedCompilerFlag(self,
+                                      '-std=c++17')
+
+    @property
     def c99_flag(self):
         if self.is_clang_based:
             return '-std=c99'
