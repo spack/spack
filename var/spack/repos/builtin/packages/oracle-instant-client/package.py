@@ -33,14 +33,14 @@ class OracleInstantClient(Package):
         # define the version using the mscore tarball
         oracle_version = release['version']
         main_pkg = release['components']['basic']
-        url, sha256 = *main_pkg
+        url, sha256 = main_pkg
         version(oracle_version, sha256=sha256, url=url)
         # define resources for the other tarballs
         for name, atts in release['components'].items():
             # skip the tarball used for the version(...) call
             if name == main_pkg:
                 continue
-            url, sha256 = *attrs
+            url, sha256 = attrs
             condition = "@{0}".format(oracle_version)
             resource(name=name, url=url, sha256=sha256, when=condition, placement=name)
 
