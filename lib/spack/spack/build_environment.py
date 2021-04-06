@@ -597,7 +597,6 @@ def set_module_variables_for_package(pkg):
     # like spack.pkg.original.libelf.Libelf, then set the module variables
     # for both classes so the parent class can still use them if it gets
     # called. parent_class_modules includes pkg.module.
-
     modules = parent_class_modules(pkg.__class__)
     for mod in modules:
         _set_variables_for_single_module(pkg, mod)
