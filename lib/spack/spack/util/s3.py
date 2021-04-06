@@ -46,6 +46,14 @@ def create_s3_session(url):
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    client = session.client('s3', **s3_client_args)
+    for auth_name in session.available_profiles:
+        try:
+            client = Session(profile_name=auth_name).client('s3', **s3_client_args)
+            client.list_buckets()
+            break
+        except ClientError:
+            continue
+    else:
+        client = Session().client('s3', **s3_client_args)
     client.ClientError = ClientError
     return client
