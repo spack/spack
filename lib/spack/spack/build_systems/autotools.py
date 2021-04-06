@@ -8,6 +8,8 @@ import os
 import os.path
 import stat
 import re
+import six  # used for string types checking
+from copy import deepcopy
 from subprocess import PIPE
 from subprocess import check_call
 from typing import List  # novm
@@ -390,7 +392,6 @@ class AutotoolsPackage(PackageBase):
         # a mapping of VAR to spack names (CFLAGS->cflags)
         flag_var_names = AutotoolsPackage._get_spack_autotool_flag_map()
 
-        tty.msg("Testing configure flags for {0}".format(spec.name))
         # split the args into VAR=VAL and all others
         # we only consider names for VAR in `flag_var_names`
         flag_args, reg_args = self._split_configure_args(configure_args,
@@ -433,6 +434,75 @@ class AutotoolsPackage(PackageBase):
         # optional: Dedupe flags... be careful though!
         return flag_map, reg_args
 
+    def _enforce_user_flags_when_package_does_not_declare(
+            self,
+            spec,
+            flag_map,
+            add_if_var_undefined=True):
+        '''Handle the case the user has defined some flag variables,
+        but the package does not set the similar AutoTools ENV variable.
+
+        Args:
+            spec (Spec): The spec being evaluated
+            flag_map (dict): Modified in-place.
+                Dictionary of VAR=VAL of flag variables and their values
+            add_if_var_undefined (bool): Whether to add flag variables if
+                the package has not defined them.
+        Discussion!
+         The problem is that if a package does not set VAR at all,
+         then a user defined flag will never get added
+
+         You don't want to do this detection in either the build_flags
+         or `configure_args` because it breaks detecting bad behavior if
+         the package defines flags in both places
+
+         The correct place to do this is *after* you have a uniform set of
+         flags the package has declared.
+
+         This is a bit involved... Some flags (fortran) spack expects
+         a common set of flags... this is actually bug imo
+         To be consistent (if spack expects a uniform fortran flags)
+         then we need to make sure that FCFLAGS / F90FLAGS / F77FLAGS are
+         set in a consistent way (or not set - but in some consistent fashion)
+
+         For example: pnetcdf sets FCFLAGS and FFLAGS, but not F90/F77 flags
+         if fflags=-g , the package is adding -fpic
+         this isn't something we can trivially resolve
+
+        ==> Setting FFLAGS=-g -fPIC (from configure_args)
+        ==> Setting FCFLAGS=-g -fPIC (from configure_args)
+        ==> Adding flag VAR that package does not:  adding F77FLAGS=-g to configure args
+        ==> Adding flag VAR that package does not:  adding F90FLAGS=-g to configure args
+
+         These modifications *are* enforcing user flags
+         IMO, a fix for SPACK would be to require packages to declare the
+         flag variables they respect. Or have spack impose a policy on all
+         packages.
+        '''
+        # a mapping of VAR to spack names (CFLAGS->cflags)
+        var_to_spack_map = AutotoolsPackage._get_spack_autotool_flag_map()
+
+        # fix the package not declaring the variable but the user defining one
+        for env_flag_var_name in var_to_spack_map:
+            # if the existing AutoTools var_map has the name (key)
+            # then do nothing
+            if env_flag_var_name in flag_map:
+                continue
+            # otherwise, add this VAR with the user specified flags
+
+            # collect the spack flags from the spec
+            spack_flag_name = var_to_spack_map[env_flag_var_name]
+            spack_flags = spec.compiler_flags[spack_flag_name]
+            # should be a list, but be safe
+            if isinstance(spack_flags, six.string_types):
+                spack_flags = [spack_flags]
+            spack_flags = ' '.join(spack_flags)
+            tty.debug("{0} Adding {1}={2} to configure args"
+                      "".format("enforce_user_flags: ",
+                                env_flag_var_name,
+                                spack_flags))
+            flag_map[env_flag_var_name] = spack_flags
+
     def _enforce_user_flags(self,
                             spec,
                             var_map,
@@ -459,16 +529,17 @@ class AutotoolsPackage(PackageBase):
             var_map (dict): modified `var_map` with user provided flags
                 added if omitted
         '''
-        import copy
-
-        pre = '{s.name}@{s.version} [{src}]:'.format(s=spec, src=arg_src)
-        new_var_map = copy.deepcopy(var_map)
+        new_var_map = deepcopy(var_map)
 
         # be careful about reordering flags
         for var_name, var_value in var_map.items():
 
+            # collect the spack flags from the spec
             spack_flag_name = var_to_spack_map[var_name]
             spack_flags = spec.compiler_flags[spack_flag_name]
+            # should be a list, but be safe
+            if isinstance(spack_flags, six.string_types):
+                spack_flags = [spack_flags]
             user_flags = var_value.split()
 
             spack_set = set(spack_flags)
@@ -477,10 +548,11 @@ class AutotoolsPackage(PackageBase):
             if spack_set.issubset(user_set):
                 continue
 
-            # the spack provided flags are not in the package's provided
+            # User provided flags are not in the package's provided
             # flags... warn the user
-            tty.warn("{0} set {1} but did not include user flags ({2})"
-                     "".format(pre, var_name, spack_flag_name))
+            tty.warn("{0} Package set {1} but did not include user flags ({2})"
+                     "".format("enforce_user_flags: ",
+                               var_name, spack_flag_name))
             tty.warn("Spack    Flags: {0}".format(' '.join(spack_flags)))
             tty.warn("Packgage Flags: {0}".format(' '.join(user_flags)))
 
@@ -489,7 +561,6 @@ class AutotoolsPackage(PackageBase):
             # contradictory ones are present... this is messy (and the
             # package) should fix this stuff
             new_var_map[var_name] = ' '.join(spack_flags + user_flags)
-
         # return the new map with spack flags added
         return new_var_map
 
@@ -510,24 +581,22 @@ class AutotoolsPackage(PackageBase):
             env_args (list): any args that startwith `VAR=` format
             reg_args (list): all other args
         '''
-        tty.msg("Splitting configure args in ENV and non-env")
         env_args = []
         reg_args = []
-        tty.msg("input_args: {0}".format(' '.join(configure_args)))
 
         pre = tuple(['{0}='.format(e) for e in env_var_names])
         env_args = [arg for arg in configure_args if arg.startswith(pre)]
         reg_args = [arg for arg in configure_args if not arg.startswith(pre)]
 
-        tty.debug("sizes {0} (env) + {1} (reg) = {2} , orig size: {3}"
-                  "".format(len(env_args), len(reg_args),
-                            len(env_args) + len(reg_args),
-                            len(configure_args)))
+        # tty.debug("sizes {0} (env) + {1} (reg) = {2} , orig size: {3}"
+        #           "".format(len(env_args), len(reg_args),
+        #                     len(env_args) + len(reg_args),
+        #                     len(configure_args)))
 
-        tty.debug("env_args [{0}]: {1}".format(len(env_args),
-                                               os.linesep.join(env_args)))
-        tty.debug("reg_args [{0}]: {1}".format(len(reg_args),
-                                               os.linesep.join(reg_args)))
+        # tty.debug("env_args [{0}]: {1}".format(len(env_args),
+        #                                        os.linesep.join(env_args)))
+        # tty.debug("reg_args [{0}]: {1}".format(len(reg_args),
+        #                                        os.linesep.join(reg_args)))
         return env_args, reg_args
 
     @staticmethod
@@ -603,6 +672,90 @@ class AutotoolsPackage(PackageBase):
 
         return unified_flags
 
+    def _configure_apply_build_type(self,
+                                    spec,
+                                    flag_map,
+                                    add_if_var_undefined=True):
+        '''Support a CMake-like build_tyle
+        Caveats: an autotools package may define **NO** flag variables
+        E.g., CFLAGS and friends.  In that case, we will not have these
+        variables defined i the `flag_map`.
+
+        This will result in the flags never getting applied... which is
+        exactly what we want to avoid - we *want* consistent application of
+        said flags.
+
+        The parameter: `add_if_var_undefined` defines the policy for adding
+        flag variables if the package does not. A reasonable question is posed
+        in `_enforce_user_flags_when_package_does_not_declare` about setting
+        user provided flags.
+
+        I feel we *should* set these variables if they do not. That makes it
+        explicit. An alternative method would be modifying the spack wrappers
+        to enforce a policy of setting - but that is not clear when evaluating
+        e.g., config.log or even the `./configure` as displayed.
+
+        Args:
+            spec (Spec): the spec being evaluated
+            flag_map (dict) [IN/OUT]: Dictionary of VAR=VAL.
+                Will be modified in place to add build_type flags
+                and potentially add flag varaibles
+            add_if_var_undefined (bool): Whether to add flag variables if
+                the package has not defined them.
+
+        Returns:
+            Nothing
+        '''
+        # Mimic cmake
+        # 'Release', 'RelWithDebug', 'Debug', 'MinSizeRel'
+        #
+        # we could expose variants that are defaults to each...
+        # but that bloats up the variant list. E.g.,
+        # build_type_release_flags with default='-O3'
+        #
+        # You would have to define all 4 to enable full coverage
+        # These seem like well defined basic flags - so maybe we can get
+        # away with defaults... Windows compilers or odd ball machines
+        # I am not familiar with is what bothers me.
+        build_type_flags_map = {'release'      : '-O3',
+                                'relwithdebug' : '-O3 -g',
+                                'debug'        : '-g',
+                                'minsizerel'   : '-Os',
+                                'undefined'    : '',
+                                }
+        # get the build type as lower case
+        build_type = spec.variants['build_type'].value.lower()
+        # create a list from the string
+        build_type_flags = build_type_flags_map[build_type].split()
+
+        flag_variables = ['CFLAGS',
+                          'CXXFLAGS',
+                          'FFLAGS',
+                          'FCFLAGS',
+                          'F90FLAGS',
+                          'F77FLAGS']
+
+        # apply these flags if the variable is defined (see
+        # `_enforce_user_flags_when_package_does_not_declare`
+        # for a discussion on whether to set the flags if the variable
+        # is not declared.
+        for flag_env_var_name in flag_variables:
+            # add the variable and flags if it doens't exist.
+            # subjust to `add_if_var_undefined`
+            if flag_env_var_name not in flag_map and add_if_var_undefined:
+                flag_map[flag_env_var_name] = ' '.join(build_type_flags)
+
+            # the case the flag var is set
+            elif flag_env_var_name in flag_map:
+                existing_flags = flag_map[flag_env_var_name]
+                existing_flags_set = set(existing_flags.split())
+                new_flags = set(build_type_flags)
+                # prepend if they don't exist already
+                for new_flag in new_flags:
+                    if new_flag not in existing_flags_set:
+                        existing_flags = new_flag + ' ' + existing_flags
+                        flag_map[flag_env_var_name] = existing_flags
+
     def configure(self, spec, prefix):
         """Runs configure with the arguments specified in
         :py:meth:`~.AutotoolsPackage.configure_args`
@@ -610,7 +763,7 @@ class AutotoolsPackage(PackageBase):
         """
         options = ['--prefix={0}'.format(prefix)]
 
-        tty.debug("Testing configure_flag_args for user provided flags")
+        # tty.debug("Testing configure_flag_args for user provided flags")
         build_env_flag_args = getattr(self, 'configure_flag_args', [])
         # given some args to configure, test them for bad flag behavior
         # return a split list of args for configure:
@@ -621,7 +774,7 @@ class AutotoolsPackage(PackageBase):
                                                          build_env_flag_args,
                                                          arg_src)
 
-        tty.debug("Testing configure_args for user provided flags")
+        # tty.debug("Testing configure_args for user provided flags")
         # gather the package defined configured args
         pkg_configure_args = self.configure_args()
         # Test the package configure_args for bad flag behavior
@@ -640,7 +793,18 @@ class AutotoolsPackage(PackageBase):
             build_var_flag_map=be_fargs,
             configure_var_flag_map=pkg_fargs)
 
+        # Now that we know all flag variables set (and their values)
+        # handle the case the user declared a some flags (cflags=foo),
+        # but the package never set CFLAGS
+        # this modifies the `unified_flags` dict in place
+        self._enforce_user_flags_when_package_does_not_declare(spec,
+                                                               unified_flags)
+
         # this is where we can apply uniform flags (such as build_system)
+        # DISABLED initially - included to demostrate why the prior effort
+        # make this clean to implement
+        #
+        # self._configure_apply_build_type(spec, unified_flags)
 
         # we could apply some deduplication (but that is tricky)
         # for now, flatten the dict of VAR : VAL to a list of [ "VAR=VAL" ]
