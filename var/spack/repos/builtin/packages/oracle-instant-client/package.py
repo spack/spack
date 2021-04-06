@@ -40,7 +40,7 @@ class OracleInstantClient(Package):
             # skip the tarball used for the version(...) call
             if name == main_pkg:
                 continue
-            url, sha256 = attrs
+            url, sha256 = atts
             condition = "@{0}".format(oracle_version)
             resource(name=name, url=url, sha256=sha256, when=condition, placement=name)
 
