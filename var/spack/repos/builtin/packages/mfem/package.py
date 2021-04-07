@@ -251,17 +251,21 @@ class Mfem(Package, ROCmPackage):
     depends_on('occa@1.0.8:', when='@:4.1.99+occa')
     depends_on('occa@1.1.0:', when='@4.2.0:+occa')
     depends_on('occa+cuda', when='+occa+cuda')
+    # TODO: propagate '+rocm' variant to occa when it is supported
 
     depends_on('raja@0.10.0:', when='@4.0.1:+raja')
     depends_on('raja@0.7.0:0.9.0', when='@4.0.0+raja')
     depends_on('raja+cuda', when='+raja+cuda')
+    depends_on('raja+rocm', when='+raja+rocm')
 
     depends_on('libceed@0.6:', when='@:4.1.99+libceed')
     depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
+    depends_on('libceed+hip', when='+libceed+rocm')
 
     depends_on('umpire@2.0.0:', when='+umpire')
     depends_on('umpire+cuda', when='+umpire+cuda')
+    depends_on('umpire+rocm', when='+umpire+rocm')
 
     # AmgX: propagate the cuda_arch and mpi settings:
     for sm_ in CudaPackage.cuda_arch_values:
