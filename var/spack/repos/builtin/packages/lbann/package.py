@@ -229,15 +229,6 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             args.append(
                 '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             )
-        # Use a high performance linker
-        if self.spec.satisfies('%clang'):
-            args.extend([
-                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld',
-                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld'])
-        elif self.spec.satisfies('%gcc'):
-            args.extend([
-                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold',
-                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold'])
 
         return args
 
