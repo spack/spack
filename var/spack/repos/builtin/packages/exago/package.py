@@ -18,6 +18,7 @@ class Exago(CMakePackage, CudaPackage):
     version('0.99.2', tag='v0.99.2')
     version('0.99.1', tag='v0.99.1')
     version('master', branch='master')
+    version('develop', branch='develop')
 
     # Progrmming model options
     variant('mpi', default=True, description='Enable/Disable MPI')
