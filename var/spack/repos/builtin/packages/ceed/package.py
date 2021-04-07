@@ -108,6 +108,7 @@ class Ceed(BundlePackage):
     # PETSc
     # ceed 4.0
     depends_on('petsc@3.15.0:3.15.99', when='@4.0.0:4.99.99+petsc')
+    depends_on('petsc+cuda', when='@4.0.0+petsc+cuda')
     depends_on('petsc@3.15.0:3.15.99+hip', when='@4.0.0:4.99.99+petsc+hip')
     depends_on('petsc@3.15.0:3.15.99~hdf5~superlu-dist',
                when='@4.0.0+petsc+quickbuild')
