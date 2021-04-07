@@ -1655,8 +1655,8 @@ class Spec(object):
                 name_tuple = ('name', name)
                 hash_tuple = (hash.attr, dspec.spec._cached_hash(hash))
                 type_tuple = ('type', sorted(str(s) for s in dspec.deptypes))
-                deps_list.append(syaml.syaml_dict([name_tuple, 
-                                                   hash_tuple, 
+                deps_list.append(syaml.syaml_dict([name_tuple,
+                                                   hash_tuple,
                                                    type_tuple]))
             d['dependencies'] = deps_list
 
@@ -1665,7 +1665,7 @@ class Spec(object):
             d['build_spec'] = syaml.syaml_dict([
                 ('name', self.build_spec.name),
                 (hash.attr, self.build_spec._cached_hash(hash))
-                ])
+            ])
         return d
 
     def to_dict(self, hash=ht.dag_hash):
@@ -1734,34 +1734,29 @@ class Spec(object):
 
         """
         node_list = []
+        # TODO: Use a set 'visited' for the hashes we've seen.
         hash_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
             spec_hash = s.node_dict_with_hashes(hash)[hash.attr]
             if spec_hash not in hash_list:
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_list.append(spec_hash)
-            if s._build_spec:
-                bspec_hash = s.build_spec.node_dict_with_hashes(hash)[hash.attr]
-                node_list.append(s.build_spec.node_dict_with_hashes(hash))
-                hash_list.append(bspec_hash)
-                bdeps = s.build_spec.dependencies_dict(deptype=hash.deptype)
-                if bdeps:
-                    for dep in bdeps.values():
-                        bdep_hash = dep.spec.node_dict_with_hashes(hash)[hash.attr]
-                        if bdep_hash not in hash_list:
-                            node_list.append(dep.spec.node_dict_with_hashes(hash))
-                            hash_list.append(bdep_hash)
+            if s.build_spec is not s:
+                build_spec_list = s.build_spec.to_dict()['spec']
+                for node in build_spec_list:
+                    node_hash = node[hash.attr]
+                    if node_hash not in hash_list:
+                        node_list.append(node)
+                        hash_list.append(node_hash)
         d = syaml.syaml_dict([('spec', node_list)])
-        #print(d)
         return d
-        #return syaml.syaml_dict([('spec', node_list)])
 
     def node_dict_with_hashes(self, hash=ht.dag_hash):
         """ Returns a node_dict of this spec with the dag hash added.  If this
         spec is concrete, the full hash is added as well.  If 'build' is in
         the hash_type, the build hash is also added. """
         node = self.to_node_dict(hash)
-        node[hash.attr] = self.dag_hash()
+        node['_hash'] = self.dag_hash()
 
         # full_hash and build_hash are lazily computed -- but if we write
         # a spec out, we want them to be included. This is effectively
@@ -1783,38 +1778,12 @@ class Spec(object):
             write_build_hash = 'build' in hash.deptype and (
                 self._hashes_final and self._build_hash or  # cached and final
                 not self._hashes_final)                     # lazily compute
-
             if write_full_hash:
                 node['_full_hash'] = self.full_hash()
             if write_build_hash:
                 node['_build_hash'] = self.build_hash()
 
         return node
-
-    def to_record_dict(self):
-        """Return a "flat" dictionary with name and hash as top-level keys.
-
-        This is similar to ``to_node_dict()``, but the name and the hash
-        are "flattened" into the dictionary for easiler parsing by tools
-        like ``jq``.  Instead of being keyed by name or hash, the
-        dictionary "name" and "hash" fields, e.g.::
-
-            {
-              "name": "openssl"
-              "hash": "3ws7bsihwbn44ghf6ep4s6h4y2o6eznv"
-              "version": "3.28.0",
-              "arch": {
-              ...
-            }
-
-        But is otherwise the same as ``to_node_dict()``.
-
-        """
-        dictionary = syaml.syaml_dict()
-        dictionary["name"] = self.name
-        dictionary["hash"] = self.dag_hash()
-        dictionary.update(self.to_node_dict()[self.name])
-        return dictionary
 
     def to_yaml(self, stream=None, hash=ht.dag_hash):
         return syaml.dump(
@@ -1825,21 +1794,21 @@ class Spec(object):
 
     @staticmethod
     def from_node_dict(node):
-        print(node)
+        spec = Spec()
         if 'name' in node.keys():
             # New format
             name = node['name']
+            for hash_type in ht.SpecHashDescriptor.hash_types:
+                setattr(spec, hash_type, node.get(hash_type, None))
         else:
-            node_name = next(iter(node))
-            name = node_name
+            # Old format
+            name = next(iter(node))
             node = node[name]
-        print(node)
-        spec = Spec()
+            setattr(spec, ht.dag_hash.attr, node.get('hash', None))
+            setattr(spec, ht.build_hash.attr, node.get('build_hash', None))
+            setattr(spec, ht.full_hash.attr, node.get('full_hash', None))
         spec.name = name
         spec.namespace = node.get('namespace', None)
-        spec._hash = node.get('hash', None)
-        spec._build_hash = node.get('build_hash', None)
-        spec._full_hash = node.get('full_hash', None)
 
         if 'version' in node or 'versions' in node:
             spec.versions = vn.VersionList.from_dict(node)
@@ -1866,9 +1835,6 @@ class Spec(object):
                 )
             for name in FlagMap.valid_compiler_flags():
                 spec.compiler_flags[name] = []
-
-        elif 'build_spec' in node:
-            pass
 
         spec.external_path = None
         spec.external_modules = None
@@ -1910,23 +1876,39 @@ class Spec(object):
         return spec
 
     @staticmethod
+    def build_spec_from_node_dict(node, hash_type='_hash'):
+        if 'build_spec' not in node.keys():
+            return
+        build_spec_dict = node['build_spec']
+        return build_spec_dict['name'], build_spec_dict[hash_type], hash_type
+
+    @staticmethod
     def dependencies_from_node_dict(node):
-        name = next(iter(node))
-        #name = node['name']
-        node = node[name]
+        if 'name' in node.keys():
+            # New format
+            name = node['name']
+        else:
+            name = next(iter(node))
+            node = node[name]
         if 'dependencies' not in node:
             return
         for t in Spec.read_yaml_dep_specs(node['dependencies']):
             yield t
 
     @staticmethod
-    def read_yaml_dep_specs(dependency_dict):
+    def read_yaml_dep_specs(deps, hash_type='_hash'):
         """Read the DependencySpec portion of a YAML-formatted Spec.
 
         This needs to be backward-compatible with older spack spec
         formats so that reindex will work on old specs/databases.
         """
-        for dep_name, elt in dependency_dict.items():
+        dep_iter = deps.items() if isinstance(deps, dict) else deps
+        for dep in dep_iter:
+            if isinstance(dep, tuple):
+                dep_name, elt = dep
+            else:
+                elt = dep
+                dep_name = dep['name']
             if isinstance(elt, six.string_types):
                 # original format, elt is just the dependency hash.
                 dag_hash, deptypes = elt, ['build', 'link']
@@ -1935,12 +1917,23 @@ class Spec(object):
                 dag_hash, deptypes = elt
             elif isinstance(elt, dict):
                 # new format: elements of dependency spec are keyed.
-                dag_hash, deptypes = elt['hash'], elt['type']
+                if 'hash' in elt:
+                    # old format
+                    dag_hash, deptypes = elt['hash'], elt['type']
+                else:
+                    for key in ('_hash', '_build_hash', '_full_hash'):
+                        if key in elt:
+                            dag_hash, deptypes = elt[key], elt['type']
+                            hash_type = key
+                            break
+                    else:
+                        raise spack.error.SpecError(
+                            "Couldn't parse dependency spec.")
             else:
                 raise spack.error.SpecError(
                     "Couldn't parse dependency types in spec.")
 
-            yield dep_name, dag_hash, list(deptypes)
+            yield dep_name, dag_hash, list(deptypes), hash_type
 
     @staticmethod
     def from_literal(spec_dict, normal=True):
@@ -2104,31 +2097,30 @@ class Spec(object):
         nodes = data['spec']
 
         # Read nodes out of list.  Root spec is the first element;
-        # dependencies are the following elements.
-        # Naming the name breaks this.
-        # I'm not sure how/why this worked in the first place...
+        # dependencies and build specs are the following elements.
         dep_list = [Spec.from_node_dict(node) for node in nodes]
         if not dep_list:
             raise spack.error.SpecError("YAML spec contains no nodes.")
-        deps = dict((spec.name, spec) for spec in dep_list)
         spec = dep_list[0]
 
-        for node in nodes:
-            # get dependency dict from the node.
-            name_node = next(iter(node))
-            if isinstance(name_node, str):
-                # Old Format
-                name = name_node
-                if 'dependencies' not in node[name]:
-                    continue
-                yaml_deps = node[name]['dependencies']
-            else:
-                name = node['name']
-                if 'dependencies' not in node:
-                    continue
-                yaml_deps = node['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
-                deps[name]._add_dependency(deps[dname], dtypes)
+        for node, node_spec in zip(nodes, dep_list):
+            # get dependencies from the node.
+            for _, dhash, dtypes, hash_type in Spec.dependencies_from_node_dict(node):
+                for pos, dep in enumerate(nodes):
+                    if dhash == dep[hash_type]:
+                        # Position indexing is necessary because you can't trust
+                        # Spec object hashes at this stage
+                        node_spec._add_dependency(dep_list[pos], dtypes)
+
+            if 'build_spec' in node.keys():
+                # Need to look up build_spec by hash, then run from_dict on it,
+                # then point to it.
+                # Need to create a copy of the list of nodes with the build spec in
+                # front.
+                _, bhash, hash_type = Spec.build_spec_from_node_dict(node)
+                for pos, bspec in enumerate(nodes):
+                    if bhash == bspec[hash_type]:
+                        node_spec.build_spec(dep_list[pos])
 
         return spec
 
@@ -3201,7 +3193,7 @@ class Spec(object):
             return spec_like
         return Spec(spec_like)
 
-    def satisfies(self, other, deps=True, strict=False, strict_deps=False):
+    def satisfies(self, other, deps=True, strict=False, strict_deps=False, debug=False):
         """Determine if this spec satisfies all constraints of another.
 
         There are two senses for satisfies:
@@ -3214,6 +3206,12 @@ class Spec(object):
           * `strict`: strict means that we *must* meet all the
             constraints specified on other.
         """
+        if debug:
+            print('self is concrete?:', self.concrete)
+            print('self dag hash:', self.dag_hash())
+            print('other is concrete?:', other.concrete)
+            print('other dag hash:', other.dag_hash())
+
         other = self._autospec(other)
 
         # The only way to satisfy a concrete spec is to match its hash exactly.

@@ -188,9 +188,9 @@ def test_default_rpaths_create_install_default_layout(mirror_dir):
     install_cmd('--no-cache', cspec.name)
 
     # Create a buildache
-    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-au', '-d', mirror_dir, cspec.name, fail_on_error=False)
     # Test force overwrite create buildcache (-f option)
-    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name)
+    buildcache_cmd('create', '-auf', '-d', mirror_dir, cspec.name, fail_on_error=False)
 
     # Create mirror index
     mirror_url = 'file://{0}'.format(mirror_dir)

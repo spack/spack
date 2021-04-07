@@ -525,8 +525,8 @@ class TestSpecSematics(object):
         # Spack's hashing algorithm.  This just reverses s2's hash.
         s2._hash = s1.dag_hash()[-1::-1]
 
-        assert not s1.satisfies(s2)
-        assert not s2.satisfies(s1)
+        assert not s1.satisfies(s2, debug=True)
+        assert not s2.satisfies(s1, debug=True)
 
     # ========================================================================
     # Indexing specs
@@ -1062,7 +1062,8 @@ class TestSpecSematics(object):
         out = spec.splice(dep, transitive)
         out_dict = out.to_dict()
         assert 'spec' in out_dict.keys()
-        print(out_dict['spec'])
+        # TODO: These are purposefully written out longhand because the schema
+        # is still changing. Clean up when finalized.
         t_exists = False
         h_exists = False
         z_exists = False
