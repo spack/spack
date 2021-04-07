@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyWincertstore(PythonPackage):
-    """wincertstore provides an interface to access Windows’ CA and CRL certificates.
+    """wincertstore provides an interface to access Windows' CA and CRL certificates.
     It uses ctypes and Windows's sytem cert store API through crypt32.dll."""
 
     homepage = "https://bitbucket.org/tiran/wincertstore"
