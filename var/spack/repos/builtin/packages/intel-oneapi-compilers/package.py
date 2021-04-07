@@ -4,8 +4,8 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import glob
-import subprocess
 from os import path
+import subprocess
 from sys import platform
 
 from spack import *
@@ -36,19 +36,16 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     def component_dir(self):
         return 'compiler'
 
-    def _join_prefix(self, p):
-        return path.join(self.prefix, 'compiler', 'latest', 'linux', p)
-
     def _ld_library_path(self):
         dirs = ['lib',
-                path.join('lib', 'x64'),
-                path.join('lib', 'emu'),
-                path.join('lib', 'oclfpga', 'host', 'linux64', 'lib'),
-                path.join('lib', 'oclfpga', 'linux64', 'lib'),
-                path.join('compiler', 'lib', 'intel64_lin'),
-                path.join('compiler', 'lib')]
+                join_path('lib', 'x64'),
+                join_path('lib', 'emu'),
+                join_path('lib', 'oclfpga', 'host', 'linux64', 'lib'),
+                join_path('lib', 'oclfpga', 'linux64', 'lib'),
+                join_path('compiler', 'lib', 'intel64_lin'),
+                join_path('compiler', 'lib')]
         for dir in dirs:
-            yield self._join_prefix(dir)
+            yield join_path(self.component_path, 'linux', dir)
 
     def install(self, spec, prefix):
         # install cpp
@@ -60,22 +57,23 @@ class IntelOneapiCompilers(IntelOneApiPackage):
         super(IntelOneapiCompilers, self).install(
             spec,
             prefix,
-            installer_path=glob.glob(path.join('fortran-installer', '*'))[0])
+            installer_path=glob.glob(join_path('fortran-installer', '*'))[0])
 
         # Some installers have a bug and do not return an error code when failing
-        if not path.isfile(path.join(prefix, 'compiler', 'latest', 'linux',
+        if not path.isfile(join_path(self.component_path, 'linux',
                                      'bin', 'intel64', 'ifort')):
             raise RuntimeError('install failed')
 
         # set rpath so 'spack compiler add' can check version strings
         # without setting LD_LIBRARY_PATH
         rpath = ':'.join(self._ld_library_path())
-        patch_dirs = [path.join('compiler', 'lib', 'intel64_lin'),
-                      path.join('compiler', 'lib', 'intel64'),
+        patch_dirs = [join_path('compiler', 'lib', 'intel64_lin'),
+                      join_path('compiler', 'lib', 'intel64'),
                       'bin']
         for pd in patch_dirs:
-            patchables = glob.glob(self._join_prefix(path.join(pd, '*')))
-            patchables.append(self._join_prefix(path.join('lib', 'icx-lto.so')))
+            patchables = glob.glob(join_path(self.component_path, 'linux', pd, '*'))
+            patchables.append(join_path(self.component_path,
+                                        'linux', 'lib', 'icx-lto.so'))
             for file in patchables:
                 # Try to patch all files, patchelf will do nothing if
                 # file should not be patched
