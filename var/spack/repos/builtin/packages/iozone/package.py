@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
-
+import os
 
 class Iozone(MakefilePackage):
     """IOzone is a filesystem benchmark tool. The benchmark generates and
@@ -23,8 +23,11 @@ class Iozone(MakefilePackage):
     build_directory = 'src/current'
 
     def edit(self, spec, prefix):
-        chmod = which('chmod')
-        chmod('-R', '755', self.stage.source_path)
+        for dirpath, dirnames, filenames in os.walk(self.stage.source_path):
+            for filename in filenames:
+                path = os.path.join(dirpath, filename)
+                os.chmod(path, 0o644)
+
         with working_dir(self.build_directory):
             filter_file(r'^CC\t= cc',
                         r'CC\t= {0}'.format(spack_cc),
