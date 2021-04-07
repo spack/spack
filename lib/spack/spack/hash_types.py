@@ -18,7 +18,7 @@ class SpecHashDescriptor(object):
 
     We currently use different hashes for different use cases.
     """
-    hash_types = [str]
+    hash_types = []
 
     def __init__(self, deptype, package_hash, attr):
         self.deptype = dp.canonical_deptype(deptype)
