@@ -23,6 +23,7 @@ class PyUproot3(PythonPackage):
 
     depends_on('python@2.7:2.9,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
+    depends_on('py-pytest-runner', type='build')
     depends_on('py-numpy@1.13.1:', type=('build', 'run'))
     depends_on('py-awkward0', type=('build', 'run'))
     depends_on('py-uproot3-methods', type=('build', 'run'))
