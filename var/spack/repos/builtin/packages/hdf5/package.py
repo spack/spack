@@ -6,6 +6,8 @@
 import shutil
 import sys
 
+from spack.util.environment import is_system_path
+
 
 class Hdf5(AutotoolsPackage):
     """HDF5 is a data model, library, and file format for storing and managing
@@ -249,8 +251,14 @@ class Hdf5(AutotoolsPackage):
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
         extra_args = ['--enable-unsupported',
-                      '--enable-symbols=yes',
-                      '--with-zlib=%s' % self.spec['zlib'].prefix]
+                      '--enable-symbols=yes']
+
+        # Do not specify the prefix of zlib if it is in a system directory
+        # (see https://github.com/spack/spack/pull/21900).
+        zlib_prefix = self.spec['zlib'].prefix
+        extra_args.append('--with-zlib={0}'.format(
+            'yes' if is_system_path(zlib_prefix) else zlib_prefix))
+
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
         extra_args += self.enable_or_disable('hl')
