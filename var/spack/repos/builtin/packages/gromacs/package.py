@@ -237,7 +237,10 @@ class Gromacs(CMakePackage):
             options.append('-DGMX_SIMD=AVX_128_FMA')
         elif 'vsx' in target:
             # IBM Power 7 and beyond
-            options.append('-DGMX_SIMD=IBM_VSX')
+            if self.spec.satisfies('%nvhpc'):
+                options.append('-DGMX_SIMD=None')
+            else:
+                options.append('-DGMX_SIMD=IBM_VSX')
         elif target.family == 'aarch64':
             # ARMv8
             if self.spec.satisfies('%nvhpc'):

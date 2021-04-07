@@ -173,7 +173,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
 
-    patch('nvhpc-libtool.patch', when='%nvhpc@develop')
+    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -756,7 +756,7 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if spec.satisfies('%nvhpc'):
+        if spec.satisfies('%nvhpc@:20.11'):
             # Workaround compiler issues
             config_args.append('CFLAGS=-O1')
 
