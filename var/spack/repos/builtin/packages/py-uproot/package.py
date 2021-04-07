@@ -7,7 +7,7 @@ from spack import *
 
 
 class PyUproot(PythonPackage):
-    """ROOT I/O in pure Python and NumPy
+    """ROOT I/O in pure Python and NumPy.
 
     Uproot is a reader and a writer of the ROOT file format using only Python
     and Numpy. Unlike the standard C++ ROOT implementation, Uproot is only an
