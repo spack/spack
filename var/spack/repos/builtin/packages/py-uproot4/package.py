@@ -25,10 +25,10 @@ class PyUproot4(PythonPackage):
             deprecated=True)
     version('0.1.2',
             sha256='b32dbffadc87bc5707ee0093964d2ce4a5ccfd521b17bbf10732afc25b820d82',
-           deprecated=True)
+            deprecated=True)
     version('0.0.27',
             sha256='de87555937332998b476f3e310392962bc983bddc008ed2b3c07a25c0379c4c9',
-           deprecated=True)
+            deprecated=True)
 
     variant('xrootd', default=True,
             description='Build with xrootd support ')
