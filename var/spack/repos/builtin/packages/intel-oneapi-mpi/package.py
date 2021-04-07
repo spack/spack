@@ -14,14 +14,18 @@ from spack import *
 class IntelOneapiMpi(IntelOneApiLibraryPackage):
     """Intel oneAPI MPI."""
 
-    maintainers = ['rscohn2']
+    maintainers = ['rscohn2', 'danvev']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/mpi-library.html'
 
     if platform == 'linux':
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17729/l_mpi_oneapi_p_2021.2.0.215_offline.sh',
+                sha256='d0d4cdd11edaff2e7285e38f537defccff38e37a3067c02f4af43a3629ad4aa3',
+                expand=False)
         version('2021.1.1',
-                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17397/l_mpi_oneapi_p_2021.1.1.76_offline.sh',
+                sha256='8b7693a156c6fc6269637bef586a8fd3ea6610cac2aae4e7f48c1fbb601625fe',
                 expand=False)
 
     provides('mpi@:3')

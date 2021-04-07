@@ -15,15 +15,26 @@ class IntelOneapiCompilers(IntelOneApiPackage):
     """Intel OneAPI compilers
 
     Provides Classic and Beta compilers for: Fortran, C, C++"""
+    maintainers = ['rscohn2', 'danvev']
 
     homepage = "https://software.intel.com/content/www/us/en/develop/tools/oneapi.html"
 
     depends_on('patchelf', type='build')
 
     if platform == 'linux':
+        version('2021.2.0',
+                sha256='5d01cbff1a574c3775510cd97ffddd27fdf56d06a6b0c89a826fb23da4336d59',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17749/l_dpcpp-cpp-compiler_p_2021.2.0.118_offline.sh',
+                expand=False)
+        resource(name='fortran-installer',
+                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17756/l_fortran-compiler_p_2021.2.0.136_offline.sh',
+                 sha256='a62e04a80f6d2f05e67cd5acb03fa58857ee22c6bd581ec0651c0ccd5bdec5a1',
+                 expand=False,
+                 placement='fortran-installer',
+                 when='@2021.2.0')
         version('2021.1.2',
-                sha256='68d6cb638091990e578e358131c859f3bbbbfbf975c581fd0b4b4d36476d6f0a',
                 url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17513/l_dpcpp-cpp-compiler_p_2021.1.2.63_offline.sh',
+                sha256='68d6cb638091990e578e358131c859f3bbbbfbf975c581fd0b4b4d36476d6f0a',
                 expand=False)
         resource(name='fortran-installer',
                  url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17508/l_fortran-compiler_p_2021.1.2.62_offline.sh',
