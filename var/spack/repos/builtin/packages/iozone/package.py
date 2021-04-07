@@ -6,6 +6,7 @@
 from spack import *
 import os
 
+
 class Iozone(MakefilePackage):
     """IOzone is a filesystem benchmark tool. The benchmark generates and
     measures a variety of file operations. Iozone has been ported to many
