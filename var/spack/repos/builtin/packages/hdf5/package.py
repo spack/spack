@@ -256,8 +256,8 @@ class Hdf5(AutotoolsPackage):
         # Do not specify the prefix of zlib if it is in a system directory
         # (see https://github.com/spack/spack/pull/21900).
         zlib_prefix = self.spec['zlib'].prefix
-        extra_args.append('--with-zlib=%s' %
-                          'yes' if is_system_path(zlib_prefix) else zlib_prefix)
+        extra_args.append('--with-zlib={0}'.format(
+            'yes' if is_system_path(zlib_prefix) else zlib_prefix))
 
         extra_args += self.enable_or_disable('threadsafe')
         extra_args += self.enable_or_disable('cxx')
