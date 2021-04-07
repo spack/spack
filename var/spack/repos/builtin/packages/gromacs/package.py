@@ -147,22 +147,22 @@ class Gromacs(CMakePackage):
 
             if self.spec.satisfies('@4.6:2020.3^cuda@11:'):
                 filter_file(r'-gencode;arch=compute_30,code=sm_30;?', '',
-                    'cmake/gmxManageNvccConfig.cmake')
+                            'cmake/gmxManageNvccConfig.cmake')
                 filter_file(r'-gencode;arch=compute_30,code=compute_30;?', '',
-                    'cmake/gmxManageNvccConfig.cmake')
+                            'cmake/gmxManageNvccConfig.cmake')
 
             # Hardware version 2.0 is supported up to CUDA 8 (Gromacs 4.6-2016.3 needs
             # to be patched, 2016.4 is handling it correctly, removed in 2019)
 
             if self.spec.satisfies('@4.6:2016.3^cuda@9:'):
                 filter_file(r'-gencode;arch=compute_20,code=sm_20;?', '',
-                    'cmake/gmxManageNvccConfig.cmake')
+                            'cmake/gmxManageNvccConfig.cmake')
                 filter_file(r'-gencode;arch=compute_20,code=compute_20;?', '',
-                    'cmake/gmxManageNvccConfig.cmake')
+                            'cmake/gmxManageNvccConfig.cmake')
 
             if self.spec.satisfies('@4.6:5.0.999^cuda@9:'):
                 filter_file(r'-gencode;arch=compute_20,code=sm_21;?', '',
-                    'cmake/gmxManageNvccConfig.cmake')
+                            'cmake/gmxManageNvccConfig.cmake')
 
     def cmake_args(self):
 
