@@ -7,7 +7,9 @@ from spack import *
 
 
 class PyUproot4(PythonPackage):
-    """ROOT I/O in pure Python and NumPy."""
+    """DEPRECATED! This package was renamed to py-uproot.
+
+    ROOT I/O in pure Python and NumPy."""
 
     homepage = "https://uproot4.readthedocs.io"
     git      = "https://github.com/scikit-hep/uproot4"
