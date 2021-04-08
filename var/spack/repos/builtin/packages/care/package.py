@@ -41,10 +41,10 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     # package that uses cub. TODO: have all packages point to the same external
     # cub package.
     depends_on('camp+cuda', when='+cuda')
-    depends_on('umpire+cuda', when='+cuda')
+    depends_on('umpire+cuda~shared', when='+cuda')
     depends_on('cub', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
-    depends_on('chai+cuda', when='+cuda')
+    depends_on('chai+cuda~shared', when='+cuda')
 
     # variants +rocm and amdgpu_targets are not automatically passed to
     # dependencies, so do it manually.
