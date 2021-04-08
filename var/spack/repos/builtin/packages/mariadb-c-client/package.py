@@ -57,6 +57,10 @@ class MariadbCClient(CMakePackage):
     depends_on('openssl')
     depends_on('zlib')
 
+    # patch needed for cmake-3.20
+    patch('https://github.com/mariadb-corporation/mariadb-connector-c/commit/242cab8c.patch',
+          sha256='bcfa0a73a34654495f5dea3cecdcb7de911c7c2446240aeaa674a4b2ab46f58c')
+
     def url_for_version(self, version):
         url = "https://downloads.mariadb.com/Connectors/c/connector-c-{0}/mariadb-connector-c-{1}-src.tar.gz"
         return url.format(version.up_to(3), version)
