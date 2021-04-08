@@ -24,4 +24,4 @@ class PyPyfftw(PythonPackage):
     depends_on('py-numpy@1.10:1.999',  type=('build', 'run'), when='@0.11.0:')
 
     def setup_build_environment(self, env):
-        env.append_flags('LDFLAGS', '-L{0}'.format(self.spec['fftw'].prefix.lib))
+        env.append_flags('LDFLAGS', self.spec['fftw'].libs.search_flags)
