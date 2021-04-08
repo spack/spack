@@ -225,7 +225,7 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 
 @pytest.mark.parametrize('start_path,path_root,paths,expected', [
     ('/usr/bin/test', '/usr', ['/usr/lib', '/usr/lib64', '/opt/local/lib'],
-     ['$ORIGIN'+os.sep+'..'+os.sep+'lib', '$ORIGIN'+os.sep+'..'+os.sep+'lib64',
+     [os.path.join('$ORIGIN', '..', 'lib'), os.path.join('$ORIGIN', '..', 'lib64'),
      '/opt/local/lib'])
 ])
 def test_make_relative_paths(start_path, path_root, paths, expected):
@@ -238,7 +238,8 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     [os.sep+'usr'+os.sep+'lib', os.sep+'usr'+os.sep+'lib64', '/opt/local/lib']),
+     [os.sep+os.path.join('usr', 'lib'), os.sep+os.path.join('usr','lib64'),
+      '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),
 ])
