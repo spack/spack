@@ -109,7 +109,6 @@ class Rocblas(CMakePackage):
             '-DBUILD_WITH_TENSILE=ON',
             '-DTensile_TEST_LOCAL_PATH={0}'.format(tensile),
             '-DTensile_COMPILER=hipcc',
-            '-DTensile_ARCHITECTURE={0}'.format(arch),
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
             '-DBUILD_WITH_TENSILE_HOST={0}'.format(
@@ -119,5 +118,10 @@ class Rocblas(CMakePackage):
 
         if '@3.7.0:' in self.spec:
             args.append('-DTensile_LIBRARY_FORMAT=msgpack')
+
+        if self.spec.satisfies('@4.1.0:'):
+            if arch == 'gfx906' or arch == 'gfx908':
+                arch = arch + ':xnack-'
+        args.append('-DTensile_ARCHITECTURE={0}'.format(arch))
 
         return args
