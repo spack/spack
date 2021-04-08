@@ -71,6 +71,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
             options.extend([
                 '-DENABLE_CUDA=ON',
                 '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix,
+                '-DNVTOOLSEXT_DIR=' + spec['cuda'].prefix,
                 '-DCUB_DIR=' + spec['cub'].prefix])
 
             if not spec.satisfies('cuda_arch=none'):
