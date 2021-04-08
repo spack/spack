@@ -7,9 +7,9 @@ from spack import *
 
 
 class Coral(CMakePackage):
-    """CORAL is an abstraction layer with an SQL-free API to access data stored using relational
-       database technologies. It is used directly by experiment-specific applications and
-       internally by COOL."""
+    """CORAL is an abstraction layer with an SQL-free API to access data stored
+       using relational database technologies. It is used directly by
+       experiment-specific applications and internally by COOL."""
 
     homepage = "https://coral-cool.docs.cern.ch/"
     git      = "https://gitlab.cern.ch/lcgcoral/coral.git"
@@ -36,19 +36,20 @@ class Coral(CMakePackage):
     depends_on('oracle-instant-client')
 
     def determine_binary_tag(self):
-        # As far as I can tell from reading the source code, `binary_tag` can be almost arbitrary
-        # The only real difference it makes is disabling oracle dependency in 
+        # As far as I can tell from reading the source code, `binary_tag`
+        # can be almost arbitraryThe only real difference it makes is
+        # disabling oracle dependency for non-x86 platforms
         if self.spec.variants['binary_tag'].value != 'auto':
             return self.spec.variants['binary_tag'].value
-        
+
         binary_tag = str(self.spec.target.family) + \
             '-' + self.spec.os + \
             '-' + self.spec.compiler.name + str(self.spec.compiler.version.joined) + \
             ('-opt' if 'Rel' in self.spec.variants['build_type'].value else '-dbg')
-            
+
         return binary_tag
 
-    def cmake_args(self):        
+    def cmake_args(self):
         args = ['-DBINARY_TAG=' + self.determine_binary_tag()]
         if self.spec['python'].version >= Version("3.0.0"):
             args.append('-DLCG_python3=on')
