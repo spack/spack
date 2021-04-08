@@ -237,11 +237,6 @@ class Hdf5(CMakePackage):
             msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
-#    def java_check(self):
-#        if '+java' in self.spec and not self.compiler.java:
-#            msg = 'cannot build a Java variant without a Java compiler'
-#            raise RuntimeError(msg)
-
     def cmake_args(self):
         spec = self.spec
 
