@@ -82,4 +82,5 @@ class Curl(AutotoolsPackage):
         args += self.with_or_without('nghttp2')
         args += self.with_or_without('libssh2')
         args += self.with_or_without('libssh')
+        args += ['--without-ca-bundle', '--without-ca-path']
         return args
