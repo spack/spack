@@ -37,6 +37,7 @@ class Fox(AutotoolsPackage):
     depends_on('libxi')
     depends_on('libxrandr')
     depends_on('gl', when='+opengl')
+    depends_on('glu', when='+opengl', type='link')
 
     def configure_args(self):
         # Make the png link flags explicit or it will try to pick up libpng15

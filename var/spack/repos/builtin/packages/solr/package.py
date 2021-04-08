@@ -17,6 +17,8 @@ class Solr(Package):
     list_url = "https://archive.apache.org/dist/lucene/solr"
     list_depth = 1
 
+    depends_on('java', type='run')
+
     version('8.6.0', sha256='4519ccdb531619df770f1065db6adcedc052c7aa94b42806d541966550956aa5')
     version('8.5.2', sha256='c457d6c7243241cad141e1df34c6f669d58a6c60e537f4217d032616dd066dcf')
     version('8.5.1', sha256='47b68073b37bbcc0517a355ef722f20827c3f1416537ebbccf5239dda8064a0b')

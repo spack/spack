@@ -304,7 +304,7 @@ class TestConcretize(object):
         barpkg = mock_repo.add_package('barpkg', [bazpkg], [default_dep])
         mock_repo.add_package('foopkg', [barpkg], [default_dep])
 
-        with spack.repo.swap(mock_repo):
+        with spack.repo.use_repositories(mock_repo):
             spec = Spec('foopkg %gcc@4.5.0 os=CNL target=nocona' +
                         ' ^barpkg os=SuSE11 ^bazpkg os=be')
             spec.concretize()
@@ -660,8 +660,7 @@ class TestConcretize(object):
 
         abstract_specs = [Spec(x) for x in abstract_specs]
         concrete_specs = spack.concretize.concretize_specs_together(
-            *abstract_specs
-        )
+            *abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
         names = set(
@@ -925,6 +924,35 @@ class TestConcretize(object):
         assert s.external
         assert s.satisfies(expected)
 
+    @pytest.mark.regression('20976')
+    @pytest.mark.parametrize('compiler,spec_str,expected,xfailold', [
+        ('gcc', 'external-common-python %clang',
+         '%clang ^external-common-openssl%gcc ^external-common-gdbm%clang', False),
+        ('clang', 'external-common-python',
+         '%clang ^external-common-openssl%clang ^external-common-gdbm%clang', True)
+    ])
+    def test_compiler_in_nonbuildable_external_package(
+            self, compiler, spec_str, expected, xfailold
+    ):
+        """Check that the compiler of a non-buildable external package does not
+           spread to other dependencies, unless no other commpiler is specified."""
+        packages_yaml = {
+            'external-common-openssl': {
+                'externals': [
+                    {'spec': 'external-common-openssl@1.1.1i%' + compiler,
+                     'prefix': '/usr'}
+                ],
+                'buildable': False
+            }
+        }
+        spack.config.set('packages', packages_yaml)
+
+        s = Spec(spec_str).concretized()
+        if xfailold and spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('This only works on the ASP-based concretizer')
+        assert s.satisfies(expected)
+        assert 'external-common-perl' not in [d.name for d in s.dependencies()]
+
     def test_external_packages_have_consistent_hash(self):
         if spack.config.get('config:concretizer') == 'original':
             pytest.skip('This tests needs the ASP-based concretizer')
@@ -1044,7 +1072,7 @@ class TestConcretize(object):
         s = Spec('dep-with-variants-if-develop-root').concretized()
         assert s['dep-with-variants-if-develop'].satisfies('@1.0')
 
-    @pytest.mark.regression('20244')
+    @pytest.mark.regression('20244,20736')
     @pytest.mark.parametrize('spec_str,is_external,expected', [
         # These are all externals, and 0_8 is a version not in package.py
         ('externaltool@1.0', True, '@1.0'),
@@ -1056,6 +1084,13 @@ class TestConcretize(object):
         ('external-buildable-with-variant +baz', True, '@1.1.special +baz'),
         ('external-buildable-with-variant ~baz', False, '@1.0 ~baz'),
         ('external-buildable-with-variant@1.0: ~baz', False, '@1.0 ~baz'),
+        # This uses an external version that meets the condition for
+        # having an additional dependency, but the dependency shouldn't
+        # appear in the answer set
+        ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
+        # This package has an external version declared that would be
+        # the least preferred if Spack had to build it
+        ('old-external', True, '@1.0.0'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
@@ -1086,3 +1121,65 @@ class TestConcretize(object):
         ).concretized()
 
         assert root.dag_hash() == new_root.dag_hash()
+
+    @pytest.mark.regression('20784')
+    def test_concretization_of_test_dependencies(self):
+        # With clingo we emit dependency_conditions regardless of the type
+        # of the dependency. We need to ensure that there's at least one
+        # dependency type declared to infer that the dependency holds.
+        s = Spec('test-dep-with-imposed-conditions').concretized()
+        assert 'c' not in s
+
+    @pytest.mark.parametrize('spec_str', [
+        'wrong-variant-in-conflicts',
+        'wrong-variant-in-depends-on'
+    ])
+    def test_error_message_for_inconsistent_variants(self, spec_str):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str)
+        with pytest.raises(RuntimeError, match='not found in package'):
+            s.concretize()
+
+    @pytest.mark.regression('22533')
+    @pytest.mark.parametrize('spec_str,variant_name,expected_values', [
+        # Test the default value 'auto'
+        ('mvapich2', 'file_systems', ('auto',)),
+        # Test setting a single value from the disjoint set
+        ('mvapich2 file_systems=lustre', 'file_systems', ('lustre',)),
+        # Test setting multiple values from the disjoint set
+        ('mvapich2 file_systems=lustre,gpfs', 'file_systems',
+         ('lustre', 'gpfs')),
+    ])
+    def test_mv_variants_disjoint_sets_from_spec(
+            self, spec_str, variant_name, expected_values
+    ):
+        s = Spec(spec_str).concretized()
+        assert set(expected_values) == set(s.variants[variant_name].value)
+
+    @pytest.mark.regression('22533')
+    def test_mv_variants_disjoint_sets_from_packages_yaml(self):
+        external_mvapich2 = {
+            'mvapich2': {
+                'buildable': False,
+                'externals': [{
+                    'spec': 'mvapich2@2.3.1 file_systems=nfs,ufs',
+                    'prefix': '/usr'
+                }]
+            }
+        }
+        spack.config.set('packages', external_mvapich2)
+
+        s = Spec('mvapich2').concretized()
+        assert set(s.variants['file_systems'].value) == set(['ufs', 'nfs'])
+
+    @pytest.mark.regression('22596')
+    def test_external_with_non_default_variant_as_dependency(self):
+        # This package depends on another that is registered as an external
+        # with 'buildable: true' and a variant with a non-default value set
+        s = Spec('trigger-external-non-default-variant').concretized()
+
+        assert '~foo' in s['external-non-default-variant']
+        assert '~bar' in s['external-non-default-variant']
+        assert s['external-non-default-variant'].external

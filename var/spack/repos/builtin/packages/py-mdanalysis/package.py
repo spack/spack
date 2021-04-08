@@ -41,7 +41,7 @@ class PyMdanalysis(PythonPackage):
     depends_on('py-six@1.4.0:',    type=('build', 'run'))
     depends_on('py-networkx@1.0:', type=('build', 'run'))
 
-    depends_on('py-gsd@1.4.0:',         when='@1.17.0:', type=('build', 'run'))
+    depends_on('py-gsd@1.4.0:',         when='@0.17.0:', type=('build', 'run'))
     depends_on('py-mmtf-python@1.0.0:', when='@0.16.0:', type=('build', 'run'))
     depends_on('py-mock',               when='@0.18.0:', type=('build', 'run'))
     depends_on('py-tqdm@4.43.0:',       when='@1.0.0:',  type=('build', 'run'))

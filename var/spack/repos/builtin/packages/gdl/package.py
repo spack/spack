@@ -60,6 +60,8 @@ class Gdl(CMakePackage):
     depends_on('netcdf-c')
     depends_on('pslib')
     depends_on('readline')
+    depends_on('libtirpc', type='link')
+    depends_on('libgeotiff', type='link')
 
     conflicts('+python', when='~embed_python')
 

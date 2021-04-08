@@ -1,0 +1,175 @@
+From 2454aafa08be8a275b2bdba56df1c38460d165ef Mon Sep 17 00:00:00 2001
+From: Chuck Atkins <chuck.atkins@kitware.com>
+Date: Fri, 22 Jan 2021 00:03:15 -0500
+Subject: [PATCH] Fix test dependency options to ignore python when testing is
+ disabled
+
+---
+ CMakeLists.txt                                 | 15 +++------------
+ bindings/Matlab/README.txt                     |  2 +-
+ cmake/DetectOptions.cmake                      |  2 +-
+ scripts/conda/adios2/superbuild/CMakeLists.txt |  2 +-
+ scripts/docker/images/centos7/Dockerfile       |  2 +-
+ scripts/docker/images/centos8/Dockerfile       |  2 +-
+ scripts/docker/images/ubuntu/Dockerfile        |  2 +-
+ scripts/runconf/runconf.sh                     |  2 +-
+ scripts/runconf/runconf_olcf.sh                |  6 +++---
+ 9 files changed, 13 insertions(+), 22 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 76e0e8fba..8823bbf87 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -114,6 +114,8 @@ if((NOT BUILD_SHARED_LIBS) AND (NOT DEFINED CMAKE_POSITION_INDEPENDENT_CODE))
+   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+ endif()
+ 
++include(CTest)
++
+ adios_option(Blosc     "Enable support for Blosc transforms" AUTO)
+ adios_option(BZip2     "Enable support for BZip2 transforms" AUTO)
+ adios_option(ZFP       "Enable support for ZFP transforms" AUTO)
+@@ -222,22 +224,11 @@ endif()
+ #------------------------------------------------------------------------------#
+ # Testing
+ #------------------------------------------------------------------------------#
+-if(DEFINED BUILD_TESTING)
+-  set(ADIOS2_BUILD_TESTING_DEFAULT ${BUILD_TESTING})
+-else()
+-  set(ADIOS2_BUILD_TESTING_DEFAULT ON)
+-endif()
+-unset(BUILD_TESTING)
+-option(ADIOS2_BUILD_TESTING "Build the ADIOS2 testing tree" 
+-  ${ADIOS2_BUILD_TESTING_DEFAULT})
+-
+ cmake_dependent_option(ADIOS2_RUN_MPI_MPMD_TESTS
+   "Enable the parallel MPMD tests" ON
+-  "ADIOS2_BUILD_TESTING;ADIOS2_HAVE_MPI" OFF)
++  "BUILD_TESTING;ADIOS2_HAVE_MPI" OFF)
+ mark_as_advanced(ADIOS2_RUN_MPI_MPMD_TESTS)
+ 
+-include(CTest)
+-set(BUILD_TESTING ${ADIOS2_BUILD_TESTING})
+ if(BUILD_TESTING)
+   find_program(DIFF_EXECUTABLE diff)
+   if(DIFF_EXECUTABLE)
+diff --git a/bindings/Matlab/README.txt b/bindings/Matlab/README.txt
+index 4b90fac77..f49b057bc 100644
+--- a/bindings/Matlab/README.txt
++++ b/bindings/Matlab/README.txt
+@@ -43,5 +43,5 @@ $ cd <your adios source>
+ $ git pull
+ $ mkdir build.lean
+ $ cd build.lean
+-$ cmake -DCMAKE_INSTALL_PREFIX=/opt/adios/lean -DADIOS2_USE_MPI=OFF -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_Python=OFF -DADIOS2_BUILD_EXAMPLES_EXPERIMENTAL=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DADIOS2_ENABLE_PIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DADIOS2_BUILD_TESTING=OFF -DADIOS2_USE_SST=OFF -DADIOS2_USE_BZip2=OFF -DADIOS2_USE_DataMan=OFF  ..
++$ cmake -DCMAKE_INSTALL_PREFIX=/opt/adios/lean -DADIOS2_USE_MPI=OFF -DADIOS2_USE_Fortran=OFF -DADIOS2_USE_Python=OFF -DADIOS2_BUILD_EXAMPLES_EXPERIMENTAL=OFF -DCMAKE_BUILD_TYPE=RelWithDebInfo -DADIOS2_ENABLE_PIC=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DBUILD_TESTING=OFF -DADIOS2_USE_SST=OFF -DADIOS2_USE_BZip2=OFF -DADIOS2_USE_DataMan=OFF  ..
+ 
+diff --git a/cmake/DetectOptions.cmake b/cmake/DetectOptions.cmake
+index ca449feee..3b8652d2d 100644
+--- a/cmake/DetectOptions.cmake
++++ b/cmake/DetectOptions.cmake
+@@ -293,7 +293,7 @@ if(Python_FOUND)
+ endif()
+ 
+ # Even if no python support, we still want the interpreter for tests
+-if(NOT Python_Interpreter_FOUND)
++if(BUILD_TESTING AND NOT Python_Interpreter_FOUND)
+   find_package(Python REQUIRED COMPONENTS Interpreter)
+ endif()
+ 
+diff --git a/scripts/conda/adios2/superbuild/CMakeLists.txt b/scripts/conda/adios2/superbuild/CMakeLists.txt
+index 75e2ad984..ef0eec25b 100644
+--- a/scripts/conda/adios2/superbuild/CMakeLists.txt
++++ b/scripts/conda/adios2/superbuild/CMakeLists.txt
+@@ -12,7 +12,7 @@ ExternalProject_Add(adios2
+     -DCMAKE_BUILD_TYPE=Release
+     -DBUILD_SHARED_LIBS=ON
+     -DADIOS2_BUILD_EXAMPLES=OFF
+-    -DADIOS2_BUILD_TESTING=OFF
++    -DBUILD_TESTING=OFF
+     -DADIOS2_USE_Python=ON
+     -DPYTHON_EXECUTABLE=$ENV{PYTHON}
+     -DADIOS2_USE_MPI=ON
+diff --git a/scripts/docker/images/centos7/Dockerfile b/scripts/docker/images/centos7/Dockerfile
+index 96cb30acb..974bd90eb 100644
+--- a/scripts/docker/images/centos7/Dockerfile
++++ b/scripts/docker/images/centos7/Dockerfile
+@@ -116,7 +116,7 @@ RUN git clone https://github.com/ornladios/adios2.git source && \
+     module load mpi && \
+     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_INSTALL_PREFIX=/opt/adios/${adios_ver_dir} \
+-      -DADIOS2_BUILD_TESTING=OFF \
++      -DBUILD_TESTING=OFF \
+       -DADIOS2_BUILD_EXAMPLES=OFF \
+       ../source && \
+     make -j$(grep -c '^processor' /proc/cpuinfo) install && \
+diff --git a/scripts/docker/images/centos8/Dockerfile b/scripts/docker/images/centos8/Dockerfile
+index 01e3af8cb..21a78c913 100644
+--- a/scripts/docker/images/centos8/Dockerfile
++++ b/scripts/docker/images/centos8/Dockerfile
+@@ -116,7 +116,7 @@ RUN git clone https://github.com/ornladios/adios2.git source && \
+     module load mpi && \
+     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_INSTALL_PREFIX=/opt/adios/${adios_ver_dir} \
+-      -DADIOS2_BUILD_TESTING=OFF \
++      -DBUILD_TESTING=OFF \
+       -DADIOS2_BUILD_EXAMPLES=OFF \
+       ../source && \
+     make -j$(grep -c '^processor' /proc/cpuinfo) install && \
+diff --git a/scripts/docker/images/ubuntu/Dockerfile b/scripts/docker/images/ubuntu/Dockerfile
+index 1979b81a0..e0f654efb 100644
+--- a/scripts/docker/images/ubuntu/Dockerfile
++++ b/scripts/docker/images/ubuntu/Dockerfile
+@@ -118,7 +118,7 @@ RUN git clone https://github.com/ornladios/adios2.git source && \
+     . /etc/profile && \
+     cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release \
+       -DCMAKE_INSTALL_PREFIX=/opt/adios/${adios_ver_dir} \
+-      -DADIOS2_BUILD_TESTING=OFF \
++      -DBUILD_TESTING=OFF \
+       -DADIOS2_BUILD_EXAMPLES=OFF \
+       ../source && \
+     make -j$(grep -c '^processor' /proc/cpuinfo) install && \
+diff --git a/scripts/runconf/runconf.sh b/scripts/runconf/runconf.sh
+index 82c3ea21e..ec12ba7ef 100644
+--- a/scripts/runconf/runconf.sh
++++ b/scripts/runconf/runconf.sh
+@@ -46,7 +46,7 @@ cmake -DCMAKE_INSTALL_PREFIX=${PWD}/install \
+           -DBUILD_SHARED_LIBS=ON \
+           -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+           -DCMAKE_BUILD_TYPE=Release \
+-          -DADIOS2_BUILD_TESTING=${VALUE} \
++          -DBUILD_TESTING=${VALUE} \
+           -DADIOS2_BUILD_EXAMPLES=${VALUE} \
+           -DADIOS2_USE_Endian_Reverse=OFF \
+           ${ADIOS2_SOURCE}
+diff --git a/scripts/runconf/runconf_olcf.sh b/scripts/runconf/runconf_olcf.sh
+index 562f9b3dd..3d1ea83bc 100644
+--- a/scripts/runconf/runconf_olcf.sh
++++ b/scripts/runconf/runconf_olcf.sh
+@@ -68,7 +68,7 @@ if [ `hostname | cut -c 1-5` == "titan" ]; then
+           -DADIOS2_USE_Python=OFF \
+           -DADIOS2_BUILD_EXAMPLES_EXPERIMENTAL=OFF \
+           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+-          -DADIOS2_BUILD_TESTING=OFF \
++          -DBUILD_TESTING=OFF \
+           ${EXTERNAL_OPTS} \
+           ${SRCDIR}
+ 
+@@ -118,7 +118,7 @@ elif [ `hostname -f | cut -c 1-9` == "summitdev" ]; then
+           -DADIOS2_USE_Python=OFF \
+           -DADIOS2_BUILD_EXAMPLES_EXPERIMENTAL=OFF \
+           -DCMAKE_BUILD_TYPE=Debug \
+-          -DADIOS2_BUILD_TESTING=ON \
++          -DBUILD_TESTING=ON \
+           -DADIOS2_USE_DataMan=OFF \
+           ${EXTERNAL_OPTS} \
+           ${SRCDIR}
+@@ -156,7 +156,7 @@ elif [ `hostname -f | cut -c 1-4` == "rhea" ]; then
+           -DADIOS2_USE_SST=OFF \
+           -DADIOS2_BUILD_EXAMPLES_EXPERIMENTAL=OFF \
+           -DCMAKE_BUILD_TYPE=Debug \
+-          -DADIOS2_BUILD_TESTING=ON \
++          -DBUILD_TESTING=ON \
+           -DADIOS2_USE_DataMan=OFF \
+           ${EXTERNAL_OPTS} \
+           ${SRCDIR}

@@ -5,7 +5,6 @@
 
 
 import argparse
-import multiprocessing
 
 import spack.cmd
 import spack.config
@@ -102,21 +101,9 @@ class SetParallelJobs(argparse.Action):
                   '[expected a positive integer, got "{1}"]'
             raise ValueError(msg.format(option_string, jobs))
 
-        jobs = min(jobs, multiprocessing.cpu_count())
         spack.config.set('config:build_jobs', jobs, scope='command_line')
 
         setattr(namespace, 'jobs', jobs)
-
-    @property
-    def default(self):
-        # This default is coded as a property so that look-up
-        # of this value is done only on demand
-        return min(spack.config.get('config:build_jobs', 16),
-                   multiprocessing.cpu_count())
-
-    @default.setter
-    def default(self, value):
-        pass
 
 
 class DeptypeAction(argparse.Action):
@@ -250,8 +237,8 @@ def very_long():
 @arg
 def tags():
     return Args(
-        '-t', '--tags', action='append',
-        help='filter a package query by tags')
+        '-t', '--tag', action='append', dest='tags', metavar='TAG',
+        help='filter a package query by tag (multiple use allowed)')
 
 
 @arg
@@ -275,6 +262,13 @@ def no_checksum():
     return Args(
         '-n', '--no-checksum', action='store_true', default=False,
         help="do not use checksums to verify downloaded files (unsafe)")
+
+
+@arg
+def deprecated():
+    return Args(
+        '--deprecated', action='store_true', default=False,
+        help='fetch deprecated versions without warning')
 
 
 def add_cdash_args(subparser, add_help):

@@ -12,6 +12,8 @@ class PyPy(PythonPackage):
     homepage = "http://pylib.readthedocs.io/en/latest/"
     pypi = "py/py-1.8.0.tar.gz"
 
+    version('1.9.0', sha256='9ca6883ce56b4e8da7e79ac18787889fa5206c79dcc67fb065376cd2fe03f342')
+    version('1.8.2', sha256='f3b3a4c36512a4c4f024041ab51866f11761cc169670204b235f6b20523d4e6b')
     version('1.8.0', sha256='dc639b046a6e2cff5bbe40194ad65936d6ba360b52b3c3fe1d08a82dd50b5e53')
     version('1.5.4',  sha256='3fd59af7435864e1a243790d322d763925431213b6b8529c6ca71081ace3bbf7')
     version('1.5.3',  sha256='29c9fab495d7528e80ba1e343b958684f4ace687327e6f789a94bf3d1915f881')

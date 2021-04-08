@@ -71,7 +71,7 @@ class Hdf5(CMakePackage):
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compatibility.
-    variant('api', default='none', description='Choose api compatibility for earlier version', values=('none', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
+    variant('api', default='default', description='Choose api compatibility for earlier version', values=('default', 'v114', 'v112', 'v110', 'v18', 'v16'), multi=False)
 
     conflicts('api=v114', when='@1.6:1.12.99', msg='v114 is not compatible with this release')
     conflicts('api=v112', when='@1.6:1.10.99', msg='v112 is not compatible with this release')
@@ -237,10 +237,10 @@ class Hdf5(CMakePackage):
             msg = 'cannot build a Fortran variant without a Fortran compiler'
             raise RuntimeError(msg)
 
-    def java_check(self):
-        if '+java' in self.spec and not self.compiler.java:
-            msg = 'cannot build a Java variant without a Java compiler'
-            raise RuntimeError(msg)
+#    def java_check(self):
+#        if '+java' in self.spec and not self.compiler.java:
+#            msg = 'cannot build a Java variant without a Java compiler'
+#            raise RuntimeError(msg)
 
     def cmake_args(self):
         spec = self.spec
@@ -250,36 +250,20 @@ class Hdf5(CMakePackage):
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
         args = [self.define('ALLOW_UNSUPPORTED', True)]
-
-        args.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
-
-        if '+shared' in spec:
-            args.append('-DONLY_SHARED_LIBS=ON')
-        else:
-            args.append('-DONLY_SHARED_LIBS=OFF')
-
         args.append(self.define_from_variant('HDF5_ENABLE_Z_LIB_SUPPORT', 'zlib'))
+        args.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
+        args.append(self.define_from_variant('ONLY_SHARED_LIBS', 'shared'))
 
         if '+szip' in spec:
             args.append(self.define_from_variant(
                         'HDF5_ENABLE_SZIP_SUPPORT', 'szip'))
-            args.append('-DUSE_LIBAEC:BOOL=ON')
-            args.append('-DHDF5_ENABLE_SZIP_ENCODING:BOOL=ON')
-            args.append(
-                '-DSZIP_INCLUDE_DIR:PATH={0}'.format(
-                    spec['libaec'].prefix.include))
-            args.append(
-                '-DSZIP_DIR:PATH={0}'.format(
-                    spec['libaec'].prefix.lib))
-
-        args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
+            args.append(self.define('USE_LIBAEC', True))
+            args.append(self.define('HDF5_ENABLE_SZIP_ENCODING', True))
+            args.append(self.define('SZIP_INCLUDE_DIR', 
+                                        spec['libaec'].prefix.include))
+            args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib)) 
 
         args.append(self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'))
-
-        if '+debug' in spec:
-            args.append('-DCMAKE_BUILD_TYPE=Debug')
-        else:
-            args.append('-DCMAKE_BUILD_TYPE=Release')
 
         args.append(self.define_from_variant('HDF5_ENABLE_THREADSAFE', 'threadsafe'))
 
@@ -298,7 +282,7 @@ class Hdf5(CMakePackage):
         else:
             args.append('-DBUILD_TESTING=OFF')
 
-        if spec.variants['api'].value != 'none':
+        if spec.variants['api'].value != 'default':
             args.append(
                 '-DDEFAULT_API_VERSION={0}'.format(
                     spec.variants['api'].value))

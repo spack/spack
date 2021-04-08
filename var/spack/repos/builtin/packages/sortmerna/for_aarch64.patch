@@ -1,0 +1,22 @@
+--- spack-src/src/sortmerna/ssw.c.bak	2021-01-15 15:52:23.000000000 +0900
++++ spack-src/src/sortmerna/ssw.c	2021-01-15 16:20:53.863003152 +0900
+@@ -42,7 +42,7 @@
+  *            July 10, 2013
+  */
+ 
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+--- spack-src/include/ssw.h.bak	2021-01-15 15:52:22.000000000 +0900
++++ spack-src/include/ssw.h	2021-01-15 16:16:51.383025096 +0900
+@@ -21,7 +21,7 @@
+ #include <stdio.h>
+ #include <stdint.h>
+ #include <string.h>
+-#include <emmintrin.h>
++#include <sse2neon.h>
+ 
+ extern const char map_nt[122];
+ /*!	@typedef	structure of the query profile	*/

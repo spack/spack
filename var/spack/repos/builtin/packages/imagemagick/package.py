@@ -21,6 +21,7 @@ class Imagemagick(AutotoolsPackage):
     depends_on('jpeg')
     depends_on('pango')
     depends_on('libtool', type='build')
+    depends_on('libtool', when='@7.0.8:', type=('build', 'link'))
     depends_on('libpng')
     depends_on('freetype')
     depends_on('fontconfig')
@@ -35,3 +36,7 @@ class Imagemagick(AutotoolsPackage):
         return [
             '--with-gs-font-dir={0}'.format(gs_font_dir)
         ]
+
+    @property
+    def libs(self):
+        return find_libraries('libMagick*', root=self.prefix, recursive=True)
