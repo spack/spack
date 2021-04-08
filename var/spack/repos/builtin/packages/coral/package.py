@@ -33,22 +33,23 @@ class Coral(CMakePackage):
     depends_on('igprof')
     depends_on('libunwind')
     depends_on('valgrind')
-    depends_on('sqlplus')
+    depends_on('oracle-instant-client')
 
     def determine_binary_tag(self):
+        # As far as I can tell from reading the source code, `binary_tag` can be almost arbitrary
+        # The only real difference it makes is disabling oracle dependency in 
         if self.spec.variants['binary_tag'].value != 'auto':
-            return
+            return self.spec.variants['binary_tag'].value
         
-        binary_tag = self.spec.target.family + \
-            '-' + self.spec.os.name + self.spec.version.joined + \
-            '-' + self.spec.compiler.version.joined() + \
-            ('-opt' if 'Rel' in self.spec.variants['build_type'] else '-dbg')
+        binary_tag = str(self.spec.target.family) + \
+            '-' + self.spec.os + \
+            '-' + self.spec.compiler.name + str(self.spec.compiler.version.joined) + \
+            ('-opt' if 'Rel' in self.spec.variants['build_type'].value else '-dbg')
             
-        self.variants['binary_tag'].value = binary_tag
+        return binary_tag
 
-    def cmake_args(self):
-        self.determine_binary_tag()
-        args = ['-DBINARY_TAG=' + self.spec.variants['binary_tag'].value]
+    def cmake_args(self):        
+        args = ['-DBINARY_TAG=' + self.determine_binary_tag()]
         if self.spec['python'].version >= Version("3.0.0"):
             args.append('-DLCG_python3=on')
 
