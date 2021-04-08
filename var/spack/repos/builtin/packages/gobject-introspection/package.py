@@ -53,7 +53,8 @@ class GobjectIntrospection(Package):
     #   inserted into the scripts as they're generated.
     patch("sbang.patch")
 
-    # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads to compilation issue with Python 3.9.
+    # Drop deprecated xml.etree.ElementTree.Element.getchildren() which leads
+    # to compilation issues with Python 3.9.
     # https://gitlab.gnome.org/GNOME/gobject-introspection/-/issues/325
     patch('https://gitlab.gnome.org/GNOME/gobject-introspection/-/commit/'
           '1f9284228092b2a7200e8a78bc0ea6702231c6db.patch',
