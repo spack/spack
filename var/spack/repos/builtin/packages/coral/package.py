@@ -39,9 +39,9 @@ class Coral(CMakePackage):
         if self.spec.variants['binary_tag'].value != 'auto':
             return
         
-        binary_tag = self.spec.target.family +
-            '-' + self.spec.os.name + self.spec.version.joined +
-            '-' + self.spec.compiler.version.joined() +
+        binary_tag = self.spec.target.family + \
+            '-' + self.spec.os.name + self.spec.version.joined + \
+            '-' + self.spec.compiler.version.joined() + \
             ('-opt' if 'Rel' in self.spec.variants['build_type'] else '-dbg')
             
         self.variants['binary_tag'].value = binary_tag
