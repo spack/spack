@@ -37,6 +37,7 @@ class Libceed(Package):
     depends_on('cuda', when='+cuda')
     depends_on('hip@3.8.0', when='@0.7:0.7.99+hip')
     depends_on('hip@3.8.0:', when='@0.8:+hip')
+    depends_on('hipblas@3.8.0:', when='@0.8:+hip')
 
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa@1.1.0', when='@0.7:+occa')
@@ -50,6 +51,7 @@ class Libceed(Package):
 
     depends_on('magma', when='+magma')
 
+    patch('libceed-v0.8-hip.patch', when='@0.8+hip')
     patch('pkgconfig-version-0.4.diff', when='@0.4')
 
     # occa: do not occaFree kernels
@@ -119,6 +121,8 @@ class Libceed(Package):
 
             if '+hip' in spec:
                 makeopts += ['HIP_DIR=%s' % spec['hip'].prefix]
+                if spec.satisfies('@0.8'):
+                    makeopts += ['HIPBLAS_DIR=%s' % spec['hipblas'].prefix]
 
             if '+libxsmm' in spec:
                 makeopts += ['XSMM_DIR=%s' % spec['libxsmm'].prefix]
