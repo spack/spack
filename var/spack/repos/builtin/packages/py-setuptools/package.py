@@ -38,7 +38,6 @@ class PySetuptools(PythonPackage):
     depends_on('python@3.5:', type=('build', 'run'), when='@45.0.0:')
     depends_on('python@2.7:2.8,3.5:', type=('build', 'run'), when='@44.0.0:44.99.99')
     depends_on('python@2.7:2.8,3.4:', type=('build', 'run'), when='@:43.99.99')
-    depends_on('unzip', type=('build', 'link', 'run'))
 
     def url_for_version(self, version):
         url = 'https://pypi.io/packages/source/s/setuptools/setuptools-{0}'
