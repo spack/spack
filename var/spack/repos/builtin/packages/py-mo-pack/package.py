@@ -20,5 +20,4 @@ class PyMoPack(PythonPackage):
     depends_on('py-cython', type=('build', 'run'))
 
     def setup_build_environment(self, env):
-        env.append_flags('LDFLAGS', '-L{0}'.format(
-            self.spec['libmo-unpack'].prefix.lib))
+        env.append_flags('LDFLAGS', self.spec['libmo-unpack'].libs.search_flags)
