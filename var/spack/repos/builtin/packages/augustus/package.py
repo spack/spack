@@ -139,7 +139,7 @@ class Augustus(MakefilePackage):
 
             with working_dir('src'):
                 makefile = FileFilter('Makefile')
-                makefile.filter('/usr/include/mysql\+\+',
+                makefile.filter(r'/usr/include/mysql\+\+',
                                 '{0}/include/mysql++'.format(mysqlpp))
                 if '^mariadb-c-client' in spec:
                     makefile.filter('/usr/include/mysql',
