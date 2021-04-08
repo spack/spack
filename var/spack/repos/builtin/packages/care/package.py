@@ -42,6 +42,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     # cub package.
     depends_on('camp+cuda', when='+cuda')
     depends_on('umpire+cuda', when='+cuda')
+    depends_on('cub', when='+cuda')
     depends_on('raja+cuda~openmp', when='+cuda')
     depends_on('chai+cuda', when='+cuda')
 
@@ -69,7 +70,8 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         if '+cuda' in spec:
             options.extend([
                 '-DENABLE_CUDA=ON',
-                '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix])
+                '-DCUDA_TOOLKIT_ROOT_DIR=' + spec['cuda'].prefix,
+                '-DCUB_DIR=' + spec['cub'].prefix])
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
