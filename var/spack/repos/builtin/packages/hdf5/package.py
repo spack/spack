@@ -254,9 +254,9 @@ class Hdf5(CMakePackage):
                         'HDF5_ENABLE_SZIP_SUPPORT', 'szip'))
             args.append(self.define('USE_LIBAEC', True))
             args.append(self.define('HDF5_ENABLE_SZIP_ENCODING', True))
-            args.append(self.define('SZIP_INCLUDE_DIR', 
-                                        spec['libaec'].prefix.include))
-            args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib)) 
+            args.append(
+                self.define('SZIP_INCLUDE_DIR', spec['libaec'].prefix.include))
+            args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib))
 
         args.append(self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'))
 
