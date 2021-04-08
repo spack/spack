@@ -40,7 +40,6 @@ class PyKeras(PythonPackage):
     version('1.1.1', sha256='be1b67f62e5119f6f24a239a865dc47e6d9aa93b97b506ba34cab7353dbc23b6')
     version('1.1.0', sha256='36d83b027ba9d2c9da8e1eefc28f600ca93dc03423e033b633cbac9061af8a5d')
 
-
     depends_on('python@3.6:', type=('build', 'run'), when='@2.4:')
     depends_on('py-numpy@1.9.1:', type=('build', 'run'), when='@2.4:')
     depends_on('py-scipy@0.14:', type=('build', 'run'), when='@2.4:')
