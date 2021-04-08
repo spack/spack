@@ -75,9 +75,11 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
             if not spec.satisfies('cuda_arch=none'):
                 cuda_arch = spec.variants['cuda_arch'].value
+                # Please note that within care, CUDA_ARCH is assigned to -code
+                # and likewise CUDA_CODE is assigned to -arch, so these are
+                # intentionally flipped here.
                 options.append('-DCUDA_ARCH=sm_{0}'.format(cuda_arch[0]))
-                flag = '-arch sm_{0}'.format(cuda_arch[0])
-                options.append('-DCMAKE_CUDA_FLAGS:STRING={0}'.format(flag))
+                options.append('-DCUDA_CODE=compute_{0}'.format(cuda_arch[0]))
         else:
             options.append('-DENABLE_CUDA=OFF')
 
