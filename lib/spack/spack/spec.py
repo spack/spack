@@ -2094,35 +2094,57 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
+
+        # New Design
+
         nodes = data['spec']
+        hash_type = None
+        any_deps = False
 
-        # Read nodes out of list.  Root spec is the first element;
-        # dependencies and build specs are the following elements.
-        dep_list = [Spec.from_node_dict(node) for node in nodes]
-        if not dep_list:
+        # Pass 0: Determine hash type
+
+        for node in nodes:
+            if 'dependencies' in node.keys():
+                any_deps = True
+                for _, _, _, dhash_type in Spec.dependencies_from_node_dict(node):
+                    if dhash_type:
+                        hash_type = dhash_type
+                        break
+
+        if not any_deps:  # If we never see a dependency...
+            hash_type = '_hash'  # guess
+        elif not hash_type:  # Seen a dependency, still don't know hash_type
+            raise spack.error.SpecError("YAML spec contains malformed"
+                                        "dependencies. Old format?")
+
+        hash_dict = {}
+        root_spec_hash = None
+
+        # Pass 1: Create a single lookup dictionary by hash
+        # Possible hash issues...
+
+        for i, node in enumerate(nodes):
+            node_hash = node[hash_type]
+            node_spec = Spec.from_node_dict(node)
+            hash_dict[node_hash] = node
+            hash_dict[node_hash]['node_spec'] = node_spec
+            if i == 0:
+                root_spec_hash = node_hash
+
+        if not root_spec_hash:
             raise spack.error.SpecError("YAML spec contains no nodes.")
-        spec = dep_list[0]
 
-        for node, node_spec in zip(nodes, dep_list):
-            # get dependencies from the node.
-            for _, dhash, dtypes, hash_type in Spec.dependencies_from_node_dict(node):
-                for pos, dep in enumerate(nodes):
-                    if dhash == dep[hash_type]:
-                        # Position indexing is necessary because you can't trust
-                        # Spec object hashes at this stage
-                        node_spec._add_dependency(dep_list[pos], dtypes)
+        # Pass 2: Finish construction of all DAG edges (including build specs)
 
+        for node_hash, node in hash_dict.items():
+            node_spec = node['node_spec']
+            for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
+                node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
             if 'build_spec' in node.keys():
-                # Need to look up build_spec by hash, then run from_dict on it,
-                # then point to it.
-                # Need to create a copy of the list of nodes with the build spec in
-                # front.
-                _, bhash, hash_type = Spec.build_spec_from_node_dict(node)
-                for pos, bspec in enumerate(nodes):
-                    if bhash == bspec[hash_type]:
-                        node_spec.build_spec(dep_list[pos])
+                _, bhash, _ = Spec.build_spec_from_node_dict(node)
+                node_spec.build_spec(hash_dict[bhash]['node_spec'])
 
-        return spec
+        return hash_dict[root_spec_hash]['node_spec']
 
     @staticmethod
     def from_yaml(stream):
