@@ -15,7 +15,7 @@ class Coral(CMakePackage):
     git      = "https://gitlab.cern.ch/lcgcoral/coral.git"
 
     version('3.3.3', tag='CORAL_3_3_3')
-    variant('binary_tag', default='x86_64-centos7-gcc8-opt')
+    variant('binary_tag', default='auto')
 
     depends_on('ninja')
     depends_on('ccache')
@@ -35,7 +35,19 @@ class Coral(CMakePackage):
     depends_on('valgrind')
     depends_on('sqlplus')
 
+    def determine_binary_tag(self):
+        if self.spec.variants['binary_tag'].value != 'auto':
+            return
+        
+        binary_tag = self.spec.target.family +
+            '-' + self.spec.os.name + self.spec.version.joined +
+            '-' + self.spec.compiler.version.joined() +
+            ('-opt' if 'Rel' in self.spec.variants['build_type'] else '-dbg')
+            
+        self.variants['binary_tag'].value = binary_tag
+
     def cmake_args(self):
+        self.determine_binary_tag()
         args = ['-DBINARY_TAG=' + self.spec.variants['binary_tag'].value]
         if self.spec['python'].version >= Version("3.0.0"):
             args.append('-DLCG_python3=on')
