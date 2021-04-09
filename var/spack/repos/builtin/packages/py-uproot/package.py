@@ -19,8 +19,29 @@ class PyUproot(PythonPackage):
     homepage = "https://github.com/scikit-hep/uproot4"
     pypi     = "uproot/uproot-4.0.6.tar.gz"
 
+    maintainers = ['vvolkl']
+
+    tags = ['hep']
+
     version('4.0.6', sha256='1bea2ccc899c6959fb2af69d7e5d1e2df210caab30d3510e26f3fc07c143c37e')
+
+    variant('xrootd', default=True,
+            description='Build with xrootd support ')
+    variant('lz4', default=True,
+            description='Build with support for reading '
+                        'lz4-compressed rootfiles ')
+
+    variant('zstd', default=True,
+            description='Build with support for reading '
+                        'zstd-compressed rootfiles ')
 
     depends_on('python@2.6:2.999,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-numpy', type=('build', 'run'))
+
+    depends_on('xrootd', when="+xrootd")
+
+    depends_on('lz4', when="+lz4")
+    depends_on('xxhash', when="+lz4")
+
+    depends_on('zstd', when="+zstd")

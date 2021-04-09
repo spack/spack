@@ -131,12 +131,11 @@ def location(parser, args):
         print(pkg.stage.source_path)
         return
 
-    # source and build dir remain, they require the spec to be staged
+    # source dir remains, which requires the spec to be staged
     if not pkg.stage.expanded:
         tty.die("Source directory does not exist yet. "
                 "Run this to create it:",
                 "spack stage " + " ".join(args.spec))
 
-    if args.source_dir:
-        print(pkg.stage.source_path)
-        return
+    # Default to source dir.
+    print(pkg.stage.source_path)
