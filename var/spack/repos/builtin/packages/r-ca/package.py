@@ -13,7 +13,7 @@ class RCa(RPackage):
     Computation and visualization of simple, multiple and joint
     correspondence analysis."""
 
-    homepage = "https://cloud.r-project.org/package=ca"
+    homepage = "http://www.carme-n.org/?sec=ca"
     url      = "https://cloud.r-project.org/src/contrib/ca_0.71.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ca"
 
