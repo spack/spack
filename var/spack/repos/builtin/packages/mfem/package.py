@@ -725,9 +725,9 @@ class Mfem(Package):
                           skip_missing=False, work_dir='.')
             make('clean')
 
-    # The files referenced in this patch method do not exist in stable
-    # versions earlier than 4.1.
-    @when('@4.1:')
+    # this patch is only needed for mfem 4.1, where a few
+    # released files include byte order marks
+    @when('@4.1.0')
     def patch(self):
         # Remove the byte order mark since it messes with some compilers
         filter_file(u'\uFEFF', '', 'fem/gslib.hpp')

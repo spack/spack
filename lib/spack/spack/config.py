@@ -35,7 +35,6 @@ import functools
 import os
 import re
 import sys
-import multiprocessing
 from contextlib import contextmanager
 from six import iteritems
 from ordereddict_backport import OrderedDict
@@ -61,6 +60,7 @@ import spack.schema.config
 import spack.schema.upstreams
 import spack.schema.env
 from spack.error import SpackError
+from spack.util.cpus import cpus_available
 
 # Hacked yaml for configuration files preserves line numbers.
 import spack.util.spack_yaml as syaml
@@ -110,7 +110,7 @@ config_defaults = {
         'verify_ssl': True,
         'checksum': True,
         'dirty': False,
-        'build_jobs': min(16, multiprocessing.cpu_count()),
+        'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
         'concretizer': 'original',
     }
@@ -241,11 +241,18 @@ class SingleFileScope(ConfigScope):
         #      }
         #   }
         # }
+
+        # This bit ensures we have read the file and have
+        # the raw data in memory
         if self._raw_data is None:
             self._raw_data = read_config_file(self.path, self.schema)
             if self._raw_data is None:
                 return None
 
+        # Here we know we have the raw data and ensure we
+        # populate the sections dictionary, which may be
+        # cleared by the clear() method
+        if not self.sections:
             section_data = self._raw_data
             for key in self.yaml_path:
                 if section_data is None:
@@ -254,6 +261,7 @@ class SingleFileScope(ConfigScope):
 
             for section_key, data in section_data.items():
                 self.sections[section_key] = {section_key: data}
+
         return self.sections.get(section, None)
 
     def _write_section(self, section):
@@ -353,6 +361,10 @@ class InternalConfigScope(ConfigScope):
 
     def __repr__(self):
         return '<InternalConfigScope: %s>' % self.name
+
+    def clear(self):
+        # no cache to clear here.
+        pass
 
     @staticmethod
     def _process_dict_keyname_overrides(data):
