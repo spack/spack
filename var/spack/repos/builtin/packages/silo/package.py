@@ -110,7 +110,7 @@ class Silo(AutotoolsPackage):
                 '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
                                        spec['hdf5'].prefix.lib),
             ])
-            
+
         if '+silex' in spec:
             x = spec['libx11']
             config_args.extend([
