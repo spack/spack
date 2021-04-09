@@ -336,9 +336,12 @@ def set_build_environment_variables(pkg, env, dirty):
     link_deps       = set(pkg.spec.traverse(root=False, deptype=('link')))
     build_link_deps = build_deps | link_deps
     rpath_deps      = get_rpath_deps(pkg)
-    build_run_deps = set()
+    # This includes all build dependencies and any other dependencies that
+    # should be added to PATH (e.g. supporting executables run by build
+    # dependencies)
+    build_and_supporting_deps = set()
     for build_dep in build_deps:
-        build_run_deps.update(build_dep.traverse(deptype='run'))
+        build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
 
     # External packages may be installed in a prefix which contains many other
     # package installs. To avoid having those installations override
@@ -349,7 +352,8 @@ def set_build_environment_variables(pkg, env, dirty):
     link_deps = _place_externals_last(link_deps)
     build_link_deps = _place_externals_last(build_link_deps)
     rpath_deps = _place_externals_last(rpath_deps)
-    build_run_deps = _place_externals_last(build_run_deps)
+    build_and_supporting_deps = _place_externals_last(
+        build_and_supporting_deps)
 
     link_dirs = []
     include_dirs = []
@@ -396,7 +400,8 @@ def set_build_environment_variables(pkg, env, dirty):
     env.set(SPACK_INCLUDE_DIRS, ':'.join(include_dirs))
     env.set(SPACK_RPATH_DIRS, ':'.join(rpath_dirs))
 
-    build_run_prefixes = filter_system_paths(x.prefix for x in build_run_deps)
+    build_and_supporting_prefixes = filter_system_paths(
+        x.prefix for x in build_and_supporting_deps)
     build_link_prefixes = filter_system_paths(
         x.prefix for x in build_link_deps)
 
@@ -414,9 +419,9 @@ def set_build_environment_variables(pkg, env, dirty):
 
     # Add bin directories from dependencies to the PATH for the build.
     # These directories are added to the beginning of the search path, and in
-    # the order given by 'build_run_prefixes' (the iteration order is reversed
-    # because each entry is prepended)
-    for prefix in reversed(build_run_prefixes):
+    # the order given by 'build_and_supporting_prefixes' (the iteration order
+    # is reversed because each entry is prepended)
+    for prefix in reversed(build_and_supporting_prefixes):
         for dirname in ['bin', 'bin64']:
             bin_dir = os.path.join(prefix, dirname)
             if os.path.isdir(bin_dir):
