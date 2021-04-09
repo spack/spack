@@ -310,7 +310,7 @@ def test_external_prefixes_last(mutable_config, mock_packages, working_env,
     cfg_data = syaml.load_config("""\
 dt-diamond-left:
   externals:
-  - spec: dt-diamond-left
+  - spec: dt-diamond-left@1.0
     prefix: /fake/path1
   buildable: false
 """)
