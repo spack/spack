@@ -100,6 +100,18 @@ class Phist(CMakePackage):
 
     # ###################### Patches ##########################
 
+# GW needs a when clause ???
+    patch('fix_import_use.patch')
+
+    patch('getpid_clang.patch')
+
+    patch('loc_integer.patch')
+    patch('loc_integer2.patch')
+
+    patch('jada_argv.patch')
+    patch('core_argv.patch')
+    patch('kernels_argv.patch')
+
     patch('update_tpetra_gotypes.patch', when='@:1.8.99')
 
     patch('sbang.patch', when='+fortran')
@@ -188,3 +200,45 @@ class Phist(CMakePackage):
     def test_install(self):
         with working_dir(self.build_directory):
             make("test_install")
+
+    @when('%cce@11.0.3:')
+    def patch(self):
+        filter_file('-march=native',
+                    '',
+                    'cmake/SetCompilerFlagsCLANG.cmake')
+        filter_file('-fno-math-errno',
+                    '',
+                    'cmake/SetCompilerFlagsCLANG.cmake')
+        filter_file('-fno-signed-zeros',
+                    '',
+                    'cmake/SetCompilerFlagsCLANG.cmake')
+        filter_file('-ffinite-math-only',
+                    '',
+                    'cmake/SetCompilerFlagsCLANG.cmake')
+        filter_file('-fno-trapping-math',
+                    '',
+                    'cmake/SetCompilerFlagsCLANG.cmake')
+        #print("GW filtering drivers/matfuncs/brussolator.F90')
+        filter_file('^/','!/','drivers/matfuncs/brussolator.F90')
+        filter_file('^/','!/','drivers/matfuncs/matpde.F90')
+        filter_file('^/','!/','drivers/matfuncs/matpde3d.F90')
+        filter_file('^/','!/','drivers/matfuncs/tritoeplitz.F90')
+        filter_file('^/','!/','src/kernels/builtin/axpy_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/crsmat_module.F90')
+        filter_file('^/','!/','src/kernels/builtin/dot_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/env_module.F90')
+        filter_file('^/','!/','src/kernels/builtin/gather_scatter_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/gemm_kernels_fused_sCD.F90')
+        filter_file('^/','!/','src/kernels/builtin/gemm_kernels_sB.F90')
+        filter_file('^/','!/','src/kernels/builtin/gemm_kernels_sB_add_sD.F90')
+        filter_file('^/','!/','src/kernels/builtin/gemm_kernels_sB_augmented.F90')
+        filter_file('^/','!/','src/kernels/builtin/gemm_kernels_sC.F90')
+        filter_file('^/','!/','src/kernels/builtin/kacz_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/map_module.F90')
+        filter_file('^/','!/','src/kernels/builtin/mrgrnk.F90')
+        filter_file('^/','!/','src/kernels/builtin/mvec_module.F90')
+        filter_file('^/','!/','src/kernels/builtin/nrm2_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/sdmat_module.F90')
+        filter_file('^/','!/','src/kernels/builtin/spmv_buff_cpy_kernels.F90')
+        filter_file('^/','!/','src/kernels/builtin/spmvm_kernels.F90')
+

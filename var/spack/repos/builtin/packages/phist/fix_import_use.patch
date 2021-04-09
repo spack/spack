@@ -1,0 +1,28 @@
+diff -ru a/fortran_bindings/cfwrapper.py.in b/fortran_bindings/cfwrapper.py.in
+--- a/fortran_bindings/cfwrapper.py.in	2021-04-05 19:42:36.551429322 -0500
++++ b/fortran_bindings/cfwrapper.py.ing	2021-04-05 13:47:10.284795422 -0500
+@@ -575,7 +575,7 @@
+                         if f_type.find("type")!=-1:
+                                 type_name=str.strip(f_type[f_type.find("(")+1:f_type.find(")")])
+                                 own_type=False
+-                                if type_name in module_types:
++                                if (type_name in module_types) and (f_import.find(type_name)==-1):
+                                         own_type=True
+                                         if f_import == "":
+                                                 f_import = type_name
+@@ -586,10 +586,11 @@
+                                         own_type=True
+                                         # a previously generated module contains the type
+                                         mod_name = TYPE_MODULE_DICT[type_name]
+-                                        if (f_use_own.find(mod_name)==-1):
+-                                                f_use_own += "use "+mod_name + ", only : "+type_name + "\n"
+-                                        else:
+-                                                f_use_own=re.sub(mod_name+", only:",mod_name+", only: "+type_name+", ",f_use_own)
++                                        if(module_name!=mod_name):
++                                                if (f_use_own.find(mod_name)==-1):
++                                                        f_use_own += "use "+mod_name + ", only : "+type_name + "\n"
++                                                else:
++                                                        f_use_own=re.sub(mod_name+", only:",mod_name+", only: "+type_name+", ",f_use_own)
+ 
+                                 if own_type and f_type.find("-pass-by-ref")!=-1:
+                                         # pass translated types (C structs) as C_PTR if

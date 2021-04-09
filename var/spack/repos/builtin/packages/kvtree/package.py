@@ -21,12 +21,16 @@ class Kvtree(CMakePackage):
 
     variant('mpi', default=True, description="Build with MPI message packing")
     depends_on('mpi', when='+mpi')
-
+#   def edit(self,spec):
+#       if '%cray' in spec:  # Cray enables OpenMP by default
+#   ldflags  += ['-Wl,-z,muldefs']
     def flag_handler(self, name, flags):
-        if '%cce' in self.spec:
-            if name == 'ldflags':
-                flags.append('-Wl,-z,muldefs')
-            return (flags, None, None)
+        if name in ['cflags', 'cxxflags', 'cppflags']:
+            return (None, flags, None)
+        elif name == 'ldflags':
+            flags.append('-Wl,-z,muldefs')
+        return (flags, None, None)
+
 
     def cmake_args(self):
         args = []

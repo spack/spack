@@ -26,3 +26,12 @@ class JsonC(AutotoolsPackage):
                     '-Wextra -Wno-error=implicit-fallthrough '
                     '-Wno-error=unused-but-set-variable',
                     'Makefile.in')
+
+    @when('%cce@11.0.3:')
+    def patch(self):
+        filter_file('-Werror',
+                    '',
+                    'CMakeLists.txt')
+        filter_file('-Werror',
+                    '',
+                    'configure')
