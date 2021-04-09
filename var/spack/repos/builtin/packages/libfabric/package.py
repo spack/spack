@@ -86,6 +86,12 @@ class Libfabric(AutotoolsPackage):
         if self.run_tests:
             env.prepend_path('PATH', self.prefix.bin)
 
+    def flag_handler(self, name, flags):
+        if (self.spec.satisfies('@1.12.0:') and '%cce' in self.spec):
+            if name == 'ldflags':
+                flags.append('-Wl,-z,muldefs')
+            return (None, None, flags)
+        
     @when('@develop')
     def autoreconf(self, spec, prefix):
         bash = which('bash')
