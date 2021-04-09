@@ -7,7 +7,15 @@ from spack import *
 
 
 class RAssertiveProperties(RPackage):
-    """assertive.properties: Assertions to Check Properties of Variables"""
+    """assertive.properties: Assertions to Check Properties of
+    Variables
+
+    A set of predicates and assertions for checking the
+    properties of variables, such as length, names and
+    attributes. This is mainly for use by other package
+    developers who want to include run-time testing features in
+    their own packages. End-users will usually want to use
+    assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.properties"
     url      = "https://cloud.r-project.org/src/contrib/assertive.properties_0.0-4.tar.gz"
