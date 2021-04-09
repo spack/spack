@@ -493,6 +493,13 @@ class AutotoolsPackage(PackageBase):
             # collect the spack flags from the spec
             spack_flag_name = var_to_spack_map[env_flag_var_name]
             spack_flags = spec.compiler_flags[spack_flag_name]
+            # now check that there is a spack variable to set
+            if not spack_flags:
+                tty.debug("{0} NOT adding: {1}={2} to configure args"
+                          "".format("enforce_user_flags: ",
+                                    env_flag_var_name,
+                                    ' '.join(spack_flags)))
+                continue
             # should be a list, but be safe
             if isinstance(spack_flags, six.string_types):
                 spack_flags = [spack_flags]
@@ -741,7 +748,7 @@ class AutotoolsPackage(PackageBase):
         # is not declared.
         for flag_env_var_name in flag_variables:
             # add the variable and flags if it doens't exist.
-            # subjust to `add_if_var_undefined`
+            # subject to `add_if_var_undefined`
             if flag_env_var_name not in flag_map and add_if_var_undefined:
                 flag_map[flag_env_var_name] = ' '.join(build_type_flags)
 
