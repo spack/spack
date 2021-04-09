@@ -1,0 +1,12 @@
+diff -ru a/drivers/matfuncs/matpde3d.F90 b/drivers/matfuncs/matpde3d.F90
+--- a/drivers/matfuncs/matpde3d.F90 2021-04-08 14:53:19.140468468 -0500
++++ b/drivers/matfuncs/matpde3d.F90 2021-04-08 14:53:57.425618367 -0500
+@@ -182,7 +182,7 @@
+     use ifport, only: getpid
+ #endif
+     implicit none
+-#if defined(__PGI) || defined(FLANG)
++#if defined(__PGI) || defined(FLANG) || defined(_CRAYFTN)
+     integer, external :: getpid
+ #endif
+     integer, allocatable :: seed(:)

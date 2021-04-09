@@ -1,0 +1,44 @@
+diff -ru a/src/kernels/builtin/mvec_module.F90 b/src/kernels/builtin/mvec_module.F90
+--- a/src/kernels/builtin/mvec_module.F90 2021-04-08 14:53:19.140468468 -0500
++++ b/src/kernels/builtin/mvec_module.F90 2021-04-08 14:53:57.425618367 -0500
+@@ -1400,6 +1400,7 @@
+     logical :: strided_x, strided_y, strided
+     logical :: only_scale, only_copy, one_alpha, y_aligned
+     integer :: i
++    integer*8 iloc
+     !--------------------------------------------------------------------------------
+
+     ! first gather some data to decide what we want
+@@ -1447,7 +1448,8 @@
+     end do
+
+     y_aligned = .true.
+-    if( mod(loc(y%val(y%jmin,1)),16) .ne. 0 .or. mod(ldy,2) .ne. 0 ) then
++    iloc=loc(y%val(y%jmin,1))
++    if( mod(iloc,16) .ne. 0 .or. mod(ldy,2) .ne. 0 ) then
+       y_aligned = .false.
+     end if
+
+@@ -1534,6 +1536,7 @@
+     type(MVec_t), pointer :: x, y
+     logical :: aligned, strided, strided_x, strided_y
+     integer(c_int) :: ldx, ldy, nrows, nvecX, nvecY
++    integer*8 iloc
+     !--------------------------------------------------------------------------------
+
+     if( .not. c_associated(y_ptr) ) then
+@@ -1573,10 +1576,12 @@
+       strided = strided_x .or. strided_y
+
+     aligned = .true.
+-    if( mod(loc(y%val(x%jmin,1)),64) .ne. 0 ) then
++    iloc=loc(y%val(y%jmin,1))
++    if( mod(iloc,64) .ne. 0 ) then
+       aligned = .false.
+     end if
+-    if( mod(loc(y%val(y%jmin,1)),64) .ne. 0 ) then
++    iloc=loc(y%val(y%jmin,1))
++    if( mod(iloc,64) .ne. 0 ) then
+       aligned = .false.
+     end if
+

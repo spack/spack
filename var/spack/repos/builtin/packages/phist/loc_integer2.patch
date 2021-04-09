@@ -1,0 +1,29 @@
+diff -ru a/src/kernels/builtin/crsmat_module.F90 b/src/kernels/builtin/crsmat_module.F90
+--- a/src/kernels/builtin/crsmat_module.F90 2021-04-08 14:53:19.140468468 -0500
++++ b/src/kernels/builtin/crsmat_module.F90 2021-04-08 14:53:57.425618367 -0500
+@@ -1487,6 +1487,7 @@
+     integer :: nvec, ldx, ldy, recvBuffSize, sendBuffSize
+     logical :: strided_x, strided_y, strided
+     logical :: y_is_aligned, x_is_aligned, handled
++    integer*8 iloc
+     !--------------------------------------------------------------------------------
+
+     ! check arguments
+@@ -1530,13 +1531,15 @@
+     ldx = size(x%val,1)
+     ldy = size(y%val,1)
+
+-    if( mod(loc(x%val(x%jmin,1)),32) .eq. 0 .and. (mod(ldx,4) .eq. 0 .or. ldx .eq. nvec) ) then
++    iloc = loc(x%val(x%jmin,1))
++    if( mod(iloc,32) .eq. 0 .and. (mod(ldx,4) .eq. 0 .or. ldx .eq. nvec) ) then
+       x_is_aligned = .true.
+     else
+       x_is_aligned = .false.
+     end if
+
+-    if( mod(loc(y%val(y%jmin,1)),32) .eq. 0 .and. (mod(ldy,4) .eq. 0 .or. ldy .eq. nvec) ) then
++    iloc = loc(y%val(y%jmin,1))
++    if( mod(iloc,32) .eq. 0 .and. (mod(ldy,4) .eq. 0 .or. ldy .eq. nvec) ) then
+       y_is_aligned = .true.
+     else
+       y_is_aligned = .false.

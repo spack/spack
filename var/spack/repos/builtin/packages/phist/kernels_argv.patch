@@ -1,0 +1,23 @@
+diff -ru a/fortran_bindings/test/kernels.F90 b/fortran_bindings/test/kernels.F90
+--- a/fortran_bindings/test/kernels.F90 2021-04-08 14:53:19.140468468 -0500
++++ b/fortran_bindings/test/kernels.F90 2021-04-08 14:53:57.425618367 -0500
+@@ -22,7 +22,7 @@
+ integer(c_int) :: iflag
+ ! dummy args to phist_kernels_init
+ integer(c_int) :: argc
+-type(c_ptr), target :: argv
++type(c_ptr), target :: argv(1)
+
+ ! indicate which types are available in the kernel library
+ logical :: haveS, haveC, haveD, haveZ
+@@ -60,7 +60,9 @@
+ ! *as long as we already initialized MPI!*
+ ! Otherwise, the kernel lib may call the C variant
+ ! of mpi_init and pass in these pointers
+-call phist_kernels_init(argc,c_loc(argv), iflag)
++!call phist_kernels_init(argc,c_loc(argv), iflag)
++!will this work ???
++call phist_kernels_init(argc,argv, iflag)
+ ASSERT_EQ(0,iflag)
+
+ ! create a communicator object, note that this may be different from an MPI_Comm in Fortran
