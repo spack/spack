@@ -9,7 +9,7 @@ from spack import *
 class RAssertiveProperties(RPackage):
     """assertive.properties: Assertions to Check Properties of Variables"""
 
-    homepage = "https://cloud.r-project.org/package=assertive.properties"
+    homepage = "https://bitbucket.org/richierocks/assertive.properties"
     url      = "https://cloud.r-project.org/src/contrib/assertive.properties_0.0-4.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.properties"
 
