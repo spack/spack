@@ -302,6 +302,11 @@ def test_set_build_environment_variables(
 
 def test_external_prefixes_last(mutable_config, mock_packages, working_env,
                                 monkeypatch):
+    # Sanity check: under normal circumstances paths associated with
+    # dt-diamond-left would appear first. We'll mark it as external in
+    # the test to check if the associated paths are placed last.
+    assert 'dt-diamond-left' < 'dt-diamond-right'
+
     cfg_data = syaml.load_config("""\
 dt-diamond-left:
   externals:
@@ -332,9 +337,6 @@ dt-diamond-left:
             external_lib_paths)
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) &
                 external_lib_paths)
-    # Sanity check: under normal circumstances paths associated with
-    # dt-diamond-left would appear first
-    assert 'dt-diamond-left' < 'dt-diamond-right'
 
 
 def test_parallel_false_is_not_propagating(config, mock_packages):
