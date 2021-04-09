@@ -306,13 +306,11 @@ def test_external_prefixes_last(mutable_config, mock_packages, working_env,
 dt-diamond-left:
   externals:
   - spec: dt-diamond-left
-    prefix: /fake/path
+    prefix: /fake/path1
   buildable: false
 """)
     spack.config.set("packages", cfg_data)
-
-    top = spack.spec.Spec('dt-diamond')
-    top.concretize()
+    top = spack.spec.Spec('dt-diamond').concretized()
 
     def _trust_me_its_a_dir(path):
         return True
@@ -327,13 +325,16 @@ dt-diamond-left:
     env_mods.apply_modifications()
     link_dir_var = os.environ['SPACK_LINK_DIRS']
     link_dirs = link_dir_var.split(':')
-    external_lib_paths = set(['/fake/path/lib', '/fake/path/lib64'])
+    external_lib_paths = set(['/fake/path1/lib', '/fake/path1/lib64'])
     # The external lib paths should be the last two entries of the list and
     # should not appear anywhere before the last two entries
     assert (set(os.path.normpath(x) for x in link_dirs[-2:]) ==
             external_lib_paths)
     assert not (set(os.path.normpath(x) for x in link_dirs[:-2]) &
                 external_lib_paths)
+    # Sanity check: under normal circumstances paths associated with
+    # dt-diamond-left would appear first
+    assert 'dt-diamond-left' < 'dt-diamond-right'
 
 
 def test_parallel_false_is_not_propagating(config, mock_packages):

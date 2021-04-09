@@ -343,17 +343,22 @@ def set_build_environment_variables(pkg, env, dirty):
     for build_dep in build_deps:
         build_and_supporting_deps.update(build_dep.traverse(deptype='run'))
 
+    # Establish an arbitrary but fixed ordering of specs so that resulting
+    # environment variable values are stable
+    def _order(specs):
+        return sorted(specs, key=lambda x: x.name)
+
     # External packages may be installed in a prefix which contains many other
     # package installs. To avoid having those installations override
     # Spack-installed packages, they are placed at the end of search paths.
     # System prefixes are removed entirely later on since they are already
     # searched.
-    build_deps = _place_externals_last(build_deps)
-    link_deps = _place_externals_last(link_deps)
-    build_link_deps = _place_externals_last(build_link_deps)
-    rpath_deps = _place_externals_last(rpath_deps)
+    build_deps = _place_externals_last(_order(build_deps))
+    link_deps = _place_externals_last(_order(link_deps))
+    build_link_deps = _place_externals_last(_order(build_link_deps))
+    rpath_deps = _place_externals_last(_order(rpath_deps))
     build_and_supporting_deps = _place_externals_last(
-        build_and_supporting_deps)
+        _order(build_and_supporting_deps))
 
     link_dirs = []
     include_dirs = []
