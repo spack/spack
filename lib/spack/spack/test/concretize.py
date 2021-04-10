@@ -176,7 +176,7 @@ class Changing(Package):
 # This must use the mutable_config fixture because the test
 # adjusting_default_target_based_on_compiler uses the current_host fixture,
 # which changes the config.
-@pytest.mark.usefixtures('mutable_config', 'mock_packages')
+@pytest.mark.usefixtures('mutable_database', 'mutable_config', 'mock_packages')
 class TestConcretize(object):
     def test_concretize(self, spec):
         check_concretize(spec)
