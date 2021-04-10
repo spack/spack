@@ -9,7 +9,6 @@ import os
 import collections
 import shutil
 import stat
-import tempfile
 import getpass
 
 import pytest
