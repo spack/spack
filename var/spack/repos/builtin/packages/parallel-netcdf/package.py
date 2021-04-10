@@ -130,38 +130,40 @@ class ParallelNetcdf(AutotoolsPackage):
 
     def configure_args(self):
         # for convenience
-        spec = self.spec
-
+        mpi_spec = self.spec['mpi']
         # mvapich2 will set the MPI env variables,
         # but that may not be a given. So set them for safety
-        args = ['--with-mpi=%s' % spec['mpi'].prefix,
+        args = ['--with-mpi=%s' % mpi_spec.prefix,
                 'SEQ_CC=%s' % spack_cc,
-                'MPICC=%s'  % spec['mpi'].mpicc,
-                'MPICXX=%s' % spec['mpi'].mpicxx,
-                'MPIF77=%s' % spec['mpi'].mpifc,
-                'MPIF90=%s' % spec['mpi'].mpifc,
+                'MPICC=%s'  % mpi_spec.mpicc,
+                'MPICXX=%s' % mpi_spec.mpicxx,
+                'MPIF77=%s' % mpi_spec.mpif77,
+                'MPIF90=%s' % mpi_spec.mpifc,
                 ]
 
         # setup testing (required at configure time)
-        mpiexec = ''
-        mpiexec_flags = ''
         # this will be an ordered search.
         # that isn't great - for example, some HPC machines may use
         # slurm to manage jobs, but another process launcher to run
         # e.g., Cray can use aprun + slurm, or mpirun + slurm.
-        mpiexecs = ['srun', 'aprun', 'jsrun', 'mpiexec', 'mpirun']
-        mpiexecs_flags = {'srun': '--cpu-bind=cores -c1 -n',
-                          'aprun': '-n',
-                          'jsrun': '-p',
-                          'mpiexec': '-n',
-                          'mpirun': 'np',
-                          }
+        #
+        # This list of tuples imposes an priority to commands
+        # mpiexec and mpirun have the highest priority by request
+        # and then external job launchers are 2nd.
+        #
+        # The ordering should only matter for default behavior
+        # In the future we hope to provide a means to define
+        # the command/flags as part of a spec, so look to the future :)
+        mpiexecs_and_flags = [('mpiexec', '-n'),
+                              ('mpirun', '-np'),
+                              ('srun', '-n'),
+                              ('aprun', '-n'),
+                              ('jsrun', '-p'),
+                              ]
 
-        for candidate_mpiexec in mpiexecs:
-            x = which(candidate_mpiexec)
-            if x:
-                mpiexec = x
-                mpiexec_flags = mpiexecs_flags[candidate_mpiexec]
+        for mpiexec, mpiexec_flags in mpiexecs_and_flags:
+            mpiexec = which(mpiexec)
+            if mpiexec:
                 testseq = '{0} {1} 1'.format(mpiexec, mpiexec_flags)
                 testmpi = '{0} {1} NP'.format(mpiexec, mpiexec_flags)
                 tty.debug("Guessing mpiexec to be : {0}".format(mpiexec))
