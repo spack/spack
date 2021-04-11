@@ -770,16 +770,33 @@ class AutotoolsPackage(PackageBase):
         """
         options = ['--prefix={0}'.format(prefix)]
 
+        tty.debug("Testing configure_flag_args for user provided flags")
+        conf_flag_args = getattr(self, 'configure_flag_args', [])
+        # given some args to configure, test them for bad flag behavior
+        # return a split list of args for configure:
+        #   The flag args (fargs) and the non-flag configure args (cargs)
+        # Return value is a dict for fargs and list for others
+        arg_src = 'configure_flag_args'
+        cf_fargs, cf_cargs = self._configure_check_flags(spec,
+                                                         conf_flag_args,
+                                                         arg_src)
+
+
         # tty.debug("Testing configure_flag_args for user provided flags")
-        build_env_flag_args = getattr(self, 'configure_flag_args', [])
+        build_env_flag_args = ['{0}={1}'.format(k, v) for k, v in env.items()]
         # given some args to configure, test them for bad flag behavior
         # return a split list of args for configure:
         #   The flag args (fargs) and the non-flag configure args (cargs)
         # Return value is a dict for fargs and list for others
         arg_src = 'setup_build_environment'
-        be_fargs, be_cargs = self._configure_check_flags(spec,
-                                                         build_env_flag_args,
-                                                         arg_src)
+        # for build_env args, we ignore the 'non flag' map
+        # because this data was pulled from os.environ
+        # we do not want to set those variables on the ./configure line
+        # We will only every use the flag args to modify the value set in
+        # bulid environment. 
+        be_fargs, _ = self._configure_check_flags(spec,
+                                                  build_env_flag_args,
+                                                  arg_src)
 
         # tty.debug("Testing configure_args for user provided flags")
         # gather the package defined configured args
@@ -795,6 +812,13 @@ class AutotoolsPackage(PackageBase):
         # reconcile build env flags and pkg configure_args ... better not
         # exist in both! It would mean setup_build_environment defined an
         # ENV, then configure was passed something else
+        #
+        # TODO: Need to add the configure_flag_args thing
+        # need to return a map of var=val, and var:loc
+        # then we will set vars in loc that were set there
+        #
+        # optional, detect if all flag vars are not set in configure_args
+        # then set in the ENV instead (try to mimic the packages's behavior
         unified_flags = self._reconcile_var_args(
             spec,
             build_var_flag_map=be_fargs,
@@ -816,7 +840,7 @@ class AutotoolsPackage(PackageBase):
         # we could apply some deduplication (but that is tricky)
         # for now, flatten the dict of VAR : VAL to a list of [ "VAR=VAL" ]
         flag_args = ['{0}={1}'.format(k, v) for k, v in unified_flags.items()]
-        options += be_cargs + pkg_cargs + flag_args
+        options += pkg_cargs + flag_args
 
         with working_dir(self.build_directory, create=True):
             inspect.getmodule(self).configure(*options)
