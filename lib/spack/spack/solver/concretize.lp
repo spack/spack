@@ -472,6 +472,8 @@ node_os_inherit(Dependency, OS)
      not node_os_set(Dependency).
 node_os_inherit(Package) :- node_os_inherit(Package, _).
 
+node_os(Package, OS) :- node_os_inherit(Package, OS).
+
 % fall back to default if not set or inherited
 node_os(Package, OS)
   :- node(Package),
