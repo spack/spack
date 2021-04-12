@@ -17,6 +17,7 @@ class Elmerfem(CMakePackage):
 
     version('ice',   branch='elmerice')
     version('devel', branch='devel')
+    version('9.0', sha256='08c5bf261e87ff37456c1aa0372db3c83efabe4473ea3ea0b8ec66f5944d1aa0')
     version('8.4', sha256='cc3ce807d76798361592cc14952cdc3db1ad8f9bac038017514033ce9badc5b3')
 
     variant('mpi', default=True, description='Enable MPI support.')
@@ -111,6 +112,14 @@ class Elmerfem(CMakePackage):
             ])
 
         return args
+
+    def patch(self):
+        if self.spec.satisfies('@8.4'):
+            # from commit f02cb33acd59 upstream
+            filter_file('FOREACH(D RANGE 1 depth)',
+                        'FOREACH(D RANGE 1 ${depth})',
+                        'fem/tests/CMakeLists.txt',
+                        string=True)
 
     def setup_run_environment(self, env):
         env.set('ELMER_HOME', self.prefix)
