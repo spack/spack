@@ -9,7 +9,7 @@ from spack import *
 class RAssertiveStrings(RPackage):
     """assertive.strings: Assertions to Check Properties of Strings"""
 
-    homepage = "https://cloud.r-project.org/package=assertive.strings"
+    homepage = "https://bitbucket.org/richierocks/assertive.strings"
     url      = "https://cloud.r-project.org/src/contrib/assertive.strings_0.0-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.strings"
 
