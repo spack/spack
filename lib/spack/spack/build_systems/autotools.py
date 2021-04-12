@@ -844,6 +844,11 @@ class AutotoolsPackage(PackageBase):
                                 }
         # get the build type as lower case
         build_type = spec.variants['build_type'].value.lower()
+
+        # always do nothing
+        if build_type == 'undefined':
+            return
+
         # create a list from the string
         build_type_flags = build_type_flags_map[build_type].split()
 
@@ -958,7 +963,8 @@ class AutotoolsPackage(PackageBase):
         # DISABLED initially - included to demostrate why the prior effort
         # make this clean to implement
         #
-        self._configure_apply_build_type(spec, final_flags)
+        if spec.variants['build_type'].value != 'Undefiend':
+            self._configure_apply_build_type(spec, final_flags)
 
         # we now have the final flag map, prepare to set the flags
         # based on the prefered locations. If the flag var was discovered
