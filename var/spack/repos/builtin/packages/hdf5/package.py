@@ -266,7 +266,6 @@ class Hdf5(CMakePackage):
                 self.define('SZIP_INCLUDE_DIR', spec['libaec'].prefix.include))
             args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib))
 
-
         api = spec.variants['api'].value
         if api != 'default':
             args.append(self.define('DEFAULT_API_VERSION', api))
