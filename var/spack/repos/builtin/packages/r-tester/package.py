@@ -9,7 +9,7 @@ from spack import *
 class RTester(RPackage):
     """tester allows you to test characteristics of common R objects."""
 
-    homepage = "https://cloud.r-project.org/package=tester"
+    homepage = "https://github.com/gastonstat/tester"
     url      = "https://cloud.r-project.org/src/contrib/tester_0.1.7.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tester"
 
