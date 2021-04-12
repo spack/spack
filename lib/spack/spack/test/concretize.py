@@ -374,8 +374,9 @@ class TestConcretize(object):
         # only relevant when not building compilers as needed
         with spack.concretize.enable_compiler_existence_check():
             s = Spec('a %gcc@0.0.0')
-            with pytest.raises(
-                    spack.concretize.UnavailableCompilerVersionError):
+            with pytest.raises((
+                    spack.concretize.UnavailableCompilerVersionError,
+                    spack.concretize.NoCompilersForArchError)):
                 s.concretize()
 
     def test_no_compilers_for_arch(self):
