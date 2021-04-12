@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,10 @@ class MountPointAttributes(AutotoolsPackage):
 
     homepage = "https://github.com/LLNL/MountPointAttributes"
     url = 'https://github.com/LLNL/MountPointAttributes/files/2270601/mountpointattr-1.1.tar.gz'
+    git = "https://github.com/LLNL/MountPointAttributes.git"
+    maintainers = ['lee218llnl']
 
+    version('master', branch='master')
     version('1.1', sha256='bff84c75c47b74ea09b6cff949dd699b185ddba0463cb1ff39ab138003c96e02')
 
     depends_on('autoconf', type='build')

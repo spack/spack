@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyMultiqc(PythonPackage):
     for a large number of common bioinformatics tools."""
 
     homepage = "https://multiqc.info"
-    url      = "https://pypi.io/packages/source/m/multiqc/multiqc-1.0.tar.gz"
+    pypi = "multiqc/multiqc-1.0.tar.gz"
 
     version('1.7', sha256='02e6a7fac7cd9ed036dcc6c92b8f8bcacbd28983ba6be53afb35e08868bd2d68')
     version('1.5', sha256='fe0ffd2b0d1067365ba4e54ae8991f2f779c7c684b037549b617020ea883310a')

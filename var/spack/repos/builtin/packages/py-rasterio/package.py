@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,7 +15,7 @@ class PyRasterio(PythonPackage):
     arrays."""
 
     homepage = "https://github.com/mapbox/rasterio"
-    url      = "https://pypi.io/packages/source/r/rasterio/rasterio-1.1.8.tar.gz"
+    pypi = "rasterio/rasterio-1.1.8.tar.gz"
     git      = "https://github.com/mapbox/rasterio.git"
 
     maintainers = ['adamjstewart']
@@ -29,7 +29,7 @@ class PyRasterio(PythonPackage):
     depends_on('python@3.5:', type=('build', 'link', 'run'), when='@1.2:')
     depends_on('python@2.7:2.8,3.5:3.8', type=('build', 'link', 'run'), when='@1.1.0:1.1.999')
     depends_on('python@2.7:2.8,3.5:3.7', type=('build', 'link', 'run'), when='@:1.0')
-    depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))
     depends_on('py-cython', type='build', when='@master')
     depends_on('py-affine', type=('build', 'run'))
     depends_on('py-attrs', type=('build', 'run'))

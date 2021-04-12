@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyPythonSwiftclient(PythonPackage):
     """This is a python client for the Swift API."""
 
     homepage = "https://docs.openstack.org/python-swiftclient"
-    url      = "https://pypi.io/packages/source/p/python-swiftclient/python-swiftclient-3.9.0.tar.gz"
+    pypi = "python-swiftclient/python-swiftclient-3.9.0.tar.gz"
 
     maintainers = ['ajkotobi']
 

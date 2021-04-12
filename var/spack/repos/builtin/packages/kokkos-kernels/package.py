@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -28,6 +28,7 @@ class KokkosKernels(CMakePackage, CudaPackage):
         'serial': (False,  "enable Serial backend (default)"),
         'cuda': (False,  "enable Cuda backend"),
         'openmp': (False,  "enable OpenMP backend"),
+        'pthread': (False,  "enable Pthread backend"),
     }
 
     for backend in backends:

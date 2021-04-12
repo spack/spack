@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,8 @@ class Mozjs(AutotoolsPackage):
     depends_on('perl@5.6:', type='build')
     depends_on('pkgconfig', type='build')
     depends_on('python@2.7.3:2.8', type='build')
+    depends_on('zip',  type='build')
+    depends_on('unzip', type='build')
     depends_on('nspr', when='@:27')
     depends_on('libffi@3.0.9:')
     depends_on('readline', when='@17.0.0:')

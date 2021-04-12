@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -71,6 +71,10 @@ class PyCartopy(PythonPackage):
 
     # Needed for `spack test run py-cartopy`
     setup_run_environment = setup_build_environment
+
+    # Needed for `spack test run py-foo` where `py-foo` depends on `py-cartopy`
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_build_environment(env)
 
     def build_ext_args(self, spec, prefix):
         args = [

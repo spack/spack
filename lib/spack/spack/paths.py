@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -50,7 +50,8 @@ mock_packages_path = os.path.join(repos_path, "builtin.mock")
 
 #: User configuration location
 user_config_path = os.path.expanduser('~/.spack')
-
+user_bootstrap_path = os.path.join(user_config_path, 'bootstrap')
+user_bootstrap_store = os.path.join(user_bootstrap_path, 'store')
 
 opt_path        = os.path.join(prefix, "opt")
 etc_path        = os.path.join(prefix, "etc")

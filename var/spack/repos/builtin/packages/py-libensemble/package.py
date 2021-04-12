@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyLibensemble(PythonPackage):
     """Library for managing ensemble-like collections of computations."""
 
     homepage = "https://libensemble.readthedocs.io"
-    url      = "https://pypi.io/packages/source/l/libensemble/libensemble-0.7.1.tar.gz"
+    pypi = "libensemble/libensemble-0.7.1.tar.gz"
     git      = "https://github.com/Libensemble/libensemble.git"
 
     version('develop', branch='develop')
@@ -46,7 +46,7 @@ class PyLibensemble(PythonPackage):
     depends_on('py-mpi4py@2.0:', type=('build', 'run'), when='+mpi')
     depends_on('py-scipy', type=('build', 'run'), when='+scipy')
     depends_on('py-petsc4py', type=('build', 'run'), when='+petsc4py')
-    depends_on('py-petsc4py@develop', type=('build', 'run'), when='@develop+petsc4py')
+    depends_on('py-petsc4py@main', type=('build', 'run'), when='@develop+petsc4py')
     depends_on('nlopt', type=('build', 'run'), when='+nlopt')
     depends_on('py-mpmath', type=('build', 'run'), when='+mpmath')
     depends_on('py-deap', type=('build', 'run'), when='+deap')

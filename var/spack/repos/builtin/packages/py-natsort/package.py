@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,7 @@ from spack import *
 class PyNatsort(PythonPackage):
     """Simple yet flexible natural sorting in Python."""
 
-    homepage = "https://pypi.org/project/natsort/"
+    homepage = "https://github.com/SethMMorton/natsort"
     url = "https://github.com/SethMMorton/natsort/archive/5.2.0.zip"
 
     version('5.2.0', sha256='0ae15082842e8a3598750b4bbaa4f7c138caf004e59c7040429d56bf9e9631bd')

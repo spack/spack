@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,7 +23,7 @@ class Charmpp(Package):
 
     maintainers = ["matthiasdiener"]
 
-    version("master", branch="master")
+    version("main", branch="main")
 
     version('6.10.2', sha256='7abb4cace8aebdfbb8006eac03eb766897c009cfb919da0d0a33f74c3b4e6deb')
     version('6.10.1', sha256='ab96198105daabbb8c8bdf370f87b0523521ce502c656cb6cd5b89f69a2c70a8')

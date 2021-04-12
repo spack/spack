@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PyCrispresso(PythonPackage):
     outcomes from deep sequencing data."""
 
     homepage = "https://github.com/lucapinello/CRISPResso"
-    url      = "https://pypi.io/packages/source/C/CRISPResso/CRISPResso-1.0.8.tar.gz"
+    pypi = "CRISPResso/CRISPResso-1.0.8.tar.gz"
 
     version('1.0.8', sha256='b04ac8781ff8ed56d018c357e741f146b72ad7e0d23c9e5bc1e1bcd1a873ebc3')
 

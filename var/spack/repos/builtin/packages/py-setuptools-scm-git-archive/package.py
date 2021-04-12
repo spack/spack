@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PySetuptoolsScmGitArchive(PythonPackage):
        (for example the ones GitHub automatically generates)."""
 
     homepage = "https://github.com/Changaco/setuptools_scm_git_archive/"
-    url = "https://pypi.io/packages/source/s/setuptools_scm_git_archive/setuptools_scm_git_archive-1.1.tar.gz"
+    pypi = "setuptools_scm_git_archive/setuptools_scm_git_archive-1.1.tar.gz"
 
     maintainers = ['marcmengel']
 

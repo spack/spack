@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,6 +26,7 @@ class FontUtil(AutotoolsPackage, XorgPackage):
     depends_on('mkfontdir', type='build')
 
     font_baseurl = 'https://www.x.org/archive/individual/font/'
+    default_fonts = []
     fonts = []
     # name, version, sha256
     fonts_resource = [
@@ -70,12 +71,19 @@ class FontUtil(AutotoolsPackage, XorgPackage):
         f = f_r[0]
         resource(name=f, url=font_baseurl + f + '-' + f_r[1] + '.tar.gz',
                  sha256=f_r[2], destination=f, when='fonts=' + f)
+
+        conflicts('fonts=font-bh-ttf', when='platform=cray')
+        conflicts('fonts=font-bh-ttf', when='arch=linux-rhel7-broadwell')
+
+        if f != 'font-bh-ttf':
+            default_fonts.append(f)
+
         fonts.append(f)
 
     variant('fonts',
             description='Installs fonts',
             values=fonts,
-            default=','.join(fonts),
+            default=','.join(default_fonts),
             multi=True)
 
     def setup_build_environment(self, env):

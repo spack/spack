@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,4 +31,4 @@ class RaxmlNg(CMakePackage):
     depends_on('mpi', when='+mpi')
 
     def cmake_args(self):
-        return [self.define_from_variants('USE_MPI', 'mpi')]
+        return [self.define_from_variant('USE_MPI', 'mpi')]

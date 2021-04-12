@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -19,6 +19,11 @@ class Gmsh(CMakePackage):
     homepage = 'http://gmsh.info'
     url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
 
+    version('4.7.1', sha256='c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a')
+    version('4.7.0', sha256='e27f32f92b374ba2a746a9d9c496401c13f66ac6e3e70753e16fa4012d14320e')
+    version('4.6.0', sha256='0f2c55e50fb6c478ebc8977f6341c223754cbf3493b7b0d683b4395ae9f2ad1c')
+    version('4.5.6', sha256='46eaeb0cdee5822fdaa4b15f92d8d160a8cc90c4565593cfa705de90df2a463f')
+    version('4.5.5', sha256='899d3cded664124fa387da57b6f170f47a7e712c7744aa3562779897e2b9e251')
     version('4.5.4', sha256='ccf8c74f43cbe3c371abe79862025d41642b3538a0148f018949494e3b3e2ecd')
     version('4.4.1', sha256='853c6438fc4e4b765206e66a514b09182c56377bb4b73f1d0d26eda7eb8af0dc')
     version('4.2.2', sha256='e9ee9f5c606bbec5f2adbb8c3d6023c4e2577f487fa4e4ecfcfc94a241cc8dcc')

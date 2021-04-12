@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,8 +32,11 @@ class GtkDoc(AutotoolsPackage):
     depends_on('py-pygments', type=('build', 'run'))
     depends_on('libxslt')
     depends_on('libxml2')
-    depends_on('docbook-xsl')
+    depends_on('docbook-xsl@1.78.1')
+    depends_on('docbook-xml@4.3')
     # depends_on('dblatex', when='+pdf')
+
+    patch('build.patch')
 
     def url_for_version(self, version):
         """Handle gnome's version-based custom URLs."""

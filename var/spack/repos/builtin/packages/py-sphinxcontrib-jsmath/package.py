@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PySphinxcontribJsmath(PythonPackage):
     """A sphinx extension which renders display math in HTML via JavaScript."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz"
+    pypi = "sphinxcontrib-jsmath/sphinxcontrib-jsmath-1.0.1.tar.gz"
 
     # Sphinx requires sphinxcontrib-jsmath at build-time, but
     # sphinxcontrib-jsmath requires sphinx at run-time

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,6 +22,7 @@ def create_s3_session(url):
     # want to require boto as a dependency unless the user actually wants to
     # access S3 mirrors.
     from boto3 import Session
+    from botocore.exceptions import ClientError
 
     session = Session()
 
@@ -41,4 +42,6 @@ def create_s3_session(url):
 
         s3_client_args["config"] = Config(signature_version=UNSIGNED)
 
-    return session.client('s3', **s3_client_args)
+    client = session.client('s3', **s3_client_args)
+    client.ClientError = ClientError
+    return client

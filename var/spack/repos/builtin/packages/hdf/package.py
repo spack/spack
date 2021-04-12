@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -144,6 +144,14 @@ class Hdf(AutotoolsPackage):
             # We should not specify '--disable-hdf4-xdr' due to a bug in the
             # configure script.
             config_args.append('LIBS=%s' % self.spec['rpc'].libs.link_flags)
+
+        # https://github.com/Parallel-NetCDF/PnetCDF/issues/61
+        if self.spec.satisfies('%gcc@10:'):
+            config_args.extend([
+                'FFLAGS=-fallow-argument-mismatch',
+                'FCFLAGS=-fallow-argument-mismatch']
+            )
+
         return config_args
 
     # Otherwise, we randomly get:

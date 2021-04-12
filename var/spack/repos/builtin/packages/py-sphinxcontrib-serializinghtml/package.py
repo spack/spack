@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class PySphinxcontribSerializinghtml(PythonPackage):
     "serialized" HTML files (json and pickle)."""
 
     homepage = "http://sphinx-doc.org/"
-    url      = "https://pypi.io/packages/source/s/sphinxcontrib-serializinghtml/sphinxcontrib-serializinghtml-1.1.3.tar.gz"
+    pypi = "sphinxcontrib-serializinghtml/sphinxcontrib-serializinghtml-1.1.3.tar.gz"
 
     # Sphinx requires sphinxcontrib-serializinghtml at build-time, but
     # sphinxcontrib-serializinghtml requires sphinx at run-time
