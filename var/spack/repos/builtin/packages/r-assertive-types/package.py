@@ -7,7 +7,13 @@ from spack import *
 
 
 class RAssertiveTypes(RPackage):
-    """assertive.types: Assertions to Check Types of Variables"""
+    """assertive.types: Assertions to Check Types of Variables
+
+    A set of predicates and assertions for checking the types
+    of variables. This is mainly for use by other package
+    developers who want to include run-time testing features in
+    their own packages. End-users will usually want to use
+    assertive directly."""
 
     homepage = "https://bitbucket.org/richierocks/assertive.types"
     url      = "https://cloud.r-project.org/src/contrib/assertive.types_0.0-3.tar.gz"
