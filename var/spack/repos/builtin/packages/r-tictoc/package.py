@@ -8,7 +8,16 @@ from spack import *
 
 class RTictoc(RPackage):
     """tictoc: Functions for timing R scripts, as well as implementations of
-    Stack and List structures"""
+    Stack and List structures
+
+    This package provides the timing functions 'tic' and 'toc'
+    that can be nested. One can record all timings while a
+    complex script is running, and examine the values later. It
+    is also possible to instrument the timing calls with custom
+    callbacks. In addition, this package provides class
+    'Stack', implemented as a vector, and class 'List',
+    implemented as a list, both of which support operations
+    'push', 'pop', 'first', 'last' and 'clear'."""
 
     homepage = "https://collectivemedia.github.io/tictoc/"
     url      = "https://cloud.r-project.org/src/contrib/tictoc_1.0.tar.gz"
