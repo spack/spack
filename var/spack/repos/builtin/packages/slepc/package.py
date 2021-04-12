@@ -136,23 +136,26 @@ class Slepc(Package):
         test_dir = self.prefix.share.slepc.examples.src.pep.tests
 
         if not os.path.exists(test_dir):
-            print("Does not exist")
             return
 
         exe = 'test11'
         output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
         expected_output = get_escaped_text_output(output_dir.join('test11_1.out'))
-        arpack_cmd = './configure --with-arpack-dir={0} --with-arpack-lib=-lparpack,-larpack'.format(self.spec['arpack-ng'].prefix)
 
-        self.run_test(exe='make',
-                      options=[#arpack_cmd,
-                               exe],
+        self.run_test(exe='{0}'.format(self.spec['arpack-ng'].prefix),
+                      options=[' --with-arpack-dir={0}'.format(self.spec['arpack-ng'].prefix),
+                               '--with-arpack-lib=-lparpack,-larpack', exe],
+                      purpose='test: configure pep example {0}'.format(exe),
+                      work_dir=test_dir)
+
+        """self.run_test(exe='make',
+                      options=[exe],
                       purpose='test: build pep example {0}'.format(exe),
                       work_dir=test_dir)
 
         # This test ensures the test runs and produces
         # the expected output
-        """response = self.run_test(exe='./{0}'.format(exe),
+        response = self.run_test(exe='./{0}'.format(exe),
                                  expected=expected_output,
                                  purpose='test: run pep example '.format(exe),
                                  work_dir=test_dir)
@@ -160,7 +163,7 @@ class Slepc(Package):
 
     def test(self):
         print("running_tests")
-        print('hello {0}'.format(self.spec['arpack-ng'].prefix))
+        print('hello {0}'.format(self.prefix))
         test_dir = self.prefix.share.slepc.examples.src.pep.tests
         output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
         output = get_escaped_text_output(output_dir.join('test11_1.out'))
