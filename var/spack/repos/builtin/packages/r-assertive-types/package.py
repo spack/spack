@@ -9,7 +9,7 @@ from spack import *
 class RAssertiveTypes(RPackage):
     """assertive.types: Assertions to Check Types of Variables"""
 
-    homepage = "https://cloud.r-project.org/package=assertive.types"
+    homepage = "https://bitbucket.org/richierocks/assertive.types"
     url      = "https://cloud.r-project.org/src/contrib/assertive.types_0.0-3.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.types"
 
