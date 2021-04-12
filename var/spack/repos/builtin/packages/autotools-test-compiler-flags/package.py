@@ -3,32 +3,17 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-# ----------------------------------------------------------------------------
-# If you submit this package back to Spack as a pull request,
-# please first remove this boilerplate and all FIXME comments.
-#
-# This is a template package file for Spack.  We've put "FIXME"
-# next to all the things you'll want to change. Once you've handled
-# them, you can save this file and test your package like this:
-#
-#     spack install autotools-test-compiler-flags
-#
-# You can edit this file again by typing:
-#
-#     spack edit autotools-test-compiler-flags
-#
-# See the Spack documentation for more information on packaging.
-# ----------------------------------------------------------------------------
 
 from spack import *
 import llnl.util.tty as tty
 
 
 class AutotoolsTestCompilerFlags(AutotoolsPackage):
-    """FIXME: Put a proper description of your package here."""
+    """Misery and Suffering await you (this package should be a test... but there
+    isn't a 'test' directory for pacakges.
+    """
 
-    # FIXME: Add a proper url for your package's homepage here.
-    homepage = "https://www.example.com"
+    homepage = "https://www.blah.com"
     url      = "https://github.com/LLNL/mpileaks/releases/download/v1.0/mpileaks-1.0.tar.gz"
 
     version('1.0', sha256='2e34cc4505556d1c1f085758e26f2f8eea0972db9382f051b2dcfb1d7d9e1825')
@@ -52,7 +37,6 @@ class AutotoolsTestCompilerFlags(AutotoolsPackage):
                         " Pipe because single valued variants won't allow"
                         " commas, semicolons, or spaces")
 
-    # FIXME: Add dependencies if required.
     depends_on('mpi')
 
     def configure_args(self):
