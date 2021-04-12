@@ -113,7 +113,10 @@ class Amdfftw(FftwBase):
         # Spack user can not directly use AMD_ARCH for this purpose but should
         # use target variable to set appropriate -march option in AMD_ARCH.
         arch = spec.architecture
-        options.append("AMD_ARCH={0}".format(arch.target.optimization_flags(spec.compiler).split("=")[-1]))
+        options.append(
+            "AMD_ARCH={0}".format(
+                arch.target.optimization_flags(
+                    spec.compiler).split("=")[-1]))
 
         # Specific SIMD support.
         # float and double precisions are supported
