@@ -142,6 +142,7 @@ class Qt(Package):
     depends_on("gperf", when='+webkit')
     depends_on("gtkplus", when='+gtk')
     depends_on("openssl", when='+ssl')
+    depends_on("python@2.7.5:2.999", when='@5.14: +webkit', type='build')
     depends_on("sqlite+column_metadata", when='+sql', type=('build', 'run'))
 
     depends_on("libpng@1.2.57", when='@3')
