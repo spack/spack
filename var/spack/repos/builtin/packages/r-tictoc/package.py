@@ -10,7 +10,7 @@ class RTictoc(RPackage):
     """tictoc: Functions for timing R scripts, as well as implementations of
     Stack and List structures"""
 
-    homepage = "https://cloud.r-project.org/package=tictoc"
+    homepage = "https://collectivemedia.github.io/tictoc/"
     url      = "https://cloud.r-project.org/src/contrib/tictoc_1.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/tictoc"
 
