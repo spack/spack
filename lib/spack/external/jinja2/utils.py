@@ -482,10 +482,14 @@ class LRUCache(object):
 
 # register the LRU cache as mutable mapping if possible
 try:
-    from collections import MutableMapping
+    from collections.abc import MutableMapping
     MutableMapping.register(LRUCache)
 except ImportError:
-    pass
+    try:
+        from collections import MutableMapping
+        MutableMapping.register(LRUCache)
+    except ImportError:
+        pass
 
 
 def select_autoescape(enabled_extensions=('html', 'htm', 'xml'),

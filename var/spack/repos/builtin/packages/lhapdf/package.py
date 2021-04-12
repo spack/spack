@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,15 +26,9 @@ class Lhapdf(AutotoolsPackage):
     depends_on('python',        type=('build', 'run'))
     depends_on('py-cython',     type='build')
     depends_on('py-setuptools', type='build')
-    depends_on('boost',         type='build')
-    depends_on('yaml-cpp',      type='build', when='@:6.1.5')
 
     extends('python')
 
     def configure_args(self):
-        args = ['--with-boost=' + self.spec['boost'].prefix,
-                'FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
-
-        if self.spec.satisfies('@:6.1.5'):
-            args.append('--with-yaml-cpp=' + self.spec['yaml-cpp'].prefix)
+        args = ['FCFLAGS=-O3', 'CFLAGS=-O3', 'CXXFLAGS=-O3']
         return args

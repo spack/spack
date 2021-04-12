@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyShapely(PythonPackage):
     """
 
     homepage = "https://github.com/Toblerity/Shapely"
-    url      = "https://pypi.io/packages/source/S/Shapely/Shapely-1.7.1.tar.gz"
+    pypi = "Shapely/Shapely-1.7.1.tar.gz"
     git      = "https://github.com/Toblerity/Shapely.git"
 
     maintainers = ['adamjstewart']
@@ -22,12 +22,12 @@ class PyShapely(PythonPackage):
     version('1.7.0', sha256='e21a9fe1a416463ff11ae037766fe410526c95700b9e545372475d2361cc951e')
     version('1.6.4', sha256='b10bc4199cfefcf1c0e5d932eac89369550320ca4bdf40559328d85f1ca4f655')
 
-    depends_on('python@3.5:', when='@1.8:', type=('build', 'run'))
-    depends_on('python@2.7:2.8,3.4:', when='@1.7:', type=('build', 'run'))
-    depends_on('python@2.6:', type=('build', 'run'))
+    depends_on('python@3.5:', when='@1.8:', type=('build', 'link', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@1.7:', type=('build', 'link', 'run'))
+    depends_on('python@2.6:', type=('build', 'link', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-cython', type='build')
-    depends_on('py-numpy', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'link', 'run'))
     depends_on('geos')
     depends_on('geos@3.3:', when='@1.3:')
     depends_on('py-pytest', type='test')

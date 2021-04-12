@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,6 +24,7 @@ class Camp(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('blt', type='build')
     depends_on('blt@0.3.7:', type='build', when='+rocm')
+    depends_on('cub', when='+cuda')
 
     def cmake_args(self):
         spec = self.spec

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -189,7 +189,7 @@ class _GpgConstants(object):
         #                "file-name-too-long" errors in gpg.
 
         try:
-            has_suitable_gpgconf = bool(_GpgConstants.gpgconf_string)
+            has_suitable_gpgconf = bool(GpgConstants.gpgconf_string)
         except SpackGPGError:
             has_suitable_gpgconf = False
 

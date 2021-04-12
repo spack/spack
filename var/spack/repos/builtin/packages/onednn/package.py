@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,9 +13,15 @@ class Onednn(CMakePackage):
 
     homepage = "https://01.org/onednn"
     url      = "https://github.com/oneapi-src/oneDNN/archive/v1.7.tar.gz"
+    git      = "https://github.com/oneapi-src/oneDNN.git"
 
     maintainers = ['adamjstewart']
 
+    version('master', branch='master')
+    version('2.1-rc', sha256='13d293e7368a8fdd8dd3c11c73352cf5f564398658dd027ce0acde947440b4cb')
+    version('2.0',    sha256='922b42c3ea7a7122a77c61568dc4512aa8130c264c0489283c989919d1f59a6d')
+    version('1.8.1',  sha256='1883ccfb037bd31f916203a38e877899fc27ae10bc9ebad686f78d189ba506a7')
+    version('1.8',    sha256='0a1bfbbc6fd86c6ea4cf0f7c36fe3e69b0bbefa74158c65a5db28d589cb5fbe9')
     version('1.7',    sha256='2dbd53578b36bd84bbc3e411d1a4cacc0eed832892818c5fa16b72cbf1dab015')
     version('1.6.5',  sha256='6258d961fe1757b70d10cf34f0925079401ffae264f056b15024270b11d5c1eb')
     version('1.6.4',  sha256='5369f7b2f0b52b40890da50c0632c3a5d1082d98325d0f2bff125d19d0dcaa1d')

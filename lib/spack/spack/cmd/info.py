@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -189,10 +189,11 @@ def print_text_info(pkg):
         color.cprint(section_title('Safe versions:  '))
 
         for v in reversed(sorted(pkg.versions)):
-            if pkg.has_code:
-                url = fs.for_package_version(pkg, v)
-            line = version('    {0}'.format(pad(v))) + color.cescape(url)
-            color.cprint(line)
+            if not pkg.versions[v].get('deprecated', False):
+                if pkg.has_code:
+                    url = fs.for_package_version(pkg, v)
+                line = version('    {0}'.format(pad(v))) + color.cescape(url)
+                color.cprint(line)
 
     color.cprint('')
     color.cprint(section_title('Variants:'))

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class PyPytestCache(PythonPackage):
     """
 
     homepage = "https://bitbucket.org/hpk42/pytest-cache/src/default/"
-    url      = "https://pypi.io/packages/source/p/pytest-cache/pytest-cache-1.0.tar.gz"
+    pypi = "pytest-cache/pytest-cache-1.0.tar.gz"
 
     version('1.0', sha256='be7468edd4d3d83f1e844959fd6e3fd28e77a481440a7118d430130ea31b07a9')
 

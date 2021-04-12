@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,7 +13,7 @@ class PyScoop(PythonPackage):
     environments, from heterogeneous grids to supercomputers."""
 
     homepage = "https://github.com/soravux/scoop"
-    url      = "https://pypi.io/packages/source/s/scoop/scoop-0.7.1.1.tar.gz"
+    pypi = "scoop/scoop-0.7.1.1.tar.gz"
 
     version('0.7.1.1', sha256='d8b6444c7bac901171e3327a97e241dde63f060354e162a65551fd8083ca62b4')
 

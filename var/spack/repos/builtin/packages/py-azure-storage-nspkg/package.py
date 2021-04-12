@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureStorageNspkg(PythonPackage):
     """Microsoft Azure Storage Namespace Package."""
 
     homepage = "https://github.com/Azure/azure-storage-python"
-    url      = "https://pypi.io/packages/source/a/azure-storage-nspkg/azure-storage-nspkg-3.1.0.tar.gz"
+    pypi = "azure-storage-nspkg/azure-storage-nspkg-3.1.0.tar.gz"
 
     version('3.1.0', sha256='6f3bbe8652d5f542767d8433e7f96b8df7f518774055ac7c92ed7ca85f653811')
 

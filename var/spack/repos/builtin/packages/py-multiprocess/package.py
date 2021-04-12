@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyMultiprocess(PythonPackage):
     """Better multiprocessing and multithreading in Python"""
 
     homepage = "https://github.com/uqfoundation/multiprocess"
-    url = "https://pypi.io/packages/source/m/multiprocess/multiprocess-0.70.5.zip"
+    pypi = "multiprocess/multiprocess-0.70.5.zip"
 
     version('0.70.9', sha256='9fd5bd990132da77e73dec6e9613408602a4612e1d73caf2e2b813d2b61508e5')
     version('0.70.7', sha256='3394f1fbd0d87112690a877e49eb7917d851ee8d822294d522dd4deae12febdb')

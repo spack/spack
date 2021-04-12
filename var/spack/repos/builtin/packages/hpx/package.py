@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,6 +17,7 @@ class Hpx(CMakePackage, CudaPackage):
 
     version('master', git='https://github.com/STEllAR-GROUP/hpx.git', branch='master')
     version('stable', git='https://github.com/STEllAR-GROUP/hpx.git', tag='stable')
+    version('1.6.0', sha256='4ab715613c1e1808edc93451781cc9bc98feec4e422ccd4322858a680f6d9017')
     version('1.5.1', sha256='b2f9358ce2a9446b9d8fb1998c30913e7199b007aa82e46d0aa05c763331c635')
     version('1.5.0', sha256='de2901d8ae017592c513e0af9cf58de295abc9802e55ece00424cbd8a3801920')
     version('1.4.1', sha256='965dabe44d17480e326d92da4eec56722d98b33943c53d2b0f8f4655cb208023')
@@ -165,5 +166,9 @@ class Hpx(CMakePackage, CudaPackage):
                 self.define('APEX_WITH_OTF2', True),
                 self.define('OTF2_ROOT', spec['otf2'].prefix),
             ]
+
+            # it seems like there was a bug in the default version of APEX in 1.5.x
+            if spec.satisfies("@1.5"):
+                args += [self.define('HPX_WITH_APEX_TAG', "v2.3.0")]
 
         return args

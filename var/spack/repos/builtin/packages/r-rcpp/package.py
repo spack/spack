@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,20 +7,25 @@ from spack import *
 
 
 class RRcpp(RPackage):
-    """The 'Rcpp' package provides R functions as well as C++ classes which
-    offer a seamless integration of R and C++. Many R data types and objects
-    can be mapped back and forth to C++ equivalents which facilitates both
-    writing of new code as well as easier integration of third-party libraries.
-    Documentation about 'Rcpp' is provided by several vignettes included in
-    this package, via the 'Rcpp Gallery' site at <http://gallery.rcpp.org>, the
-    paper by Eddelbuettel and Francois (2011, JSS), and the book by
-    Eddelbuettel (2013, Springer); see 'citation("Rcpp")' for details on these
-    last two."""
+    """Seamless R and C++ Integration
+
+    The 'Rcpp' package provides R functions as well as C++ classes which; offer
+    a seamless integration of R and C++. Many R data types and objects can be;
+    mapped back and forth to C++ equivalents which facilitates both writing of
+    new; code as well as easier integration of third-party libraries.
+    Documentation; about 'Rcpp' is provided by several vignettes included in
+    this package, via the; 'Rcpp Gallery' site at <https://gallery.rcpp.org>,
+    the paper by Eddelbuettel and; Francois (2011,
+    <doi:10.18637/jss.v040.i08>), the book by Eddelbuettel (2013,;
+    <doi:10.1007/978-1-4614-6868-4>) and the paper by Eddelbuettel and Balamuta
+    (2018,; <doi:10.1080/00031305.2017.1375990>); see 'citation("Rcpp")' for
+    details."""
 
     homepage = "http://dirk.eddelbuettel.com/code/rcpp.html"
     url      = "https://cloud.r-project.org/src/contrib/Rcpp_0.12.13.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/Rcpp"
 
+    version('1.0.6', sha256='c9f24756bc000f7a989bd4f9aa93d57f7739dcde77946703f8bb32332a35f012')
     version('1.0.4.6', sha256='45af675ddbbe155e671453b2e84fe32250bb98d4ccb4342b61c1e25cff10b302')
     version('1.0.2', sha256='ad9338d6fc89dd116a3e2c5ecef1956e4be63b6c6aa1b21b2e5f249d65a5129c')
     version('1.0.0',   sha256='b7378bf0dda17ef72aa3f2a318a9cb5667bef50b601dc1096431e17426e18bc2')

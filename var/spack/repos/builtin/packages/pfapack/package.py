@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,6 +16,8 @@ class Pfapack(MakefilePackage):
     url      = "https://michaelwimmer.org/pfapack.tgz"
 
     version('2014-09-17', sha256='b68fc35dda23ee24c358641b1a92ef701c4ffa0b3f0b0808b24e68afeb58ef07')
+
+    parallel = False
 
     depends_on('lapack')
     depends_on('blas')

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -8,7 +8,7 @@ class PyAzureMgmtRelay(PythonPackage):
     """Microsoft Azure Relay Client Library for Python."""
 
     homepage = "https://github.com/Azure/azure-sdk-for-python"
-    url      = "https://pypi.io/packages/source/a/azure-mgmt-relay/azure-mgmt-relay-0.2.0.zip"
+    pypi = "azure-mgmt-relay/azure-mgmt-relay-0.2.0.zip"
 
     version('0.2.0', sha256='a7e8341b2920d1d45bdf73d2b7825c44427d33fb0d820aceb11c94432323bf68')
     version('0.1.0', sha256='d9f987cf2998b8a354f331b2a71082c049193f1e1cd345812e14b9b821365acb')

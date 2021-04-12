@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Tskit(PythonPackage):
     examine, and manipulate tree sequences"""
 
     homepage = "https://tskit.readthedocs.io/en/latest/"
-    url      = "https://pypi.io/packages/source/t/tskit/tskit-0.3.1.tar.gz"
+    pypi = "tskit/tskit-0.3.1.tar.gz"
 
     version('0.3.1', sha256='b9c5a9b2fb62a615e389036946345ef8a35b09f1ffee541995b16f97fedb3d36')
 

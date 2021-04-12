@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RTfbstools(RPackage):
-    """Software Package for Transcription Factor Binding Site (TFBS) Analysis.
+    """Software Package for Transcription Factor Binding Site (TFBS) Analysis
 
        TFBSTools is a package for the analysis and manipulation of
        transcription factor binding sites. It includes matrices conversion
@@ -19,6 +19,7 @@ class RTfbstools(RPackage):
     homepage = "https://bioconductor.org/packages/TFBSTools"
     git      = "https://git.bioconductor.org/packages/TFBSTools.git"
 
+    version('1.28.0', commit='15e7cf76f39ee3280a27284d58f7adef1c33f193')
     version('1.22.0', commit='613d3567fd662b65269bd200c5aa5f87ac6a4612')
     version('1.20.0', commit='74035fc6beb1af82f171c11ef2b0a8817714c5bc')
     version('1.18.0', commit='17e12b9f3dcb9059d414307ec0bc23ed1ee33294')

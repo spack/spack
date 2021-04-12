@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -27,9 +27,9 @@ class Libxtst(AutotoolsPackage, XorgPackage):
     depends_on('libxext@1.0.99.4:')
     depends_on('libxi')
 
-    depends_on('recordproto@1.13.99.1:', type='build')
-    depends_on('xextproto@7.0.99.3:', type='build')
-    depends_on('inputproto', type='build')
-    depends_on('fixesproto', type='build')
+    depends_on('recordproto@1.13.99.1:')
+    depends_on('xextproto@7.0.99.3:')
+    depends_on('inputproto')
+    depends_on('fixesproto')
     depends_on('pkgconfig', type='build')
     depends_on('util-macros', type='build')

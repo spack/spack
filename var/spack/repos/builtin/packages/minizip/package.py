@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -24,10 +24,11 @@ class Minizip(AutotoolsPackage):
 
     # error: implicit declaration of function 'mkdir' is invalid in C99
     patch('implicit.patch', when='%apple-clang@12:')
+    patch('implicit.patch', when='%gcc@7.3.0:')
 
     # statically link to libz.a
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/minizip.rb
-    patch('static.patch')
+    patch('static.patch', when='%apple-clang@12:')
 
     # build minizip and miniunz
     @run_before('autoreconf')

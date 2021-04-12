@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -44,6 +44,7 @@ class Flibcpp(CMakePackage):
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             self.define_from_variant('FLIBCPP_BUILD_DOCS', 'doc'),
             self.define_from_variant('FLIBCPP_FORTRAN_STD', 'fstd'),
+            self.define_from_variant('FLIBCPP_USE_SWIG', 'swig'),
             self.define('FLIBCPP_BUILD_TESTS', bool(self.run_tests)),
             self.define('FLIBCPP_BUILD_EXAMPLES', bool(self.run_tests)),
         ]

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,7 @@ from spack import *
 
 
 class RAffyplm(RPackage):
-    """Methods for fitting probe-level models.
+    """Methods for fitting probe-level models
 
        A package that extends and improves the functionality of the base affy
        package. Routines that make heavy use of compiled code for speed.
@@ -18,6 +18,7 @@ class RAffyplm(RPackage):
     homepage = "https://bioconductor.org/packages/affyPLM"
     git      = "https://git.bioconductor.org/packages/affyPLM.git"
 
+    version('1.66.0', commit='f0780c3d0e9dccaff83861b98beb5c1d324c4399')
     version('1.60.0', commit='b11e377d6af3fd0f28aba8195ebf171003da1a9d')
     version('1.58.0', commit='32764c7691d9a72a301d50042a8844112887a1c8')
     version('1.56.0', commit='13dfc558281af9a177d4d592c34cf7ace629af0e')

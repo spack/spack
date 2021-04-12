@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -10,7 +10,7 @@ class PyLmfit(PythonPackage):
     """Least-Squares Minimization with Bounds and Constraints"""
 
     homepage = "http://lmfit.github.io/lmfit-py/"
-    url      = "https://pypi.io/packages/source/l/lmfit/lmfit-0.9.5.tar.gz"
+    pypi = "lmfit/lmfit-0.9.5.tar.gz"
 
     version('1.0.1',  sha256='d249eb756899360f4d2a544c9458f47fc8f765ac22c09e099530585fd64e286e')
     version('0.9.15', sha256='cd7bdf47c09a3d49f30dff9a1c7f778973d15d1e1b5dc642f14c22f6630eaf2f')

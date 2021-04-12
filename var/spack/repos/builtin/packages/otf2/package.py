@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -23,6 +23,10 @@ class Otf2(AutotoolsPackage):
     version('1.4',   sha256='fb5fe169003c01e40848e224f09c440014e9872e84d2ca02ce7fffdd3f879a2f')
     version('1.3.1', sha256='c4605ace845d89fb1a19223137b92cc503b01e3db5eda8c9e0715d0cfcf2e4b9')
     version('1.2.1', sha256='1db9fb0789de4a9c3c96042495e4212a22cb581f734a1593813adaf84f2288e4')
+
+    # Fix missing initialization of variable resulting in issues when used by
+    # APEX/HPX: https://github.com/STEllAR-GROUP/hpx/issues/5239
+    patch('collective_callbacks.patch', when='@2.1:2.2')
 
     def configure_args(self):
         return [

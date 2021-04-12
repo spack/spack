@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,7 +32,8 @@ class Xxhash(MakefilePackage):
         targets = []
 
         if '%nvhpc' in self.spec:
-            targets.append('CFLAGS=-O1')
+            if self.spec.satisfies('%nvhpc@:20.11'):
+                targets.append('CFLAGS=-O1')
 
             if 'avx512' in self.spec.target:
                 # Workaround AVX512 compiler issue

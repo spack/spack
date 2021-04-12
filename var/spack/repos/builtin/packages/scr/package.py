@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,9 @@
 from spack import *
 
 import os
+
+# to get system platform type
+import sys
 
 
 class Scr(CMakePackage):
@@ -43,13 +46,20 @@ class Scr(CMakePackage):
     depends_on('filo', when="@3:")
     depends_on('spath', when="@3:")
 
+    # DTCMP is an optional dependency up until 3.x
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
             "Necessary to enable user directory naming at runtime")
-    depends_on('dtcmp', when="+dtcmp")
+    depends_on('dtcmp', when="@:2.999 +dtcmp")
+
+    # DTCMP is a required dependency with 3.x and later
+    conflicts('~dtcmp', when="@3:", msg="<SCR> DTCMP required for versions >=3")
+    depends_on('dtcmp', when="@3:")
 
     variant('libyogrt', default=True,
             description="Build SCR with libyogrt for get_time_remaining.")
+    depends_on('libyogrt scheduler=slurm', when="+libyogrt resource_manager=SLURM")
+    depends_on('libyogrt scheduler=lsf', when="+libyogrt resource_manager=LSF")
     depends_on('libyogrt', when="+libyogrt")
 
     # MySQL not yet in spack
@@ -81,9 +91,13 @@ class Scr(CMakePackage):
             multi=False,
             description='File locking style for SCR.')
 
-    variant('cache_base', default='/tmp',
-            description='Compile time default location for checkpoint cache.')
-    variant('cntl_base', default='/tmp',
+    # The default cache and control directories should be placed in tmpfs if available.
+    # On Linux, /dev/shm is a common tmpfs location.  Other platforms, like macOS,
+    # do not define a common tmpfs location, so /tmp is the next best option.
+    platform_tmp_default = '/dev/shm' if sys.platform == 'linux' else '/tmp'
+    variant('cache_base', default=platform_tmp_default,
+            description='Compile time default location for cache directory.')
+    variant('cntl_base', default=platform_tmp_default,
             description='Compile time default location for control directory.')
 
     def get_abs_path_rel_prefix(self, path):

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -31,7 +31,7 @@ class Openfst(AutotoolsPackage):
     version('1.4.0',  sha256='eb557f37560438f03912b4e43335c4c9e72aa486d4f2046127131185eb88f17a')
 
     conflicts('%intel@16:')
-    conflicts('%gcc@6:', when='@:1.6.7')
+    conflicts('%gcc@6:', when='@:1.6.1')
 
     variant('far', default=False, description="Enable FAR support")
 

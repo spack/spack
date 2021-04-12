@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -25,6 +25,9 @@ class Openmx(MakefilePackage):
     depends_on('fftw')
     depends_on('blas')
     depends_on('lapack')
+    depends_on('sse2neon', when='target=aarch64:')
+
+    patch('for_aarch64.patch', when='@3.8 target=aarch64:')
 
     parallel = False
 

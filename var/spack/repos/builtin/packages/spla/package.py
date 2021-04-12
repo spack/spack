@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,6 +15,7 @@ class Spla(CMakePackage):
     url      = "https://github.com/eth-cscs/spla/archive/v1.0.0.tar.gz"
     git = 'https://github.com/eth-cscs/spla.git'
 
+    version('1.3.0', sha256='ff05a22bd655607ff941f3228ac8605a813e1eec6eaa49fbcf7b58a3a4cf5f00')
     version('1.2.1', sha256='4d7237f752dc6257778c84ee19c9635072b1cb8ce8d9ab6e34a047f63a736b29')
     version('1.2.0', sha256='96ddd13c155ef3d7e40f87a982cdb439cf9e720523e66b6d20125d346ffe8fca')
     version('1.1.1', sha256='907c374d9c53b21b9f67ce648e7b2b09c320db234a1013d3f05919cd93c95a4b')
@@ -27,6 +28,7 @@ class Spla(CMakePackage):
     variant('static', default=False, description="Build as static library")
     variant('cuda', default=False, description="CUDA backend")
     variant('rocm', default=False, description="ROCm backend")
+    variant('fortran', default=False, description="Build fortran module")
 
     conflicts("+cuda", when="+rocm", msg="+cuda and +rocm are mutually exclusive")
 
@@ -41,12 +43,11 @@ class Spla(CMakePackage):
     depends_on('hsa-rocr-dev', when='+rocm', type='link')
 
     def cmake_args(self):
-        args = []
-
-        if '+openmp' in self.spec:
-            args += ["-DSPLA_OMP=ON"]
-        else:
-            args += ["-DSPLA_OMP=OFF"]
+        args = [
+            self.define_from_variant('SPLA_OMP', 'openmp'),
+            self.define_from_variant('SPLA_FORTRAN', 'fortran'),
+            self.define_from_variant('SPLA_STATIC', 'static')
+        ]
 
         if '+cuda' in self.spec:
             args += ["-DSPLA_GPU_BACKEND=CUDA"]
@@ -54,11 +55,6 @@ class Spla(CMakePackage):
             args += ["-DSPLA_GPU_BACKEND=ROCM"]
         else:
             args += ["-DSPLA_GPU_BACKEND=OFF"]
-
-        if '+static' in self.spec:
-            args += ["-DSPLA_STATIC=ON"]
-        else:
-            args += ["-DSPLA_STATIC=OFF"]
 
         if self.spec['blas'].name == 'openblas':
             args += ["-DSPLA_HOST_BLAS=OPENBLAS"]

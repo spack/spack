@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -13,6 +13,8 @@ class Flex(AutotoolsPackage):
 
     homepage = "https://github.com/westes/flex"
     url = "https://github.com/westes/flex/releases/download/v2.6.1/flex-2.6.1.tar.gz"
+
+    tags = ['build-tools']
 
     executables = ['^flex$']
 

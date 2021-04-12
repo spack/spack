@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -114,6 +114,7 @@ def test_get_concrete_specs(config, mock_packages):
     assert('archive-files' in spec_map)
 
 
+@pytest.mark.maybeslow
 def test_register_cdash_build():
     build_name = 'Some pkg'
     base_url = 'http://cdash.fake.org'

@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -39,6 +39,8 @@ class Mercury(CMakePackage):
             description='Enable udreg on supported Cray platforms')
     variant('debug', default=False,
             description='Enable Mercury to print debug output')
+    variant('checksum', default=True,
+            description='Checksum verify all request/response messages')
 
     depends_on('cmake@2.8.12.2:', type='build')
     # depends_on('cci', when='+cci')  # TODO: add CCI package
@@ -67,7 +69,7 @@ class Mercury(CMakePackage):
             '-DBUILD_TESTING:BOOL=%s' % str(self.run_tests),
             '-DMERCURY_ENABLE_PARALLEL_TESTING:BOOL=%s' % str(parallel_tests),
             '-DMERCURY_USE_BOOST_PP:BOOL=ON',
-            '-DMERCURY_USE_CHECKSUMS:BOOL=ON',
+            '-DMERCURY_USE_CHECKSUMS:BOOL=%s' % variant_bool('+checksum'),
             '-DMERCURY_USE_SYSTEM_MCHECKSUM:BOOL=OFF',
             '-DMERCURY_USE_XDR:BOOL=OFF',
             '-DNA_USE_BMI:BOOL=%s' % variant_bool('+bmi'),
