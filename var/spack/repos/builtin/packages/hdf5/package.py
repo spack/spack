@@ -67,7 +67,6 @@ class Hdf5(CMakePackage):
     variant('tools', default=False, description='Enable build tools')
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
-    variant('zlib', default=True, description='Enable zlib support')
     variant('pic', default=True,
             description='Produce position-independent code (for shared libs)')
     # Build HDF5 with API compatibility.
@@ -86,7 +85,7 @@ class Hdf5(CMakePackage):
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
     depends_on('libaec', when='+szip')
-    depends_on('zlib@1.2.5:', when='+zlib')
+    depends_on('zlib@1.1.2:')
 
     # The Java wrappers and associated libhdf5_java library
     # were first available in 1.10
@@ -244,43 +243,33 @@ class Hdf5(CMakePackage):
         # features: it only *allows* the user to specify certain
         # combinations of other arguments. Enabling it just skips a
         # sanity check in configure, so this doesn't merit a variant.
-        args = [self.define('ALLOW_UNSUPPORTED', True)]
-        args.append(self.define_from_variant('HDF5_ENABLE_Z_LIB_SUPPORT', 'zlib'))
-        args.append(self.define_from_variant('BUILD_SHARED_LIBS', 'shared'))
-        args.append(self.define_from_variant('ONLY_SHARED_LIBS', 'shared'))
+        args = [
+            self.define('ALLOW_UNSUPPORTED', True),
+            self.define('BUILD_TESTING', self.run_tests),
+            self.define('HDF5_ENABLE_Z_LIB_SUPPORT', True),
+            self.define_from_variant('HDF5_ENABLE_SZIP_SUPPORT', 'szip'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('ONLY_SHARED_LIBS', 'shared'),
+            self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'),
+            self.define_from_variant('HDF5_ENABLE_THREADSAFE', 'threadsafe'),
+            self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'),
+            self.define_from_variant('HDF5_BUILD_CPP_LIB', 'cxx'),
+            self.define_from_variant('HDF5_BUILD_FORTRAN', 'fortran'),
+            self.define_from_variant('HDF5_BUILD_JAVA', 'java'),
+            self.define_from_variant('HDF5_BUILD_TOOLS', 'tools')
+        ]
 
         if '+szip' in spec:
-            args.append(self.define_from_variant(
-                        'HDF5_ENABLE_SZIP_SUPPORT', 'szip'))
             args.append(self.define('USE_LIBAEC', True))
             args.append(self.define('HDF5_ENABLE_SZIP_ENCODING', True))
             args.append(
                 self.define('SZIP_INCLUDE_DIR', spec['libaec'].prefix.include))
             args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib))
 
-        args.append(self.define_from_variant('HDF5_ENABLE_PARALLEL', 'mpi'))
 
-        args.append(self.define_from_variant('HDF5_ENABLE_THREADSAFE', 'threadsafe'))
-
-        args.append(self.define_from_variant('HDF5_BUILD_HL_LIB', 'hl'))
-
-        args.append(self.define_from_variant('HDF5_BUILD_CPP_LIB', 'cxx'))
-
-        args.append(self.define_from_variant('HDF5_BUILD_FORTRAN', 'fortran'))
-
-        args.append(self.define_from_variant('HDF5_BUILD_JAVA', 'java'))
-
-        args.append(self.define_from_variant('HDF5_BUILD_TOOLS', 'tools'))
-
-        if self.run_tests:
-            args.append('-DBUILD_TESTING=ON')
-        else:
-            args.append('-DBUILD_TESTING=OFF')
-
-        if spec.variants['api'].value != 'default':
-            args.append(
-                '-DDEFAULT_API_VERSION={0}'.format(
-                    spec.variants['api'].value))
+        api = spec.variants['api'].value
+        if api != 'default':
+            args.append(self.define('DEFAULT_API_VERSION', api))
 
         return args
 
