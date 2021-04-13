@@ -95,12 +95,17 @@ class Slepc(Package):
         # its symlink in spack/stage/ !
         os.environ['SLEPC_DIR'] = os.getcwd()
 
-        options = []
+        if '%cce' in self.spec:
+            filter_file('          flags = l',
+                        '          flags = l\n        flags += ["-fuse-ld=gold"]',
+                        'config/package.py')
 
+        options = []
         if '+arpack' in spec:
             options.extend([
                 '--with-arpack-dir=%s' % spec['arpack-ng'].prefix,
             ])
+            print ("options: ", options)
             if spec.satisfies('@:3.12.99'):
                 arpackopt = '--with-arpack-flags'
             else:
@@ -128,14 +133,8 @@ class Slepc(Package):
 
         make('install', parallel=False)
 
-    def flag_handler(self, name, flags):
-        if '%cce' in self.spec:
-            if name in ['cflags', 'cxxflags', 'cppflags']:
-                return (None, flags, None)
-            elif name == 'ldflags':
-                flags.append('-fuse-ld=gold')
-            return (flags, None, None)
         
+       
     def setup_run_environment(self, env):
         # set SLEPC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
