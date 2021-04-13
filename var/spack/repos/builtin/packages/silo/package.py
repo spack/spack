@@ -47,7 +47,7 @@ class Silo(AutotoolsPackage):
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == 'ldflags':
-            if spec.satisfies('+hdf5'):
+            if '+hdf5' in spec:
                 if spec['hdf5'].satisfies('~shared'):
                     flags.append('-ldl')
             flags.append(spec['readline'].libs.search_flags)
