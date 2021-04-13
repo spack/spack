@@ -53,7 +53,7 @@ class Paraview(CMakePackage, CudaPackage):
             description='Use module kits')
     variant('cuda_arch', default='native', multi=False,
             values=('native', 'fermi', 'kepler', 'maxwell',
-                    'pascal', 'volta', 'turing', 'all', 'none'),
+                    'pascal', 'volta', 'turing', 'ampere', 'all', 'none'),
             description='CUDA architecture')
 
     conflicts('+python', when='+python3')
