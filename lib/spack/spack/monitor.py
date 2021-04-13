@@ -72,7 +72,7 @@ def get_monitor_group(subparser):
     the group is added, and returned.
     """
     # Monitoring via https://github.com/spack/spack-monitor
-    monitor_group = subparser.add_mutually_exclusive_group()
+    monitor_group = subparser.add_argument_group()
     monitor_group.add_argument(
         '--monitor', action='store_true', dest='use_monitor', default=False,
         help="interact with a montor server during builds.")
