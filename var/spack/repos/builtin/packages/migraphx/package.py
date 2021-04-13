@@ -42,8 +42,7 @@ class Migraphx(CMakePackage):
     depends_on('msgpack-c', type='link')
     depends_on('half@1.12.0', type='link')
     depends_on('py-pybind11', type='build')
-    depends_on('py-pybind11@2.6:', type='build', when='@4.1.0')
-    depends_on('nlohmann-json', when='@3.9.0:')
+    depends_on('py-pybind11@2.6:', type='build', when='@4.1.0:')
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
         depends_on('hip@' + ver, type='build', when='@' + ver)
