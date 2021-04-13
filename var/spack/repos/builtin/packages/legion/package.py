@@ -22,16 +22,14 @@ class Legion(CMakePackage):
        tuning of Legion applications to new architectures.
     """
     homepage = "http://legion.stanford.edu/"
-    url = "https://github.com/StanfordLegion/legion/tarball/legion-20.12.0"
+    url = "https://github.com/StanfordLegion/legion/tarball/legion-20.03.0"
     git = "https://github.com/StanfordLegion/legion.git"
 
-    # !!! NOTE: 'master' is the only spot were the embedded gasnet builds is currently
-    # supported.
-    # version('stable', branch='stable')
+    version('stable', branch='stable')
     version('master', branch='master')
     version('cr', branch='control_replication')
 
-    depends_on("cmake@3.16:", type='build')  # rest of legion to be updated to match.
+    depends_on("cmake@3.16:", type='build')
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -43,7 +41,9 @@ class Legion(CMakePackage):
             description="The network communications/transport layer to use.",
             multi=False)
 
-    # TODO: Need to pick a version of MPI v3 below.
+    # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
+    # layer. At present the MPI layer is still experimental and we discourge its
+    # use for general (not legion development) use cases.
     depends_on('mpi', when='network=mpi')
     depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
 
@@ -95,7 +95,7 @@ class Legion(CMakePackage):
         conflicts(conflict_str, when='network=none',
                   msg="conduit attribute requires 'network=gasnet'.")
     depends_on('ucx', when='conduit=ucx')
-    depends_on('mpi', when='conduit=mpi')  # TODO: need to ferret out MPI 3.x support details.
+    depends_on('mpi', when='conduit=mpi')
 
     variant('gasnet_debug', default=False,
             description="Build gasnet with debugging enabled.")
@@ -139,8 +139,8 @@ class Legion(CMakePackage):
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
 
-    depends_on('cuda@10:11', when='+cuda_unsupported_compiler')
-    depends_on('cuda@10:11', when='+cuda')
+    depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
+    depends_on('cuda@10.0:11.9', when='+cuda')
     conflicts('+cuda_hijack', when='~cuda')
 
     variant('fortran', default=False,
