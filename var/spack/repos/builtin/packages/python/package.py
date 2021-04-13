@@ -26,6 +26,7 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin']
 
+    version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
