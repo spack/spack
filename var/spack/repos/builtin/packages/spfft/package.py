@@ -55,6 +55,9 @@ class Spfft(CMakePackage, CudaPackage):
 
     depends_on('cuda@:10', when='@:0.9.11 +cuda')
 
+    # FindHIP cmake script only works for < 4.1
+    depends_on('hip@:4.0', when='@:1.0.1 +rocm')
+
     def cmake_args(self):
         spec = self.spec
         args = [
