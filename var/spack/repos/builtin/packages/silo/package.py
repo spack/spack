@@ -105,7 +105,7 @@ class Silo(AutotoolsPackage):
             '--enable-shared' if '+shared' in spec else '--disable-shared',
         ]
 
-        if spec.satisfies('+hdf5'):
+        if '+hdf5' in spec:
             config_args.extend([
                 '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
                                        spec['hdf5'].prefix.lib),
