@@ -70,7 +70,7 @@ class Amdfftw(FftwBase):
         ]
 
         # Check if compiler is AOCC
-        if spec.satisfies('%aocc'):
+        if '%aocc' in spec:
             options.append("CC={0}".format(os.path.basename(spack_cc)))
             options.append("FC={0}".format(os.path.basename(spack_fc)))
             options.append("F77={0}".format(os.path.basename(spack_fc)))
@@ -100,7 +100,7 @@ class Amdfftw(FftwBase):
             options.append('--disable-mpi')
             options.append('--disable-amd-mpifft')
 
-        if spec.satisfies('+amd-fast-planner'):
+        if '+amd-fast-planner' in spec:
             options.append('--enable-amd-fast-planner')
         else:
             options.append('--disable-amd-fast-planner')
