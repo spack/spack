@@ -112,7 +112,6 @@ config_defaults = {
         'dirty': False,
         'build_jobs': min(16, cpus_available()),
         'build_stage': '$tempdir/spack-stage',
-        'misc_cache': '$tempdir/misc_cache',
         'concretizer': 'original',
     }
 }
