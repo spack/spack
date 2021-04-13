@@ -48,8 +48,8 @@ class Migraphx(CMakePackage):
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
         depends_on('rocblas@' + ver, type='link', when='@' + ver)
         depends_on('miopen-hip@' + ver, type='link', when='@' + ver)
-    depends_on('py-pybind11', type='build')
-    depends_on('py-pybind11@2.6.1', type='build', when='@4.1.0')
+        depends_on('py-pybind11', type='build')
+        depends_on('py-pybind11@2.6:', type='build', when='@4.1.0')
 
     depends_on('nlohmann-json', when='@3.9.0:')
 
