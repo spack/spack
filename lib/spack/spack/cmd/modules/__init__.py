@@ -147,7 +147,8 @@ def loads(module_type, specs, args, out=None):
     modules = list(
         (spec,
          spack.modules.common.get_module(
-             module_type, spec, get_full_path=False, required=False))
+             module_type, spec, get_full_path=False,
+             module_set_name=args.module_set_name, required=False))
         for spec in specs)
 
     module_commands = {

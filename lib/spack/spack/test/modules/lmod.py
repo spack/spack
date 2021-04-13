@@ -5,11 +5,16 @@
 import re
 import pytest
 
+import spack.environment as ev
+import spack.main
 import spack.modules.lmod
+import spack.spec
 
 mpich_spec_string = 'mpich@3.0.4'
 mpileaks_spec_string = 'mpileaks'
 libdwarf_spec_string = 'libdwarf arch=x64-linux'
+
+install = spack.main.SpackCommand('install')
 
 #: Class of the writer tested in this module
 writer_cls = spack.modules.lmod.LmodModulefileWriter
@@ -331,3 +336,18 @@ class TestLmod(object):
 
         assert old_format == new_format
         assert old_format == settings['lmod']
+
+    def test_modules_relative_to_view(
+            self, tmpdir, modulefile_content, module_configuration, install_mockery):
+        with ev.Environment(str(tmpdir), with_view=True) as e:
+            module_configuration('with_view')
+            install('cmake')
+
+            spec = spack.spec.Spec('cmake').concretized()
+
+            content = modulefile_content('cmake')
+            expected = e.default_view.view().get_projection_for_spec(spec)
+            # Rather than parse all lines, ensure all prefixes in the content
+            # point to the right one
+            assert any(expected in line for line in content)
+            assert not any(spec.prefix in line for line in content)
