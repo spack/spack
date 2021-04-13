@@ -1362,13 +1362,6 @@
         "vpclmulqdq"
       ],
       "compilers": {
-        "gcc": [
-          {
-            "name": "znver3",
-            "versions": "10.3:",
-            "flags": "-march={name} -mtune={name}"
-          }
-        ],
         "aocc": [
           {
             "versions": "3.0:",
