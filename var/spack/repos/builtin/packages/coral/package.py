@@ -14,6 +14,8 @@ class Coral(CMakePackage):
     homepage = "https://coral-cool.docs.cern.ch/"
     git      = "https://gitlab.cern.ch/lcgcoral/coral.git"
 
+    tags = ['hep']
+
     version('3.3.3', tag='CORAL_3_3_3')
     variant('binary_tag', default='auto')
 
