@@ -673,10 +673,15 @@ class BaseContext(tengine.Context):
     @tengine.context_property
     def environment_modifications(self):
         """List of environment modifications to be processed."""
-        # Modifications guessed inspecting the spec prefix
+        # Modifications guessed by inspecting the spec prefix
         prefix_inspections = spack.config.get(
             'modules:%s:prefix_inspections' % self.conf.name, {})
-        use_view = prefix_inspections.pop('use_view', False)
+        if self.conf.name == 'default' and not prefix_inspections:
+            # backwards compatibility on config format
+            prefix_inspections = spack.config.get(
+                'modules:prefix_inspections', {})
+        use_view = spack.config.get(
+            'modules:%s:use_view' % self.conf.name, False)
 
         spec = self.spec.copy()  # defensive copy before setting prefix
         if use_view:

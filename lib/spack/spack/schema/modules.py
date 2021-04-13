@@ -117,18 +117,16 @@ module_type_configuration = {
 
 
 top_level_properties = {
+    'use_view': {'anyOf': [
+        {'type': 'string'},
+        {'type': 'boolean'}
+    ]},
     'prefix_inspections': {
         'type': 'object',
         'additionalProperties': False,
-        'properties': {
-            'use_view': {'anyOf': [
-                {'type': 'string'},
-                {'type': 'boolean'}
-            ]},
-        },
         'patternProperties': {
             # prefix-relative path to be inspected for existence
-            r'(?!use_view|-)[\w-]*': array_of_strings
+            r'^[\w-]*': array_of_strings
         }
     },
     'roots': {
