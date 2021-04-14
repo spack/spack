@@ -14,7 +14,7 @@ from typing import List  # novm
 import spack.build_environment
 from llnl.util.filesystem import working_dir
 from spack.directives import depends_on, variant, conflicts
-from spack.package import PackageBase, InstallError, run_after
+from spack.package import PackageBase, run_after
 
 # Regex to extract the primary generator from the CMake generator
 # string.
@@ -101,8 +101,8 @@ class CMakePackage(PackageBase):
 
     depends_on('ninja', when='generator=Ninja')
 
-    generatorMap = { 'Make' : 'Unix Makefiles',
-                     'Ninja' : 'Ninja' }
+    generatorMap = {'Make': 'Unix Makefiles',
+                    'Ninja': 'Ninja'}
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',

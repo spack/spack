@@ -123,7 +123,7 @@ This may need to be higher for some filesystems."""
 lock_fail_timeout = 0.1
 
 
-def getuid(): 
+def getuid():
     if _platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1

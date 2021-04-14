@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import os
 import subprocess
 from typing import List  # novm
 from spack.compiler import Compiler
@@ -34,9 +35,9 @@ class Msvc(Compiler):
     #: Regex used to extract version from compiler's output
     version_regex = '([1-9][0-9]*\.[0-9]*\.[0-9]*)'
 
-
     # Initialize, deferring to base class but then adding the vcvarsallfile
     # file based on compiler executable path.
+
     def __init__(self, *args, **kwargs):
         super(Msvc, self).__init__(*args, **kwargs)
         self.vcvarsallfile = os.path.abspath(
