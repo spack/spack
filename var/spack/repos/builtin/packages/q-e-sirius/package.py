@@ -14,7 +14,7 @@ class QESirius(CMakePackage):
 
     maintainers = ['simonpintarelli']
 
-    version('develop', branch='ristretto-sirius-scf')
+    version('develop-ristretto', branch='ristretto')
 
     variant('mpi', default=True, description='Builds with MPI support')
     variant('openmp', default=True, description='Enables OpenMP support')
