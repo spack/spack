@@ -214,8 +214,8 @@ class TestSpecList(object):
                 ['mpileaks'],
                 ['^callpath'],
                 ['^libdwarf/%s' % libdwarf_spec.dag_hash()]
-                ]
-             }
+            ]
+        }
 
         # ensure the concrete spec was retained in the matrix entry of which
         # it is a dependency
