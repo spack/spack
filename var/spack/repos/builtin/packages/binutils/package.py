@@ -57,6 +57,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # https://sourceware.org/bugzilla/show_bug.cgi?id=25491
     depends_on('texinfo', type='build', when='@2.34')
 
+    conflicts('~plugins', when='+gold', msg="ld.gold needs plugins")
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
 
