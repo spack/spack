@@ -55,7 +55,7 @@ _source_path_subdir = 'spack-src'
 stage_prefix = 'spack-stage-'
 
 
-def getuid(): 
+def getuid():
     if sys.platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1

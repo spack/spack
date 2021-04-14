@@ -102,8 +102,8 @@ class CMakePackage(PackageBase):
 
     depends_on('ninja', when='generator=Ninja')
 
-    generatorMap = { 'Make' : 'Unix Makefiles',
-                     'Ninja' : 'Ninja' }
+    generatorMap = {'Make': 'Unix Makefiles',
+                    'Ninja': 'Ninja'}
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',

@@ -28,7 +28,7 @@ import spack.schema.repos
 import spack.util.path as spack_path
 import spack.util.spack_yaml as syaml
 
-def getuid(): 
+def getuid():
     if sys.platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
