@@ -18,8 +18,7 @@ import sys
 import ctypes
 import traceback
 import signal
-import tempfile
-import threading 
+import threading
 from threading import Thread
 from contextlib import contextmanager
 from six import string_types
@@ -801,7 +800,8 @@ class winlog:
 
             self._active = True
             with replace_environment(self.env):
-                self._thread = Thread(target=background_reader, args=(self.reader, self.echo_writer, self._kill))
+                self._thread = Thread(target=background_reader,
+                                      args=(self.reader, self.echo_writer, self._kill))
                 self._thread.start()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -839,7 +839,6 @@ class winlog:
         finally:
             sys.stdout.write(xoff)
             sys.stdout.flush()
-
 
 
 def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,

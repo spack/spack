@@ -51,7 +51,8 @@ def test_changed_files(parser, flake8_package):
     # directory of Spack. Convert to absolute file paths.
     files = changed_files(args)
     files = [os.path.join(spack.paths.prefix, path) for path in files]
-
+    if sys.platform == 'win32':
+        files = [path.replace('/', '\\') for path in files]
     # There will likely be other files that have changed
     # when these tests are run
     assert flake8_package in files
