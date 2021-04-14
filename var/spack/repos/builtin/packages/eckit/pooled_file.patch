@@ -1,0 +1,43 @@
+--- a/src/eckit/io/PooledFile.cc
++++ b/src/eckit/io/PooledFile.cc
+@@ -11,7 +11,7 @@
+ #include <cstdio>
+ #include <memory>
+ #include <string>
+-#include <thread>
++#include <mutex>
+ 
+ #include "eckit/config/LibEcKit.h"
+ #include "eckit/config/Resource.h"
+@@ -26,7 +26,8 @@ namespace eckit {
+ 
+ class PoolFileEntry;
+ 
+-static thread_local std::map<PathName, std::unique_ptr<PoolFileEntry>> pool_;
++static std::mutex pool_m_;
++static std::map<PathName, std::unique_ptr<PoolFileEntry>> pool_;
+ 
+ struct PoolFileEntryStatus {
+ 
+@@ -77,6 +78,7 @@ public:
+ 
+         if (statuses_.size() == 0) {
+             doClose();
++            std::lock_guard<std::mutex> lock(pool_m_);
+             pool_.erase(name_);
+             // No code after !!!
+         }
+@@ -193,11 +195,13 @@ public:
+ 
+ 
+ PooledFile::PooledFile(const PathName& name) : name_(name), entry_(nullptr) {
++    std::unique_lock<std::mutex> locker(pool_m_);
+     auto j = pool_.find(name);
+     if (j == pool_.end()) {
+         pool_.emplace(std::make_pair(name, std::unique_ptr<PoolFileEntry>(new PoolFileEntry(name))));
+         j           = pool_.find(name);
+     }
++    locker.unlock();
+ 
+     entry_ = (*j).second.get();
+     entry_->add(this);
