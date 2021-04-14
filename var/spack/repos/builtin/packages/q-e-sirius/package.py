@@ -15,6 +15,7 @@ class QESirius(CMakePackage):
     maintainers = ['simonpintarelli']
 
     version('develop-ristretto', branch='ristretto')
+    version('6.7-rc1-sirius', tag='v6.7-rc1-sirius')
 
     variant('mpi', default=True, description='Builds with MPI support')
     variant('openmp', default=True, description='Enables OpenMP support')
@@ -32,6 +33,8 @@ class QESirius(CMakePackage):
     depends_on('elpa', when='+elpa')
     depends_on('libxc', when='+libxc')
     depends_on('hdf5', when='+hdf5')
+
+    depends_on('git', type='build')
 
     conflicts('~mpi', when='+scalapack', msg='SCALAPACK requires MPI support')
     conflicts('~scalapack', when='+elpa', msg='ELPA requires SCALAPACK support')
