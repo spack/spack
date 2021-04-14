@@ -250,13 +250,14 @@ class Lock(object):
         """Read PID and host data out of the file if it is there."""
         self.old_pid = self.pid
         self.old_host = self.host
-
+        print(self.host)
         line = self._file.read()
         if line:
             pid, host = line.strip().split(',')
             _, _, self.pid = pid.rpartition('=')
             _, _, self.host = host.rpartition('=')
             self.pid = int(self.pid)
+        print(self.host)
 
     def _write_log_debug_data(self):
         """Write PID and host data to the file, recording old values."""
@@ -265,6 +266,7 @@ class Lock(object):
 
         self.pid = os.getpid()
         self.host = socket.getfqdn()
+        print(self.host)
 
         # write pid, host to disk to sync over FS
         self._file.seek(0)
