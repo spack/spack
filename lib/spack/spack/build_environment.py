@@ -819,7 +819,7 @@ def setup_package(pkg, dirty, context='build'):
         # kludge to handle cray libsci being automatically loaded by PrgEnv
         # modules on cray platform. Module unload does no damage when
         # unnecessary
-        #module('unload', 'cray-libsci')
+        # module('unload', 'cray-libsci')
 
         if pkg.architecture.target.module_name:
             load_module(pkg.architecture.target.module_name)
@@ -1117,7 +1117,8 @@ def start_build_process(pkg, function, kwargs):
 
     try:
         # Forward sys.stdin when appropriate, to allow toggling verbosity
-        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin, 'fileno'):
+        if sys.platform != "win32" and sys.stdin.isatty() and hasattr(sys.stdin,
+                                                                      'fileno'):
             input_fd = os.dup(sys.stdin.fileno())
             input_multiprocess_fd = MultiProcessFd(input_fd)
 

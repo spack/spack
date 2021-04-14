@@ -83,7 +83,7 @@ __all__ = [
 ]
 
 
-def getuid(): 
+def getuid():
     if _platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
@@ -1315,7 +1315,7 @@ class HeaderList(FileList):
 
         self._directories = [os.path.normpath(x) for x in value]
         if sys.platform == "win32":
-             self._directories = [d.replace("\\", "/") for d in self._directories]
+            self._directories = [d.replace("\\", "/") for d in self._directories]
 
     def _default_directories(self):
         """Default computation of directories based on the list of
@@ -1830,9 +1830,9 @@ def prefixes(path):
         return []
 
     if sys.platform == "win32":
-      sep = "/"
+        sep = "/"
     else:
-      sep = os.sep()
+        sep = os.sep()
 
     if sys.platform == "win32":
         path = path.replace("\\", "/")
@@ -1841,8 +1841,8 @@ def prefixes(path):
     if path.startswith(sep):
         parts.insert(0, sep)
     elif parts[0].endswith(":"):
-      # Handle drive letters e.g. C:/ on Windows
-      parts[0] = parts[0] + sep
+        # Handle drive letters e.g. C:/ on Windows
+        parts[0] = parts[0] + sep
     paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
 
     if sys.platform == "win32":

@@ -288,6 +288,7 @@ env:
     a = spack.repo.path.get_pkg_class('a')
     assert a.installed, 'Expected a to be installed'
 
+
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_remove_after_concretize():
@@ -375,6 +376,7 @@ def test_environment_status(capsys, tmpdir):
                     with capsys.disabled():
                         assert 'in current directory' in env('status')
 
+
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_env_status_broken_view(
@@ -396,6 +398,7 @@ def test_env_status_broken_view(
         output = env('status')
         assert 'In environment test' in output
         assert 'Environment test includes out of date' not in output
+
 
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
@@ -814,6 +817,7 @@ packages:
         assert any(
             x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
 
+
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')
 def test_included_config_precedence():
@@ -1004,26 +1008,26 @@ def test_read_old_lock_and_write_new(tmpdir):
         mock_repo.add_package('x', [y], [build_only])
 
     with spack.repo.use_repositories(mock_repo):
-            x = Spec('x')
-            x.concretize()
+        x = Spec('x')
+        x.concretize()
 
-            y = x['y']
+        y = x['y']
 
-            test_lockfile_dict = create_v1_lockfile_dict([x], [x, y])
+        test_lockfile_dict = create_v1_lockfile_dict([x], [x, y])
 
-            test_lockfile_path = str(tmpdir.join('test.lock'))
-            with open(test_lockfile_path, 'w') as f:
-                sjson.dump(test_lockfile_dict, stream=f)
+        test_lockfile_path = str(tmpdir.join('test.lock'))
+        with open(test_lockfile_path, 'w') as f:
+            sjson.dump(test_lockfile_dict, stream=f)
 
-            _env_create('test', test_lockfile_path, with_view=False)
+        _env_create('test', test_lockfile_path, with_view=False)
 
-            e = ev.read('test')
-            hashes = set(e._to_lockfile_dict()['concrete_specs'])
-            # When the lockfile is rewritten, it should adopt the new hash scheme
-            # which accounts for all dependencies, including build dependencies
-            assert hashes == set([
-                x.build_hash(),
-                y.build_hash()])
+        e = ev.read('test')
+        hashes = set(e._to_lockfile_dict()['concrete_specs'])
+        # When the lockfile is rewritten, it should adopt the new hash scheme
+        # which accounts for all dependencies, including build dependencies
+        assert hashes == set([
+            x.build_hash(),
+            y.build_hash()])
 
 
 @pytest.mark.usefixtures('config')
@@ -1036,22 +1040,22 @@ def test_read_old_lock_creates_backup(tmpdir):
         y = mock_repo.add_package('y', [], [])
 
     with spack.repo.use_repositories(mock_repo):
-            y = Spec('y')
-            y.concretize()
+        y = Spec('y')
+        y.concretize()
 
-            test_lockfile_dict = create_v1_lockfile_dict([y], [y])
+        test_lockfile_dict = create_v1_lockfile_dict([y], [y])
 
-            env_root = tmpdir.mkdir('test-root')
-            test_lockfile_path = str(env_root.join(ev.lockfile_name))
-            with open(test_lockfile_path, 'w') as f:
-                sjson.dump(test_lockfile_dict, stream=f)
+        env_root = tmpdir.mkdir('test-root')
+        test_lockfile_path = str(env_root.join(ev.lockfile_name))
+        with open(test_lockfile_path, 'w') as f:
+            sjson.dump(test_lockfile_dict, stream=f)
 
-            e = ev.Environment(str(env_root))
-            assert os.path.exists(e._lock_backup_v1_path)
-            with open(e._lock_backup_v1_path, 'r') as backup_v1_file:
-                lockfile_dict_v1 = sjson.load(backup_v1_file)
-            # Make sure that the backup file follows the v1 hash scheme
-            assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
+        e = ev.Environment(str(env_root))
+        assert os.path.exists(e._lock_backup_v1_path)
+        with open(e._lock_backup_v1_path, 'r') as backup_v1_file:
+            lockfile_dict_v1 = sjson.load(backup_v1_file)
+        # Make sure that the backup file follows the v1 hash scheme
+        assert y.dag_hash() in lockfile_dict_v1['concrete_specs']
 
 
 @pytest.mark.usefixtures('config')
@@ -1074,20 +1078,20 @@ def test_indirect_build_dep():
         setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
-            x_spec = Spec('x')
-            x_concretized = x_spec.concretized()
+        x_spec = Spec('x')
+        x_concretized = x_spec.concretized()
 
-            _env_create('test', with_view=False)
-            e = ev.read('test')
-            e.add(x_spec)
-            e.concretize()
-            e.write()
+        _env_create('test', with_view=False)
+        e = ev.read('test')
+        e.add(x_spec)
+        e.concretize()
+        e.write()
 
-            e_read = ev.read('test')
-            x_env_hash, = e_read.concretized_order
+        e_read = ev.read('test')
+        x_env_hash, = e_read.concretized_order
 
-            x_env_spec = e_read.specs_by_hash[x_env_hash]
-            assert x_env_spec == x_concretized
+        x_env_spec = e_read.specs_by_hash[x_env_hash]
+        assert x_env_spec == x_concretized
 
 
 @pytest.mark.usefixtures('config')
@@ -1116,32 +1120,32 @@ def test_store_different_build_deps():
         setattr(mock_repo, 'dump_provenance', noop)
 
     with spack.repo.use_repositories(mock_repo):
-            y_spec = Spec('y ^z@3')
-            y_concretized = y_spec.concretized()
+        y_spec = Spec('y ^z@3')
+        y_concretized = y_spec.concretized()
 
-            x_spec = Spec('x ^z@2')
-            x_concretized = x_spec.concretized()
+        x_spec = Spec('x ^z@2')
+        x_concretized = x_spec.concretized()
 
-            # Even though x chose a different 'z', it should choose the same y
-            # according to the DAG hash (since build deps are excluded from
-            # comparison by default). Although the dag hashes are equal, the specs
-            # are not considered equal because they compare build deps.
-            assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
+        # Even though x chose a different 'z', it should choose the same y
+        # according to the DAG hash (since build deps are excluded from
+        # comparison by default). Although the dag hashes are equal, the specs
+        # are not considered equal because they compare build deps.
+        assert x_concretized['y'].dag_hash() == y_concretized.dag_hash()
 
-            _env_create('test', with_view=False)
-            e = ev.read('test')
-            e.add(y_spec)
-            e.add(x_spec)
-            e.concretize()
-            e.write()
+        _env_create('test', with_view=False)
+        e = ev.read('test')
+        e.add(y_spec)
+        e.add(x_spec)
+        e.concretize()
+        e.write()
 
-            e_read = ev.read('test')
-            y_env_hash, x_env_hash = e_read.concretized_order
+        e_read = ev.read('test')
+        y_env_hash, x_env_hash = e_read.concretized_order
 
-            y_read = e_read.specs_by_hash[y_env_hash]
-            x_read = e_read.specs_by_hash[x_env_hash]
+        y_read = e_read.specs_by_hash[y_env_hash]
+        x_read = e_read.specs_by_hash[x_env_hash]
 
-            assert x_read['z'] != y_read['z']
+        assert x_read['z'] != y_read['z']
 
 
 def test_env_updates_view_install(
@@ -1187,6 +1191,7 @@ def test_env_without_view_install(
     # After enabling the view, the specs should be linked into the environment
     # view dir
     check_mpileaks_and_deps_in_view(view_dir)
+
 
 @pytest.mark.skipif(sys.platform == "win32",
                     reason='Not supported on Windows (yet)')

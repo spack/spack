@@ -139,6 +139,7 @@ def env_deactivate_setup_parser(subparser):
         '--bat', action='store_const', dest='shell', const='bat',
         help="print bat commands to activate the environment")
 
+
 def env_deactivate(args):
     if not args.shell:
         spack.cmd.common.shell_init_instructions(
