@@ -42,7 +42,7 @@ class Qmcpack(CMakePackage, CudaPackage):
             description='The build type to build',
             values=('Debug', 'Release', 'RelWithDebInfo'))
     variant('mpi', default=True, description='Build with MPI support')
-    variant('phdf5', default=True, description='Build with parallel collective I/O')
+    variant('phdf5', default=False, description='Build with parallel collective I/O')
     variant('complex', default=False,
             description='Build the complex (general twist/k-point) version')
     variant('mixed', default=False,
