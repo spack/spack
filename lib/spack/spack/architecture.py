@@ -64,7 +64,7 @@ import archspec.cpu
 import six
 
 import llnl.util.tty as tty
-from llnl.util.lang import memoized, key_ordering
+import llnl.util.lang as lang
 
 import spack.compiler
 import spack.compilers
@@ -231,7 +231,7 @@ class Target(object):
         )
 
 
-@key_ordering
+@lang.lazy_lexicographic_ordering
 class Platform(object):
     """ Abstract class that each type of Platform will subclass.
         Will return a instance of it once it is returned.
@@ -328,23 +328,27 @@ class Platform(object):
     def __str__(self):
         return self.name
 
-    def _cmp_key(self):
-        t_keys = ''.join(str(t._cmp_key()) for t in
-                         sorted(self.targets.values()))
-        o_keys = ''.join(str(o._cmp_key()) for o in
-                         sorted(self.operating_sys.values()))
-        return (self.name,
-                self.default,
-                self.front_end,
-                self.back_end,
-                self.default_os,
-                self.front_os,
-                self.back_os,
-                t_keys,
-                o_keys)
+    def _cmp_iter(self):
+        yield self.name
+        yield self.default
+        yield self.front_end
+        yield self.back_end
+        yield self.default_os
+        yield self.front_os
+        yield self.back_os
+
+        def targets():
+            for t in sorted(self.targets.values()):
+                yield t._cmp_iter
+        yield targets
+
+        def oses():
+            for o in sorted(self.operating_sys.values()):
+                yield o._cmp_iter
+        yield oses
 
 
-@key_ordering
+@lang.lazy_lexicographic_ordering
 class OperatingSystem(object):
     """ Operating System will be like a class similar to platform extended
         by subclasses for the specifics. Operating System will contain the
@@ -362,8 +366,9 @@ class OperatingSystem(object):
     def __repr__(self):
         return self.__str__()
 
-    def _cmp_key(self):
-        return (self.name, self.version)
+    def _cmp_iter(self):
+        yield self.name
+        yield self.version
 
     def to_dict(self):
         return syaml_dict([
@@ -372,7 +377,7 @@ class OperatingSystem(object):
         ])
 
 
-@key_ordering
+@lang.lazy_lexicographic_ordering
 class Arch(object):
     """Architecture is now a class to help with setting attributes.
 
@@ -422,20 +427,21 @@ class Arch(object):
                 self.target is not None)
     __bool__ = __nonzero__
 
-    def _cmp_key(self):
+    def _cmp_iter(self):
         if isinstance(self.platform, Platform):
-            platform = self.platform.name
+            yield self.platform.name
         else:
-            platform = self.platform
+            yield self.platform
+
         if isinstance(self.os, OperatingSystem):
-            os = self.os.name
+            yield self.os.name
         else:
-            os = self.os
+            yield self.os
+
         if isinstance(self.target, Target):
-            target = self.target.microarchitecture
+            yield self.target.microarchitecture
         else:
-            target = self.target
-        return (platform, os, target)
+            yield self.target
 
     def to_dict(self):
         str_or_none = lambda v: str(v) if v else None
@@ -457,7 +463,7 @@ class Arch(object):
         return arch_for_spec(spec)
 
 
-@memoized
+@lang.memoized
 def get_platform(platform_name):
     """Returns a platform object that corresponds to the given name."""
     platform_list = all_platforms()
@@ -493,13 +499,13 @@ def arch_for_spec(arch_spec):
     return Arch(arch_plat, arch_spec.os, arch_spec.target)
 
 
-@memoized
+@lang.memoized
 def _all_platforms():
     mod_path = spack.paths.platform_path
     return spack.util.classes.list_classes("spack.platforms", mod_path)
 
 
-@memoized
+@lang.memoized
 def _platform():
     """Detects the platform for this machine.
 
@@ -530,7 +536,7 @@ platform = _platform
 all_platforms = _all_platforms
 
 
-@memoized
+@lang.memoized
 def default_arch():
     """Default ``Arch`` object for this machine.
 
@@ -554,7 +560,7 @@ def sys_type():
     return str(default_arch())
 
 
-@memoized
+@lang.memoized
 def compatible_sys_types():
     """Returns a list of all the systypes compatible with the current host."""
     compatible_archs = []

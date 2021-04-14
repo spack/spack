@@ -113,6 +113,13 @@ class Hpctoolkit(AutotoolsPackage):
     conflicts('^binutils@2.35:2.35.1',
               msg='avoid binutils 2.35 and 2.35.1 (spews errors)')
 
+    # Fixes multiple definition error with GCC 10.
+    # https://github.com/HPCToolkit/hpctoolkit/issues/309
+    patch('https://github.com/blue42u/hpctoolkit/commit/'
+          'b3f6f9e4846d9256cf0d841465ff89d78c6bf422.patch',
+          when='%gcc@10',
+          sha256='f8507c3ce9672c70c2db9f9deb5766c8120ea06e20866d0f553a17866e810b91')
+
     flag_handler = AutotoolsPackage.build_system_flags
 
     def configure_args(self):

@@ -63,7 +63,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     def configure_args(self):
         spec = self.spec
 
-        configure_args = [
+        args = [
             '--disable-dependency-tracking',
             '--disable-werror',
             '--enable-multilib',
@@ -74,37 +74,30 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             '--with-sysroot=/',
         ]
 
-        if '+lto' in spec:
-            configure_args.append('--enable-lto')
-
-        if '+ld' in spec:
-            configure_args.append('--enable-ld')
-
-        if '+interwork' in spec:
-            configure_args.append('--enable-interwork')
-
-        if '+gold' in spec:
-            configure_args.append('--enable-gold')
-
-        if '+plugins' in spec:
-            configure_args.append('--enable-plugins')
+        args += self.enable_or_disable('lto')
+        args += self.enable_or_disable('ld')
+        args += self.enable_or_disable('interwork')
+        args += self.enable_or_disable('gold')
+        args += self.enable_or_disable('plugins')
 
         if '+libiberty' in spec:
-            configure_args.append('--enable-install-libiberty')
+            args.append('--enable-install-libiberty')
+        else:
+            args.append('--disable-install-libiberty')
 
         if '+nls' in spec:
-            configure_args.append('--enable-nls')
-            configure_args.append('LDFLAGS=-lintl')
+            args.append('--enable-nls')
+            args.append('LDFLAGS=-lintl')
         else:
-            configure_args.append('--disable-nls')
+            args.append('--disable-nls')
 
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
         if spec.satisfies('platform=darwin'):
-            configure_args.append('--program-prefix=g')
+            args.append('--program-prefix=g')
 
-        return configure_args
+        return args
 
     # 2.36 is missing some dependencies and requires serial make install.
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482

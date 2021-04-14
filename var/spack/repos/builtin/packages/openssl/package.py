@@ -28,17 +28,18 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
 
     # The latest stable version is the 1.1.1 series. This is also our Long Term
     # Support (LTS) version, supported until 11th September 2023.
-    version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf')
-    version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242')
-    version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9')
-    version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46')
-    version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35')
-    version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe')
-    version('1.1.1d', sha256='1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2')
-    version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90')
-    version('1.1.1b', sha256='5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b')
-    version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41')
-    version('1.1.1',  sha256='2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d')
+    version('1.1.1k', sha256='892a0875b9872acd04a9fde79b1f943075d5ea162415de3047c327df33fbaee5')
+    version('1.1.1j', sha256='aaf2fcb575cdf6491b98ab4829abf78a3dec8402b8b81efc8f23c00d443981bf', deprecated=True)
+    version('1.1.1i', sha256='e8be6a35fe41d10603c3cc635e93289ed00bf34b79671a3a4de64fcee00d5242', deprecated=True)
+    version('1.1.1h', sha256='5c9ca8774bd7b03e5784f26ae9e9e6d749c9da2438545077e6b3d755a06595d9', deprecated=True)
+    version('1.1.1g', sha256='ddb04774f1e32f0c49751e21b67216ac87852ceb056b75209af2443400636d46', deprecated=True)
+    version('1.1.1f', sha256='186c6bfe6ecfba7a5b48c47f8a1673d0f3b0e5ba2e25602dd23b629975da3f35', deprecated=True)
+    version('1.1.1e', sha256='694f61ac11cb51c9bf73f54e771ff6022b0327a43bbdfa1b2f19de1662a6dcbe', deprecated=True)
+    version('1.1.1d', sha256='1e3a91bc1f9dfce01af26026f856e064eab4c8ee0a8f457b5ae30b40b8b711f2', deprecated=True)
+    version('1.1.1c', sha256='f6fb3079ad15076154eda9413fed42877d668e7069d9b87396d0804fdb3f4c90', deprecated=True)
+    version('1.1.1b', sha256='5c557b023230413dfb0756f3137a13e6d726838ccd1430888ad15bfb2b43ea4b', deprecated=True)
+    version('1.1.1a', sha256='fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41', deprecated=True)
+    version('1.1.1',  sha256='2836875a0f89c03d0fdf483941512613a50cfb421d6fd94b9f41d7279d586a3d', deprecated=True)
 
     # The 1.1.0 series is out of support and should not be used.
     version('1.1.0l', sha256='74a2f756c64fd7386a29184dc0344f4831192d61dc2481a93a4c5dd727f41148', deprecated=True)
@@ -113,7 +114,7 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if spec.satisfies('@1.0'):
             options.append('no-krb5')
         # clang does not support the .arch directive in assembly files.
-        if 'clang' in self.compiler.cc and \
+        if ('clang' in self.compiler.cc or 'nvc' in self.compiler.cc) and \
            'aarch64' in spack.architecture.sys_type():
             options.append('no-asm')
 
