@@ -14,7 +14,8 @@ from llnl.util.filesystem import group_ids
 import spack.config
 import spack.util.lock as lk
 
-def getuid(): 
+
+def getuid():
     if sys.platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1

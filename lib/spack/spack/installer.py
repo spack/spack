@@ -31,13 +31,11 @@ import copy
 import glob
 import heapq
 import itertools
-import io
 import os
 import shutil
 import six
 import sys
 import time
-import tempfile
 from collections import defaultdict
 
 import llnl.util.filesystem as fs
@@ -1399,7 +1397,7 @@ class PackageInstaller(object):
         exists_errors = []
 
         while self.build_pq:
-        
+
             task = self._pop_task()
             if task is None:
                 continue
@@ -1519,7 +1517,7 @@ class PackageInstaller(object):
             # Proceed with the installation since we have an exclusive write
             # lock on the package.
             try:
- 
+
                 if pkg.spec.dag_hash() in task.request.overwrite:
                     rec, _ = self._check_db(pkg.spec)
                     if rec and rec.installed:
@@ -1707,16 +1705,15 @@ def build_process(pkg, kwargs):
                 # everything to log_path
                 if sys.platform == 'win32':
                     with winlog(pkg.log_path, True, True,
-                                    env=unmodified_env) as logger:
+                                env=unmodified_env) as logger:
 
                         # Debug this child process from here
                         # ForkablePdb(logger._saved_stdout,
                         #             logger._saved_stderr).set_trace()
-
-                       for phase_name, phase_attr in zip(
+                        for phase_name, phase_attr in zip(
                                 pkg.phases, pkg._InstallPhase_phases):
 
-                            #with logger.force_echo():
+                            # with logger.force_echo():
                             #    inner_debug_level = tty.debug_level()
                             #    tty.set_debug(debug_level)
                             #    tty.msg("{0} Executing phase: '{1}'"
@@ -1727,15 +1724,15 @@ def build_process(pkg, kwargs):
                             phase = getattr(pkg, phase_attr)
                             phase(pkg.spec, pkg.prefix)
 
-                       #echo = logger.echo
-                       log(pkg)
+                        # echo = logger.echo
+                        log(pkg)
                 else:
                     with log_output(pkg.log_path, echo, True,
-                                env=unmodified_env) as logger:
+                                    env=unmodified_env) as logger:
 
-                    # Debug this child process from here
-                    # ForkablePdb(logger._saved_stdout,
-                    #             logger._saved_stderr).set_trace()
+                        # Debug this child process from here
+                        # ForkablePdb(logger._saved_stdout,
+                        #             logger._saved_stderr).set_trace()
 
                         for phase_name, phase_attr in zip(
                                 pkg.phases, pkg._InstallPhase_phases):
