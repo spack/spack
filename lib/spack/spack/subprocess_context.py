@@ -24,7 +24,8 @@ import multiprocessing
 import spack.architecture
 import spack.config
 
-_serialize = sys.platform == 'win32' or (sys.version_info >= (3, 8) and sys.platform == 'darwin')
+_serialize = sys.platform == 'win32' or (sys.version_info >= (3, 8)
+                                         and sys.platform == 'darwin')
 
 
 patches = None

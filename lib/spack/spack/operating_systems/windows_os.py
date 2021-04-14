@@ -35,14 +35,15 @@ class WindowsOs(OperatingSystem):
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
             paths = subprocess.check_output([
-                os.path.join(root, "Microsoft Visual Studio", "Installer", "vswhere.exe"),
+                os.path.join(root, "Microsoft Visual Studio", "Installer",
+                             "vswhere.exe"),
                 "-prerelease",
                 "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
                 "-property", "installationPath",
                 "-products", "*",
             ], **extra_args).strip()
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
-                paths = path.decode()
+                paths = paths.decode()
             msvcPaths = paths.split('\n')
             msvcPaths = [os.path.join(path, "VC", "Tools", "MSVC")
                          for path in msvcPaths]

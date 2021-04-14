@@ -2,16 +2,16 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-from os.path import exists, join, islink
+from os.path import exists, join
 import os
 import tempfile
 import shutil
-import six
 import sys
 
 import llnl.util.filesystem as fs
 
 __win32_can_symlink__ = None
+
 
 def symlink(real_path, link_path):
     """
@@ -24,6 +24,7 @@ def symlink(real_path, link_path):
     else:
         # Use junctions
         _win32_junction(real_path, link_path)
+
 
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
 def _win32_junction(path, link):
@@ -48,6 +49,7 @@ def _win32_junction(path, link):
         command = 'mklink /H "{}" "{}"'.format(link, path)
 
     _cmd(command)
+
 
 def _win32_can_symlink():
     global __win32_can_symlink__
@@ -83,9 +85,11 @@ def _win32_can_symlink():
 
     return __win32_can_symlink__
 
+
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_cmd.py
 def _cmd(command):
     import subprocess
+
     # Create a new process to execute the command
     def make_proc():
         # delay the creation of the process until we validate all args
@@ -96,5 +100,5 @@ def _cmd(command):
 
     proc = make_proc()
     (out, err) = proc.communicate()
-    if proc.wait() != 0 :
+    if proc.wait() != 0:
         raise OSError(str(info))
