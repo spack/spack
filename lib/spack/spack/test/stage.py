@@ -42,7 +42,7 @@ _include_hidden = 2
 _include_extra = 3
 
 
-def getuid(): 
+def getuid():
     if sys.platform == "win32":
         if ctypes.windll.shell32.IsUserAnAdmin() == 0:
             return 1
