@@ -599,10 +599,21 @@ class AutotoolsPackage(PackageBase):
         '''
         global env
 
-        all_same_src = set([src for _, src in flag_src.items()])
+        # if we encounter a variable we lack source info for
+        # then send then set the flag in this location
         unknown_use_src = src_mapping['default']
+
+        # find how many unique sources we have
+        # we query `flag_src` because that is populated based
+        # variables the package set. E.g., not from build_type
+        # or anything that automatically adds flags
+        all_same_src = set([src for _, src in flag_src.items()])
+        # if we found all flags from a single source (as set by the package)
+        # then we will set unknown sources in that same space
         if len(all_same_src) == 1:
-            unknown_use_src = all_same_src.pop()
+            # if the set has a single value, then use that location
+            # but make sure to *lookup* the mapping.
+            unknown_use_src = src_mapping[all_same_src.pop()]
 
         return_map = {}
         for var_name, var_value in unified_flags.items():
