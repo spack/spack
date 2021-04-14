@@ -18,6 +18,7 @@ import spack.util.path
 
 from llnl.util.symlink import symlink
 
+
 def misc_cache_location():
     """The ``misc_cache`` is Spack's cache for small data.
 
