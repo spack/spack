@@ -19,11 +19,13 @@ class Legion(CMakePackage):
        interface provides explicit programmer controlled placement of data in
        the memory hierarchy and assignment of tasks to processors in a way
        that is orthogonal to correctness, thereby enabling easy porting and
-       tuning of Legion applications to new architectures.
-    """
+       tuning of Legion applications to new architectures."""
+       
     homepage = "http://legion.stanford.edu/"
     url = "https://github.com/StanfordLegion/legion/tarball/legion-20.03.0"
     git = "https://github.com/StanfordLegion/legion.git"
+
+    maintainers = ['pmccormick', 'streichler']
 
     version('stable', branch='stable')
     version('master', branch='master')
