@@ -105,6 +105,7 @@ spack:
     - py-pip
     - py-plotly
     - py-ply
+    - py-poisson-recon-pybind
     - py-pre-commit
     - py-progress
     - py-py4j
