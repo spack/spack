@@ -36,6 +36,8 @@ class Libbsd(AutotoolsPackage):
     # https://gitlab.freedesktop.org/libbsd/libbsd/issues/1
     conflicts('platform=darwin')
 
+    depends_on('libmd', when='@0.11:')
+
     def patch(self):
         # Remove flags not recognized by the NVIDIA compiler
         if self.spec.satisfies('%pgi') or self.spec.satisfies('%nvhpc'):
