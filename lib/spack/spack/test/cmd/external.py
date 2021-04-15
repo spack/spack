@@ -85,12 +85,11 @@ def test_get_executables_follows_symlink(working_env, mock_executable, tmpdir):
     cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
 
     # Create a symlink to cmake in a different directory
-    symlink_dir = str(os.path.join(tmpdir, "other_path"))
-    symlink = str(os.path.join(symlink_dir, "cmake"))
-    mkdirp(symlink_dir)
-    os.symlink(cmake_path, symlink)
-
-    os.environ['PATH'] = symlink_dir
+    symlink_dir = tmpdir.join("other_path")
+    symlink = symlink_dir.join("cmake")
+    mkdirp(str(symlink_dir))
+    os.symlink(cmake_path, str(symlink))
+    os.environ['PATH'] = str(symlink_dir)
     path_to_exe = spack.cmd.external._get_system_executables()
 
     # Make sure the path is the realpath, not the dirname of the symlink
