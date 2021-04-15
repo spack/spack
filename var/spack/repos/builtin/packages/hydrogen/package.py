@@ -85,7 +85,6 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('blas=accelerate +openmp_blas')
 
     depends_on('essl', when='blas=essl')
-    depends_on('essl -cuda', when='blas=essl -openmp_blas')
     depends_on('essl +ilp64', when='blas=essl +int64_blas')
     depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
     depends_on('netlib-lapack +external-blas', when='blas=essl')
@@ -170,9 +169,10 @@ class Hydrogen(CMakePackage, CudaPackage, ROCmPackage):
             archs = self.spec.variants['amdgpu_target'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
+                cxxflags_str = " ".join(self.spec.compiler_flags['cxxflags'])
                 args.append(
                     '-DHIP_HIPCC_FLAGS=--amdgpu-target={0}'
-                    ' -g -fsized-deallocation -fPIC'.format(arch_str)
+                    ' -g -fsized-deallocation -fPIC {1}'.format(arch_str, cxxflags_str)
                 )
 
         # Add support for OS X to find OpenMP (LLVM installed via brew)
