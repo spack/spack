@@ -7,6 +7,7 @@ import os.path
 import platform
 import re
 import shutil
+import os
 
 import pytest
 
@@ -226,7 +227,8 @@ def test_existing_rpaths(patchelf_behavior, expected, mock_patchelf):
 
 @pytest.mark.parametrize('start_path,path_root,paths,expected', [
     ('/usr/bin/test', '/usr', ['/usr/lib', '/usr/lib64', '/opt/local/lib'],
-     ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'])
+     [os.path.join('$ORIGIN', '..', 'lib'), os.path.join('$ORIGIN', '..', 'lib64'),
+     '/opt/local/lib'])
 ])
 def test_make_relative_paths(start_path, path_root, paths, expected):
     relatives = spack.relocate._make_relative(start_path, path_root, paths)
@@ -238,7 +240,8 @@ def test_make_relative_paths(start_path, path_root, paths, expected):
     # and then normalized
     ('/usr/bin/test',
      ['$ORIGIN/../lib', '$ORIGIN/../lib64', '/opt/local/lib'],
-     ['/usr/lib', '/usr/lib64', '/opt/local/lib']),
+     [os.sep+os.path.join('usr', 'lib'), os.sep+os.path.join('usr','lib64'),
+      '/opt/local/lib']),
     # Relative path without $ORIGIN
     ('/usr/bin/test', ['../local/lib'], ['../local/lib']),
 ])
