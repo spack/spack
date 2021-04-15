@@ -115,6 +115,9 @@ class Sirius(CMakePackage, CudaPackage):
     depends_on('hsa-rocr-dev', when='+rocm', type='link')
     depends_on('rocblas', when='+rocm')
 
+    # FindHIP cmake script only works for < 4.1
+    depends_on('hip@:4.0', when='@:7.2.0 +rocm')
+
     extends('python', when='+python')
 
     conflicts('+shared', when='@6.3.0:6.4.999')

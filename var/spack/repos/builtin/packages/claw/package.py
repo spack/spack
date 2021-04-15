@@ -48,9 +48,14 @@ class Claw(CMakePackage):
     filter_compiler_wrappers('claw_f.conf', relative_root='etc')
 
     def flag_handler(self, name, flags):
-        # https://gcc.gnu.org/gcc-10/porting_to.html
-        if name == 'cflags' and self.spec.satisfies('%gcc@10:'):
-            flags.append('-fcommon')
+        if name == 'cflags':
+            comp_spec = self.spec.compiler
+            # https://gcc.gnu.org/gcc-10/porting_to.html
+            # https://releases.llvm.org/11.0.0/tools/clang/docs/ReleaseNotes.html#modified-compiler-flags
+            # TODO: take care of other Clang-based compilers when they become
+            #  real cases
+            if comp_spec.satisfies('gcc@10:') or comp_spec.satisfies('cce@11:'):
+                flags.append('-fcommon')
 
         return flags, None, None
 

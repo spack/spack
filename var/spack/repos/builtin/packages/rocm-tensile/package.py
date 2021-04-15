@@ -62,7 +62,6 @@ class RocmTensile(CMakePackage):
         args = [
             '-Damd_comgr_DIR={0}'.format(self.spec['comgr'].prefix),
             '-DTensile_COMPILER=hipcc',
-            '-DTensile_ARCHITECTURE={0}'.format(arch),
             '-DTensile_LOGIC=asm_full',
             '-DTensile_CODE_OBJECT_VERSION=V3',
             '-DBoost_USE_STATIC_LIBS=OFF',
@@ -74,6 +73,11 @@ class RocmTensile(CMakePackage):
 
         if '@3.7.0:' in self.spec:
             args.append('-DTensile_LIBRARY_FORMAT=msgpack')
+
+        if self.spec.satisfies('@4.1.0:'):
+            if arch == 'gfx906' or arch == 'gfx908':
+                arch = arch + ':xnack-'
+        args.append('-DTensile_ARCHITECTURE={0}'.format(arch))
 
         return args
 
