@@ -54,6 +54,7 @@ class Unifyfs(AutotoolsPackage):
     depends_on('gotcha@0.0.2', when='@:0.9.0')
     depends_on('leveldb', when='@:0.9.0')
 
+    patch('unifyfs_log.h.patch')
     patch('unifyfs-sysio.c.patch', when='@0.9.1')
 
     conflicts('^mercury~bmi')
@@ -94,6 +95,7 @@ class Unifyfs(AutotoolsPackage):
                 return spec[name].prefix.bin.h5pcc
 
         args.extend(self.with_or_without('hdf5', hdf5_compiler_path))
+        args.append('MPICC=mpicc')
 
         if '+auto-mount' in spec:
             args.append('--enable-mpi-mount')
@@ -121,3 +123,8 @@ class Unifyfs(AutotoolsPackage):
     def autoreconf(self, spec, prefix):
         bash = which('bash')
         bash('./autogen.sh')
+
+    @when('%cce@11.0.3:')
+    def patch(self):
+        filter_file('-Werror','','client/src/Makefile.in')
+        filter_file('-Werror','','client/src/Makefile.am')

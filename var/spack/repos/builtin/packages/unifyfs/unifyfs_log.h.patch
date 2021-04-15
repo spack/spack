@@ -1,0 +1,11 @@
+--- spack-src/common/src/unifyfs_log.h.orig       2021-04-13 18:16:02.175121018 -0500
++++ spack-src/common/src/unifyfs_log.h    2021-04-13 18:17:01.120173420 -0500
+@@ -59,7 +59,7 @@
+
+ #define LOG(level, ...) \
+     if (level <= unifyfs_log_level) { \
+-        const char* srcfile = __FILE__ + unifyfs_log_source_base_len; \
++        const char* srcfile = &(__FILE__ [ unifyfs_log_source_base_len]); \
+         unifyfs_log_time = time(NULL); \
+         unifyfs_log_ltime = localtime(&unifyfs_log_time); \
+         strftime(unifyfs_log_timestamp, sizeof(unifyfs_log_timestamp), \
