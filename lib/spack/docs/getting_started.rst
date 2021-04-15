@@ -1322,3 +1322,69 @@ To ensure that Spack does not autodetect the Cray programming
 environment, unset the environment variable ``MODULEPATH``. This
 will cause Spack to treat a linux container on a Cray system as a base
 linux distro.
+
+.. _windows_support:
+
+----------------
+Spack On Windows
+----------------
+
+You will require a MSVC compiler, Git and CMake in order to use Spack on Windows.
+Spack on Windows is run through an application which opens a spack command line, 
+and the Spack installer includes a version of Python.
+
+^^^^^^^^^^^^^^^^^^^^^
+Install Windows Spack
+^^^^^^^^^^^^^^^^^^^^^
+
+Get the newest version of Spack features/windows_support branch. This can be by
+first running the installer, then using git to fetch and checkout 
+features/windows_support in the spack_install\spack directory. After running the
+installer, your directory structure should look like so:
+
+spack_install-----------spack
+  		        |-------scripts
+ 	 	        |-------spack_cmd.bat
+  		        |-------Python
+
+If you have a specific version of Python you would like Spack to use, be sure it is
+on your PATH. When Spack is run for the first time, it will search your PATH for a
+compatible version of Python, otherwise, it will use its included Python.
+
+^^^^^^^^^^^^^
+Configuration
+^^^^^^^^^^^^^
+
+In  ~\.spack\windows, create ``config.yaml`` with contents:
+
+.. code-block:: yaml
+
+    config:
+      use_curl: true
+      locks: false
+ 
+In  ~\.spack\windows, create ``packages.yaml`` with these contents 
+
+.. code-block:: yaml
+
+    packages:
+      ninja:
+        externals:
+        - spec: ninja@1.8.2
+          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
+        buildable: False
+
+Spack on Windows should be run through the Spack Package Manager application added by
+the installer, or by running ``spack_cmd.bat`` from the spack installed directory. To
+add detectable compilers and packages, run ``spack compiler find`` and ``spack external find``
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Windows Compatible Packages
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Many Spack packages are not currently compatible with Windows, due to Unix dependencies 
+or requiring incompatible build tools like automake. Here are several packages known to
+work on Windows:
+-abseil-cpp
+-cpuinfo
+-glm
