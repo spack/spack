@@ -353,7 +353,8 @@ class Conduit(CMakePackage):
         cxxflags = cppflags + ' '.join(spec.compiler_flags['cxxflags'])
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
-        fflags = ' '.join(spec.compiler_flags['fflags'])
+        if '%cce' in self.spec:
+            fflags = ' '.join(spec.compiler_flags['fflags'])+" -ef"
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 
@@ -546,3 +547,4 @@ class Conduit(CMakePackage):
 
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
+
