@@ -164,10 +164,11 @@ class Conduit(CMakePackage):
     phases = ['hostconfig', 'cmake', 'build', 'install']
 
     def flag_handler(self, name, flags):
-        if name in ('cflags', 'cxxflags', 'fflags'):
-            # the package manages these flags in another way
-            return (None, None, None)
-        return (flags, None, None)
+        if '%cce' in self.spec:
+            if name == 'fflags':
+                # the package manages these flags in another way
+                flags.append('-ef')
+            return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
