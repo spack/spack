@@ -14,7 +14,7 @@ class Cool(CMakePackage):
     git      = "https://gitlab.cern.ch/lcgcool/cool.git"
 
     tags = ['hep']
- 
+
     version('3.3.5', tag='COOL_3_3_5')
     version('3.3.4', tag='COOL_3_3_4')
     version('3.3.3', tag='COOL_3_3_3')
