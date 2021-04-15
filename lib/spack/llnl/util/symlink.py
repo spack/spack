@@ -101,4 +101,4 @@ def _cmd(command):
     proc = make_proc()
     (out, err) = proc.communicate()
     if proc.wait() != 0:
-        raise OSError(str(info))
+        raise OSError(str(err))
