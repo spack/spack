@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import os
+import posixpath
 import shutil
 import glob
 import tempfile
@@ -21,7 +22,7 @@ import spack.util.spack_json as sjson
 from spack.error import SpackError
 
 
-default_projections = {'all': os.path.join(
+default_projections = {'all': posixpath.join(
     '{architecture}', '{compiler.name}-{compiler.version}',
     '{name}-{version}-{hash}')}
 
