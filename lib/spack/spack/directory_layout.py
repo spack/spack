@@ -6,6 +6,7 @@
 import errno
 import glob
 import os
+import posixpath
 import shutil
 import tempfile
 from contextlib import contextmanager
@@ -21,7 +22,7 @@ import spack.spec
 import spack.util.spack_json as sjson
 from spack.error import SpackError
 
-default_projections = {'all': os.path.join(
+default_projections = {'all': posixpath.join(
     '{architecture}', '{compiler.name}-{compiler.version}',
     '{name}-{version}-{hash}')}
 
