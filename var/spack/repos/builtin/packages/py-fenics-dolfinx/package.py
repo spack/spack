@@ -24,7 +24,7 @@ class PyFenicsDolfinx(PythonPackage):
     depends_on("fenics-basix@main", type=("build", "run"))
     depends_on("py-mpi4py", type=("build", "run"))
     depends_on("py-petsc4py", type=("build", "run"))
-    depends_on("py-pybind11", type=("build", "run"))
+    depends_on("py-pybind11@2.6.2:2.6.99", type=("build", "run"))
 
     depends_on("py-fenics-ffcx", type=("run"))
     depends_on("py-fenics-basix", type=("run"))
