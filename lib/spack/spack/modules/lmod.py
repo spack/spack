@@ -8,6 +8,7 @@ import itertools
 import os.path
 from typing import Any, Dict  # novm
 
+import posixpath
 import llnl.util.lang as lang
 
 import spack.compilers
@@ -99,7 +100,7 @@ def guess_core_compilers(name, store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
-    default_projections = {'all': os.path.join('{name}', '{version}')}
+    default_projections = {'all': posixpath.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
