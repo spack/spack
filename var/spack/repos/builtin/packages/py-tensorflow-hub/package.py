@@ -8,7 +8,7 @@ class PyTensorflowHub(Package):
     consumption of reusable parts of machine learning models."""
 
     homepage = "https://github.com/tensorflow/hub"
-    url = "https://files.pythonhosted.org/packages/f4/1f/ca72fa5400954903aa6f3354142cd66374604384fb13429af9e41b12120d/tensorflow_hub-0.11.0-py2.py3-none-any.whl"
+    url = "https://pypi.io/packages/py2.py3/t/tensorflow_hub/tensorflow_hub-0.11.0-py2.py3-none-any.whl"
 
     version('0.11.0', sha256='19399a8abef10682b4f739a5aa78b43da3937df17f5d2afb0547945798787674', expand=False)
 
