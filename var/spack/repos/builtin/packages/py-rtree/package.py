@@ -22,3 +22,6 @@ class PyRtree(PythonPackage):
                 join_path(lib, 'libspatialindex.%s'   % dso_suffix))
         env.set('SPATIALINDEX_C_LIBRARY',
                 join_path(lib, 'libspatialindex_c.%s' % dso_suffix))
+
+    def setup_run_environment(self, env):
+        self.setup_build_environment(env)
