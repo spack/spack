@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,7 +16,7 @@ class RGgthemes(RPackage):
     Journal', among others. Provides 'geoms' for Tufte's box plot and range
     frame."""
 
-    homepage = "https://cloud.r-project.org/package=ggthemes"
+    homepage = "https://jrnold.github.io/ggthemes/"
     url      = "https://cloud.r-project.org/src/contrib/ggthemes_4.2.0.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/ggthemes"
 
