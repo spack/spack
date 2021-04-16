@@ -14,7 +14,7 @@ class RCaretensemble(RPackage):
     meta-model, and caretEnsemble() will make a robust linear combination of
     models using a GLM."""
 
-    homepage = "https://cloud.r-project.org/package=caretEnsemble"
+    homepage = "https://github.com/zachmayer/caretEnsemble"
     url      = "https://cloud.r-project.org/src/contrib/caretEnsemble_2.0.1.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/caretEnsemble"
 
