@@ -193,8 +193,8 @@ class QuantumEspresso(Package):
     # NOTE: *SOME* third-party patches will require deactivation of
     # upstream patches using `~patch` variant
 
-    # QMCPACK converter patches for QE 6.4.1, 6.4, and 6.3
-    conflicts('@:6.2,6.5:', when='+qmcpack',
+    # QMCPACK converter patches for QE 6.7, 6.4.1, 6.4, and 6.3
+    conflicts('@:6.2,6.5:6.6', when='+qmcpack',
               msg='QMCPACK converter NOT available for this version of QE')
 
     # Internal compiler error gcc8 and a64fx, I check only 6.5 and 6.6
@@ -203,6 +203,11 @@ class QuantumEspresso(Package):
 
     conflicts('@6.5:', when='+environ',
               msg='6.4.x is the latest QE series supported by Environ')
+
+    # 6.7
+    patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.7.0.diff'
+    patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
+    patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
 
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
