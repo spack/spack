@@ -33,5 +33,5 @@ class RRjava(RPackage):
 
     def setup_build_environment(self, env):
         spec = self.spec
-        env.append_flags('JAVAH', '{0}/bin/javah'.format(
+        env.append_flags('JAVAH', '{0}/javah'.format(
             join_path(spec['java'].prefix.bin)))
