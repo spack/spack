@@ -93,7 +93,7 @@ def test_group_by_prefix_follows_symlinks(mock_executable, tmpdir):
 
     # Test whether the cmake executable is found instead of the symlink
     path_to_exe = spack.cmd.external._group_by_prefix([symlink])
-    assert (cmake_dir, {cmake}) in path_to_exe
+    assert (cmake_dir, set([cmake])) in path_to_exe
 
 
 external = SpackCommand('external')
