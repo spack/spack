@@ -10,6 +10,7 @@ class PyTensorflowHub(Package):
     homepage = "https://github.com/tensorflow/hub"
     url = "https://pypi.io/packages/py2.py3/t/tensorflow_hub/tensorflow_hub-0.11.0-py2.py3-none-any.whl"
 
+    version('0.12.0', sha256='822fe5f7338c95efcc3a534011c6689e4309ba2459def87194179c4de8a6e1fc', expand=False)
     version('0.11.0', sha256='19399a8abef10682b4f739a5aa78b43da3937df17f5d2afb0547945798787674', expand=False)
 
     extends('python')
