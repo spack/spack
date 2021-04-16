@@ -74,7 +74,7 @@ def _get_system_executables():
     # entry overrides later entries
     for search_path in reversed(search_paths):
         for exe in os.listdir(search_path):
-            exe_path = os.path.realpath(os.path.join(search_path, exe))
+            exe_path = os.path.join(search_path, exe)
             if is_executable(exe_path):
                 path_to_exe[exe_path] = exe
     return path_to_exe
@@ -189,8 +189,11 @@ def external_find(args):
 
 
 def _group_by_prefix(paths):
+    """Group a list of executables by prefix, canonicalizing symlinks."""
     groups = defaultdict(set)
     for p in paths:
+        # Canonicalize symlinks
+        p = os.path.realpath(p)
         groups[os.path.dirname(p)].add(p)
     return groups.items()
 

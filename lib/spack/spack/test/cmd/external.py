@@ -80,20 +80,20 @@ def test_get_executables(working_env, mock_executable):
     assert path_to_exe[cmake_path1] == 'cmake'
 
 
-def test_get_executables_follows_symlink(working_env, mock_executable, tmpdir):
+def test_group_by_prefix_follows_symlinks(mock_executable, tmpdir):
     """Test whether symlinks to executables are followed when collecting"""
-    cmake_path = mock_executable("cmake", output="echo cmake version 1.foo")
+    cmake = mock_executable("cmake", output="echo cmake version 1.foo")
+    cmake_dir = os.path.dirname(cmake)
 
     # Create a symlink to cmake in a different directory
     symlink_dir = tmpdir.join("other_path")
-    symlink = symlink_dir.join("cmake")
+    symlink = str(symlink_dir.join("cmake"))
     mkdirp(str(symlink_dir))
-    os.symlink(cmake_path, str(symlink))
-    os.environ['PATH'] = str(symlink_dir)
-    path_to_exe = spack.cmd.external._get_system_executables()
+    os.symlink(cmake, symlink)
 
-    # Make sure the path is the realpath, not the dirname of the symlink
-    assert path_to_exe[cmake_path] == 'cmake'
+    # Test whether the cmake executable is found instead of the symlink
+    path_to_exe = spack.cmd.external._group_by_prefix([symlink])
+    assert (cmake_dir, {cmake}) in path_to_exe
 
 
 external = SpackCommand('external')
