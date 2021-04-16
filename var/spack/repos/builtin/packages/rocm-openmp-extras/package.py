@@ -88,7 +88,7 @@ class RocmOpenmpExtras(Package):
                    when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type=('build', 'run'),
                    when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver + ' -openmp', type=('build', 'run'),
+        depends_on('llvm-amdgpu@' + ver + ' ~openmp', type=('build', 'run'),
                    when='@' + ver)
 
         # tag changed to 'rocm-' in 4.0.0
