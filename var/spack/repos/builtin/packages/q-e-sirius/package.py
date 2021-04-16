@@ -35,6 +35,7 @@ class QESirius(CMakePackage):
     depends_on('hdf5', when='+hdf5')
 
     depends_on('git', type='build')
+    depends_on('pkgconfig', type='build')
 
     conflicts('~mpi', when='+scalapack', msg='SCALAPACK requires MPI support')
     conflicts('~scalapack', when='+elpa', msg='ELPA requires SCALAPACK support')
