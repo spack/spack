@@ -7,7 +7,9 @@ from spack import *
 
 
 class RCaretensemble(RPackage):
-    """Functions for creating ensembles of caret models: caretList() and
+    """caretEnsemble: Ensembles of Caret Models
+
+    Functions for creating ensembles of caret models: caretList() and
     caretStack(). caretList() is a convenience function for fitting multiple
     caret::train() models to the same dataset. caretStack() will make linear or
     non-linear combinations of these models, using a caret::train() model as a
