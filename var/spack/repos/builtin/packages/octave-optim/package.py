@@ -18,4 +18,4 @@ class OctaveOptim(OctavePackage, SourceforgePackage):
     depends_on('octave-struct@1.0.12:')
     depends_on('octave-statistics@1.4.0:')
     extends('octave@3.6.0:', when='@:1.5.2')
-    extends('octave@4.0.0:', when='@1.6.2:')
+    extends('octave@4.0.0:', when='@1.6.1:')
