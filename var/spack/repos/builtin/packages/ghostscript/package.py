@@ -40,7 +40,9 @@ class Ghostscript(AutotoolsPackage):
 
     # Related bug report: https://bugs.ghostscript.com/show_bug.cgi?id=702985
     # Patch source: https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff;h=41ef9a0bc36b
-    patch("https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff_plain;h=41ef9a0bc36b", when='@9.53.3^freetype@2.10.3:', sha256="254532a8561afddb5b39c1c30526676559ed9f0b87c1e9985eb797a59c98a3dd")
+    patch("https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff_plain;h=41ef9a0bc36b",
+          when='@:9.53.3^freetype@2.10.3:',
+          sha256="254532a8561afddb5b39c1c30526676559ed9f0b87c1e9985eb797a59c98a3dd")
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
