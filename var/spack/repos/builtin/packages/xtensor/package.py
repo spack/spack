@@ -28,8 +28,7 @@ class Xtensor(CMakePackage):
             description='Enable TBB parallelization')
 
     depends_on('xtl', when='@develop')
-    depends_on('xtl@0.7.2:0.7.99', when='@0.23.4')
-    depends_on('xtl@0.7.2:0.7.99', when='@0.23.2')
+    depends_on('xtl@0.7.2:0.7.99', when='@0.23.2:0.23.4')
     depends_on('xtl@0.6.4:0.6.99', when='@0.20.7')
     depends_on('xtl@0.4.0:0.4.99', when='@0.15.1')
     depends_on('xtl@0.3.3:0.3.99', when='@0.13.1')
