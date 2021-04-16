@@ -11,20 +11,26 @@ import platform
 # The viewer and trace viewer tar files and sha256sum depend on the
 # version and machine type.  Starting with 2019.08, the name of the
 # tar file contains the version number.
-def viewer_url(ver, mach):
+def viewer_url(ver, machine, system):
     ver2 = ('-' + ver) if ver >= '2019.08' else ''
-    return (
-        'http://hpctoolkit.org/download/hpcviewer/{0}/'
-        'hpcviewer{1}-linux.gtk.{2}.tgz'
-    ).format(ver, ver2, mach)
+    if machine == "darwin":
+        return (
+            'http://hpctoolkit.org/download/hpcviewer/{0}/'
+            'hpcviewer{1}-macosx.cocoa.{2}.zip'
+        ).format(ver, ver2, system)
+    else:
+        return (
+            'http://hpctoolkit.org/download/hpcviewer/{0}/'
+            'hpcviewer{1}-linux.gtk.{2}.tgz'
+        ).format(ver, ver2, machine)
 
 
-def trace_url(ver, mach):
+def trace_url(ver, machine):
     ver2 = ('-' + ver) if ver >= '2019.08' else ''
     return (
         'http://hpctoolkit.org/download/hpcviewer/{0}/'
         'hpctraceviewer{1}-linux.gtk.{2}.tgz'
-    ).format(ver, ver2, mach)
+    ).format(ver, ver2, machine)
 
 
 class Hpcviewer(Package):
@@ -38,9 +44,10 @@ class Hpcviewer(Package):
     maintainers = ['mwkrentel']
 
     viewer_sha = {
-        ('2021.03', 'aarch64'): '1b1f7f51a319a159aa96dee21b2cd77ee23b01df263ea122980fa1567e4dab8d',
-        ('2021.03', 'ppc64le'): '8fc4683a9e61263ac78fe35391930b0cdc8e84dd50f8d41dcd0c6d8072b02937',
-        ('2021.03', 'x86_64'):  '40b4453fe662b896a853d869486b481ded0d29abdf5e50aab2d8f3bdf8940b04',
+        ('2021.03', 'linux-aarch64'): '1b1f7f51a319a159aa96dee21b2cd77ee23b01df263ea122980fa1567e4dab8d',
+        ('2021.03', 'linux-ppc64le'): '8fc4683a9e61263ac78fe35391930b0cdc8e84dd50f8d41dcd0c6d8072b02937',
+        ('2021.03', 'linux-x86_64'):  '40b4453fe662b896a853d869486b481ded0d29abdf5e50aab2d8f3bdf8940b04',
+        ('2021.03', 'darwin-x86_64'): 'ef7598b2a8d6574f315915452015d4b50ad8631165a872d1fbccac80284db160',
         ('2021.01', 'aarch64'): 'fe797a1c97943f7509c36a570198291e674cd4a793c1d6538a2761d66542dc52',
         ('2021.01', 'ppc64le'): 'ba4035de2ae208280c3744000ea08d2d7f8c31bd7095f722e442ddc289648063',
         ('2021.01', 'x86_64'):  '99eba4e1c613203c4658f2874d0e79e1620db7a22ac7dcb810801886ba9f8a79',
@@ -118,8 +125,11 @@ class Hpcviewer(Package):
     }
 
     for key in viewer_sha.keys():
-        if key[1] == platform.machine():
-            version(key[0], url=viewer_url(*key), sha256=viewer_sha[key])
+        system = platform.system().lower()
+        machine = platform.machine().lower()
+        machine_id = "{0}-{1}".format(system, machine)
+        if key[1] == machine_id:
+            version(key[0], url=viewer_url(key[0], system, machine), sha256=viewer_sha[key])
 
             # Current versions include the viewer and trace viewer in
             # one tar file.  Before 2020.07, the trace viewer was a
@@ -132,10 +142,16 @@ class Hpcviewer(Package):
     depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
     depends_on('java@8', type=('build', 'run'), when='@:2020.99')
 
-    conflicts('platform=darwin', msg='hpcviewer requires a manual install on MacOS, see homepage')
 
     # Both hpcviewer and trace viewer have an install script.
     def install(self, spec, prefix):
+        # On OS X extract the zip and create symlink to bin dir
+        if platform.system() == "Darwin":
+            install_tree('.', prefix)
+            os.symlink(join_path(prefix, "Contents/MacOS"), prefix.bin)
+            return
+
+        # On linux perform installation
         args = [
             '--java', spec['java'].home,
             prefix
