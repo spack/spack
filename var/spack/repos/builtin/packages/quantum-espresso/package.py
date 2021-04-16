@@ -377,8 +377,11 @@ class QuantumEspresso(Package):
         #   BLAS_LIBS being set
         # However, MKL is correctly picked up by qe-6.5 for BLAS and FFT if
         # MKLROOT is set (which SPACK does automatically for ^mkl)
-        if not ('quantum-espresso@6.5' in spec and '^mkl' in spec):
+        if spec.satisfies('@:6.4'): # set even if MKL is selected
             options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
+        else: # behavior changed at 6.5 and later
+            if not spec.satisfies('^mkl'):
+                options.append('BLAS_LIBS={0}'.format(lapack_blas.ld_flags))
 
         if '+scalapack' in spec:
             if '^mkl' in spec:
