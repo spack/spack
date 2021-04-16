@@ -38,6 +38,10 @@ class Claw(CMakePackage):
           sha256='44a3e17bf6e972db9760fc50bc0948309ee441dab1cdb11816ba675de0138549',
           when='@:2.0.2%intel')
 
+    patch('https://github.com/claw-project/claw-compiler/commit/4d8bc7a794af3651b8b61501388fc00096b23a85.patch',
+          sha256='0a55110c67d7755741e1c86c2f71341286e7502a81ac29958ce80273e87bc8e1',
+          when='@2.0.2%cce')
+
     # Cache ANT dependencies in the stage directory.
     # Otherwise, they are cached to the user's home directory.
     patch('ivy_local_cache.patch')
