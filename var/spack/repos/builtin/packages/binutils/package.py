@@ -39,6 +39,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
     variant('lto', default=False, description='Enable lto.')
     variant('ld', default=False, description='Enable ld.')
+    variant('gas', default=False, description='Enable as assembler.')
     variant('interwork', default=False, description='Enable interwork.')
 
     patch('cr16.patch', when='@:2.29.1')
@@ -60,6 +61,15 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
 
+    # When you build binutils with ~ld and +gas and load it in your PATH, you may
+    # end up with an incompatibility between linker and assembler, in particular:
+    # "unable to initialize decompress status for section .debug_info" is the error
+    # I've encountered.
+    conflicts('~gas', '+ld', msg="Linker and assembler should be the same version")
+    conflicts('+gas', '~ld', msg="Linker and assembler should be the same version")
+    conflicts('~gas', '+gold', msg="Linker and assembler should be the same version")
+    conflicts('+gas', '~gold', msg="Linker and assembler should be the same version")
+
     def configure_args(self):
         spec = self.spec
 
@@ -76,6 +86,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
         args += self.enable_or_disable('lto')
         args += self.enable_or_disable('ld')
+        args += self.enable_or_disable('gas')
         args += self.enable_or_disable('interwork')
         args += self.enable_or_disable('gold')
         args += self.enable_or_disable('plugins')
