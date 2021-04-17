@@ -142,7 +142,6 @@ class Hpcviewer(Package):
     depends_on('java@11:', type=('build', 'run'), when='@2021.0:')
     depends_on('java@8', type=('build', 'run'), when='@:2020.99')
 
-
     # Both hpcviewer and trace viewer have an install script.
     def install(self, spec, prefix):
         # On OS X extract the zip and create symlink to bin dir
