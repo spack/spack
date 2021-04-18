@@ -4,11 +4,17 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 import llnl.util.tty.color as cl
 import spack.audit
+import spack.repo
 
 
 description = "audit configuration files, packages, etc."
 section = "system"
 level = "short"
+
+CHECKS = {
+    'configs': ['CFG-COMPILER'],
+    'packages': ['PKG-DIRECTIVES']
+}
 
 
 def setup_parser(subparser):
@@ -16,21 +22,58 @@ def setup_parser(subparser):
     sp = subparser.add_subparsers(metavar='SUBCOMMAND', dest='subcommand')
 
     # Audit configuration files
-    sp.add_parser(
-        'configuration',
-        help='audit configuration files'
+    sp.add_parser('configs', help='audit configuration files')
+
+    # Audit package recipes
+    pkg_parser = sp.add_parser('packages', help='audit package recipes')
+    pkg_parser.add_argument(
+        '--name',
+        help='restrict which packages to analyze (may be given multiple times)',
+        action='append'
     )
 
 
+def configs(parser, args):
+    checks = CHECKS[args.subcommand]
+    reports = _run_checks(checks)
+    _process_reports(reports)
+
+
+def packages(parser, args):
+    checks = CHECKS[args.subcommand]
+    pkgs = args.name or spack.repo.path.all_package_names()
+
+    reports = _run_checks(checks, pkgs=pkgs)
+    _process_reports(reports)
+
+
 def audit(parser, args):
-    # FIXME: trigger subcommands
-    errors = spack.audit.audit_cfgcmp.run()
-    if errors:
-        msg = '{0}: {1} issue{2} found'.format(
-            spack.audit.audit_cfgcmp.tag, len(errors),
-            '' if len(errors) == 1 else 's'
-        )
-        header = '@*b{' + msg + '}'
-        print(cl.colorize(header))
-        for idx, error in enumerate(errors):
-            print(str(idx + 1) + '. ' + str(error))
+    subcommands = {
+        'configs': configs,
+        'packages': packages
+    }
+    subcommands[args.subcommand](parser, args)
+
+
+def _run_checks(checks, **kwargs):
+    reports = []
+    for check in checks:
+        errors = spack.audit.CALLBACKS[check].run(**kwargs)
+        reports.append((check, errors))
+    return reports
+
+
+def _process_reports(reports):
+    for check, errors in reports:
+        if errors:
+            msg = '{0}: {1} issue{2} found'.format(
+                check, len(errors), '' if len(errors) == 1 else 's'
+            )
+            header = '@*b{' + msg + '}'
+            print(cl.colorize(header))
+            for idx, error in enumerate(errors):
+                print(str(idx + 1) + '. ' + str(error))
+        else:
+            msg = '{0}: 0 issues found.'.format(check)
+            header = '@*b{' + msg + '}'
+            print(cl.colorize(header))
