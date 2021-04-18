@@ -34,11 +34,11 @@ def trace_url(ver, machine):
 
 
 class Hpcviewer(Package):
-    """Binary distribution of hpcviewer and hpctraceviewer for the Rice
-    HPCToolkit (Linux x86_64, ppc64le and aarch64).  Note: hpctoolkit
-    databases are platform independent, so you don't need to install
-    hpctoolkit to run the viewers and it's common to run hpcrun and
-    hpcviewer on different machines."""
+    """Binary distribution of hpcviewer and integrated traceviewer
+    for the Rice HPCToolkit (MacOS x86_64, and Linux x86_64, ppc64le
+    and aarch64).  Note: hpctoolkit databases are platform independent,
+    so you don't need to install hpctoolkit to run the viewer, and
+    it's common to run hpcrun and hpcviewer on different machines."""
 
     homepage = "http://hpctoolkit.org"
     maintainers = ['mwkrentel']
