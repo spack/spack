@@ -55,6 +55,7 @@ class Paraview(CMakePackage, CudaPackage):
             values=('native', 'fermi', 'kepler', 'maxwell',
                     'pascal', 'volta', 'turing', 'ampere', 'all', 'none'),
             description='CUDA architecture')
+    variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
 
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -396,5 +397,8 @@ class Paraview(CMakePackage, CudaPackage):
                     ":".join(self.rpath + pylibdirs)
                 )
             )
+
+        if '+advanced_debug' in spec:
+            cmake_args.append('-DVTK_DEBUG_LEAKS:BOOL=ON')
 
         return cmake_args
