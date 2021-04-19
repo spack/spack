@@ -38,7 +38,11 @@ class RdmaCore(CMakePackage):
 #       system path) as a component in compile-time static strings such as
 #       IBACM_SERVER_PATH.
     def cmake_args(self):
-        cmake_args = ["-DCMAKE_INSTALL_SYSCONFDIR=" +
-                      self.spec.prefix.etc,
-                      "-DCMAKE_INSTALL_RUNDIR=/var/run"]
+        cmake_args = [
+            '-DCMAKE_INSTALL_SYSCONFDIR={0}'.format(self.spec.prefix.etc),
+            '-DCMAKE_INSTALL_RUNDIR=/var/run',
+            '-DPYTHON_LIBRARY={0}'.format(self.spec['python'].libs[0]),
+            '-DPYTHON_INCLUDE_DIR={0}'
+            .format(self.spec['python'].headers.directories[0])
+        ]
         return cmake_args
