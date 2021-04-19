@@ -144,3 +144,4 @@ spack:
     - spark
     - sundials+int64
     - superlu-dist@5.4.0
+    - synapsetool
