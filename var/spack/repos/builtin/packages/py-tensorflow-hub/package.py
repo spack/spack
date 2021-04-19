@@ -3,24 +3,66 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import tempfile
+
 
 class PyTensorflowHub(Package):
     """TensorFlow Hub is a library to foster the publication, discovery, and
     consumption of reusable parts of machine learning models."""
 
     homepage = "https://github.com/tensorflow/hub"
-    url = "https://pypi.io/packages/py2.py3/t/tensorflow_hub/tensorflow_hub-0.11.0-py2.py3-none-any.whl"
-
-    version('0.12.0', sha256='822fe5f7338c95efcc3a534011c6689e4309ba2459def87194179c4de8a6e1fc', expand=False)
-    version('0.11.0', sha256='19399a8abef10682b4f739a5aa78b43da3937df17f5d2afb0547945798787674', expand=False)
-
+    url = "https://github.com/tensorflow/hub/archive/refs/tags/v0.12.0.tar.gz"
+    
+    version('0.12.0', sha256='b192ef3a9a6cbeaee46142d64b47b979828dbf41fc56d48c6587e08f6b596446')
+    version('0.11.0', sha256='4715a4212b45531a7c25ada7207d850467d1b5480f1940f16623f8770ad64df4')
+    
     extends('python')
-
-    depends_on('python@3.6:',               type=('build', 'run'))
-    depends_on('py-pip',                    type='build')
-    depends_on('py-setuptools',             type='build')
-    depends_on('py-tensorflow-estimator',   type=('build', 'run'))
-
+    
+    depends_on('bazel', type='build')
+    depends_on('python@3.6:',        type=('build', 'run'))
+    depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
+    depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
+    
     def install(self, spec, prefix):
-        pip = which('pip')
-        pip('install', self.stage.archive_file, '--prefix={0}'.format(prefix))
+        tmp_path = tempfile.mkdtemp(prefix='spack')
+        env['TEST_TMPDIR'] = tmp_path
+        env['HOME'] = tmp_path
+        args = [
+            # Don't allow user or system .bazelrc to override build settings
+            '--nohome_rc',
+            '--nosystem_rc',
+            # Bazel does not work properly on NFS, switch to /tmp
+            '--output_user_root=' + tmp_path,
+            'build',
+            # Spack logs don't handle colored output well
+            '--color=no',
+            '--jobs={0}'.format(make_jobs),
+            # Enable verbose output for failures
+            '--verbose_failures',
+            # Show (formatted) subcommands being executed
+            '--subcommands=pretty_print',
+            '--spawn_strategy=local',
+            # Ask bazel to explain what it's up to
+            # Needs a filename as argument
+            '--explain=explainlogfile.txt',
+            # Increase verbosity of explanation,
+            '--verbose_explanations',
+            # bazel uses system PYTHONPATH instead of spack paths
+            '--action_env', 'PYTHONPATH={0}'.format(env['PYTHONPATH']),
+            '//tensorflow_hub/pip_package:build_pip_package',
+        ]
+
+        bazel(*args)
+        
+        runfiles = 'bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub'
+        insttmp_path = tempfile.mkdtemp(prefix='spack')
+        install('tensorflow_hub/pip_package/setup.py', insttmp_path)
+        install('tensorflow_hub/pip_package/setup.cfg', insttmp_path)
+        install('LICENSE', '{0}/LICENSE.txt'.format(insttmp_path))
+        mkdirp(join_path(insttmp_path, 'tensorflow_hub'))
+        install_tree('{0}/tensorflow_hub'.format(runfiles),
+                     join_path(insttmp_path, 'tensorflow_hub'))
+
+        with working_dir(insttmp_path):
+            setup_py('install', '--prefix={0}'.format(prefix),
+                     '--single-version-externally-managed', '--root=/')
