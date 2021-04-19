@@ -41,6 +41,8 @@ class Dyninst(CMakePackage):
 
     depends_on('boost@1.61.0:' + boost_libs, when='@10.1.0:')
     depends_on('boost@1.61.0:1.69.99' + boost_libs, when='@:10.0.99')
+    depends_on('boost@1.67.0:' + boost_libs, when='@11.0.0:')
+
     depends_on('libiberty+pic')
 
     # Dyninst uses elfutils starting with 9.3.0, and used libelf
@@ -75,6 +77,9 @@ class Dyninst(CMakePackage):
     conflicts('%pgi')
     conflicts('%xl')
     conflicts('%xl_r')
+
+    # Version 11.0 requires a C++11-compliant ABI
+    conflicts('%gcc@:5.99.99', when='@11.0.0:')
 
     # Versions 9.3.x used cotire, but have no knob to turn it off.
     # Cotire has no real use for one-time builds and can break
