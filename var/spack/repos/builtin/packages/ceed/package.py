@@ -45,9 +45,7 @@ class Ceed(BundlePackage):
     depends_on('libceed@0.8~cuda', when='@4.0.0~cuda')
     depends_on('libceed@0.8+cuda+magma', when='@4.0.0+cuda')
     depends_on('libceed@0.8~hip', when='@4.0.0~hip')
-    # FIXME: magma does not have 'hip' variant, at least at the momemnt:
     depends_on('libceed@0.8+hip', when='@4.0.0+hip')
-    # depends_on('libceed@0.8+hip+magma', when='@4.0.0+hip')
     depends_on('libceed@0.8+occa', when='@4.0.0+occa')
     depends_on('libceed@0.8~occa', when='@4.0.0~occa')
     # ceed-3.0
@@ -156,8 +154,6 @@ class Ceed(BundlePackage):
     # MAGMA
     # ceed-4.0
     depends_on('magma@2.5.4', when='@4.0.0+cuda')
-    # FIXME: magma does not have 'hip' variant, at least at the momemnt:
-    # depends_on('magma@2.5.4+hip', when='@4.0.0+hip')
     # ceed-3.0
     depends_on('magma@2.5.3', when='@3.0.0+cuda')
     # ceed-2.0
