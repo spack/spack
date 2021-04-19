@@ -6,6 +6,7 @@
 import collections
 import itertools
 import os.path
+import posixpath
 from typing import Any, Dict  # novm
 
 import llnl.util.lang as lang
@@ -99,7 +100,7 @@ def guess_core_compilers(name, store=False):
 
 class LmodConfiguration(BaseConfiguration):
     """Configuration class for lmod module files."""
-    default_projections = {'all': os.path.join('{name}', '{version}')}
+    default_projections = {'all': posixpath.join('{name}', '{version}')}
 
     @property
     def core_compilers(self):
@@ -445,7 +446,7 @@ class LmodContext(BaseContext):
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
-    default_template = os.path.join('modules', 'modulefile.lua')
+    default_template = posixpath.join('modules', 'modulefile.lua')
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
