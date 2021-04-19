@@ -176,6 +176,57 @@ def _unknown_variants_in_directives(pkgs, error_cls):
     return llnl.util.lang.dedupe(errors)
 
 
+@audit_pkgdirectives
+def _unknown_variants_in_dependencies(pkgs, error_cls):
+    """Search and report use of wrong variants for dependencies"""
+    import spack.repo
+    import spack.spec
+
+    errors = []
+    for pkg_name in pkgs:
+        pkg = spack.repo.get(pkg_name)
+        filename = spack.repo.path.filename_for_package_name(pkg_name)
+        for dependency_name, dependency_data in pkg.dependencies.items():
+            # No need to analyze virtual packages
+            if spack.repo.path.is_virtual(dependency_name):
+                continue
+
+            try:
+                dependency_pkg = spack.repo.get(dependency_name)
+            except spack.repo.UnknownPackageError:
+                # This dependency is completely missing, so report
+                # and continue the analysis
+                summary = (pkg_name + ": unknown package '{0}' in "
+                           "'depends_on' directive".format(dependency_name))
+                details = [
+                    " in " + filename
+                ]
+                errors.append(error_cls(summary=summary, details=details))
+                continue
+
+            for _, dependency_edge in dependency_data.items():
+                dependency_variants = dependency_edge.spec.variants
+                for name, value in dependency_variants.items():
+                    try:
+                        dependency_pkg.variants[name].validate_or_raise(
+                            value, pkg=dependency_pkg
+                        )
+                    except Exception as e:
+                        summary = (pkg_name + ": wrong variant used for a "
+                                   "dependency in a 'depends_on' directive")
+                        error_msg = str(e).strip()
+                        if isinstance(e, KeyError):
+                            error_msg = ('the variant {0} does not '
+                                         'exist'.format(error_msg))
+                        error_msg += " in package '" + dependency_name + "'"
+
+                        errors.append(error_cls(
+                            summary=summary, details=[error_msg, 'in ' + filename]
+                        ))
+
+    return errors
+
+
 def _analyze_variants_in_directive(pkg, constraint, directive, error_cls):
     import spack.variant
     variant_exceptions = (
