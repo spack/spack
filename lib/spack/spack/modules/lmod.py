@@ -443,7 +443,7 @@ class LmodContext(BaseContext):
 
 class LmodModulefileWriter(BaseModuleFileWriter):
     """Writer class for lmod module files."""
-    default_template = os.path.join('modules', 'modulefile.lua')
+    default_template = posixpath.join('modules', 'modulefile.lua')
 
 
 class CoreCompilersNotFoundError(spack.error.SpackError, KeyError):
