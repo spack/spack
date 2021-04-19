@@ -56,13 +56,14 @@ class PyTensorflowHub(Package):
 
         bazel(*args)
 
-        runfiles = 'bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub' 
+        runfiles = join_path('bazel-bin', 'tensorflow_hub', 'pip_package',
+                             'build_pip_package.runfiles', 'org_tensorflow_hub')
         insttmp_path = tempfile.mkdtemp(prefix='spack')
-        install('tensorflow_hub/pip_package/setup.py', insttmp_path)
-        install('tensorflow_hub/pip_package/setup.cfg', insttmp_path)
-        install('LICENSE', '{0}/LICENSE.txt'.format(insttmp_path))
+        install(join_path('tensorflow_hub', 'pip_package', 'setup.py'),  insttmp_path)
+        install(join_path('tensorflow_hub', 'pip_package', 'setup.cfg'), insttmp_path)
+        install('LICENSE', join_path(insttmp_path, 'LICENSE.txt'))
         mkdirp(join_path(insttmp_path, 'tensorflow_hub'))
-        install_tree('{0}/tensorflow_hub'.format(runfiles),
+        install_tree(join_path(runfiles, tensorflow_hub),
                      join_path(insttmp_path, 'tensorflow_hub'))
 
         with working_dir(insttmp_path):
