@@ -6,8 +6,8 @@
 """This module implements the classes necessary to generate TCL
 non-hierarchical modules.
 """
-import os.path
 import string
+import posixpath
 from typing import Dict, Any  # novm
 
 import llnl.util.tty as tty
@@ -106,4 +106,4 @@ class TclContext(BaseContext):
 
 class TclModulefileWriter(BaseModuleFileWriter):
     """Writer class for tcl module files."""
-    default_template = os.path.join('modules', 'modulefile.tcl')
+    default_template = posixpath.join('modules', 'modulefile.tcl')
