@@ -14,17 +14,17 @@ class PyTensorflowHub(Package):
     url = "https://github.com/tensorflow/hub/archive/refs/tags/v0.12.0.tar.gz"
 
     maintainers = ['aweits']
-    
+
     version('0.12.0', sha256='b192ef3a9a6cbeaee46142d64b47b979828dbf41fc56d48c6587e08f6b596446')
     version('0.11.0', sha256='4715a4212b45531a7c25ada7207d850467d1b5480f1940f16623f8770ad64df4')
-    
+
     extends('python')
-    
+
     depends_on('bazel', type='build')
     depends_on('python@3.6:',        type=('build', 'run'))
     depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
-    
+
     def install(self, spec, prefix):
         tmp_path = tempfile.mkdtemp(prefix='spack')
         env['TEST_TMPDIR'] = tmp_path
@@ -55,8 +55,8 @@ class PyTensorflowHub(Package):
         ]
 
         bazel(*args)
-        
-        runfiles = 'bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub'
+
+        runfiles = 'bazel-bin/tensorflow_hub/pip_package/build_pip_package.runfiles/org_tensorflow_hub' 
         insttmp_path = tempfile.mkdtemp(prefix='spack')
         install('tensorflow_hub/pip_package/setup.py', insttmp_path)
         install('tensorflow_hub/pip_package/setup.cfg', insttmp_path)
