@@ -59,10 +59,13 @@ class Mirror(object):
     to them.  These two URLs are usually the same.
     """
 
-    def __init__(self, fetch_url, push_url=None, name=None):
+    def __init__(self, fetch_url, push_url=None,
+                 name=None, access_pair=(None, None), access_token=None):
         self._fetch_url = fetch_url
         self._push_url = push_url
         self._name = name
+        self._access_pair = access_pair
+        self._access_token = access_token
 
     def to_json(self, stream=None):
         return sjson.dump(self.to_dict(), stream)
@@ -96,7 +99,8 @@ class Mirror(object):
         if isinstance(d, six.string_types):
             return Mirror(d, name=name)
         else:
-            return Mirror(d['fetch'], d['push'], name)
+            return Mirror(d['fetch'], d['push'], name,
+                          (d["id"], d["secret"]), d["token"])
 
     def display(self, max_len=0):
         if self._push_url is None:
@@ -136,6 +140,22 @@ class Mirror(object):
     @property
     def name(self):
         return self._name or "<unnamed>"
+
+    @property
+    def access_pair(self):
+        return self._access_pair
+
+    @access_pair.setter
+    def access_pair(self, connection_tuple):
+        self._access_pair = connection_tuple
+
+    @property
+    def access_token(self):
+        return self._access_token
+
+    @access_token.setter
+    def access_token(self, connection_token):
+        self._access_token = connection_token
 
     @property
     def fetch_url(self):
@@ -453,7 +473,7 @@ def create(path, specs, skip_unstable_versions=False):
     return mirror_stats.stats()
 
 
-def add(name, url, scope):
+def add(name, url, scope, args={}):
     """Add a named mirror in the given scope"""
     mirrors = spack.config.get('mirrors', scope=scope)
     if not mirrors:
@@ -463,7 +483,16 @@ def add(name, url, scope):
         tty.die("Mirror with name %s already exists." % name)
 
     items = [(n, u) for n, u in mirrors.items()]
-    items.insert(0, (name, url))
+    mirror_data = url
+    key_values = ["s3_access_key_id", "s3_access_token"]
+    if any(value for value in key_values if value in args):
+        mirror_data = {"fetch": url, "push": url,
+                       "id": args.s3_access_key_id,
+                       "secret": args.s3_access_key_secret,
+                       "token": args.s3_access_token,
+                       "endpoint_url": args.s3_endpoint_url}
+
+    items.insert(0, (name, mirror_data))
     mirrors = syaml_dict(items)
     spack.config.set('mirrors', mirrors, scope=scope)
 

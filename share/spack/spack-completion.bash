@@ -1277,7 +1277,7 @@ _spack_mirror_destroy() {
 _spack_mirror_add() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help --scope"
+        SPACK_COMPREPLY="-h --help --scope --s3-access-key-id --s3-access-key-secret --s3-access-token --s3-endpoint-url"
     else
         _mirrors
     fi

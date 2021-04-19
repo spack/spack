@@ -6,7 +6,6 @@
 import sys
 
 import llnl.util.tty as tty
-from llnl.util.tty.colify import colify
 
 import spack.cmd
 import spack.cmd.common.arguments as arguments
@@ -93,7 +92,18 @@ def setup_parser(subparser):
         '--scope', choices=scopes, metavar=scopes_metavar,
         default=spack.config.default_modify_scope(),
         help="configuration scope to modify")
-
+    add_parser.add_argument(
+        '--s3-access-key-id',
+        help="ID string to use to connect to this S3 mirror")
+    add_parser.add_argument(
+        '--s3-access-key-secret',
+        help="Secret string to use to connect to this S3 mirror")
+    add_parser.add_argument(
+        '--s3-access-token',
+        help="Access Token to use to connect to this S3 mirror")
+    add_parser.add_argument(
+        '--s3-endpoint-url',
+        help="Access Token to use to connect to this S3 mirror")
     # Remove
     remove_parser = sp.add_parser('remove', aliases=['rm'],
                                   help=mirror_remove.__doc__)
@@ -129,7 +139,7 @@ def setup_parser(subparser):
 def mirror_add(args):
     """Add a mirror to Spack."""
     url = url_util.format(args.url)
-    spack.mirror.add(args.name, url, args.scope)
+    spack.mirror.add(args.name, url, args.scope, args)
 
 
 def mirror_remove(args):
@@ -330,7 +340,7 @@ def mirror_create(args):
         "  %-4d failed to fetch." % e)
     if error:
         tty.error("Failed downloads:")
-        colify(s.cformat("{name}{@version}") for s in error)
+        tty.colify(s.cformat("{name}{@version}") for s in error)
         sys.exit(1)
 
 

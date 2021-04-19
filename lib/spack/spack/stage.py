@@ -437,11 +437,14 @@ class Stage(object):
             # Join URLs of mirror roots with mirror paths. Because
             # urljoin() will strip everything past the final '/' in
             # the root, so we add a '/' if it is not present.
-            mirror_urls = []
+            mirror_urls = {}
             for mirror in spack.mirror.MirrorCollection().values():
                 for rel_path in self.mirror_paths:
-                    mirror_urls.append(
-                        url_util.join(mirror.fetch_url, rel_path))
+                    mirror_url = url_util.join(mirror.fetch_url, rel_path)
+                    mirror_urls[mirror_url] = {}
+                    if mirror.access_pair or mirror.access_token:
+                        mirror_urls[mirror_url] = {"token": mirror.access_token,
+                                                   "pair": mirror.access_pair}
 
             # If this archive is normally fetched from a tarball URL,
             # then use the same digest.  `spack mirror` ensures that
@@ -460,10 +463,11 @@ class Stage(object):
 
             # Add URL strategies for all the mirrors with the digest
             # Insert fetchers in the order that the URLs are provided.
-            for url in reversed(mirror_urls):
+            for url in reversed(list(mirror_urls.keys())):
                 fetchers.insert(
                     0, fs.from_url_scheme(
-                        url, digest, expand=expand, extension=extension))
+                        url, digest, expand=expand, extension=extension,
+                        connection=mirror_urls[url]))
 
             if self.default_fetcher.cachable:
                 for rel_path in reversed(list(self.mirror_paths)):

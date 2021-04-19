@@ -18,7 +18,7 @@ def _parse_s3_endpoint_url(endpoint_url):
     return endpoint_url
 
 
-def create_s3_session(url):
+def create_s3_session(url, connection={}):
     url = url_util.parse(url)
     if url.scheme != 's3':
         raise ValueError(
@@ -31,8 +31,18 @@ def create_s3_session(url):
     from boto3 import Session
     from botocore.exceptions import ClientError
 
-    session = Session()
+    s3_connection = {}
 
+    if connection:
+        if connection['token']:
+            s3_connection["aws_session_token"] = connection["token"]
+        if connection["pair"][0]:
+            s3_connection["aws_access_key_id"] = connection["pair"][0]
+            s3_connection["aws_secret_access_key"] = connection["pair"][1]
+        if connection['endpoint_url']:
+            s3_connection["endpoint_url"] = connection["endpoint_url"]
+
+    session = Session(**s3_connection)
     s3_client_args = {"use_ssl": spack.config.get('config:verify_ssl')}
 
     endpoint_url = os.environ.get('S3_ENDPOINT_URL')

@@ -1365,6 +1365,9 @@ class S3FetchStrategy(URLFetchStrategy):
     url_attr = 's3'
 
     def __init__(self, *args, **kwargs):
+        self.connection = {}
+        if "connection" in kwargs:
+            self.connection = kwargs["connection"]
         try:
             super(S3FetchStrategy, self).__init__(*args, **kwargs)
         except ValueError:
@@ -1437,7 +1440,12 @@ class GCSFetchStrategy(URLFetchStrategy):
         basename = os.path.basename(parsed_url.path)
 
         with working_dir(self.stage.path):
-            _, headers, stream = web_util.read_from_url(self.url)
+            import spack.util.s3 as s3_util
+            s3 = s3_util.create_s3_session(self.url,
+                                           connection=self.connection)
+            headers = s3.get_object(Bucket=parsed_url.netloc,
+                                    Key=parsed_url.path.lstrip("/"))
+            stream = headers.StreamingBody()
 
             with open(basename, 'wb') as f:
                 shutil.copyfileobj(stream, f)

@@ -169,6 +169,31 @@ def test_mirror_crud(tmp_scope, capsys):
         output = mirror('remove', '--scope', tmp_scope, 'mirror')
         assert 'Removed mirror' in output
 
+        # Test S3 connection info token
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-token', 'aaaaaazzzzz',
+               'mirror', 's3://spack-public')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
+        # Test S3 connection info id/key
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-key-id', 'foo', '--s3-access-key-secret', 'bar',
+               'mirror', 's3://spack-public')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
+        # Test S3 connection info with endpoint URL
+        mirror('add', '--scope', tmp_scope,
+               '--s3-access-token', 'aaaaaazzzzz',
+               '--s3-endpoint-url', 'http://localhost/',
+               'mirror', 's3://spack-public')
+
+        output = mirror('remove', '--scope', tmp_scope, 'mirror')
+        assert 'Removed mirror' in output
+
         output = mirror('list', '--scope', tmp_scope)
         assert 'No mirrors configured' in output
 
