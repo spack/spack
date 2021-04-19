@@ -1,0 +1,13 @@
+--- old/vtkm/cont/openmp/internal/FunctorsOpenMP.h    2021-04-13 18:16:02.175121018 -0500
++++ new/vtkm/cont/openmp/internal/FunctorsOpenMP.h    2021-04-13 18:17:01.120173420 -0500
+@@ -136,7 +136,7 @@
+   auto outIter = vtkm::cont::ArrayPortalToIteratorBegin(outPortal) + outStart;
+   vtkm::Id valuesPerChunk;
+
+-  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals))
++  VTKM_OPENMP_DIRECTIVE(parallel default(none) shared(inIter, outIter, valuesPerChunk, numVals, isSame))
+   {
+
+     VTKM_OPENMP_DIRECTIVE(single)
+
+
