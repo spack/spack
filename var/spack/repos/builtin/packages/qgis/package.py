@@ -18,6 +18,7 @@ class Qgis(CMakePackage):
     maintainers = ['adamjstewart', 'Sinan81']
 
     version('3.18.2',   sha256='1913e4d5596bbc8b7d143f3defb18bf376f750a71f334f69d76af5deca7ecc5d')
+    # Prefer latest long term release
     version('3.16.5',   sha256='525f469ad6e40dd7a8f09ebab5eb6a2dffc45939b99b7d937750cc04ed78d61c', preferred=True)
     version('3.14.16',  sha256='c9915c2e577f1812a2b35b678b123c58407e07824d73e5ec0dda13db7ca75c04')
     version('3.14.0',   sha256='1b76c5278def0c447c3d354149a2afe2562ac26cf0bcbe69b9e0528356d407b8')
@@ -25,7 +26,6 @@ class Qgis(CMakePackage):
     version('3.12.2',   sha256='501f81715672205afd2c1a289ffc765aff96eaa8ecb49d079a58ef4d907467b8')
     version('3.12.1',   sha256='a7dc7af768b8960c08ce72a06c1f4ca4664f4197ce29c7fe238429e48b2881a8')
     version('3.12.0',   sha256='19e9c185dfe88cad7ee6e0dcf5ab7b0bbfe1672307868a53bf771e0c8f9d5e9c')
-    # Prefer latest long term release
     version('3.10.10',  sha256='e21a778139823fb6cf12e4a38f00984fcc060f41abcd4f0af83642d566883839')
     version('3.10.7',   sha256='f6c02489e065bae355d2f4374b84a1624379634c34a770b6d65bf38eb7e71564')
     version('3.10.6',   sha256='a96791bf6615e4f8ecdbbb9a90a8ef14a12459d8c5c374ab22eb5f776f864bb5')
