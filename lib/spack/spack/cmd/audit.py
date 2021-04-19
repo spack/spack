@@ -73,6 +73,7 @@ def _process_reports(reports):
             print(cl.colorize(header))
             for idx, error in enumerate(errors):
                 print(str(idx + 1) + '. ' + str(error))
+            raise SystemExit(1)
         else:
             msg = '{0}: 0 issues found.'.format(check)
             header = '@*b{' + msg + '}'
