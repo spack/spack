@@ -11,8 +11,9 @@ class PyBluepysnap(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/snap"
     git      = "https://github.com/BlueBrain/snap.git"
-    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.10.0.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.11.0.tar.gz"
 
+    version('0.11.0', sha256='01360cd20d04be9d0458bf8eda154299857a5b3c72db8babedd336c7740d51b9')
     version('0.10.0', sha256='0cc73e82c5f54a2eb6e4b22b59bc1c714915bd8df7fec156af5f2e24755e805e')
     version('0.9.0', sha256='140e06b9a7cc90719ffaf4c71ffaa9320c13bdd8ef25ffb598fd348b850b6695')
     version('0.8.0', sha256='10337610cfb83121f2869cec53830de04eed8e90b2b27aba36b8799468fa9c0f')
@@ -41,7 +42,7 @@ class PyBluepysnap(PythonPackage):
     depends_on('py-h5py@3.0.1:', type='run', when='@0.8.0:')
 
     depends_on('py-neurom@1.3:1.5.99', type='run', when='@:0.7.9')
-    depends_on('py-neurom@1.6:', type='run', when='@0.8.0:')
+    depends_on('py-neurom@1.6:1.99.99', type='run', when='@0.8.0:')
 
     # python2 only so only < 0.8.0
     depends_on('py-pathlib2@2.3:', type='run', when='@:0.7.9')

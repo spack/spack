@@ -12,6 +12,7 @@ class PyBluepy(PythonPackage):
     homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/bluepy"
     git      = "ssh://bbpcode.epfl.ch/nse/bluepy"
 
+    version('2.2.0', tag='bluepy-v2.2.0')
     version('2.1.0', tag='bluepy-v2.1.0')
     version('2.0.0', tag='bluepy-v2.0.0')
     version('0.16.0', tag='bluepy-v0.16.0')
@@ -39,11 +40,11 @@ class PyBluepy(PythonPackage):
     depends_on('py-h5py@2.3:2.99', type='run', when='@:1.0.0')
 
     # neurom
-    depends_on('py-neurom@1.6.0:', type='run', when='@2.0.0:')
+    depends_on('py-neurom@1.6.0:1.99.99', type='run', when='@2.0.0:')
     depends_on('py-neurom@1.4.18:1.5.99', type='run', when='@:1.0.0')
 
     # voxcell
-    depends_on('py-voxcell@3.0.0', type='run', when='@2.0.0:')
+    depends_on('py-voxcell@3.0.0:', type='run', when='@2.0.0:')
     depends_on('py-voxcell@2.7.4:2.99', type='run', when='@0.14.16:0.16.0')
     depends_on('py-voxcell@:2.7.3', type='run', when='@:0.14.15')
 
