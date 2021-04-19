@@ -63,4 +63,7 @@ class Butterflypack(CMakePackage):
             '-DBUILD_SHARED_LIBS=%s' % on_off('+shared'),
         ]
 
+        if spec.satisfies('%cce'):
+            args.append('-DCMAKE_Fortran_FLAGS=-eZ -N1023')
+        
         return args
