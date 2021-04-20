@@ -10,7 +10,7 @@ class PyPymumps(PythonPackage):
     """Python bindings for MUMPS, a parallel sparse direct solver"""
 
     homepage = "http://github.com/pymumps/pymumps"
-    url = "https://files.pythonhosted.org/packages/74/19/5a4405c485dc0548ad5be7536c9d19dac567c865834987ff1e998340b7ae/PyMUMPS-0.3.2.tar.gz"
+    pypi = "PyMUMPS/PyMUMPS-0.3.2.tar.gz"
     git = "https://github.com/PyMumps/pymumps.git"
 
     # Add a list of GitHub accounts to notify when the
