@@ -32,6 +32,9 @@ def setup_parser(subparser):
         action='append'
     )
 
+    # List all checks
+    sp.add_parser('list', help='list available checks and exits')
+
 
 def configs(parser, args):
     checks = CHECKS[args.subcommand]
@@ -47,10 +50,23 @@ def packages(parser, args):
     _process_reports(reports)
 
 
+def list(parser, args):
+    for subcommand, check_tags in CHECKS.items():
+        print(cl.colorize('@*b{' + subcommand + '}:'))
+        for tag in check_tags:
+            audit_obj = spack.audit.CALLBACKS[tag]
+            print('  ' + audit_obj.description)
+            if args.verbose:
+                for idx, fn in enumerate(audit_obj.callbacks):
+                    print('    {0}.'.format(idx + 1) + fn.__doc__)
+        print()
+
+
 def audit(parser, args):
     subcommands = {
         'configs': configs,
-        'packages': packages
+        'packages': packages,
+        'list': list
     }
     subcommands[args.subcommand](parser, args)
 

@@ -5,8 +5,35 @@
 """Classes and functions to register audit checks for various parts of
 Spack and run them on-demand.
 
-- Each tag has a well defined call signature
-- Only callable via kwargs
+To register a new class of sanity checks (e.g. sanity checks for
+compilers.yaml), the first action required is to create a new AuditClass
+object:
+
+.. code-block:: python
+
+   audit_cfgcmp = AuditClass(
+       tag='CFG-COMPILER',
+       description='Sanity checks on compilers.yaml',
+       kwargs=()
+   )
+
+This object is to be used as a decorator to register functions
+that will perform each a single check:
+
+.. code-block:: python
+
+   @audit_cfgcmp
+   def _search_duplicate_compilers(error_cls):
+       pass
+
+These functions need to take as argument the keywords declared when
+creating the decorator object plus an ``error_cls`` argument at the
+end, acting as a factory to create Error objects. It should return a
+(possibly empty) list of errors.
+
+Calls to each of these functions are triggered by the ``run`` method of
+the decorator object, that will forward the keyword arguments passed
+as input.
 """
 import itertools
 try:
@@ -96,9 +123,7 @@ audit_cfgcmp = AuditClass(
 
 @audit_cfgcmp
 def _search_duplicate_compilers(error_cls):
-    """Search and report copmilers with the same spec and two
-    different definitions.
-    """
+    """Report compilers with the same spec and two different definitions"""
     import spack.config
     errors = []
 
@@ -132,7 +157,7 @@ audit_pkgdirectives = AuditClass(
 
 @audit_pkgdirectives
 def _unknown_variants_in_directives(pkgs, error_cls):
-    """Search and report the use of unknown or wrong variants in directives."""
+    """Report unknown or wrong variants in directives for this package"""
     import llnl.util.lang
     import spack.repo
     import spack.spec
@@ -178,7 +203,7 @@ def _unknown_variants_in_directives(pkgs, error_cls):
 
 @audit_pkgdirectives
 def _unknown_variants_in_dependencies(pkgs, error_cls):
-    """Search and report use of wrong variants for dependencies"""
+    """Report unknown dependencies and wrong variants for dependencies"""
     import spack.repo
     import spack.spec
 

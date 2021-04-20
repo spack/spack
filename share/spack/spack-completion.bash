@@ -386,7 +386,7 @@ _spack_audit() {
     then
         SPACK_COMPREPLY="-h --help"
     else
-        SPACK_COMPREPLY="configs packages"
+        SPACK_COMPREPLY="configs packages list"
     fi
 }
 
@@ -396,6 +396,10 @@ _spack_audit_configs() {
 
 _spack_audit_packages() {
     SPACK_COMPREPLY="-h --help --name"
+}
+
+_spack_audit_list() {
+    SPACK_COMPREPLY="-h --help"
 }
 
 _spack_blame() {
