@@ -26,6 +26,8 @@ class Legion(CMakePackage):
 
     maintainers = ['pmccormick', 'streichler']
 
+    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.  
+
     version('21.03.0', tag='legion-21.03.0')
     version('stable', branch='stable')
     version('master', branch='master')
