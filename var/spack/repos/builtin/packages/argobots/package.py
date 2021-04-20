@@ -30,7 +30,7 @@ class Argobots(AutotoolsPackage):
     variant("debug", default=False, description="Compiled with debugging symbols")
     variant("stackunwind", default=False, description="Enable function stack unwinding")
     variant("stackguard", default="no", description="Enable stack guard",
-            values=('no', 'canary', 'mprotect', 'mprotect_strict'), multi=False)
+            values=('no', 'canary-32', 'mprotect', 'mprotect-strict'), multi=False)
     variant("tool", default=False, description="Enable ABT_tool interface")
     variant("affinity", default=False, description="Enable affinity setting")
 
@@ -60,12 +60,9 @@ class Argobots(AutotoolsPackage):
             args.append('--enable-stack-unwind')
             args.append('--with-libunwind={0}'.format(self.spec['libunwind'].prefix))
 
-        if 'stackguard=canary' in self.spec:
-            args.append('--enable-stack-overflow-check=canary-32')
-        elif 'stackguard=mprotect' in self.spec:
-            args.append('--enable-stack-overflow-check=mprotect')
-        elif 'stackguard=mprotect_strict' in self.spec:
-            args.append('--enable-stack-overflow-check=mprotect-strict')
+        stackguard = self.spec.variants['stackguard'].value
+        if stackguard != 'no':
+            args.append('--enable-stack-overflow-check={0}'.format(stackguard))
 
         if '+tool' in self.spec:
             args.append('--enable-tool')
