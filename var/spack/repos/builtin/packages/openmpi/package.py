@@ -29,7 +29,7 @@ class Openmpi(AutotoolsPackage):
     list_url = "https://www.open-mpi.org/software/ompi/"
     git = "https://github.com/open-mpi/ompi.git"
 
-    maintainers = ['hppritcha']
+    maintainers = ['hppritcha', 'naughtont3']
 
     executables = ['^ompi_info$']
 
@@ -173,7 +173,7 @@ class Openmpi(AutotoolsPackage):
     patch('nag_pthread/2.0.0_2.1.1.patch', when='@2.0.0:2.1.1%nag')
     patch('nag_pthread/1.10.4_1.10.999.patch', when='@1.10.4:1.10.999%nag')
 
-    patch('nvhpc-libtool.patch', when='%nvhpc@develop')
+    patch('nvhpc-libtool.patch', when='@develop %nvhpc')
     patch('nvhpc-configure.patch', when='%nvhpc')
 
     # Fix MPI_Sizeof() in the "mpi" Fortran module for compilers that do not
@@ -273,7 +273,7 @@ class Openmpi(AutotoolsPackage):
 
     depends_on('libevent@2.0:', when='@4:')
 
-    depends_on('hwloc@2.0:', when='@4: ~internal-hwloc')
+    depends_on('hwloc@2:', when='@4: ~internal-hwloc')
     # ompi@:3.0.0 doesn't support newer hwloc releases:
     # "configure: error: OMPI does not currently support hwloc v2 API"
     # Future ompi releases may support it, needs to be verified.
@@ -306,6 +306,8 @@ class Openmpi(AutotoolsPackage):
     depends_on('openpbs', when='schedulers=tm')
     depends_on('slurm', when='schedulers=slurm')
 
+    depends_on('openssh', type='run')
+
     # CUDA support was added in 1.7
     conflicts('+cuda', when='@:1.6')
     # PMI support was added in 1.5.5
@@ -335,7 +337,7 @@ class Openmpi(AutotoolsPackage):
     # knem support was added in 1.5
     conflicts('fabrics=knem', when='@:1.4')
 
-    conflicts('schedulers=slurm ~pmi', when='@1.5.4:',
+    conflicts('schedulers=slurm ~pmi', when='@1.5.4:2.999.999',
               msg='+pmi is required for openmpi(>=1.5.5) to work with SLURM.')
     conflicts('schedulers=loadleveler', when='@3.0.0:',
               msg='The loadleveler scheduler is not supported with '
@@ -629,7 +631,11 @@ class Openmpi(AutotoolsPackage):
         # for versions older than 3.0.3,3.1.3,4.0.0
         # Presumably future versions after 11/2018 should support slurm+static
         if spec.satisfies('schedulers=slurm'):
-            config_args.append('--with-pmi={0}'.format(spec['slurm'].prefix))
+            if spec.satisfies('+pmi'):
+                config_args.append('--with-pmi={0}'.format(
+                    spec['slurm'].prefix))
+            else:
+                config_args.extend(self.with_or_without('pmi'))
             if spec.satisfies('@3.1.3:') or spec.satisfies('@3.0.3'):
                 if '+static' in spec:
                     config_args.append('--enable-static')
@@ -750,7 +756,7 @@ class Openmpi(AutotoolsPackage):
             else:
                 config_args.append('--without-cuda')
 
-        if spec.satisfies('%nvhpc'):
+        if spec.satisfies('%nvhpc@:20.11'):
             # Workaround compiler issues
             config_args.append('CFLAGS=-O1')
 

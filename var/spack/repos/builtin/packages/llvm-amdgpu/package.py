@@ -12,10 +12,13 @@ class LlvmAmdgpu(CMakePackage):
        optimizers, and run-time environments."""
 
     homepage = "https://github.com/RadeonOpenCompute/llvm-project"
-    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/RadeonOpenCompute/llvm-project.git"
+    url      = "https://github.com/RadeonOpenCompute/llvm-project/archive/rocm-4.1.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='amd-stg-open')
+    version('4.1.0', sha256='244e38d824fa7dfa8d0edf3c036b3c84e9c17a16791828e4b745a8d31eb374ae')
     version('4.0.0', sha256='aa1f80f429fded465e86bcfaef72255da1af1c5c52d58a4c979bc2f6c2da5a69')
     version('3.10.0', sha256='8262aff88c1ff6c4deb4da5a4f8cda1bf90668950e2b911f93f73edaee53b370')
     version('3.9.0', sha256='1ff14b56d10c2c44d36c3c412b190d3d8cd1bb12cfc7cd58af004c16fd9987d1')
@@ -40,7 +43,7 @@ class LlvmAmdgpu(CMakePackage):
 
     # Will likely only be fixed in LLVM 12 upstream
     patch('fix-system-zlib-ncurses.patch', when='@3.5.0:3.8.0')
-    patch('fix-ncurses-3.9.0.patch', when='@3.9.0:')
+    patch('fix-ncurses-3.9.0.patch', when='@3.9.0:4.0.0')
 
     conflicts('^cmake@3.19.0')
 
@@ -68,6 +71,7 @@ class LlvmAmdgpu(CMakePackage):
             compiler = Executable(self.compiler.cc)
             gcc_output = compiler('-print-search-dirs', output=str, error=str)
 
+            gcc_prefix = ""
             for line in gcc_output.splitlines():
                 if line.startswith("install:"):
                     # Get path and strip any whitespace
