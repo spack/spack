@@ -1,0 +1,11 @@
+--- spack-src/SRC/BPACK_defs.f90
++++ spack-src/SRC/BPACK_defs.f90
+@@ -28,7 +28,7 @@
+     integer, parameter:: BPACK_PATCH_VERSION = 0
+ 
+     !**** common parameters
+-#ifdef PGI
++#if defined(PGI) || defined(_CRAYFTN)
+     integer, external :: iargc
+ #endif
+     integer, parameter::dp = kind(0.0d0), sp = kind(0.0)

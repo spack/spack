@@ -44,6 +44,7 @@ class Butterflypack(CMakePackage):
     patch('longline.patch', when='%fj')
     patch('fjfortran.patch', when='%fj')
     patch('isnan.patch', when='%fj')
+    patch('iargc_cce.patch', when='%cce')
 
     def cmake_args(self):
         spec = self.spec
