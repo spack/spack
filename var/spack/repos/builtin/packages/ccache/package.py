@@ -40,17 +40,17 @@ class Ccache(CMakePackage):
     # Before 4.0 this was an Autotools package
     @when('@:3.99')
     def cmake(self, spec, prefix):
+        configure_args = ["--prefix=" + prefix]
+        configure(*configure_args)
         pass
 
     @when('@:3.99')
     def build(self, spec, prefix):
+        make()
         pass
 
     @when('@:3.99')
     def install(self, spec, prefix):
-        configure_args = ["--prefix=" + prefix]
-        configure(*configure_args)
-        make()
         make("install")
 
     @classmethod
