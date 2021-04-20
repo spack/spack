@@ -120,13 +120,17 @@ class Magma(CMakePackage, CudaPackage):
             magma_dir = 'MAGMADIR={0}'.format(self.prefix)
             cuda_dir = 'CUDADIR={0}'.format(self.spec['cuda'].prefix)
             blas_dir = 'OPENBLASDIR={0}'.format(self.spec['blas'].prefix)
-            test_msg = 'MAGMA smoke test'
             make(magma_dir, cuda_dir, blas_dir, 'c')
-            self.run_test('./example_sparse', purpose=test_msg)
-            self.run_test('./example_sparse_operator', purpose=test_msg)
-            self.run_test('./example_v1', purpose=test_msg)
-            self.run_test('./example_v2', purpose=test_msg)
+            self.run_test('./example_sparse',
+                          purpose='MAGMA smoke test - sparse solver')
+            self.run_test('./example_sparse_operator',
+                          purpose='MAGMA smoke test - sparse operator')
+            self.run_test('./example_v1',
+                          purpose='MAGMA smoke test - legacy v1 interface')
+            self.run_test('./example_v2',
+                          purpose='MAGMA smoke test - v2 interface')
             if '+fortran' in self.spec:
                 make(magma_dir, cuda_dir, blas_dir, 'fortran')
-                self.run_test('./example_f', purpose=test_msg)
+                self.run_test('./example_f',
+                              purpose='MAGMA smoke test - Fortran interface')
             make('clean')
