@@ -61,14 +61,13 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
 
-    # When you build binutils with ~ld and +gas and load it in your PATH, you may
-    # end up with an incompatibility between linker and assembler, in particular:
-    # "unable to initialize decompress status for section .debug_info" is the error
-    # I've encountered.
-    conflicts('~gas', '+ld', msg="Linker and assembler should be the same version")
-    conflicts('+gas', '~ld', msg="Linker and assembler should be the same version")
-    conflicts('~gas', '+gold', msg="Linker and assembler should be the same version")
-    conflicts('+gas', '~gold', msg="Linker and assembler should be the same version")
+    # When you build binutils with ~ld and +gas and load it in your PATH, you
+    # may end up with incompatibilities between a potentially older system ld
+    # and a recent assembler. For instance the linker on ubuntu 16.04 from
+    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
+    # "unable to initialize decompress status for section .debug_info"
+    # when compiling with debug symbols on gcc.
+    conflicts('+gas', '~ld', msg="Assembler not always compatible with system ld")
 
     def configure_args(self):
         spec = self.spec
