@@ -127,7 +127,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('protobuf@3.4:')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('lzma')
+    depends_on('xz')
     depends_on('zlib')
 
     # Older builds of pugi export their symbols differently,
