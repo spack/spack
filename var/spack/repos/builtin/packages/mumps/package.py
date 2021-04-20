@@ -323,7 +323,10 @@ class Mumps(Package):
             ['d', '+double'], ['z', '+complex+double']]
         for ltr, v in letters_variants:
             if v in spec:
-                make(ltr + 'examples')
+                if self.spec.satisfies('@5.4:'):
+                    make(ltr)
+                else:
+                    make(ltr + 'examples')
 
         install_tree('lib', prefix.lib)
         install_tree('include', prefix.include)
