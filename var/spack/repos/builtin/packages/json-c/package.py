@@ -31,15 +31,13 @@ class JsonC(CMakePackage):
 
     @when('@:0.13.1')
     def cmake(self, spec, prefix):
-        pass
+        configure_args = ['--prefix=' + prefix]
+        configure(*configure_args)
 
     @when('@:0.13.1')
     def build(self, spec, prefix):
-        pass
+        make()
 
     @when('@:0.13.1')
     def install(self, spec, prefix):
-        configure_args = ['--prefix=' + prefix]
-        configure(*configure_args)
-        make()
         make('install')
