@@ -43,7 +43,7 @@ class Mumps(Package):
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
-    variant('openmp', default=False,
+    variant('openmp', default=True,
             description='Compile MUMPS with OpenMP support')
     variant('blr_mt', default=False,
             description='Allow BLAS calls in OpenMP regions ' +
