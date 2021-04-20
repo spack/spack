@@ -39,10 +39,9 @@ class Ghostscript(AutotoolsPackage):
     patch('nogoto.patch', when='%fj@:4.1.0')
 
     # Related bug report: https://bugs.ghostscript.com/show_bug.cgi?id=702985
-    # Patch source: https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff;h=41ef9a0bc36b
-    patch("https://git.ghostscript.com/?p=ghostpdl.git;a=commitdiff_plain;h=41ef9a0bc36b",
+    patch("https://github.com/ArtifexSoftware/ghostpdl/commit/41ef9a0bc36b9db7115fbe9623f989bfb47bbade.patch",
           when='@:9.53.3^freetype@2.10.3:',
-          sha256="254532a8561afddb5b39c1c30526676559ed9f0b87c1e9985eb797a59c98a3dd")
+          sha256="49c353106d97c40b3b2c78f72ce34e3eef66e6b04861c313f87bad11ab4189e6")
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
