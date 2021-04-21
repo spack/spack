@@ -84,8 +84,7 @@ dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID),
-  not external(Package),
-  abi_compatible(Package).
+  not external(Package).
   
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
@@ -98,6 +97,7 @@ do_not_impose(ID) :-
 % They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
  :- dependency_holds(Package, Dependency, Type),
+    dependency_checks_hold(Package, Dependency, Type),
     not virtual(Dependency).
 
 % every root must be a node

@@ -64,7 +64,6 @@ class ABIFactGenerator(object):
                 if "@@" in symbol and not vinfo:
                     symbol, _ = symbol.split('@', 1)
 
-                self.gen.fact(fn.symbol(symbol))
                 self.gen.fact(fn.symbol_definition(corpus.basename, symbol, defined))
                 self.gen.fact(fn.has_symbol(corpus.basename, symbol))
 
@@ -188,7 +187,7 @@ def generate_facts(spec, outfile):
     for main in manifest['binary_to_relocate_fullpath']:
 
         # This version of the corpus is designed for spack
-        corpora.append(Corpus(main, name=spec.name, uid=spec.build_hash()))
+        corpora.append(Corpus(main, name=spec.name, uid=spec.version))
 
     # Find all needed libraries and compilers, used for all mains
     for dep in spec.dependencies():
@@ -196,7 +195,7 @@ def generate_facts(spec, outfile):
         compilers.add(which(dep.compiler.name).path)
 
         for lib in manifest['binary_to_relocate_fullpath']:
-            corpora.append(Corpus(lib, name=dep.name, uid=dep.build_hash()))
+            corpora.append(Corpus(lib, name=dep.name, uid=version))
 
     # Add compilers
     for compiler in compilers:
