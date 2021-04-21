@@ -22,7 +22,6 @@ class Unifyfs(AutotoolsPackage):
     version('develop', branch='dev')
     version('0.9.2', sha256='7046625dc0677535f5d960187cb2e2d58a6f8cfb4dc6a3604f825257eb0891aa')
     version('0.9.1', sha256='2498a859cfa4961356fdf5c4c17e3afc3de7e034ad013b8c7145a622ef6199a0')
-    version('0.9.0', sha256='e6c73e22ef1c23f3141646aa17058b69c1c4e526886771f8fe982da924265b0f', deprecated=True)
 
     variant('auto-mount', default='True', description='Enable automatic mount/unmount in MPI_Init/Finalize')
     variant('hdf5', default='False', description='Build with parallel HDF5 (install with `^hdf5~mpi` for serial)')
@@ -49,8 +48,6 @@ class Unifyfs(AutotoolsPackage):
     # Optional dependencies
     depends_on('hdf5', when='+hdf5')
     depends_on('libfabric fabrics=rxm,sockets,tcp', when="^mercury@2:+ofi")
-    depends_on('libfabric@1.9.1', when="^mochi-margo@0.4.3 ^mercury+ofi")
-    depends_on('mercury@1.0.1', when='^mochi-margo@0.4.3')
     depends_on('spath~mpi', when='+spath')
 
     conflicts('^mercury~bmi~ofi')
