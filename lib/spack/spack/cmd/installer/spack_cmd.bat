@@ -16,6 +16,7 @@ popd
 
 if not defined python_pf_ver (
     :: If not, look for Python from the Spack installer
+    :get_builtin
     for /f "tokens=*" %%g in ('dir /b /a:d "!spackinstdir!\Python*"') do (set python_ver=%%g)
 
     if not defined python_ver (
@@ -28,6 +29,9 @@ if not defined python_pf_ver (
 ) else (
     :: Python is already on the path
     set py_exe=!python_pf_ver!
+    for /F "tokens=* USEBACKQ" %%F in (
+        `!py_exe! --version`) do (set "output=%%F")
+    if not "!output:Microsoft Store=!"=="!output!" goto :get_builtin
 )
 
 for /f "tokens=*" %%g in ('dir /b /a:d "%spackinstdir%\spack*"') do (set spack_ver=%%g)
