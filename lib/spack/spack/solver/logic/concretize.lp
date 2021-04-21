@@ -79,13 +79,14 @@ attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
-% a dependency holds if its condition holds
+% a dependency holds if its condition holds and it is abi compatible
 dependency_holds(Package, Dependency, Type) :-
   dependency_condition(ID, Package, Dependency),
   dependency_type(ID, Type),
   condition_holds(ID),
-  not external(Package).
-
+  not external(Package),
+  abi_compatible(Package).
+  
 % We cut off dependencies of externals (as we don't really know them).
 % Don't impose constraints on dependencies that don't exist.
 do_not_impose(ID) :-

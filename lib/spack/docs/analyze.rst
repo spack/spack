@@ -160,3 +160,32 @@ before, and a message that the monitor server was pinged:
     $ spack analyze --monitor wget
     ...
     ==> Sending result for wget bin/wget to monitor.
+    
+    
+---------
+Analyzers
+---------
+
+The following sections include analyzer specific documentation, if needed.
+
+^^^
+elf
+^^^
+
+The elf analyzer will generate a logic program file, meaning facts about ELF
+symbols and a limited amount of dwarf debugging information that can be used with
+clingo to supplement a solve, or the spack symbols solver model. You likely 
+want this analyzer if you are developing new models for spack, and want to generate a logic program
+first. Importantly, you **must** build the library you
+intend to analyze with debug information. For example, the package ``tcl``
+only requires ``zlib``, and we can build both with debug and then run the analyzer:
+
+.. code-block:: console
+
+    $ spack install zlib+debug
+    $ spack install tcl+debug
+    $ spack analyze run -a elf tcl
+    
+If you don't have pyelftools installed, the analyzer will bootstrap it first,
+and then continue to extract debug information. At the end, you'll have files
+saved to your analyzer folder for tcl.

@@ -292,6 +292,30 @@ class PyclingoDriver(object):
         if self.cores:
             self.assumptions.append(atom)
 
+    def load_logic_programs(self, logic_programs, needs):
+        """
+        Load one or more logic programs, and ensure all needed are provided.
+        """
+        # Ensure that all required, needed programs are included
+        basenames = [os.path.basename(x) for x in logic_programs]
+        missing = [x for x in needs if x not in basenames]
+
+        if missing:
+            tty.die("Missing logic programs for solver: %s" % " ".join(needs))
+
+        # read in logic programs associated with different setups
+        parent_dir = os.path.dirname(__file__)
+        for logic_program in set(logic_programs):
+
+            # If the full path was not provided, it has to be in logic
+            if not os.path.exists(logic_program):
+                logic_program = os.path.join(parent_dir, 'logic', logic_program)
+
+            # If it still does not exist, we have a problem
+            if not os.path.exists(logic_program):
+                tty.die("%s does not exist." % logic_program)
+            self.control.load(logic_program)
+
     def init_control(self, nmodels=0):
         """Initialize the controller for the solver.
 
@@ -310,14 +334,19 @@ class PyclingoDriver(object):
 
     def solve(
             self, setups, specs, dump=None, nmodels=0, timers=False, stats=False,
-            tests=False
+            tests=False, extra_lp=None
     ):
         timer = Timer()
 
         self.init_control(nmodels)
 
         # Logic programs are matched to setups
-        logic_programs = []
+        # Add the "empty" abi compatible rule if we don't have another model
+        logic_programs = ["no-op.lp"] if len(setups) == 1 else []
+        logic_programs += [extra_lp] if extra_lp else []
+
+        # keep track of needed, required programs
+        needs = [getattr(s, 'needs') for s in setups if hasattr(s, 'needs')]
 
         # set up the problem -- this generates facts and rules
         with self.control.backend() as backend:
@@ -327,11 +356,8 @@ class PyclingoDriver(object):
                 logic_programs += solver_setup.lp
         timer.phase("setup")
 
-        # read in logic programs associated with different setups
-        parent_dir = os.path.dirname(__file__)
-        for logic_program in set(logic_programs):
-            logic_program = os.path.join(parent_dir, 'logic', logic_program)
-            self.control.load(logic_program)
+        # Load logic programs and check for missing
+        self.load_logic_programs(logic_programs, needs)
         timer.phase("load")
 
         # Grounding is the first step in the solve -- it turns our facts
@@ -638,7 +664,7 @@ def _develop_specs_from_env(spec, env):
 # These are handwritten parts for the Spack ASP model.
 #
 def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
-          extra_setup=None):
+          extra_setup=None, extra_lp=None):
     """Solve for a stable model of specs.
 
     Arguments:
@@ -646,6 +672,7 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
         dump (tuple): what to dump
         models (int): number of models to search (default: 0)
         extra_setup (str): an extra setup function and logic program to run.
+        extra_lp (str): extra logic program for models.
     """
     driver = PyclingoDriver()
     if "asp" in dump:
@@ -662,4 +689,5 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
     extra_setups = extra_setup or [] + ['base']
     setups = [s() for s in setup_models if s.name in extra_setups]
 
-    return driver.solve(setups, specs, dump, models, timers, stats, tests)
+    return driver.solve(setups, specs, dump, models, timers, stats,
+                        tests, extra_lp)

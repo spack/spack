@@ -70,6 +70,15 @@ def setup_parser(subparser):
     subparser.add_argument(
         'specs', nargs=argparse.REMAINDER, help="specs of packages")
 
+    # Assume for now that we can only add one extra model
+    subparser.add_argument(
+        '-e', '--extra', action='store',
+        default=None, choices=['symbols'],
+        help='extra known models to add to the solve.')
+    subparser.add_argument(
+        '-p', '--lp', default=None,
+        help='Add an extra needed logic program.')
+
 
 def solve(parser, args):
     # these are the same options as `spack spec`
@@ -104,7 +113,7 @@ def solve(parser, args):
     # dump generated ASP program
     result = asp.solve(
         specs, dump=dump, models=models, timers=args.timers, stats=args.stats,
-        extra_setup=None  # will be replaced with args.extra
+        extra_setup=args.extra, extra_lp=args.lp
     )
     if 'solutions' not in dump:
         return
