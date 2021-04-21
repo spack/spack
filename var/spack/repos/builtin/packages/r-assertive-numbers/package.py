@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,15 @@ from spack import *
 
 
 class RAssertiveNumbers(RPackage):
-    """assertive.numbers: Assertions to Check Properties of Numbers"""
+    """assertive.numbers: Assertions to Check Properties of Numbers
 
-    homepage = "https://cloud.r-project.org/package=assertive.numbers"
+    A set of predicates and assertions for checking the
+    properties of numbers. This is mainly for use by other
+    package developers who want to include run-time testing
+    features in their own packages. End-users will usually want
+    to use assertive directly."""
+
+    homepage = "https://bitbucket.org/richierocks/assertive.numbers"
     url      = "https://cloud.r-project.org/src/contrib/assertive.numbers_0.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.numbers"
 
