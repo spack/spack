@@ -39,7 +39,7 @@ class Zstd(CMakePackage):
     variant('zlib', default=False, description='Build programs with zlib support')
     variant('lzma', default=False, description='Build programs with lzma support')
     variant('lz4', default=False, description='Build programs with zlib support')
-    variant('multithread', default=False, description='Build with pthread support')
+    variant('multithread', default=True, description='Build with pthread support')
 
     conflicts('+zlib', when='~programs', msg="zlib requires programs to be built")
     conflicts('+lzma', when='~programs', msg="lzma requires programs to be built")
