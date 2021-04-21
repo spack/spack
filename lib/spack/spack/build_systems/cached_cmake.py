@@ -128,7 +128,7 @@ class CachedCMakePackage(CMakePackage):
     def initconfig_mpi_entries(self):
         spec = self.spec
 
-        if "+mpi" not in spec:
+        if not spec.satisfies('^mpi'):
             return []
 
         entries = [
@@ -194,7 +194,7 @@ class CachedCMakePackage(CMakePackage):
             "#------------------{0}\n".format("-" * 60),
         ]
 
-        if '+cuda' in spec:
+        if spec.satisfies('^cuda'):
             entries.append("#------------------{0}".format("-" * 30))
             entries.append("# Cuda")
             entries.append("#------------------{0}\n".format("-" * 30))
@@ -206,7 +206,7 @@ class CachedCMakePackage(CMakePackage):
             entries.append(cmake_cache_path("CMAKE_CUDA_COMPILER",
                                             cudacompiler))
 
-            if "+mpi" in spec:
+            if spec.satisfies('^mpi'):
                 entries.append(cmake_cache_path("CMAKE_CUDA_HOST_COMPILER",
                                                 "${MPI_CXX_COMPILER}"))
             else:

@@ -218,6 +218,8 @@ class Git(AutotoolsPackage):
             description='Gitk: provide Tcl/Tk in the run environment')
     variant('svn', default=False,
             description='Provide SVN Perl dependency in run environment')
+    variant('perl', default=True,
+            description='Do not use Perl scripts or libraries at all')
 
     depends_on('curl')
     depends_on('expat')
@@ -227,7 +229,7 @@ class Git(AutotoolsPackage):
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
     depends_on('pcre2', when='@2.14:')
-    depends_on('perl')
+    depends_on('perl', when='+perl')
     depends_on('zlib')
     depends_on('openssh', type='run')
 
@@ -237,6 +239,8 @@ class Git(AutotoolsPackage):
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
     depends_on('perl-alien-svn', type='run', when='+svn')
+
+    conflicts('+svn', when='~perl')
 
     @classmethod
     def determine_version(cls, exe):
@@ -279,6 +283,9 @@ class Git(AutotoolsPackage):
             env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
 
+        if '~perl' in self.spec:
+            env.append_flags('NO_PERL', '1')
+
     def configure_args(self):
         spec = self.spec
 
@@ -287,9 +294,11 @@ class Git(AutotoolsPackage):
             '--with-expat={0}'.format(spec['expat'].prefix),
             '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
-            '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
+
+        if '+perl' in self.spec:
+            configure_args.append('--with-perl={0}'.format(spec['perl'].command.path))
 
         if '^pcre' in self.spec:
             configure_args.append('--with-libpcre={0}'.format(

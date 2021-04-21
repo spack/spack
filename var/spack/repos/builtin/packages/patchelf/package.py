@@ -21,6 +21,10 @@ class Patchelf(AutotoolsPackage):
     version('0.9',  sha256='f2aa40a6148cb3b0ca807a1bf836b081793e55ec9e5540a5356d800132be7e0a')
     version('0.8',  sha256='14af06a2da688d577d64ff8dac065bb8903bbffbe01d30c62df7af9bf4ce72fe')
 
+    # Fixes a bug where patchelf errors with 'unsupported overlap
+    # of SHT_NOTE and PT_NOTE'
+    patch('https://github.com/NixOS/patchelf/pull/230.patch', sha256='a155f233b228f02d7886e304cb13898d93801b52f351e098c2cc0719697ec9d0', when='@0.12')
+
     def url_for_version(self, version):
         if version < Version('0.12'):
             return "https://nixos.org/releases/patchelf/patchelf-{0}/patchelf-{1}.tar.gz".format(version, version)
