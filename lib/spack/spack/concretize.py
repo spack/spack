@@ -714,7 +714,7 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
-def concretize_specs_together(*abstract_specs):
+def concretize_specs_together(*abstract_specs, **kwargs):
     """Given a number of specs as input, tries to concretize them together.
 
     Args:
