@@ -14,6 +14,12 @@ skip_symbol("_ITM_deregisterTMCloneTable").
 skip_symbol("__gmon_start__").
 skip_symbol("_ITM_registerTMCloneTable").
 
+
+%----------------------------------------------------------------------------
+% Corpus symbols: libtcl8.6.so
+%----------------------------------------------------------------------------
+
+
 % A symbol is undefined for a given binary if:
 symbol_is_undefined(Package, Hash, Symbol, Binary)
 
@@ -28,6 +34,9 @@ symbol_is_undefined(Package, Hash, Symbol, Binary)
 
     % it's a main corpus
     is_main_corpus(Package, Hash),
+
+    % the corpus has the symbol (possibly reundant)
+    has_symbol(Binary, Symbol),
 
     % and it's definition is UND
     symbol_definition(Binary, Symbol, "UND").
@@ -52,19 +61,18 @@ symbol_is_defined(Package, Symbol, Dependency, DepHash, Library, Definition)
     Definition != "UND".
 
 
-% A symbol is defined for a package if
-symbol_is_defined(Package, Hash, Symbol)
+% A symbol is defined for a package across all binaries if
+symbol_is_defined(Package, Hash, Symbol) 
 
     % any dependency has it
-    :- symbol_is_defined(Package, Hash, Symbol, _, _, _, _).
+    :- symbol_is_defined(Package, Hash, Symbol, _, _, _).
 
 
+% A symbol is missing for a binary if
+symbol_is_missing(Package, Hash, Symbol, Binary)
 
-% A symbol is missing if
-symbol_is_missing(Package, Hash, Symbol)
-
-    % it's undefined for any binary
-    :- symbol_is_undefined(Package, Hash, Symbol, _),
+    % it's undefined for the binary
+    :- symbol_is_undefined(Package, Hash, Symbol, Binary),
 
     % and it's not defined for the package anywhere
     not symbol_is_defined(Package, Hash, Symbol).
@@ -76,4 +84,4 @@ symbol_is_missing(Package, Hash, Symbol)
 :- abi_compatible(Package), 
 
     % The symbol is missing
-    symbol_is_missing(Package, _, _).
+    symbol_is_missing(Package, _, _, _).

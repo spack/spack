@@ -686,7 +686,7 @@ def solve(specs, dump=(), models=0, timers=False, stats=False, tests=False,
             spack.spec.Spec.ensure_valid_variants(s)
 
     # By default, we only use one setup (base)
-    extra_setups = extra_setup or [] + ['base']
+    extra_setups = ([extra_setup] if extra_setup else []) + ['base']
     setups = [s() for s in setup_models if s.name in extra_setups]
 
     return driver.solve(setups, specs, dump, models, timers, stats,
