@@ -1342,10 +1342,11 @@ first running the installer, then using git to fetch and checkout
 features/windows_support in the spack_install\spack directory. After running the
 installer, your directory structure should look like so:
 
-spack_install-----------spack
-  		        |-------scripts
- 	 	        |-------spack_cmd.bat
-  		        |-------Python
+.. code-block:: console
+    spack_install-----------spack
+  	    	        |-------scripts
+ 	 	            |-------spack_cmd.bat
+  		            |-------Python
 
 If you have a specific version of Python you would like Spack to use, be sure it is
 on your PATH. When Spack is run for the first time, it will search your PATH for a
@@ -1384,9 +1385,9 @@ Windows Compatible Packages
 
 Many Spack packages are not currently compatible with Windows, due to Unix dependencies 
 or incompatible build tools like autoconf. Here are several packages known to work on Windows:
-* abseil-cpp
-* cpuinfo
-* glm
+*abseil-cpp
+*cpuinfo
+*glm
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Generate a New Windows Installer
@@ -1396,10 +1397,10 @@ To generate a new windows installer, the spack ``make-installer`` command to
 create a Windows installer. Installers are not supported on other platforms.
 
 The installer must be created on Windows and requires the following:
-* Spack (https://github.com/spack/spack)
-* Python (https://www.python.org/downloads/)
-* CMake (https://cmake.org/download/)
-* Wix (https://wixtoolset.org/releases/)
+*Spack (https://github.com/spack/spack)
+*Python (https://www.python.org/downloads/)
+*CMake (https://cmake.org/download/)
+*Wix (https://wixtoolset.org/releases/)
 
 To create the installer, run:
 
