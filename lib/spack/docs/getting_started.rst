@@ -1383,8 +1383,40 @@ Windows Compatible Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Many Spack packages are not currently compatible with Windows, due to Unix dependencies 
-or requiring incompatible build tools like automake. Here are several packages known to
-work on Windows:
--abseil-cpp
--cpuinfo
--glm
+or incompatible build tools like autoconf. Here are several packages known to work on Windows:
+* abseil-cpp
+* cpuinfo
+* glm
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Generate a New Windows Installer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To generate a new windows installer, the spack ``make-installer`` command to
+create a Windows installer. Installers are not supported on other platforms.
+
+The installer must be created on Windows and requires the following:
+* Spack (https://github.com/spack/spack)
+* Python (https://www.python.org/downloads/)
+* CMake (https://cmake.org/download/)
+* Wix (https://wixtoolset.org/releases/)
+
+To create the installer, run:
+
+``spack make-installer -v <spack_version> <output directory>``
+
+For example, ``spack make-installer -v 0.16.0 tmp`` will download spack from 
+https://github.com/spack/spack/releases/download/v0.16.0 and create the installer in 'tmp'.
+
+The output directory may be an absolute path or relative to the current
+directory. It *must* already exist.
+
+Alternatively, specify a local spack directory:
+
+``spack make-installer -s <spack directory> <output directory>``
+
+e.g. spack make-installer -s spack-0.16.0 tmp
+
+The spack directory may be an absolute path or relative to the current
+directory. The entire contents of the specified directory will be included
+in the installer (Includes things like .git files or local changes).
