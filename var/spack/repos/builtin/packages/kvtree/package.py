@@ -39,7 +39,7 @@ class Kvtree(CMakePackage):
             args.append("-DMPI=OFF")
 
         args.append('-DKVTREE_FILE_LOCK={0}'.format(
-            spec.variants['file_lock'].value.upper()))
+            self.spec.variants['file_lock'].value.upper()))
 
         if self.spec.satisfies('platform=cray'):
             args.append("-DKVTREE_LINK_STATIC=ON")
