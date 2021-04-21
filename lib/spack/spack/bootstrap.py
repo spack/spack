@@ -87,7 +87,7 @@ def ensure_module_importable_or_raise(module, abstract_spec=None, install_fn=Non
         module (str): module to be imported in the current interpreter
         abstract_spec (str): abstract spec that might provide the module. If not
             given it defaults to "module"
-        install_fn (callable): optional callable to try install software that might
+        install_fn: optional callable to try install software that might
             provide the required module. The callable takes a module and an abstract
             spec as arguments
 
@@ -295,7 +295,11 @@ def _install_clingo_and_try_import(module, abstract_spec_str):
                     'compilers', [{'compiler': item['compiler']}]
             ):
                 # FIXME: need to check sha256
-                install_args = ['install', '-a', '-u', '-o', '-f', spec_str]
+                install_args = [
+                    'install',
+                    '--sha256', item['sha256'],
+                    '-a', '-u', '-o', '-f', spec_str
+                ]
                 buildcache(*install_args, fail_on_error=False)
                 if _import_from_store(module, abstract_spec):
                     return True
