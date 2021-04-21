@@ -116,11 +116,10 @@ class CorpusReader(et.elffile.ELFFile):
         from a symbol table index to a corresponding section object. The
         SymbolTableIndexSection was added in pyelftools 0.27.
         """
-        self._shndx_sections = {
-            x.symboltable: x
-            for x in self.elffile.iter_sections()
-            if isinstance(x, et.sections.SymbolTableIndexSection)
-        }
+        self._shndx_sections = {}
+        for x in self.elffile.iter_sections():
+            if isinstance(x, et.sections.SymbolTableIndexSection):
+                self._shndx_sections[x.symboltable] = x
 
     def get_symbols(self):
         """Return a set of symbols from the dwarf symbol tables"""
@@ -251,11 +250,10 @@ class CorpusReader(et.elffile.ELFFile):
         # Check for or lazily construct index section mapping (symbol table
         # index -> corresponding symbol table index section object)
         if self._shndx_sections is None:
-            self._shndx_sections = {
-                sec.symboltable: sec
-                for sec in self.elffile.iter_sections()
-                if isinstance(sec, et.sections.SymbolTableIndexSection)
-            }
+            self._shndx_sections = {}
+            for sec in self.elffile.iter_sections():
+                if isinstance(sec, et.sections.SymbolTableIndexSection):
+                    self._shndx_sections[sec.symboltable] = sec
         return self._shndx_sections[symtab_index].get_section_index(symbol_index)
 
     def get_dynamic_tags(self):
