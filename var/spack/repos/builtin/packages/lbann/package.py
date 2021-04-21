@@ -10,7 +10,8 @@ from spack import *
 class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
     memory, HPC-optimized, model and data parallel training toolkit for deep
-    neural networks."""
+    neural networks.
+    """
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
@@ -164,11 +165,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
     depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
-               '+imgcodecs +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda',
+               '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc +vsx
-    depends_on('opencv@4.1.0: +powerpc +vsx', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add  +powerpc
+    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
