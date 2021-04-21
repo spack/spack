@@ -80,9 +80,6 @@ defined_symbol(Package, Version, Symbol)
     % it's defined for any corpora
     :- defined_symbol(Package, Version, Symbol, _, _).
 
-% A package is abi compatible with a dependency if
-%abi_compatible(Package, Dependency) :-
-%    not mismatch(Package, Dependency).
 
 % This is the main "entry" function from concretize.lp
 % the dependency checks hold
@@ -91,7 +88,7 @@ dependency_checks_hold(Package, Dependency, Type)
     :- node(Package),
     version(Package, Version),
     version(Dependency, DependencyVersion),    
-    mismatch(Package, PackageVersion, Dependency, DependencyVersion, Type).
+    not mismatch(Package, PackageVersion, Dependency, DependencyVersion, Type).
 
 
 % There is a mismatch for a package and dependency if:
