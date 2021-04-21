@@ -29,8 +29,8 @@ class Argobots(AutotoolsPackage):
     variant("valgrind", default=False, description="Enable Valgrind")
     variant("debug", default=False, description="Compiled with debugging symbols")
     variant("stackunwind", default=False, description="Enable function stack unwinding")
-    variant("stackguard", default="no", description="Enable stack guard",
-            values=('no', 'canary-32', 'mprotect', 'mprotect-strict'), multi=False)
+    variant("stackguard", default="none", description="Enable stack guard",
+            values=('none', 'canary-32', 'mprotect', 'mprotect-strict'), multi=False)
     variant("tool", default=False, description="Enable ABT_tool interface")
     variant("affinity", default=False, description="Enable affinity setting")
 
