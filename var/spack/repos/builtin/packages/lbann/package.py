@@ -78,6 +78,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
     conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
 
+    conflicts('~vision', when='@0.91:0.101')
+    conflicts('~numpy', when='@0.91:0.101')
+    conflicts('~python', when='@0.91:0.101')
+    conflicts('~pfe', when='@0.91:0.101')
+
     depends_on('cmake@3.17.0:', type='build')
 
     # Specify the correct versions of Hydrogen
@@ -169,7 +174,8 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    depends_on('conduit@0.5.0:0.6.99 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch
