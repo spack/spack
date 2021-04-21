@@ -464,7 +464,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.append('--with-system-zlib')
 
         if 'zstd' in spec:
-            options.append('--with-zstd={0}'.format(spec['zstd'].prefix))
+            options.append('--with-zstd-include={0}'.format(
+                spec['zstd'].headers.directories[0]))
+            options.append('--with-zstd-lib={0}'.format(
+                spec['zstd'].libs.directories[0]))
 
         # Enabling language "jit" requires --enable-host-shared.
         if 'languages=jit' in spec:
