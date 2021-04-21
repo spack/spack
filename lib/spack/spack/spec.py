@@ -1484,9 +1484,11 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
+        # TODO: Make this a spack json dump, make sure format is deterministic.
         node_dict = self.to_node_dict(hash=hash)
-        yaml_text = syaml.dump(node_dict, default_flow_style=True)
-        sha = hashlib.sha1(yaml_text.encode('utf-8'))
+        # yaml_text = syaml.dump(node_dict, default_flow_style=True)
+        json_text = sjson.dump(node_dict)
+        sha = hashlib.sha1(json_text.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
 
         if sys.version_info[0] >= 3:
@@ -1669,6 +1671,7 @@ class Spec(object):
         return d
 
     def to_dict(self, hash=ht.dag_hash):
+        # TODO: Update this docstring
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionaries like the one that is ultimately written to a
@@ -1676,7 +1679,10 @@ class Spec(object):
         example, for sqlite::
 
             {
-                'spec': [
+                'spec': { <--reformat
+                '_meta' : 2, <--keep int
+                'nodes' : <-- new key on node list
+                [
                     {
                         'sqlite': {
                             'version': '3.28.0',
@@ -1742,14 +1748,16 @@ class Spec(object):
                 node_list.append(s.node_dict_with_hashes(hash))
                 hash_list.append(spec_hash)
             if s.build_spec is not s:
-                build_spec_list = s.build_spec.to_dict()['spec']
+                build_spec_list = s.build_spec.to_dict()['spec']['nodes']
                 for node in build_spec_list:
                     node_hash = node[hash.attr]
                     if node_hash not in hash_list:
                         node_list.append(node)
                         hash_list.append(node_hash)
-        d = syaml.syaml_dict([('spec', node_list)])
-        return d
+        meta_dict = syaml.syaml_dict([('version', 2)])
+        inner_dict = syaml.syaml_dict([('_meta', meta_dict), ('nodes', node_list)])
+        spec_dict = syaml.syaml_dict([('spec', inner_dict)])
+        return spec_dict
 
     def node_dict_with_hashes(self, hash=ht.dag_hash):
         """ Returns a node_dict of this spec with the dag hash added.  If this
@@ -2088,8 +2096,40 @@ class Spec(object):
         return spec_builder(spec_dict)
 
     @staticmethod
+    def from_old_dict(data):
+        """Construct a spec from JSON/YAML using the format version 1.
+        Note: Version 1 format has no notion of a build_spec, and names are
+        guaranteed to be unique.
+
+        Parameters:
+        data -- a nested dict/list data structure read from YAML or JSON.
+        """
+        nodes = data['spec']
+
+        # Read nodes out of list.  Root spec is the first element;
+        # dependencies are the following elements.
+        dep_list = [Spec.from_node_dict(node) for node in nodes]
+        if not dep_list:
+            raise spack.error.SpecError("YAML spec contains no nodes.")
+        deps = dict((spec.name, spec) for spec in dep_list)
+        spec = dep_list[0]
+
+        for node in nodes:
+            # get dependency dict from the node.
+            name = next(iter(node))
+
+            if 'dependencies' not in node[name]:
+                continue
+
+            yaml_deps = node[name]['dependencies']
+            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+                deps[name]._add_dependency(deps[dname], dtypes)
+
+        return spec
+
+    @staticmethod
     def from_dict(data):
-        """Construct a spec from YAML.
+        """Construct a spec from JSON/YAML.
 
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
@@ -2097,12 +2137,11 @@ class Spec(object):
 
         # New Design
 
-        nodes = data['spec']
+        nodes = data['spec']['nodes']
         hash_type = None
         any_deps = False
 
         # Pass 0: Determine hash type
-
         for node in nodes:
             if 'dependencies' in node.keys():
                 any_deps = True
@@ -2122,7 +2161,6 @@ class Spec(object):
 
         # Pass 1: Create a single lookup dictionary by hash
         # Possible hash issues...
-
         for i, node in enumerate(nodes):
             node_hash = node[hash_type]
             node_spec = Spec.from_node_dict(node)
@@ -2135,14 +2173,13 @@ class Spec(object):
             raise spack.error.SpecError("YAML spec contains no nodes.")
 
         # Pass 2: Finish construction of all DAG edges (including build specs)
-
         for node_hash, node in hash_dict.items():
             node_spec = node['node_spec']
             for _, dhash, dtypes, _ in Spec.dependencies_from_node_dict(node):
                 node_spec._add_dependency(hash_dict[dhash]['node_spec'], dtypes)
             if 'build_spec' in node.keys():
                 _, bhash, _ = Spec.build_spec_from_node_dict(node)
-                node_spec.build_spec(hash_dict[bhash]['node_spec'])
+                node_spec._build_spec = hash_dict[bhash]['node_spec']
 
         return hash_dict[root_spec_hash]['node_spec']
 

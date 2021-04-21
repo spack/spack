@@ -1060,36 +1060,31 @@ class TestSpecSematics(object):
         spec.concretize()
         dep.concretize()
         out = spec.splice(dep, transitive)
-        out_dict = out.to_dict()
-        assert 'spec' in out_dict.keys()
-        # TODO: These are purposefully written out longhand because the schema
-        # is still changing. Clean up when finalized.
-        t_exists = False
-        h_exists = False
-        z_exists = False
-        for node in out_dict['spec']:
-            if node['name'] == 'splice-t':
-                t_exists = True
-            if node['name'] == 'splice-h':
-                h_exists = True
-            if node['name'] == 'splice-z':
-                z_exists = True
-        assert t_exists
-        assert h_exists
-        assert z_exists
-        t_bspec_exists = False
-        h_bspec_exists = False
-        z_bspec_exists = False
-        for node in out_dict['spec']:
-            if node['name'] == 'splice-t' and 'build_spec' in node.keys():
-                t_bspec_exists = True
-            if node['name'] == 'splice-h' and 'build_spec' in node.keys():
-                h_bspec_exists = True
-            if node['name'] == 'splice-z' and 'build_spec' in node.keys():
-                z_bspec_exists = True
-        assert t_bspec_exists
-        assert h_bspec_exists != transitive
-        assert not z_bspec_exists
+
+        # Sanity check all hashes are unique...
+        assert spec.full_hash() != dep.full_hash()
+        assert out.full_hash() != dep.full_hash()
+        assert out.full_hash() != spec.full_hash()
+
+        out_rt_spec = Spec.from_dict(out.to_dict())  # rt is "round trip"
+        out_rt_spec_bld_hash = out_rt_spec.build_spec.full_hash()
+        out_rt_spec_h_bld_hash = out_rt_spec['splice-h'].build_spec.full_hash()
+        out_rt_spec_z_bld_hash = out_rt_spec['splice-z'].build_spec.full_hash()
+
+        # In any case, the build spec for splice-t (root) should point to the
+        # original spec, preserving build provenance.
+        assert spec.full_hash() == out_rt_spec_bld_hash
+        assert out_rt_spec.full_hash() != out_rt_spec_bld_hash
+
+        # The build spec for splice-h should always point to the introduced
+        # spec, since that is the spec spliced in.
+        assert dep['splice-h'].full_hash() == out_rt_spec_h_bld_hash
+
+        # The build spec for splice-z will depend on whether or not the splice
+        # was transitive.
+        expected_z_bld_hash = (dep['splice-z'].full_hash() if transitive else
+                               spec['splice-z'].full_hash())
+        assert expected_z_bld_hash == out_rt_spec_z_bld_hash
 
     @pytest.mark.parametrize('spec,constraint,expected_result', [
         ('libelf target=haswell', 'target=broadwell', False),

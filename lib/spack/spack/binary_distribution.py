@@ -1607,7 +1607,7 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
 
     spec_yaml = syaml.load(yaml_contents)
 
-    yaml_spec = spec_yaml['spec']
+    yaml_spec = spec_yaml['spec']['nodes']
     name = spec.name
 
     # TODO: Modernize this to use the methods for reading YAML in Spec
@@ -1617,19 +1617,18 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     # a single object, we iterate over the list looking for the object
     # with the name of this concrete spec as a key, out of an abundance
     # of caution.
-    # In the new format:
-    # The "spec" key in the yaml is still a list of objects, but with a
+    # In format version 2:
+    # ['spec']['nodes'] in the yaml is still a list of objects, but with a
     # multitude of keys. The list will commonly contain many objects, and in the
     # case of build specs, it is highly likely that the same name will occur
     # once as the actual package, and then again as the build provenance of that
-    # same package.
+    # same package. Hence format version 2 matches on the dag hash, not name.
     if yaml_spec and 'name' not in yaml_spec[0]:
         # old style
         cached_pkg_specs = [item[name] for item in yaml_spec if name in item]
-    else:
+    elif yaml_spec and spec_yaml['spec']['_meta']['version'] == 2:
         cached_pkg_specs = [item for item in yaml_spec
                             if item['_hash'] == spec.dag_hash()]
-        # pprint(cached_pkg_specs)
     cached_target = cached_pkg_specs[0] if cached_pkg_specs else None
 
     # If either the full_hash didn't exist in the .spec.yaml file, or it

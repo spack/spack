@@ -6,6 +6,7 @@
 """Definitions that control how Spack creates Spec hashes."""
 
 import spack.dependency as dp
+from typing import List
 
 
 class SpecHashDescriptor(object):
@@ -17,8 +18,9 @@ class SpecHashDescriptor(object):
     canonicalized hash of the package.py for each node in the graph.
 
     We currently use different hashes for different use cases.
+
     """
-    hash_types = []
+    hash_types = []  # type: List[str]
 
     def __init__(self, deptype, package_hash, attr):
         self.deptype = dp.canonical_deptype(deptype)
