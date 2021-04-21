@@ -84,16 +84,10 @@ defined_symbol(Package, Version, Symbol)
 %abi_compatible(Package, Dependency) :-
 %    not mismatch(Package, Dependency).
 
-
 % This is the main "entry" function from concretize.lp
 % the dependency checks hold
 dependency_checks_hold(Package, Dependency, Type)
 
-    % If we do not have a check failure
-    :- not check_failure(Package, Dependency, Type).
-
-% A check failure happens if there is a mismatch for a package and dependency
-check_failure(Package, Dependency, Type)
     :- node(Package),
     version(Package, Version),
     version(Dependency, DependencyVersion),    
@@ -114,7 +108,7 @@ mismatch(Package, Version, Dependency, DependencyVersion, Type)
     undefined_symbol(Package, Version, Symbol),
 
     % the package depends on the dependency
-    depends_on(Package, Dependency, "link"),
+    depends_on(Package, Dependency, Type),
 
     % and the symbol is not defined for the dependency
     not defined_symbol(Dependency, DependencyVersion, Symbol).
@@ -136,4 +130,4 @@ defined_symbol(Package, Version, Symbol)
     :- depends_on(Package, Dependency, Type), defined_symbol(Dependency, Version, Symbol).
 
 :- depends_on(Package, Dependency, _),
-   not check_failure(Package, Dependency, _).
+   not dependency_checks_hold(Package, Dependency, _).
