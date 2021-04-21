@@ -9,7 +9,7 @@ import copy
 import itertools
 import os
 from six import string_types
-
+import warnings
 import archspec.cpu
 
 import llnl.util.tty as tty
@@ -762,7 +762,9 @@ class SpackSolverSetup(object):
 
         for target in targets:
             try:
-                target.optimization_flags(compiler_name, compiler_version)
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    target.optimization_flags(compiler_name, compiler_version)
                 supported.append(target)
             except archspec.cpu.UnsupportedMicroarchitecture:
                 continue
