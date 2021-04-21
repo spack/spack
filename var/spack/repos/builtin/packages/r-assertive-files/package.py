@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,15 @@ from spack import *
 
 
 class RAssertiveFiles(RPackage):
-    """assertive.files: Assertions to Check Properties of Files"""
+    """assertive.files: Assertions to Check Properties of Files
 
-    homepage = "https://cloud.r-project.org/package=assertive.files"
+    A set of predicates and assertions for checking the
+    properties of files and connections. This is mainly for use
+    by other package developers who want to include run-time
+    testing features in their own packages. End-users will
+    usually want to use assertive directly."""
+
+    homepage = "https://bitbucket.org/richierocks/assertive.files"
     url      = "https://cloud.r-project.org/src/contrib/assertive.files_0.0-2.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive.files"
 
