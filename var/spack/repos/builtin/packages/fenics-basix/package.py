@@ -14,6 +14,7 @@ class FenicsBasix(CMakePackage):
     maintainers = ["mscroggs", "chrisrichardson"]
 
     version("main", branch="main")
+    # version("0.1.0", sha256="")
 
     depends_on("cmake@3.16:", type="build")
     depends_on("xtensor@0.23.4:", type="build")

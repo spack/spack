@@ -15,8 +15,11 @@ class PyFenicsBasix(PythonPackage):
     maintainers = ["chrisrichardson", "mscroggs"]
 
     version("main", branch="main")
+#    version("0.1.0", sha256="")
 
-    depends_on("fenics-basix@main", type=("build", "run"))
+    depends_on("fenics-basix@main", type=("build", "run"), when="@main")
+    depends_on("fenics-basix@0.1.0", type=("build", "run"), when="@0.1.0")
+
     depends_on("python@3.6:", type=('build', 'run'))
     depends_on("py-setuptools", type="build")
     depends_on("cmake@3.18:", type="build")
