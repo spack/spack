@@ -16,7 +16,7 @@ class NcbiRmblastn(AutotoolsPackage):
     version('2.9.0', sha256='a390cc2d7a09422759fc178db84de9def822cbe485916bbb2ec0d215dacdc257')
 
     # There is a corresponding gzipped patch file associated with each version.
-    # According to the documentation, http://www.repeatmasker.org/RMBlast.html, 
+    # According to the documentation, http://www.repeatmasker.org/RMBlast.html,
     # Download NCBI Blast+ and rmblast patch file:
     #   ncbi-blast-2.11.0+-src.tar.gz
     #   isb-2.11.0+-rmblast.patch.gz
