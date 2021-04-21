@@ -172,6 +172,7 @@ class Ascent(Package, CudaPackage):
     conflicts("+shared", when="+cuda",
               msg="Ascent needs to be built with ~shared for CUDA builds.")
 
+
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
 
@@ -197,6 +198,8 @@ class Ascent(Package, CudaPackage):
                 for arg in std_cmake_args:
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
+#           if 'cce' in self.spec :
+            cmake_args.extend(["-DCMAKE_Fortran_FLAGS=-ef"])
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             print("Configuring Ascent...")
             cmake(*cmake_args)
@@ -425,7 +428,8 @@ class Ascent(Package, CudaPackage):
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"
-            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+            #cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
@@ -528,3 +532,4 @@ class Ascent(Package, CudaPackage):
         host_cfg_fname = os.path.abspath(host_cfg_fname)
         tty.info("spack generated conduit host-config file: " + host_cfg_fname)
         return host_cfg_fname
+
