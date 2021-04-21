@@ -169,7 +169,7 @@ class ProcessInProcess(Package):
             bash('build.sh', '--prefix=%s' % prefix, '--with-pip=%s' % prefix)
 
         # testing PiP by using PiP-Testsuite (another repo), no need install
-        # this test suites now include above PiP-gdb test and so, 
+        # this test suites now include above PiP-gdb test and so,
         # this should be the very last
         with working_dir(join_path('PiP-Testsuite', 'PiP-Testsuite')):
             bash('configure', '--with-pip=%s' % prefix)
