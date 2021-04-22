@@ -80,15 +80,20 @@ defined_symbol(Package, Version, Symbol)
     % it's defined for any corpora
     :- defined_symbol(Package, Version, Symbol, _, _).
 
+% 
+dependency_checks_hold(Package, Dependency, Type)
+    :- dependency_holds(Package, Dependency, Type),
+    not check_failure(Package, Dependency, Type).
 
 % This is the main "entry" function from concretize.lp
 % the dependency checks hold
-dependency_checks_hold(Package, Dependency, Type)
-
+check_failure(Package, Dependency, Type)
     :- node(Package),
+    node(Dependency),
     version(Package, Version),
-    version(Dependency, DependencyVersion),    
-    not mismatch(Package, PackageVersion, Dependency, DependencyVersion, Type).
+    version(Dependency, DependencyVersion),
+    not mismatch(Package, Version, Dependency, DependencyVersion, Type),
+    Type == "link".
 
 
 % There is a mismatch for a package and dependency if:
