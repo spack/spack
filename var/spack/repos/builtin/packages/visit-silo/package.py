@@ -40,16 +40,6 @@ class VisitSilo(CMakePackage):
     version('2.10.2', sha256='89ecdfaf197ef431685e31b75628774deb6cd75d3e332ef26505774403e8beff')
     version('2.10.1', sha256='6b53dea89a241fd03300a7a3a50c0f773e2fb8458cd3ad06816e9bd2f0337cd8')
 
-    variant(
-        'activate', default='extension',
-        description='Installation activate: '
-                    'private or public as xml2cmake (quick and dirty), '
-                    'or spack friendly so as to '
-                    'get visit plugins working as extensions',
-        values=('extension', 'private', 'public'),
-        multi=False
-    )
-
     depends_on('cmake', type='build')
     depends_on('silo')
     depends_on('visit')
@@ -72,23 +62,19 @@ class VisitSilo(CMakePackage):
 
     @run_before('cmake')
     def run_xml2cmake(self):
-        mode = '-public'
         spec = self.spec
         visit = spec['visit']
-        if 'activate=private' in spec:
-            mode = '-private'
-        args = ['-v', str(visit.version), '-clobber', mode, 'Silo.xml']
+        args = ['-v', str(visit.version), '-clobber', '-public', 'Silo.xml']
         with working_dir(self.root_cmakelists_dir):
             # Regenerate the public cmake files
             if os.path.exists("CMakeLists.txt"):
                 os.unlink('CMakeLists.txt')
             which("xml2cmake")(*args)
-            if 'activate=extension' in spec:
-                # spack extension activate : alter VISIT_PLUGIN_DIR
-                cmf = FileFilter('CMakeLists.txt')
-                cmf.filter(r'^SET\(VISIT_PLUGIN_DIR\s+\"{0}(.+)\"\)'.
-                           format(visit.prefix),
-                           r'SET(VISIT_PLUGIN_DIR "{0}\1")'.format(prefix))
+            # spack extension activate : alter VISIT_PLUGIN_DIR
+            cmf = FileFilter('CMakeLists.txt')
+            cmf.filter(r'^SET\(VISIT_PLUGIN_DIR\s+\"{0}(.+)\"\)'.
+                       format(visit.prefix),
+                       r'SET(VISIT_PLUGIN_DIR "{0}\1")'.format(prefix))
 
     def cmake_args(self):
         silo = self.spec['silo']
