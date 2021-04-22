@@ -946,11 +946,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a CVS repository.
        Use like this in a package:
 
-           version('name', cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename')
+           version('name',
+                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename')
 
        Optionally, you can provide a branch and/ord a date for the URL:
 
-           version('name', cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename',
+           version('name',
+                   cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename',
                    branch='branchname', date='date')
 
     Repositories are checked out into the standard stage source path directory.
@@ -1037,7 +1039,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
     def _remove_untracked_files(self):
         """Removes untracked files in a CVS repository."""
         with working_dir(self.stage.source_path):
-            status = self.cvs('status', file, output=str)
+            status = self.cvs('status', output=str)
             for line in status.split('\n'):
                 if re.match('^[?]', line):
                     path = line[2:].strip()
