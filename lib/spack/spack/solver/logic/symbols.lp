@@ -14,11 +14,6 @@ skip_symbol("_ITM_deregisterTMCloneTable").
 skip_symbol("__gmon_start__").
 skip_symbol("_ITM_registerTMCloneTable").
 
-% ask gil about datalog
-% don't do hashes right now, associate symbols with version of package
-% tree versions of zlib, associate symbols with versions instead of hash
-
-
 %----------------------------------------------------------------------------
 % Corpus symbols: libtcl8.6.so
 %----------------------------------------------------------------------------
@@ -80,19 +75,33 @@ defined_symbol(Package, Version, Symbol)
     % it's defined for any corpora
     :- defined_symbol(Package, Version, Symbol, _, _).
 
-% 
-dependency_checks_hold(Package, Dependency, Type)
-    :- dependency_holds(Package, Dependency, Type),
-    not check_failure(Package, Dependency, Type).
 
 % This is the main "entry" function from concretize.lp
-% the dependency checks hold
+% dependency checks hold if
+dependency_checks_hold(Package, Dependency, Type)
+
+    % the dependency holds and
+    :- dependency_holds(Package, Dependency, Type),
+
+    % there are no check failures
+    not check_failure(Package, Dependency, Type).
+
+
+% the dependency checks fail
 check_failure(Package, Dependency, Type)
+
+    % if both the package and dependency are nodes
     :- node(Package),
     node(Dependency),
+
+    % they have set versions
     version(Package, Version),
     version(Dependency, DependencyVersion),
+
+    % and the symbols for those versions don't match
     not mismatch(Package, Version, Dependency, DependencyVersion, Type),
+
+    % type is unsafe if we don't add this.
     Type == "link".
 
 
