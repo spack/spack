@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import llnl.util.lang
+import llnl.util.tty as tty
 
 
 class ConcreteSpecRegistry(object):
@@ -19,17 +20,29 @@ class ConcreteSpecRegistry(object):
         import spack.environment as ev
         import spack.store
 
+        tty.debug('ConcreteSpecRegistry: populating')
+        tty.debug('  db specs:')
         for key, spec in spack.store.db.all_specs():
+            tty.debug('    {0} -> {1}'.format(key, spec.name))
             self._registry[key] = spec
 
+        tty.debug('  buildcache specs:')
         bindist.binary_index.update()
         for spec in bindist.binary_index.get_all_built_specs():
+            tty.debug('    {0} -> {1}'.format(spec.dag_hash(), spec.name))
             self._registry[spec.dag_hash()] = spec
 
         active_env = ev.get_env(None, None)
         if active_env:
+            tty.debug('  environment specs:')
             for s in active_env.all_specs():
+                tty.debug('    {0} -> {1}'.format(s.dag_hash(), s.name))
                 self._registry[s.dag_hash()] = s
+
+    def clear(self):
+        # Seems to be needed by testing infrastructure so we are
+        # forced to repopulate with relevant specs.
+        self._registry = {}
 
     def get_by_hash(self, dag_hash):
         if not self._registry:
