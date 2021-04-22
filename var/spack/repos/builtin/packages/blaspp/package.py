@@ -25,13 +25,13 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('openmp', default=True, description='Use OpenMP internally.')
     variant('cuda',   default=False, description='Build with CUDA backend')
-    variant('hip',    default=False, description='Build with HIP backend')
+    #variant('hip',    default=False, description='Build with HIP backend')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake@3.15.0:', type='build')
     depends_on('blas')
     depends_on('llvm-openmp', when='%apple-clang +openmp')
-    depends_on('rocblas', when='+hip')
+    depends_on('rocblas', when='+rocm')
 
     # only supported with clingo solver: virtual dependency preferences
     # depends_on('openblas threads=openmp', when='+openmp ^openblas')
@@ -41,7 +41,8 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('^openblas@0.3.6 threads=none', msg='BLASpp requires a threadsafe openblas')
     conflicts('^openblas@0.3.7: ~locking', msg='BLASpp requires a threadsafe openblas')
 
-    conflicts('+hip', when='@:2020.10.02', msg='HIP support requires blaspp 2021.04.00 or greater')
+    conflicts('+rocm', when='@:2020.10.02', msg='HIP support requires blaspp 2021.04.00 or greater')
+    conflicts('+rocm', when='+cuda', msg='BLASpp can only support one GPU backend')
 
     def cmake_args(self):
         spec = self.spec
@@ -49,7 +50,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
         if self.version >= Version('2021.04.00'):
             backend = 'none'
             if '+cuda' in spec: backend = 'cuda'
-            if '+hip' in spec: backend = 'hip'
+            if '+rocm' in spec: backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
         return [
             '-Dbuild_tests=%s'       % self.run_tests,
