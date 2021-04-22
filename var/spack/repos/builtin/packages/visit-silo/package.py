@@ -10,12 +10,16 @@ import os
 class VisitSilo(CMakePackage):
     """This is the Silo Plug-In for VisIt.
        It can be installed after VisIt is installed along SILO library.
-       It is typically a private plugin.
+       It is made as an extension to VisIt that can be activated or as an environment
+       with a view: ~/.visit
+       Complete explanation at:
+       https://github.com/spack/spack/pull/22907#issuecomment-824218296
     """
 
+    # These settings are exactly those of VisIt
     homepage = "https://wci.llnl.gov/simulation/computer-codes/visit/"
     git      = "https://github.com/visit-dav/visit.git"
-    url = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
+    url      = "https://github.com/visit-dav/visit/releases/download/v3.1.1/visit3.1.1.tar.gz"
 
     maintainers = ['cyrush', 'cessenat']
 
@@ -36,19 +40,28 @@ class VisitSilo(CMakePackage):
     version('2.10.2', sha256='89ecdfaf197ef431685e31b75628774deb6cd75d3e332ef26505774403e8beff')
     version('2.10.1', sha256='6b53dea89a241fd03300a7a3a50c0f773e2fb8458cd3ad06816e9bd2f0337cd8')
 
-    variant('private', default=True,
-            description='Make it a private plugin')
+    variant(
+        'activate', default='extension',
+        description='Installation activate: '
+                    'private or public as xml2cmake (quick and dirty), '
+                    'or spack friendly so as to '
+                    'get visit plugins working as extensions',
+        values=('extension', 'private', 'public'),
+        multi=False
+    )
 
     depends_on('cmake', type='build')
     depends_on('silo')
     depends_on('visit')
+
+    extends('visit')
 
     build_targets = ['VERBOSE=1']
     phases = ['cmake', 'build']
 
     @property
     def root_cmakelists_dir(self):
-        if not self.spec.satisfies('@local'):
+        if '@local' not in self.spec:
             return join_path('src', 'databases', 'Silo')
         else:
             return '.'
@@ -60,16 +73,22 @@ class VisitSilo(CMakePackage):
     @run_before('cmake')
     def run_xml2cmake(self):
         mode = '-public'
-        if self.spec.satisfies('+private'):
+        spec = self.spec
+        visit = spec['visit']
+        if 'activate=private' in spec:
             mode = '-private'
-        args = ['-v', str(self.spec['visit'].version), '-clobber', mode, 'Silo.xml']
-        if not self.spec.satisfies('@local'):
-            with working_dir(self.root_cmakelists_dir):
-                # Regenerate the public cmake files
+        args = ['-v', str(visit.version), '-clobber', mode, 'Silo.xml']
+        with working_dir(self.root_cmakelists_dir):
+            # Regenerate the public cmake files
+            if os.path.exists("CMakeLists.txt"):
                 os.unlink('CMakeLists.txt')
-                which("xml2cmake")(*args)
-        else:
             which("xml2cmake")(*args)
+            if 'activate=extension' in spec:
+                # spack extension activate : alter VISIT_PLUGIN_DIR
+                cmf = FileFilter('CMakeLists.txt')
+                cmf.filter(r'^SET\(VISIT_PLUGIN_DIR\s+\"{0}(.+)\"\)'.
+                           format(visit.prefix),
+                           r'SET(VISIT_PLUGIN_DIR "{0}\1")'.format(prefix))
 
     def cmake_args(self):
         silo = self.spec['silo']
