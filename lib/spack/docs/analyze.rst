@@ -189,3 +189,18 @@ only requires ``zlib``, and we can build both with debug and then run the analyz
 If you don't have pyelftools installed, the analyzer will bootstrap it first,
 and then continue to extract debug information. At the end, you'll have files
 saved to your analyzer folder for tcl.
+
+^^^^^^^^^^^^^^^
+locations types
+^^^^^^^^^^^^^^^
+
+Akin to the elf analyzer, the location types analyzer requires debug information,
+so you should follow the instructions to generate it first. Then to run the analyzer:
+
+
+.. code-block:: console
+
+    $ spack install zlib+debug
+    $ spack install tcl+debug
+    $ spack analyze run -a abi_type_location tcl
+
