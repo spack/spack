@@ -45,7 +45,6 @@ class Libceed(Package):
     depends_on('occa@1.0.0-alpha.5,develop', when='@:0.2+occa')
     depends_on('occa+cuda', when='+occa+cuda')
     depends_on('occa~cuda', when='+occa~cuda')
-    # TODO: propagate 'hip' variant to occa when such variant is added to occa
 
     depends_on('libxsmm', when='+libxsmm')
 

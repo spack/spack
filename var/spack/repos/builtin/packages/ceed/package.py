@@ -66,7 +66,6 @@ class Ceed(BundlePackage):
 
     # OCCA
     # ceed-4.0
-    # TODO: add hip variant to occa and enable it here when appropriate
     depends_on('occa@1.1.0~cuda', when='@4.0.0+occa~cuda')
     depends_on('occa@1.1.0+cuda', when='@4.0.0+occa+cuda')
     # ceed-3.0
