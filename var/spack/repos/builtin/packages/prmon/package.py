@@ -17,6 +17,7 @@ class Prmon(CMakePackage):
     maintainers = ['vvolkl']
 
     version("master", branch="master")
+    version('2.2.0', sha256='e11ee9a5ed7d007a064b18bd75f799a8055b8dc6da241d97a980a1e13c4a2495')
     version('2.1.1', sha256='b3d9327717caa857dfda5bee2308375c0c000817275160ed09970d805a1ec9d6')
     version('1.1.1', sha256='5f074b05af2a12e2726c33f6a6e9e8e59ee0c4fb5fe056deb38abacd1bb6bf03')
 
