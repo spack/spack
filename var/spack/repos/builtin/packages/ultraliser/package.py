@@ -10,7 +10,7 @@ class Ultraliser(CMakePackage):
     """Mesh and volume reconstruction of neuroscientific models
     """
     homepage = "https://github.com/BlueBrain/Ultraliser"
-    git = "https://github.com/BlueBrain/Ultraliser"
+    git = "git@github.com:BlueBrain/Ultraliser.git"
 
     version('0.3.0', tag='v0.3.0')
 
