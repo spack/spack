@@ -25,7 +25,6 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
 
     variant('openmp', default=True, description='Use OpenMP internally.')
     variant('cuda',   default=False, description='Build with CUDA backend')
-    #variant('hip',    default=False, description='Build with HIP backend')
     variant('shared', default=True, description='Build shared libraries')
 
     depends_on('cmake@3.15.0:', type='build')
@@ -42,7 +41,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('^openblas@0.3.7: ~locking', msg='BLASpp requires a threadsafe openblas')
 
     conflicts('+rocm', when='@:2020.10.02', msg='HIP support requires blaspp 2021.04.00 or greater')
-    conflicts('+rocm', when='+cuda', msg='BLASpp can only support one GPU backend')
+    conflicts('+rocm', when='+cuda', msg='BLASpp can only support one GPU backend at a time')
 
     def cmake_args(self):
         spec = self.spec
