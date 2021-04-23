@@ -430,7 +430,7 @@ class Root(CMakePackage):
         ]
 
         # Some special features
-        if self.spec.satisfies('@6.20:'):
+        if self.spec.satisfies('@6.20.02:'):
             options.append(define_from_variant('pyroot', 'python'))
         else:
             options.append(define_from_variant('python'))
