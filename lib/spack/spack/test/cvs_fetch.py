@@ -79,7 +79,8 @@ def test_cvs_extra_fetch(tmpdir):
     """Ensure a fetch after downloading is effectively a no-op."""
     testpath = str(tmpdir)
 
-    fetcher = CvsFetchStrategy(cvs=':pserver:not-a-real-cvs-repo%module=not-a-real-module')
+    fetcher = CvsFetchStrategy(
+        cvs=':pserver:not-a-real-cvs-repo%module=not-a-real-module')
     assert fetcher is not None
 
     with Stage(fetcher, path=testpath) as stage:
