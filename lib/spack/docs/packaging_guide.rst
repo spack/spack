@@ -4300,6 +4300,8 @@ available for use in stand-alone tests:
    You are free to use a method name that is more suitable for
    your package.
 
+.. _cache_custom_files:
+
 """""""""""""""""""
 Adding custom files
 """""""""""""""""""
@@ -4325,7 +4327,75 @@ The ``test`` method can access those files from the
 Reading expected output from a file
 """""""""""""""""""""""""""""""""""
 
-.. TODO:: Add the explanation of the helper method here
+The helper function ``get_escaped_text_output`` is available for packages
+to retrieve and properly format the text from a file that contains the
+output that is expected when an executable is run using ``self.run_test``.
+
+The signature for ``get_escaped_text_output`` is:
+
+.. code-block:: python
+
+   def get_escaped_text_output(filename):
+
+where ``filename`` is the path to the file containing the expected output.
+
+The ``filename`` for a :ref:`custom file <cache_custom_files>` can be 
+accessed and used as illustrated by a simplified version of an ``sqlite``
+package check:
+
+.. code-block:: python
+
+   class Sqlite(AutotoolsPackage):
+       ...
+
+       def test(self):
+           test_data_dir = self.test_suite.current_test_data_dir
+           db_filename = test_data_dir.join('packages.db')
+           ..
+
+           expected = get_escaped_text_output(test_data_dir.join('dump.out'))
+           self.run_test('sqlite3',
+                         [db_filename, '.dump'],
+                         expected,
+                         installed=True,
+                         purpose='test: checking dump output',
+                         skip_missing=False)
+
+Expected outputs do not have to be stored with the Spack package.
+Maintaining them with the source is actually preferable.
+
+Suppose a package's source has ``examples/foo.c`` and ``examples/foo.out``
+files that are copied for stand-alone test purposes using
+:ref:`cache_extra_test_sources <cache_extra_test_sources>` and the
+`run_test` method builds the executable ``examples/foo``. The package
+can retrieve the expected output from ``examples/foo.out`` using:
+
+.. code-block:: python
+
+   class MyFooPackage(Package):
+       ...
+
+       def test(self):
+           ..
+           filename = join_path(self.install_test_root, 'examples', 'foo.out')
+           expected = get_escaped_text_output(filename)
+           ..
+
+Alternatively, suppose ``MyFooPackage`` installs tests in ``share/tests``
+and their outputs in ``share/tests/outputs``. The expected output for
+``foo``, assuming it is still called ``foo.out``, can be retrieved as
+follows:
+
+.. code-block:: python
+
+   class MyFooPackage(Package):
+       ...
+
+       def test(self):
+           ..
+           filename = join_path(self.prefix.share.tests.outputs, 'foo.out')
+           expected = get_escaped_text_output(filename)
+           ..
 
 
 """"""""""""""""""""""""
