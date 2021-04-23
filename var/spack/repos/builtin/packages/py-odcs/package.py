@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyOdcs(PythonPackage):
-    """The main goal of ODCS is to allow generation of temporary composes using the REST API calls"""
+    """The main goal of ODCS is to allow generation of temporary composes
+    using the REST API calls"""
 
     homepage = "https://pagure.io/odcs"
     pypi     = "odcs/odcs-0.3.2.tar.gz"
