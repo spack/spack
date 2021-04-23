@@ -7,7 +7,7 @@ from spack import *
 
 
 class RRenv(RPackage):
-    """Project Environments:
+    """Project Environments for R packages:
 
     A dependency management toolkit for R. Using 'renv', you can create and
     manage project-local R libraries, save the state of these libraries to a
