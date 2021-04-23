@@ -48,8 +48,10 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
         backend_config = '-Duse_cuda=%s' % ('+cuda' in spec)
         if self.version >= Version('2021.04.00'):
             backend = 'none'
-            if '+cuda' in spec: backend = 'cuda'
-            if '+rocm' in spec: backend = 'hip'
+            if '+cuda' in spec:
+                backend = 'cuda'
+            if '+rocm' in spec:
+                backend = 'hip'
             backend_config = '-Dgpu_backend=%s' % backend
         return [
             '-Dbuild_tests=%s'       % self.run_tests,
