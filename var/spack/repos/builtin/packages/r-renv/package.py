@@ -9,11 +9,11 @@ from spack import *
 class RRenv(RPackage):
     """Project Environments:
 
-        A dependency management toolkit for R. Using 'renv', you can create and
-        manage project-local R libraries, save the state of these libraries to
-        a 'lockfile', and later restore your library as required. Together,
-        these tools can help make your projects more isolated, portable, and
-        reproducible."""
+    A dependency management toolkit for R. Using 'renv', you can create and
+    manage project-local R libraries, save the state of these libraries to a
+    'lockfile', and later restore your library as required. Together, these
+    tools can help make your projects more isolated, portable, and
+    reproducible."""
 
     homepage = "https://rstudio.github.io/renv/"
     cran     = "renv"
