@@ -17,7 +17,6 @@ spack:
             ospray@1.8.5,
             python,
             py-h5py,
-            py-h5py~mpi,
             py-mpi4py,
             py-numpy,
             py-pandas

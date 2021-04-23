@@ -39,7 +39,7 @@ modules:
       - py-flake8
       - py-mpi4py%gcc
       - python-dev
-      - py-h5py~mpi%gcc
+      - py-h5py+mpi%gcc
       - py-numpy%gcc
       - py-poisson-recon-pybind
       - py-rtree
