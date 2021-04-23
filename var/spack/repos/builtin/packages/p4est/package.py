@@ -9,7 +9,7 @@ from spack import *
 class P4est(AutotoolsPackage):
     """Dynamic management of a collection (a forest) of adaptive octrees in
     parallel"""
-    homepage = "http://www.p4est.org"
+    homepage = "https://www.p4est.org"
     url      = "https://github.com/cburstedde/p4est/archive/refs/tags/v2.3.1.tar.gz"
 
     maintainers = ['davydden']
