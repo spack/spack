@@ -61,7 +61,7 @@ class Argobots(AutotoolsPackage):
             args.append('--with-libunwind={0}'.format(self.spec['libunwind'].prefix))
 
         stackguard = self.spec.variants['stackguard'].value
-        if stackguard != 'no':
+        if stackguard != 'none':
             args.append('--enable-stack-overflow-check={0}'.format(stackguard))
 
         if '+tool' in self.spec:
