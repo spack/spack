@@ -7,7 +7,10 @@ from spack import *
 
 
 class ImpliedBoolean(AutotoolsPackage):
-    """Simple package with one optional dependency"""
+    """This package declares a single-valued variant where one of the
+       possible values is interpreted as a boolean in YAML 1.1. This is
+       used to test Spec conversions to/from YAML.
+    """
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"
