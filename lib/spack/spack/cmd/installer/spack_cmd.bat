@@ -17,7 +17,8 @@ popd
 if not defined python_pf_ver (
     :: If not, look for Python from the Spack installer
     :get_builtin
-    for /f "tokens=*" %%g in ('dir /b /a:d "!spackinstdir!\Python*"') do (set python_ver=%%g)
+    (for /f "tokens=*" %%g in ('dir /b /a:d "!spackinstdir!\Python*"') do (
+        set python_ver=%%g)) 2> NUL
 
     if not defined python_ver (
         echo Python was not found on your system.
@@ -26,13 +27,17 @@ if not defined python_pf_ver (
         set py_path=!spackinstdir!\!python_ver!
         set py_exe=!py_path!\python.exe
     )
+    goto :exitpoint
 ) else (
     :: Python is already on the path
     set py_exe=!python_pf_ver!
-    for /F "tokens=* USEBACKQ" %%F in (
-        `!py_exe! --version`) do (set "output=%%F")
+    (for /F "tokens=* USEBACKQ" %%F in (
+        `!py_exe! --version`) do (set "output=%%F")) 2>NUL
     if not "!output:Microsoft Store=!"=="!output!" goto :get_builtin
+    goto :exitpoint
 )
+:exitpoint
+
 
 for /f "tokens=*" %%g in ('dir /b /a:d "%spackinstdir%\spack*"') do (set spack_ver=%%g)
 set "SPACK_ROOT=%spackinstdir%\%spack_ver%"
