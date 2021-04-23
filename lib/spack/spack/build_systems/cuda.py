@@ -185,3 +185,10 @@ class CudaPackage(PackageBase):
     # Make sure cuda_arch can not be used without +cuda
     for value in cuda_arch_values:
         conflicts('~cuda', when='cuda_arch=' + value)
+
+    def build_type_flag_handler(self, name, flags):
+        if self.build_type:
+            debug_flags = ('cflags', 'cxxflags', 'fflags')
+            if self.build_type.name == "debug" and name in debug_flags:
+                flags.append('-G')
+        return super(CudaPackage, self).build_type_flag_handler(name, flags)

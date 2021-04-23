@@ -95,6 +95,11 @@ class CMakePackage(PackageBase):
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
+#    opt_types = [op1,op2,op3,op4]
+#    build_types = [g, g-00]
+#    for sbt in opt_types:
+#        conflicts("build_type=debug", when="spack_build_type=%s" %sbt)
+
     # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
     variant('ipo', default=False,
             description='CMake interprocedural optimization')

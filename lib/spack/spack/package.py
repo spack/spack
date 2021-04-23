@@ -1277,6 +1277,15 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
         return spack.compilers.compiler_for_spec(self.spec.compiler,
                                                  self.spec.architecture)
 
+    @property
+    def build_type(self):
+        return spack.build_types.get_build_type(self.spec)
+
+    def build_type_flag_handler(self, name, flags):
+        if self.build_type:
+            flags += self.build_type.get_flags()
+        return super(PackageBase, self).build_type_flag_handler(name, flags)
+
     def url_version(self, version):
         """
         Given a version, this returns a string that should be substituted
