@@ -142,16 +142,17 @@ esac
 # If any of the arguments below are present, then the mode is vcheck.
 # In vcheck mode, nothing is added in terms of extra search paths or
 # libraries.
-if [[ -z $mode ]] || [[ $mode == ld ]]; then
-    for arg in "$@"; do
-        case $arg in
-            -v|-V|--version|-dumpversion)
-                mode=vcheck
-                break
-                ;;
-        esac
-    done
-fi
+for arg in "$@"; do
+    case $arg in
+        -v)
+            [[ $mode == ld ]] && mode=vcheck && break
+            ;;
+        -V|--version|-dumpversion)
+            mode=vcheck
+            break
+            ;;
+    esac
+done
 
 # Finish setting up the mode.
 if [[ -z $mode ]]; then
