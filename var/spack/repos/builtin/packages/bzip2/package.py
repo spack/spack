@@ -46,8 +46,11 @@ class Bzip2(Package, SourcewarePackage):
         )
 
     def flag_handler(self, name, flags):
-        if name == 'cflags' and '+pic' in self.spec:
-            flags.append(self.compiler.cc_pic_flag)
+        if name == 'cflags':
+            if '+pic' in self.spec:
+                flags.append(self.compiler.cc_pic_flag)
+            if '+debug' in self.spec:
+                flags.append('-g')
         return(flags, None, None)
 
     def patch(self):
