@@ -32,7 +32,7 @@ class Spykfunc(PythonPackage):
     depends_on('boost', type=('build', 'link'), when='@0.15.4:')
     depends_on('morpho-kit', type=('build', 'link'), when='@0.15.4:')
 
-    depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:')
+    depends_on('py-mvdtool~mpi', type=('build', 'run'), when='@0.14.4:0.16.0')
 
     depends_on('python@3.6:')
     depends_on('py-cython', type='run', when='@:0.15.3')
