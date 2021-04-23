@@ -145,7 +145,10 @@ esac
 for arg in "$@"; do
     case $arg in
         -v)
-            [[ $mode == ld ]] && mode=vcheck && break
+            if [[ $mode == ld ]]; then
+                mode=vcheck
+                break
+            fi
             ;;
         -V|--version|-dumpversion)
             mode=vcheck
