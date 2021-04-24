@@ -76,55 +76,6 @@ defined_symbol(Package, Version, Symbol)
     :- defined_symbol(Package, Version, Symbol, _, _).
 
 
-% This is the main "entry" function from concretize.lp
-% dependency checks hold if
-dependency_checks_hold(Package, Dependency, Type)
-
-    % the dependency holds and
-    :- dependency_holds(Package, Dependency, Type),
-
-    % there are no check failures
-    not check_failure(Package, Dependency, Type).
-
-
-% the dependency checks fail
-check_failure(Package, Dependency, Type)
-
-    % if both the package and dependency are nodes
-    :- node(Package),
-    node(Dependency),
-
-    % they have set versions
-    version(Package, Version),
-    version(Dependency, DependencyVersion),
-
-    % and the symbols for those versions don't match
-    not mismatch(Package, Version, Dependency, DependencyVersion, Type),
-
-    % type is unsafe if we don't add this.
-    Type == "link".
-
-
-% There is a mismatch for a package and dependency if:
-mismatch(Package, Version, Dependency, DependencyVersion, Type)
-
-    % they are linkable
-    :- linkable(Package, Dependency),
-
-    % The package and dependency each have their own version
-    version(Package, Version),
-    version(Dependency, DependencyVersion),
-
-    % The package has an undefined symbol
-    undefined_symbol(Package, Version, Symbol),
-
-    % the package depends on the dependency
-    depends_on(Package, Dependency, Type),
-
-    % and the symbol is not defined for the dependency
-    not defined_symbol(Dependency, DependencyVersion, Symbol).
-
-
 % a package and dependency are linkable if
 linkable(Package, Dependency)
 
@@ -134,11 +85,23 @@ linkable(Package, Dependency)
 
     % And the dependency holds
     dependency_holds(Package, Dependency, _).
+    
 
-% transitive
-% I don't know how we can have two versions here?
-defined_symbol(Package, Version, Symbol)
-    :- depends_on(Package, Dependency, Type), defined_symbol(Dependency, Version, Symbol).
+% A package and dependency are incompatible if:
+incompatible(Package, V1, Dependency, V2)
 
-:- depends_on(Package, Dependency, _),
-   not dependency_checks_hold(Package, Dependency, _).
+    % they are linkable
+    :- linkable(Package, Dependency),
+
+    % The package and dependency each have their own version
+    version(Package, V1),
+    version(Dependency, V2),
+
+    % The package has an undefined symbol
+    undefined_symbol(Package, V1, Symbol),
+
+    % the package depends on the dependency
+    depends_on(Package, Dependency),
+
+    % and the symbol is not defined for the dependency
+    not defined_symbol(Dependency, V2, Symbol).

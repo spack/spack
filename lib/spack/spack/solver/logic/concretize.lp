@@ -38,6 +38,7 @@ version_satisfies(Package, Constraint)
 #defined preferred_version_declared/3.
 #defined version_satisfies/3.
 
+
 %-----------------------------------------------------------------------------
 % Spec conditions and imposed constraints
 %
@@ -97,7 +98,6 @@ do_not_impose(ID) :-
 % They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
  :- dependency_holds(Package, Dependency, Type),
-    dependency_checks_hold(Package, Dependency, Type),
     not virtual(Dependency).
 
 % every root must be a node
@@ -122,6 +122,24 @@ path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 
 #defined dependency_type/2.
 #defined dependency_condition/3.
+
+%-----------------------------------------------------------------------------
+% ABI Compatibility
+%-----------------------------------------------------------------------------
+
+% compatibility is defined as the absence of any incompatibilities
+compatible(Package, Dependency) :-
+        node(Package),
+        node(Dependency),
+        version(Package, V1),
+        version(Dependency, V2),
+        not incompatible(Package, V1, Dependency, V2).
+
+#defined incompatible/4.
+
+% Do not admit models with ABI-incompatible dependencies
+:- depends_on(Package, Dependency), not compatible(Package, Dependency).
+
 
 %-----------------------------------------------------------------------------
 % Conflicts
