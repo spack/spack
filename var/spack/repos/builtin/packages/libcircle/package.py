@@ -22,6 +22,9 @@ class Libcircle(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('libpciaccess', type='link')
 
+    patch('configure.patch')
+    patch('Makefile.in.patch')
+
     @when('@master')
     def autoreconf(self, spec, prefix):
         with working_dir(self.configure_directory):
