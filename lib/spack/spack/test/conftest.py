@@ -932,7 +932,6 @@ def mock_cvs_repository(tmpdir_factory):
     t = Bunch(
         checks=checks,
         url=url,
-        hash=get_rev,
         path=str(
             repodir
         )
