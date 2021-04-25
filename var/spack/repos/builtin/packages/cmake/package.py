@@ -110,6 +110,9 @@ class Cmake(Package):
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
+    #GW kludge to fix ascent FindMPI problem
+    patch('FindMPI_kludge.patch', when='@3.20.0')
+
     # Revert the change that introduced a regression when parsing mpi link
     # flags, see: https://gitlab.kitware.com/cmake/cmake/issues/19516
     patch('cmake-revert-findmpi-link-flag-list.patch', when='@3.15.0')
