@@ -919,13 +919,25 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('commit', '-m' 'revision 1', r1_file)
 
     checks = {
-        'default': Bunch(
-            revision='Head', file=r1_file, args={'cvs': cvsroot}
+        'default':
+        Bunch(
+            file=r1_file,
+            args={
+                'cvs':
+                cvsroot
+            }
         )
     }
-    def get_rev():
-        return '1.1'
-    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
+
+    t = Bunch(
+        checks=checks,
+        url=url,
+        hash=get_rev,
+        path=str(
+            repodir
+        )
+    )
+
     yield t
 
 
