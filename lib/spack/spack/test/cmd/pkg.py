@@ -106,9 +106,10 @@ def mock_pkg_cvs_repo(tmpdir_factory):
         cvs('-d', cvsroot, 'init')
 
         # initial commit with mock packages
-        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit', module, 'mockvendor', 'mockrelease')
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
+            module, 'mockvendor', 'mockrelease')
         shutil.rmtree('.')
-        with working_dir('..'):        
+        with working_dir('..'):
             cvs('-d', cvsroot, 'checkout', module)
 
         # add commit with pkg-a, pkg-b, pkg-c packages
@@ -120,7 +121,8 @@ def mock_pkg_cvs_repo(tmpdir_factory):
         with open('pkg-c/package.py', 'w') as f:
             f.write(pkg_template.format(name='PkgC'))
         cvs('-d', cvsroot, 'add', 'pkg-a', 'pkg-b', 'pkg-c')
-        cvs('-d', cvsroot, 'commit', '-m', 'add pkg-a, pkg-b, pkg-c', 'pkg-a', 'pkg-b', 'pkg-c')
+        cvs('-d', cvsroot, 'commit', '-m', 'add pkg-a, pkg-b, pkg-c',
+            'pkg-a', 'pkg-b', 'pkg-c')
 
         # remove pkg-c, add pkg-d
         with open('pkg-b/package.py', 'a') as f:
@@ -132,7 +134,8 @@ def mock_pkg_cvs_repo(tmpdir_factory):
         cvs('-d', cvsroot, 'add', 'pkg-d')
         shutil.rmtree('pkg-c')
         cvs('-d', cvsroot, 'remove', 'pkg-c')
-        cvs('-d', cvsroot, 'commit', '-m', 'change pkg-b, remove pkg-c, add pkg-d', 'pkg-b', 'pkg-c', 'pkg-d')
+        cvs('-d', cvsroot, 'commit', '-m', 'change pkg-b, remove pkg-c, add pkg-d',
+            'pkg-b', 'pkg-c', 'pkg-d')
 
     with spack.repo.use_repositories(mock_repo):
         yield mock_repo_packages
