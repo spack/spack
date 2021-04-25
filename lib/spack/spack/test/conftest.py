@@ -903,7 +903,7 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
             module, 'mockvendor', 'mockrelease')
         shutil.rmtree('.')
-        with working_dir('..'):
+        with '..'.as_cwd():
             cvs('-d', cvsroot, 'checkout', module)
 
         # Commit file r0
@@ -923,7 +923,7 @@ def mock_cvs_repository(tmpdir_factory):
             revision='1.1', file=r1_file, args={'cvs': str(repodir)}
         )
     }
-    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=lambda: return '1.1', path=str(repodir))
     yield t
 
 
