@@ -5,6 +5,7 @@
 
 from __future__ import print_function
 
+import os.path
 import pytest
 import re
 import shutil
@@ -81,6 +82,57 @@ def mock_pkg_git_repo(tmpdir_factory):
         git('rm', '-rf', 'pkg-c')
         git('-c', 'commit.gpgsign=false', 'commit',
             '-m', 'change pkg-b, remove pkg-c, add pkg-d')
+
+    with spack.repo.use_repositories(mock_repo):
+        yield mock_repo_packages
+
+
+# Force all tests to use a CVS repository *in* the mock packages repo.
+@pytest.fixture(scope='module')
+def mock_pkg_cvs_repo(tmpdir_factory):
+    """Copy the builtin.mock repo and make a mutable CVS repo inside it."""
+    tmproot = tmpdir_factory.mktemp('mock_pkg_cvs_repo')
+    repo_path = tmproot.join('builtin.mock')
+
+    shutil.copytree(spack.paths.mock_packages_path, str(repo_path))
+    mock_repo = spack.repo.RepoPath(str(repo_path))
+    mock_repo_packages = mock_repo.repos[0].packages_path
+
+    cvs = which('cvs', required=True)
+    with working_dir(mock_repo_packages):
+        # The CVS repository needs to live in a different directory
+        cvsroot = mock_repo_packages + "_cvsroot"
+        module = os.path.dirname(mock_repo_packages)
+        cvs('-d', cvsroot, 'init')
+
+        # initial commit with mock packages
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit', module, 'mockvendor', 'mockrelease')
+        shutil.rmtree('.')
+        with working_dir('..'):        
+            cvs('-d', cvsroot, 'checkout', module)
+
+        # add commit with pkg-a, pkg-b, pkg-c packages
+        mkdirp('pkg-a', 'pkg-b', 'pkg-c')
+        with open('pkg-a/package.py', 'w') as f:
+            f.write(pkg_template.format(name='PkgA'))
+        with open('pkg-b/package.py', 'w') as f:
+            f.write(pkg_template.format(name='PkgB'))
+        with open('pkg-c/package.py', 'w') as f:
+            f.write(pkg_template.format(name='PkgC'))
+        cvs('-d', cvsroot, 'add', 'pkg-a', 'pkg-b', 'pkg-c')
+        cvs('-d', cvsroot, 'commit', '-m', 'add pkg-a, pkg-b, pkg-c', 'pkg-a', 'pkg-b', 'pkg-c')
+
+        # remove pkg-c, add pkg-d
+        with open('pkg-b/package.py', 'a') as f:
+            f.write('\n# change pkg-b')
+        cvs('-d', cvsroot, 'add', 'pkg-b')
+        mkdirp('pkg-d')
+        with open('pkg-d/package.py', 'w') as f:
+            f.write(pkg_template.format(name='PkgD'))
+        cvs('-d', cvsroot, 'add', 'pkg-d')
+        shutil.rmtree('pkg-c')
+        cvs('-d', cvsroot, 'remove', 'pkg-c')
+        cvs('-d', cvsroot, 'commit', '-m', 'change pkg-b, remove pkg-c, add pkg-d', 'pkg-b', 'pkg-c', 'pkg-d')
 
     with spack.repo.use_repositories(mock_repo):
         yield mock_repo_packages
