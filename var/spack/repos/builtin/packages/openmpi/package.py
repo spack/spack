@@ -36,9 +36,10 @@ class Openmpi(AutotoolsPackage):
     version('master', branch='master')
 
     # Current
-    version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
+    version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
 
     # Still supported
+    version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
     version('4.0.5', preferred=True, sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
     version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
