@@ -14,12 +14,12 @@ class Flexi(CMakePackage):
     git      = "https://github.com/flexi-framework/flexi.git"
 
     version('master', preferred=True)
-    version('21.03.0', commit='d061978e5d96cfc96c06edc1bae9d92cbe540c18')
+    version('21.03.0', tag='v21.03.0')
 
     patch('for_aarch64.patch', when='target=aarch64:')
 
     variant('mpi', default=True, description='Enable MPI')
-    variant('2D', default=False, description='If set to True the code will run in two-dimensional mode')
+    variant('2d', default=False, description='If set to True the code will run in two-dimensional mode')
     variant('eqnsysname', default='navierstokes', values=('navierstokes', 'linearscalaradvection', 'rans_sa'), multi=False, description='Defines the equation system')
     variant('fv', default=False, description='Enables the usage of the finite volume subcell shock capturing mechanism')
     variant('lifting', default='br1', values=('br1', 'br2'), multi=False, description='Two different lifting methods for the parabolic part of the equation system available')
@@ -64,7 +64,7 @@ class Flexi(CMakePackage):
         args = [
             '-DLIBS_BUILD_HDF5:BOOL=OFF',
             self.define_from_variant('LIBS_USE_MPI', 'mpi'),
-            self.define_from_variant('FLEXI_2D', '2D'),
+            self.define_from_variant('FLEXI_2D', '2d'),
             self.define_from_variant('FLEXI_EQNSYSNAME', 'eqnsysname'),
             self.define_from_variant('FLEXI_FV', 'fv'),
             self.define_from_variant('FLEXI_LIFTING', 'lifting'),
