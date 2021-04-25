@@ -428,8 +428,7 @@ class Ascent(Package, CudaPackage):
                 mpicc_path = "cc"
                 mpicxx_path = "CC"
                 mpifc_path = "ftn"
-            #cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
-            cfg.write(cmake_cache_entry("ENABLE_MPI", "OFF"))
+            cfg.write(cmake_cache_entry("ENABLE_MPI", "ON"))
             cfg.write(cmake_cache_entry("MPI_C_COMPILER", mpicc_path))
             cfg.write(cmake_cache_entry("MPI_CXX_COMPILER", mpicxx_path))
             cfg.write(cmake_cache_entry("MPI_Fortran_COMPILER", mpifc_path))
