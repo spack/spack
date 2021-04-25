@@ -923,7 +923,7 @@ def mock_cvs_repository(tmpdir_factory):
             revision='1.1', file=r1_file, args={'cvs': str(repodir)}
         )
     }
-    t = Bunch(checks=checks, url=url, hash=lambda: return '1.1', path=str(repodir))
+    t = Bunch(checks=checks, url=url, hash=(lambda: return '1.1'), path=str(repodir))
     yield t
 
 
