@@ -923,7 +923,9 @@ def mock_cvs_repository(tmpdir_factory):
             revision='Head', file=r1_file, args={'cvs': cvsroot}
         )
     }
-    t = Bunch(checks=checks, url=url, path=str(repodir))
+    def get_rev():
+        return '1.1'
+    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
     yield t
 
 
