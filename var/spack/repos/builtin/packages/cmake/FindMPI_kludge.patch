@@ -1,0 +1,15 @@
+--- a/Modules/FindMPI.cmake.orig  2021-04-23 20:29:46.595024848 -0500
++++ b/Modules/FindMPI.cmake       2021-04-24 17:44:33.765228617 -0500
+@@ -1440,6 +1440,10 @@
+     if(NOT (MPI_${LANG}_LIB_NAMES AND (MPI_${LANG}_INCLUDE_PATH OR MPI_${LANG}_INCLUDE_DIRS OR MPI_${LANG}_COMPILER_INCLUDE_DIRS)))
+       set(MPI_${LANG}_TRIED_IMPLICIT FALSE)
+       set(MPI_${LANG}_WORKS_IMPLICIT FALSE)
++# GW kludge 4/24/2021 - fixes ascent FindMPI error
++      set(MPI_ASSUME_NO_BUILTIN_MPI FALSE)
++      set(MPI_${LANG}_COMPILER FALSE)
++
+       if(NOT MPI_${LANG}_COMPILER AND NOT MPI_ASSUME_NO_BUILTIN_MPI)
+         # Should the imported targets be empty, we effectively try whether the compiler supports MPI on its own, which is the case on e.g.
+         # Cray PrgEnv.
+
+
