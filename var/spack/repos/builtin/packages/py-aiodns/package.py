@@ -19,5 +19,5 @@ class PyAiodns(PythonPackage):
 
     depends_on('py-setuptools', type='build')
     depends_on('python@:3.6.99', type=('build', 'run'))
-    depends_on('py-typing', type=('build', 'run'))
+    depends_on('py-typing', when='^python@:3.6.999', type=('build', 'run'))
     depends_on('py-pycares@3.0.0:', type=('build', 'run'))
