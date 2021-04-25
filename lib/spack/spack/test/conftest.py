@@ -885,6 +885,49 @@ def mock_archive(request, tmpdir_factory):
 
 
 @pytest.fixture(scope='session')
+def mock_cvs_repository(tmpdir_factory):
+    """Creates a very simple CVS repository with two commits."""
+    cvs = spack.util.executable.which('cvs', required=True)
+
+    tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
+    tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
+    repodir = tmpdir.join(spack.stage._source_path_subdir)
+    cvsroot = repodir + "_cvsroot"
+    module = os.path.dirname(repodir)
+
+    # Initialize the repository
+    with repodir.as_cwd():
+        # The CVS repository needs to live in a different directory
+        url = str(repodir)
+        cvs('-d', cvsroot, 'init')
+        cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
+            module, 'mockvendor', 'mockrelease')
+        shutil.rmtree('.')
+        with working_dir('..'):
+            cvs('-d', cvsroot, 'checkout', module)
+
+        # Commit file r0
+        r0_file = 'r0_file'
+        repodir.ensure(r0_file)
+        cvs('add', r0_file)
+        cvs('commit', '-m', 'revision 0', r0_file)
+
+        # Commit file r1
+        r1_file = 'r1_file'
+        repodir.ensure(r1_file)
+        cvs('add', r1_file)
+        cvs('commit', '-m' 'revision 1', r1_file)
+
+    checks = {
+        'default': Bunch(
+            revision='1.1', file=r1_file, args={'cvs': str(repodir)}
+        )
+    }
+    t = Bunch(checks=checks, url=url, hash=get_rev, path=str(repodir))
+    yield t
+
+
+@pytest.fixture(scope='session')
 def mock_git_repository(tmpdir_factory):
     """Creates a simple git repository with two branches,
     two commits and two submodules. Each submodule has one commit.
