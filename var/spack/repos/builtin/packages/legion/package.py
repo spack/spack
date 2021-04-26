@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -26,14 +26,42 @@ class Legion(CMakePackage):
 
     maintainers = ['pmccormick', 'streichler']
 
-    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.  
-
     version('21.03.0', tag='legion-21.03.0')
     version('stable', branch='stable')
     version('master', branch='master')
     version('cr', branch='control_replication')
 
     depends_on("cmake@3.16:", type='build')
+    # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
+    # layer. At present the MPI layer is still experimental and we discourge its
+    # use for general (not legion development) use cases.
+    depends_on('mpi', when='network=mpi')
+    depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
+    depends_on('ucx', when='conduit=ucx')
+    depends_on('mpi', when='conduit=mpi')
+    depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
+    depends_on('cuda@10.0:11.9', when='+cuda')
+    depends_on('hdf5', when='+hdf5')
+    depends_on('hwloc', when='+hwloc')
+
+    # cuda-centric
+    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
+    # TODO: we could use a map here to clean up and use naming vs. numbers.
+    cuda_arch_list = ('60', '70', '75', '80')
+    for nvarch in cuda_arch_list:
+        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
+                   when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
+        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
+                   when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
+
+    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
+    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
+
+    depends_on('python@3', when='+python')
+    depends_on('papi', when='+papi')
+    depends_on('zlib', when='+zlib')
+
+    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -44,12 +72,6 @@ class Legion(CMakePackage):
             values=('gasnet', 'mpi', 'none'),
             description="The network communications/transport layer to use.",
             multi=False)
-
-    # TODO: Need to spec version of MPI v3 for use of the low-level MPI transport
-    # layer. At present the MPI layer is still experimental and we discourge its
-    # use for general (not legion development) use cases.
-    depends_on('mpi', when='network=mpi')
-    depends_on('mpi', when='network=gasnet')  # MPI is required to build gasnet (needs mpicc).
 
     # We default to automatically embedding a gasnet build. To override this
     # point the package a pre-installed version of GASNet-Ex via the gasnet_root
@@ -73,16 +95,6 @@ class Legion(CMakePackage):
             multi=False)
     conflicts('gasnet_root', when="network=mpi")
 
-    # The preferred mechanism for gasnet is to embed the build within the
-    # package.  As such, we prefer to use a resource vs. a package dependency
-    # (i.e., there is currently not an officially supported gasnet(ex) package that
-    # follows the preferred/supported mechanisms.
-    resource(name='gasnet_res',
-             git='https://github.com/StanfordLegion/gasnet.git',
-             branch='control',
-             placement='gasnet',
-             when='network=gasnet')
-
     variant('conduit', default='none',
             values=('aries', 'ibv', 'udp', 'mpi', 'ucx', 'none'),
             description="The gasnet conduit(s) to enable.",
@@ -98,8 +110,6 @@ class Legion(CMakePackage):
                   msg="conduit attribute requires 'network=gasnet'.")
         conflicts(conflict_str, when='network=none',
                   msg="conduit attribute requires 'network=gasnet'.")
-    depends_on('ucx', when='conduit=ucx')
-    depends_on('mpi', when='conduit=mpi')
 
     variant('gasnet_debug', default=False,
             description="Build gasnet with debugging enabled.")
@@ -128,9 +138,6 @@ class Legion(CMakePackage):
     variant('spy', default=False,
             description="Enable detailed logging for Legion Spy debugging.")
 
-    # reminder for arch numbers to names: 60=pascal, 70=volta, 75=turing, 80=ampere
-    # TODO: we could use a map here to clean up and use naming vs. numbers.
-    cuda_arch_list = ('60', '70', '75', '80')
     # note: we will be dependent upon spack's latest-and-greatest cuda version...
     variant('cuda', default=False,
             description="Enable CUDA support.")
@@ -142,9 +149,6 @@ class Legion(CMakePackage):
             multi=False)
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
-
-    depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
-    depends_on('cuda@10.0:11.9', when='+cuda')
     conflicts('+cuda_hijack', when='~cuda')
 
     variant('fortran', default=False,
@@ -152,23 +156,12 @@ class Legion(CMakePackage):
 
     variant('hdf5', default=False,
             description="Enable support for HDF5.")
-    depends_on('hdf5', when='+hdf5')
 
     variant('hwloc', default=False,
             description="Use hwloc for topology awareness.")
-    depends_on('hwloc', when='+hwloc')
 
     variant('kokkos', default=False,
             description="Enable support for interoperability with Kokkos.")
-
-    depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
-    for nvarch in cuda_arch_list:
-        depends_on('kokkos@3.3.01+cuda+cuda_lambda+wrapper cuda_arch={0}'.format(nvarch),
-                   when='%gcc+kokkos+cuda cuda_arch={0}'.format(nvarch))
-        depends_on("kokkos@3.3.01+cuda+cuda_lambda~wrapper cuda_arch={0}".format(nvarch),
-                   when="%clang+kokkos+cuda cuda_arch={0}".format(nvarch))
-
-    depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
 
     variant('bindings', default=False,
             description="Build runtime language bindings (excl. Fortran).")
@@ -181,15 +174,12 @@ class Legion(CMakePackage):
 
     variant('papi', default=False,
             description="Enable PAPI performance measurements.")
-    depends_on('papi', when='+papi')
 
     variant('python', default=False,
             description="Enable Python support.")
-    depends_on('python@3', when='+python')
 
     variant('zlib', default=True,
             description="Enable zlib support.")
-    depends_on('zlib', when='+zlib')
 
     variant('redop_complex', default=False,
             description="Use reduction operators for complex types.")
