@@ -297,7 +297,6 @@ class Paraview(CMakePackage, CudaPackage):
         includes  = variant_bool('+development_files')
 
         cmake_args = [
-            '-DPARAVIEW_BUILD_EDITION:STRING=%s' % spec.variants['build_edition'].value,
             '-DVTK_OPENGL_HAS_OSMESA:BOOL=%s' % variant_bool('+osmesa'),
             '-DVTK_USE_X:BOOL=%s' % nvariant_bool('+osmesa'),
             '-DPARAVIEW_INSTALL_DEVELOPMENT_FILES:BOOL=%s' % includes,
@@ -318,6 +317,8 @@ class Paraview(CMakePackage, CudaPackage):
         if spec.satisfies('@5.7:'):
             if spec.satisfies('@5.8:'):
                 cmake_args.extend([
+                    '-DPARAVIEW_BUILD_EDITION:STRING=%s' %
+                    spec.variants['build_edition'].value,
                     '-DPARAVIEW_USE_QT:BOOL=%s' % variant_bool('+qt'),
                     '-DPARAVIEW_BUILD_WITH_EXTERNAL=ON'])
                 if spec.satisfies('%cce'):
