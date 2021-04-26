@@ -638,7 +638,7 @@ class Database(object):
         Does not do any locking.
         """
         spec_dict = installs[hash_key]['spec']
-        spec_path = installs[hash_key]['path']
+        spec_path = installs[hash_key].get('path', None)
         # Install records don't include hash with spec, so we add it in here
         # to ensure it is read properly.
         for name in spec_dict:
