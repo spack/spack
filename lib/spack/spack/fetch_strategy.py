@@ -949,7 +949,7 @@ class CvsFetchStrategy(VCSFetchStrategy):
            version('name',
                    cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename')
 
-       Optionally, you can provide a branch and/ord a date for the URL:
+       Optionally, you can provide a branch and/or a date for the URL:
 
            version('name',
                    cvs=':pserver:anonymous@www.example.com:/cvsroot%module=modulename',
@@ -1017,12 +1017,13 @@ class CvsFetchStrategy(VCSFetchStrategy):
 
         with temp_cwd():
             url, module = self.url.split('%module=')
-            # Log in
-            cmds = ['-c', 'spawn cvs -q -d ' + url + ' login',
-                    '-c', 'expect',
-                    '-c', 'send "anonymous\n"',
-                    '-c', 'expect eof']
-            self.expect(*cmds, ignore_quotes=True)
+            if url.startswith(':pserver:'):
+                # Log in
+                cmds = ['-c', 'spawn cvs -q -d ' + url + ' login',
+                        '-c', 'expect',
+                        '-c', 'send "anonymous\n"',
+                        '-c', 'expect eof']
+                self.expect(*cmds, ignore_quotes=True)
             # Check out files
             args = ['-z9', '-d', url, 'checkout']
             if self.branch is not None:
@@ -1039,9 +1040,9 @@ class CvsFetchStrategy(VCSFetchStrategy):
     def _remove_untracked_files(self):
         """Removes untracked files in a CVS repository."""
         with working_dir(self.stage.source_path):
-            status = self.cvs('status', output=str)
+            status = self.cvs('-qn', 'update', output=str)
             for line in status.split('\n'):
-                if re.match('^[?]', line):
+                if re.match(r'^[?]', line):
                     path = line[2:].strip()
                     if os.path.isfile(path):
                         os.unlink(path)

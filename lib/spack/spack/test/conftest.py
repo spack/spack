@@ -892,49 +892,56 @@ def mock_cvs_repository(tmpdir_factory):
     tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
     tmpdir.ensure(spack.stage._source_path_subdir, dir=True)
     repodir = tmpdir.join(spack.stage._source_path_subdir)
-    cvsroot = repodir + "_cvsroot"
-    module = os.path.dirname(repodir)
+    cvsroot = str(repodir)
+
+    # The CVS repository and source tree need to live in a different directories
+    sourcedirparent = tmpdir_factory.mktemp('mock-cvs-source-dir')
+    module = spack.stage._source_path_subdir
+    url = cvsroot + "%module=" + module
+    sourcedirparent.ensure(module, dir=True)
+    sourcedir = sourcedirparent.join(module)
 
     # Initialize the repository
-    with repodir.as_cwd():
-        # The CVS repository needs to live in a different directory
-        url = str(repodir)
+    with sourcedir.as_cwd():
         cvs('-d', cvsroot, 'init')
         cvs('-d', cvsroot, 'import', '-m', 'initial mock repo commit',
             module, 'mockvendor', 'mockrelease')
-        shutil.rmtree('.')
-        with '..'.as_cwd():
+        with sourcedirparent.as_cwd():
             cvs('-d', cvsroot, 'checkout', module)
 
         # Commit file r0
         r0_file = 'r0_file'
-        repodir.ensure(r0_file)
-        cvs('add', r0_file)
-        cvs('commit', '-m', 'revision 0', r0_file)
+        sourcedir.ensure(r0_file)
+        cvs('-d', cvsroot, 'add', r0_file)
+        cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
 
         # Commit file r1
         r1_file = 'r1_file'
-        repodir.ensure(r1_file)
-        cvs('add', r1_file)
-        cvs('commit', '-m' 'revision 1', r1_file)
+        sourcedir.ensure(r1_file)
+        cvs('-d', cvsroot, 'add', r1_file)
+        cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
+
+    # CVS doesn't have a notion of unique revision for a source tree, so we
+    # fake it
+    def get_rev():
+        return '1.1'
 
     checks = {
         'default':
         Bunch(
             file=r1_file,
-            args={
-                'cvs':
-                cvsroot
-            }
+            hash=get_rev,
+            revision='1.1',
+            args={'cvs': url}
         )
     }
 
     t = Bunch(
         checks=checks,
         url=url,
-        path=str(
-            repodir
-        )
+        hash=get_rev,
+        revision='1.1',
+        path=str(repodir)
     )
 
     yield t
