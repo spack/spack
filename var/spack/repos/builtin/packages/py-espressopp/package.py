@@ -28,7 +28,7 @@ class PyEspressopp(CMakePackage):
     depends_on("mpi")
     depends_on("boost+serialization+filesystem+system+python+mpi cxxstd=11")
     extends("python")
-    depends_on("python@3:")
+    depends_on("python@3:", type=('build', 'run'))
     depends_on("py-mpi4py@2.0.0:", type=('build', 'run'))
     depends_on("fftw")
     depends_on("py-sphinx", when="+ug", type='build')
