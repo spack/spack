@@ -270,7 +270,7 @@ class Boost(Package):
     # Fix B2 bootstrap toolset during installation
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
-    patch("bootstrap-toolset.patch", when="@1.75:")
+    patch("bootstrap-toolset.patch", when="@1.75")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
