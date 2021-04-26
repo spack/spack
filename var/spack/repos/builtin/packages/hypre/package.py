@@ -80,6 +80,7 @@ class Hypre(Package, CudaPackage):
     depends_on('superlu-dist', when='+superlu-dist+mpi')
 
     conflicts('+cuda', when='+int64')
+    conflicts('+unified-memory', when='~cuda')
 
     # Patch to build shared libraries on Darwin does not apply to
     # versions before 2.13.0
