@@ -35,6 +35,8 @@ class OpenspeedshopUtils(CMakePackage):
     git      = "https://github.com/OpenSpeedShop/openspeedshop.git"
 
     version('develop', branch='master')
+    version('2.4.2.1', branch='2.4.2.1')
+    version('2.4.2', branch='2.4.2')
     version('2.4.1', branch='2.4.1')
     version('2.4.0', branch='2.4.0')
     version('2.3.1.5', branch='2.3.1.5')
@@ -51,8 +53,9 @@ class OpenspeedshopUtils(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
 
-    variant('build_type', default='None', values=('None',),
-            description='CMake build type')
+    variant('build_type', default='RelWithDebInfo',
+            description='The build type to build',
+            values=('Debug', 'Release', 'RelWithDebInfo'))
 
     # MPI variants
     variant('openmpi', default=False,
@@ -83,9 +86,9 @@ class OpenspeedshopUtils(CMakePackage):
     depends_on("flex@2.6.1", type='build')
 
     # For binutils
-    depends_on("binutils", type='build')
+    depends_on("binutils+plugins~gold@2.32", type='build')
 
-    depends_on("elf", type="link")
+    depends_on("elfutils", type="link")
     depends_on("libdwarf")
 
     depends_on("sqlite")
@@ -174,7 +177,7 @@ class OpenspeedshopUtils(CMakePackage):
         # Appends base options to cmake_args
         spec = self.spec
 
-        compile_flags = "-O2 -g"
+        compile_flags = "-O2 -g -Wall"
 
         cmake_args = []
 
@@ -227,7 +230,7 @@ class OpenspeedshopUtils(CMakePackage):
         base_options = []
 
         base_options.append('-DBINUTILS_DIR=%s' % spec['binutils'].prefix)
-        base_options.append('-DLIBELF_DIR=%s' % spec['elf'].prefix)
+        base_options.append('-DLIBELF_DIR=%s' % spec['elfutils'].prefix)
         base_options.append('-DLIBDWARF_DIR=%s' % spec['libdwarf'].prefix)
         base_options.append('-DPYTHON_EXECUTABLE=%s' % python_exe)
         base_options.append('-DPYTHON_INCLUDE_DIR=%s' % python_include)

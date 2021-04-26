@@ -25,16 +25,21 @@ class Libmonitor(AutotoolsPackage):
     variant('hpctoolkit', default=False,
             description='Configure for HPCToolkit')
 
-    # Configure for Krell and OpenSpeedshop.
+    # Configure for OpenSpeedshop and Survey.
     variant('krellpatch', default=False,
             description="Build with openspeedshop based patch.")
+
+    # Configure for adding MPI Post Comm Rank support
+    variant('monitorcommrank', default=False,
+            description="Build with MPI Post Comm Rank support patch.")
 
     variant('dlopen', default=True,
             description='Override dlopen and dlclose')
 
-    patch('libmonitorkrell-0000.patch', when='@2013.02.18+krellpatch')
     patch('libmonitorkrell-0001.patch', when='@2013.02.18+krellpatch')
     patch('libmonitorkrell-0002.patch', when='@2013.02.18+krellpatch')
+
+    patch('add-monitor-comm-rank-notification.patch', when='@2020.10.15+monitorcommrank')
 
     signals = 'SIGBUS, SIGSEGV, SIGPROF, 36, 37, 38'
 
