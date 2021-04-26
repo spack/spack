@@ -27,6 +27,13 @@ parse_tags = {"dw_tag_subprogram", "dw_tag_formal_parameter", "dw_tag_function",
               "subprogram", "formal_parameter", "function"}
 
 
+# skip these tags (and all children)
+skip_tags = {"dw_tag_subroutine_type", "subroutine_type"}
+
+# These are what we want to call interfaces
+interfaces = {"function", "subprogram"}
+
+
 class ABIFactGenerator(object):
     """Class to set up and generate corpus ABI facts."""
 
@@ -80,7 +87,7 @@ class ABIFactGenerator(object):
                 # Additional elf metadata / details to generate
                 if details:
                     self.gen.fact(fn.symbol_type(corpus.basename, symbol, meta['type']))
-                    self.gen.fact(fn.symbol_version(corpus.basename, symbol, vinfo))
+                    # self.gen.fact(fn.symbol_version(corpus.basename, symbol, vinfo))
                     self.gen.fact(fn.symbol_binding(corpus.basename, symbol, bind))
                     self.gen.fact(fn.symbol_visibility(corpus.basename, symbol, vis))
 
@@ -208,12 +215,20 @@ class ABIFactGenerator(object):
         # Keep track of unique id (hash of attributes, parent, and corpus)
         die.unique_id = self._die_hash(die, corpus, parent)
 
+        # Skip these tags (and children) all together
+        if tag in skip_tags:
+            return
+
         # Create a top level entry for the die based on it's tag type
         if tag in parse_tags:
-            self.gen.fact(AspFunction(tag, args=[corpus.basename, die.unique_id]))
+
+            # Don't parse formal parameters for skipped subroutine_type
+            if tag == "formal_parameter" and "subroutine_type" in die.get_parent().tag:
+                return
 
         # Children are represented as facts
-        self._add_children(corpus, die)
+        # Disable this for now
+        # self._add_children(corpus, die)
 
         # Add to the lookup
         self.die_lookup[corpus.path][die.abbrev_code] = die
@@ -234,7 +249,7 @@ class ABIFactGenerator(object):
             for child in die.iter_children():
                 self._parse_die_children(corpus, child, parent)
 
-    def generate_location(self, corpus, die, tag):
+    def get_location(self, die):
         """Given a DW_AT_location parameter, parse it to get a location.
         """
         location_lists = die.dwarfinfo.location_lists()
@@ -247,13 +262,9 @@ class ABIFactGenerator(object):
 
                 # Attribute itself contains location information
                 if isinstance(loc, et.locationlists.LocationExpr):
-                    locat = et.dwarf.describe_DWARF_expr(loc.loc_expr,
-                                                         die.dwarfinfo.structs,
-                                                         die.cu.cu_offset)
-                    args = [corpus.basename, die.unique_id, locat]
-                    self.gen.fact(
-                        AspFunction(tag + "_location", args=args)
-                    )
+                    return et.dwarf.describe_DWARF_expr(loc.loc_expr,
+                                                        die.dwarfinfo.structs,
+                                                        die.cu.cu_offset)
 
                 # Attribute is reference to .debug_loc section
                 elif isinstance(loc, list):
@@ -272,43 +283,62 @@ class ABIFactGenerator(object):
         if tag not in parse_tags:
             return
 
+            if tag in interfaces:
+                self.gen.fact(fn.interface(corpus.basename, die.unique_id))
+            else:
+                self.gen.fact(AspFunction(tag, args=[corpus.basename, die.unique_id]))
+
+        # We must have a name or linkage name
+        name = None
+        loc = None
+        die_type = None
+        if "DW_AT_linkage_name" in die.attributes:
+            name = self.bytes2str(die.attributes["DW_AT_linkage_name"].value)
+
         if "DW_AT_name" in die.attributes:
             name = self.bytes2str(die.attributes["DW_AT_name"].value)
-            self.gen.fact(
-                AspFunction(tag + "_name", args=[corpus.basename, die.unique_id, name])
-            )
+
+        if not name:
+            print('UNKNOWN INTERFACE?')
+            import IPython
+            IPython.embed()
+
+        # Generate the declarations for interfaces
+        if tag in interfaces and name:
+            self.gen.fact(fn.interface(corpus.basename, die.unique_id, name))
+
+        # TODO need to parse pointers
+        # abi_typelocation('exe', 'main', 'char**', 'fb-32')
+        # // Probably not how we'll eventually represent pointers.
 
         # DW_AT_type is a reference to another die (the type)
         if "DW_AT_type" in die.attributes:
-            self._parse_die_type(corpus, die, tag)
-
-        # Not to be confused with "bite size" :)
-        if "DW_AT_byte_size" in die.attributes:
-            size_in_bits = die.attributes["DW_AT_byte_size"].value * 8
-            self.gen.fact(
-                AspFunction(
-                    tag + "_size_in_bits",
-                    args=[corpus.basename, die.unique_id, size_in_bits],
-                )
-            )
-
-        # The size this DIE occupies in the section (not sure about units)
-        if hasattr(die, "size"):
-            self.gen.fact(
-                AspFunction(
-                    tag + "_die_size", args=[corpus.basename, die.unique_id, die.size]
-                )
-            )
+            die_type = self._get_die_type(die)
 
         if "DW_AT_location" in die.attributes:
-            self.generate_location(corpus, die, tag)
+            loc = self.get_location(die)
 
-        if "DW_AT_linkage_name" in die.attributes:
-            name = self.bytes2str(die.attributes["DW_AT_linkage_name"].value)
-            args = [corpus.basename, die.unique_id, name]
-            self.gen.fact(AspFunction(tag + "_mangled_name", args=args))
+        # If it's a subprogram and we have a type, it's a return type!
+        # abi_typelocation('exe', 'main', 'int', 'return')
+        if tag == "function" and die_type:
+            cname = corpus.basename
+            self.gen.fact(fn.abi_typelocation(cname, name, die_type, "return"))
 
-    def _parse_die_type(self, corpus, die, tag, lookup_die=None):
+        # function without a return type
+        elif tag == "function" and not die_type:
+            return
+
+        elif not (loc and die_type):
+            print("MISSING LOC OR DIE TYPE")
+            print(die)
+            import IPython
+            IPython.embed()
+            import sys
+            sys.exit(0)
+        else:
+            self.gen.fact(fn.abi_typelocation(corpus.basename, name, die_type, loc))
+
+    def _get_die_type(self, die, lookup_die=None):
         """
         Parse the die type.
 
@@ -327,14 +357,15 @@ class ABIFactGenerator(object):
         query_die = lookup_die or die
 
         # CU relative offset
-
         if query_die.attributes["DW_AT_type"].form.startswith("DW_FORM_ref"):
             try:
                 type_die = query_die.cu.get_DIE_from_refaddr(
                     query_die.attributes["DW_AT_type"].value
                 )
-            except Exception:
-                pass
+
+            # DWARFError: refaddr 48991 not in DIE range of CU 66699
+            except et.exceptions.DWARFError:
+                return "ref-address-not-in-range"
 
         # Absolute offset
         elif query_die.attributes["DW_AT_type"].startswith("DW_FORM_ref_addr"):
@@ -348,30 +379,27 @@ class ABIFactGenerator(object):
         # have it's parent here at the moment
         if type_die:
 
+            # Not sure how to parse this, call it const for now
+            if type_die.tag == 'DW_TAG_const_type':
+                return "const"
+
+            # Just call structures a type for now, and pointers
+            if type_die.tag == 'DW_TAG_structure_type':
+                return "structure"
+
+            if type_die.tag == "DW_TAG_pointer_type":
+                return "pointer"
+
             # If we have another type def, call function again until we find it
             if "DW_AT_type" in type_die.attributes:
-                return self._parse_die_type(corpus, die, tag, type_die)
-
-            # If it's a pointer, we have the byte size (no name)
-            if re.search(type_die.tag, "pointer_type"):
-                if "DW_AT_byte_size" in type_die.attributes:
-                    size_in_bits = type_die.attributes["DW_AT_byte_size"].value * 8
-                    self.gen.fact(
-                        AspFunction(
-                            tag + "_size_in_bits",
-                            args=[corpus.basename, die.unique_id, size_in_bits],
-                        )
-                    )
+                return self._get_die_type(die, type_die)
 
             # Not sure how to parse non complete types
             # https://stackoverflow.com/questions/38225269/dwarf-reading-not-complete-types
             elif "DW_AT_declaration" in type_die.attributes:
-                self.gen.fact(
-                    AspFunction(
-                        tag + "_non_complete_type",
-                        args=[corpus.basename, die.unique_id, "yes"],
-                    )
-                )
+                print('DW_AT_declaration')
+                import IPython
+                IPython.embed()
 
             # Here we are supposed to walk member types and calc size with offsets
             # For now let's assume we can just compare all child sizes
@@ -380,13 +408,6 @@ class ABIFactGenerator(object):
                 return
 
             else:
-                type_size = type_die.attributes["DW_AT_byte_size"].value * 8
-                self.gen.fact(
-                    AspFunction(
-                        tag + "_size_in_bits",
-                        args=[corpus.basename, die.unique_id, type_size],
-                    )
-                )
                 type_name = None
                 if "DW_AT_linkage_name" in type_die.attributes:
                     type_name = self.bytes2str(
@@ -394,14 +415,7 @@ class ABIFactGenerator(object):
                     )
                 elif "DW_AT_name" in type_die.attributes:
                     type_name = self.bytes2str(type_die.attributes["DW_AT_name"].value)
-
-                if type_name:
-                    self.gen.fact(
-                        AspFunction(
-                            tag + "_type_name",
-                            args=[corpus.basename, die.unique_id, type_name],
-                        )
-                    )
+                return type_name
 
     def _parse_compile_unit(self, corpus, die, tag):
         """
