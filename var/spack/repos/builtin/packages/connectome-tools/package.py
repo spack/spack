@@ -9,8 +9,8 @@ from spack import *
 class ConnectomeTools(PythonPackage):
     """Connectome statistics; S2F recipe generation"""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/connectome-tools"
-    git      = "ssh://bbpcode.epfl.ch/nse/connectome-tools"
+    homepage = "https://bbpgitlab.epfl.ch/nse/connectome-tools"
+    git = "git@bbpgitlab.epfl.ch:nse/connectome-tools.git"
 
     version('develop', branch='master')
     version('0.4.0', tag='connectome-tools-v0.4.0')
