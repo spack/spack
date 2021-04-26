@@ -187,7 +187,7 @@ python "%spack%" %_sp_flags% %_sp_subcommand% %_sp_args%
 goto :end_switch
 
 :end_switch
-exit /B 0
+exit /B %ERRORLEVEL%
 
 
 ::########################################################################
@@ -220,4 +220,4 @@ for %%I in (%~2) do (
         :pathadd "%~1" "%%I\%%Z"
     )
 )
-exit /B 0
+exit /B %ERRORLEVEL%

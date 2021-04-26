@@ -1,0 +1,109 @@
+name: windows tests
+
+on:
+  push:
+    branches:
+      - features/windows-support
+      - windows-ci
+  pull_request:
+    branches:
+      - features/windows-support
+      - windows-ci
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python Packages
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install --upgrade vermin
+    - name: vermin (Spack's Core)
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v lib/spack/spack/ lib/spack/llnl/ bin/
+    - name: vermin (Repositories)
+      run: vermin --backport argparse --backport typing -t=2.6- -t=3.5- -v var/spack/repos
+  # Run style checks on the files that have been changed
+  style:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+        python -m pip install --upgrade pip six setuptools flake8 mypy>=0.800 black pywin32
+    - name: Run style tests
+      run: |
+          Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+          spack style
+    - name: Verify license headers
+      run: |
+          python bin\spack license verify
+  unittest:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Unit Test llnl
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack -h
+        spack unit-test lib\spack\spack\test\llnl
+    - name: Unit Test modules
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack unit-test lib\spack\spack\test\modules
+    - name: Unit Test Common
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack unit-test lib\spack\spack\test\abi.py
+        spack unit-test lib\spack\spack\test\architecture.py
+        spack unit-test lib\spack\spack\test\url_fetch.py
+        spack unit-test lib\spack\spack\test\url_parse.py
+        spack unit-test lib\spack\spack\test\url_substitution.py
+  unittest-util:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Unit Test util
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack unit-test lib\spack\spack\test\util
+  buildtest:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install Python packages
+      run: |
+          python -m pip install --upgrade pip six pywin32 setuptools codecov coverage
+    - name: Build Test
+      run: |
+        Invoke-Expression -Command .\share\spack\qa\windows_test_setup.ps1
+        spack external find cmake
+        spack install abseil-cpp
