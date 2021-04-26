@@ -4067,7 +4067,7 @@ other checks.
      - ``check`` (``make check``)
      - Not applicable
    * - `SConsPackage <sconspackage>`
-     - ``build_test`` (must be overriden)
+     - ``build_test`` (must be overridden)
      - Not applicable
    * - `SIPPackage <sippackage>`
      - Not applicable
@@ -4522,7 +4522,103 @@ where each argument has the following meaning:
 Inheriting stand-alone tests
 """"""""""""""""""""""""""""
 
-.. TODO:: Add the ``mpi`` package as an example here
+Stand-alone tests defined in parent (.e.g., :ref:`build-systems`) and
+virtual (e.g., :ref:`virtual-dependencies`) packages are available to
+packages that inherit from or provide interfaces for those packages,
+respectively. The table below summarizes the tests that will be included
+with those provided in the package itself when executing stand-alone tests.
+
+.. list-table:: Inherited/provided stand-alone tests
+   :header-rows: 1
+
+   * - Parent/Provider Package
+     - Stand-alone Tests
+   * - `C
+       <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/c>`_
+     - Compiles ``hello.c`` and runs it
+   * - `Cxx
+       <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/cxx>`_
+     - Compiles and runs several ``hello`` programs
+   * - `Fortan
+       <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/fortran>`_
+     - Compiles and runs ``hello`` programs (``F`` and ``f90``)
+   * - `Mpi
+       <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
+     - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
+   * - `PythonPackage <pythonpackage>`
+     - Imports installed modules
+
+These tests are very generic so it is important that package
+developers and maintainers provide additional stand-alone tests
+customized to the package.
+
+One example of a package that adds its own stand-alone (or smoke)
+tests is the `Openmpi package
+<https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/openmpi/package.py>`_.
+The preliminary set of tests for the package performed the
+following checks:
+
+- installed binaries with the ``--version`` option return the expected
+  version;
+- outputs from (selected) installed binaries match expectations;
+- ``make all`` succeeds when building examples that were copied from the
+  source directory during package installation; and
+- outputs from running the copied and built examples match expectations.
+
+Below is an example of running and viewing the stand-alone tests,
+where only the outputs for the first of each set are shown:
+
+.. code-block:: console
+
+   $ spack test run --alias openmpi-4.0.5 openmpi@4.0.5
+   ==> Spack test openmpi-4.0.5
+   ==> Testing package openmpi-4.0.5-eygjgve
+   $ spack test results -l openmpi-4.0.5
+   ==> Spack test openmpi-4.0.5
+   ==> Testing package openmpi-4.0.5-eygjgve
+   ==> Results for test suite 'openmpi-4.0.5':
+   ==>   openmpi-4.0.5-eygjgve PASSED
+   ==> Testing package openmpi-4.0.5-eygjgve
+   ==> [2021-04-26-17:35:20.259650] test: ensuring version of mpiCC is 8.3.1
+   ==> [2021-04-26-17:35:20.260155] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpiCC' '--version'
+   g++ (GCC) 8.3.1 20190311 (Red Hat 8.3.1-3)
+   Copyright (C) 2018 Free Software Foundation, Inc.
+   This is free software; see the source for copying conditions.  There is NO
+   warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+   
+   PASSED
+   ...
+   ==> [2021-04-26-17:35:20.493921] test: checking mpirun output
+   ==> [2021-04-26-17:35:20.494461] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-n' '1' 'ls' '..'
+   openmpi-4.0.5-eygjgve           repo     test_suite.lock
+   openmpi-4.0.5-eygjgve-test-out.txt  results.txt
+   PASSED
+   ...
+   ==> [2021-04-26-17:35:20.630452] test: ensuring ability to build the examples
+   ==> [2021-04-26-17:35:20.630943] '/usr/bin/make' 'all'
+   mpicc -g  hello_c.c  -o hello_c
+   mpicc -g  ring_c.c  -o ring_c
+   mpicc -g  connectivity_c.c  -o connectivity_c
+   mpicc -g  spc_example.c  -o spc_example
+   ...
+   PASSED
+   ==> [2021-04-26-17:35:23.291214] test: checking hello_c example output and status (0)
+   ==> [2021-04-26-17:35:23.291841] './hello_c'
+   Hello, world, I am 0 of 1, (Open MPI v4.0.5, package: Open MPI dahlgren@quartz2300 Distribution, ident: 4.0.5, repo rev: v4.0.5, Aug 26, 2020, 114)
+   PASSED
+   ...
+   ==> [2021-04-26-17:35:24.603152] test: ensuring copied examples cleaned up
+   ==> [2021-04-26-17:35:24.603807] '/usr/bin/make' 'clean'
+   rm -f hello_c hello_cxx hello_mpifh hello_usempi hello_usempif08 hello_oshmem hello_oshmemcxx hello_oshmemfh Hello.class ring_c ring_cxx ring_mpifh ring_usempi ring_usempif08 ring_oshmem ring_oshmemfh Ring.class connectivity_c oshmem_shmalloc oshmem_circular_shift oshmem_max_reduction oshmem_strided_puts oshmem_symmetric_data spc_example *~ *.o
+   PASSED
+   ==> [2021-04-26-17:35:24.643360] test: mpicc: expect command status in [0]
+   ==> [2021-04-26-17:35:24.643834] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpicc' '-o' 'mpi_hello_c' '$HOME/.spack/test/hyzq5eqlqfog6fawlzxwg3prqy5vjhms/openmpi-4.0.5-eygjgve/data/mpi/mpi_hello.c'
+   PASSED
+   ==> [2021-04-26-17:35:24.776765] test: mpirun: expect command status in [0]
+   ==> [2021-04-26-17:35:24.777194] '$SPACK_ROOT/opt/spack/linux-rhel7-broadwell/gcc-8.3.1/openmpi-4.0.5-eygjgvek35awfor2qaljltjind2oa67r/bin/mpirun' '-np' '1' 'mpi_hello_c'
+   Hello world! From rank 0 of 1
+   PASSED
+   ...
 
 
 .. warning::
