@@ -30,6 +30,8 @@ class ElftoolsWrapper(object):
         from elftools.elf import (
             dynamic, descriptions, sections, gnuversions, elffile, constants)
         from elftools.dwarf import descriptions as dwarf
+        from elftools.dwarf import locationlists as locationlists
+        from elftools.common import py3compat as py3compat
         self.dynamic = dynamic
         self.descriptions = descriptions
         self.sections = sections
@@ -37,6 +39,8 @@ class ElftoolsWrapper(object):
         self.elffile = elffile
         self.constants = constants
         self.dwarf = dwarf
+        self.locationlists = locationlists
+        self.py3compat = py3compat
 
 
 et = ElftoolsWrapper()

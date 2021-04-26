@@ -23,7 +23,8 @@ fn = AspFunctionBuilder()
 
 
 # only parse these tags
-parse_tags = {"dw_tag_subprogram", "dw_tag_formal_parameter", "dw_tag_function"}
+parse_tags = {"dw_tag_subprogram", "dw_tag_formal_parameter", "dw_tag_function",
+              "subprogram", "formal_parameter", "function"}
 
 
 class ABIFactGenerator(object):
@@ -158,10 +159,10 @@ class ABIFactGenerator(object):
             lookup[die.unique_id].add(child_id)
 
             # If it's a subprogram, we care about order of parameters
-            formal = "DW_TAG_formal_parameter"
-            if die.tag == "DW_TAG_subprogram" and child.tag == formal:
+            formal = "formal_parameter"
+            if re.search("subprogram|function", die.tag) and child.tag == formal:
                 param_count += 1
-                prefix = "dw_tag_formal_parameter_order"
+                prefix = "formal_parameter_order"
                 self.gen.fact(
                     AspFunction(prefix, args=[corpus.basename, child_id, param_count])
                 )
@@ -174,14 +175,15 @@ class ABIFactGenerator(object):
 
         The die tag needs to be parsed to be all lowercase, and for some
         die tags, we want to remove the "Dwarf specific words." (e.g.,
-        a subprogram --> a function
+        a subprogram --> a function, along with "DW_TAG".
         """
         tag = die.tag.lower()
 
         # A subprogram is a function
         if "subprogram" in tag:
             tag = re.sub('subprogram', 'function', tag)
-        return tag
+
+        return tag.replace('dw_tag_', '', 1)
 
     def _parse_die_children(self, corpus, die, parent=None):
         """
@@ -232,6 +234,36 @@ class ABIFactGenerator(object):
             for child in die.iter_children():
                 self._parse_die_children(corpus, child, parent)
 
+    def generate_location(self, corpus, die, tag):
+        """Given a DW_AT_location parameter, parse it to get a location.
+        """
+        location_lists = die.dwarfinfo.location_lists()
+        loc_parser = et.locationlists.LocationParser(location_lists)
+
+        # https://github.com/eliben/pyelftools/blob/master/examples/dwarf_location_info.py
+        for attr in et.py3compat.itervalues(die.attributes):
+            if loc_parser.attribute_has_location(attr, die.cu['version']):
+                loc = loc_parser.parse_from_attribute(attr, die.cu['version'])
+
+                # Attribute itself contains location information
+                if isinstance(loc, et.locationlists.LocationExpr):
+                    locat = et.dwarf.describe_DWARF_expr(loc.loc_expr,
+                                                         die.dwarfinfo.structs,
+                                                         die.cu.cu_offset)
+                    args = [corpus.basename, die.unique_id, locat]
+                    self.gen.fact(
+                        AspFunction(tag + "_location", args=args)
+                    )
+
+                # Attribute is reference to .debug_loc section
+                elif isinstance(loc, list):
+                    print('LIST')
+                    import IPython
+                    IPython.embed()
+                    print(show_loclist(loc, die.dwarfinfo, '      ', die.cu.cu_offset))
+                    import sys
+                    sys.exit(0)
+
     def _parse_common_attributes(self, corpus, die, tag):
         """
         Many share these attributes, so we have a common function to parse.
@@ -267,6 +299,9 @@ class ABIFactGenerator(object):
                     tag + "_die_size", args=[corpus.basename, die.unique_id, die.size]
                 )
             )
+
+        if "DW_AT_location" in die.attributes:
+            self.generate_location(corpus, die, tag)
 
         if "DW_AT_linkage_name" in die.attributes:
             name = self.bytes2str(die.attributes["DW_AT_linkage_name"].value)
@@ -318,7 +353,7 @@ class ABIFactGenerator(object):
                 return self._parse_die_type(corpus, die, tag, type_die)
 
             # If it's a pointer, we have the byte size (no name)
-            if type_die.tag == "DW_TAG_pointer_type":
+            if re.search(type_die.tag, "pointer_type"):
                 if "DW_AT_byte_size" in type_die.attributes:
                     size_in_bits = type_die.attributes["DW_AT_byte_size"].value * 8
                     self.gen.fact(
@@ -471,8 +506,26 @@ class ABIFactGenerator(object):
         self.generate_elf_symbols(corpora, details)
 
         if details:
+
             # Generate dwarf information entries
             self.generate_dwarf_information_entries(corpora)
+
+
+def show_loclist(loclist, dwarfinfo, indent, cu_offset):
+    """TODO have not encountered this case yet"""
+    print('show loclist!')
+    import IPython
+    IPython.embed()
+    d = []
+    for loc_entity in loclist:
+        if isinstance(loc_entity, et.locationlists.LocationEntry):
+            d.append('%s <<%s>>' % (
+                loc_entity,
+                et.dwarf.describe_DWARF_expr(loc_entity.loc_expr,
+                                             dwarfinfo.structs, cu_offset)))
+        else:
+            d.append(str(loc_entity))
+    return '\n'.join(indent + s for s in d)
 
 
 # Functions intended to be called by external clients

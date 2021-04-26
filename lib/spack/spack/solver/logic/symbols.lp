@@ -105,3 +105,5 @@ incompatible(Package, V1, Dependency, V2)
 
     % and the symbol is not defined for the dependency
     not defined_symbol(Dependency, V2, Symbol).
+    
+#show incompatible/4.
