@@ -11,13 +11,12 @@ class PyAiodns(PythonPackage):
     doing asynchronous DNS resolutions using pycares."""
 
     homepage = "https://pypi.org/project/aiodns/"
-    url      = "https://github.com/saghul/aiodns/archive/aiodns-2.0.0.tar.gz"
+    pypi     = "aiodns/aiodns-2.0.0.tar.gz"
 
-    version('2.0.0', sha256='f5f9f066d34dbf6120ec4a9357ba322313721a5fe7e9f0dec64d29df643e699c')
-    version('1.2.0', sha256='10fbdd52ba0e5523e12fb863f892fc8ea7c6da2fa42f12c748e3b704464c6824')
-    version('1.1.1', sha256='a91cd89880a163005da698da5f1779ebe0ba752a927d4244c0dd99c34320fb7d')
+    version('2.0.0', sha256='815fdef4607474295d68da46978a54481dd1e7be153c7d60f9e72773cd38d77d')
+    version('1.2.0', sha256='d67e14b32176bcf3ff79b5d47c466011ce4adeadfa264f7949da1377332a0449')
+    version('1.1.1', sha256='d8677adc679ce8d0ef706c14d9c3d2f27a0e0cc11d59730cdbaf218ad52dd9ea')                                                                                                                                                  
 
     depends_on('py-setuptools', type='build')
     depends_on('python@:3.6.99', type=('build', 'run'))
-    depends_on('py-typing', when='^python@:3.6.999', type=('build', 'run'))
     depends_on('py-pycares@3.0.0:', type=('build', 'run'))
