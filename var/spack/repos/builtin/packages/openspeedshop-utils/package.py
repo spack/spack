@@ -13,22 +13,21 @@ import os.path
 
 
 class OpenspeedshopUtils(CMakePackage):
-    """OpenSpeedShop is a community effort by The Krell Institute with
-       current direct funding from DOEs NNSA.  It builds on top of a
-       broad list of community infrastructures, most notably Dyninst
-       and MRNet from UW, libmonitor from Rice, and PAPI from UTK.
-       OpenSpeedShop is an open source multi platform Linux performance
-       tool which is targeted to support performance analysis of
-       applications running on both single node and large scale IA64,
-       IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue Gene and
-       Cray platforms.  OpenSpeedShop development is hosted by the Krell
-       Institute. The infrastructure and base components of OpenSpeedShop
+    """OpenSpeedShop is a community effort led by Trenza, Inc.
+       It builds on top of a broad list of community infrastructures,
+       most notably Dyninst and MRNet from UW, libmonitor from Rice,
+       and PAPI from UTK.  OpenSpeedShop is an open source multi platform
+       Linux performance tool which is targeted to support performance
+       analysis of applications running on both single node and large
+       scale IA64, IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue
+       Gene and Cray platforms.  OpenSpeedShop development is hosted by
+       Trenza Inc.. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
        openspeedshop-utils is a package that does not have the
        qt3 gui.  It was created to avoid a conflict between
        openspeedshop and cbtf-argonavis-gui based on the fact
-       that spack will not allow a qt3 and qt4/qt5 dependency in a packages
-       dependency tree.
+       that spack will not allow a qt3 and qt4/qt5 dependency in a
+       packages dependency tree.
     """
 
     homepage = "http://www.openspeedshop.org"

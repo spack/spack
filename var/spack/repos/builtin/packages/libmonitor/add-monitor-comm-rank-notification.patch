@@ -75,14 +75,3 @@
  
  /*
   * In Fortran, MPI_Comm is always int.
-@@ -333,3 +335,10 @@
-     FORTRAN_COMM_RANK_BODY(real_pmpi_comm_size_f2, pmpi_comm_size__,
- 			   real_pmpi_comm_rank_f2, pmpi_comm_rank__);
- }
-+
-+
-+/*
-+ *----------------------------------------------------------------------
-+ *  OVERRIDE PMPI_PCONTROL FUNCTIONS
-+ *----------------------------------------------------------------------
-+ */

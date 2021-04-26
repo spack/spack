@@ -10,16 +10,15 @@ import os
 
 
 class Openspeedshop(CMakePackage):
-    """OpenSpeedShop is a community effort by The Krell Institute with
-       current direct funding from DOEs NNSA.  It builds on top of a
-       broad list of community infrastructures, most notably Dyninst
-       and MRNet from UW, libmonitor from Rice, and PAPI from UTK.
-       OpenSpeedShop is an open source multi platform Linux performance
-       tool which is targeted to support performance analysis of
-       applications running on both single node and large scale IA64,
-       IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue Gene and
-       Cray platforms.  OpenSpeedShop development is hosted by the Krell
-       Institute. The infrastructure and base components of OpenSpeedShop
+    """OpenSpeedShop is a community effort led by Trenza, Inc.
+       It builds on top of a broad list of community infrastructures,
+       most notably Dyninst and MRNet from UW, libmonitor from Rice,
+       and PAPI from UTK.  OpenSpeedShop is an open source multi platform
+       Linux performance tool which is targeted to support performance
+       analysis of applications running on both single node and large
+       scale IA64, IA32, EM64T, AMD64, PPC, ARM, Power8, Intel Phi, Blue
+       Gene and Cray platforms.  OpenSpeedShop development is hosted by
+       Trenza Inc.. The infrastructure and base components of OpenSpeedShop
        are released as open source code primarily under LGPL.
     """
 
