@@ -932,6 +932,7 @@ def mock_cvs_repository(tmpdir_factory):
             file=r1_file,
             hash=get_rev,
             revision='1.1',
+            date=None,
             args={'cvs': url}
         )
     }
@@ -941,6 +942,7 @@ def mock_cvs_repository(tmpdir_factory):
         url=url,
         hash=get_rev,
         revision='1.1',
+        date=None,
         path=str(repodir)
     )
 
