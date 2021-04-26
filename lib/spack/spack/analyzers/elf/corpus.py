@@ -46,7 +46,7 @@ class ElftoolsWrapper(object):
 et = ElftoolsWrapper()
 
 
-class CorpusReader(et.elffile.ELFFile):
+class CorpusReader(et.elffile.ELFFile):  # noqa
     """
     A CorpusReader wraps an elffile.
 

@@ -1731,9 +1731,9 @@ Developer Commands
 
 .. _cmd-spack-solve:
 
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 ``spack solve``
-^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 
 You can interact with Spack's solver outside of a package install with
 spack solve. For example:
