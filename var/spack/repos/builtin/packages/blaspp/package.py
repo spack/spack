@@ -35,13 +35,13 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     # only supported with clingo solver: virtual dependency preferences
     # depends_on('openblas threads=openmp', when='+openmp ^openblas')
 
-    # BLASpp tests will fail when using openblas > 0.3.5 without multithreading support
+    # BLAS++ tests will fail when using openblas > 0.3.5 without multithreading support
     # locking is only supported in openblas 3.7+
-    conflicts('^openblas@0.3.6 threads=none', msg='BLASpp requires a threadsafe openblas')
-    conflicts('^openblas@0.3.7: ~locking', msg='BLASpp requires a threadsafe openblas')
+    conflicts('^openblas@0.3.6 threads=none', msg='BLAS++ requires a threadsafe openblas')
+    conflicts('^openblas@0.3.7: ~locking', msg='BLAS++ requires a threadsafe openblas')
 
-    conflicts('+rocm', when='@:2020.10.02', msg='HIP support requires blaspp 2021.04.00 or greater')
-    conflicts('+rocm', when='+cuda', msg='BLASpp can only support one GPU backend at a time')
+    conflicts('+rocm', when='@:2020.10.02', msg='ROCm support requires BLAS++ 2021.04.00 or greater')
+    conflicts('+rocm', when='+cuda', msg='BLAS++ can only support one GPU backend at a time')
 
     def cmake_args(self):
         spec = self.spec
