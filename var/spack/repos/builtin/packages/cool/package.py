@@ -33,8 +33,8 @@ class Cool(CMakePackage):
 
     def determine_binary_tag(self):
         # As far as I can tell from reading the source code, `binary_tag`
-        # can be almost arbitraryThe only real difference it makes is
-        # disabling oracle dependency for non-x86 platforms
+        # can be almost arbitrary.  The only real difference it makes is
+        # disabling oracle dependency for non-x86 platforms.
         if self.spec.variants['binary_tag'].value != 'auto':
             return self.spec.variants['binary_tag'].value
 
