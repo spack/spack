@@ -186,6 +186,10 @@ class CudaPackage(PackageBase):
     for value in cuda_arch_values:
         conflicts('~cuda', when='cuda_arch=' + value)
 
+    def setup_build_environment(self, env):
+        build_type_flags = self.build_type.get_flags('cudaflags')
+        env.set('NVCC_PREPEND_FLAGS', build_type_flags)
+
     def flag_handler(self, name, flags):
         if self.build_type:
             debug_flags = ('cflags', 'cxxflags', 'fflags')
