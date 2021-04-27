@@ -189,10 +189,3 @@ class CudaPackage(PackageBase):
     def setup_build_environment(self, env):
         build_type_flags = self.build_type.get_flags('cudaflags')
         env.set('NVCC_PREPEND_FLAGS', build_type_flags)
-
-    def flag_handler(self, name, flags):
-        if self.build_type:
-            debug_flags = ('cflags', 'cxxflags', 'fflags')
-            if self.build_type.name == "debug" and name in debug_flags:
-                flags.append('-G')
-        return super(CudaPackage, self).flag_handler(name, flags)
