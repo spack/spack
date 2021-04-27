@@ -69,3 +69,6 @@ class PyTensorflowHub(Package):
         with working_dir(insttmp_path):
             setup_py('install', '--prefix={0}'.format(prefix),
                      '--single-version-externally-managed', '--root=/')
+
+        remove_linked_tree(tmp_path)
+        remove_linked_tree(insttmp_path)
