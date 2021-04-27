@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,8 +17,8 @@ class Elemental(CMakePackage):
     git      = "https://github.com/elemental/Elemental.git"
 
     version('develop', branch='master')
-    version('0.87.7', '6c1e7442021c59a36049e37ea69b8075')
-    version('0.87.6', '9fd29783d45b0a0e27c0df85f548abe9')
+    version('0.87.7', sha256='7becfdbc223e9c72e65ae876d842c48d2037d13f83e9f41cea285e21b840d7d9')
+    version('0.87.6', sha256='b597987c99ddd3462e0619524c5b7f711177ae8ae541b1b961e11d96e15afc64')
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
@@ -61,14 +61,14 @@ class Elemental(CMakePackage):
     # Allow Elemental to build internally when using 8-byte ints
     depends_on('openblas threads=openmp', when='blas=openblas +openmp_blas ~int64_blas')
 
-    depends_on('intel-mkl', when="blas=mkl ~openmp_blas ~int64_blas")
-    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas ~int64_blas')
-    depends_on('intel-mkl@2017.1 +openmp +ilp64', when='blas=mkl +openmp_blas +int64_blas')
+    depends_on('intel-mkl', when="blas=mkl")
+    depends_on('intel-mkl threads=openmp', when='blas=mkl +openmp_blas')
+    depends_on('intel-mkl@2017.1 +ilp64', when='blas=mkl +int64_blas')
 
     depends_on('veclibfort', when='blas=accelerate')
 
-    depends_on('essl ~cuda', when='blas=essl ~openmp_blas ~int64_blas')
-    depends_on('essl threads=openmp', when='blas=essl +openmp_blas ~int64_blas')
+    depends_on('essl', when='blas=essl')
+    depends_on('essl threads=openmp', when='blas=essl +openmp_blas')
 
     # Note that this forces us to use OpenBLAS until #1712 is fixed
     depends_on('lapack', when='blas=openblas ~openmp_blas')

@@ -1,0 +1,55 @@
+diff -ruN TextParser.org/cmake/CompileOptionSelector.cmake TextParser.fix/cmake/CompileOptionSelector.cmake
+--- TextParser.org/cmake/CompileOptionSelector.cmake	2019-09-04 09:59:21.533841689 +0900
++++ TextParser.fix/cmake/CompileOptionSelector.cmake	2019-09-04 09:58:26.358051534 +0900
+@@ -25,8 +25,8 @@
+     endif()
+ 
+   elseif (USE_F_TCS STREQUAL "YES")
+-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast -Xg")
+-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast -Xg")
++    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Kfast -Nclang")
++    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Kfast -Nclang")
+     # -Xg   : gcc compatible flag
+     # -fPIC : PIC flag
+     if(enable_fapi)
+diff -ruN TextParser.org/cmake/Toolchain_fx100.cmake TextParser.fix/cmake/Toolchain_fx100.cmake
+--- TextParser.org/cmake/Toolchain_fx100.cmake	2019-09-04 09:59:21.533841689 +0900
++++ TextParser.fix/cmake/Toolchain_fx100.cmake	2019-09-04 09:58:26.358051534 +0900
+@@ -3,18 +3,18 @@
+ include(CMakeForceCompiler)
+ 
+ if(with_MPI)
+-  CMAKE_FORCE_C_COMPILER(mpifccpx GNU)
+-  CMAKE_FORCE_CXX_COMPILER(mpiFCCpx GNU)
+-  CMAKE_FORCE_Fortran_COMPILER(mpifrtpx GNU)
++  CMAKE_FORCE_C_COMPILER(mpicc GNU)
++  CMAKE_FORCE_CXX_COMPILER(mpicxx GNU)
++  CMAKE_FORCE_Fortran_COMPILER(mpifort GNU)
+ 
+   #CMAKE_FORCE_Fortran_Compiler is not supported ver. 2.6
+   #set(CMAKE_Fortran_COMPILER mpifrtpx GNU)
+   #set(CMAKE_Fortran_COMPILER_WORKS true)
+   #set(CMAKE_Fortran_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER}")
+ else()
+-  CMAKE_FORCE_C_COMPILER(fccpx GNU)
+-  CMAKE_FORCE_CXX_COMPILER(FCCpx GNU)
+-  CMAKE_FORCE_Fortran_COMPILER(frtpx GNU)
++  CMAKE_FORCE_C_COMPILER(fcc GNU)
++  CMAKE_FORCE_CXX_COMPILER(FCC GNU)
++  CMAKE_FORCE_Fortran_COMPILER(frt GNU)
+ 
+   #CMAKE_FORCE_Fortran_Compiler is not supported ver. 2.6
+   #set(CMAKE_Fortran_COMPILER frtpx GNU)
+@@ -22,9 +22,9 @@
+   #set(CMAKE_Fortran_LINK_EXECUTABLE "${CMAKE_CXX_COMPILER}")
+ endif()
+ 
+-set(CMAKE_FIND_ROOT_PATH /opt/FJSVfxlang/1.2.1)
+-set(CMAKE_INCLUDE_PATH /opt/FJSVfxlang/1.2.1/include)
+-set(CMAKE_LIBRARY_PATH /opt/FJSVfxlang/1.2.1/lib64)
++#set(CMAKE_FIND_ROOT_PATH /opt/FJSVfxlang/1.2.1)
++#set(CMAKE_INCLUDE_PATH /opt/FJSVfxlang/1.2.1/include)
++#set(CMAKE_LIBRARY_PATH /opt/FJSVfxlang/1.2.1/lib64)
+ 
+ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)

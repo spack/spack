@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,7 @@
 
 import inspect
 import os
+from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
 from spack.directives import depends_on, variant
@@ -46,14 +47,18 @@ class MesonPackage(PackageBase):
     #: system base class
     build_system_class = 'MesonPackage'
 
-    build_targets = []
+    build_targets = []  # type: List[str]
     install_targets = ['install']
 
     build_time_test_callbacks = ['check']
 
-    variant('buildtype', default='release',
+    variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
+    variant('default_library', default='shared',
+            description=' Default library type',
+            values=('shared', 'static', 'both'))
+    variant('strip', default=False, description='Strip targets on install')
 
     depends_on('meson', type='build')
     depends_on('ninja', type='build')
@@ -95,6 +100,13 @@ class MesonPackage(PackageBase):
         except KeyError:
             build_type = 'release'
 
+        strip = 'true' if '+strip' in pkg.spec else 'false'
+
+        try:
+            default_library = pkg.spec.variants['default_library'].value
+        except KeyError:
+            default_library = 'shared'
+
         args = [
             '--prefix={0}'.format(pkg.prefix),
             # If we do not specify libdir explicitly, Meson chooses something
@@ -102,8 +114,9 @@ class MesonPackage(PackageBase):
             # find libraries and pkg-config files.
             # See https://github.com/mesonbuild/meson/issues/2197
             '--libdir={0}'.format(pkg.prefix.lib),
-            '--buildtype={0}'.format(build_type),
-            '--strip',
+            '-Dbuildtype={0}'.format(build_type),
+            '-Dstrip={0}'.format(strip),
+            '-Ddefault_library={0}'.format(default_library)
         ]
 
         return args
@@ -130,6 +143,7 @@ class MesonPackage(PackageBase):
         * ``--libdir``
         * ``--buildtype``
         * ``--strip``
+        * ``--default_library``
 
         which will be set automatically.
 

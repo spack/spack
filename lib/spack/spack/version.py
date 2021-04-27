@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,16 +30,20 @@ from bisect import bisect_left
 from functools import wraps
 from six import string_types
 
+import spack.error
 from spack.util.spack_yaml import syaml_dict
 
 
 __all__ = ['Version', 'VersionRange', 'VersionList', 'ver']
 
 # Valid version characters
-VALID_VERSION = r'[A-Za-z0-9_.-]'
+VALID_VERSION = re.compile(r'[A-Za-z0-9_.-]')
+
+# regex for version segments
+SEGMENT_REGEX = re.compile(r'[a-zA-Z]+|[0-9]+')
 
 # Infinity-like versions. The order in the list implies the comparison rules
-infinity_versions = ['develop', 'master', 'head', 'trunk']
+infinity_versions = ['develop', 'main', 'master', 'head', 'trunk']
 
 
 def int_if_int(string):
@@ -96,9 +100,10 @@ class Version(object):
     """Class to represent versions"""
 
     def __init__(self, string):
-        string = str(string)
+        if not isinstance(string, str):
+            string = str(string)
 
-        if not re.match(VALID_VERSION, string):
+        if not VALID_VERSION.match(string):
             raise ValueError("Bad characters in version string: %s" % string)
 
         # preserve the original string, but trimmed.
@@ -106,12 +111,11 @@ class Version(object):
         self.string = string
 
         # Split version into alphabetical and numeric segments
-        segment_regex = r'[a-zA-Z]+|[0-9]+'
-        segments = re.findall(segment_regex, string)
+        segments = SEGMENT_REGEX.findall(string)
         self.version = tuple(int_if_int(seg) for seg in segments)
 
         # Store the separators from the original version string as well.
-        self.separators = tuple(re.split(segment_regex, string)[1:])
+        self.separators = tuple(SEGMENT_REGEX.split(string)[1:])
 
     @property
     def dotted(self):
@@ -781,6 +785,9 @@ class VersionList(object):
     def __len__(self):
         return len(self.versions)
 
+    def __bool__(self):
+        return bool(self.versions)
+
     @coerced
     def __eq__(self, other):
         return other is not None and self.versions == other.versions
@@ -848,3 +855,11 @@ def ver(obj):
         return obj
     else:
         raise TypeError("ver() can't convert %s to version!" % type(obj))
+
+
+class VersionError(spack.error.SpackError):
+    """This is raised when something is wrong with a version."""
+
+
+class VersionChecksumError(VersionError):
+    """Raised for version checksum errors."""

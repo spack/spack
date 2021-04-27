@@ -1,0 +1,12 @@
+diff --git a/vtkm/thirdparty/diy/vtkmdiy/CMakeLists.txt b/vtkm/thirdparty/diy/vtkmdiy/CMakeLists.txt
+index 5211330..3e991f3 100644
+--- a/vtkm/thirdparty/diy/vtkmdiy/CMakeLists.txt
++++ b/vtkm/thirdparty/diy/vtkmdiy/CMakeLists.txt
+@@ -139,6 +139,7 @@ function(add_diy_mpi_library use_mpi)
+     endif()
+ 
+     add_library(${lib_name} ${sources})
++    set_property(TARGET ${lib_name} PROPERTY POSITION_INDEPENDENT_CODE ON)
+     target_compile_features(${lib_name} PRIVATE cxx_std_11)
+     target_compile_definitions(${lib_name}
+         PRIVATE -DVTKMDIY_HAS_MPI=${has_mpi_val}

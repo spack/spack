@@ -2,4 +2,5 @@ enable:
   - tcl
 tcl:
   # {variants} is not allowed in the naming scheme, see #2884
-  naming_scheme: '{name}/{version}-{compiler.name}-{variants}'
+  projections:
+    all: '{name}/{version}-{compiler.name}-{variants}'

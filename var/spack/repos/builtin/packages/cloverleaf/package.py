@@ -1,12 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-
-import glob
-
-from spack import *
 
 
 class Cloverleaf(MakefilePackage):
@@ -16,11 +11,11 @@ class Cloverleaf(MakefilePackage):
     """
 
     homepage = "http://uk-mac.github.io/CloverLeaf"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
+    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/CloverLeaf/CloverLeaf-1.1.tar.gz"
 
     tags = ['proxy-app']
 
-    version('1.1', '65652b30a64eb237ec844a6fdd4cd518')
+    version('1.1', sha256='de87f7ee6b917e6b3d243ccbbe620370c62df890e3ef7bdbab46569b57be132f')
 
     variant('build', default='ref', description='Type of Parallelism Build',
             values=('cuda', 'mpi_only', 'openacc_cray',
@@ -95,7 +90,5 @@ class Cloverleaf(MakefilePackage):
                 prefix.bin)
         install('CloverLeaf_{0}/clover.in'.format(self.type_of_build),
                 prefix.bin)
-
-        for f in glob.glob(
-                'CloverLeaf_{0}/*.in'.format(self.type_of_build)):
-            install(f, prefix.doc.tests)
+        install('CloverLeaf_{0}/*.in'.format(self.type_of_build),
+                prefix.doc.tests)

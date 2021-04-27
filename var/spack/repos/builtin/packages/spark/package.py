@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -22,13 +22,17 @@ class Spark(Package):
     depends_on('java', type=('build', 'run'))
     depends_on('hadoop', when='+hadoop', type=('build', 'run'))
 
-    version('2.3.0', 'db21021b8e877b219ab886097ef42344')
-    version('2.1.0', '21d4471e78250775b1fa7c0e6c3a1326')
-    version('2.0.2', '32110c1bb8f081359738742bd26bced1')
-    version('2.0.0', '8a5307d973da6949a385aefb6ff747bb')
-    version('1.6.2', '304394fbe2899211217f0cd9e9b2b5d9')
-    version('1.6.1', 'fcf4961649f15af1fea78c882e65b001')
-    version('1.6.0', '2c28edc89ca0067e63e525c04f7b1d89')
+    version('3.1.1', sha256='2d16f527016993e69a7c801233e661a170e3099ae2d9b950f7457729d63062f4')
+    version('3.0.2', sha256='1a904f9bfa44a1218cb440c99800dd2ae729249a73c63b3bb10e431ed5b58406')
+    version('3.0.1', sha256='ddda310ac09e3f2da9c33ad278b1665fbad2411d8da127d0de86b90019e962dc')
+    version('2.4.7', sha256='f68f6a63814078ba3246dbf755f597b814a228122b239b07efb3909f017ddf8b')
+    version('2.3.0', sha256='a7e29e78bd43aa6d137f0bb0afd54a3017865d471456c6d436ae79475bbeb161')
+    version('2.1.0', sha256='3ca4ecb0eb9a00de5099cc2564ed957433a2d15d9d645a60470324621853c5ae')
+    version('2.0.2', sha256='122ec1af0fcb23c0345f20f77d33cf378422ffe966efe4b9ef90e55cf7a46a3c')
+    version('2.0.0', sha256='7c90bc4b7689df30f187e00845db8c7c9fb4045a0bcf2fa70a4954cc17d2c0d1')
+    version('1.6.2', sha256='f6b43333ca80629bacbbbc2e460d21064f53f50880f3f0a3f68745fdf8b3137e')
+    version('1.6.1', sha256='3d67678c5cb5eeba1cab125219fa2f9f17609368ea462e3993d2eae7c8f37207')
+    version('1.6.0', sha256='9f62bc1d1f7668becd1fcedd5ded01ad907246df287d2525cfc562d88a3676da')
 
     def install(self, spec, prefix):
 
@@ -47,7 +51,7 @@ class Spark(Package):
         install('RELEASE', prefix)
 
     @when('+hadoop')
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         hadoop = self.spec['hadoop'].command
         hadoop.add_default_env('JAVA_HOME', self.spec['java'].home)
         hadoop_classpath = hadoop('classpath', output=str)
@@ -56,4 +60,4 @@ class Spark(Package):
         # module files
         hadoop_classpath = re.sub(r'[\s+]', '', hadoop_classpath)
 
-        run_env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)
+        env.set('SPARK_DIST_CLASSPATH', hadoop_classpath)

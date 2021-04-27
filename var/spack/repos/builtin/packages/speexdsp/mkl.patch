@@ -1,0 +1,11 @@
+--- a/configure.ac	2019-04-25 22:57:34.000000000 -0500
++++ b/configure.ac	2020-10-16 11:40:00.577784873 -0500
+@@ -266,7 +266,7 @@
+ #include <mkl.h>
+ void func() {
+   DFTI_DESCRIPTOR_HANDLE h;
+-  MKL_LONG result=DftiCreateDescriptor(&h, DFTI_SINGLE, DFTI_REAL, 0);
++  MKL_LONG result=DftiCreateDescriptor(&h, DFTI_SINGLE, DFTI_REAL, 0, 1);
+ }]])],
+    [AC_MSG_RESULT(yes)],
+    [AC_MSG_FAILURE([Failed to compile MKL test program. Make sure you set CFLAGS to include the include directory and set LDFLAGS to include the library directory and all necesarry libraries.])]

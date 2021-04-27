@@ -1,0 +1,16 @@
+--- a/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
++++ b/src/main/java/com/google/devtools/build/lib/bazel/rules/BazelRuleClassProvider.java
+@@ -181,6 +181,13 @@ public class BazelRuleClassProvider {
+           env.put("PATH", null);
+         }
+ 
++        Map<String, String> spackEnv = System.getenv();
++        for (String envName : spackEnv.keySet()) {
++          if (envName.startsWith("SPACK_")) {
++            env.put(envName, spackEnv.get(envName));
++          }
++        }
++
+         // Shell environment variables specified via options take precedence over the
+         // ones inherited from the fragments. In the long run, these fragments will
+         // be replaced by appropriate default rc files anyway.

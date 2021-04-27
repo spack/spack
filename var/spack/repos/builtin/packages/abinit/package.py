@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -30,11 +30,13 @@ class Abinit(AutotoolsPackage):
     homepage = 'http://www.abinit.org'
     url      = 'https://www.abinit.org/sites/default/files/packages/abinit-8.6.3.tar.gz'
 
-    version('8.8.2', '72d7046c7ff31b9f17afe050ecdfb3a5')
-    version('8.6.3', '6c34d2cec0cf0008dd25b8ec1b6d3ee8')
-    version('8.2.2', '5f25250e06fdc0815c224ffd29858860')
+    version('8.10.3', sha256='ed626424b4472b93256622fbb9c7645fa3ffb693d4b444b07d488771ea7eaa75')
+    version('8.10.2', sha256='4ee2e0329497bf16a9b2719fe0536cc50c5d5a07c65e18edaf15ba02251cbb73')
+    version('8.8.2', sha256='15216703bd56a799a249a112b336d07d733627d3756487a4b1cb48ebb625c3e7')
+    version('8.6.3', sha256='82e8d071088ab8dc1b3a24380e30b68c544685678314df1213180b449c84ca65')
+    version('8.2.2', sha256='e43544a178d758b0deff3011c51ef7c957d7f2df2ce8543366d68016af9f3ea1')
     # Versions before 8.0.8b are not supported.
-    version('8.0.8b', 'abc9e303bfa7f9f43f95598f87d84d5d')
+    version('8.0.8b', sha256='37ad5f0f215d2a36e596383cb6e54de3313842a0390ce8d6b48a423d3ee25af2')
 
     variant('mpi', default=True,
             description='Builds with MPI support. Requires MPI2+')
@@ -55,6 +57,9 @@ class Abinit(AutotoolsPackage):
     variant('hdf5', default=False,
             description='Enables HDF5+Netcdf4 with MPI. WARNING: experimental')
 
+    variant('wannier90', default=False,
+            description='Enables the Wannier90 library')
+
     # Add dependencies
     # currently one cannot forward options to virtual packages, see #1712.
     # depends_on('blas', when='~openmp')
@@ -70,8 +75,9 @@ class Abinit(AutotoolsPackage):
     # depends_on('elpa~openmp', when='+elpa+mpi~openmp')
     # depends_on('elpa+openmp', when='+elpa+mpi+openmp')
 
-    depends_on('fftw+float', when='~openmp')
-    depends_on('fftw+float+openmp', when='+openmp')
+    depends_on('fftw precision=float,double')
+    depends_on('fftw~openmp', when='~openmp')
+    depends_on('fftw+openmp', when='+openmp')
 
     depends_on('netcdf-fortran', when='+hdf5')
     depends_on('hdf5+mpi', when='+mpi+hdf5')  # required for NetCDF-4 support
@@ -82,9 +88,18 @@ class Abinit(AutotoolsPackage):
     # Cannot ask for +scalapack if it does not depend on MPI
     conflicts('+scalapack', when='~mpi')
 
+    depends_on("wannier90+shared", when='+wannier90')
+
     # Elpa is a substitute for scalapack and needs mpi
     # conflicts('+elpa', when='~mpi')
     # conflicts('+elpa', when='+scalapack')
+
+    patch('rm_march_settings.patch')
+
+    # Fix detection of Fujitsu compiler
+    # Fix configure not to collect the option that causes an error
+    # Fix intent(out) and unnecessary rewind to avoid compile error
+    patch('fix_for_fujitsu.patch', when='%fj')
 
     def configure_args(self):
 
@@ -93,12 +108,30 @@ class Abinit(AutotoolsPackage):
         options = []
         oapp = options.append
 
+        if '+wannier90' in spec:
+            oapp('--with-wannier90-libs=-L{0}'
+                 .format(spec['wannier90'].prefix.lib + ' -lwannier -lm'))
+            oapp('--with-wannier90-incs=-I{0}'
+                 .format(spec['wannier90'].prefix.modules))
+            oapp('--with-wannier90-bins={0}'
+                 .format(spec['wannier90'].prefix.bin))
+            oapp('--enable-connectors')
+            oapp('--with-dft-flavor=wannier90')
+
         if '+mpi' in spec:
             # MPI version:
             # let the configure script auto-detect MPI support from mpi_prefix
-            oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
             oapp('--enable-mpi=yes')
-            oapp('--enable-mpi-io=yes')
+            if self.spec.satisfies('%fj'):
+                oapp('CC={0}'.format(spec['mpi'].mpicc))
+                oapp('CXX={0}'.format(spec['mpi'].mpicxx))
+                oapp('FC={0}'.format(spec['mpi'].mpifc))
+            else:
+                oapp('--with-mpi-prefix={0}'.format(spec['mpi'].prefix))
+                oapp('--enable-mpi-io=yes')
+                oapp('MPIFC={0}'.format(spec['mpi'].mpifc))
+            if '~wannier90' in spec:
+                oapp('--with-dft-flavor=atompaw+libxc')
 
         # Activate OpenMP in Abinit Fortran code.
         if '+openmp' in spec:
@@ -127,7 +160,6 @@ class Abinit(AutotoolsPackage):
             '--with-fft-incs=-I%s' % spec['fftw'].prefix.include,
             '--with-fft-libs=-L%s %s' % (spec['fftw'].prefix.lib, fftlibs),
         ])
-        oapp('--with-dft-flavor=atompaw+libxc')
 
         # LibXC library
         libxc = spec['libxc:fortran']
@@ -153,6 +185,10 @@ class Abinit(AutotoolsPackage):
             # In Spack we do our best to avoid building any internally provided
             # dependencies, such as netcdf3 in this case.
             oapp('--with-trio-flavor=none')
+
+        if self.spec.satisfies('%fj'):
+            oapp('FCFLAGS_MODDIR=-M{0}'.format(join_path(
+                 self.stage.source_path, 'src/mods')))
 
         return options
 

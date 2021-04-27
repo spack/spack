@@ -1,13 +1,9 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-
-import glob
 import tarfile
-
-from spack import *
 
 
 class Minimd(MakefilePackage):
@@ -16,11 +12,11 @@ class Minimd(MakefilePackage):
     """
 
     homepage = "http://mantevo.org"
-    url      = "http://mantevo.org/downloads/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
+    url      = "http://downloads.mantevo.org/releaseTarballs/miniapps/MiniMD/miniMD_1.2.tgz"
 
     tags = ['proxy-app']
 
-    version('1.2', '893ef1ca5062e32b43a8d11bcfe1a056')
+    version('1.2', sha256='2874d35b12a15f9e92137e6f2060c1150cff75f8a7b88b255daf130087e5901e')
 
     depends_on('mpi')
 
@@ -44,6 +40,10 @@ class Minimd(MakefilePackage):
                                  self.version.up_to(2)))
         inner_tar.extractall()
 
+        if spec.target.family == 'aarch64':
+            makefile = FileFilter('miniMD_ref/Makefile.openmpi')
+            makefile.filter('-mavx', '')
+
     def install(self, spec, prefix):
         # Manual Installation
         mkdirp(prefix.bin)
@@ -52,6 +52,4 @@ class Minimd(MakefilePackage):
         install('miniMD_ref/miniMD_mpi', prefix.bin)
         install('miniMD_ref/in.lj.miniMD', prefix.bin)
         install('miniMD_ref/README', prefix.doc)
-
-        for f in glob.glob('miniMD_ref/in.*'):
-            install(f, prefix.doc)
+        install('miniMD_ref/in.*', prefix.doc)

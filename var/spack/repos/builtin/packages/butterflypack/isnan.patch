@@ -1,0 +1,362 @@
+diff -u -r -N a/SRC/Bplus_factor.f90 b/SRC/Bplus_factor.f90
+--- a/SRC/Bplus_factor.f90	2020-07-16 17:19:24.000000000 +0900
++++ b/SRC/Bplus_factor.f90	2020-07-22 17:29:47.000000000 +0900
+@@ -18,6 +18,7 @@
+ module Bplus_factor
+ use Bplus_compress
+ use Bplus_randomizedop
++use ieee_arithmetic
+ 
+ contains
+ 
+@@ -1007,7 +1008,7 @@
+ 			exit
+ 		endif
+ 
+-		if(isnan(error_inout))then
++		if(ieee_support_nan() .and. ieee_is_nan(error_inout))then
+ 			converged=0
+ 			exit
+ 		endif
+diff -u -r -N a/SRC/Bplus_randomized.f90 b/SRC/Bplus_randomized.f90
+--- a/SRC/Bplus_randomized.f90	2020-07-16 17:22:35.000000000 +0900
++++ b/SRC/Bplus_randomized.f90	2020-07-22 17:31:04.000000000 +0900
+@@ -20,6 +20,7 @@
+ 
+ use MISC_Utilities
+ use BPACK_Utilities
++use ieee_arithmetic
+ 
+ contains
+ 
+@@ -1615,7 +1616,7 @@
+ 				Vout(1:mm,1:num_vect_sub) = Vin(1:mm,1:num_vect_sub)- Vout(1:mm,1:num_vect_sub)
+ 				Vout(1+mm:N,1:num_vect_sub) = Vin(1+mm:N,1:num_vect_sub)
+ 
+-				if(isnan(fnorm(Vout,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vout,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD11N'
+ 					stop
+ 				end if
+@@ -1628,7 +1629,7 @@
+ 				&Vout(1+mm:mm+nn,1:num_vect_sub),Vin(1+mm:mm+nn,1:num_vect_sub),ctemp1,ctemp2,ptree,stats)
+ 				Vin = Vout + Vin
+ 
+-				if(isnan(fnorm(Vin,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vin,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD22N'
+ 					stop
+ 				end if
+@@ -1640,7 +1641,7 @@
+ 				&Vbuff, Vout(1+mm:mm+nn,1:num_vect_sub),ctemp1,ctemp2,ptree,stats)
+ 				Vout(1+mm:mm+nn,1:num_vect_sub) = Vout(1+mm:mm+nn,1:num_vect_sub) + Vbuff
+ 
+-				if(isnan(fnorm(Vout,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vout,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD33N'
+ 					stop
+ 				end if
+@@ -1660,7 +1661,7 @@
+ 				Vout(1:mm,1:num_vect_sub) = Vin(1:mm,1:num_vect_sub) - Vout(1:mm,1:num_vect_sub)
+ 				Vout(1+mm:N,1:num_vect_sub) = Vin(1+mm:N,1:num_vect_sub)
+ 
+-				if(isnan(fnorm(Vout,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vout,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD11T'
+ 					stop
+ 				end if
+@@ -1671,7 +1672,7 @@
+ 				&Vout(1+mm:mm+nn,1:num_vect_sub),Vin(1+mm:mm+nn,1:num_vect_sub),ctemp1,ctemp2,ptree,stats)
+ 				Vin = Vout + Vin
+ 
+-				if(isnan(fnorm(Vin,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vin,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD22T'
+ 					stop
+ 				end if
+@@ -1682,7 +1683,7 @@
+ 				&Vbuff,Vout(1+mm:N,1:num_vect_sub),ctemp1,ctemp2,ptree,stats)
+ 				Vout(1+mm:N,1:num_vect_sub) = Vout(1+mm:N,1:num_vect_sub)+Vbuff
+ 
+-				if(isnan(fnorm(Vout,N,num_vect_sub)))then
++				if(ieee_support_nan() .and. ieee_is_nan(fnorm(Vout,N,num_vect_sub)))then
+ 					write(*,*)fnorm(Vin,N,num_vect_sub),fnorm(Vout,N,num_vect_sub),'ABCD33T'
+ 					stop
+ 				end if
+diff -u -r -N a/SRC/Bplus_utilities.f90 b/SRC/Bplus_utilities.f90
+--- a/SRC/Bplus_utilities.f90	2020-07-16 17:26:34.000000000 +0900
++++ b/SRC/Bplus_utilities.f90	2020-07-22 17:44:12.000000000 +0900
+@@ -17,6 +17,7 @@
+ #include "ButterflyPACK_config.fi"
+ module Bplus_Utilities
+ use MISC_Utilities
++use ieee_arithmetic
+ contains
+ 
+ 
+@@ -1144,7 +1145,7 @@
+ 	stop
+ end if
+ 
+-BF_checkNAN = isnan(temp)
++BF_checkNAN = ieee_support_nan() .and. ieee_is_nan(temp)
+ 
+ end function BF_checkNAN
+ 
+@@ -1416,7 +1417,7 @@
+ 
+ 
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank,dimension_n)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank,dimension_n)))then
+ 						write(*,*)'NAN in L 1'
+ 					end if
+ 
+@@ -1431,7 +1432,7 @@
+ 					call gemmf90(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j)%matrix,rank, block_i%ButterflyV%blocks(2*index_j)%matrix,dimension_n,&
+                                                 block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank, 'N','T',rank,dimension_n,nn,cone,czero)
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,dimension_n)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,dimension_n)))then
+ 						write(*,*)'NAN in L 2'
+ 					end if
+ 
+@@ -1443,7 +1444,7 @@
+ 					allocate(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix(rank,nn))
+ 					block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix = block_i%ButterflyKerl(level)%blocks(index_i,2*index_j-1)%matrix
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank,nn)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank,nn)))then
+ 						write(*,*)'NAN in L 3'
+ 					end if
+ 
+@@ -1452,7 +1453,7 @@
+ 					allocate(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix(rank,nn))
+ 					block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix = block_i%ButterflyKerl(level)%blocks(index_i,2*index_j)%matrix
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,nn)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,nn)))then
+ 						write(*,*)'NAN in L 4'
+ 					end if
+ 
+@@ -1469,7 +1470,7 @@
+ 					allocate(block_o%ButterflyU%blocks(index_i+index_i_start)%matrix(mm,rank))
+ 					block_o%ButterflyU%blocks(index_i+index_i_start)%matrix = block_i%ButterflyU%blocks(index_i)%matrix
+ 					if(present(memory))memory = memory + SIZEOF(block_o%ButterflyU%blocks(index_i+index_i_start)%matrix)/1024.0d3
+-					if(isnan(fnorm(block_o%ButterflyU%blocks(index_i+index_i_start)%matrix,mm,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyU%blocks(index_i+index_i_start)%matrix,mm,rank)))then
+ 						write(*,*)'NAN in L 5'
+ 					end if
+ 				endif
+@@ -1501,7 +1502,7 @@
+ 
+ ! write(*,*)'good 1.1'
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,dimension_m,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,dimension_m,rank)))then
+ 						write(*,*)'NAN in R 1'
+ 					end if
+ 
+@@ -1517,7 +1518,7 @@
+                                                 block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,'N','N',dimension_m,rank,mm,cone,czero)
+ 
+ ! write(*,*)'good 2'
+-					if(isnan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,rank)))then
+ 						write(*,*)'NAN in R 2'
+ 					end if
+ 				else
+@@ -1528,7 +1529,7 @@
+ 					allocate(block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix(mm,rank))
+ 					block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix = block_i%ButterflyKerl(level)%blocks(2*index_i-1,index_j)%matrix
+ 
+-					if(isnan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,mm,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,mm,rank)))then
+ 						write(*,*)'NAN in R 3'
+ 					end if
+ 
+@@ -1539,7 +1540,7 @@
+ 					allocate(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix(mm,rank))
+ 					block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix = block_i%ButterflyKerl(level)%blocks(2*index_i,index_j)%matrix
+ 				! write(*,*)'good 4'
+-					if(isnan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,mm,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,mm,rank)))then
+ 						write(*,*)'NAN in R 4'
+ 					end if
+ 				end if
+@@ -1556,7 +1557,7 @@
+ 					block_o%ButterflyV%blocks(index_j+index_j_start)%matrix = block_i%ButterflyV%blocks(index_j)%matrix
+ 					if(present(memory))memory = memory + SIZEOF(block_o%ButterflyV%blocks(index_j+index_j_start)%matrix)/1024.0d3
+ 
+-					if(isnan(fnorm(block_o%ButterflyV%blocks(index_j+index_j_start)%matrix,nn,rank)))then
++					if(ieee_support_nan() .and. ieee_is_nan(fnorm(block_o%ButterflyV%blocks(index_j+index_j_start)%matrix,nn,rank)))then
+ 						write(*,*)'NAN in R 5'
+ 					end if
+ 				endif
+@@ -5129,7 +5130,7 @@
+ 
+ 		if (chara=='N') then
+ 
+-			if(isnan(sum(abs(random1(:,1))**2)))then
++			if(ieee_support_nan() .and. ieee_is_nan(sum(abs(random1(:,1))**2)))then
+ 				write(*,*)'NAN in 1 BF_block_MVP_dat'
+ 				stop
+ 			end if
+@@ -5470,7 +5471,7 @@
+ 			enddo
+ 			!$omp end parallel do
+ 
+-			if(isnan(sum(abs(random2(:,1))**2)))then
++			if(ieee_support_nan() .and. ieee_is_nan(sum(abs(random2(:,1))**2)))then
+ 				write(*,*)'NAN in 2 BF_block_MVP_dat',blocks%row_group,blocks%col_group,blocks%level,blocks%level_butterfly
+ 				stop
+ 			end if
+@@ -5904,7 +5905,7 @@
+ 
+ 	if (chara=='N') then
+ 
+-		if(isnan(sum(abs(VectIn(:,1))**2)))then
++		if(ieee_support_nan() .and. ieee_is_nan(sum(abs(VectIn(:,1))**2)))then
+ 			write(*,*)'NAN in 1 BF_block_MVP_partial'
+ 			stop
+ 		end if
+@@ -7995,10 +7996,10 @@
+ 				allocate(Singular(mn_min))
+ 
+ 				call copymatT(blocks%ButterflyV%blocks(j)%matrix,matrixtemp,dimension_n,rank)
+-				call assert(.not. isnan(fnorm(matrixtemp,rank,dimension_n)),'matrixtemp NAN at 3')
++				call assert(.not. (ieee_support_nan() .and. ieee_is_nan(fnorm(matrixtemp,rank,dimension_n))),'matrixtemp NAN at 3')
+ 
+ 				call gesvd_robust(matrixtemp,Singular,UU,VV,rank,dimension_n,mn_min)
+-				call assert(.not. isnan(sum(Singular)),'Singular NAN at 3')
++				call assert(.not. (ieee_support_nan() .and. ieee_is_nan(sum(Singular))),'Singular NAN at 3')
+ 
+ 				do ii=1,mn_min
+ 					UU(:,ii) = UU(:,ii)*Singular(ii)
+@@ -8060,9 +8061,9 @@
+ 					matrixtemp(1:rank,1:nn1) = blocks%ButterflyKerl(level)%blocks(i,j)%matrix
+ 					! call copymatN(blocks%ButterflyKerl(level)%blocks(i,j+1)%matrix,matrixtemp(1:rank,1+nn1:nn2+nn1),rank,nn2)
+ 					matrixtemp(1:rank,1+nn1:nn2+nn1) = blocks%ButterflyKerl(level)%blocks(i,j+1)%matrix
+-					call assert(.not. isnan(fnorm(matrixtemp,rank,nn1+nn2)),'matrixtemp NAN at 4')
++					call assert(.not. (ieee_support_nan() .and. ieee_is_nan(fnorm(matrixtemp,rank,nn1+nn2))),'matrixtemp NAN at 4')
+ 					call gesvd_robust(matrixtemp,Singular,UU,VV,rank,nn1+nn2,mn_min)
+-					call assert(.not. isnan(sum(Singular)),'Singular NAN at 4')
++					call assert(.not. (ieee_support_nan() .and. ieee_is_nan(sum(Singular))),'Singular NAN at 4')
+ 
+ 					do ii=1,mn_min
+ 						UU(:,ii) = UU(:,ii)*Singular(ii)
+@@ -8174,10 +8175,10 @@
+ 
+ 				! call copymatN(blocks%ButterflyU%blocks(i)%matrix,matrixtemp,dimension_m,rank)
+ 				matrixtemp = blocks%ButterflyU%blocks(i)%matrix
+-				call assert(.not. isnan(fnorm(matrixtemp,dimension_m,rank)),'matrixtemp NAN at 1')
++				call assert(.not. (ieee_support_nan() .and. ieee_is_nan(fnorm(matrixtemp,dimension_m,rank))),'matrixtemp NAN at 1')
+ 
+ 				call gesvd_robust(matrixtemp,Singular,UU,VV,dimension_m,rank,mn_min)
+-				call assert(.not. isnan(sum(Singular)),'Singular NAN at 1')
++				call assert(.not. (ieee_support_nan() .and. ieee_is_nan(sum(Singular))),'Singular NAN at 1')
+ 
+ 				do ii=1,mn_min
+ 					VV(ii,:) = VV(ii,:)*Singular(ii)
+@@ -8239,7 +8240,7 @@
+ 					matrixtemp(1:mm1,1:rank) = blocks%ButterflyKerl(level)%blocks(i,j)%matrix
+ 					! call copymatN(blocks%ButterflyKerl(level)%blocks(i+1,j)%matrix,matrixtemp(1+mm1:mm2+mm1,1:rank),mm2,rank)
+ 					matrixtemp(1+mm1:mm2+mm1,1:rank) = blocks%ButterflyKerl(level)%blocks(i+1,j)%matrix
+-					call assert(.not. isnan(fnorm(matrixtemp,mm1+mm2,rank)),'matrixtemp NAN at 2')
++					call assert(.not. (ieee_support_nan() .and. ieee_is_nan(fnorm(matrixtemp,mm1+mm2,rank))),'matrixtemp NAN at 2')
+ 
+ 					call gesvd_robust(matrixtemp,Singular,UU,VV,mm1+mm2,rank,mn_min)
+ 					! if(isnan(sum(Singular)).and. mm1+mm2<rank)then
+@@ -8247,7 +8248,7 @@
+ 					! end if
+ 
+ 					! call assert(.not. isnan(sum(Singular)),'Singular NAN at 2')
+-					if(isnan(sum(Singular)))then
++					if(ieee_support_nan() .and. ieee_is_nan(sum(Singular)))then
+ 						write(*,*)'Singular NAN at 2',mm1+mm2,rank
+ 						do ii=1,mm1+mm2
+ 							do jj=1,rank
+diff -u -r -N a/SRC/MISC_utilities.f90 b/SRC/MISC_utilities.f90
+--- a/SRC/MISC_utilities.f90	2020-07-16 17:29:34.000000000 +0900
++++ b/SRC/MISC_utilities.f90	2020-07-22 17:45:29.000000000 +0900
+@@ -33,7 +33,7 @@
+ use omp_lib
+ use MISC_DenseLA
+ use BPACK_linkedlist
+-
++use ieee_arithmetic
+ 
+ integer, parameter :: int64 = selected_int_kind(18)
+ 
+@@ -131,7 +131,7 @@
+ 	isnanMat = .false.
+ 	do ii =1,m
+ 	do jj =1,n
+-		isnanMat = isnanMat .or. isnan(abs(A(ii,jj)))
++		isnanMat = isnanMat .or. (ieee_support_nan() .and. ieee_is_nan(abs(A(ii,jj))))
+ 	end do
+ 	end do
+  end function isnanMat
+@@ -545,7 +545,7 @@
+ allocate(Singular(mn))
+ 
+ 
+-if(isnan(fnorm(mat,M,N)))then
++if(ieee_support_nan() .and. ieee_is_nan(fnorm(mat,M,N)))then
+ 	write(*,*)'input matrix NAN in GetRank'
+ 	stop
+ end if
+@@ -557,7 +557,7 @@
+ 	rank = 1
+ 	deallocate(UU,VV,Singular)
+ else
+-	if(isnan(sum(Singular)))then
++	if(ieee_support_nan() .and. ieee_is_nan(sum(Singular)))then
+ 		deallocate(UU,VV,Singular)
+ 		write(*,*)'gesvd_robust wrong in GetRank, switching to QR'
+ 
+@@ -578,7 +578,7 @@
+ 		! RRQR
+ 		jpvt = 0
+ 		call geqp3f90(Atmp,jpvt,tau,flop)
+-		if(isnan(fnorm(Atmp,mnl,mn)))then
++		if(ieee_support_nan() .and. ieee_is_nan(fnorm(Atmp,mnl,mn)))then
+ 			write(*,*)'Q or R has NAN in GetRank'
+ 			stop
+ 		end if
+@@ -718,7 +718,7 @@
+ 			deallocate(jpiv)
+ 			deallocate(JPERM)
+ 
+-			if(isnan(fnorm(mat2D,myArows,myAcols)))then
++			if(ieee_support_nan() .and. ieee_is_nan(fnorm(mat2D,myArows,myAcols)))then
+ 				write(*,*)'Q or R has NAN in PComputeRange'
+ 				stop
+ 			end if
+@@ -753,7 +753,7 @@
+ if(present(Flops))Flops=0d0
+ 
+ 	mn=min(M,N)
+-	if(isnan(fnorm(mat,M,N)))then
++	if(ieee_support_nan() .and. ieee_is_nan(fnorm(mat,M,N)))then
+ 		write(*,*)'input matrix NAN in ComputeRange'
+ 		stop
+ 	end if
+@@ -781,7 +781,7 @@
+ 		if(present(Flops))Flops = Flops + flop
+ 		rank=mn
+ 	endif
+-	if(isnan(fnorm(mat,M,N)))then
++	if(ieee_support_nan() .and. ieee_is_nan(fnorm(mat,M,N)))then
+ 		write(*,*)'Q or R has NAN in ComputeRange'
+ 		stop
+ 	end if
+@@ -1586,7 +1586,7 @@
+ 
+ 
+ 	do ii = 1,k
+-	if(isnan(abs(sum(x(:,ii)))))then
++	if(ieee_support_nan() .and. ieee_is_nan(abs(sum(x(:,ii)))))then
+ 		! do jj =1,rank
+ 		! write(*,*)jj,'hh',A_tmp_rank(jj,:)
+ 		! end do

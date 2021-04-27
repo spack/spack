@@ -1,4 +1,4 @@
-.. Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
    Spack Project Developers. See the top-level COPYRIGHT file for details.
 
    SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -36,8 +36,8 @@ Here is an example ``config.yaml`` file:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 Each Spack configuration file is nested under a top-level section
 corresponding to its name. So, ``config.yaml`` starts with ``config:``,
@@ -77,6 +77,13 @@ are six configuration scopes. From lowest to highest:
 #. **custom**: Stored in a custom directory specified by ``--config-scope``.
    If multiple scopes are listed on the command line, they are ordered
    from lowest to highest precedence.
+
+#. **environment**: When using Spack :ref:`environments`, Spack reads
+   additional configuration from the environment file. See
+   :ref:`environment-configuration` for further details on these
+   scopes. Environment scopes can be referenced from the command line
+   as ``env:name`` (to reference environment ``foo``, use
+   ``env:foo``).
 
 #. **command line**: Build settings specified on the command line take
    precedence over all other scopes.
@@ -192,10 +199,11 @@ with MPICH. You can create different configuration scopes for use with
 Platform-specific Scopes
 ------------------------
 
-For each scope above, there can also be platform-specific settings.
-For example, on most platforms, GCC is the preferred compiler.
-However, on macOS (darwin), Clang often works for more packages,
-and is set as the default compiler. This configuration is set in
+For each scope above (excluding environment scopes), there can also be
+platform-specific settings.  For example, on most platforms, GCC is
+the preferred compiler.  However, on macOS (darwin), Clang often works
+for more packages, and is set as the default compiler. This
+configuration is set in
 ``$(prefix)/etc/spack/defaults/darwin/packages.yaml``. It will take
 precedence over settings in the ``defaults`` scope, but can still be
 overridden by settings in ``system``, ``system/darwin``, ``site``,
@@ -244,8 +252,8 @@ your configurations look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. code-block:: yaml
@@ -269,8 +277,8 @@ command:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 .. _config-overrides:
@@ -312,8 +320,8 @@ Let's revisit the ``config.yaml`` example one more time. The
    :caption: $(prefix)/etc/spack/defaults/config.yaml
 
    build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
 
 
 Suppose the user configuration adds its *own* list of ``build_stage``
@@ -323,7 +331,7 @@ paths:
    :caption: ~/.spack/config.yaml
 
    build_stage:
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -341,10 +349,10 @@ get config`` shows the result:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
-       - $tempdir
-       - /nfs/tmp2/$user
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
 
 
 As in :ref:`config-overrides`, the higher-precedence scope can
@@ -356,7 +364,7 @@ user config looked like this:
    :caption: ~/.spack/config.yaml
 
    build_stage::
-     - /lustre-scratch/$user
+     - /lustre-scratch/$user/spack
      - ~/mystage
 
 
@@ -371,7 +379,7 @@ The merged configuration would look like this:
      module_roots:
        lmod: $spack/share/spack/lmod
      build_stage:
-       - /lustre-scratch/$user
+       - /lustre-scratch/$user/spack
        - ~/mystage
 
 
@@ -427,6 +435,33 @@ home directory, and ``~user`` will expand to a specified user's home
 directory. The ``~`` must appear at the beginning of the path, or Spack
 will not expand it.
 
+.. _configuration_environment_variables:
+
+-------------------------
+Environment Modifications
+-------------------------
+
+Spack allows to prescribe custom environment modifications in a few places
+within its configuration files. Every time these modifications are allowed
+they are specified as a dictionary, like in the following example:
+
+.. code-block:: yaml
+
+   environment:
+     set:
+       LICENSE_FILE: '/path/to/license'
+     unset:
+     - CPATH
+     - LIBRARY_PATH
+     append_path:
+       PATH: '/new/bin/dir'
+
+The possible actions that are permitted are ``set``, ``unset``, ``append_path``,
+``prepend_path`` and finally ``remove_path``. They all require a dictionary
+of variable names mapped to the values used for the modification.
+The only exception is ``unset`` that requires just a list of variable names.
+No particular order is ensured on the execution of each of these modifications.
+
 ----------------------------
 Seeing Spack's Configuration
 ----------------------------
@@ -463,10 +498,9 @@ account all scopes. For example, to see the fully merged
      module_roots:
        tcl: $spack/share/spack/modules
        lmod: $spack/share/spack/lmod
-       dotkit: $spack/share/spack/dotkit
      build_stage:
-     - $tempdir
-     - /nfs/tmp2/$user
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
      - $spack/var/spack/stage
      source_cache: $spack/var/spack/cache
      misc_cache: ~/.spack/cache
@@ -514,10 +548,9 @@ down the problem:
    /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
    /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
    /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
-   /home/myuser/spack/etc/spack/defaults/config.yaml:35      dotkit: $spack/share/spack/dotkit
    /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
-   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir
-   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - /nfs/tmp2/$user
+   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
    /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
    /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -32,6 +32,8 @@ class Pythia6(CMakePackage):
 
     homepage = 'https://pythiasix.hepforge.org/'
     url = 'http://www.hepforge.org/archive/pythiasix/pythia-6.4.28.tgz'
+
+    tags = ['hep']
 
     version('6.4.28',
             sha256='01cbff47e99365b5e46f6d62c1735d3cae1932c4710604850d59f538cb758020')
@@ -108,17 +110,14 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='example',
-                 placement={example: example}
-             )
+                 placement={example: example})
 
     # Docs.
-    docs \
-        = {'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt':
-            'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
-           'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf':
-           '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
-           'https://pythiasix.hepforge.org/pythia6-announcement.txt':
-           '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'}
+    docs = {
+        'http://www.hepforge.org/archive/pythiasix/update_notes-6.4.28.txt': 'a229be4ba9a4eb65a9d53600a5f388b620038d56694c6cb4671c2be224b67751',
+        'http://home.thep.lu.se/~torbjorn/pythia6/lutp0613man2.pdf': '03d637310ea80f0d7aea761492bd38452c602890d8cf913a1ec9edacd79fa43d',
+        'https://pythiasix.hepforge.org/pythia6-announcement.txt': '2a52def41f0c93e32e0db58dbcf072b987ebfbd32e42ccfc1f9382fcf65f1271'
+    }
 
     for docurl, checksum in iteritems(docs):
         doc = os.path.basename(urlparse(docurl).path)
@@ -127,14 +126,14 @@ class Pythia6(CMakePackage):
                  sha256=checksum,
                  expand=False,
                  destination='doc',
-                 placement={doc: doc}
-             )
+                 placement={doc: doc})
 
     # The included patch customizes some routines provided in dummy form
     # by the original source to be useful out of the box in the vast
     # majority of cases. If your case is different, platform- or
     # variant-based adjustments should be made.
     patch('pythia6.patch', level=0)
+    patch('pythia6-root.patch', level=1, when='+root')
 
     def patch(self):
         # Use our provided CMakeLists.txt. The Makefile provided with
@@ -147,6 +146,11 @@ class Pythia6(CMakePackage):
         filter_file(r'^(\s+PARAMETER\s*\(\s*NMXHEP\s*=\s*)\d+',
                     r'\1{0}'.format(self.spec.variants['nmxhep'].value),
                     'pyhepc.f')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%gcc@10:'):
+            env.append_flags('CFLAGS', '-fcommon')
+            env.append_flags('FFLAGS', '-fcommon')
 
     def cmake_args(self):
         args = ['-DPYTHIA6_VERSION={0}'.format(self.version.dotted)]

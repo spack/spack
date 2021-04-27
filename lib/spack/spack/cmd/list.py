@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,7 +7,6 @@ from __future__ import print_function
 from __future__ import division
 
 import argparse
-import cgi
 import fnmatch
 import os
 import re
@@ -22,6 +21,11 @@ import spack.dependency
 import spack.repo
 import spack.cmd.common.arguments as arguments
 from spack.version import VersionList
+
+if sys.version_info > (3, 1):
+    from html import escape  # novm
+else:
+    from cgi import escape
 
 description = "list and search available packages"
 section = "basic"
@@ -50,6 +54,9 @@ def setup_parser(subparser):
     subparser.add_argument(
         '--update', metavar='FILE', default=None, action='store',
         help='write output to the specified file, if any package is newer')
+    subparser.add_argument(
+        '-v', '--virtuals', action='store_true', default=False,
+        help='include virtual packages in list')
 
     arguments.add_common_arguments(subparser, ['tags'])
 
@@ -217,7 +224,7 @@ def html(pkg_names, out):
         out.write('<dd><ul class="first last simple">\n')
         out.write(('<li>'
                    '<a class="reference external" href="%s">%s</a>'
-                   '</li>\n') % (pkg.homepage, cgi.escape(pkg.homepage)))
+                   '</li>\n') % (pkg.homepage, escape(pkg.homepage, True)))
         out.write('</ul></dd>\n')
 
         out.write('<dt>Spack package:</dt>\n')
@@ -249,7 +256,7 @@ def html(pkg_names, out):
 
         out.write('<dt>Description:</dt>\n')
         out.write('<dd>\n')
-        out.write(cgi.escape(pkg.format_doc(indent=2)))
+        out.write(escape(pkg.format_doc(indent=2), True))
         out.write('\n')
         out.write('</dd>\n')
         out.write('</dl>\n')
@@ -263,7 +270,7 @@ def list(parser, args):
     formatter = formatters[args.format]
 
     # Retrieve the names of all the packages
-    pkgs = set(spack.repo.all_package_names())
+    pkgs = set(spack.repo.all_package_names(args.virtuals))
     # Filter the set appropriately
     sorted_packages = filter_by_name(pkgs, args)
 

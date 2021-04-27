@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -6,6 +6,9 @@
 from spack import *
 
 import os
+
+# to get system platform type
+import sys
 
 
 class Scr(CMakePackage):
@@ -17,12 +20,10 @@ class Scr(CMakePackage):
     url      = "https://github.com/LLNL/scr/archive/v1.2.0.tar.gz"
     git      = "https://github.com/llnl/scr.git"
 
-    # NOTE: scr-v1.1.8 is built with autotools and is not properly build here.
-    # scr-v1.1.8 will be deprecated with the upcoming release of v1.2.0
-    # url      = "https://github.com/LLNL/scr/releases/download/v1.1.8/scr-1.1.8.tar.gz"
-    # version('1.1.8', '6a0f11ad18e27fcfc00a271ff587b06e')
+    version('develop', branch='develop')
+    version('legacy', branch='legacy')
 
-    version('master', branch='master')
+    version('2.0.0', sha256='471978ae0afb56a20847d3989b994fbd680d1dea21e77a5a46a964b6e3deed6b')
     version('1.2.2', sha256='764a85638a9e8762667ec1f39fa5f7da7496fca78de379a22198607b3e027847')
     version('1.2.1', sha256='23acab2dc7203e9514455a5168f2fd57bc590affb7a1876912b58201513628fe')
     version('1.2.0', sha256='e3338ab2fa6e9332d2326c59092b584949a083a876adf5a19d4d5c7a1bbae047')
@@ -31,13 +32,37 @@ class Scr(CMakePackage):
     depends_on('zlib')
     depends_on('mpi')
 
+    # As of mid-2020, develop requires the "master" branch
+    # of a few component libraries
+    depends_on('axl@master', when="@develop")
+    depends_on('kvtree@master', when="@develop")
+    depends_on('redset@master', when="@develop")
+    depends_on('er@master', when="@develop")
+    depends_on('rankstr@master', when="@develop")
+    depends_on('shuffile@master', when="@develop")
+
+    # SCR legacy is anything 2.x.x or earlier
+    # SCR components is anything 3.x.x or later
+    depends_on('er', when="@3:")
+    depends_on('kvtree', when="@3:")
+    depends_on('rankstr', when="@3:")
+    depends_on('filo', when="@3")
+    depends_on('spath', when="@3:")
+
+    # DTCMP is an optional dependency up until 3.x
     variant('dtcmp', default=True,
             description="Build with DTCMP. "
             "Necessary to enable user directory naming at runtime")
-    depends_on('dtcmp', when="+dtcmp")
+    depends_on('dtcmp', when="@:2.999 +dtcmp")
+
+    # DTCMP is a required dependency with 3.x and later
+    conflicts('~dtcmp', when="@3:", msg="<SCR> DTCMP required for versions >=3")
+    depends_on('dtcmp', when="@3:")
 
     variant('libyogrt', default=True,
             description="Build SCR with libyogrt for get_time_remaining.")
+    depends_on('libyogrt scheduler=slurm', when="+libyogrt resource_manager=SLURM")
+    depends_on('libyogrt scheduler=lsf', when="+libyogrt resource_manager=LSF")
     depends_on('libyogrt', when="+libyogrt")
 
     # MySQL not yet in spack
@@ -69,12 +94,14 @@ class Scr(CMakePackage):
             multi=False,
             description='File locking style for SCR.')
 
-    variant('cache_base', default='/tmp',
-            description='Compile time default location for checkpoint cache.')
-    variant('cntl_base', default='/tmp',
+    # The default cache and control directories should be placed in tmpfs if available.
+    # On Linux, /dev/shm is a common tmpfs location.  Other platforms, like macOS,
+    # do not define a common tmpfs location, so /tmp is the next best option.
+    platform_tmp_default = '/dev/shm' if sys.platform == 'linux' else '/tmp'
+    variant('cache_base', default=platform_tmp_default,
+            description='Compile time default location for cache directory.')
+    variant('cntl_base', default=platform_tmp_default,
             description='Compile time default location for control directory.')
-
-    conflicts('platform=bgq')
 
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix

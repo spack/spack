@@ -16,7 +16,6 @@
 modules:
   enable:
     - tcl
-    - dotkit
   prefix_inspections:
     bin:
       - PATH
@@ -26,15 +25,11 @@ modules:
       - MANPATH
     share/aclocal:
       - ACLOCAL_PATH
-    lib:
-      - LIBRARY_PATH
-    lib64:
-      - LIBRARY_PATH
-    include:
-      - CPATH
     lib/pkgconfig:
       - PKG_CONFIG_PATH
     lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    share/pkgconfig:
       - PKG_CONFIG_PATH
     '':
       - CMAKE_PREFIX_PATH

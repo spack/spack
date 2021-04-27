@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,17 +7,25 @@ from spack import *
 
 
 class RPbapply(RPackage):
-    """A lightweight package that adds progress bar to vectorized R
-    apply functions."""
+    """Adding Progress Bar to '*apply' Functions
 
-    homepage = "https://cran.r-project.org/web/packages/pbapply/index.html"
-    url      = "https://cran.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
-    list_url = "https://cran.rstudio.com/src/contrib/Archive/pbapply"
+    A lightweight package that adds progress bar to vectorized R functions
+    ('*apply'). The implementation can easily be added to functions where
+    showing the progress is useful (e.g. bootstrap). The type and style of the
+    progress bar (with percentages or remaining time) can be set through
+    options. Supports several parallel processing backends."""
 
-    version('1.3-3', '570db6795179a1439c174be881c77d18')
-    version('1.3-2', 'd72a777bfe4a28ba4e1585e31680f82e')
-    version('1.3-1', '13d64dead441426aa96a3bf3fde29daf')
-    version('1.3-0', 'a3f93cd05054657a01893a3817fa1f08')
-    version('1.2-2', '23e2bfe531c704b79308b0b5fbe1ace8')
+    homepage = "https://cloud.r-project.org/package=pbapply"
+    url      = "https://cloud.r-project.org/src/contrib/pbapply_1.3-3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbapply"
 
-    depends_on('r@3.4.0:3.4.9')
+    version('1.4-3', sha256='8fe6287535be766b5a688810e2cc1ca4e668ac6b42b6e832473fe5701133eb21')
+    version('1.4-1', sha256='b3633349181db944e1dfc4422b4728a6562e454117a232cbb51633906cd27cad')
+    version('1.3-4', sha256='cdfdaf9b8aecbe48daac858aecaf65a766b74a363d1eb7cd6ebf27c0549f6552')
+    version('1.3-3', sha256='7379b21d1176db5769f5cac858dd12c975736e80a600870180cec9625cf51047')
+    version('1.3-2', sha256='196367da93fcd31431d8e78c177d4afccf9c634513edf24a7229adce2d95b5e9')
+    version('1.3-1', sha256='fc4f1ea9d3290bab20a0ec74a3195c8887592b022ab6abb8d7754006a4487114')
+    version('1.3-0', sha256='a6d4bf88ade12a3b25662e271329fe54d170596335cba2a2dd210bbb7e8a5936')
+    version('1.2-2', sha256='81e5a8a5e0c7ce24b25679d0f69e8773908c9ce569f1e5984e52d4cef33ac34e')
+
+    depends_on('r@3.2.0:', type=('build', 'run'))

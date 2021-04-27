@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,21 +17,24 @@ definition to modify the package, for example:
 
 The available directives are:
 
-  * ``version``
+  * ``conflicts``
   * ``depends_on``
-  * ``provides``
   * ``extends``
   * ``patch``
-  * ``variant``
+  * ``provides``
   * ``resource``
+  * ``variant``
+  * ``version``
 
 """
 
-import collections
 import functools
 import os.path
 import re
+import sys
+
 from six import string_types
+from typing import Set, List  # novm
 
 import llnl.util.lang
 import llnl.util.tty.color
@@ -44,12 +47,19 @@ import spack.variant
 from spack.dependency import Dependency, default_deptype, canonical_deptype
 from spack.fetch_strategy import from_kwargs
 from spack.resource import Resource
-from spack.version import Version
+from spack.version import Version, VersionChecksumError
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
+
 
 __all__ = []
 
 #: These are variant names used by Spack internally; packages can't use them
-reserved_names = ['patches']
+reserved_names = ['patches', 'dev_path']
 
 _patch_order_index = 0
 
@@ -102,8 +112,8 @@ class DirectiveMeta(type):
     """
 
     # Set of all known directives
-    _directive_names = set()
-    _directives_to_be_executed = []
+    _directive_names = set()  # type: Set[str]
+    _directives_to_be_executed = []  # type: List[str]
 
     def __new__(cls, name, bases, attr_dict):
         # Initialize the attribute containing the list of directives
@@ -138,8 +148,8 @@ class DirectiveMeta(type):
             cls, name, bases, attr_dict)
 
     def __init__(cls, name, bases, attr_dict):
-        # The class is being created: if it is a package we must ensure
-        # that the directives are called on the class to set it up
+        # The instance is being initialized: if it is a package we must ensure
+        # that the directives are called to set it up.
 
         if 'spack.pkg' in cls.__module__:
             # Ensure the presence of the dictionaries associated
@@ -201,7 +211,7 @@ class DirectiveMeta(type):
 
         if isinstance(dicts, string_types):
             dicts = (dicts, )
-        if not isinstance(dicts, collections.Sequence):
+        if not isinstance(dicts, Sequence):
             message = "dicts arg must be list, tuple, or string. Found {0}"
             raise TypeError(message.format(type(dicts)))
         # Add the dictionary names if not already there
@@ -242,7 +252,7 @@ class DirectiveMeta(type):
 
                 # ...so if it is not a sequence make it so
                 values = result
-                if not isinstance(values, collections.Sequence):
+                if not isinstance(values, Sequence):
                     values = (values, )
 
                 DirectiveMeta._directives_to_be_executed.extend(values)
@@ -260,16 +270,25 @@ directive = DirectiveMeta.directive
 
 @directive('versions')
 def version(ver, checksum=None, **kwargs):
-    """Adds a version and metadata describing how to fetch its source code.
+    """Adds a version and, if appropriate, metadata for fetching its code.
 
-    Metadata is stored as a dict of ``kwargs`` in the package class's
-    ``versions`` dictionary.
+    The ``version`` directives are aggregated into a ``versions`` dictionary
+    attribute with ``Version`` keys and metadata values, where the metadata
+    is stored as a dictionary of ``kwargs``.
 
-    The ``dict`` of arguments is turned into a valid fetch strategy
-    later. See ``spack.fetch_strategy.for_package_version()``.
+    The ``dict`` of arguments is turned into a valid fetch strategy for
+    code packages later. See ``spack.fetch_strategy.for_package_version()``.
+
+    Keyword Arguments:
+        deprecated (bool): whether or not this version is deprecated
     """
     def _execute_version(pkg):
-        if checksum:
+        if checksum is not None:
+            if hasattr(pkg, 'has_code') and not pkg.has_code:
+                raise VersionChecksumError(
+                    "{0}: Checksums not allowed in no-code packages"
+                    "(see '{1}' version).".format(pkg.name, ver))
+
             kwargs['checksum'] = checksum
 
         # Store kwargs for the package to later with a fetch_strategy.
@@ -292,8 +311,18 @@ def _depends_on(pkg, spec, when=None, type=default_deptype, patches=None):
 
     # call this patches here for clarity -- we want patch to be a list,
     # but the caller doesn't have to make it one.
-    if patches and dep_spec.virtual:
-        raise DependencyPatchError("Cannot patch a virtual dependency.")
+
+    # Note: we cannot check whether a package is virtual in a directive
+    # because directives are run as part of class instantiation, and specs
+    # instantiate the package class as part of the `virtual` check.
+    # To be technical, specs only instantiate the package class as part of the
+    # virtual check if the provider index hasn't been created yet.
+    # TODO: There could be a cache warming strategy that would allow us to
+    # ensure `Spec.virtual` is a valid thing to call in a directive.
+    # For now, we comment out the following check to allow for virtual packages
+    # with package files.
+    # if patches and dep_spec.virtual:
+    #     raise DependencyPatchError("Cannot patch a virtual dependency.")
 
     # ensure patches is a list
     if patches is None:
@@ -375,7 +404,7 @@ def depends_on(spec, when=None, type=default_deptype, patches=None):
 
 
 @directive(('extendees', 'dependencies'))
-def extends(spec, **kwargs):
+def extends(spec, type=('build', 'run'), **kwargs):
     """Same as depends_on, but allows symlinking into dependency's
     prefix tree.
 
@@ -396,7 +425,7 @@ def extends(spec, **kwargs):
         if not when_spec:
             return
 
-        _depends_on(pkg, spec, when=when)
+        _depends_on(pkg, spec, when=when, type=type)
         pkg.extendees[spec] = (spack.spec.Spec(spec), kwargs)
     return _execute_extends
 
@@ -451,17 +480,22 @@ def patch(url_or_filename, level=1, when=None, working_dir=".", **kwargs):
 
     """
     def _execute_patch(pkg_or_dep):
+        pkg = pkg_or_dep
+        if isinstance(pkg, Dependency):
+            pkg = pkg.pkg
+
+        if hasattr(pkg, 'has_code') and not pkg.has_code:
+            raise UnsupportedPackageDirective(
+                'Patches are not allowed in {0}: package has no code.'.
+                format(pkg.name))
+
         when_spec = make_when_spec(when)
         if not when_spec:
             return
 
-        # if this spec is identical to some other, then append this
+        # If this spec is identical to some other, then append this
         # patch to the existing list.
         cur_patches = pkg_or_dep.patches.setdefault(when_spec, [])
-
-        pkg = pkg_or_dep
-        if isinstance(pkg, Dependency):
-            pkg = pkg.pkg
 
         global _patch_order_index
         ordering_key = (pkg.name, _patch_order_index)
@@ -639,3 +673,7 @@ class CircularReferenceError(DirectiveError):
 
 class DependencyPatchError(DirectiveError):
     """Raised for errors with patching dependencies."""
+
+
+class UnsupportedPackageDirective(DirectiveError):
+    """Raised when an invalid or unsupported package directive is specified."""

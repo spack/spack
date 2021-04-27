@@ -1,14 +1,13 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 import collections
 import errno
 import hashlib
-import fileinput
 import glob
 import grp
+import itertools
 import numbers
 import os
 import pwd
@@ -23,6 +22,12 @@ import six
 from llnl.util import tty
 from llnl.util.lang import dedupe, memoized
 from spack.util.executable import Executable
+
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Sequence  # novm
+else:
+    from collections import Sequence
 
 __all__ = [
     'FileFilter',
@@ -42,14 +47,20 @@ __all__ = [
     'fix_darwin_install_name',
     'force_remove',
     'force_symlink',
+    'chgrp',
+    'chmod_x',
     'copy',
     'install',
     'copy_tree',
     'install_tree',
     'is_exe',
     'join_path',
+    'last_modification_time_recursive',
     'mkdirp',
+    'partition_path',
+    'prefixes',
     'remove_dead_links',
+    'remove_directory_contents',
     'remove_if_dead_link',
     'remove_linked_tree',
     'set_executable',
@@ -58,7 +69,8 @@ __all__ = [
     'touchp',
     'traverse_tree',
     'unset_executable_mode',
-    'working_dir'
+    'working_dir',
+    'keep_modification_time'
 ]
 
 
@@ -66,6 +78,32 @@ def path_contains_subdirectory(path, root):
     norm_root = os.path.abspath(root).rstrip(os.path.sep) + os.path.sep
     norm_path = os.path.abspath(path).rstrip(os.path.sep) + os.path.sep
     return norm_path.startswith(norm_root)
+
+
+def possible_library_filenames(library_names):
+    """Given a collection of library names like 'libfoo', generate the set of
+    library filenames that may be found on the system (e.g. libfoo.so). This
+    generates the library filenames that may appear on any OS.
+    """
+    lib_extensions = ['a', 'la', 'so', 'tbd', 'dylib']
+    return set(
+        '.'.join((lib, extension)) for lib, extension in
+        itertools.product(library_names, lib_extensions))
+
+
+def paths_containing_libs(paths, library_names):
+    """Given a collection of filesystem paths, return the list of paths that
+    which include one or more of the specified libraries.
+    """
+    required_lib_fnames = possible_library_filenames(library_names)
+
+    rpaths_to_include = []
+    for path in paths:
+        fnames = set(os.listdir(path))
+        if fnames & required_lib_fnames:
+            rpaths_to_include.append(path)
+
+    return rpaths_to_include
 
 
 def same_path(path1, path2):
@@ -96,10 +134,15 @@ def filter_file(regex, repl, *filenames, **kwargs):
         backup (bool): Make backup file(s) suffixed with ``~``. Default is True
         ignore_absent (bool): Ignore any files that don't exist.
             Default is False
+        stop_at (str): Marker used to stop scanning the file further. If a text
+            line matches this marker filtering is stopped and the rest of the
+            file is copied verbatim. Default is to filter until the end of the
+            file.
     """
     string = kwargs.get('string', False)
     backup = kwargs.get('backup', True)
     ignore_absent = kwargs.get('ignore_absent', False)
+    stop_at = kwargs.get('stop_at', None)
 
     # Allow strings to use \1, \2, etc. for replacement, like sed
     if not callable(repl):
@@ -120,6 +163,7 @@ def filter_file(regex, repl, *filenames, **kwargs):
         tty.debug(msg.format(filename, regex))
 
         backup_filename = filename + "~"
+        tmp_filename = filename + ".spack~"
 
         if ignore_absent and not os.path.exists(filename):
             msg = 'FILTER FILE: file "{0}" not found. Skipping to next file.'
@@ -131,15 +175,48 @@ def filter_file(regex, repl, *filenames, **kwargs):
         if not os.path.exists(backup_filename):
             shutil.copy(filename, backup_filename)
 
+        # Create a temporary file to read from. We cannot use backup_filename
+        # in case filter_file is invoked multiple times on the same file.
+        shutil.copy(filename, tmp_filename)
+
         try:
-            for line in fileinput.input(filename, inplace=True):
-                print(re.sub(regex, repl, line.rstrip('\n')))
+            extra_kwargs = {}
+            if sys.version_info > (3, 0):
+                extra_kwargs = {'errors': 'surrogateescape'}
+
+            # Open as a text file and filter until the end of the file is
+            # reached or we found a marker in the line if it was specified
+            with open(tmp_filename, mode='r', **extra_kwargs) as input_file:
+                with open(filename, mode='w', **extra_kwargs) as output_file:
+                    # Using iter and readline is a workaround needed not to
+                    # disable input_file.tell(), which will happen if we call
+                    # input_file.next() implicitly via the for loop
+                    for line in iter(input_file.readline, ''):
+                        if stop_at is not None:
+                            current_position = input_file.tell()
+                            if stop_at == line.strip():
+                                output_file.write(line)
+                                break
+                        filtered_line = re.sub(regex, repl, line)
+                        output_file.write(filtered_line)
+                    else:
+                        current_position = None
+
+            # If we stopped filtering at some point, reopen the file in
+            # binary mode and copy verbatim the remaining part
+            if current_position and stop_at:
+                with open(tmp_filename, mode='rb') as input_file:
+                    input_file.seek(current_position)
+                    with open(filename, mode='ab') as output_file:
+                        output_file.writelines(input_file.readlines())
+
         except BaseException:
             # clean up the original file on failure.
             shutil.move(backup_filename, filename)
             raise
 
         finally:
+            os.remove(tmp_filename)
             if not backup and os.path.exists(backup_filename):
                 os.remove(backup_filename)
 
@@ -226,7 +303,10 @@ def group_ids(uid=None):
 
 def chgrp(path, group):
     """Implement the bash chgrp function on a single path"""
-    gid = grp.getgrnam(group).gr_gid
+    if isinstance(group, six.string_types):
+        gid = grp.getgrnam(group).gr_gid
+    else:
+        gid = group
     os.chown(path, -1, gid)
 
 
@@ -268,56 +348,78 @@ def unset_executable_mode(path):
 
 
 def copy(src, dest, _permissions=False):
-    """Copies the file *src* to the file or directory *dest*.
+    """Copy the file(s) *src* to the file or directory *dest*.
 
     If *dest* specifies a directory, the file will be copied into *dest*
     using the base filename from *src*.
 
+    *src* may contain glob characters.
+
     Parameters:
-        src (str): the file to copy
+        src (str): the file(s) to copy
         dest (str): the destination file or directory
         _permissions (bool): for internal use only
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    # Expand dest to its eventual full path if it is a directory.
-    if os.path.isdir(dest):
-        dest = join_path(dest, os.path.basename(src))
+    files = glob.glob(src)
+    if not files:
+        raise IOError("No such file or directory: '{0}'".format(src))
+    if len(files) > 1 and not os.path.isdir(dest):
+        raise ValueError(
+            "'{0}' matches multiple files but '{1}' is not a directory".format(
+                src, dest))
 
-    shutil.copy(src, dest)
+    for src in files:
+        # Expand dest to its eventual full path if it is a directory.
+        dst = dest
+        if os.path.isdir(dest):
+            dst = join_path(dest, os.path.basename(src))
 
-    if _permissions:
-        set_install_permissions(dest)
-        copy_mode(src, dest)
+        shutil.copy(src, dst)
+
+        if _permissions:
+            set_install_permissions(dst)
+            copy_mode(src, dst)
 
 
 def install(src, dest):
-    """Installs the file *src* to the file or directory *dest*.
+    """Install the file(s) *src* to the file or directory *dest*.
 
     Same as :py:func:`copy` with the addition of setting proper
     permissions on the installed file.
 
     Parameters:
-        src (str): the file to install
+        src (str): the file(s) to install
         dest (str): the destination file or directory
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* matches multiple files but *dest* is
+            not a directory
     """
     copy(src, dest, _permissions=True)
 
 
-def resolve_link_target_relative_to_the_link(l):
+def resolve_link_target_relative_to_the_link(link):
     """
     os.path.isdir uses os.path.exists, which for links will check
     the existence of the link target. If the link target is relative to
     the link, we need to construct a pathname that is valid from
     our cwd (which may not be the same as the link's directory)
     """
-    target = os.readlink(l)
+    target = os.readlink(link)
     if os.path.isabs(target):
         return target
-    link_dir = os.path.dirname(os.path.abspath(l))
+    link_dir = os.path.dirname(os.path.abspath(link))
     return os.path.join(link_dir, target)
 
 
@@ -326,6 +428,8 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
 
     If the destination directory *dest* does not already exist, it will
     be created as well as missing parent directories.
+
+    *src* may contain glob characters.
 
     If *symlinks* is true, symbolic links in the source tree are represented
     as symbolic links in the new tree and the metadata of the original links
@@ -341,46 +445,66 @@ def copy_tree(src, dest, symlinks=True, ignore=None, _permissions=False):
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
         _permissions (bool): for internal use only
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dest*
     """
     if _permissions:
         tty.debug('Installing {0} to {1}'.format(src, dest))
     else:
         tty.debug('Copying {0} to {1}'.format(src, dest))
 
-    mkdirp(dest)
+    abs_dest = os.path.abspath(dest)
+    if not abs_dest.endswith(os.path.sep):
+        abs_dest += os.path.sep
 
-    src = os.path.abspath(src)
-    dest = os.path.abspath(dest)
+    files = glob.glob(src)
+    if not files:
+        raise IOError("No such file or directory: '{0}'".format(src))
 
-    for s, d in traverse_tree(src, dest, order='pre',
-                              follow_symlinks=not symlinks,
-                              ignore=ignore,
-                              follow_nonexisting=True):
-        if os.path.islink(s):
-            link_target = resolve_link_target_relative_to_the_link(s)
-            if symlinks:
-                target = os.readlink(s)
-                if os.path.isabs(target):
-                    new_target = re.sub(src, dest, target)
-                    if new_target != target:
-                        tty.debug("Redirecting link {0} to {1}"
-                                  .format(target, new_target))
-                        target = new_target
+    for src in files:
+        abs_src = os.path.abspath(src)
+        if not abs_src.endswith(os.path.sep):
+            abs_src += os.path.sep
 
-                os.symlink(target, d)
-            elif os.path.isdir(link_target):
-                mkdirp(d)
+        # Stop early to avoid unnecessary recursion if being asked to copy
+        # from a parent directory.
+        if abs_dest.startswith(abs_src):
+            raise ValueError('Cannot copy ancestor directory {0} into {1}'.
+                             format(abs_src, abs_dest))
+
+        mkdirp(abs_dest)
+
+        for s, d in traverse_tree(abs_src, abs_dest, order='pre',
+                                  follow_symlinks=not symlinks,
+                                  ignore=ignore,
+                                  follow_nonexisting=True):
+            if os.path.islink(s):
+                link_target = resolve_link_target_relative_to_the_link(s)
+                if symlinks:
+                    target = os.readlink(s)
+                    if os.path.isabs(target):
+                        new_target = re.sub(abs_src, abs_dest, target)
+                        if new_target != target:
+                            tty.debug("Redirecting link {0} to {1}"
+                                      .format(target, new_target))
+                            target = new_target
+
+                    os.symlink(target, d)
+                elif os.path.isdir(link_target):
+                    mkdirp(d)
+                else:
+                    shutil.copyfile(s, d)
             else:
-                shutil.copyfile(s, d)
-        else:
-            if os.path.isdir(s):
-                mkdirp(d)
-            else:
-                shutil.copyfile(s, d)
+                if os.path.isdir(s):
+                    mkdirp(d)
+                else:
+                    shutil.copy2(s, d)
 
-        if _permissions:
-            set_install_permissions(d)
-            copy_mode(s, d)
+            if _permissions:
+                set_install_permissions(d)
+                copy_mode(s, d)
 
 
 def install_tree(src, dest, symlinks=True, ignore=None):
@@ -394,6 +518,10 @@ def install_tree(src, dest, symlinks=True, ignore=None):
         dest (str): the destination directory
         symlinks (bool): whether or not to preserve symlinks
         ignore (function): function indicating which files to ignore
+
+    Raises:
+        IOError: if *src* does not match any files or directories
+        ValueError: if *src* is a parent directory of *dest*
     """
     copy_tree(src, dest, symlinks=symlinks, ignore=ignore, _permissions=True)
 
@@ -414,6 +542,13 @@ def get_filetype(path_name):
     return output.strip()
 
 
+def chgrp_if_not_world_writable(path, group):
+    """chgrp path to group if path is not world writable"""
+    mode = os.stat(path).st_mode
+    if not mode & stat.S_IWOTH:
+        chgrp(path, group)
+
+
 def mkdirp(*paths, **kwargs):
     """Creates a directory, as well as parent directories if needed.
 
@@ -421,27 +556,38 @@ def mkdirp(*paths, **kwargs):
         paths (str): paths to create with mkdirp
 
     Keyword Aguments:
-        mode (permission bits or None, optional): optional permissions to
-            set on the created directory -- use OS default if not provided
-        mode_intermediate (permission bits or None, optional):
-            same as mode, but for newly-created intermediate directories
+        mode (permission bits or None, optional): optional permissions to set
+            on the created directory -- use OS default if not provided
+        group (group name or None, optional): optional group for permissions of
+            final created directory -- use OS default if not provided. Only
+            used if world write permissions are not set
+        default_perms ('parents' or 'args', optional): The default permissions
+            that are set for directories that are not themselves an argument
+            for mkdirp. 'parents' means intermediate directories get the
+            permissions of their direct parent directory, 'args' means
+            intermediate get the same permissions specified in the arguments to
+            mkdirp -- default value is 'args'
     """
     mode = kwargs.get('mode', None)
-    mode_intermediate = kwargs.get('mode_intermediate', None)
+    group = kwargs.get('group', None)
+    default_perms = kwargs.get('default_perms', 'args')
+
     for path in paths:
         if not os.path.exists(path):
             try:
+                # detect missing intermediate folders
                 intermediate_folders = []
-                if mode_intermediate is not None:
-                    # detect missing intermediate folders
-                    intermediate_path = os.path.dirname(path)
+                last_parent = ''
 
-                    while intermediate_path:
-                        if os.path.exists(intermediate_path):
-                            break
+                intermediate_path = os.path.dirname(path)
 
-                        intermediate_folders.append(intermediate_path)
-                        intermediate_path = os.path.dirname(intermediate_path)
+                while intermediate_path:
+                    if os.path.exists(intermediate_path):
+                        last_parent = intermediate_path
+                        break
+
+                    intermediate_folders.append(intermediate_path)
+                    intermediate_path = os.path.dirname(intermediate_path)
 
                 # create folders
                 os.makedirs(path)
@@ -449,13 +595,36 @@ def mkdirp(*paths, **kwargs):
                 # leaf folder permissions
                 if mode is not None:
                     os.chmod(path, mode)
+                if group:
+                    chgrp_if_not_world_writable(path, group)
+                    if mode is not None:
+                        os.chmod(path, mode)  # reset sticky grp bit post chgrp
 
                 # for intermediate folders, change mode just for newly created
                 # ones and if mode_intermediate has been specified, otherwise
                 # intermediate folders list is not populated at all and default
                 # OS mode will be used
+                if default_perms == 'args':
+                    intermediate_mode = mode
+                    intermediate_group = group
+                elif default_perms == 'parents':
+                    stat_info = os.stat(last_parent)
+                    intermediate_mode = stat_info.st_mode
+                    intermediate_group = stat_info.st_gid
+                else:
+                    msg = "Invalid value: '%s'. " % default_perms
+                    msg += "Choose from 'args' or 'parents'."
+                    raise ValueError(msg)
+
                 for intermediate_path in reversed(intermediate_folders):
-                    os.chmod(intermediate_path, mode_intermediate)
+                    if intermediate_mode is not None:
+                        os.chmod(intermediate_path, intermediate_mode)
+                    if intermediate_group is not None:
+                        chgrp_if_not_world_writable(intermediate_path,
+                                                    intermediate_group)
+                        os.chmod(intermediate_path,
+                                 intermediate_mode)  # reset sticky bit after
+
             except OSError as e:
                 if e.errno != errno.EEXIST or not os.path.isdir(path):
                     raise e
@@ -503,9 +672,9 @@ def replace_directory_transaction(directory_name, tmp_root=None):
     # Check the input is indeed a directory with absolute path.
     # Raise before anything is done to avoid moving the wrong directory
     assert os.path.isdir(directory_name), \
-        '"directory_name" must be a valid directory'
+        'Invalid directory: ' + directory_name
     assert os.path.isabs(directory_name), \
-        '"directory_name" must contain an absolute path'
+        '"directory_name" must contain an absolute path: ' + directory_name
 
     directory_basename = os.path.basename(directory_name)
 
@@ -522,7 +691,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
 
     try:
         yield tmp_dir
-    except (Exception, KeyboardInterrupt, SystemExit):
+    except (Exception, KeyboardInterrupt, SystemExit) as e:
         # Delete what was there, before copying back the original content
         if os.path.exists(directory_name):
             shutil.rmtree(directory_name)
@@ -533,6 +702,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('DIRECTORY RECOVERED [{0}]'.format(directory_name))
 
         msg = 'the transactional move of "{0}" failed.'
+        msg += '\n    ' + str(e)
         raise RuntimeError(msg.format(directory_name))
     else:
         # Otherwise delete the temporary directory
@@ -540,7 +710,7 @@ def replace_directory_transaction(directory_name, tmp_root=None):
         tty.debug('TEMPORARY DIRECTORY DELETED [{0}]'.format(tmp_dir))
 
 
-def hash_directory(directory):
+def hash_directory(directory, ignore=[]):
     """Hashes recursively the content of a directory.
 
     Args:
@@ -557,11 +727,12 @@ def hash_directory(directory):
     for root, dirs, files in os.walk(directory):
         for name in sorted(files):
             filename = os.path.join(root, name)
-            # TODO: if caching big files becomes an issue, convert this to
-            # TODO: read in chunks. Currently it's used only for testing
-            # TODO: purposes.
-            with open(filename, 'rb') as f:
-                md5_hash.update(f.read())
+            if filename not in ignore:
+                # TODO: if caching big files becomes an issue, convert this to
+                # TODO: read in chunks. Currently it's used only for testing
+                # TODO: purposes.
+                with open(filename, 'rb') as f:
+                    md5_hash.update(f.read())
 
     return md5_hash.hexdigest()
 
@@ -760,6 +931,15 @@ def set_executable(path):
     os.chmod(path, mode)
 
 
+def last_modification_time_recursive(path):
+    path = os.path.abspath(path)
+    times = [os.stat(path).st_mtime]
+    times.extend(os.stat(os.path.join(root, name)).st_mtime
+                 for root, dirs, files in os.walk(path)
+                 for name in dirs + files)
+    return max(times)
+
+
 def remove_empty_directories(root):
     """Ascend up from the leaves accessible from `root` and remove empty
     directories.
@@ -794,10 +974,8 @@ def remove_if_dead_link(path):
     Parameters:
         path (str): The potential dead link
     """
-    if os.path.islink(path):
-        real_path = os.path.realpath(path)
-        if not os.path.exists(real_path):
-            os.unlink(path)
+    if os.path.islink(path) and not os.path.exists(path):
+        os.unlink(path)
 
 
 def remove_linked_tree(path):
@@ -815,6 +993,53 @@ def remove_linked_tree(path):
             os.unlink(path)
         else:
             shutil.rmtree(path, True)
+
+
+@contextmanager
+def safe_remove(*files_or_dirs):
+    """Context manager to remove the files passed as input, but restore
+    them in case any exception is raised in the context block.
+
+    Args:
+        *files_or_dirs: glob expressions for files or directories
+            to be removed
+
+    Returns:
+        Dictionary that maps deleted files to their temporary copy
+        within the context block.
+    """
+    # Find all the files or directories that match
+    glob_matches = [glob.glob(x) for x in files_or_dirs]
+    # Sort them so that shorter paths like "/foo/bar" come before
+    # nested paths like "/foo/bar/baz.yaml". This simplifies the
+    # handling of temporary copies below
+    sorted_matches = sorted([
+        os.path.abspath(x) for x in itertools.chain(*glob_matches)
+    ], key=len)
+
+    # Copy files and directories in a temporary location
+    removed, dst_root = {}, tempfile.mkdtemp()
+    try:
+        for id, file_or_dir in enumerate(sorted_matches):
+            # The glob expression at the top ensures that the file/dir exists
+            # at the time we enter the loop. Double check here since it might
+            # happen that a previous iteration of the loop already removed it.
+            # This is the case, for instance, if we remove the directory
+            # "/foo/bar" before the file "/foo/bar/baz.yaml".
+            if not os.path.exists(file_or_dir):
+                continue
+            # The monotonic ID is a simple way to make the filename
+            # or directory name unique in the temporary folder
+            basename = os.path.basename(file_or_dir) + '-{0}'.format(id)
+            temporary_path = os.path.join(dst_root, basename)
+            shutil.move(file_or_dir, temporary_path)
+            removed[file_or_dir] = temporary_path
+        yield removed
+    except BaseException:
+        # Restore the files that were removed
+        for original_path, temporary_path in removed.items():
+            shutil.move(temporary_path, original_path)
+        raise
 
 
 def fix_darwin_install_name(path):
@@ -887,7 +1112,7 @@ def find(root, files, recursive=True):
 
     Parameters:
         root (str): The root directory to start searching from
-        files (str or collections.Sequence): Library name(s) to search for
+        files (str or Sequence): Library name(s) to search for
         recurse (bool, optional): if False search only root folder,
             if True descends top-down from the root. Defaults to True.
 
@@ -950,7 +1175,7 @@ def _find_non_recursive(root, search_files):
 # Utilities for libraries and headers
 
 
-class FileList(collections.Sequence):
+class FileList(Sequence):
     """Sequence of absolute paths to files.
 
     Provides a few convenience methods to manipulate file paths.
@@ -1033,7 +1258,9 @@ class HeaderList(FileList):
 
     # Make sure to only match complete words, otherwise path components such
     # as "xinclude" will cause false matches.
-    include_regex = re.compile(r'(.*)(\binclude\b)(.*)')
+    # Avoid matching paths such as <prefix>/include/something/detail/include,
+    # e.g. in the CUDA Toolkit which ships internal libc++ headers.
+    include_regex = re.compile(r'(.*?)(\binclude\b)(.*)')
 
     def __init__(self, files):
         super(HeaderList, self).__init__(files)
@@ -1191,7 +1418,7 @@ def find_headers(headers, root, recursive=False):
     """
     if isinstance(headers, six.string_types):
         headers = [headers]
-    elif not isinstance(headers, collections.Sequence):
+    elif not isinstance(headers, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_headers.__name__, type(headers))
@@ -1346,7 +1573,7 @@ def find_system_libraries(libraries, shared=True):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_system_libraries.__name__,
@@ -1400,7 +1627,7 @@ def find_libraries(libraries, root, shared=True, recursive=False):
     """
     if isinstance(libraries, six.string_types):
         libraries = [libraries]
-    elif not isinstance(libraries, collections.Sequence):
+    elif not isinstance(libraries, Sequence):
         message = '{0} expects a string or sequence of strings as the '
         message += 'first argument [got {1} instead]'
         message = message.format(find_libraries.__name__, type(libraries))
@@ -1449,6 +1676,19 @@ def can_access_dir(path):
 
 
 @memoized
+def can_write_to_dir(path):
+    """Return True if the argument is a directory in which we can write.
+
+    Args:
+        path: path to be tested
+
+    Returns:
+        True if ``path`` is an writeable directory, else False
+    """
+    return os.path.isdir(path) and os.access(path, os.R_OK | os.X_OK | os.W_OK)
+
+
+@memoized
 def files_in(*search_paths):
     """Returns all the files in paths passed as arguments.
 
@@ -1494,3 +1734,116 @@ def search_paths_for_executables(*path_hints):
             executable_paths.append(bin_dir)
 
     return executable_paths
+
+
+def partition_path(path, entry=None):
+    """
+    Split the prefixes of the path at the first occurrence of entry and
+    return a 3-tuple containing a list of the prefixes before the entry, a
+    string of the prefix ending with the entry, and a list of the prefixes
+    after the entry.
+
+    If the entry is not a node in the path, the result will be the prefix list
+    followed by an empty string and an empty list.
+    """
+    paths = prefixes(path)
+
+    if entry is not None:
+        # Derive the index of entry within paths, which will correspond to
+        # the location of the entry in within the path.
+        try:
+            entries = path.split(os.sep)
+            i = entries.index(entry)
+            if '' in entries:
+                i -= 1
+            return paths[:i], paths[i], paths[i + 1:]
+        except ValueError:
+            pass
+
+    return paths, '', []
+
+
+def prefixes(path):
+    """
+    Returns a list containing the path and its ancestors, top-to-bottom.
+
+    The list for an absolute path will not include an ``os.sep`` entry.
+    For example, assuming ``os.sep`` is ``/``, given path ``/ab/cd/efg``
+    the resulting paths will be, in order: ``/ab``, ``/ab/cd``, and
+    ``/ab/cd/efg``
+
+    The list for a relative path starting ``./`` will not include ``.``.
+    For example, path ``./hi/jkl/mn`` results in a list with the following
+    paths, in order: ``./hi``, ``./hi/jkl``, and ``./hi/jkl/mn``.
+
+    Parameters:
+        path (str): the string used to derive ancestor paths
+
+    Returns:
+        A list containing ancestor paths in order and ending with the path
+    """
+    if not path:
+        return []
+
+    parts = path.strip(os.sep).split(os.sep)
+    if path.startswith(os.sep):
+        parts.insert(0, os.sep)
+    paths = [os.path.join(*parts[:i + 1]) for i in range(len(parts))]
+
+    try:
+        paths.remove(os.sep)
+    except ValueError:
+        pass
+
+    try:
+        paths.remove('.')
+    except ValueError:
+        pass
+
+    return paths
+
+
+def md5sum(file):
+    """Compute the MD5 sum of a file.
+
+    Args:
+        file (str): file to be checksummed
+
+    Returns:
+        MD5 sum of the file's content
+    """
+    md5 = hashlib.md5()
+    with open(file, "rb") as f:
+        md5.update(f.read())
+    return md5.digest()
+
+
+def remove_directory_contents(dir):
+    """Remove all contents of a directory."""
+    if os.path.exists(dir):
+        for entry in [os.path.join(dir, entry) for entry in os.listdir(dir)]:
+            if os.path.isfile(entry) or os.path.islink(entry):
+                os.unlink(entry)
+            else:
+                shutil.rmtree(entry)
+
+
+@contextmanager
+def keep_modification_time(*filenames):
+    """
+    Context manager to keep the modification timestamps of the input files.
+    Tolerates and has no effect on non-existent files and files that are
+    deleted by the nested code.
+
+    Parameters:
+        *filenames: one or more files that must have their modification
+            timestamps unchanged
+    """
+    mtimes = {}
+    for f in filenames:
+        if os.path.exists(f):
+            mtimes[f] = os.path.getmtime(f)
+    yield
+    for f, mtime in mtimes.items():
+        if os.path.exists(f):
+            os.utime(f, (os.path.getatime(f), mtime))

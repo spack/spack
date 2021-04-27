@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,6 +11,7 @@
 # Author: Justin Too <justin@doubleotoo.com>
 # Date: September 6, 2015
 #
+import re
 import os
 from contextlib import contextmanager
 
@@ -27,30 +28,41 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # URL must remain http:// so Spack can bootstrap curl
     url = "http://www.cpan.org/src/5.0/perl-5.24.1.tar.gz"
 
+    executables = [r'^perl(-?\d+.*)?$']
+
     # see http://www.cpan.org/src/README.html for
     # explanation of version numbering scheme
 
     # Development releases (odd numbers)
-    version('5.25.11', '37a398682c36cd85992b34b5c1c25dc1')
+    version('5.33.3', sha256='4f4ba0aceb932e6cf7c05674d05e51ef759d1c97f0685dee65a8f3d190f737cd')
+    version('5.31.7', sha256='d05c4e72128f95ef6ffad42728ecbbd0d9437290bf0f88268b51af011f26b57d')
+    version('5.31.4', sha256='418a7e6fe6485cc713a86d1227ef112f0bb3f80322e3b715ffe42851d97804a5')
 
     # Maintenance releases (even numbers, recommended)
-    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
-    version('5.26.2', 'dc0fea097f3992a8cd53f8ac0810d523', preferred=True)
-    version('5.24.1', '765ef511b5b87a164e2531403ee16b3c')
+    version('5.32.1', sha256='03b693901cd8ae807231b1787798cf1f2e0b8a56218d07b7da44f784a7caeb2c', preferred=True)
+    version('5.32.0', sha256='efeb1ce1f10824190ad1cadbcccf6fdb8a5d37007d0100d2d9ae5f2b5900c0b4')
+    version('5.30.3', sha256='32e04c8bb7b1aecb2742a7f7ac0eabac100f38247352a73ad7fa104e39e7406f')
+    version('5.30.2', sha256='66db7df8a91979eb576fac91743644da878244cf8ee152f02cd6f5cd7a731689')
+    version('5.30.1', sha256='bf3d25571ff1ee94186177c2cdef87867fd6a14aa5a84f0b1fb7bf798f42f964')
+    version('5.30.0', sha256='851213c754d98ccff042caa40ba7a796b2cee88c5325f121be5cbb61bbf975f2')
 
     # End of life releases
-    version('5.22.4', '31a71821682e02378fcdadeed85688b8')
-    version('5.22.3', 'aa4f236dc2fc6f88b871436b8d0fda95')
-    version('5.22.2', '5767e2a10dd62a46d7b57f74a90d952b')
-    version('5.22.1', '19295bbb775a3c36123161b9bf4892f1')
-    version('5.22.0', 'e32cb6a8dda0084f2a43dac76318d68d')
-    version('5.20.3', 'd647d0ea5a7a8194c34759ab9f2610cd')
-    version('5.18.4', '1f9334ff730adc05acd3dd7130d295db')
-    version('5.16.3', 'eb5c40f2575df6c155bc99e3fe0a9d82')
+    version('5.28.0', sha256='7e929f64d4cb0e9d1159d4a59fc89394e27fa1f7004d0836ca0d514685406ea8')
+    version('5.26.2', sha256='572f9cea625d6062f8a63b5cee9d3ee840800a001d2bb201a41b9a177ab7f70d')
+    version('5.24.1', sha256='e6c185c9b09bdb3f1b13f678999050c639859a7ef39c8cad418448075f5918af')
+    version('5.22.4', sha256='ba9ef57c2b709f2dad9c5f6acf3111d9dfac309c484801e0152edbca89ed61fa')
+    version('5.22.3', sha256='1b351fb4df7e62ec3c8b2a9f516103595b2601291f659fef1bbe3917e8410083')
+    version('5.22.2', sha256='81ad196385aa168cb8bd785031850e808c583ed18a7901d33e02d4f70ada83c2')
+    version('5.22.1', sha256='2b475d0849d54c4250e9cba4241b7b7291cffb45dfd083b677ca7b5d38118f27')
+    version('5.22.0', sha256='0c690807f5426bbd1db038e833a917ff00b988bf03cbf2447fa9ffdb34a2ab3c')
+    version('5.20.3', sha256='3524e3a76b71650ab2f794fd68e45c366ec375786d2ad2dca767da424bbb9b4a')
+    version('5.18.4', sha256='01a4e11a9a34616396c4a77b3cef51f76a297e1a2c2c490ae6138bf0351eb29f')
+    version('5.16.3', sha256='69cf08dca0565cec2c5c6c2f24b87f986220462556376275e5431cc2204dedb6')
 
     extendable = True
 
     depends_on('gdbm')
+    depends_on('berkeley-db')
 
     # there has been a long fixed issue with 5.22.0 with regard to the ccflags
     # definition.  It is well documented here:
@@ -60,6 +72,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     # Fix build on Fedora 28
     # https://bugzilla.redhat.com/show_bug.cgi?id=1536752
     patch('https://src.fedoraproject.org/rpms/perl/raw/004cea3a67df42e92ffdf4e9ac36d47a3c6a05a4/f/perl-5.26.1-guard_old_libcrypt_fix.patch', level=1, sha256='0eac10ed90aeb0459ad8851f88081d439a4e41978e586ec743069e8b059370ac', when='@:5.26.2')
+
+    # Fix 'Unexpected product version' error on macOS 11.0 Big Sur
+    # https://github.com/Perl/perl5/pull/17946
+    patch('macos-11-version-check.patch', when='@5.24.1:5.32.0 platform=darwin')
+
+    # Enable builds with the NVIDIA compiler
+    # The Configure script assumes some gcc specific behavior, and use
+    # the mini Perl environment to bootstrap installation.
+    patch('nvhpc-5.30.patch', when='@5.30.0:5.30.99 %nvhpc')
+    patch('nvhpc-5.32.patch', when='@5.32.0:5.32.99 %nvhpc')
+    conflicts('@5.32.0:', when='%nvhpc@:20.11',
+              msg='The NVIDIA compilers are incompatible with version 5.32 and later')
 
     # Installing cpanm alongside the core makes it safe and simple for
     # people/projects to install their own sets of perl modules.  Not
@@ -77,12 +101,46 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
     resource(
         name="cpanm",
         url="http://search.cpan.org/CPAN/authors/id/M/MI/MIYAGAWA/App-cpanminus-1.7042.tar.gz",
-        md5="e87f55fbcb3c13a4754500c18e89219f",
+        sha256="9da50e155df72bce55cb69f51f1dbb4b62d23740fb99f6178bb27f22ebdf8a46",
         destination="cpanm",
         placement="cpanm"
     )
 
     phases = ['configure', 'build', 'install']
+
+    @classmethod
+    def determine_version(cls, exe):
+        perl = spack.util.executable.Executable(exe)
+        output = perl('--version', output=str, error=str)
+        if output:
+            match = re.search(r'perl.*\(v([0-9.]+)\)', output)
+            if match:
+                return match.group(1)
+        return None
+
+    @classmethod
+    def determine_variants(cls, exes, version):
+        for exe in exes:
+            perl = spack.util.executable.Executable(exe)
+            output = perl('-V', output=str, error=str)
+            variants = ''
+            if output:
+                match = re.search(r'-Duseshrplib', output)
+                if match:
+                    variants += '+shared'
+                else:
+                    variants += '~shared'
+                match = re.search(r'-Duse.?threads', output)
+                if match:
+                    variants += '+threads'
+                else:
+                    variants += '~threads'
+            path = os.path.dirname(exe)
+            if 'cpanm' in os.listdir(path):
+                variants += '+cpanm'
+            else:
+                variants += '~cpanm'
+            return variants
 
     # On a lustre filesystem, patch may fail when files
     # aren't writeable so make pp.c user writeable
@@ -128,13 +186,18 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # https://github.com/spack/spack/pull/3081 and
         # https://github.com/spack/spack/pull/4416
         if spec.satisfies('%intel'):
-            config_args.append('-Accflags={0}'.format(self.compiler.pic_flag))
+            config_args.append('-Accflags={0}'.format(
+                self.compiler.cc_pic_flag))
 
         if '+shared' in spec:
             config_args.append('-Duseshrplib')
 
         if '+threads' in spec:
             config_args.append('-Dusethreads')
+
+        # Development versions have an odd second component
+        if spec.version[1] % 2 == 1:
+            config_args.append('-Dusedevel')
 
         return config_args
 
@@ -147,7 +210,7 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
-    def test(self):
+    def build_test(self):
         make('test')
 
     def install(self, spec, prefix):
@@ -164,25 +227,24 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
                 make()
                 make('install')
 
-    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+    def _setup_dependent_env(self, env, dependent_spec, deptypes):
         """Set PATH and PERL5LIB to include the extension and
            any other perl extensions it depends on,
            assuming they were installed with INSTALL_BASE defined."""
         perl_lib_dirs = []
-        perl_bin_dirs = []
-        for d in dependent_spec.traverse(
-                deptype=('build', 'run'), deptype_query='run'):
+        for d in dependent_spec.traverse(deptype=deptypes):
             if d.package.extends(self.spec):
                 perl_lib_dirs.append(d.prefix.lib.perl5)
-                perl_bin_dirs.append(d.prefix.bin)
-        if perl_bin_dirs:
-            perl_bin_path = ':'.join(perl_bin_dirs)
-            spack_env.prepend_path('PATH', perl_bin_path)
-            run_env.prepend_path('PATH', perl_bin_path)
         if perl_lib_dirs:
             perl_lib_path = ':'.join(perl_lib_dirs)
-            spack_env.prepend_path('PERL5LIB', perl_lib_path)
-            run_env.prepend_path('PERL5LIB', perl_lib_path)
+            env.prepend_path('PERL5LIB', perl_lib_path)
+
+    def setup_dependent_build_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec,
+                                  deptypes=('build', 'run'))
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self._setup_dependent_env(env, dependent_spec, deptypes=('run',))
 
     def setup_dependent_package(self, module, dependent_spec):
         """Called before perl modules' install() methods.
@@ -204,6 +266,13 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
             # Make the site packages directory for extensions,
             # if it does not exist already.
             mkdirp(module.perl_lib_dir)
+
+    def setup_build_environment(self, env):
+        # This is to avoid failures when using -mmacosx-version-min=11.1
+        # since not all Apple Clang compilers support that version range
+        # See https://eclecticlight.co/2020/07/21/big-sur-is-both-10-16-and-11-0-its-official/
+        if self.spec.satisfies('os=bigsur'):
+            env.set('SYSTEM_VERSION_COMPAT', 1)
 
     @run_after('install')
     def filter_config_dot_pm(self):
@@ -290,3 +359,34 @@ class Perl(Package):  # Perl doesn't use Autotools, it should subclass Package
         # Make deactivate idempotent
         if ext_pkg.name in exts:
             del exts[ext_pkg.name]
+
+    @property
+    def command(self):
+        """Returns the Perl command, which may vary depending on the version
+        of Perl. In general, Perl comes with a ``perl`` command. However,
+        development releases have a ``perlX.Y.Z`` command.
+
+        Returns:
+            Executable: the Perl command
+        """
+        for ver in ('', self.spec.version):
+            path = os.path.join(self.prefix.bin, '{0}{1}'.format(
+                self.spec.name, ver))
+            if os.path.exists(path):
+                return Executable(path)
+        else:
+            msg = 'Unable to locate {0} command in {1}'
+            raise RuntimeError(msg.format(self.spec.name, self.prefix.bin))
+
+    def test(self):
+        """Smoke tests"""
+        exe = self.spec['perl'].command.name
+
+        reason = 'test: checking version is {0}'.format(self.spec.version)
+        self.run_test(exe, '--version', ['perl', str(self.spec.version)],
+                      installed=True, purpose=reason)
+
+        reason = 'test: ensuring perl runs'
+        msg = 'Hello, World!'
+        options = ['-e', 'use warnings; use strict;\nprint("%s\n");' % msg]
+        self.run_test(exe, options, msg, installed=True, purpose=reason)

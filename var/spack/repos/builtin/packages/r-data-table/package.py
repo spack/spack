@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,15 +7,21 @@ from spack import *
 
 
 class RDataTable(RPackage):
-    """Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
+    """Extension of `data.frame`
+
+    Fast aggregation of large data (e.g. 100GB in RAM), fast ordered joins,
     fast add/modify/delete of columns by group using no copies at all, list
     columns and a fast file reader (fread). Offers a natural and flexible
     syntax, for faster development."""
 
     homepage = "https://github.com/Rdatatable/data.table/wiki"
-    url      = "https://cran.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/data.table"
+    url      = "https://cloud.r-project.org/src/contrib/data.table_1.10.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/data.table"
 
+    version('1.13.6', sha256='d50cdd4c4f89cabf83baa9114e49a3b8179f403c499d6e0be7791a44ffcd3e9b')
+    version('1.12.8', sha256='d3a75f3a355ff144cc20a476041617e21fcf2a9f79265fd9bbd4693f3671f9dc')
+    version('1.12.2', sha256='db55c18f0d703a8bc1c806dd1f7551bb405cb867717f52ef9dd64405394d22f5')
+    version('1.12.0', sha256='611b112123dbd4ebd5200770fcdfaaeaab622adeb2b290d36018d3092742e3f7')
     version('1.11.8',   sha256='dc427465599cadd848b28a78e2fce3362867847b44148252054385999fe566d9')
     version('1.11.6',   sha256='ac6783c18e94d1bc05702ddec9fd87c542c744f640132f5ffc373348be84d9e9')
     version('1.11.4',   sha256='fdccf1dec3f38bb344163163decf3ffa0c0f8e2c70daa1bec8aac422716e81d5')
@@ -31,3 +37,4 @@ class RDataTable(RPackage):
     version('1.9.6',    sha256='6f74c349c1731823aef6899edcf18418454167d04eba983e3a6fe17ee9fd236e')
 
     depends_on('r@3.1.0:', type=('build', 'run'))
+    depends_on('zlib')

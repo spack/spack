@@ -1,7 +1,7 @@
 # These dependencies should be installed using pip in order
 # to build the documentation.
 
-sphinx==2.0.1
-sphinxcontrib-programoutput==0.14
-sphinx-rtd-theme==0.4.3
+sphinx
+sphinxcontrib-programoutput
+sphinx-rtd-theme
 python-levenshtein

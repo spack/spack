@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -15,11 +15,15 @@ class Swfft(MakefilePackage):
     url      = "https://xgitlab.cels.anl.gov/api/v4/projects/hacc%2FSWFFT/repository/archive.tar.gz?sha=v1.0"
     git      = "https://xgitlab.cels.anl.gov/hacc/SWFFT.git"
 
-    version('1.0', '0fbc34544b97ba9c3fb19ef2d7a0f076')
+    version('1.0', sha256='d0eba8446a89285e4e43cba787fec6562a360079a99d56f3af5001cc7e66d5dc')
     version('develop', branch='master')
 
     depends_on('mpi')
     depends_on('fftw')
+
+    # fix error
+    #     TimingStats.h:94:35: error: 'printf' was not declared in this scope
+    patch('include-stdio_h.patch')
 
     tags = ['proxy-app', 'ecp-proxy-app']
 
@@ -31,6 +35,10 @@ class Swfft(MakefilePackage):
         targets.append('DFFT_MPI_CC=%s' % spec['mpi'].mpicc)
         targets.append('DFFT_MPI_CXX=%s' % spec['mpi'].mpicxx)
         targets.append('DFFT_MPI_F90=%s' % spec['mpi'].mpifc)
+
+        if self.spec.satisfies('%nvhpc'):
+            # remove -Wno-deprecated -std=gnu99
+            targets.append('DFFT_MPI_CFLAGS=-g -O3 -Wall')
 
         return targets
 

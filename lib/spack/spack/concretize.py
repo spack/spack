@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -16,15 +16,18 @@ TODO: make this customizable and allow users to configure
 """
 from __future__ import print_function
 
+import platform
 import os.path
 import tempfile
+
+import archspec.cpu
+
 import llnl.util.filesystem as fs
 import llnl.util.tty as tty
 
 from itertools import chain
 from functools_backport import reverse_order
 from contextlib import contextmanager
-from six import iteritems
 
 import llnl.util.lang
 
@@ -35,13 +38,10 @@ import spack.compilers
 import spack.architecture
 import spack.error
 import spack.tengine
+import spack.variant as vt
 from spack.config import config
 from spack.version import ver, Version, VersionList, VersionRange
 from spack.package_prefs import PackagePrefs, spec_externals, is_spec_buildable
-
-
-#: Concretizer singleton
-concretizer = llnl.util.lang.Singleton(lambda: Concretizer())
 
 
 #: impements rudimentary logic for ABI compatibility
@@ -52,25 +52,38 @@ class Concretizer(object):
     """You can subclass this class to override some of the default
        concretization strategies, or you can override all of them.
     """
-    def __init__(self):
-        # controls whether we check that compiler versions actually exist
-        # during concretization. Used for testing and for mirror creation
-        self.check_for_compiler_existence = not config.get(
-            'config:install_missing_compilers', False)
+    #: Controls whether we check that compiler versions actually exist
+    #: during concretization. Used for testing and for mirror creation
+    check_for_compiler_existence = None
 
-    @contextmanager
-    def disable_compiler_existence_check(self):
-        saved = self.check_for_compiler_existence
-        self.check_for_compiler_existence = False
-        yield
-        self.check_for_compiler_existence = saved
+    def __init__(self, abstract_spec=None):
+        if Concretizer.check_for_compiler_existence is None:
+            Concretizer.check_for_compiler_existence = not config.get(
+                'config:install_missing_compilers', False
+            )
+        self.abstract_spec = abstract_spec
+        self._adjust_target_answer_generator = None
 
-    @contextmanager
-    def enable_compiler_existence_check(self):
-        saved = self.check_for_compiler_existence
-        self.check_for_compiler_existence = True
-        yield
-        self.check_for_compiler_existence = saved
+    def concretize_develop(self, spec):
+        """
+        Add ``dev_path=*`` variant to packages built from local source.
+        """
+        env = spack.environment.get_env(None, None)
+        dev_info = env.dev_specs.get(spec.name, {}) if env else {}
+        if not dev_info:
+            return False
+
+        path = os.path.normpath(os.path.join(env.path, dev_info['path']))
+
+        if 'dev_path' in spec.variants:
+            assert spec.variants['dev_path'].value == path
+            changed = False
+        else:
+            spec.variants.setdefault(
+                'dev_path', vt.SingleValuedVariant('dev_path', path))
+            changed = True
+        changed |= spec.constrain(dev_info['spec'])
+        return changed
 
     def _valid_virtuals_and_externals(self, spec):
         """Returns a list of candidate virtual dep providers and external
@@ -85,7 +98,7 @@ class Concretizer(object):
         if spec.virtual:
             candidates = spack.repo.path.providers_for(spec)
             if not candidates:
-                raise spack.spec.UnsatisfiableProviderSpecError(
+                raise spack.error.UnsatisfiableProviderSpecError(
                     candidates[0], spec)
 
             # Find nearest spec in the DAG (up then down) that has prefs.
@@ -234,31 +247,136 @@ class Concretizer(object):
         DAG has an architecture, then use the root otherwise use the defaults
         on the platform.
         """
-        try:
-            # Get the nearest architecture with any fields set
-            nearest = next(p for p in spec.traverse(direction='parents')
-                           if (p.architecture and p is not spec))
-            nearest_arch = nearest.architecture
-        except StopIteration:
-            # Default to the system architecture if nothing set
-            nearest_arch = spack.spec.ArchSpec(spack.architecture.sys_type())
-
-        spec_changed = False
-
         # ensure type safety for the architecture
         if spec.architecture is None:
             spec.architecture = spack.spec.ArchSpec()
-            spec_changed = True
 
-        # replace each of the fields (platform, os, target) separately
-        nearest_dict = nearest_arch.to_cmp_dict()
-        replacement_fields = [k for k, v in iteritems(nearest_dict)
-                              if v and not getattr(spec.architecture, k)]
-        for field in replacement_fields:
-            setattr(spec.architecture, field, getattr(nearest_arch, field))
-            spec_changed = True
+        if spec.architecture.concrete:
+            return False
 
+        # Get platform of nearest spec with a platform, including spec
+        # If spec has a platform, easy
+        if spec.architecture.platform:
+            new_plat = spack.architecture.get_platform(
+                spec.architecture.platform)
+        else:
+            # Else if anyone else has a platform, take the closest one
+            # Search up, then down, along build/link deps first
+            # Then any nearest. Algorithm from compilerspec search
+            platform_spec = find_spec(
+                spec, lambda x: x.architecture and x.architecture.platform
+            )
+            if platform_spec:
+                new_plat = spack.architecture.get_platform(
+                    platform_spec.architecture.platform)
+            else:
+                # If no platform anywhere in this spec, grab the default
+                new_plat = spack.architecture.platform()
+
+        # Get nearest spec with relevant platform and an os
+        # Generally, same algorithm as finding platform, except we only
+        # consider specs that have a platform
+        if spec.architecture.os:
+            new_os = spec.architecture.os
+        else:
+            new_os_spec = find_spec(
+                spec, lambda x: (x.architecture and
+                                 x.architecture.platform == str(new_plat) and
+                                 x.architecture.os)
+            )
+            if new_os_spec:
+                new_os = new_os_spec.architecture.os
+            else:
+                new_os = new_plat.operating_system('default_os')
+
+        # Get the nearest spec with relevant platform and a target
+        # Generally, same algorithm as finding os
+        curr_target = None
+        if spec.architecture.target:
+            curr_target = spec.architecture.target
+        if spec.architecture.target and spec.architecture.target_concrete:
+            new_target = spec.architecture.target
+        else:
+            new_target_spec = find_spec(
+                spec, lambda x: (x.architecture and
+                                 x.architecture.platform == str(new_plat) and
+                                 x.architecture.target and
+                                 x.architecture.target != curr_target)
+            )
+            if new_target_spec:
+                if curr_target:
+                    # constrain one target by the other
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, new_target_spec.architecture.target))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, curr_target))
+                    curr_target_arch.constrain(new_target_arch)
+                    new_target = curr_target_arch.target
+                else:
+                    new_target = new_target_spec.architecture.target
+            else:
+                # To get default platform, consider package prefs
+                if PackagePrefs.has_preferred_targets(spec.name):
+                    new_target = self.target_from_package_preferences(spec)
+                else:
+                    new_target = new_plat.target('default_target')
+                if curr_target:
+                    # convert to ArchSpec to compare satisfaction
+                    new_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(new_target)))
+                    curr_target_arch = spack.spec.ArchSpec(
+                        (None, None, str(curr_target)))
+
+                    if not new_target_arch.satisfies(curr_target_arch):
+                        # new_target is an incorrect guess based on preferences
+                        # and/or default
+                        valid_target_ranges = str(curr_target).split(',')
+                        for target_range in valid_target_ranges:
+                            t_min, t_sep, t_max = target_range.partition(':')
+                            if not t_sep:
+                                new_target = t_min
+                                break
+                            elif t_max:
+                                new_target = t_max
+                                break
+                            elif t_min:
+                                # TODO: something better than picking first
+                                new_target = t_min
+                                break
+
+        # Construct new architecture, compute whether spec changed
+        arch_spec = (str(new_plat), str(new_os), str(new_target))
+        new_arch = spack.spec.ArchSpec(arch_spec)
+        spec_changed = new_arch != spec.architecture
+        spec.architecture = new_arch
         return spec_changed
+
+    def target_from_package_preferences(self, spec):
+        """Returns the preferred target from the package preferences if
+        there's any.
+
+        Args:
+            spec: abstract spec to be concretized
+        """
+        target_prefs = PackagePrefs(spec.name, 'target')
+        target_specs = [spack.spec.Spec('target=%s' % tname)
+                        for tname in archspec.cpu.TARGETS]
+
+        def tspec_filter(s):
+            # Filter target specs by whether the architecture
+            # family is the current machine type. This ensures
+            # we only consider x86_64 targets when on an
+            # x86_64 machine, etc. This may need to change to
+            # enable setting cross compiling as a default
+            target = archspec.cpu.TARGETS[str(s.architecture.target)]
+            arch_family_name = target.family.name
+            return arch_family_name == platform.machine()
+
+        # Sort filtered targets by package prefs
+        target_specs = list(filter(tspec_filter, target_specs))
+        target_specs.sort(key=target_prefs)
+        new_target = target_specs[0].architecture.target
+        return new_target
 
     def concretize_variants(self, spec):
         """If the spec already has variants filled in, return.  Otherwise, add
@@ -269,6 +387,13 @@ class Concretizer(object):
         preferred_variants = PackagePrefs.preferred_variants(spec.name)
         pkg_cls = spec.package_class
         for name, variant in pkg_cls.variants.items():
+            var = spec.variants.get(name, None)
+            if var and '*' in var:
+                # remove variant wildcard before concretizing
+                # wildcard cannot be combined with other variables in a
+                # multivalue variant, a concrete variant cannot have the value
+                # wildcard, and a wildcard does not constrain a variant
+                spec.variants.pop(name)
             if name not in spec.variants:
                 changed = True
                 if name in preferred_variants:
@@ -292,7 +417,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler if the target or operating system
         # is not yet determined
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -303,7 +428,16 @@ class Concretizer(object):
         # compiler_for_spec Should think whether this can be more
         # efficient
         def _proper_compiler_style(cspec, aspec):
-            return spack.compilers.compilers_for_spec(cspec, arch_spec=aspec)
+            compilers = spack.compilers.compilers_for_spec(
+                cspec, arch_spec=aspec
+            )
+            # If the spec passed as argument is concrete we want to check
+            # the versions match exactly
+            if (cspec.concrete and compilers and
+                cspec.version not in [c.version for c in compilers]):
+                return []
+
+            return compilers
 
         if spec.compiler and spec.compiler.concrete:
             if (self.check_for_compiler_existence and not
@@ -316,7 +450,7 @@ class Concretizer(object):
         other_spec = spec if spec.compiler else find_spec(
             spec, lambda x: x.compiler, spec.root)
         other_compiler = other_spec.compiler
-        assert(other_spec)
+        assert other_spec
 
         # Check if the compiler is already fully specified
         if other_compiler and other_compiler.concrete:
@@ -339,11 +473,14 @@ class Concretizer(object):
                         other_compiler
                     )
                     self.concretize_version(cpkg_spec)
-                    spec.compiler.versions = cpkg_spec.versions
+                    spec.compiler = spack.spec.CompilerSpec(
+                        other_compiler.name, cpkg_spec.versions)
                     return True
                 else:
                     # No compiler with a satisfactory spec was found
-                    raise UnavailableCompilerVersionError(other_compiler)
+                    raise UnavailableCompilerVersionError(
+                        other_compiler, spec.architecture
+                    )
         else:
             # We have no hints to go by, grab any compiler
             compiler_list = spack.compilers.all_compiler_specs()
@@ -367,7 +504,7 @@ class Concretizer(object):
             _compiler_concretization_failure(
                 other_compiler, spec.architecture)
 
-        assert(spec.compiler.concrete)
+        assert spec.compiler.concrete
         return True  # things changed.
 
     def concretize_compiler_flags(self, spec):
@@ -378,7 +515,7 @@ class Concretizer(object):
         """
         # Pass on concretizing the compiler flags if the target or operating
         # system is not set.
-        if not (spec.architecture.os and spec.architecture.target):
+        if not spec.architecture.concrete:
             # We haven't changed, but other changes need to happen before we
             # continue. `return True` here to force concretization to keep
             # running.
@@ -428,6 +565,109 @@ class Concretizer(object):
 
         return ret
 
+    def adjust_target(self, spec):
+        """Adjusts the target microarchitecture if the compiler is too old
+        to support the default one.
+
+        Args:
+            spec: spec to be concretized
+
+        Returns:
+            True if spec was modified, False otherwise
+        """
+        # To minimize the impact on performance this function will attempt
+        # to adjust the target only at the very first call once necessary
+        # information is set. It will just return False on subsequent calls.
+        # The way this is achieved is by initializing a generator and making
+        # this function return the next answer.
+        if not (spec.architecture and spec.architecture.concrete):
+            # Not ready, but keep going because we have work to do later
+            return True
+
+        def _make_only_one_call(spec):
+            yield self._adjust_target(spec)
+            while True:
+                yield False
+
+        if self._adjust_target_answer_generator is None:
+            self._adjust_target_answer_generator = _make_only_one_call(spec)
+
+        return next(self._adjust_target_answer_generator)
+
+    def _adjust_target(self, spec):
+        """Assumes that the architecture and the compiler have been
+        set already and checks if the current target microarchitecture
+        is the default and can be optimized by the compiler.
+
+        If not, downgrades the microarchitecture until a suitable one
+        is found. If none can be found raise an error.
+
+        Args:
+            spec: spec to be concretized
+
+        Returns:
+            True if any modification happened, False otherwise
+        """
+        import archspec.cpu
+
+        # Try to adjust the target only if it is the default
+        # target for this platform
+        current_target = spec.architecture.target
+        current_platform = spack.architecture.get_platform(
+            spec.architecture.platform
+        )
+
+        default_target = current_platform.target('default_target')
+        if PackagePrefs.has_preferred_targets(spec.name):
+            default_target = self.target_from_package_preferences(spec)
+
+        if current_target != default_target or (
+                self.abstract_spec and
+                self.abstract_spec.architecture and
+                self.abstract_spec.architecture.concrete):
+            return False
+
+        try:
+            current_target.optimization_flags(spec.compiler)
+        except archspec.cpu.UnsupportedMicroarchitecture:
+            microarchitecture = current_target.microarchitecture
+            for ancestor in microarchitecture.ancestors:
+                candidate = None
+                try:
+                    candidate = spack.architecture.Target(ancestor)
+                    candidate.optimization_flags(spec.compiler)
+                except archspec.cpu.UnsupportedMicroarchitecture:
+                    continue
+
+                if candidate is not None:
+                    msg = ('{0.name}@{0.version} cannot build optimized '
+                           'binaries for "{1}". Using best target possible: '
+                           '"{2}"')
+                    msg = msg.format(spec.compiler, current_target, candidate)
+                    tty.warn(msg)
+                    spec.architecture.target = candidate
+                    return True
+            else:
+                raise
+
+        return False
+
+
+@contextmanager
+def disable_compiler_existence_check():
+    saved = Concretizer.check_for_compiler_existence
+    Concretizer.check_for_compiler_existence = False
+    yield
+    Concretizer.check_for_compiler_existence = saved
+
+
+@contextmanager
+def enable_compiler_existence_check():
+    saved = Concretizer.check_for_compiler_existence
+    Concretizer.check_for_compiler_existence = True
+    yield
+    Concretizer.check_for_compiler_existence = saved
+
 
 def find_spec(spec, condition, default=None):
     """Searches the dag from spec in an intelligent order and looks
@@ -472,10 +712,12 @@ def _compiler_concretization_failure(compiler_spec, arch):
         raise UnavailableCompilerVersionError(compiler_spec, arch)
 
 
-def concretize_specs_together(*abstract_specs):
+def concretize_specs_together(*abstract_specs, **kwargs):
     """Given a number of specs as input, tries to concretize them together.
 
     Args:
+        tests (bool or list or set): False to run no tests, True to test
+            all packages, or a list of package names to run tests for some
         *abstract_specs: abstract specs to be concretized, given either
             as Specs or strings
 
@@ -515,7 +757,7 @@ def concretize_specs_together(*abstract_specs):
     with spack.repo.additional_repository(concretization_repository):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
-        concretization_root.concretize()
+        concretization_root.concretize(tests=kwargs.get('tests', False))
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs
@@ -558,7 +800,9 @@ class UnavailableCompilerVersionError(spack.error.SpackError):
             )
 
         super(UnavailableCompilerVersionError, self).__init__(
-            err_msg, "Run 'spack compiler find' to add compilers.")
+            err_msg, "Run 'spack compiler find' to add compilers or "
+            "'spack compilers' to see which compilers are already recognized"
+            " by spack.")
 
 
 class NoValidVersionError(spack.error.SpackError):
@@ -582,10 +826,10 @@ class InsufficientArchitectureInfoError(spack.error.SpackError):
             % (spec.name, str(archs)))
 
 
-class NoBuildError(spack.error.SpackError):
+class NoBuildError(spack.error.SpecError):
     """Raised when a package is configured with the buildable option False, but
-       no satisfactory external versions can be found"""
-
+    no satisfactory external versions can be found
+    """
     def __init__(self, spec):
         msg = ("The spec\n    '%s'\n    is configured as not buildable, "
                "and no matching external installs were found")

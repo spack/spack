@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -12,7 +12,7 @@ class Tix(AutotoolsPackage):
 
     homepage = "https://sourceforge.net/projects/tix/"
     url      = "https://sourceforge.net/projects/tix/files/tix/8.4.3/Tix8.4.3-src.tar.gz/download"
-    version('8.4.3', '2b8bf4b10a852264678182652f477e59')
+    version('8.4.3', sha256='562f040ff7657e10b5cffc2c41935f1a53c6402eb3d5f3189113d734fd6c03cb')
 
     extends('tcl')
     depends_on('tk@:8.5.99')
@@ -20,13 +20,14 @@ class Tix(AutotoolsPackage):
 
     def configure_args(self):
         spec = self.spec
-        config_args = ['--with-tcl={0}'.format(spec['tcl'].prefix.lib),
-                       '--with-tk={0}'.format(spec['tk'].prefix.lib),
-                       '--exec-prefix={0}'.format(spec.prefix)]
-        return config_args
+        args = [
+            '--with-tcl={0}'.format(spec['tcl'].libs.directories[0]),
+            '--with-tk={0}'.format(spec['tk'].libs.directories[0]),
+            '--exec-prefix={0}'.format(self.prefix),
+        ]
+        return args
 
-    def install(self, spec, prefix):
-        make('install')
-        with working_dir(self.prefix.lib):
-            symlink('Tix{0}/libTix{0}.{1}'.format(self.version, dso_suffix),
-                    'libtix.{0}'.format(dso_suffix))
+    @property
+    def libs(self):
+        return find_libraries(['libTix{0}'.format(self.version)],
+                              root=self.prefix, recursive=True)

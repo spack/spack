@@ -1,0 +1,17 @@
+--- a/configure	2019-08-07 20:44:13.708133253 -0500
++++ b/configure	2019-08-07 20:44:27.334099579 -0500
+@@ -2640,10 +2640,10 @@
+ 
+ # ------------------------------------------------------------------
+ 
+-if test "x${srcdir}" != "x."; then
+-    echo "--srcdir is not supported"
+-    exit 1
+-fi
++#if test "x${srcdir}" != "x."; then
++#    echo "--srcdir is not supported"
++#    exit 1
++#fi
+ 
+ WARNINGS="-Wimplicit -Wreturn-type -Wno-write-strings -Wformat"
+ if test "x$ENABLE_WARNINGS" '!=' "x";then

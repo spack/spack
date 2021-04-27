@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -17,9 +17,9 @@ class XcbUtilErrors(AutotoolsPackage):
     homepage = "https://xcb.freedesktop.org/"
     url      = "https://xcb.freedesktop.org/dist/xcb-util-errors-1.0.tar.gz"
 
-    version('1.0', 'dc4a6ce073a81a0b7e614a2988f275cc')
+    version('1.0', sha256='7752a722e580efdbada30632cb23aed35c18757399ac3b547b59fd7257cf5e33')
 
     depends_on('libxcb@1.4:')
 
-    depends_on('xcb-proto', type='build')
+    depends_on('xcb-proto')
     depends_on('pkgconfig', type='build')

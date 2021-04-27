@@ -1,10 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Opennurbs(Package):
@@ -19,7 +16,7 @@ class Opennurbs(Package):
 
     version('develop', branch='develop')
 
-    version('percept', '59163fd085a24c7a4c2170c70bb60fea',
+    version('percept', sha256='d12a8f14f0b27d286fb7a75ab3c4e300f77d1fbb028326d1c8d28e4641605538',
             url='https://github.com/PerceptTools/percept/raw/master/build-cmake/opennurbs-percept.tar.gz')
 
     variant('shared', default=True,
@@ -49,6 +46,4 @@ class Opennurbs(Package):
         mkdir(prefix.include)
         install('libopenNURBS.a', prefix.lib)
         install_tree('zlib', join_path(prefix.include, 'zlib'))
-        headers = glob.glob(join_path('.', '*.h'))
-        for h in headers:
-            install(h, prefix.include)
+        install('*.h', prefix.include)

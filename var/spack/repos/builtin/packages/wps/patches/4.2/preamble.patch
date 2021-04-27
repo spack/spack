@@ -1,0 +1,21 @@
+diff --git a/arch/preamble b/arch/preamble
+index f5d316f..cb0d4a0 100644
+--- a/arch/preamble
++++ b/arch/preamble
+@@ -39,13 +39,14 @@ WRF_INCLUDE     =       -I$(WRF_DIR)/external/io_netcdf \
+                         -I$(WRF_DIR)/external/io_grib1 \
+                         -I$(WRF_DIR)/external/io_int \
+                         -I$(WRF_DIR)/inc \
+-                        -I$(NETCDF)/include
++                        -I$(NETCDF)/include \
++                        -I$(NETCDFF)/include
+ 
+ WRF_LIB         =       -L$(WRF_DIR)/external/io_grib1 -lio_grib1 \
+                         -L$(WRF_DIR)/external/io_grib_share -lio_grib_share \
+                         -L$(WRF_DIR)/external/io_int -lwrfio_int \
+                         -L$(WRF_DIR)/external/io_netcdf -lwrfio_nf \
+-                        -L$(NETCDF)/lib CONFIGURE_NETCDFF_LIB -lnetcdf
++                        -L$(NETCDFF)/lib -L$(NETCDF)/lib CONFIGURE_NETCDFF_LIB -lnetcdf
+ 
+ 
+ #### Architecture specific settings ####

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,12 +11,14 @@ class PyXdot(PythonPackage):
     dot language."""
 
     homepage = "https://github.com/jrfonseca/xdot.py"
-    url      = "https://github.com/jrfonseca/xdot.py/archive/0.9.tar.gz"
+    pypi = "xdot/xdot-1.0.tar.gz"
     git      = "https://github.com/jrfonseca/xdot.py.git"
+    maintainers = ['lee218llnl']
 
-    version('master', branch="master")
-    version('1.0', '4e60c42d009a8802db6c1b4dab519863')
-    version('0.9', '19c78311d73b0f9ea059a6febf42eeea')
+    version('master', branch='master')
+    version('1.2', sha256='3df91e6c671869bd2a6b2a8883fa3476dbe2ba763bd2a7646cf848a9eba71b70')
+    version('1.0', sha256='7e067896d729af82f1fd0758e265f129944d469c30f550e3f15dbdb751cc42a1')
+    version('0.9', sha256='a33701664ecfefe7c7313a120a587e87334f3a566409bc451538fcde5edd6907')
 
     # setuptools is required at runtime to avoid:
     # No module named 'pkg_resources'
@@ -28,6 +30,7 @@ class PyXdot(PythonPackage):
     depends_on('atk', type=('build', 'run'))
     depends_on('gdk-pixbuf', type=('build', 'run'))
     depends_on('gtkplus', type=('build', 'run'))
+    depends_on('py-numpy', type=('build', 'run'), when='@1.2:')
 
     @run_after('install')
     def post_install(self):
@@ -46,17 +49,17 @@ class PyXdot(PythonPackage):
         python3 = spec['python'].command
         python3('-m', 'compileall', dst)
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_run_environment(self, env):
         spec = self.spec
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['pango'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['atk'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['gdk-pixbuf'].prefix.lib,
-                                       'girepository-1.0'))
-        run_env.prepend_path('GI_TYPELIB_PATH',
-                             join_path(spec['gtkplus'].prefix.lib,
-                                       'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['pango'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['atk'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['gdk-pixbuf'].prefix.lib,
+                                   'girepository-1.0'))
+        env.prepend_path('GI_TYPELIB_PATH',
+                         join_path(spec['gtkplus'].prefix.lib,
+                                   'girepository-1.0'))

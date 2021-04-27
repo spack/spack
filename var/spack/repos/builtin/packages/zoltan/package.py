@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -20,12 +20,9 @@ class Zoltan(AutotoolsPackage):
     """
 
     homepage = "http://www.cs.sandia.gov/zoltan"
-    url      = "http://www.cs.sandia.gov/~kddevin/Zoltan_Distributions/zoltan_distrib_v3.83.tar.gz"
+    url      = "https://github.com/sandialabs/Zoltan/archive/v3.83.tar.gz"
 
-    version('3.83', '1ff1bc93f91e12f2c533ddb01f2c095f')
-    version('3.8', '9d8fba8a990896881b85351d4327c4a9')
-    version('3.6', '9cce794f7241ecd8dbea36c3d7a880f9')
-    version('3.3', '5eb8f00bda634b25ceefa0122bd18d65')
+    version('3.83', sha256='17320a9f08e47f30f6f3846a74d15bfea6f3c1b937ca93c0ab759ca02c40e56c')
 
     patch('notparallel.patch', when='@3.8')
 
@@ -35,10 +32,13 @@ class Zoltan(AutotoolsPackage):
     variant('fortran', default=True, description='Enable Fortran support.')
     variant('mpi', default=True, description='Enable MPI support.')
     variant('parmetis', default=False, description='Enable ParMETIS support.')
+    variant('int64', default=False, description='Enable 64bit indices.')
 
     depends_on('mpi', when='+mpi')
 
+    depends_on('parmetis@4: +int64', when='+parmetis+int64')
     depends_on('parmetis@4:', when='+parmetis')
+    depends_on('metis+int64', when='+parmetis+int64')
     depends_on('metis', when='+parmetis')
 
     depends_on('perl@:5.21', type='build', when='@:3.6')
@@ -88,16 +88,26 @@ class Zoltan(AutotoolsPackage):
             '-g' if '+debug' in spec else '',
         ]
 
+        config_ldflags = []
+        # PGI runtime libraries
+        if '%pgi' in spec:
+            config_ldflags.append('-pgf90libs')
+        # NVHPC runtime libraries
+        if '%nvhpc' in spec:
+            config_ldflags.append('-fortranlibs')
         if '+shared' in spec:
             config_args.extend([
                 'RANLIB=echo',
                 '--with-ar=$(CXX) -shared $(LDFLAGS) -o'
             ])
-            config_cflags.append(self.compiler.pic_flag)
+            config_cflags.append(self.compiler.cc_pic_flag)
             if spec.satisfies('%gcc'):
                 config_args.append('--with-libs=-lgfortran')
             if spec.satisfies('%intel'):
                 config_args.append('--with-libs=-lifcore')
+
+        if '+int64' in spec:
+            config_args.append('--with-id-type=ulong')
 
         if '+parmetis' in spec:
             parmetis_prefix = spec['parmetis'].prefix
@@ -128,13 +138,17 @@ class Zoltan(AutotoolsPackage):
                 '--with-mpi-libs= '
             ])
 
+        config_fcflags = config_cflags[:]
+        if spec.satisfies('%gcc@10:+fortran'):
+            config_fcflags.append('-fallow-argument-mismatch')
         # NOTE: Early versions of Zoltan come packaged with a few embedded
         # library packages (e.g. ParMETIS, Scotch), which messes with Spack's
         # ability to descend directly into the package's source directory.
         config_args.extend([
             '--with-cflags={0}'.format(' '.join(config_cflags)),
             '--with-cxxflags={0}'.format(' '.join(config_cflags)),
-            '--with-fcflags={0}'.format(' '.join(config_cflags))
+            '--with-fcflags={0}'.format(' '.join(config_fcflags)),
+            '--with-ldflags={0}'.format(' '.join(config_ldflags))
         ])
         return config_args
 

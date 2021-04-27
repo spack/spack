@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -11,7 +11,7 @@ class Dia(Package):
     homepage  = 'https://wiki.gnome.org/Apps/Dia'
     url       = 'https://ftp.gnome.org/pub/gnome/sources/dia/0.97/dia-0.97.3.tar.xz'
 
-    version('0.97.3',    '0e744a0f6a6c4cb6a089e4d955392c3c')
+    version('0.97.3',    sha256='22914e48ef48f894bb5143c5efc3d01ab96e0a0cde80de11058d3b4301377d34')
 
     depends_on('intltool', type='build')
     depends_on('gettext', type='build')
@@ -21,7 +21,7 @@ class Dia(Package):
     depends_on('python')
     depends_on('swig')
     depends_on('libsm')
-    depends_on('libuuid')
+    depends_on('uuid')
     depends_on('libxinerama')
     depends_on('libxrender')
     depends_on('libxml2')

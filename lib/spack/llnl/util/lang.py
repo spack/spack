@@ -1,73 +1,96 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from __future__ import division
 
+import multiprocessing
 import os
 import re
 import functools
-import collections
 import inspect
 from datetime import datetime, timedelta
 from six import string_types
 import sys
+
+if sys.version_info < (3, 0):
+    from itertools import izip_longest  # novm
+    zip_longest = izip_longest
+else:
+    from itertools import zip_longest  # novm
+
+if sys.version_info >= (3, 3):
+    from collections.abc import Hashable, MutableMapping  # novm
+else:
+    from collections import Hashable, MutableMapping
 
 
 # Ignore emacs backups when listing modules
 ignore_modules = [r'^\.#', '~$']
 
 
-class classproperty(property):
-    """classproperty decorator: like property but for classmethods."""
-    def __get__(self, cls, owner):
-        return self.fget.__get__(None, owner)()
+# On macOS, Python 3.8 multiprocessing now defaults to the 'spawn' start
+# method. Spack cannot currently handle this, so force the process to start
+# using the 'fork' start method.
+#
+# TODO: This solution is not ideal, as the 'fork' start method can lead to
+# crashes of the subprocess. Figure out how to make 'spawn' work.
+#
+# See:
+# * https://github.com/spack/spack/pull/18124
+# * https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods  # noqa: E501
+# * https://bugs.python.org/issue33725
+if sys.version_info >= (3,):  # novm
+    fork_context = multiprocessing.get_context('fork')
+else:
+    fork_context = multiprocessing
 
 
 def index_by(objects, *funcs):
     """Create a hierarchy of dictionaries by splitting the supplied
-       set of objects on unique values of the supplied functions.
-       Values are used as keys.  For example, suppose you have four
-       objects with attributes that look like this::
+    set of objects on unique values of the supplied functions.
 
-          a = Spec(name="boost",    compiler="gcc",   arch="bgqos_0")
-          b = Spec(name="mrnet",    compiler="intel", arch="chaos_5_x86_64_ib")
-          c = Spec(name="libelf",   compiler="xlc",   arch="bgqos_0")
-          d = Spec(name="libdwarf", compiler="intel", arch="chaos_5_x86_64_ib")
+    Values are used as keys. For example, suppose you have four
+    objects with attributes that look like this::
 
-          list_of_specs = [a,b,c,d]
-          index1 = index_by(list_of_specs, lambda s: s.arch,
-                            lambda s: s.compiler)
-          index2 = index_by(list_of_specs, lambda s: s.compiler)
+        a = Spec("boost %gcc target=skylake")
+        b = Spec("mrnet %intel target=zen2")
+        c = Spec("libelf %xlc target=skylake")
+        d = Spec("libdwarf %intel target=zen2")
 
-       ``index1`` now has two levels of dicts, with lists at the
-       leaves, like this::
+        list_of_specs = [a,b,c,d]
+        index1 = index_by(list_of_specs, lambda s: str(s.target),
+                          lambda s: s.compiler)
+        index2 = index_by(list_of_specs, lambda s: s.compiler)
 
-           { 'bgqos_0'           : { 'gcc' : [a], 'xlc' : [c] },
-             'chaos_5_x86_64_ib' : { 'intel' : [b, d] }
-           }
+    ``index1`` now has two levels of dicts, with lists at the
+    leaves, like this::
 
-       And ``index2`` is a single level dictionary of lists that looks
-       like this::
+        { 'zen2'    : { 'gcc' : [a], 'xlc' : [c] },
+          'skylake' : { 'intel' : [b, d] }
+        }
 
-           { 'gcc'    : [a],
-             'intel'  : [b,d],
-             'xlc'    : [c]
-           }
+    And ``index2`` is a single level dictionary of lists that looks
+    like this::
 
-       If any elemnts in funcs is a string, it is treated as the name
-       of an attribute, and acts like getattr(object, name).  So
-       shorthand for the above two indexes would be::
+        { 'gcc'    : [a],
+          'intel'  : [b,d],
+          'xlc'    : [c]
+        }
 
-           index1 = index_by(list_of_specs, 'arch', 'compiler')
-           index2 = index_by(list_of_specs, 'compiler')
+    If any elements in funcs is a string, it is treated as the name
+    of an attribute, and acts like getattr(object, name).  So
+    shorthand for the above two indexes would be::
 
-       You can also index by tuples by passing tuples::
+        index1 = index_by(list_of_specs, 'arch', 'compiler')
+        index2 = index_by(list_of_specs, 'compiler')
 
-           index1 = index_by(list_of_specs, ('arch', 'compiler'))
+    You can also index by tuples by passing tuples::
 
-       Keys in the resulting dict will look like ('gcc', 'bgqos_0').
+        index1 = index_by(list_of_specs, ('target', 'compiler'))
+
+    Keys in the resulting dict will look like ('gcc', 'skylake').
     """
     if not funcs:
         return objects
@@ -176,7 +199,7 @@ def memoized(func):
 
     @functools.wraps(func)
     def _memoized_function(*args):
-        if not isinstance(args, collections.Hashable):
+        if not isinstance(args, Hashable):
             # Not hashable, so just call the function.
             return func(*args)
 
@@ -209,49 +232,223 @@ def list_modules(directory, **kwargs):
                 yield re.sub('.py$', '', name)
 
 
-def key_ordering(cls):
-    """Decorates a class with extra methods that implement rich comparison
-       operations and ``__hash__``.  The decorator assumes that the class
-       implements a function called ``_cmp_key()``.  The rich comparison
-       operations will compare objects using this key, and the ``__hash__``
-       function will return the hash of this key.
+def decorator_with_or_without_args(decorator):
+    """Allows a decorator to be used with or without arguments, e.g.::
 
-       If a class already has ``__eq__``, ``__ne__``, ``__lt__``, ``__le__``,
-       ``__gt__``, or ``__ge__`` defined, this decorator will overwrite them.
+        # Calls the decorator function some args
+        @decorator(with, arguments, and=kwargs)
 
-       Raises:
-           TypeError: If the class does not have a ``_cmp_key`` method
+    or::
+
+        # Calls the decorator function with zero arguments
+        @decorator
+
     """
-    def setter(name, value):
-        value.__name__ = name
-        setattr(cls, name, value)
+    # See https://stackoverflow.com/questions/653368 for more on this
+    @functools.wraps(decorator)
+    def new_dec(*args, **kwargs):
+        if len(args) == 1 and len(kwargs) == 0 and callable(args[0]):
+            # actual decorated function
+            return decorator(args[0])
+        else:
+            # decorator arguments
+            return lambda realf: decorator(realf, *args, **kwargs)
 
-    if not has_method(cls, '_cmp_key'):
-        raise TypeError("'%s' doesn't define _cmp_key()." % cls.__name__)
+    return new_dec
 
-    setter('__eq__',
-           lambda s, o:
-           (s is o) or (o is not None and s._cmp_key() == o._cmp_key()))
-    setter('__lt__',
-           lambda s, o: o is not None and s._cmp_key() < o._cmp_key())
-    setter('__le__',
-           lambda s, o: o is not None and s._cmp_key() <= o._cmp_key())
 
-    setter('__ne__',
-           lambda s, o:
-           (s is not o) and (o is None or s._cmp_key() != o._cmp_key()))
-    setter('__gt__',
-           lambda s, o: o is None or s._cmp_key() > o._cmp_key())
-    setter('__ge__',
-           lambda s, o: o is None or s._cmp_key() >= o._cmp_key())
+#: sentinel for testing that iterators are done in lazy_lexicographic_ordering
+done = object()
 
-    setter('__hash__', lambda self: hash(self._cmp_key()))
+
+def tuplify(seq):
+    """Helper for lazy_lexicographic_ordering()."""
+    return tuple((tuplify(x) if callable(x) else x) for x in seq())
+
+
+def lazy_eq(lseq, rseq):
+    """Equality comparison for two lazily generated sequences.
+
+    See ``lazy_lexicographic_ordering``.
+    """
+    liter = lseq()  # call generators
+    riter = rseq()
+
+    # zip_longest is implemented in native code, so use it for speed.
+    # use zip_longest instead of zip because it allows us to tell
+    # which iterator was longer.
+    for left, right in zip_longest(liter, riter, fillvalue=done):
+        if (left is done) or (right is done):
+            return False
+
+        # recursively enumerate any generators, otherwise compare
+        equal = lazy_eq(left, right) if callable(left) else left == right
+        if not equal:
+            return False
+
+    return True
+
+
+def lazy_lt(lseq, rseq):
+    """Less-than comparison for two lazily generated sequences.
+
+    See ``lazy_lexicographic_ordering``.
+    """
+    liter = lseq()
+    riter = rseq()
+
+    for left, right in zip_longest(liter, riter, fillvalue=done):
+        if (left is done) or (right is done):
+            return left is done  # left was shorter than right
+
+        sequence = callable(left)
+        equal = lazy_eq(left, right) if sequence else left == right
+        if equal:
+            continue
+
+        if sequence:
+            return lazy_lt(left, right)
+        if left is None:
+            return True
+        if right is None:
+            return False
+
+        return left < right
+
+    return False  # if equal, return False
+
+
+@decorator_with_or_without_args
+def lazy_lexicographic_ordering(cls, set_hash=True):
+    """Decorates a class with extra methods that implement rich comparison.
+
+    This is a lazy version of the tuple comparison used frequently to
+    implement comparison in Python. Given some objects with fields, you
+    might use tuple keys to implement comparison, e.g.::
+
+        class Widget:
+            def _cmp_key(self):
+                return (
+                    self.a,
+                    self.b,
+                    (self.c, self.d),
+                    self.e
+                )
+
+            def __eq__(self, other):
+                return self._cmp_key() == other._cmp_key()
+
+            def __lt__(self):
+                return self._cmp_key() < other._cmp_key()
+
+            # etc.
+
+    Python would compare ``Widgets`` lexicographically based on their
+    tuples. The issue there for simple comparators is that we have to
+    bulid the tuples *and* we have to generate all the values in them up
+    front. When implementing comparisons for large data structures, this
+    can be costly.
+
+    Lazy lexicographic comparison maps the tuple comparison shown above
+    to generator functions. Instead of comparing based on pre-constructed
+    tuple keys, users of this decorator can compare using elements from a
+    generator. So, you'd write::
+
+        @lazy_lexicographic_ordering
+        class Widget:
+            def _cmp_iter(self):
+                yield a
+                yield b
+                def cd_fun():
+                    yield c
+                    yield d
+                yield cd_fun
+                yield e
+
+            # operators are added by decorator
+
+    There are no tuples preconstructed, and the generator does not have
+    to complete. Instead of tuples, we simply make functions that lazily
+    yield what would've been in the tuple. The
+    ``@lazy_lexicographic_ordering`` decorator handles the details of
+    implementing comparison operators, and the ``Widget`` implementor
+    only has to worry about writing ``_cmp_iter``, and making sure the
+    elements in it are also comparable.
+
+    Some things to note:
+
+      * If a class already has ``__eq__``, ``__ne__``, ``__lt__``,
+        ``__le__``, ``__gt__``, ``__ge__``, or ``__hash__`` defined, this
+        decorator will overwrite them.
+
+      * If ``set_hash`` is ``False``, this will not overwrite
+        ``__hash__``.
+
+      * This class uses Python 2 None-comparison semantics. If you yield
+        None and it is compared to a non-None type, None will always be
+        less than the other object.
+
+    Raises:
+        TypeError: If the class does not have a ``_cmp_iter`` method
+
+    """
+    if not has_method(cls, "_cmp_iter"):
+        raise TypeError("'%s' doesn't define _cmp_iter()." % cls.__name__)
+
+    # comparison operators are implemented in terms of lazy_eq and lazy_lt
+    def eq(self, other):
+        if self is other:
+            return True
+        return (other is not None) and lazy_eq(self._cmp_iter, other._cmp_iter)
+
+    def lt(self, other):
+        if self is other:
+            return False
+        return (other is not None) and lazy_lt(self._cmp_iter, other._cmp_iter)
+
+    def ne(self, other):
+        if self is other:
+            return False
+        return (other is None) or not lazy_eq(self._cmp_iter, other._cmp_iter)
+
+    def gt(self, other):
+        if self is other:
+            return False
+        return (other is None) or lazy_lt(other._cmp_iter, self._cmp_iter)
+
+    def le(self, other):
+        if self is other:
+            return True
+        return (other is not None) and not lazy_lt(other._cmp_iter,
+                                                   self._cmp_iter)
+
+    def ge(self, other):
+        if self is other:
+            return True
+        return (other is None) or not lazy_lt(self._cmp_iter, other._cmp_iter)
+
+    def h(self):
+        return hash(tuplify(self._cmp_iter))
+
+    def add_func_to_class(name, func):
+        """Add a function to a class with a particular name."""
+        func.__name__ = name
+        setattr(cls, name, func)
+
+    add_func_to_class("__eq__", eq)
+    add_func_to_class("__ne__", ne)
+    add_func_to_class("__lt__", lt)
+    add_func_to_class("__le__", le)
+    add_func_to_class("__gt__", gt)
+    add_func_to_class("__ge__", ge)
+    if set_hash:
+        add_func_to_class("__hash__", h)
 
     return cls
 
 
-@key_ordering
-class HashableMap(collections.MutableMapping):
+@lazy_lexicographic_ordering
+class HashableMap(MutableMapping):
     """This is a hashable, comparable dictionary.  Hash is performed on
        a tuple of the values in the dictionary."""
 
@@ -273,8 +470,9 @@ class HashableMap(collections.MutableMapping):
     def __delitem__(self, key):
         del self.dict[key]
 
-    def _cmp_key(self):
-        return tuple(sorted(self.values()))
+    def _cmp_iter(self):
+        for _, v in sorted(self.items()):
+            yield v
 
     def copy(self):
         """Type-agnostic clone method.  Preserves subclass type."""
@@ -555,6 +753,12 @@ class Singleton(object):
         return self._instance
 
     def __getattr__(self, name):
+        # When unpickling Singleton objects, the 'instance' attribute may be
+        # requested but not yet set. The final 'getattr' line here requires
+        # 'instance'/'_instance' to be defined or it will enter an infinite
+        # loop, so protect against that here.
+        if name in ['_instance', 'instance']:
+            raise AttributeError()
         return getattr(self.instance, name)
 
     def __getitem__(self, name):
@@ -583,6 +787,8 @@ class LazyReference(object):
         self.ref_function = ref_function
 
     def __getattr__(self, name):
+        if name == 'ref_function':
+            raise AttributeError()
         return getattr(self.ref_function(), name)
 
     def __getitem__(self, name):
@@ -612,14 +818,57 @@ def load_module_from_file(module_name, module_path):
     """
     if sys.version_info[0] == 3 and sys.version_info[1] >= 5:
         import importlib.util
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
+        spec = importlib.util.spec_from_file_location(  # novm
+            module_name, module_path)
+        module = importlib.util.module_from_spec(spec)  # novm
         spec.loader.exec_module(module)
     elif sys.version_info[0] == 3 and sys.version_info[1] < 5:
         import importlib.machinery
-        loader = importlib.machinery.SourceFileLoader(module_name, module_path)
+        loader = importlib.machinery.SourceFileLoader(  # novm
+            module_name, module_path)
         module = loader.load_module()
     elif sys.version_info[0] == 2:
         import imp
         module = imp.load_source(module_name, module_path)
     return module
+
+
+def uniq(sequence):
+    """Remove strings of duplicate elements from a list.
+
+    This works like the command-line ``uniq`` tool.  It filters strings
+    of duplicate elements in a list. Adjacent matching elements are
+    merged into the first occurrence.
+
+    For example::
+
+        uniq([1, 1, 1, 1, 2, 2, 2, 3, 3]) == [1, 2, 3]
+        uniq([1, 1, 1, 1, 2, 2, 2, 1, 1]) == [1, 2, 1]
+
+    """
+    if not sequence:
+        return []
+
+    uniq_list = [sequence[0]]
+    last = sequence[0]
+    for element in sequence[1:]:
+        if element != last:
+            uniq_list.append(element)
+            last = element
+    return uniq_list
+
+
+def star(func):
+    """Unpacks arguments for use with Multiprocessing mapping functions"""
+    def _wrapper(args):
+        return func(*args)
+    return _wrapper
+
+
+class Devnull(object):
+    """Null stream with less overhead than ``os.devnull``.
+
+    See https://stackoverflow.com/a/2929954.
+    """
+    def write(self, *_):
+        pass

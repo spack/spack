@@ -1,0 +1,50 @@
+--- configure.orig      2016-09-30 09:01:00.000000000 +0200
++++ configure   2016-09-30 09:03:05.000000000 +0200
+@@ -16574,11 +16574,15 @@
+         cat >conftest.py <<_ACEOF
+
+ import sys, string
++# Python 2 and 3 compatible
++from future.builtins import map
++# Python 2 and 3: forward-compatible
++from future.builtins import range
+ # split strings by '.' and convert to numeric.  Append some zeros
+ # because we need at least 4 digits for the hex conversion.
+-minver = map(int, string.split('2.5', '.')) + [0, 0, 0]
++minver = list(map(int, '2.5'.split('.'))) + [0, 0, 0]
+ minverhex = 0
+-for i in xrange(0, 4): minverhex = (minverhex << 8) + minver[i]
++for i in range(0, 4): minverhex = (minverhex << 8) + minver[i]
+ if sys.hexversion >= minverhex:
+     sys.exit( 0 )
+ else:
+@@ -16606,15 +16610,15 @@
+     fi
+
+
+-  PYTHON_VERSION=`$PYTHON -c "import sys; print '.'.join(map(str, sys.version_info[:2]));"`
++  PYTHON_VERSION=`$PYTHON -c "from __future__ import print_function; import sys; print('.'.join(list(map(str, sys.version_info[:2]))));"`
+
+-  YODA_PYTHONPATH=`$PYTHON -c "import distutils.sysconfig; print distutils.sysconfig.get_python_lib(prefix='$prefix', plat_specific=True);"`
++  YODA_PYTHONPATH=`$PYTHON -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_lib(prefix='$prefix', plat_specific=True));"`
+
+   ## Test for Python header
+   if test -x "$PYTHON"; then
+     { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Python include path" >&5
+ $as_echo_n "checking for Python include path... " >&6; }
+-    python_incpath=`$PYTHON -c "import distutils.sysconfig; print distutils.sysconfig.get_python_inc();"`
++    python_incpath=`$PYTHON -c "from __future__ import print_function; import distutils.sysconfig; print(distutils.sysconfig.get_python_inc());"`
+     { $as_echo "$as_me:${as_lineno-$LINENO}: result: $python_incpath" >&5
+ $as_echo "$python_incpath" >&6; }
+     python_header="$python_incpath/Python.h"
+ --- pyext/setup.py.in.orig      2016-09-30 09:03:25.000000000 +0200
+ +++ pyext/setup.py.in   2016-09-30 09:04:03.000000000 +0200
+ @@ -34,7 +34,7 @@
+  extns = [ext("util"),  ext("core", statics=static_files, depends=core_depends)]
+
+  ## Enable building of ROOT extension if ROOT is present
+ -if os.environ.has_key("BUILD_ROOTCOMPAT"):
+ +if "BUILD_ROOTCOMPAT" in os.environ:
+      try:
+          # import ROOT
+          # TODO: Need to test for and use root-config in configure

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -9,7 +9,9 @@ import contextlib
 import inspect
 import json
 import os
+import platform
 import re
+import socket
 import sys
 import os.path
 
@@ -32,12 +34,14 @@ system_dirs = [os.path.join(p, s) for s in suffixes for p in system_paths] + \
 _shell_set_strings = {
     'sh': 'export {0}={1};\n',
     'csh': 'setenv {0} {1};\n',
+    'fish': 'set -gx {0} {1};\n'
 }
 
 
 _shell_unset_strings = {
     'sh': 'unset {0};\n',
     'csh': 'unsetenv {0};\n',
+    'fish': 'set -e {0};\n',
 }
 
 
@@ -137,6 +141,40 @@ def pickle_environment(path, environment=None):
                  open(path, 'wb'), protocol=2)
 
 
+def get_host_environment_metadata():
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+    environ = get_host_environment()
+    return {"host_os": environ['os'],
+            "platform": environ['platform'],
+            "host_target": environ['target'],
+            "hostname": environ['hostname'],
+            "spack_version": spack.main.get_version(),
+            "kernel_version": platform.version()}
+
+
+def get_host_environment():
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
+    import spack.spec
+    import spack.architecture as architecture
+    arch = architecture.Arch(
+        architecture.platform(), 'default_os', 'default_target')
+    arch_spec = spack.spec.Spec('arch=%s' % arch)
+    return {
+        'target': str(arch.target),
+        'os': str(arch.os),
+        'platform': str(arch.platform),
+        'arch': arch_spec,
+        'architecture': arch_spec,
+        'arch_str': str(arch),
+        'hostname': socket.gethostname()
+    }
+
+
 @contextlib.contextmanager
 def set_env(**kwargs):
     """Temporarily sets and restores environment variables.
@@ -224,6 +262,16 @@ class UnsetEnv(NameModifier):
     def execute(self, env):
         # Avoid throwing if the variable was not set
         env.pop(self.name, None)
+
+
+class RemoveFlagsEnv(NameValueModifier):
+
+    def execute(self, env):
+        environment_value = env.get(self.name, '')
+        flags = environment_value.split(
+            self.separator) if environment_value else []
+        flags = [f for f in flags if f != self.value]
+        env[self.name] = self.separator.join(flags)
 
 
 class SetPath(NameValueModifier):
@@ -366,10 +414,25 @@ class EnvironmentModifications(object):
         """Stores a request to unset an environment variable.
 
         Args:
-            name: name of the environment variable to be set
+            name: name of the environment variable to be unset
         """
         kwargs.update(self._get_outside_caller_attributes())
         item = UnsetEnv(name, **kwargs)
+        self.env_modifications.append(item)
+
+    def remove_flags(self, name, value, sep=' ', **kwargs):
+        """
+        Stores in the current object a request to remove flags from an
+        env variable
+
+        Args:
+            name: name of the environment variable to be removed from
+            value: value to remove to the environment variable
+            sep: separator to assume for environment variable
+        """
+        kwargs.update(self._get_outside_caller_attributes())
+        kwargs.update({'separator': sep})
+        item = RemoveFlagsEnv(name, value, **kwargs)
         self.env_modifications.append(item)
 
     def set_path(self, name, elements, **kwargs):
@@ -467,13 +530,52 @@ class EnvironmentModifications(object):
         """
         self.env_modifications = []
 
-    def apply_modifications(self):
+    def reversed(self):
+        """
+        Returns the EnvironmentModifications object that will reverse self
+
+        Only creates reversals for additions to the environment, as reversing
+        ``unset`` and ``remove_path`` modifications is impossible.
+
+        Reversable operations are set(), prepend_path(), append_path(),
+        set_path(), and append_flags().
+        """
+        rev = EnvironmentModifications()
+
+        for envmod in reversed(self.env_modifications):
+            if type(envmod) == SetEnv:
+                tty.debug("Reversing `Set` environment operation may lose "
+                          "original value")
+                rev.unset(envmod.name)
+            elif type(envmod) == AppendPath:
+                rev.remove_path(envmod.name, envmod.value)
+            elif type(envmod) == PrependPath:
+                rev.remove_path(envmod.name, envmod.value)
+            elif type(envmod) == SetPath:
+                tty.debug("Reversing `SetPath` environment operation may lose "
+                          "original value")
+                rev.unset(envmod.name)
+            elif type(envmod) == AppendFlagsEnv:
+                rev.remove_flags(envmod.name, envmod.value)
+            else:
+                # This is an un-reversable operation
+                tty.warn("Skipping reversal of unreversable operation"
+                         "%s %s" % (type(envmod), envmod.name))
+
+        return rev
+
+    def apply_modifications(self, env=None):
         """Applies the modifications and clears the list."""
+        # Use os.environ if not specified
+        # Do not copy, we want to modify it in place
+        if env is None:
+            env = os.environ
+
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(os.environ)
+                x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
@@ -485,15 +587,16 @@ class EnvironmentModifications(object):
                 x.execute(new_env)
 
         cmds = ''
-        for name in set(new_env) & set(os.environ):
+
+        for name in set(new_env) | set(os.environ):
             new = new_env.get(name, None)
             old = os.environ.get(name, None)
             if new != old:
                 if new is None:
                     cmds += _shell_unset_strings[shell].format(name)
                 else:
-                    cmds += _shell_set_strings[shell].format(name,
-                                                             new_env[name])
+                    cmds += _shell_set_strings[shell].format(
+                        name, cmd_quote(new_env[name]))
         return cmds
 
     @staticmethod
@@ -537,12 +640,15 @@ class EnvironmentModifications(object):
             'SHLVL', '_', 'PWD', 'OLDPWD', 'PS1', 'PS2', 'ENV',
             # Environment modules v4
             'LOADEDMODULES', '_LMFILES_', 'BASH_FUNC_module()', 'MODULEPATH',
-            'MODULES_(.*)', r'(\w*)_mod(quar|share)'
+            'MODULES_(.*)', r'(\w*)_mod(quar|share)',
+            # Lmod configuration
+            r'LMOD_(.*)', 'MODULERCFILE'
         ])
 
         # Compute the environments before and after sourcing
         before = sanitize(
-            dict(os.environ), blacklist=blacklist, whitelist=whitelist
+            environment_after_sourcing_files(os.devnull, **kwargs),
+            blacklist=blacklist, whitelist=whitelist
         )
         file_and_args = (filename,) + arguments
         after = sanitize(
@@ -858,15 +964,23 @@ def environment_after_sourcing_files(*files, **kwargs):
         source_file.extend(x for x in file_and_args)
         source_file = ' '.join(source_file)
 
+        # If the environment contains 'python' use it, if not
+        # go with sys.executable. Below we just need a working
+        # Python interpreter, not necessarily sys.executable.
+        python_cmd = executable.which('python3', 'python', 'python2')
+        python_cmd = python_cmd.name if python_cmd else sys.executable
+
         dump_cmd = 'import os, json; print(json.dumps(dict(os.environ)))'
-        dump_environment = 'python -c "{0}"'.format(dump_cmd)
+        dump_environment = python_cmd + ' -c "{0}"'.format(dump_cmd)
 
         # Try to source the file
         source_file_arguments = ' '.join([
             source_file, suppress_output,
             concatenate_on_success, dump_environment,
         ])
-        output = shell(source_file_arguments, output=str, env=environment)
+        output = shell(
+            source_file_arguments, output=str, env=environment, ignore_quotes=True
+        )
         environment = json.loads(output)
 
         # If we're in python2, convert to str objects instead of unicode

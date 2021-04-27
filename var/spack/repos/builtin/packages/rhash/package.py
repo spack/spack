@@ -1,10 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-import glob
-from spack import *
 
 
 class Rhash(MakefilePackage):
@@ -16,7 +13,7 @@ class Rhash(MakefilePackage):
     homepage = "https://sourceforge.net/projects/rhash/"
     url      = "https://github.com/rhash/RHash/archive/v1.3.5.tar.gz"
 
-    version('1.3.5', 'f586644019c10c83c6b6835de4b99e74')
+    version('1.3.5', sha256='98e0688acae29e68c298ffbcdbb0f838864105f9b2bd8857980664435b1f1f2e')
 
     # For macOS build instructions, see:
     # https://github.com/Homebrew/homebrew-core/blob/master/Formula/rhash.rb
@@ -52,8 +49,6 @@ class Rhash(MakefilePackage):
         make('install-lib-static', 'DESTDIR={0}'.format(prefix), 'PREFIX=')
 
         if spec.satisfies('platform=darwin'):
-            libs = glob.glob('librhash/*.dylib')
-            for lib in libs:
-                install(lib, prefix.lib)
+            install('librhash/*.dylib', prefix.lib)
         else:
             make('install-lib-shared', 'DESTDIR={0}'.format(prefix), 'PREFIX=')

@@ -1,4 +1,4 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,16 +7,23 @@ import os
 import shutil
 import glob
 import tempfile
-import re
+import errno
 from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp, chgrp
+from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
+import spack.util.spack_json as sjson
 from spack.error import SpackError
+
+
+default_projections = {'all': ('{architecture}/'
+                               '{compiler.name}-{compiler.version}/'
+                               '{name}-{version}-{hash}')}
 
 
 def _check_concrete(spec):
@@ -90,14 +97,23 @@ class DirectoryLayout(object):
         assert(not path.startswith(self.root))
         return os.path.join(self.root, path)
 
-    def remove_install_directory(self, spec):
+    def remove_install_directory(self, spec, deprecated=False):
         """Removes a prefix and any empty parent directories from the root.
            Raised RemoveFailedError if something goes wrong.
         """
         path = self.path_for_spec(spec)
         assert(path.startswith(self.root))
 
-        if os.path.exists(path):
+        if deprecated:
+            if os.path.exists(path):
+                try:
+                    metapath = self.deprecated_file_path(spec)
+                    os.unlink(path)
+                    os.remove(metapath)
+                except OSError as e:
+                    raise RemoveFailedError(spec, path, e)
+
+        elif os.path.exists(path):
             try:
                 shutil.rmtree(path)
             except OSError as e:
@@ -106,9 +122,17 @@ class DirectoryLayout(object):
         path = os.path.dirname(path)
         while path != self.root:
             if os.path.isdir(path):
-                if os.listdir(path):
-                    return
-                os.rmdir(path)
+                try:
+                    os.rmdir(path)
+                except OSError as e:
+                    if e.errno == errno.ENOENT:
+                        # already deleted, continue with parent
+                        pass
+                    elif e.errno == errno.ENOTEMPTY:
+                        # directory wasn't empty, done
+                        return
+                    else:
+                        raise e
             path = os.path.dirname(path)
 
 
@@ -170,30 +194,40 @@ class YamlDirectoryLayout(DirectoryLayout):
        The hash here is a SHA-1 hash for the full DAG plus the build
        spec.  TODO: implement the build spec.
 
-       The installation directory scheme can be modified with the
-       arguments hash_len and path_scheme.
+       The installation directory projections can be modified with the
+       projections argument.
     """
 
     def __init__(self, root, **kwargs):
         super(YamlDirectoryLayout, self).__init__(root)
-        self.hash_len       = kwargs.get('hash_len')
-        self.path_scheme    = kwargs.get('path_scheme') or (
-            "{architecture}/"
-            "{compiler.name}-{compiler.version}/"
-            "{name}-{version}-{hash}")
-        if self.hash_len is not None:
-            if re.search(r'{hash:\d+}', self.path_scheme):
-                raise InvalidDirectoryLayoutParametersError(
-                    "Conflicting options for installation layout hash length")
-            self.path_scheme = self.path_scheme.replace(
-                "{hash}", "{hash:%d}" % self.hash_len)
+        projections = kwargs.get('projections') or default_projections
+        self.projections = dict((key, projection.lower())
+                                for key, projection in projections.items())
+
+        # apply hash length as appropriate
+        self.hash_length = kwargs.get('hash_length', None)
+        if self.hash_length is not None:
+            for when_spec, projection in self.projections.items():
+                if '{hash}' not in projection:
+                    if '{hash' in projection:
+                        raise InvalidDirectoryLayoutParametersError(
+                            "Conflicting options for installation layout hash"
+                            " length")
+                    else:
+                        raise InvalidDirectoryLayoutParametersError(
+                            "Cannot specify hash length when the hash is not"
+                            " part of all install_tree projections")
+                self.projections[when_spec] = projection.replace(
+                    "{hash}", "{hash:%d}" % self.hash_length)
 
         # If any of these paths change, downstream databases may not be able to
         # locate files in older upstream databases
         self.metadata_dir        = '.spack'
+        self.deprecated_dir      = 'deprecated'
         self.spec_file_name      = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
+        self.manifest_file_name  = 'install_manifest.json'
 
     @property
     def hidden_file_paths(self):
@@ -202,14 +236,28 @@ class YamlDirectoryLayout(DirectoryLayout):
     def relative_path_for_spec(self, spec):
         _check_concrete(spec)
 
-        path = spec.format(self.path_scheme)
+        projection = spack.projections.get_projection(self.projections, spec)
+        path = spec.format(projection)
         return path
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
+            spec.to_yaml(f, hash=ht.full_hash)
+
+    def write_host_environment(self, spec):
+        """The host environment is a json file with os, kernel, and spack
+        versioning. We use it in the case that an analysis later needs to
+        easily access this information.
+        """
+        from spack.util.environment import get_host_environment_metadata
+        env_file = self.env_metadata_path(spec)
+        environ = get_host_environment_metadata()
+        with open(env_file, 'w') as fd:
+            sjson.dump(environ, fd)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
@@ -231,6 +279,30 @@ class YamlDirectoryLayout(DirectoryLayout):
         _check_concrete(spec)
         return os.path.join(self.metadata_path(spec), self.spec_file_name)
 
+    def deprecated_file_name(self, spec):
+        """Gets name of deprecated spec file in deprecated dir"""
+        _check_concrete(spec)
+        return spec.dag_hash() + '_' + self.spec_file_name
+
+    def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
+        """Gets full path to spec file for deprecated spec
+
+        If the deprecator_spec is provided, use that. Otherwise, assume
+        deprecated_spec is already deprecated and its prefix links to the
+        prefix of its deprecator."""
+        _check_concrete(deprecated_spec)
+        if deprecator_spec:
+            _check_concrete(deprecator_spec)
+
+        # If deprecator spec is None, assume deprecated_spec already deprecated
+        # and use its link to find the file.
+        base_dir = self.path_for_spec(
+            deprecator_spec
+        ) if deprecator_spec else os.readlink(deprecated_spec.prefix)
+
+        return os.path.join(base_dir, self.metadata_dir, self.deprecated_dir,
+                            self.deprecated_file_name(deprecated_spec))
+
     @contextmanager
     def disable_upstream_check(self):
         self.check_upstream = False
@@ -239,6 +311,9 @@ class YamlDirectoryLayout(DirectoryLayout):
 
     def metadata_path(self, spec):
         return os.path.join(spec.prefix, self.metadata_dir)
+
+    def env_metadata_path(self, spec):
+        return os.path.join(self.metadata_path(spec), "install_environment.json")
 
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
@@ -256,23 +331,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         from spack.package_prefs import get_package_group
 
         # Each package folder can have its own specific permissions, while
-        # intermediate folders (arch/compiler) are set with full access to
-        # everyone (0o777) and install_tree root folder is the chokepoint
-        # for restricting global access.
-        # So, whoever has access to the install_tree is allowed to install
-        # packages for same arch/compiler and since no data is stored in
-        # intermediate folders, it does not represent a security threat.
+        # intermediate folders (arch/compiler) are set with access permissions
+        # equivalent to the root permissions of the layout.
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
-        perms_intermediate = 0o777
 
-        mkdirp(spec.prefix, mode=perms, mode_intermediate=perms_intermediate)
-        if group:
-            chgrp(spec.prefix, group)
-            # Need to reset the sticky group bit after chgrp
-            os.chmod(spec.prefix, perms)
-
-        mkdirp(self.metadata_path(spec), mode=perms)
+        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
+        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
 
         self.write_spec(spec, self.spec_file_path(spec))
 
@@ -297,7 +362,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         #
         # TODO: remove this when we do better concretization and don't
         # ignore build-only deps in hashes.
-        elif installed_spec == spec.copy(deps=('link', 'run')):
+        elif (installed_spec.copy(deps=('link', 'run')) ==
+              spec.copy(deps=('link', 'run'))):
+            # The directory layout prefix is based on the dag hash, so among
+            # specs with differing full-hash but matching dag-hash, only one
+            # may be installed. This means for example that for two instances
+            # that differ only in CMake version used to build, only one will
+            # be installed.
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():
@@ -310,11 +381,32 @@ class YamlDirectoryLayout(DirectoryLayout):
         if not os.path.isdir(self.root):
             return []
 
-        path_elems = ["*"] * len(self.path_scheme.split(os.sep))
-        path_elems += [self.metadata_dir, self.spec_file_name]
-        pattern = os.path.join(self.root, *path_elems)
-        spec_files = glob.glob(pattern)
-        return [self.read_spec(s) for s in spec_files]
+        specs = []
+        for _, path_scheme in self.projections.items():
+            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems += [self.metadata_dir, self.spec_file_name]
+            pattern = os.path.join(self.root, *path_elems)
+            spec_files = glob.glob(pattern)
+            specs.extend([self.read_spec(s) for s in spec_files])
+        return specs
+
+    def all_deprecated_specs(self):
+        if not os.path.isdir(self.root):
+            return []
+
+        deprecated_specs = set()
+        for _, path_scheme in self.projections.items():
+            path_elems = ["*"] * len(path_scheme.split(os.sep))
+            path_elems += [self.metadata_dir, self.deprecated_dir,
+                           '*_' + self.spec_file_name]
+            pattern = os.path.join(self.root, *path_elems)
+            spec_files = glob.glob(pattern)
+            get_depr_spec_file = lambda x: os.path.join(
+                os.path.dirname(os.path.dirname(x)), self.spec_file_name)
+            deprecated_specs |= set((self.read_spec(s),
+                                     self.read_spec(get_depr_spec_file(s)))
+                                    for s in spec_files)
+        return deprecated_specs
 
     def specs_by_hash(self):
         by_hash = {}
@@ -352,8 +444,8 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def check_extension_conflict(self, spec, ext_spec):
         exts = self._extension_map(spec)
         if ext_spec.name in exts:
-            installed_spec = exts[ext_spec.name]
-            if ext_spec == installed_spec:
+            installed_spec = exts[ext_spec.name].copy(deps=('link', 'run'))
+            if ext_spec.copy(deps=('link', 'run')) == installed_spec:
                 raise ExtensionAlreadyInstalledError(spec, ext_spec)
             else:
                 raise ExtensionConflictError(spec, ext_spec, installed_spec)
@@ -439,6 +531,11 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
     def _write_extensions(self, spec, extensions):
         path = self.extension_file_path(spec)
+
+        if not extensions:
+            # Remove the empty extensions file
+            os.remove(path)
+            return
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)

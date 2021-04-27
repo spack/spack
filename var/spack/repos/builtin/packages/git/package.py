@@ -1,9 +1,11 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import sys
+import re
+import os
 from spack import *
 
 
@@ -16,14 +18,60 @@ class Git(AutotoolsPackage):
     homepage = "http://git-scm.com"
     url      = "https://mirrors.edge.kernel.org/pub/software/scm/git/git-2.12.0.tar.gz"
 
+    executables = ['^git$']
+
     # In order to add new versions here, add a new list entry with:
     # * version: {version}
     # * sha256: the sha256sum of the git-{version}.tar.gz
     # * sha256_manpages: the sha256sum of the corresponding manpage from
     #       https://www.kernel.org/pub/software/scm/git/git-manpages-{version}.tar.gz
     # You can find the source here: https://mirrors.edge.kernel.org/pub/software/scm/git/sha256sums.asc
-
     releases = [
+        {
+            'version': '2.31.1',
+            'sha256': '46d37c229e9d786510e0c53b60065704ce92d5aedc16f2c5111e3ed35093bfa7',
+            'sha256_manpages': 'd330498aaaea6928b0abbbbb896f6f605efd8d35f23cbbb2de38c87a737d4543'
+        },
+        {
+            'version': '2.31.0',
+            'sha256': 'bc6168777883562569144d536e8a855b12d25d46870d95188a3064260d7784ee',
+            'sha256_manpages': 'a51b760c36be19113756839a9110b328a09abfff0d57f1c93ddac3974ccbc238'
+        },
+        {
+            'version': '2.30.1',
+            'sha256': '23a3e53f0d2dd3e62a8147b24a1a91d6ffe95b92123ef4dbae04e9a6205e71c0',
+            'sha256_manpages': 'db323e1b242e9d0337363b1e538c8b879e4c46eedbf94d3bee9e65dab6d49138'
+        },
+        {
+            'version': '2.30.0',
+            'sha256': 'd24c4fa2a658318c2e66e25ab67cc30038a35696d2d39e6b12ceccf024de1e5e',
+            'sha256_manpages': 'e23035ae232c9a5eda57db258bc3b7f1c1060cfd66920f92c7d388b6439773a6'
+        },
+        {
+            'version': '2.29.0',
+            'sha256': 'fa08dc8424ef80c0f9bf307877f9e2e49f1a6049e873530d6747c2be770742ff',
+            'sha256_manpages': '8f3bf70ddb515674ce2e19572920a39b1be96af12032b77f1dd57898981fb151'
+        },
+        {
+            'version': '2.28.0',
+            'sha256': 'f914c60a874d466c1e18467c864a910dd4ea22281ba6d4d58077cb0c3f115170',
+            'sha256_manpages': '3cfca28a88d5b8112ea42322b797a500a14d0acddea391aed0462aff1ab11bf7'
+        },
+        {
+            'version': '2.27.0',
+            'sha256': '77ded85cbe42b1ffdc2578b460a1ef5d23bcbc6683eabcafbb0d394dffe2e787',
+            'sha256_manpages': '414e4b17133e54d846f6bfa2479f9757c50e16c013eb76167a492ae5409b8947'
+        },
+        {
+            'version': '2.26.0',
+            'sha256': 'aa168c2318e7187cd295a645f7370cc6d71a324aafc932f80f00c780b6a26bed',
+            'sha256_manpages': 'c1ffaf0b4cd1e80a0eb0d4039e208c9d411ef94d5da44e38363804e1a7961218'
+        },
+        {
+            'version': '2.25.0',
+            'sha256': 'a98c9b96d91544b130f13bf846ff080dda2867e77fe08700b793ab14ba5346f6',
+            'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
+        },
         {
             'version': '2.21.0',
             'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
@@ -168,30 +216,55 @@ class Git(AutotoolsPackage):
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
+    variant('svn', default=False,
+            description='Provide SVN Perl dependency in run environment')
+    variant('perl', default=True,
+            description='Do not use Perl scripts or libraries at all')
 
     depends_on('curl')
     depends_on('expat')
     depends_on('gettext')
-    depends_on('libiconv')
+    depends_on('iconv')
+    depends_on('libidn2')
     depends_on('openssl')
     depends_on('pcre', when='@:2.13')
-    depends_on('pcre+jit', when='@2.14:')
-    depends_on('perl')
+    depends_on('pcre2', when='@2.14:')
+    depends_on('perl', when='+perl')
     depends_on('zlib')
+    depends_on('openssh', type='run')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
     depends_on('tk',       type=('build', 'link'), when='+tcltk')
+    depends_on('perl-alien-svn', type='run', when='+svn')
 
-    # See the comment in setup_environment re EXTLIBS.
+    conflicts('+svn', when='~perl')
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'git version (\S+)', output)
+        return match.group(1) if match else None
+
+    @classmethod
+    def determine_variants(cls, exes, version_str):
+        prefix = os.path.dirname(exes[0])
+        variants = ''
+        if 'gitk' in os.listdir(prefix):
+            variants += '+tcltk'
+        else:
+            variants += '~tcltk'
+        return variants
+
+    # See the comment in setup_build_environment re EXTLIBS.
     def patch(self):
         filter_file(r'^EXTLIBS =$',
                     '#EXTLIBS =',
                     'Makefile')
 
-    def setup_environment(self, spack_env, run_env):
+    def setup_build_environment(self, env):
         # We use EXTLIBS rather than LDFLAGS so that git's Makefile
         # inserts the information into the proper place in the link commands
         # (alongside the # other libraries/paths that configure discovers).
@@ -204,10 +277,14 @@ class Git(AutotoolsPackage):
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
         if 'gettext' in self.spec:
-            spack_env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
-                self.spec['gettext'].prefix.lib))
-            spack_env.append_flags('CFLAGS', '-I{0}'.format(
+            if 'intl' in self.spec['gettext'].libs.names:
+                env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
+                    self.spec['gettext'].prefix.lib))
+            env.append_flags('CFLAGS', '-I{0}'.format(
                 self.spec['gettext'].prefix.include))
+
+        if '~perl' in self.spec:
+            env.append_flags('NO_PERL', '1')
 
     def configure_args(self):
         spec = self.spec
@@ -215,13 +292,20 @@ class Git(AutotoolsPackage):
         configure_args = [
             '--with-curl={0}'.format(spec['curl'].prefix),
             '--with-expat={0}'.format(spec['expat'].prefix),
-            '--with-iconv={0}'.format(spec['libiconv'].prefix),
-            '--with-libpcre={0}'.format(spec['pcre'].prefix),
+            '--with-iconv={0}'.format(spec['iconv'].prefix),
             '--with-openssl={0}'.format(spec['openssl'].prefix),
-            '--with-perl={0}'.format(spec['perl'].command.path),
             '--with-zlib={0}'.format(spec['zlib'].prefix),
         ]
 
+        if '+perl' in self.spec:
+            configure_args.append('--with-perl={0}'.format(spec['perl'].command.path))
+
+        if '^pcre' in self.spec:
+            configure_args.append('--with-libpcre={0}'.format(
+                spec['pcre'].prefix))
+        if '^pcre2' in self.spec:
+            configure_args.append('--with-libpcre2={0}'.format(
+                spec['pcre2'].prefix))
         if '+tcltk' in self.spec:
             configure_args.append('--with-tcltk={0}'.format(
                 self.spec['tk'].prefix.bin.wish))
@@ -251,3 +335,14 @@ class Git(AutotoolsPackage):
             install_tree('man1', prefix.share.man.man1)
             install_tree('man5', prefix.share.man.man5)
             install_tree('man7', prefix.share.man.man7)
+
+    def setup_run_environment(self, env):
+        # Setup run environment if using SVN extension
+        # Libs from perl-alien-svn and apr-util are required in
+        # LD_LIBRARY_PATH
+        # TODO: extend to other platforms
+        if "+svn platform=linux" in self.spec:
+            perl_svn = self.spec['perl-alien-svn']
+            env.prepend_path('LD_LIBRARY_PATH', join_path(
+                perl_svn.prefix, 'lib', 'perl5', 'x86_64-linux-thread-multi',
+                'Alien', 'SVN'))

@@ -1,10 +1,7 @@
-# Copyright 2013-2019 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
-from spack import *
-import glob
 
 
 class Chombo(MakefilePackage):
@@ -24,12 +21,8 @@ class Chombo(MakefilePackage):
 
     variant('mpi', default=True, description='Enable MPI parallel support')
     variant('hdf5', default=True, description='Enable HDF5 support')
-    variant('dims',
-        default='3',
-        values=('1', '2', '3', '4', '5', '6'),
-        multi=False,
-        description='Number of PDE dimensions [1-6]'
-    )
+    variant('dims', default='3', values=('1', '2', '3', '4', '5', '6'),
+            multi=False, description='Number of PDE dimensions [1-6]')
 
     patch('hdf5-16api.patch', when='@3.2', level=0)
     patch('Make.defs.local.template.patch', when='@3.2', level=0)
@@ -113,9 +106,7 @@ class Chombo(MakefilePackage):
     def install(self, spec, prefix):
         with working_dir('lib'):
             install_tree('include', prefix.include)
-            libfiles = glob.glob('lib*.a')
-            libfiles += glob.glob('lib*.so')
-            libfiles += glob.glob('lib*.dylib')
             mkdirp(prefix.lib)
-            for lib in libfiles:
-                install(lib, prefix.lib)
+            install('lib*.a', prefix.lib)
+            install('lib*.so', prefix.lib)
+            install('lib*.dylib', prefix.lib)
