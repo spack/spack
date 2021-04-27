@@ -246,17 +246,18 @@ class IntelParallelStudio(IntelPackage):
             env.set(name, value)
 
     def setup_dependent_package(self, module, dependent_spec):
-        # First query for 'srun' in the environment and if it doesn't exist
-        # use either 'mpirun' or 'mpiexec', both of which could be either in
-        # $I_MPI_ROOT/intel64 or $I_MPI_ROOT/ia32
-        mpiroot_dir = os.environ['I_MPI_ROOT']
-        mpibin_dir = join_path(mpiroot_dir, 'intel64', 'bin')
-        self.spec.runner = MPIRunner.query_mgr_pref(
-            'srun',
-            mpibin_dir
-        )
-        if not self.spec.runner:
-            mpibin_dir = join_path(mpiroot_dir, 'ia32', 'bin')
-            self.spec.runner = MPIRunner.query_mpi_pref(
-                mpibin_dir
-            )
+        # First try specific runner config and then top level config;
+        # if neither is defined initialize the runner with 'srun' or 'mpiexec'.
+        # The latter could be either in $I_MPI_ROOT/intel64 or $I_MPI_ROOT/ia32
+        pkg_name = __name__.split('.')[-1]
+        self.spec.mpirunner = MPIRunner.create_from_conf_key(pkg_name)
+
+        if not self.spec.mpirunner:
+            mpiroot_dir = os.environ['I_MPI_ROOT']
+            mpibin_dir = join_path(mpiroot_dir, 'intel64', 'bin')
+            self.spec.mpirunner = MPIRunner.query_res_manager(
+                'srun', mpibin_dir)
+            if not self.spec.runner:
+                mpibin_dir = join_path(mpiroot_dir, 'ia32', 'bin')
+                self.spec.mpirunner = MPIRunner.query_res_manager(
+                    'srun', mpibin_dir)

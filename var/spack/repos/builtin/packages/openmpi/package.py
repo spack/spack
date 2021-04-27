@@ -521,19 +521,28 @@ class Openmpi(AutotoolsPackage):
             join_path(self.prefix.lib, 'libmpi.{0}'.format(dso_suffix))
         ]
 
-        # If we have slurm in spec use that as the resource manager, otherwise
-        # query for 'srun' in the environment and if it doesn't exist use
-        # either 'mpirun' or 'mpiexec'
-        if 'schedulers=slurm' in self.spec and 'slurm' in self.spec:
-            self.spec.runner = MPIRunner(
-                self.spec['slurm'].prefix.bin.srun,
-                'slurm'
-            )
-        else:
-            self.spec.runner = MPIRunner.query_mgr_pref(
-                'srun',
-                self.prefix.bin
-            )
+        # First try specific runner config and then top level config;
+        # if neither is defined initialize the runner according to spec
+        pkg_name = __name__.split('.')[-1]
+        self.spec.mpirunner = MPIRunner.create_from_conf_key(pkg_name)
+
+        if not self.spec.mpirunner:
+            if 'schedulers=slurm' in self.spec:
+                if '+legacylaunchers' in self.spec:
+                    self.spec.mpirunner = MPIRunner(
+                        self.prefix.bin.mpiexec)
+                elif 'slurm' in self.spec:
+                    self.spec.mpirunner = MPIRunner(
+                        self.spec['slurm'].prefix.bin.srun)
+                else:   # external openmpi package
+                    srun_exe = which('srun')
+                    if srun_exe:
+                        self.spec.mpirunner = MPIRunner(srun_exe.command)
+                    else:
+                        self.spec.mpirunner = MPIRunner(
+                            self.prefix.bin.orterun)
+            else:
+                self.spec.mpirunner = MPIRunner(self.prefix.bin.mpiexec)
 
     # Most of the following with_or_without methods might seem redundant
     # because Spack compiler wrapper adds the required -I and -L flags, which

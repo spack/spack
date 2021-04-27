@@ -54,12 +54,8 @@ class FujitsuMpi(Package):
         self.spec.mpif77 = self.prefix.bin.mpifrt
         self.spec.mpifc = self.prefix.bin.mpifrt
 
-        # First query for 'srun' in the environment and if it doesn't exist
-        # use either 'mpirun' or 'mpiexec'
-        self.spec.runner = MPIRunner.query_mgr_pref(
-            'srun',
-            self.prefix.bin
-        )
+        self.spec.mpirunner = MPIRunner.create_def_runner(
+            __name__, self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         self.setup_run_environment(env)

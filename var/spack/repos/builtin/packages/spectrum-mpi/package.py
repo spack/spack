@@ -113,12 +113,8 @@ class SpectrumMpi(Package):
             self.spec.mpif77 = os.path.join(self.prefix.bin, 'mpif77')
             self.spec.mpifc = os.path.join(self.prefix.bin, 'mpif90')
 
-        # First query for 'srun' in the environment and if it doesn't exist
-        # use either 'mpirun' or 'mpiexec'
-        self.spec.runner = MPIRunner.query_mgr_pref(
-            'srun',
-            self.prefix.bin
-        )
+        self.spec.mpirunner = MPIRunner.create_def_runner(
+            __name__, self.prefix.bin)
 
     def setup_dependent_build_environment(self, env, dependent_spec):
         if '%xl' in dependent_spec or '%xl_r' in dependent_spec:
