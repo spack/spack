@@ -21,6 +21,7 @@ class PyTensorflowHub(Package):
     extends('python')
 
     depends_on('bazel', type='build')
+    depends_on('py-setuptools', type='build')
     depends_on('python@3.6:',        type=('build', 'run'))
     depends_on('py-numpy@1.12.0:',   type=('build', 'run'))
     depends_on('py-protobuf@3.8.0:',   type=('build', 'run'))
