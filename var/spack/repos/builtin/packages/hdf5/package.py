@@ -166,7 +166,7 @@ class Hdf5(AutotoolsPackage):
             'INTEGER(SIZE_T), INTENT(OUT) :: buf_size',
             'fortran/src/H5Fff_F03.f90',
             string=True, ignore_absent=True)
-
+            
     filter_compiler_wrappers('h5cc', 'h5c++', 'h5fc', relative_root='bin')
 
     def url_for_version(self, version):
@@ -335,6 +335,15 @@ class Hdf5(AutotoolsPackage):
 
         return extra_args
 
+    @run_after('configure')
+    def patch_makefile(self):
+        with working_dir('examples'):
+            filter_file(
+                'LD_LIBRARY_PATH =',
+                '#LD_LIBRARY_PATH :=',
+                'Makefile',
+            string=True, ignore_absent=True)
+ 
     @run_after('configure')
     def patch_postdeps(self):
         if '@:1.8.14' in self.spec:
