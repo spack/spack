@@ -1395,9 +1395,9 @@ In  ``~\.spack\windows``, create ``packages.yaml`` with these contents
           prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
         buildable: False
 
-Spack on Windows should be run through the Spack Package Manager application added by
-the installer, or by running ``spack_cmd.bat`` from the spack installed directory. To
-add detectable compilers and packages, run ``spack compiler find`` and ``spack external find``
+Next, run Spack by launching the installed app from the Windows, or by launching ``spack_cmd.bat``.
+Finally, run ``spack external find cmake`` to add CMake to spack.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Windows Compatible Packages
@@ -1414,7 +1414,7 @@ or incompatible build tools like autoconf. Here are several packages known to wo
 Generate a New Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Run``spack_install/spack_cmd.bat`` to open the spack cmd prompt.
+Run ``spack_install/spack_cmd.bat`` to open the spack cmd prompt.
 
 Note: If Python is not already on your PATH you will need to add it
 (e.g ``PATH=C:\Users\betsy.mcphail\Spack 0.16.0\Python-3.9.0;%PATH%``)
