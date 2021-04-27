@@ -53,6 +53,10 @@ class _HookRunner(object):
 
         for name in relative_names:
             module_name = __name__ + '.' + name
+            # When importing a module from a package, __import__('A.B', ...)
+            # returns package A when 'fromlist' is empty. If fromlist is not
+            # empty it returns the submodule B instead
+            # See: https://stackoverflow.com/a/2725668/771663
             module_obj = __import__(module_name, fromlist=[None])
             cls._hooks.append((module_name, module_obj))
 
