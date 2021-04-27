@@ -13,7 +13,7 @@ except ImportError:
 import re
 import hashlib
 from .corpus import Corpus, et
-from spack.solver.asp import AspFunctionBuilder, AspFunction
+from spack.solver.asp import AspFunctionBuilder
 from spack.util.executable import which
 import spack.binary_distribution
 import spack.solver.asp
@@ -24,7 +24,8 @@ fn = AspFunctionBuilder()
 
 # only parse these tags
 parse_tags = {"dw_tag_subprogram", "dw_tag_formal_parameter", "dw_tag_function",
-              "subprogram", "formal_parameter", "function"}
+              "subprogram", "formal_parameter", "function", "dw_tag_pointer",
+              "pointer", "dw_tag_pointer_type", "pointer_type", "variable"}
 
 
 # skip these tags (and all children)
@@ -147,6 +148,8 @@ class ABIFactGenerator(object):
         Add children ids to the lookup, ensuring we print the relationship
         only once.
         """
+        tag = self._get_tag(die)
+
         def uid(corpus, die):
             return "%s_%s" % (corpus.path, die.abbrev_code)
 
@@ -156,26 +159,16 @@ class ABIFactGenerator(object):
         if die.unique_id not in lookup:
             lookup[die.unique_id] = set()
 
-        # If it's a DW_TAG_subprogram, keep track of child parameter order
-        # We add one each time, so count starts at 0 after that
-        param_count = -1
+        # Define child relationships
         for child in die.iter_children():
             child_id = self._die_hash(child, corpus, die.unique_id)
             if child_id in lookup[die.unique_id]:
                 continue
             lookup[die.unique_id].add(child_id)
 
-            # If it's a subprogram, we care about order of parameters
-            formal = "formal_parameter"
-            if re.search("subprogram|function", die.tag) and child.tag == formal:
-                param_count += 1
-                prefix = "formal_parameter_order"
-                self.gen.fact(
-                    AspFunction(prefix, args=[corpus.basename, child_id, param_count])
-                )
-
-#            if tag in parse_tags or die.tag in parse_tags or child.tag in parse_tags:
-#                self.gen.fact(fn.has_child(die.unique_id, child_id))
+            # skip adding order
+            if tag in parse_tags or die.tag in parse_tags or child.tag in parse_tags:
+                self.gen.fact(fn.has_child(die.unique_id, child_id))
 
     def _get_tag(self, die):
         """Get a clingo appropriate tag name.
@@ -227,8 +220,12 @@ class ABIFactGenerator(object):
                 return
 
         # Children are represented as facts
-        # Disable this for now
+        # Disable for now - see how far can get without relationship facts
         # self._add_children(corpus, die)
+
+        # If it's already been parsed, skip
+        if die.abbrev_code in self.die_lookup[corpus.path]:
+            return
 
         # Add to the lookup
         self.die_lookup[corpus.path][die.abbrev_code] = die
@@ -283,33 +280,48 @@ class ABIFactGenerator(object):
         if tag not in parse_tags:
             return
 
-            if tag in interfaces:
-                self.gen.fact(fn.interface(corpus.basename, die.unique_id))
-            else:
-                self.gen.fact(AspFunction(tag, args=[corpus.basename, die.unique_id]))
-
-        # We must have a name or linkage name
+        # We want to represent things as names, locations, and types
         name = None
         loc = None
         die_type = None
+
+        # Derive a name, required for defining an interface
         if "DW_AT_linkage_name" in die.attributes:
             name = self.bytes2str(die.attributes["DW_AT_linkage_name"].value)
 
         if "DW_AT_name" in die.attributes:
             name = self.bytes2str(die.attributes["DW_AT_name"].value)
 
-        if not name:
-            print('UNKNOWN INTERFACE?')
+        # We can only declare an interface with a name
+        if tag in interfaces and name:
+            self.gen.fact(fn.interface(corpus.basename, name))
+        elif tag in interfaces and not name:
+            return
+
+        # There can be a mostly empty pointer type that just states the size
+        # of a pointer in bytes, with the only parent being the compile unit
+        if not name and tag == "pointer_type":
+            return
+
+        # This has DW_AT_specification (a reference?) but no name, not sure
+        # how to handle
+        elif not name and tag == "variable":
+            return
+
+        elif not name:
+            print('unknwon interface')
             import IPython
             IPython.embed()
-
-        # Generate the declarations for interfaces
-        if tag in interfaces and name:
-            self.gen.fact(fn.interface(corpus.basename, die.unique_id, name))
+            import sys
+            sys.exit(0)
 
         # TODO need to parse pointers
         # abi_typelocation('exe', 'main', 'char**', 'fb-32')
         # // Probably not how we'll eventually represent pointers.
+        if "pointer" in tag:
+            print('pointer')
+            import IPython
+            IPython.embed()
 
         # DW_AT_type is a reference to another die (the type)
         if "DW_AT_type" in die.attributes:
@@ -318,17 +330,33 @@ class ABIFactGenerator(object):
         if "DW_AT_location" in die.attributes:
             loc = self.get_location(die)
 
+        # Variables don't necessarily have a parent function
+        if "variable" in tag and loc:
+            fact = fn.abi_typelocation(corpus.basename, name, die_type, loc)
+            self.gen.fact(fact)
+            return
+
         # If it's a subprogram and we have a type, it's a return type!
         # abi_typelocation('exe', 'main', 'int', 'return')
         if tag == "function" and die_type:
             cname = corpus.basename
-            self.gen.fact(fn.abi_typelocation(cname, name, die_type, "return"))
+            parent = os.path.basename(
+                self.bytes2str(die.get_parent().attributes['DW_AT_name'].value)
+            )
+            fact = fn.abi_typelocation(cname, parent, name, die_type, "return")
+            self.gen.fact(fact)
+            return
 
         # function without a return type
         elif tag == "function" and not die_type:
             return
 
-        elif not (loc and die_type):
+        # Not sure how to parse non complete types (skip for now)
+        # https://stackoverflow.com/questions/38225269/dwarf-reading-not-complete-types
+        elif "DW_AT_declaration" in die.attributes:
+            return
+
+        elif not loc and not die_type:
             print("MISSING LOC OR DIE TYPE")
             print(die)
             import IPython
@@ -336,7 +364,17 @@ class ABIFactGenerator(object):
             import sys
             sys.exit(0)
         else:
-            self.gen.fact(fn.abi_typelocation(corpus.basename, name, die_type, loc))
+            # We need to link the name of the (usually parameter) to its
+            # parent function name
+            parent = die.get_parent()
+
+            # Variables might not have a parent
+            if "subprogram" not in parent.tag:
+                fact = fn.abi_typelocation(corpus.basename, name, die_type, loc)
+            else:
+                pname = self.bytes2str(parent.attributes['DW_AT_name'].value)
+                fact = fn.abi_typelocation(corpus.basename, pname, name, die_type, loc)
+            self.gen.fact(fact)
 
     def _get_die_type(self, die, lookup_die=None):
         """
@@ -364,8 +402,14 @@ class ABIFactGenerator(object):
                 )
 
             # DWARFError: refaddr 48991 not in DIE range of CU 66699
+            # https://github.com/eliben/pyelftools/blob/master/elftools/dwarf/compileunit.py#L113
+            # When using a reference class attribute with a form that is
+            # relative to the compile unit, add unit add the compile unit's
+            # .cu_addr before calling this function.
             except et.exceptions.DWARFError:
-                return "ref-address-not-in-range"
+                type_die = query_die.cu.get_DIE_from_refaddr(
+                    query_die.attributes["DW_AT_type"].value + query_die.cu.cu_offset
+                )
 
         # Absolute offset
         elif query_die.attributes["DW_AT_type"].startswith("DW_FORM_ref_addr"):
@@ -393,19 +437,6 @@ class ABIFactGenerator(object):
             # If we have another type def, call function again until we find it
             if "DW_AT_type" in type_die.attributes:
                 return self._get_die_type(die, type_die)
-
-            # Not sure how to parse non complete types
-            # https://stackoverflow.com/questions/38225269/dwarf-reading-not-complete-types
-            elif "DW_AT_declaration" in type_die.attributes:
-                print('DW_AT_declaration')
-                import IPython
-                IPython.embed()
-
-            # Here we are supposed to walk member types and calc size with offsets
-            # For now let's assume we can just compare all child sizes
-            # https://github.com/eliben/pyelftools/issues/306#issuecomment-606677552
-            elif "DW_AT_byte_size" not in type_die.attributes:
-                return
 
             else:
                 type_name = None
