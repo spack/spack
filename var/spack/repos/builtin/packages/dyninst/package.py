@@ -47,7 +47,10 @@ class Dyninst(CMakePackage):
 
     # Dyninst uses elfutils starting with 9.3.0, and used libelf
     # before that.
-    depends_on('elfutils', type='link', when='@9.3.0:')
+    # NB: Parallel DWARF parsing in Dyninst 10.2.0 requires a thread-
+    #     safe libdw
+    depends_on('elfutils@0.178:', type='link', when='@10.2.0:')
+    depends_on('elfutils', type='link', when='@9.3.0:10.1.99')
     depends_on('libelf', type='link', when='@:9.2.99')
 
     # Dyninst uses libdw from elfutils starting with 10.0, and used
