@@ -315,7 +315,7 @@ class MfemCmake(CMakePackage, CudaPackage):
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
-    patch('mfem-netcdf.patch', when='+netcdf')
+    patch('mfem-4.2-netcdf.patch', when='@4.2.0+netcdf')
     # JBE: This is the minimum needed for Serac but probably not sufficient
     # in the general case
     patch('mfem-4.2-static.patch', when='@4.2.0~shared')
@@ -710,14 +710,8 @@ class MfemCmake(CMakePackage, CudaPackage):
             netcdf_dir = get_spec_path(spec, "netcdf-c")
             cfg.write(cmake_cache_entry("NETCDF_DIR", netcdf_dir))
 
-            #TODO (bernede1@llnl.gov): what about NETCDF_REQUIRED_PACKAGES
-            # see MFEM config/defaults.cmake
-            cfg.write(cmake_cache_string("NetCDF_REQUIRED_PACKAGES", "HDF5"))
-            # FindHDF5 (builtin) uses HDF5_ROOT and not HDF5_DIR
             hdf5_dir = get_spec_path(spec, "hdf5")
-            cfg.write(cmake_cache_entry("HDF5_ROOT", hdf5_dir))
-            # NetCDF uses hdf5+hl
-            cfg.write(cmake_cache_option("HDF5_FIND_HL", True))
+            cfg.write(cmake_cache_entry("HDF5_DIR", hdf5_dir))
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
