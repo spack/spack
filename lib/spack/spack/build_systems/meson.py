@@ -91,14 +91,13 @@ class MesonPackage(PackageBase):
         std_meson_args += getattr(self, 'meson_flag_args', [])
         return std_meson_args
 
-    @staticmethod
-    def _std_args(pkg):
+    def _std_args(self, pkg):
         """Computes the standard meson arguments for a generic package"""
 
         try:
             build_type = pkg.spec.variants['buildtype'].value
         except KeyError:
-            build_type = 'release'
+            build_type = self.build_type.name
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
