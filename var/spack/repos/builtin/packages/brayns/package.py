@@ -32,6 +32,7 @@ class Brayns(CMakePackage):
 
     depends_on('cmake@3.1:', type='build')
     depends_on('doxygen', type='build', when='+doc')
+    depends_on('graphviz', type='build', when='+doc')
     depends_on('ispc', type='build')
     depends_on('ninja', type='build')
 
