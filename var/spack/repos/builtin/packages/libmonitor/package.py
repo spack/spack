@@ -27,16 +27,16 @@ class Libmonitor(AutotoolsPackage):
 
     # Configure for OpenSpeedshop and Survey.
     # Configure for adding MPI Post Comm Rank support
-    variant('monitorcommrank', default=False,
+    variant('commrank', default=False,
             description="Build with MPI Post Comm Rank support patch.")
 
     variant('dlopen', default=True,
             description='Override dlopen and dlclose')
 
-    patch('libmonitorkrell-0001.patch', when='@2013.02.18+monitorcommrank')
-    patch('libmonitorkrell-0002.patch', when='@2013.02.18+monitorcommrank')
+    patch('libmonitorkrell-0001.patch', when='@2013.02.18+commrank')
+    patch('libmonitorkrell-0002.patch', when='@2013.02.18+commrank')
 
-    patch('add-monitor-comm-rank-notification.patch', when='@2020.10.15+monitorcommrank')
+    patch('add-monitor-comm-rank-notification.patch', when='@2020.10.15+commrank')
 
     signals = 'SIGBUS, SIGSEGV, SIGPROF, 36, 37, 38'
 
