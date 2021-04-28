@@ -354,7 +354,8 @@ def make_argument_parser(**kwargs):
         dest='help', action='store_const', const='long', default=None,
         help="show help for all commands (same as spack help --all)")
     parser.add_argument(
-        '--color', action='store', default='auto',
+        '--color', action='store',
+        default=os.environ.get('SPACK_COLOR', 'auto'),
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
     parser.add_argument(

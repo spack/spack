@@ -22,6 +22,22 @@ def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
+def _gunzip(archive_file):
+    """Like gunzip, but extracts in the current working directory
+    instead of in-place.
+
+    Args:
+        archive_file (str): absolute path of the file to be decompressed
+    """
+    import gzip
+    decompressed_file = os.path.basename(archive_file.strip('.gz'))
+    working_dir = os.getcwd()
+    destination_abspath = os.path.join(working_dir, decompressed_file)
+    with gzip.open(archive_file, "rb") as f_in:
+        with open(destination_abspath, "wb") as f_out:
+            f_out.write(f_in.read())
+
+
 def decompressor_for(path, extension=None):
     """Get the appropriate decompressor for a path."""
     if ((extension and re.match(r'\.?zip$', extension)) or
@@ -30,8 +46,7 @@ def decompressor_for(path, extension=None):
         unzip.add_default_arg('-q')
         return unzip
     if extension and re.match(r'gz', extension):
-        gunzip = which('gunzip', required=True)
-        return gunzip
+        return _gunzip
     if extension and re.match(r'bz2', extension):
         bunzip2 = which('bunzip2', required=True)
         return bunzip2
