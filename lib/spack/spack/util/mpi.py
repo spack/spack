@@ -8,7 +8,7 @@ import spack.config
 
 
 class MPIRunner(object):
-    """ Class representing a resource manager command to run MPI-based code.
+    """Class representing a resource manager command to run MPI-based code.
 
     A number of static methods are provided to help create MPIRunner's in
     different ways. Users can set parameters in config files and create a
@@ -24,8 +24,7 @@ class MPIRunner(object):
     'mpi_runner_cmd': 'srun',
     'mpi_runner_pre_np_flags': '-np'
     The static function 'create_from_conf_key' first tries the provided
-    config section and then goes to the top level conf params.
-    """
+    config section and then goes to the top level conf params."""
 
     default_np_flags = '-n'
 
