@@ -135,8 +135,8 @@ class Tau(Package):
         compiler_path = os.path.dirname(self.compiler.cc)
         os.environ['PATH'] = ':'.join([compiler_path, os.environ['PATH']])
 
-        compiler_options = ['-c++=%s' % os.path.basename(self.compiler.cxx),
-                            '-cc=%s' % os.path.basename(self.compiler.cc)]
+        compiler_options = ['-c++=%s' % self.compiler.cxx_names[0],
+                            '-cc=%s' % self.compiler.cc_names[0]]
 
         if '+fortran' in spec and self.compiler.fc:
             compiler_options.append('-fortran=%s' % self.compiler.fc_names[0])
@@ -224,6 +224,8 @@ class Tau(Package):
             env['CXX'] = spec['mpi'].mpicxx
             env['F77'] = spec['mpi'].mpif77
             env['FC'] = spec['mpi'].mpifc
+            options.append("-mpiinc=%s" % spec['mpi'].prefix.include)
+            options.append("-mpilib=%s" % spec['mpi'].prefix.lib)
 
             options.append('-mpi')
             if '+comm' in spec:
