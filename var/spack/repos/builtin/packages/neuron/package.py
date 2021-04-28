@@ -83,7 +83,7 @@ class Neuron(CMakePackage):
             args.append('-DNRN_DYNAMIC_UNITS_USE_LEGACY=ON')
 
         if "+caliper" in spec:
-            args.append('-DCORENRN_CALIPER_PROFILEING=ON')
+            args.append('-DCORENRN_CALIPER_PROFILING=ON')
 
         return args
 
