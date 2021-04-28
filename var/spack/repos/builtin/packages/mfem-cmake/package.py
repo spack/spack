@@ -308,13 +308,20 @@ class MfemCmake(CMakePackage, CudaPackage):
     depends_on('amgx~mpi', when='+amgx~mpi')
     for sm_ in CudaPackage.cuda_arch_values:
         depends_on('amgx cuda_arch={0}'.format(sm_),
-                   when='+amgx cuda_arch=sm_{0}'.format(sm_))
+                   when='+amgx cuda_arch={0}'.format(sm_))
 
     patch('mfem_ppc_build.patch', when='@3.2:3.3.0 arch=ppc64le')
     patch('mfem-3.4.patch', when='@3.4.0')
     patch('mfem-3.3-3.4-petsc-3.9.patch',
           when='@3.3.0:3.4.0 +petsc ^petsc@3.9.0:')
     patch('mfem-4.2-umpire.patch', when='@4.2.0+umpire')
+    patch('mfem-netcdf.patch', when='+netcdf')
+    # JBE: This is the minimum needed for Serac but probably not sufficient
+    # in the general case
+    patch('mfem-4.2-static.patch', when='@4.2.0~shared')
+
+    # JBE: Need cuda math libraries to be resolved explicitly
+    patch('mfem-4.2-amgx.patch', when='@4.2.0+amgx')
 
     # Patch to fix MFEM makefile syntax error. See
     # https://github.com/mfem/mfem/issues/1042 for the bug report and
@@ -508,6 +515,11 @@ class MfemCmake(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("CMAKE_CUDA_COMPILER",
                                         cudacompiler))
 
+            # JBE: CudaPackage will set this in the environment which overrides
+            # anything else - is this related to https://github.com/spack/spack/issues/17823 ??
+            if '+mpi' in spec:
+                env['CUDAHOSTCXX'] = spec['mpi'].mpicxx
+
             if spec.satisfies('cuda_arch=none'):
                 cfg.write("# No cuda_arch specified in Spack spec, this is likely to fail\n\n")
             else:
@@ -573,13 +585,16 @@ class MfemCmake(CMakePackage, CudaPackage):
         #else:
         #    cfg.write(cmake_cache_option("MFEM_USE_MPI", False))
 
+        # JBE: PREFIX interferes with generation of CUDA link command
+        if '+cuda' not in spec:
+            cfg.write(cmake_cache_entry("PREFIX", prefix))
 
-        cfg.write(cmake_cache_entry("PREFIX", prefix)),
         cfg.write(cmake_cache_option("MFEM_USE_MEMALLOC", True))
         cfg.write(cmake_cache_option("MFEM_DEBUG", on_off('+debug')))
         # NOTE: env['CXX'] is the spack c++ compiler wrapper. The real
         # compiler is defined by env['SPACK_CXX'].
-        cfg.write(cmake_cache_string("CXX", env['SPACK_CXX'])),
+        cfg.write(cmake_cache_string("CXX", env['SPACK_CXX']))
+
         cfg.write(cmake_cache_option("MFEM_USE_LIBUNWIND", on_off('+libunwind')))
         cfg.write(cmake_cache_option(zlib_var, on_off('+zlib')))
         cfg.write(cmake_cache_option("MFEM_USE_METIS", on_off('+metis')))
@@ -621,13 +636,13 @@ class MfemCmake(CMakePackage, CudaPackage):
 
         if '+lapack' in spec:
             lapack = spec['lapack'].libs
-            lapack_inc = spec['lapack'].prefix.includes
+            lapack_inc = spec['lapack'].prefix.include
             lapack_lib = ld_flags_from_library_list(lapack)
             cfg.write(cmake_cache_string("LAPACK_LIBRARIES",lapack_lib))
             cfg.write(cmake_cache_string("LAPACK_INCLUDE_DIRS",lapack_inc))
 
             blas = spec['blas'].libs
-            blas_inc = spec['blas'].prefix.includes
+            blas_inc = spec['blas'].prefix.include
             blas_lib = ld_flags_from_library_list(blas)
             cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_lib))
             cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS",blas_inc))
@@ -697,6 +712,12 @@ class MfemCmake(CMakePackage, CudaPackage):
 
             #TODO (bernede1@llnl.gov): what about NETCDF_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
+            cfg.write(cmake_cache_string("NetCDF_REQUIRED_PACKAGES", "HDF5"))
+            # FindHDF5 (builtin) uses HDF5_ROOT and not HDF5_DIR
+            hdf5_dir = get_spec_path(spec, "hdf5")
+            cfg.write(cmake_cache_entry("HDF5_ROOT", hdf5_dir))
+            # NetCDF uses hdf5+hl
+            cfg.write(cmake_cache_option("HDF5_FIND_HL", True))
 
         if '+zlib' in spec:
             if "@:3.3.2" in spec:
@@ -728,7 +749,7 @@ class MfemCmake(CMakePackage, CudaPackage):
             cuda_cxx = join_path(spec['cuda'].prefix, 'bin', 'nvcc')
 
             cfg.write(cmake_cache_string("CUDA_CXX", cuda_cxx))
-            cfg.write(cmake_cache_string("CUDA_ARCH", cuda_arch))
+            cfg.write(cmake_cache_string("CUDA_ARCH", 'sm_{0}'.format(cuda_arch[0])))
 
         if '+occa' in spec:
             occa_dir = get_spec_path(spec, "occa")
@@ -740,7 +761,7 @@ class MfemCmake(CMakePackage, CudaPackage):
 
         if '+amgx' in spec:
             amgx_dir = get_spec_path(spec, "amgx")
-            cfg.write(cmake_cache_string("AMGX_DIR", amgx.prefix))
+            cfg.write(cmake_cache_string("AMGX_DIR", amgx_dir))
 
         if '+libceed' in spec:
             ceed_dir = get_spec_path(spec, "libceed")
