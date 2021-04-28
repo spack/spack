@@ -95,10 +95,12 @@ class CMakePackage(PackageBase):
             description='CMake build type',
             values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
 
-#    opt_types = [op1,op2,op3,op4]
-#    build_types = [g, g-00]
-#    for sbt in opt_types:
-#        conflicts("build_type=debug", when="spack_build_type=%s" %sbt)
+    # cmake conflicts with any build_type except Debug
+    # I'm not sure how to write this because I can't refer to self.build_type.name
+    # sbt = self.build_type.name
+    # if sbt != "debug":
+    #    for bt in ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"]:
+    #        conflicts("build_type=%s" % bt, when="spack_build_type=" % sbt)
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
     variant('ipo', default=False,

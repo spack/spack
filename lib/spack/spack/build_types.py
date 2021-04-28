@@ -19,8 +19,6 @@ class BuildTypeBase(object):
     def name(self):
         """get the name for the class
         """
-        # TODO spack has a module that handles conversions from class names
-        # to lower case names
         return self.__class__.__name__
 
     def get_flags(self):
