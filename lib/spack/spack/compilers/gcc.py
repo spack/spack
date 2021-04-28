@@ -39,7 +39,7 @@ class Gcc(spack.compiler.Compiler):
     PrgEnv_compiler = 'gcc'
 
     # Flag defaults for build types
-    flag_debug = ["-g3", "-Og"]
+    debug_flag = ["-g3", "-Og"]
 
     @property
     def verbose_flag(self):

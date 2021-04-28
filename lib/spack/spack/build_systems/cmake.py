@@ -11,6 +11,7 @@ import re
 from typing import List  # novm
 
 import spack.build_environment
+import spack.build_types
 from llnl.util.filesystem import working_dir
 from spack.util.environment import filter_system_paths
 from spack.directives import depends_on, variant, conflicts
@@ -90,17 +91,19 @@ class CMakePackage(PackageBase):
     #: for more information.
     generator = 'Unix Makefiles'
 
+    # cmake build types
+    build_types = ('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel')
+
     # https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html
     variant('build_type', default='RelWithDebInfo',
             description='CMake build type',
-            values=('Debug', 'Release', 'RelWithDebInfo', 'MinSizeRel'))
+            values=build_types)
 
     # cmake conflicts with any build_type except Debug
-    # I'm not sure how to write this because I can't refer to self.build_type.name
-    # sbt = self.build_type.name
-    # if sbt != "debug":
-    #    for bt in ["Debug", "Release", "RelWithDebInfo", "MinSizeRel"]:
-    #        conflicts("build_type=%s" % bt, when="spack_build_type=" % sbt)
+    for sbt in spack.build_types.debug_types:
+        for bt in build_types:
+            if bt != 'Debug':
+                conflicts('build_type=%s' % bt, when='spack_build_type=%s' % sbt)
 
     # https://cmake.org/cmake/help/latest/variable/CMAKE_INTERPROCEDURAL_OPTIMIZATION.html
     variant('ipo', default=False,

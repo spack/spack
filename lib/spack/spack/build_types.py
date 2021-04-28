@@ -41,6 +41,7 @@ class Debug(BuildTypeBase):
     attr = 'debug_flag'
 
 
+debug_types = {"debug"}
 build_types = {'debug': Debug}
 
 
