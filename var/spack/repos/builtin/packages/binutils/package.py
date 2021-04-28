@@ -30,7 +30,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version('2.23.2', sha256='fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097')
     version('2.20.1', sha256='71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64')
 
-    variant('plugins', default=False,
+    variant('plugins', default=True,
             description="enable plugins, needed for gold linker")
     variant('gold', default=(sys.platform != 'darwin'),
             description="build the gold linker")

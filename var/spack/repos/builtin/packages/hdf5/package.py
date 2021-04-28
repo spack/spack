@@ -299,13 +299,22 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--enable-static-exec')
 
         if '+pic' in self.spec:
-            extra_args.extend([
-                'CFLAGS='   + self.compiler.cc_pic_flag,
-                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
-                'FCFLAGS='  + self.compiler.fc_pic_flag,
-            ])
+            # use global spack compiler flags
+            _flags = self.compiler.cc_pic_flag
+            _flags += " " + ' '.join(self.spec.compiler_flags['cflags'])
+            extra_args.append('CFLAGS={0}'.format(_flags))
 
-        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+            if '+cxx' in self.spec:
+                _flags = self.compiler.cxx_pic_flag
+                _flags += " " + ' '.join(self.spec.compiler_flags['cxxflags'])
+                extra_args.append('CXXFLAGS={0}'.format(_flags))
+
+            if '+fortran' in self.spec:
+                _flags = self.compiler.fc_pic_flag
+                _flags += " " + ' '.join(self.spec.compiler_flags['fflags'])
+                extra_args.append('FCFLAGS={0}'.format(_flags))
+
+        # Fujitsu Compiler does not add Fortran runtime in rpath.
         if '+fortran %fj' in self.spec:
             extra_args.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
 

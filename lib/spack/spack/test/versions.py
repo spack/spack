@@ -373,6 +373,9 @@ def test_intersect_with_containment():
     check_intersection('1.6:1.6.5', ':1.6.5', '1.6')
     check_intersection('1.6:1.6.5', '1.6', ':1.6.5')
 
+    check_intersection('11.2', '11', '11.2')
+    check_intersection('11.2', '11.2', '11')
+
 
 def test_union_with_containment():
     check_union(':1.6', '1.6.5', ':1.6')

@@ -27,11 +27,17 @@ It is recommended that the following be put in your ``.bashrc`` file:
 
 If you do not see colorized output when using ``less -R`` it is because color
 is being disabled in the piped output. In this case, tell spack to force
-colorized output.
+colorized output with a flag
 
 .. code-block:: console
 
     $ spack --color always | less -R
+
+or an environment variable
+
+.. code-block:: console
+
+   $ SPACK_COLOR=always spack | less -R
 
 --------------------------
 Listing available packages
