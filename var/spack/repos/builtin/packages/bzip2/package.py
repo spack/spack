@@ -54,7 +54,7 @@ class Bzip2(Package, SourcewarePackage):
         return(flags, None, None)
 
     def patch(self):
-        if spec.satisfies('+debug'):
+        if self.spec.satisfies('+debug'):
             for makefile in ['Makefile', 'Makefile-libbz2_so']:
                 filter_file(r'-O ', '-O0 ', makefile)
                 filter_file(r'-O2 ', '-O0 ', makefile)
