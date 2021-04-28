@@ -131,7 +131,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnat', when='languages=ada')
     depends_on('binutils+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
-    depends_on('cuda@:10', when='+nvptx')
+    depends_on('cuda', when='+nvptx')
 
     # The server is sometimes a bit slow to respond
     timeout = {'timeout': 60}
@@ -148,7 +148,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     # nvptx-tools doesn't have any releases, so grabbing the last commit
     resource(name='nvptx-tools',
              git='https://github.com/MentorEmbedded/nvptx-tools',
-             commit='5f6f343a302d620b0868edab376c00b15741e39e',
+             commit='d0524fbdc86dfca068db5a21cc78ac255b335be5',
              when='+nvptx')
 
     # TODO: integrate these libraries.
@@ -444,6 +444,19 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             filter_file('@zlibinc@',
                         '-I{0}'.format(spec['zlib'].prefix.include),
                         'gcc/Makefile.in')
+
+        if spec.satisfies('+nvptx'):
+            # backport of 383400a6078d upstream to allow support of cuda@11:
+            filter_file('#define ASM_SPEC "%{misa=*:-m %*}"',
+                        '#define ASM_SPEC "%{misa=*:-m %*; :-m sm_35}"',
+                        'gcc/config/nvptx/nvptx.h',
+                        string=True)
+            filter_file('Target RejectNegative ToLower Joined '
+                        'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM30)',
+                        'Target RejectNegative ToLower Joined '
+                        'Enum(ptx_isa) Var(ptx_isa_option) Init(PTX_ISA_SM35)',
+                        'gcc/config/nvptx/nvptx.opt',
+                        string=True)
 
     # https://gcc.gnu.org/install/configure.html
     def configure_args(self):

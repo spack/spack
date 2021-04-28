@@ -43,6 +43,11 @@ class Mumps(Package):
     variant('int64', default=False,
             description='Use int64_t/integer*8 as default index type')
     variant('shared', default=True, description='Build shared libraries')
+    variant('openmp', default=False,
+            description='Compile MUMPS with OpenMP support')
+    variant('blr_mt', default=False,
+            description='Allow BLAS calls in OpenMP regions ' +
+                        '(warning: might not be supported by all multithread BLAS)')
 
     depends_on('scotch + esmumps', when='~ptscotch+scotch')
     depends_on('scotch + esmumps ~ metis + mpi', when='+ptscotch')
@@ -66,6 +71,8 @@ class Mumps(Package):
               msg="You cannot use the parmetis variant without metis")
     conflicts('+ptscotch', when='~mpi',
               msg="You cannot use the ptscotch variant without mpi")
+    conflicts('+blr_mt', when='~openmp',
+              msg="You cannot use the blr_mt variant without openmp")
 
     def write_makefile_inc(self):
         # The makefile variables LIBBLAS, LSCOTCH, LMETIS, and SCALAP are only
@@ -172,6 +179,23 @@ class Mumps(Package):
         else:
             if using_xlf:
                 optf.append('-qfixed')
+
+        # As of version 5.2.0, MUMPS is able to take advantage
+        # of the GEMMT BLAS extension. MKL is currently the only
+        # known BLAS implementation supported.
+        if '@5.2.0: ^mkl' in self.spec:
+            optf.append('-DGEMMT_AVAILABLE')
+
+        if '+openmp' in self.spec:
+            optc.append(self.compiler.openmp_flag)
+            optf.append(self.compiler.openmp_flag)
+            optl.append(self.compiler.openmp_flag)
+
+        # Using BLR_MT might not be supported by all multithreaded BLAS
+        # (MKL is known to work) but it is not something we can easily
+        # check so we trust that the user knows what he/she is doing.
+        if '+blr_mt' in self.spec:
+            optf.append('-DBLR_MT')
 
         makefile_conf.extend([
             'OPTC = {0}'.format(' '.join(optc)),
