@@ -110,7 +110,6 @@ class Nest(CMakePackage):
 
         if '+python' in self.spec:
             version = self.spec['python'].version[0]
-            #args.append('-Dwith-python={0}'.format(version))
             args.append('-Dwith-python=ON')
             args.append('-Dcythonize-pynest=' + self.spec['py-cython'].prefix)
         else:
