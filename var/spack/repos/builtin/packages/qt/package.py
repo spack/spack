@@ -200,13 +200,16 @@ class Qt(Package):
         url = self.list_url.replace('http:', 'https:')
 
         if version < Version('5.12') and version.up_to(2) != Version('5.9'):
-            # as of 28 April 2020:
-            # new_archive contains 1-5.8, 5.10-5.11
-            # archive contains 1-5.1, 5.9, 5.12-6.0
-            # official_releases containis 5.9, 5.12, 5.15, 6.0
+            # As of 28 April 2021:
+            # - new_archive contains 1-5.8, 5.10-5.11
+            # - archive contains 1-5.1, 5.9, 5.12-6.0
+            # - official_releases containis 5.9, 5.12, 5.15, 6.0
             url = url.replace('archive', 'new_archive')
 
-        url += str(version.up_to(2 if version >= Version('4.0') else 1)) + '/'
+        if version >= Version('4.0'):
+            url += str(version.up_to(2)) + '/'
+        else:
+            url += str(version.up_to(1)) + '/'
 
         if version >= Version('4.8'):
             url += str(version) + '/'
