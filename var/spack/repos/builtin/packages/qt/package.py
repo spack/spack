@@ -20,7 +20,7 @@ class Qt(Package):
     # Supported releases: 'https://download.qt.io/official_releases/qt/'
     # Older archives: 'https://download.qt.io/new_archive/qt/'
     url      = 'https://download.qt.io/archive/qt/5.15/5.15.2/single/qt-everywhere-src-5.15.2.tar.xz'
-    list_url = 'https://download.qt.io/archive/qt/'
+    list_url = 'http://download.qt.io/archive/qt/'
     list_depth = 3
     maintainers = ['sethrj']
 
@@ -39,9 +39,9 @@ class Qt(Package):
     version('5.11.2', sha256='c6104b840b6caee596fa9a35bc5f57f67ed5a99d6a36497b6fe66f990a53ca81', deprecated=True)
     version('5.10.0', sha256='936d4cf5d577298f4f9fdb220e85b008ae321554a5fcd38072dc327a7296230e', deprecated=True)
     version('5.9.9',  sha256='5ce285209290a157d7f42ec8eb22bf3f1d76f2e03a95fc0b99b553391be01642')
-    version('5.9.1', sha256='7b41a37d4fe5e120cdb7114862c0153f86c07abbec8db71500443d2ce0c89795', deprecated=True)
-    version('5.9.0', sha256='f70b5c66161191489fc13c7b7eb69bf9df3881596b183e7f6d94305a39837517', deprecated=True)
-    version('5.6.3', sha256='2fa0cf2e5e8841b29a4be62062c1a65c4f6f2cf1beaf61a5fd661f520cd776d0')
+    version('5.9.1',  sha256='7b41a37d4fe5e120cdb7114862c0153f86c07abbec8db71500443d2ce0c89795', deprecated=True)
+    version('5.9.0',  sha256='f70b5c66161191489fc13c7b7eb69bf9df3881596b183e7f6d94305a39837517', deprecated=True)
+    version('5.6.3',  sha256='2fa0cf2e5e8841b29a4be62062c1a65c4f6f2cf1beaf61a5fd661f520cd776d0')
     version('5.5.1',  sha256='c7fad41a009af1996b62ec494e438aedcb072b3234b2ad3eeea6e6b1f64be3b3', deprecated=True)
     version('5.4.2',  sha256='cfc768c55f0a0cd232bed914a9022528f8f2e50cb010bf0e4f3f62db3dfa17bd', deprecated=True)
     version('5.4.0',  sha256='1739633424bde3d89164ae6ff1c5c913be38b9997e451558ef873aac4bbc408a', deprecated=True)
@@ -197,9 +197,13 @@ class Qt(Package):
 
     def url_for_version(self, version):
         # URL keeps getting more complicated with every release
-        url = self.list_url
+        url = self.list_url.replace('http:', 'https:')
 
-        if version < Version('5.12'):
+        if version < Version('5.12') and version.up_to(2) != Version('5.9'):
+            # as of 28 April 2020:
+            # new_archive contains 1-5.8, 5.10-5.11
+            # archive contains 1-5.1, 5.9, 5.12-6.0
+            # official_releases containis 5.9, 5.12, 5.15, 6.0
             url = url.replace('archive', 'new_archive')
 
         url += str(version.up_to(2 if version >= Version('4.0') else 1)) + '/'
