@@ -1410,40 +1410,61 @@ Spack On Windows
 ----------------
 
 You will require a MSVC compiler, Git and CMake in order to use Spack on Windows.
-Spack on Windows is run through an application which opens a spack command line, 
+Spack on Windows is run through an application which opens a spack command line,
 and the Spack installer includes a version of Python.
 
 ^^^^^^^^^^^^^^^^^^^^^
 Install Windows Spack
 ^^^^^^^^^^^^^^^^^^^^^
 
-Get the newest version of Spack features/windows_support branch. This can be by
-first running the installer, then using git to fetch and checkout 
-features/windows_support in the spack_install\spack directory. After running the
-installer, your directory structure should look like so:
+Spack on Windows can be installed with the installer or manually set-up.
 
-    spack_install-----------spack
-  	    	        -------scripts
- 	 	            -------spack_cmd.bat
-  		            -------Python
+[Advanced] If not running the installer, use the following steps:
+
+Create a ``spack_install`` directory (name is not important)
+
+.. code-block:: console
+
+    $ cd spack_install
+    $ git clone https://github.com/spack/spack.git
+    $ cd spack
+    $ git checkout features/windows-support
+    $ cd ..
+    $ cp -r spack/lib/spack/spack/cmd/installer/scripts/ .
+    $ cp spack/lib/spack/spack/cmd/installer/spack_cmd.bat .
+
+
+Whether running the installer or manual setup, the resulting directory
+structure should be:
+
+.. code-block:: console
+    spack_install
+        |-------spack[<version>]
+        |-------scripts
+        |-------spack_cmd.bat
+        |-------[Python<version>]
+
+Note: If installing manually Python will *not* be in the ``spack_install``
+directory.
 
 If you have a specific version of Python you would like Spack to use, be sure it is
 on your PATH. When Spack is run for the first time, it will search your PATH for a
-compatible version of Python, otherwise, it will use its included Python.
+compatible version of Python, otherwise, it will use its included Python
+(installer only).
 
 ^^^^^^^^^^^^^
 Configuration
 ^^^^^^^^^^^^^
 
-In  ~\.spack\windows, create ``config.yaml`` with contents:
+In  ``~\.spack\windows``, create ``config.yaml`` with contents:
 
 .. code-block:: yaml
 
     config:
       use_curl: true
       locks: false
- 
-In  ~\.spack\windows, create ``packages.yaml`` with these contents 
+
+In  ``~\.spack\windows``, create ``packages.yaml`` with these contents
 
 .. code-block:: yaml
 
@@ -1454,15 +1475,15 @@ In  ~\.spack\windows, create ``packages.yaml`` with these contents
           prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
         buildable: False
 
-Spack on Windows should be run through the Spack Package Manager application added by
-the installer, or by running ``spack_cmd.bat`` from the spack installed directory. To
-add detectable compilers and packages, run ``spack compiler find`` and ``spack external find``
+Next, run Spack by launching the installed app from the Windows, or by launching ``spack_cmd.bat``.
+Finally, run ``spack external find cmake`` to add CMake to spack.
+
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Windows Compatible Packages
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Many Spack packages are not currently compatible with Windows, due to Unix dependencies 
+Many Spack packages are not currently compatible with Windows, due to Unix dependencies
 or incompatible build tools like autoconf. Here are several packages known to work on Windows:
 
 * abseil-cpp
@@ -1473,10 +1494,13 @@ or incompatible build tools like autoconf. Here are several packages known to wo
 Generate a New Windows Installer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To generate a new windows installer, the spack ``make-installer`` command to
-create a Windows installer. Installers are not supported on other platforms.
+Run ``spack_install/spack_cmd.bat`` to open the spack cmd prompt.
 
-The installer must be created on Windows and requires the following:
+Note: If Python is not already on your PATH you will need to add it
+(e.g ``PATH=C:\Users\betsy.mcphail\Spack 0.16.0\Python-3.9.0;%PATH%``)
+
+The installer requires the following (Spack and Python should already have
+been installed in earlier steps):
 
 * Spack (https://github.com/spack/spack)
 * Python (https://www.python.org/downloads/)
@@ -1487,7 +1511,7 @@ To create the installer, run:
 
 ``spack make-installer -v <spack_version> <output directory>``
 
-For example, ``spack make-installer -v 0.16.0 tmp`` will download spack from 
+For example, ``spack make-installer -v 0.16.0 tmp`` will download spack from
 https://github.com/spack/spack/releases/download/v0.16.0 and create the installer in 'tmp'.
 
 The output directory may be an absolute path or relative to the current
