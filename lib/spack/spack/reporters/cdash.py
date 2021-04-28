@@ -161,14 +161,21 @@ class CDash(Reporter):
             report_data[phase]['log'] = \
                 '\n'.join(report_data[phase]['loglines'])
             errors, warnings = parse_log_events(report_data[phase]['loglines'])
+
+            # Convert errors to warnings if the package reported success.
+            if package['result'] == 'success':
+                warnings = errors + warnings
+                errors = []
+
             # Cap the number of errors and warnings at 50 each.
             errors = errors[:50]
             warnings = warnings[:50]
             nerrors = len(errors)
 
-            if phase == 'configure' and nerrors > 0:
-                report_data[phase]['status'] = 1
+            if nerrors > 0:
                 self.success = False
+                if phase == 'configure':
+                    report_data[phase]['status'] = 1
 
             if phase == 'build':
                 # Convert log output from ASCII to Unicode and escape for XML.
@@ -188,13 +195,6 @@ class CDash(Reporter):
                         event['source_file'] = xml.sax.saxutils.escape(
                             event['source_file'])
                     return event
-
-                # Convert errors to warnings if the package reported success.
-                if package['result'] == 'success':
-                    warnings = errors + warnings
-                    errors = []
-                else:
-                    self.success = False
 
                 report_data[phase]['errors'] = []
                 report_data[phase]['warnings'] = []
