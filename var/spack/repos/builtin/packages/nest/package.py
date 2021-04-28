@@ -25,6 +25,8 @@ class Nest(CMakePackage):
     version('2.6.0',  sha256='5fe4924bc57d0c7dd820aa371de935eedf7e813832c0eee2c976b33c9a8db4cf')
     version('2.4.2',  sha256='8f86e58c1a12b733ffabd8b0400326e5a3494a458149ea8ebe9f19674d05b91b')
 
+    maintainers = ['ikitayama']
+
     variant('python', default=False,
             description='Build the PyNest interface')
     variant('mpi', default=True,
