@@ -29,7 +29,7 @@ class Nest(CMakePackage):
 
     variant('python', default=False,
             description='Build the PyNest interface')
-    variant('mpi', default=True,
+    variant('mpi', default=False,
             description='Build with MPI bindings')
     variant('openmp', default=True,
             description='"Enable OpenMP support"')
@@ -52,6 +52,7 @@ class Nest(CMakePackage):
 
     depends_on('python@2.6:',       when='+python', type=('build', 'run'))
     depends_on('py-numpy',          when='+python', type=('build', 'run'))
+    depends_on('py-scipy',          when='+python', type=('run'))
     depends_on('py-cython@0.19.2:', when='+python', type='build')
     depends_on('py-nose',           when='+python', type='test')
     depends_on('py-setuptools',     when='+python', type='build')
@@ -109,7 +110,8 @@ class Nest(CMakePackage):
 
         if '+python' in self.spec:
             version = self.spec['python'].version[0]
-            args.append('-Dwith-python={0}'.format(version))
+            #args.append('-Dwith-python={0}'.format(version))
+            args.append('-Dwith-python=ON')
             args.append('-Dcythonize-pynest=' + self.spec['py-cython'].prefix)
         else:
             args.append('-Dwith-python=OFF')
