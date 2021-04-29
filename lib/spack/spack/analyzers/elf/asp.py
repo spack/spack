@@ -14,7 +14,7 @@ except ImportError:
 import re
 import hashlib
 from .corpus import Corpus, et
-from spack.solver.asp import AspFunctionBuilder
+from spack.solver.asp import AspFunctionBuilder, AspFunction
 from spack.util.executable import which
 import spack.binary_distribution
 import spack.solver.asp
@@ -24,7 +24,12 @@ fn = AspFunctionBuilder()
 
 
 class ABIFactGenerator(object):
-    """Class to set up and generate corpus ABI facts."""
+    """
+    Class to set up and generate corpus ABI facts.
+
+    This should eventually be refactored so the abi_type_location analyzer
+    uses it as a base class and adds functions to it.
+    """
 
     def __init__(self, gen):
         self.gen = gen
@@ -43,6 +48,9 @@ class ABIFactGenerator(object):
         self.die_lookup = {}
         self.language = None
 
+        # Keep a cache of facts added to avoid duplicates
+        self._facts = {"abi_typelocation": set(), "interface": set()}
+
         global elftools
 
         if not elftools:
@@ -55,7 +63,8 @@ class ABIFactGenerator(object):
                 import elftools
 
     def generate_elf_symbols(self, corpora, detail=False):
-        """For each corpus, write out elf symbols as facts.
+        """
+        For each corpus, write out elf symbols as facts.
         """
         for corpus in corpora:
             self.gen.h2("Corpus symbols: %s" % corpus.basename)
@@ -69,7 +78,8 @@ class ABIFactGenerator(object):
                 self._generate_elf_symbol(corpus, symbol, meta, detail=detail)
 
     def _generate_elf_symbol(self, corpus, symbol, meta, detail=False):
-        """Shared helped function to generate metadata for a symbol
+        """
+        Shared helper function to generate metadata for a symbol
         """
         # Prepare variables
         vinfo = meta['version_info']
@@ -97,7 +107,8 @@ class ABIFactGenerator(object):
             # self.gen.fact(fn.symbol_visibility(corpus.basename, symbol, vis))
 
     def generate_elf_symbol(self, corpus, symbol, detail=True):
-        """Given a specific elf symbol, generate it's defails if it's:
+        """
+        Given a specific elf symbol, generate it's defails if it's:
 
         1. a needed symbol, meaning exported by a main
         2. defined for the corpus in question
@@ -174,7 +185,8 @@ class ABIFactGenerator(object):
                 self._parse_die_children(corpus, die)
 
     def _get_tag(self, die):
-        """Get a clingo appropriate tag name.
+        """
+        Get a DWARF agnostic tag name.
 
         The die tag needs to be parsed to be all lowercase, and for some
         die tags, we want to remove the "Dwarf specific words." (e.g.,
@@ -214,7 +226,8 @@ class ABIFactGenerator(object):
                 self._parse_die_children(corpus, child, parent)
 
     def get_location(self, die):
-        """Given a DW_AT_location parameter, parse it to get a location.
+        """
+        Given a DW_AT_location parameter, parse it to get a location.
         """
         location_lists = die.dwarfinfo.location_lists()
         loc_parser = et.locationlists.LocationParser(location_lists)
@@ -232,17 +245,16 @@ class ABIFactGenerator(object):
 
                 # Attribute is reference to .debug_loc section
                 elif isinstance(loc, list):
-                    print('LIST')
-                    import IPython
-                    IPython.embed()
-                    print(show_loclist(loc, die.dwarfinfo, '      ', die.cu.cu_offset))
-                    import sys
-                    sys.exit(0)
+                    return parse_loclist(loc, die)
 
     def get_export_status(self, die, tag, corpus):
-        """Determine if the corpus tag is an export or an import.
+        """
+        Determine if the corpus tag is an export or an import.
         """
         exported = None
+
+        # Consider formal_parameters, variables, and members as parameters
+        param_tags = ['formal_parameter', 'variable', 'member']
 
         # If it's the main corpus and it has an exported flag
         if self.main == corpus.name and hasattr(die.attributes, "DW_AT_external"):
@@ -253,20 +265,15 @@ class ABIFactGenerator(object):
             exported = "import"
 
         # If it's the main corpus and it's a parameter, the param is imported
-        elif self.main == corpus.name and tag == "formal_parameter":
+        elif self.main == corpus.name and tag in param_tags:
             exported = "import"
 
         # If it's the main corpus and its a function (return) it's exported
         elif self.main == corpus.name and tag == "function":
             exported = "export"
 
-        # //Library that defines abs()
-        # symbol_type("libtcl8.6.so","abs","FUNC").
-        # abi_typelocation("libtcl8.6.so", "abs", "import", "double", "%rdi").
-        # abi_typelocation("libtcl8.6.so", "abs", "export", "int", "%rax").
-
         # If it's not the main corpus and its a parameter, it's exported from main
-        elif tag == "formal_parameter":
+        elif tag in param_tags:
             exported = "export"
 
         # If it's not the main corpus and its a function return, import to main
@@ -279,7 +286,7 @@ class ABIFactGenerator(object):
 
         # A library variable not externally available
         else:
-            exported = "not-importe"
+            exported = "not-imported"
 
         return exported
 
@@ -308,28 +315,29 @@ class ABIFactGenerator(object):
         order = self.child_lookup[corpus.basename][parent_id][die_id]
 
         # Signed and unsigned Bool,char,short,int,long,long long, and pointers
-        INTEGER = ['int', 'char', 'short', 'long', 'bool', 'longlong', 'pointer',
-                   'unsigned int', 'long int']
+        INTEGER = False
+        if re.search("(int|char|short|long|pointer|bool)", die_type):
+            INTEGER = True
 
         # float,double,_Decimal32,_Decimal64and__m64are in class SSE.
         SSE = ['double', 'decimal']
 
-        if die_type in INTEGER and order == 1:
+        if INTEGER and order == 1:
             return "%rdi"
 
-        elif die_type in INTEGER and order == 2:
+        elif INTEGER and order == 2:
             return "%rsi"
 
-        elif die_type in INTEGER and order == 3:
+        elif INTEGER and order == 3:
             return "%rdx"
 
-        elif die_type in INTEGER and order == 4:
+        elif INTEGER and order == 4:
             return "%rcx"
 
-        elif die_type in INTEGER and order == 5:
+        elif INTEGER and order == 5:
             return "%r8"
 
-        elif die_type in INTEGER and order == 6:
+        elif INTEGER and order == 6:
             return "%r9"
 
         # I think constants are stored on the stack?
@@ -337,11 +345,30 @@ class ABIFactGenerator(object):
             return "stack"
 
         # This could be stack too, or the above memory
-        elif die_type in INTEGER and order > 6:
+        elif INTEGER and order > 6:
             return "memory"
 
         elif die_type in SSE and order <= 8:
             return "%xmm" + str(order - 1)
+
+    def add_loc_fact(self, *args):
+        self.add_fact(*args, key="abi_typelocation")
+
+    def add_interface_fact(self, *args):
+        self.add_fact(*args, key="interface")
+
+    def add_fact(self, *args, key):
+        """
+        Generate an ABI location fact.
+
+        A common function to take some number of arguments and generate
+        a location fact. We also check that the fact has not been seen before.
+        This function exists to ensure we don't generate redundant facts.
+        """
+        factkey = "".join(args)
+        if factkey not in self._facts[key]:
+            self.gen.fact(AspFunction(key, args=args))
+            self._facts[key].add(factkey)
 
     def _parse_common_attributes(self, corpus, die, tag):
         """
@@ -394,42 +421,43 @@ class ABIFactGenerator(object):
         # (e.g., a formal_parameter)
         if tag == "formal_parameter" and die_type and pname and loc:
             register = self.get_parameter_register(die, corpus, die_type)
-            fact = fn.abi_typelocation(corpus.basename, pname, name,
-                                       exported, die_type, register, loc)
+            self.add_loc_fact(tag, corpus.basename, pname, name, exported, die_type,
+                              register, loc)
 
         # Case 2: A formal parameter without a loc
         elif tag == "formal_parameter" and pname and die_type:
             register = self.get_parameter_register(die, corpus, die_type)
             cname = corpus.basename
-            fact = fn.abi_typelocation(cname, pname, name, exported,
-                                       die_type, register)
+            self.add_loc_fact(tag, cname, pname, name, exported, die_type, register)
 
-        # Case 3: We have everything, but not a formal parameter
+        # Case 3: We have everything, and variable (parent name is file)
+        elif die_type and pname and loc and tag == 'variable':
+            self.add_loc_fact(tag, corpus.basename, name, exported, die_type, loc)
+
+        # Case 4: We have everything, but not a formal parameter
         elif die_type and pname and loc:
-            fact = fn.abi_typelocation(corpus.basename, pname, name,
-                                       exported, die_type, loc)
+            self.add_loc_fact(tag, corpus.basename, pname, name, exported, die_type,
+                              loc)
 
-        # Case 4: just die_type and loc (e.g., a variable)
+        # Case 5: just die_type and loc (e.g., a variable)
         elif die_type and loc:
-            fact = fn.abi_typelocation(corpus.basename, name, exported, die_type, loc)
+            self.add_loc_fact(tag, corpus.basename, name, exported, die_type, loc)
 
         # If we have a die_type and the tag is function, it'a s return type
         elif tag == "function" and die_type:
             cname = corpus.basename
-            fact = fn.abi_typelocation(cname, name, exported, die_type, "%rax")
+            self.add_loc_fact(tag, cname, name, exported, die_type, "%rax")
 
         # function without a return type
         elif not die_type:
-            fact = fn.interface(corpus.basename, name, exported)
+            self.add_interface_fact(tag, corpus.basename, name, exported)
 
         # abi_typelocation('exe', 'main', 'char**', 'fb-32')
-        # here we get dies with possibly an incorrect type, these should
-        # be spot checked (I'm not sure what they are)
+        # here we have mostly members and variable DIEs
         # maybe we need to derived from DW_AT_declaration or DW_AT_sibling?
         else:
             cname = corpus.basename
-            fact = fn.abi_typelocation_unsure(cname, name, exported, die_type)
-        self.gen.fact(fact)
+            self.add_loc_fact(tag, cname, name, exported, die_type)
 
     def _get_die_type(self, die, lookup_die=None):
         """
@@ -614,21 +642,23 @@ class ABIFactGenerator(object):
         self.generate_elf_symbols(corpora, detail=False)
 
 
-def show_loclist(loclist, dwarfinfo, indent, cu_offset):
-    """TODO have not encountered this case yet"""
-    print('show loclist!')
-    import IPython
-    IPython.embed()
-    d = []
+def parse_loclist(loclist, die):
+    """
+    In the case that we do not have a location expression, we have a list!
+
+    I'm not sure under what circumstances we would have two+ locations, but
+    let's include both (with comma separation) anyway, and we can address
+    if/when we see it.
+    """
+    locs = set()
     for loc_entity in loclist:
         if isinstance(loc_entity, et.locationlists.LocationEntry):
-            d.append('%s <<%s>>' % (
-                loc_entity,
-                et.dwarf.describe_DWARF_expr(loc_entity.loc_expr,
-                                             dwarfinfo.structs, cu_offset)))
+            locs.add(et.dwarf.describe_DWARF_expr(loc_entity.loc_expr,
+                                                  die.dwarfinfo.structs,
+                                                  die.cu.cu_offset))
         else:
-            d.append(str(loc_entity))
-    return '\n'.join(indent + s for s in d)
+            locs.add(str(loc_entity))
+    return ','.join(list(locs))
 
 
 # Functions intended to be called by external clients

@@ -1755,8 +1755,7 @@ two packages with debug symbols:
 
 .. code-block:: console
 
-    $ spack install zlib+debug
-    $ spack install tcl+debug
+    $ spack install tcl+debug ^zlib+debug
     
 And then (since we don't have a database of symbols yet) generate facts with the
 elf analyzer:

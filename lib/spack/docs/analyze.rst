@@ -182,8 +182,7 @@ only requires ``zlib``, and we can build both with debug and then run the analyz
 
 .. code-block:: console
 
-    $ spack install zlib+debug
-    $ spack install tcl+debug
+    $ spack install tcl+debug ^zlib+debug
     $ spack analyze run -a elf tcl
     
 If you don't have pyelftools installed, the analyzer will bootstrap it first,
@@ -200,7 +199,6 @@ so you should follow the instructions to generate it first. Then to run the anal
 
 .. code-block:: console
 
-    $ spack install zlib+debug
-    $ spack install tcl+debug
+    $ spack install tcl+debug ^zlib+debug
     $ spack analyze run -a abi_type_location tcl
 
