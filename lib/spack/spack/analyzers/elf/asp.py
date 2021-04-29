@@ -455,11 +455,6 @@ class ABIFactGenerator(object):
         # This is a catch all for handling what we don't know how to predict
         else:
             cname = corpus.basename
-            print(cname)
-            print(tag)
-            print(name)
-            print(exported)
-            print(die_type)
             if die_type:
                 self.add_loc_fact(tag, cname, name, exported, die_type)
             else:
