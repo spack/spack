@@ -22,8 +22,18 @@ class NcbiRmblastn(AutotoolsPackage):
     #   isb-2.11.0+-rmblast.patch.gz
     # The patch is downloaded and unzipped in the ncbi-rmblastn Spack package
     # directory to make it available for the patch directive.
-    patch('isb-2.11.0+-rmblast.patch', when="@2.11.0")
-    patch('isb-2.9.0+-rmblast-p1.patch', when="@2.9.0")
+    patch(
+        'http://www.repeatmasker.org/isb-2.11.0+-rmblast.patch.gz',
+        sha256='ce985abd3512834adb9ad3e4078fbf9608a33a2ee6538a1e94b641490c92f899',
+        archive_sha256='0fc27781c2ea2f17645247e2f3775b5d18c56f0b62761a865347be745ea4f6be',
+        when='@2.11.0'
+    )
+    patch(
+        'http://www.repeatmasker.org/isb-2.9.0+-rmblast.patch.gz',
+        sha256='ffa0845801aed11f4215b452532f3ff5b3dcb49ac8c14169568aaa585b9450ed',
+        archive_sha256='e746ee480ade608052306fd21f015c8a323f27029f65399275216f9a4c882d59',
+        when='@2.9.0'
+    )
 
     configure_directory = 'c++'
 

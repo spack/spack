@@ -298,14 +298,53 @@ class Hdf5(CMakePackage):
         # CMAKE_POSITION_INDEPENDENT_CODE variable are True by default, but '~pic' 
         # should disable them both.
         args.append(self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
-        if '+pic' in self.spec:
-            args.extend([
-                'CFLAGS='   + self.compiler.cc_pic_flag,
-                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
-                'FCFLAGS='  + self.compiler.fc_pic_flag,
-            ])        
+        if '+pic' in spec:
+            # use global spack compiler flags
+            _flags = self.compiler.cc_pic_flag
+            _flags += " " + ' '.join(spec.compiler_flags['cflags'])
+            args.append('CFLAGS={0}'.format(_flags))
+
+            if '+cxx' in spec:
+                _flags = self.compiler.cxx_pic_flag
+                _flags += " " + ' '.join(spec.compiler_flags['cxxflags'])
+                args.append('CXXFLAGS={0}'.format(_flags))
+
+            if '+fortran' in spec:
+                _flags = self.compiler.fc_pic_flag
+                _flags += " " + ' '.join(spec.compiler_flags['fflags'])
+                args.append('FCFLAGS={0}'.format(_flags))
+
+        # Fujitsu Compiler does not add Fortran runtime in rpath.
+        if '+fortran %fj' in spec:
+            args.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
+
+        if '+mpi' in spec:
+            # The HDF5 configure script warns if cxx and mpi are enabled
+            # together. There doesn't seem to be a real reason for this, except
+            # that parts of the MPI interface are not accessible via the C++
+            # interface. Since they are still accessible via the C interface,
+            # this is not actually a problem.
+            args.append('CC=%s' % self.spec['mpi'].mpicc)
+
+            if '+cxx' in self.spec:
+                args.append('CXX=%s' % self.spec['mpi'].mpicxx)
+
+            if '+fortran' in self.spec:
+                args.append('FC=%s' % self.spec['mpi'].mpifc)
 
         return args
+
+    @run_after('cmake')
+    def patch_postdeps(self):
+        if '@:1.8.14' in self.spec:
+            # On Ubuntu14, HDF5 1.8.12 (and maybe other versions)
+            # mysteriously end up with "-l -l" in the postdeps in the
+            # libtool script.  Patch this by removing the spurious -l's.
+            filter_file(
+                r'postdeps="([^"]*)"',
+                lambda m: 'postdeps="%s"' % ' '.join(
+                    arg for arg in m.group(1).split(' ') if arg != '-l'),
+                'libtool')
 
     @run_after('cmake')
     def patch_libtool(self):
