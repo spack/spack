@@ -134,7 +134,7 @@ class ABIFactGenerator(object):
             for symbol, _ in corpus.elfsymbols.items():
                 self.symbols[corpus.basename].add(symbol)
 
-    def _die_hash(self, die, corpus, parent):
+    def _die_hash(self, die, corpus, parent=None):
         """
         We need a unique id for a die entry based on it's corpus, cu, content
         """
@@ -160,9 +160,9 @@ class ABIFactGenerator(object):
 
             # Add to child and die lookup, for redundancy check
             if corpus.path not in self.die_lookup:
-                self.die_lookup[corpus.path] = {}
+                self.die_lookup[corpus.basename] = {}
             if corpus.path not in self.child_lookup:
-                self.child_lookup[corpus.path] = {}
+                self.child_lookup[corpus.basename] = {}
 
             for die in corpus.iter_dwarf_information_entries():
 
@@ -239,13 +239,21 @@ class ABIFactGenerator(object):
                     import sys
                     sys.exit(0)
 
-    def get_export_status(self, tag, corpus):
+    def get_export_status(self, die, tag, corpus):
         """Determine if the corpus tag is an export or an import.
         """
         exported = None
 
+        # If it's the main corpus and it has an exported flag
+        if self.main == corpus.name and hasattr(die.attributes, "DW_AT_external"):
+            exported = "export"
+
+        # If it's not the main corpus and has an exported flag
+        elif hasattr(die.attributes, "DW_AT_external"):
+            exported = "import"
+
         # If it's the main corpus and it's a parameter, the param is imported
-        if self.main == corpus.name and tag == "formal_parameter":
+        elif self.main == corpus.name and tag == "formal_parameter":
             exported = "import"
 
         # If it's the main corpus and its a function (return) it's exported
@@ -265,26 +273,43 @@ class ABIFactGenerator(object):
         elif tag == "function":
             exported = "import"
 
-        # //Another library that calls abs()
-        # symbol_type("libfoo.so","abs","FUNC").
-        # abi_typelocation("libfoo.so", "abs", "export", "double", "%rdi").
-        # abi_typelocation("libfoo.so", "abs", "import", "int", "%rax").
+        # A main corpus variable not exported
+        elif self.main == corpus.name:
+            exported = "not-exported"
+
+        # A library variable not externally available
+        else:
+            exported = "not-importe"
+
         return exported
 
-    def get_parameter_register(self, die, die_type):
-        """Given the order and type of formal parameter, return the register
+    def get_parameter_register(self, die, corpus, die_type):
+        """
+        Given the order and type of formal parameter, return the register
+
+        We cache the order of the children for lookup by later parameter calls.
         """
         # We first have to derive the order from the parent children
-        # This should probably be done once and cached
+        # If we do it for the first time, cache it
         parent = die.get_parent()
-        order = 1
-        for child in parent.iter_children():
-            if child == die:
-                break
-            order += 1
+        parent_id = self._die_hash(parent, corpus)
+
+        # If we haven't seen it yet, create a lookup
+        if parent_id not in self.child_lookup[corpus.basename]:
+            self.child_lookup[corpus.basename][parent_id] = {}
+            order = 1
+            for child in parent.iter_children():
+                child_id = self._die_hash(child, corpus)
+                self.child_lookup[corpus.basename][parent_id][child_id] = order
+                order += 1
+
+        # Retrieve the parameter order we need (this is one of the children)
+        die_id = self._die_hash(die, corpus)
+        order = self.child_lookup[corpus.basename][parent_id][die_id]
 
         # Signed and unsigned Bool,char,short,int,long,long long, and pointers
-        INTEGER = ['int', 'char', 'short', 'long', 'bool', 'longlong', 'pointer']
+        INTEGER = ['int', 'char', 'short', 'long', 'bool', 'longlong', 'pointer',
+                   'unsigned int', 'long int']
 
         # float,double,_Decimal32,_Decimal64and__m64are in class SSE.
         SSE = ['double', 'decimal']
@@ -307,6 +332,11 @@ class ABIFactGenerator(object):
         elif die_type in INTEGER and order == 6:
             return "%r9"
 
+        # I think constants are stored on the stack?
+        elif die_type == "const":
+            return "stack"
+
+        # This could be stack too, or the above memory
         elif die_type in INTEGER and order > 6:
             return "memory"
 
@@ -334,7 +364,7 @@ class ABIFactGenerator(object):
             return
 
         # main imports what it needs, exports what it provides
-        exported = self.get_export_status(tag, corpus)
+        exported = self.get_export_status(die, tag, corpus)
 
         # We found metadata for a symbol! :D
         self.generate_elf_symbol(corpus, name, detail=True)
@@ -345,6 +375,10 @@ class ABIFactGenerator(object):
 
         if "DW_AT_location" in die.attributes:
             loc = self.get_location(die)
+
+        # Structures are represented as their contents, skip
+        if die_type == "structure":
+            return
 
         # If we have a parent, we can add it
         parent = die.get_parent()
@@ -358,21 +392,26 @@ class ABIFactGenerator(object):
 
         # Case 1: we have a parent, loc, name, and die_type
         # (e.g., a formal_parameter)
-        if die_type and pname and loc:
-            register = self.get_parameter_register(die, die_type)
+        if tag == "formal_parameter" and die_type and pname and loc:
+            register = self.get_parameter_register(die, corpus, die_type)
             fact = fn.abi_typelocation(corpus.basename, pname, name,
                                        exported, die_type, register, loc)
 
-        # Case 2: just die_type and loc (e.g., a variable)
-        elif die_type and loc:
-            fact = fn.abi_typelocation(corpus.basename, name, exported, die_type, loc)
-
-        # A formal parameter with a function parent
+        # Case 2: A formal parameter without a loc
         elif tag == "formal_parameter" and pname and die_type:
-            register = self.get_parameter_register(die, die_type)
+            register = self.get_parameter_register(die, corpus, die_type)
             cname = corpus.basename
             fact = fn.abi_typelocation(cname, pname, name, exported,
                                        die_type, register)
+
+        # Case 3: We have everything, but not a formal parameter
+        elif die_type and pname and loc:
+            fact = fn.abi_typelocation(corpus.basename, pname, name,
+                                       exported, die_type, loc)
+
+        # Case 4: just die_type and loc (e.g., a variable)
+        elif die_type and loc:
+            fact = fn.abi_typelocation(corpus.basename, name, exported, die_type, loc)
 
         # If we have a die_type and the tag is function, it'a s return type
         elif tag == "function" and die_type:
@@ -434,16 +473,13 @@ class ABIFactGenerator(object):
 
             IPython.embed()
 
-        # If we grabbed the type, just explicitly write the size/type
-        # In the future we could reference another die, but don't
-        # have it's parent here at the moment
         if type_die:
 
             # If we have another type def, call function again until we find it
             if "DW_AT_type" in type_die.attributes:
                 return self._get_die_type(die, type_die)
 
-            # Not sure how to parse this, call it const for now
+            # If it's a constant, typically the parent is a compile unit
             elif type_die.tag == 'DW_TAG_const_type':
                 return "const"
 
