@@ -209,7 +209,7 @@ class QuantumEspresso(Package):
     patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
     patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
 
-    # Need OpenMP threaded FFTW and BLAS libraries when configured 
+    # Need OpenMP threaded FFTW and BLAS libraries when configured
     # with OpenMP support
     conflicts('^fftw~openmp', when='+openmp')
     conflicts('^amdfftw~openmp', when='+openmp')
