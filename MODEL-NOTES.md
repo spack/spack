@@ -5,48 +5,161 @@ There are a lot of details and I want to get them down here so you can also
 look them over carefully and give feedback. You can also just look at the modified
 asp.py in the pull request for the "code documentation" version. :)
 
-## 1. Defining Interfaces
+## 1. Get corpora
 
-We define subprograms (functions) as interfaces. 
+The user is going to run a command that asks to run an analyzer for a specific
+package. E.g., "tcl" (pronounced "tickle.")
 
-Interfaces
- - DW_TAG_subprogram (function)
+```bash
+$ spack analyze run -a abi_type_location tcl
+```
 
-I'll add other interfaces to this but want to make sure I'm doing functions correctly first.
+Importantly, this package along with its dependencies needs to be built
+with debug.
 
-## 2. Defining DIEs we want to parse
+```bash
+$ spack install tcl+debug ^zlib+debug
+```
 
-Of all the DW_TAG_*s, I'm currently parsing:
+We can then get a build manifest for the tcl spec, and create Corpora, or
+general classes that wrap an elffile, for each entry in the manifest
+`binary_to_relocate_fullpath`. These entries are labeled as main corpora,
+meaning directionality (e.g., import vs. export) we define in context to them,
+and we generate a few extra rules to declare them as main corpora.
+We then loop through the main spec dependencies, and get the same manifest
+and key to add (potential) supporting libraries. These are not labeled as 
+main corpora, and the directionality (discussed later) is reversed.
 
-Parsing
- - **all interfaces noted above**
- - DW_TAG_formal_parameter
- - DW_TAG_variable (don't have predictible parents, we skip DW_AT_declaration)
- - DW_TAG_pointer_type/DW_TAG_pointer (not sure the latter exists)
- - DW_TAG_variable
+## 2. Get system corpora
 
-Given the above, we sometimes hit children that we explicitly don't want to parse.
-So I'm currently skipping:
+For each corpora (a library file) we use ldd on the library file to get
+a list of additional (system typically) libraries that we want to parse.
+We use "which" to get the fullpath, and only add the new corpus if
+the path is not already represented by another corpus.
 
- - DW_TAG_subroutine_type
+## 3. Set needed symbols
 
-because I'm not sure how to parse it. More specifically, we hit formal_parameters with
-a parent that is a subroutine type. Since I can't represent this easily with name, I
-skip over it.
+We only care about a symbol if it's defined in one of our main corpora, so
+we create a lookup of needed symbols (by symbol name)
+that constitutes any symbol in a main corpus. We will not add symbol facts
+from dependency libraries that are not found in a main corpus. We don't
+care about what specific main library the symbol comes from - if it's found
+in any main library it's flagged as needed.
 
-## 3. Relationships?
+## 4. Create symbol lookup
 
-I am currently skipping adding relationships for has_child because I'm
-hoping to represent the relationship as flat (e.g., the name of a function
-and variable in the same fact). However this might get complicated if we have functions
-and/or variables with the same name within a corpus. In this case we need to go back to
-giving each a unique id based on its name, parent, and corpus. I 
-do a check early on based on the die "abbreviation code" in the scope of a corpus
-to make sure we don't parse any DIEs twice. 
+We aren't actually going to parse through the list of main symbols directly,
+but rather the Dwarf Information Entries (DIEs) that the main corpora have,
+and then we will add information for a symbol only if it's represented in a DIE.
+To make this easy, we create a symbol lookup, where we can quickly
+check if some needed symbol is defined for a corpus. It's a set for easy
+lookup:
 
-## 4. Base of Model is Name, Type, Location
+```python
+for corpus in corpora:
+   self.symbols[corpus.basename] = set()
+   for symbol, _ in corpus.elfsymbols.items():
+        self.symbols[corpus.basename].add(symbol)
+```
 
-My basic approach is to try and represent every DIE as a name, location, and die type.
+And then later we can easily see if it's defined for a specific corpus,
+and if so, retrieve it directly from the `corpus.elfsymbols`. This
+is just an implementation detail.
+
+## 5. Generate corpus metadata
+
+For each corpus, we generate basic metadata like it's name, path, and whether
+it's a main corpus. E.g.,
+
+```asp
+corpus("tclsh8.6").
+is_main_corpus("tcl","8.6.11").
+corpus_machine("tcl","EM_X86_64").
+```
+
+## 6. Define logic to get register based on type
+
+This will need work, but we have a function that can take a die type,
+and based on the type, return the register that it is found in. Below,
+you'll see that we parse over a parent die's children in order to determine
+the order of parameters. When we hit a parent function for the first time,
+we generate a cache of child parameter orders (so we only do it once).
+
+```python
+def get_parameter_register(self, die, corpus, die_type):
+    """
+    Given the order and type of formal parameter, return the register
+
+    We cache the order of the children for lookup by later parameter calls.
+    """
+    # We first have to derive the order from the parent children
+    # If we do it for the first time, cache it
+    parent = die.get_parent()
+    parent_id = self._die_hash(parent, corpus)
+
+    # If we haven't seen it yet, create a lookup
+    if parent_id not in self.child_lookup[corpus.basename]:
+        self.child_lookup[corpus.basename][parent_id] = {}
+        order = 1
+        for child in parent.iter_children():
+
+            # Don't include children that are not formal parameters
+            if "formal_parameter" not in child.tag:
+                continue
+            child_id = self._die_hash(child, corpus)
+            self.child_lookup[corpus.basename][parent_id][child_id] = order
+            order += 1
+
+    # Retrieve the parameter order we need (this is one of the children)
+    die_id = self._die_hash(die, corpus)
+    order = self.child_lookup[corpus.basename][parent_id][die_id]
+
+    # Signed and unsigned Bool,char,short,int,long,long long, and pointers
+    INTEGER = False
+    if re.search("(int|char|short|long|pointer|bool)", die_type):
+        INTEGER = True
+
+    # float,double,_Decimal32,_Decimal64and__m64are in class SSE.
+    SSE = ['double', 'decimal']
+
+    if INTEGER and order == 1:
+        return "%rdi"
+
+    elif INTEGER and order == 2:
+        return "%rsi"
+
+    elif INTEGER and order == 3:
+        return "%rdx"
+
+    elif INTEGER and order == 4:
+        return "%rcx"
+
+    elif INTEGER and order == 5:
+        return "%r8"
+
+    elif INTEGER and order == 6:
+        return "%r9"
+
+    # I think constants are stored on the stack?
+    elif die_type == "const":
+        return "stack"
+
+    # This could be stack too, or the above memory
+    elif INTEGER and order > 6:
+        return "memory"
+
+    elif die_type in SSE and order <= 8:
+        return "%xmm" + str(order - 1)
+```
+
+## 7. Iterate over DIEs
+
+Now we can iterate over DIEs, and for each, we:
+
+### Base of Model is Name, Type, Location
+
+For any DIE we can match to a symbol, we attempt to define a name, location,
+and die type.
 
 ```python
 # We want to represent things as names, locations, and types
@@ -55,75 +168,54 @@ loc = None
 die_type = None
 ```
 
-### Find a name
+### Check for a name
 
-I first look for a name, which can be the `DW_AT_linkage_name` (the mangled string)
-or a `DW_AT_name`. 
+We can only match to a symbol if the DIE has a `DW_AT_name` or `DW_AT_linkage_name`
+(the mangled string) attribute. We check for the mangled string first. If the DIE
+does not have a name, we skip it because we cannot match to a needed symbol.
+If the name is present but not in the needed symbols lookup, we also skip it.
+We don't care about symbols that a main corpora does not use.
 
-### If it's an interface, atomize it
 
-If we find a name and the tag is a known interface, I define it as such.
-I skip and keep going if there is not a name. I'm not sure how to define an interface that doesn't have one, or even what that means.
+### Get an export status
 
-```python
-# We can only declare an interface with a name
-if tag in interfaces and name:
-    self.gen.fact(fn.interface(corpus.basename, name))     
-elif tag in interfaces and not name:
-    return
+We want to generally say if a variable, function, member, or parameter is exported
+or imported, which is a term relative to our main corpora. This means that:
+
+ 1. If we have a main corpus and it has a `DW_AT_external` flag, it's an "export"
+ 2. If it's not a main corpus and it has a `DW_AT_external` flag, it's an "import"
+ 3. If we have a main corpus and it's a formal parameter type, it's an "import"
+ 4. If it's the main corpus and a variable or member, it's exported (not sure about this one)
+ 5. If it's not the main corpus and it's a variable or member, it's imported (not sure about this one)
+ 6. If it's the main corpus and it's a function (return) it's exported
+ 7. If it's not the main corpus and it's a function (return) it's imported
+ 8. If it's a main corpus (anything else) we label "unknown-export"
+ 9. If it's not a main corpus and anything else, we also label "unknown-export"
+
+This is one of the variables that is added to an abi_typelocation fact.
+
+
+### Add symbol metadata
+
+At this point, if we've found a name and the name is in needed symbols,
+we can generate metadata for the symbol. This typically looks like:
+
+```asp
+has_symbol("libtcl8.6.so","free").
+symbol_type("libtcl8.6.so","free","FUNC").
+symbol_binding("libtcl8.6.so","free","GLOBAL").
+symbol_definition("libtcl8.6.so","free","UND").
 ```
 
-### Skip things that cannot be named
+We are interested in symbols that are needed that are undefined (UND above).
 
-In testing I found that all libraries typically have a pointer type that is empty.
-I think maybe it's just for declaring the size of a pointer? I skip over these
-because there is basically no metadata that we need. It's not a named thing.
+### Get type and location
 
-```python
-# There can be a mostly empty pointer type that just states the size
-# of a pointer in bytes, with the only parent being the compile unit
-if not name and tag == "pointer_type":
-    return
-```
-
-But I suspect if two libraries have different size pointer types, that's kind of weird
-and would be an issue. But it's not in scope for our current modeling attempt so I'm skipping it.
-
-If I've found a variable tag and it does not have a name, I also don't know how
-to parse that so I skip it. In testing some of these have `DW_AT_specification`
-which I suspect is some kind of reference? Possibly we could follow the reference
-to get a name?
+We then look for `DW_AT_type` and `DW_AT_location` to get a location (which can
+be multiple if a location list is found, they will be separated by commas in a string)
+and a type.
 
 ```python
-# This has DW_AT_specification (a reference?) but no name, not sure
-# how to handle
-elif not name and tag == "variable":
-    return
-```
-
-Matt mentioned that we would want to parse pointers something like:
-
-```python
-abi_typelocation('exe', 'main', 'char**', 'fb-32')
-```
-
-But in testing I haven't hit one yet - it's more likely to be hit when
-I am deriving a type for another DIE (next section). For the DIEs that we loop over, this case has not triggered
-
-```python
-if "pointer" in tag:
-    print('pointer')
-    import IPython
-    IPython.embed()
-```
-
-### Get the die type and name
-
-Once we get over the "special cases" humps above, we can usually try to get
-a  location and type.
-
-```python
-# DW_AT_type is a reference to another die (the type)
 if "DW_AT_type" in die.attributes:
     die_type = self._get_die_type(die)
 
@@ -131,7 +223,7 @@ if "DW_AT_location" in die.attributes:
     loc = self.get_location(die)
 ```
 
-This (I think) is done fairly reasonably - I was hitting an error where an
+Getting the die type (I think) is done fairly reasonably - I was hitting an error where an
 address was outside of a CU unit, but I read that I just need to add the CU offset
 (and then I get an answer). 
 
@@ -166,139 +258,98 @@ Given that we have a type_die (derived from an address we either need to):
 Note that I'm using cu.cu_offset instead of cu.cu_die_offset (which from the
 comments above I think is the one I want?)
 
-## 5. Variables with locations can be atomized
+### Skip structures
 
-In testing they don't appear to have any kind of useful parent (e.g.,
-a formal parameter would have a function parent). So we just parse them
-into atoms and include their name, type, and location.
+I think structures are represented by their guts? So for now we skip
+them, meaning tags `structure` and `structure_type`. We do this by checking if `die_type` 
+one of these strings. In practice structures don't have a known export status 
+nor do they have a die_type.
+
+### Get a parent
+
+If we have a formal parameter, we are going to want to say what function it is
+from, and the function (`DW_TAG_subprogram`) is the parent that we need to parse.
+So we always derive the name of a parent, which can be a function, but for
+variables (and maybe members?) it's a filename, which we don't care about.
+
+
+### Generate facts
+
+For fact generation, the structure depends on what we found (e.g., sometimes
+we don't have a location). I think this could probably be simplified a lot -
+the cases of what we should find aren't totally clear to me.
+
+#### Generate interfaces
+
+Functions are always labeled as interfaces.
+
+```asp
+# tag, corpus basename, name, export status
+interface("function","libtcl8.6.so","compact","export").
+```
+
+Likely there are other tag types we want to call interfaces too?
+The next facts are all related to abi_typelocation.
+
+#### Case 1: we have a parent, loc, name, and die_type
+
+If we have everything, this typically is a formal parameter (and we check too,
+since we are going to look up a register). We additionally
+derive the register name with the function we described in #6. We generate
+a location fact with:
 
 ```python
-# Variables don't necessarily have a parent function
-if "variable" in tag and loc:
-    fact = fn.abi_typelocation(corpus.basename, name, die_type, loc)
-    self.gen.fact(fact)
-    return
-```
-I don't check if there is a defined die_type - this could currently show
-up with die_type as none.
-
-## 6. Atomize function return type
-
-Matt told me that if we have a function (subprogram) with a type,
-the type is the return type! Huzzah! In practice I don't see that
-these have any locations, but I also am no longer checking.
-
-```
-# If it's a subprogram and we have a type, it's a return type!
-# abi_typelocation('exe', 'main', 'int', 'return')
-if tag == "function" and die_type:
-     cname = corpus.basename
-     parent = os.path.basename(
-         self.bytes2str(die.get_parent().attributes['DW_AT_name'].value)
-     )
-     fact = fn.abi_typelocation(cname, parent, name, die_type, "return")
-     self.gen.fact(fact)            
-     return
+# tag corpus.basename, parent name, name, export status, die_type, register, loc
+abi_typelocation("formal_parameter","libtcl8.6.so","TclNREvalObjEx","word","import","int","%r8","(DW_OP_fbreg: -184)").
 ```
 
-## 7. Functions without return types
+We are including the tag for now so it's easier to debug the facts (e.g.,
+see what DIE tag generated each). I'm not sure if a formal_parameter can ever
+not have a loc - if this is the case, the loc will show up as None.
 
-Functions without types means that there is no return, so we exit because
-we've already declared it to be an interface and don't need to parse the die
-further (the children will be parsed later).
+#### Case 3: A variable with a type and loc
+
+If we have a variable, we don't care about it's parent name, but
+we do care about it's location and die type.
 
 ```python
-elif tag == "function" and not die_type:
-    return
+# tag, corpus.basename, name, exported, die_type, loc
+abi_typelocation("variable","libtcl8.6.so","backd","export","short unsigned int","(DW_OP_addr: 204320)").
 ```
-I don't check if a function without a type has a location. From the examples
-I saw, we weren't representing functions as having locations, but rather their
-parameters.
 
-## 8. Bail out on DW_AT_declaration
-
-This is what I read is a "non complete type" and in testing I didn't see
-that there was enough metadata to make a full atom, so we bail out.
+#### Case 4: We have all attributes, but it's not a formal parameter
 
 ```python
-# Not sure how to parse non complete types (skip for now)
-# https://stackoverflow.com/questions/38225269/dwarf-reading-not-complete-types
-elif "DW_AT_declaration" in die.attributes:
-    return
+tag, corpus.basename, pname, name, exported, die_type, loc)
 ```
 
-## 9. Atomize formal parameters
+This is sort of a catch all for #4, except we know it's not a variable (so we try
+including the parent name, pname). I'm not sure if this is ever used.
 
-At this point I always do a sanity check (since we are still developing that
-there is both a location AND die type. Since we are just parsing functions,
-this is where we are defining atoms for formal paramters. If the parent is a subprogram
-I add it to the atom, otherwise I try to define a general type/location for whatever
-I've found (typically a variable)
+#### Case 5: just die_type and loc
+
+I'm again not sure if we ever hit this case. Maybe this would trigger for
+a variable?
 
 ```python
-# We need to link the name of the (usually parameter) to its 
-# parent function name
-parent = die.get_parent()
-
-# Variables might not have a parent
-if "subprogram" not in parent.tag:
-    fact = fn.abi_typelocation(corpus.basename, name, die_type, loc)
-else:
-    pname = self.bytes2str(parent.attributes['DW_AT_name'].value)
-    fact = fn.abi_typelocation(corpus.basename, pname, name, die_type, loc)
-self.gen.fact(fact)
+# tag, corpus.basename, name, exported, die_type, loc
 ```
 
-And as I stated above, if including the parent name is not sufficient for
-uniqueness we will need to go back and generate unique ids and add `has_child`
-relationships.
+### Case 6: A function with a die_type is a return type
 
+```python
+# tag, cname, name, exported, die_type, "%rax")
+abi_typelocation("function","libtcl8.6.so","casecmp","export","int","%rax").
+```
 
-## Other interfaces to consider?
+### Case 7: Catch all
 
-Once the above is clear, I think I want to also call the following things interfaces:
+If we don't hit a case above, we generate the abi_typelocation fact
+and just include everything that might be there. In practice this does not
+include loc, and it looks like we hit members and variables.
 
- - DW_TAG_union_type
- - DW_TAG_class_type
- - DW_TAG_enumerator
- - DW_TAG_array_type
-
-And each will probably need more special parsing. I'm not sure if I need to parse:
-
- - DW_TAG_member
- - DW_TAG_inheritance
- - DW_TAG_template_type_param
- - DW_TAG_template_value_param
- - DW_TAG_imported_module
- - DW_TAG_imported_declaration
- - DW_TAG_subrange_type
- - DW_TAG_subroutine_type (I'm currently skipping)
- - DW_TAG_inlined_subroutine (have not encountered yet, not parsing)
- - DW_TAG_enumeration_type (I suspect we will go through this when we parse enumerator interfaces)
- - DW_TAG_unspecified_type (possibly other types we will hit?)
- - DW_TAG_reference_type
- - DW_TAG_rvalue_reference_type
- - DW_TAG_GNU_call_site (no idea)
- - DW_TAG_GNU_call_site_parameter
- - DW_TAG_unspecified_parameters
- - DW_TAG_GNU_template_parameter_pack
- - DW_TAG_volatile_type (sounds dangerous!)
- - DW_TAG_lexical_block
-
-I am not (directly) parsing:
-
- - DW_TAG_compile_unit
- - DW_TAG_namespace
- - DW_TAG_typedef
- - DW_TAG_base_type
-
-Meaning I don't skip them entirely, but I haven't encountered them yet (unless it's
-one of the DIEs that is passed through with a `DW_AT_type` that we return in the previous
-step.) I suspect the typedef and base_type fall into this category.
-
-Special cases - I only seem to hit these when I'm looking for a type. Others
-from the last of "I'm not sure I need to parse" might appear here.
-
- - DW_AT_pointer_type
- - DW_AT_const_type
- - DW_AT_structure_type
+```python
+# tag, cname, name, exported, die_type)
+abi_typelocation("member","libtcl8.6.so","free","export","short int").
+abi_typelocation("variable","libtcl8.6.so","tclPlatform","export","unsigned int").
+```

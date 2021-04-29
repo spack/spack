@@ -253,9 +253,6 @@ class ABIFactGenerator(object):
         """
         exported = None
 
-        # Consider formal_parameters, variables, and members as parameters
-        param_tags = ['formal_parameter', 'variable', 'member']
-
         # If it's the main corpus and it has an exported flag
         if self.main == corpus.name and hasattr(die.attributes, "DW_AT_external"):
             exported = "export"
@@ -265,15 +262,19 @@ class ABIFactGenerator(object):
             exported = "import"
 
         # If it's the main corpus and it's a parameter, the param is imported
-        elif self.main == corpus.name and tag in param_tags:
+        elif self.main == corpus.name and tag == "formal_parameter":
+            exported = "import"
+
+        # If it's the main corpus and it's a variable or member, it's exported
+        elif self.main == corpus.name and tag in ['variable', 'member']:
+            exported = "export"
+
+        # If it's not main corpus and it's a variable or member, it's imported
+        elif tag in ['variable', 'member']:
             exported = "import"
 
         # If it's the main corpus and its a function (return) it's exported
         elif self.main == corpus.name and tag == "function":
-            exported = "export"
-
-        # If it's not the main corpus and its a parameter, it's exported from main
-        elif tag in param_tags:
             exported = "export"
 
         # If it's not the main corpus and its a function return, import to main
@@ -282,11 +283,11 @@ class ABIFactGenerator(object):
 
         # A main corpus variable not exported
         elif self.main == corpus.name:
-            exported = "not-exported"
+            exported = "unknown-export"
 
         # A library variable not externally available
         else:
-            exported = "not-imported"
+            exported = "unknown-export"
 
         return exported
 
@@ -306,6 +307,10 @@ class ABIFactGenerator(object):
             self.child_lookup[corpus.basename][parent_id] = {}
             order = 1
             for child in parent.iter_children():
+
+                # Don't include children that are not formal parameters
+                if "formal_parameter" not in child.tag:
+                    continue
                 child_id = self._die_hash(child, corpus)
                 self.child_lookup[corpus.basename][parent_id][child_id] = order
                 order += 1
@@ -404,8 +409,12 @@ class ABIFactGenerator(object):
             loc = self.get_location(die)
 
         # Structures are represented as their contents, skip
-        if die_type == "structure":
+        if die_type == "structure" or tag == "structure_type":
             return
+
+        # Always label a function as an interface
+        if tag == "function":
+            self.add_interface_fact(tag, corpus.basename, name, exported)
 
         # If we have a parent, we can add it
         parent = die.get_parent()
@@ -424,22 +433,16 @@ class ABIFactGenerator(object):
             self.add_loc_fact(tag, corpus.basename, pname, name, exported, die_type,
                               register, loc)
 
-        # Case 2: A formal parameter without a loc
-        elif tag == "formal_parameter" and pname and die_type:
-            register = self.get_parameter_register(die, corpus, die_type)
-            cname = corpus.basename
-            self.add_loc_fact(tag, cname, pname, name, exported, die_type, register)
-
-        # Case 3: We have everything, and variable (parent name is file)
+        # Case 2: We have everything, and variable (parent name is file)
         elif die_type and pname and loc and tag == 'variable':
             self.add_loc_fact(tag, corpus.basename, name, exported, die_type, loc)
 
-        # Case 4: We have everything, but not a formal parameter
+        # Case 3: We have everything, but not a formal parameter
         elif die_type and pname and loc:
             self.add_loc_fact(tag, corpus.basename, pname, name, exported, die_type,
                               loc)
 
-        # Case 5: just die_type and loc (e.g., a variable)
+        # Case 4: just die_type and loc (e.g., a variable)
         elif die_type and loc:
             self.add_loc_fact(tag, corpus.basename, name, exported, die_type, loc)
 
@@ -448,16 +451,19 @@ class ABIFactGenerator(object):
             cname = corpus.basename
             self.add_loc_fact(tag, cname, name, exported, die_type, "%rax")
 
-        # function without a return type
-        elif not die_type:
-            self.add_interface_fact(tag, corpus.basename, name, exported)
-
         # abi_typelocation('exe', 'main', 'char**', 'fb-32')
-        # here we have mostly members and variable DIEs
-        # maybe we need to derived from DW_AT_declaration or DW_AT_sibling?
+        # This is a catch all for handling what we don't know how to predict
         else:
             cname = corpus.basename
-            self.add_loc_fact(tag, cname, name, exported, die_type)
+            print(cname)
+            print(tag)
+            print(name)
+            print(exported)
+            print(die_type)
+            if die_type:
+                self.add_loc_fact(tag, cname, name, exported, die_type)
+            else:
+                self.add_loc_fact(tag, cname, name, exported)
 
     def _get_die_type(self, die, lookup_die=None):
         """
@@ -543,13 +549,13 @@ class ABIFactGenerator(object):
             # packages have a name and uid
             self.gen.fact(fn.corpus(corpus.basename))
 
-            # if we have seen the spec or dep name already, continue
-            if corpus.name in seen:
+            # if we have seen the library already, continue
+            if corpus.path in seen:
                 continue
-            seen.add(corpus.name)
+            seen.add(corpus.path)
 
             # Is it a main corpus?
-            if corpus.name == main or corpus.uid is not None:
+            if corpus.name == main:
                 self.gen.fact(fn.is_main_corpus(corpus.name, corpus.uid))
 
             # If the corpus has a soname:
@@ -564,7 +570,8 @@ class ABIFactGenerator(object):
         """
         ldd = which('ldd')
 
-        seen = set()
+        # Ensure we don't add a library twice
+        seen = set([x.path for x in corpora])
         syscorpora = []
         for corpus in corpora:
             output = ldd(corpus.path, output=str)
@@ -597,7 +604,7 @@ class ABIFactGenerator(object):
 
         self.gen.h1("Corpus Facts")
 
-        # Add system corpora to the list ?
+        # Add system corpora to the list
         corpora += self.get_system_corpora(corpora)
 
         # We still want to filter down to needed symbols by main corpora
