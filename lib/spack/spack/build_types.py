@@ -12,8 +12,9 @@ class BuildTypeBase(object):
     """
     default = None
 
-    def __init__(self, compiler):
-        self.compiler = compiler
+    def __init__(self, spec):
+        self.spec = spec
+        self.default = []
 
     @property
     def name(self):
@@ -21,28 +22,65 @@ class BuildTypeBase(object):
         """
         return self.__class__.__name__
 
-    def get_flags(self):
-        """Given a spack build type (e.g., debug) subclass, return extra flags.
-
-        Each compiler can define a flag attribute associated with a buildtype.
+    def get_compiler_flags(self, group):
         """
-        # The build type can define a default value
-        default = self.default
-        return getattr(self.compiler, self.attr, default)
+        Get multiple flags from a compiler via a named group.
+        """
+        if not hasattr(self, group):
+            return self.default
+
+        attrs = []
+        for attr in getattr(self, group):
+            attrs += getattr(self.spec.compiler, attr, self.default)
+        return attrs
+
+    def get_package_flags(self, group, package):
+        """
+        Get multiple flags from a package via a named group
+        """
+        # Cut out early if we don't have flags or a packages
+        if not hasattr(self, group) or package not in self.spec:
+            return self.default
+
+        attrs = []
+        for attr in getattr(self, group):
+            attrs += getattr(self.spec[package].package, attr, self.default)
+        return attrs
+
+    def get_flags(self, group=None):
+        """
+        Given a spack build type (e.g., debug) subclass, return extra flags.
+
+        Each compiler can define flags attribute associated with a buildtype.
+        Each package can also defined flags for build types. Eventually
+        compilers will be packages so we will not need the first.
+        """
+        # A build type can define a list of flags for a group attribute
+        if group == "cudaflags":
+            return self.get_package_flags("cuda_attrs", "cuda")
+        elif group in ["cflags", "cxxflags", "fflags"]:
+            return self.get_compiler_flags("compiler_attrs")
+
+        # If we don't have a group, or matching group, return default (no flags)
+        return self.default
 
 
-class Debug(BuildTypeBase):
+class BasicDebug(BuildTypeBase):
     """
     The debug build type corresponds with the user asking for
     spack_build_type=debug
     """
-    # If the compiler does not have a preference, give -g
-    default = "-g"
-    attr = 'debug_flag'
+    compiler_attrs = ['debug_flag']
+    cuda_attrs = ['debug_flag']
 
 
-debug_types = {"debug"}
-build_types = {'debug': Debug}
+class DebugOptimized(BuildTypeBase):
+    compiler_attrs = ['debug_flag', 'debug_optimize_flag']
+    cuda_attrs = ['debug_flag']
+
+
+debug_types = {"debug", "debug+opt"}
+build_types = {'debug': BasicDebug, 'debug+opt': DebugOptimized}
 
 
 def get_build_type(spec):
@@ -53,4 +91,4 @@ def get_build_type(spec):
     """
     build_type = spec.variants['spack_build_type'].value
     if build_type:
-        return build_types[build_type](spec.compiler)
+        return build_types[build_type](spec)
