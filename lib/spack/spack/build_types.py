@@ -95,6 +95,6 @@ def get_build_type(spec):
     The variant value has to be a string, not a BuiltType
     So we have a getter method that gets the class associated with the string
     """
-    build_type = spec.variants['spack_build_type'].value
+    build_type = spec.variants.get('spack_build_type')
     if build_type:
-        return build_types[build_type](spec)
+        return build_types[build_type.value](spec)
