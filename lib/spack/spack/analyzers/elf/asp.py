@@ -35,6 +35,9 @@ class ABIFactGenerator(object):
         # Or any symbols to advise further parsing
         self.symbols = {}
 
+        # Keep track of primary / main corpora
+        self.main = None
+
         # A lookup of DIE children ids
         self.child_lookup = {}
         self.die_lookup = {}
@@ -71,17 +74,21 @@ class ABIFactGenerator(object):
         # Prepare variables
         vinfo = meta['version_info']
         defined = meta['defined']
+        bind = meta['binding']
 
         # If the symbol has @@ in the name, it includes the version.
         if "@@" in symbol and not vinfo:
             symbol, _ = symbol.split('@', 1)
+
+        # We don't care about LOCAL symbols
+        if bind == "LOCAL":
+            return
 
         self.gen.fact(fn.symbol_definition(corpus.basename, symbol, defined))
         self.gen.fact(fn.has_symbol(corpus.basename, symbol))
 
         if detail:
             # vis = meta['visibility']
-            bind = meta['binding']
 
             # Additional elf metadata / details to generate
             self.gen.fact(fn.symbol_type(corpus.basename, symbol, meta['type']))
@@ -95,13 +102,12 @@ class ABIFactGenerator(object):
         1. a needed symbol, meaning exported by a main
         2. defined for the corpus in question
         """
-        if symbol not in self.needed_symbols or corpus.basename not in self.symbols:
+        if symbol not in self.needed_symbols or symbol not in corpus.elfsymbols:
             return
 
         # Generate the symbol if its defined for the corpus
-        if symbol in self.symbols[corpus.basename]:
-            meta = corpus.elfsymbols[symbol]
-            self._generate_elf_symbol(corpus, symbol, meta, detail=detail)
+        meta = corpus.elfsymbols[symbol]
+        self._generate_elf_symbol(corpus, symbol, meta, detail=detail)
 
     def bytes2str(self, item):
         return elftools.common.py3compat.bytes2str(item)
@@ -110,6 +116,7 @@ class ABIFactGenerator(object):
         """
         Set needed symbols that we should filter to.
         """
+        self.main = main
         for corpus in corpora:
             if corpus.name == main:
                 for symbol, _ in corpus.elfsymbols.items():
@@ -195,13 +202,6 @@ class ABIFactGenerator(object):
         # Keep track of unique id (hash of attributes, parent, and corpus)
         die.unique_id = self._die_hash(die, corpus, parent)
 
-        # If it's already been parsed, skip
-        if die.abbrev_code in self.die_lookup[corpus.path]:
-            return
-
-        # Add to the lookup
-        self.die_lookup[corpus.path][die.abbrev_code] = die
-
         # Parse common attributes of symbols
         self._parse_common_attributes(corpus, die, tag)
 
@@ -239,6 +239,80 @@ class ABIFactGenerator(object):
                     import sys
                     sys.exit(0)
 
+    def get_export_status(self, tag, corpus):
+        """Determine if the corpus tag is an export or an import.
+        """
+        exported = None
+
+        # If it's the main corpus and it's a parameter, the param is imported
+        if self.main == corpus.name and tag == "formal_parameter":
+            exported = "import"
+
+        # If it's the main corpus and its a function (return) it's exported
+        elif self.main == corpus.name and tag == "function":
+            exported = "export"
+
+        # //Library that defines abs()
+        # symbol_type("libtcl8.6.so","abs","FUNC").
+        # abi_typelocation("libtcl8.6.so", "abs", "import", "double", "%rdi").
+        # abi_typelocation("libtcl8.6.so", "abs", "export", "int", "%rax").
+
+        # If it's not the main corpus and its a parameter, it's exported from main
+        elif tag == "formal_parameter":
+            exported = "export"
+
+        # If it's not the main corpus and its a function return, import to main
+        elif tag == "function":
+            exported = "import"
+
+        # //Another library that calls abs()
+        # symbol_type("libfoo.so","abs","FUNC").
+        # abi_typelocation("libfoo.so", "abs", "export", "double", "%rdi").
+        # abi_typelocation("libfoo.so", "abs", "import", "int", "%rax").
+        return exported
+
+    def get_parameter_register(self, die, die_type):
+        """Given the order and type of formal parameter, return the register
+        """
+        # We first have to derive the order from the parent children
+        # This should probably be done once and cached
+        parent = die.get_parent()
+        order = 1
+        for child in parent.iter_children():
+            if child == die:
+                break
+            order += 1
+
+        # Signed and unsigned Bool,char,short,int,long,long long, and pointers
+        INTEGER = ['int', 'char', 'short', 'long', 'bool', 'longlong', 'pointer']
+
+        # float,double,_Decimal32,_Decimal64and__m64are in class SSE.
+        SSE = ['double', 'decimal']
+
+        if die_type in INTEGER and order == 1:
+            return "%rdi"
+
+        elif die_type in INTEGER and order == 2:
+            return "%rsi"
+
+        elif die_type in INTEGER and order == 3:
+            return "%rdx"
+
+        elif die_type in INTEGER and order == 4:
+            return "%rcx"
+
+        elif die_type in INTEGER and order == 5:
+            return "%r8"
+
+        elif die_type in INTEGER and order == 6:
+            return "%r9"
+
+        elif die_type in INTEGER and order > 6:
+            return "memory"
+
+        elif die_type in SSE and order <= 8:
+            return "%xmm" + str(order - 1)
+
     def _parse_common_attributes(self, corpus, die, tag):
         """
         Many share these attributes, so we have a common function to parse.
@@ -256,8 +330,11 @@ class ABIFactGenerator(object):
             name = self.bytes2str(die.attributes["DW_AT_name"].value)
 
         # If it doesn't have a name, or its not a known symbol, continue
-        if not name or name not in self.symbols[corpus.basename]:
+        if not name or name not in self.needed_symbols:
             return
+
+        # main imports what it needs, exports what it provides
+        exported = self.get_export_status(tag, corpus)
 
         # We found metadata for a symbol! :D
         self.generate_elf_symbol(corpus, name, detail=True)
@@ -272,29 +349,39 @@ class ABIFactGenerator(object):
         # If we have a parent, we can add it
         parent = die.get_parent()
         pname = None
-        if "DW_AT_name" in parent.attributes:
+        if "DW_AT_linkage_name" in parent.attributes:
+            pname = self.bytes2str(parent.attributes["DW_AT_linkage_name"].value)
+
+        elif "DW_AT_name" in parent.attributes:
             pname = os.path.basename(
                 self.bytes2str(parent.attributes['DW_AT_name'].value))
 
         # Case 1: we have a parent, loc, name, and die_type
         # (e.g., a formal_parameter)
         if die_type and pname and loc:
-            fact = fn.abi_typelocation(corpus.basename, pname, name, die_type, loc)
+            register = self.get_parameter_register(die, die_type)
+            fact = fn.abi_typelocation(corpus.basename, pname, name,
+                                       exported, die_type, register, loc)
 
         # Case 2: just die_type and loc (e.g., a variable)
         elif die_type and loc:
-            fact = fn.abi_typelocation(corpus.basename, name, die_type, loc)
+            fact = fn.abi_typelocation(corpus.basename, name, exported, die_type, loc)
+
+        # A formal parameter with a function parent
+        elif tag == "formal_parameter" and pname and die_type:
+            register = self.get_parameter_register(die, die_type)
+            cname = corpus.basename
+            fact = fn.abi_typelocation(cname, pname, name, exported,
+                                       die_type, register)
 
         # If we have a die_type and the tag is function, it'a s return type
-        # abi_typelocation('exe', 'main', 'int', 'return')
-        # return values are imports
-        elif tag == "function" and pname and die_type:
+        elif tag == "function" and die_type:
             cname = corpus.basename
-            fact = fn.abi_typelocation(cname, pname, name, die_type, "return")
+            fact = fn.abi_typelocation(cname, name, exported, die_type, "%rax")
 
         # function without a return type
         elif not die_type:
-            fact = fn.interface(corpus.basename, name)
+            fact = fn.interface(corpus.basename, name, exported)
 
         # abi_typelocation('exe', 'main', 'char**', 'fb-32')
         # here we get dies with possibly an incorrect type, these should
@@ -302,7 +389,7 @@ class ABIFactGenerator(object):
         # maybe we need to derived from DW_AT_declaration or DW_AT_sibling?
         else:
             cname = corpus.basename
-            fact = fn.abi_typelocation_unsure(cname, pname, name, die_type)
+            fact = fn.abi_typelocation_unsure(cname, name, exported, die_type)
         self.gen.fact(fact)
 
     def _get_die_type(self, die, lookup_die=None):
