@@ -793,15 +793,18 @@ def concretize_specs_together(*abstract_specs, **kwargs):
         # Spec from a helper package that depends on all the abstract_specs
         concretization_root = spack.spec.Spec('concretizationroot')
         concretization_root.concretize(tests=kwargs.get('tests', False))
+        # overwrite the temporary namespace
+        for subspec in concretization_root.traverse():
+            if subspec.namespace == concretization_ns:
+                subspec.namespace = remap_repos.get(subspec.name, subspec.namespace)
+            # now remove all stored hashes so that it recalculates with the right specs
+            subspec._hash = None
+            # should clear _dunder/_build/full-_hash and _final_hashes
+            subspec.clear_cached_hashes()
         # Retrieve the direct dependencies
         concrete_specs = [
             concretization_root[spec.name].copy() for spec in abstract_specs
         ]
-
-    for mainspec in concrete_specs:
-        for subspec in mainspec.traverse():
-            if subspec.namespace == concretization_ns:
-                subspec.namespace = remap_repos.get(subspec.name)
 
     return concrete_specs
 
