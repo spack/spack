@@ -79,8 +79,14 @@ class DebugOptimized(BuildTypeBase):
     cuda_attrs = ['debug_flag']
 
 
+class DebugMax(BuildTypeBase):
+    compiler_attrs = ['debug_max_flag']
+    cuda_attrs = ['debug_flag']
+
+
 debug_types = {"debug", "debug+opt"}
-build_types = {'debug': BasicDebug, 'debug+opt': DebugOptimized}
+build_types = {'debug': BasicDebug, 'debug+opt': DebugOptimized,
+               'debug+max': DebugMax}
 
 
 def get_build_type(spec):
