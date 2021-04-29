@@ -29,10 +29,10 @@ class BuildTypeBase(object):
         if not hasattr(self, group):
             return self.default
 
-        attrs = []
+        flags = []
         for attr in getattr(self, group):
-            attrs += getattr(self.spec.compiler, attr, self.default)
-        return attrs
+            flags += getattr(self.spec.package.compiler, attr, self.default)
+        return flags
 
     def get_package_flags(self, group, package):
         """
@@ -42,10 +42,10 @@ class BuildTypeBase(object):
         if not hasattr(self, group) or package not in self.spec:
             return self.default
 
-        attrs = []
+        flags = []
         for attr in getattr(self, group):
-            attrs += getattr(self.spec[package].package, attr, self.default)
-        return attrs
+            flags += getattr(self.spec[package].package, attr, self.default)
+        return flags
 
     def get_flags(self, group=None):
         """
@@ -84,9 +84,9 @@ class DebugMax(BuildTypeBase):
     cuda_attrs = ['debug_flag']
 
 
-debug_types = {"debug", "debug+opt"}
-build_types = {'debug': BasicDebug, 'debug+opt': DebugOptimized,
-               'debug+max': DebugMax}
+debug_types = {"debug", "debug_opt", "debug_max"}
+build_types = {'debug': BasicDebug, 'debug_opt': DebugOptimized,
+               'debug_max': DebugMax}
 
 
 def get_build_type(spec):
