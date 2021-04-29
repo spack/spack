@@ -786,10 +786,6 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
 
-    out = capfd.readouterr()[0]
-    assert 'Installing a' in out
-    assert ' in progress by another process' in out
-
 
 def test_cleanup_all_tasks(install_mockery, monkeypatch):
     """Test to ensure cover _cleanup_all_tasks."""
