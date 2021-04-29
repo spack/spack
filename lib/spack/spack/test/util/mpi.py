@@ -37,6 +37,13 @@ def test_mpirunner(tmpdir):
         assert runner.full_cmd(2) == 'srun --pre --sflags 2 --post'
         assert runner.full_cmd(1) == 'srun --pre --sflags 1 --post'
 
+        opts = runner.full_opts(2)
+        assert len(opts) == 4
+        assert opts[0] == runner.pre_np_flags
+        assert opts[1] == runner.np_flags
+        assert opts[2] == '2'
+        assert opts[3] == runner.post_np_flags
+
     with spack.config.override('config', runner_conf_general):
         runner = MPIRunner.create_from_conf_key('nonexistent_conf')
 
