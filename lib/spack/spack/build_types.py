@@ -6,8 +6,6 @@
 """Build types can add different flags depending on the compiler.
 """
 
-import llnl.util.tty as tty
-
 
 class BuildTypeBase(object):
     """A build type base provides base functions to look up flags for a compiler.
@@ -106,6 +104,4 @@ def get_build_type(spec):
     So we have a getter method that gets the class associated with the string
     """
     build_type = spec.variants.get('spack_build_type')
-    if build_type.value not in build_types:
-        tty.die("%s is not a valid build type" % build_type.value)
     return build_types[build_type.value](spec)

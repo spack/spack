@@ -32,6 +32,7 @@ from typing import Optional, List, Dict, Any, Callable  # novm
 import llnl.util.filesystem as fsys
 import llnl.util.tty as tty
 
+import spack.build_types
 import spack.compilers
 import spack.config
 import spack.dependency
@@ -2668,7 +2669,8 @@ class Package(PackageBase):
 
     spack.directives.variant('spack_built_type', default='rel_with_deb',
                              help="Set to control compiler flags for optimization \
-                                   and debug levels")
+                                   and debug levels",
+                             values=spack.build_types.build_types.values())
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
