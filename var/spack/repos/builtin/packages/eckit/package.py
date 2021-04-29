@@ -78,13 +78,6 @@ class Eckit(CMakePackage):
               msg='"linalg=lapack" is implied when "linalg=mkl" and '
                   'must not be specified additionally')
 
-    # Fixes a bug that manifests itself in 'test_fdb_service_marsreques' of the
-    # fdb package. The tests implements a use case when a thread_local map is
-    # accessed with the same key from different threads. The patch might affect
-    # the performance, therefore we limit it to the latest version only and wait
-    # for a proper fix upstream:
-    patch('pooled_file.patch', when='@1.16.0')
-
     def cmake_args(self):
         args = [
             # Some features that we want to build are experimental:
