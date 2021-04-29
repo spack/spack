@@ -2666,6 +2666,10 @@ class Package(PackageBase):
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
 
+    spack.directives.variant('spack_built_type', default='rel_with_deb',
+                             help="Set to control compiler flags for optimization \
+                                   and debug levels")
+
 
 def install_dependency_symlinks(pkg, spec, prefix):
     """

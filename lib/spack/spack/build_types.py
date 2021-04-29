@@ -6,6 +6,8 @@
 """Build types can add different flags depending on the compiler.
 """
 
+import llnl.util.tty as tty
+
 
 class BuildTypeBase(object):
     """A build type base provides base functions to look up flags for a compiler.
@@ -65,9 +67,9 @@ class BuildTypeBase(object):
         return self.default
 
 
-class NullBuildType(BuildTypeBase):
+class RelWithDeb(BuildTypeBase):
     """
-    A null build type does not add any extra flags.
+    Eventually will be the default
     """
     compiler_attrs = []
     cuda_attrs = []
@@ -94,7 +96,7 @@ class DebugMax(BuildTypeBase):
 
 debug_types = {"debug", "debug_opt", "debug_max"}
 build_types = {'debug': BasicDebug, 'debug_opt': DebugOptimized,
-               'debug_max': DebugMax, "null": NullBuildType}
+               'debug_max': DebugMax, "rel_with_deb": RelWithDeb}
 
 
 def get_build_type(spec):
@@ -104,5 +106,6 @@ def get_build_type(spec):
     So we have a getter method that gets the class associated with the string
     """
     build_type = spec.variants.get('spack_build_type')
-    build_type = "null" if not build_type else build_type.value
-    return build_types[build_type](spec)
+    if build_type.value not in build_types:
+        tty.die("%s is not a valid build type" % build_type.value)
+    return build_types[build_type.value](spec)
