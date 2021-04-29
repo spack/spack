@@ -274,28 +274,28 @@ class Hdf5(CMakePackage):
             args.append(
                 self.define('SZIP_INCLUDE_DIR', spec['szip'].prefix.include))
             # args.append(self.define('SZIP_DIR', spec['szip'].prefix.lib)) was
-            # sufficient for HDF5 versions released since 2019, but earlier 
+            # sufficient for HDF5 versions released since 2019, but earlier
             # versions had a FindSZIP.cmake file that required a full path
             # to libsz.so.2.  Since this will also work for the newer versions,
             # that is used below.  The libaec puts its lib files in lib64, so
             # the 64 is appended to spec['szip'].prefix.lib along with the
-            #/libs.so.2 in the lines below when using szip from Libaec.
+            # /libs.so.2 in the lines below when using szip from Libaec.
             if '^libaec' in spec:
-                szlib_name="64/libsz.so.2"
+                szlib_name = "64/libsz.so.2"
             else:
-                szlib_name="/libsz.so.2"
-            szlib_path=spec['szip'].prefix.lib+szlib_name
+                szlib_name = "/libsz.so.2"
+            szlib_path = spec['szip'].prefix.lib + szlib_name
             args.append(self.define('SZIP_LIBRARY', szlib_path))
 
         api = spec.variants['api'].value
         if api != 'default':
             args.append(self.define('DEFAULT_API_VERSION', api))
 
-        # The variable CMAKE_POSITION_INDEPENDENT_CODE is set to True by default in 
-        # HDF5 Cmake code;  this should insure that it is off if '~pic' in spec. The 
+        # The variable CMAKE_POSITION_INDEPENDENT_CODE is set to True by default in
+        # HDF5 Cmake code;  this should insure that it is off if '~pic' in spec. The
         # flags that were previously set for '+pic' in the Autotools version are kept
         # in case CMake doesn't set them as expected.  Both the 'pic' variant and the
-        # CMAKE_POSITION_INDEPENDENT_CODE variable are True by default, but '~pic' 
+        # CMAKE_POSITION_INDEPENDENT_CODE variable are True by default, but '~pic'
         # should disable them both.
         args.append(self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
         if '+pic' in spec:
