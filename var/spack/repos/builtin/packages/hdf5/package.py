@@ -329,7 +329,7 @@ class Hdf5(AutotoolsPackage):
 
         # Quiet warnings/errors about implicit declaration of functions in C99
         if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
-            cflags += " -Wno-implicit-function-declaration" 
+            cflags += " -Wno-implicit-function-declaration"
 
         if cflags:
             extra_args.append('CFLAGS={0}'.format(cflags))
