@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
