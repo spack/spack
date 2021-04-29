@@ -32,7 +32,7 @@ class BuildTypeBase(object):
         flags = []
         for attr in getattr(self, group):
             flags += getattr(self.spec.package.compiler, attr, self.default)
-        return flags
+        return list(set(flags))
 
     def get_package_flags(self, group, package):
         """
@@ -45,7 +45,7 @@ class BuildTypeBase(object):
         flags = []
         for attr in getattr(self, group):
             flags += getattr(self.spec[package].package, attr, self.default)
-        return flags
+        return list(set(flags))
 
     def get_flags(self, group=None):
         """
@@ -63,6 +63,14 @@ class BuildTypeBase(object):
 
         # If we don't have a group, or matching group, return default (no flags)
         return self.default
+
+
+class NullBuildType(BuildTypeBase):
+    """
+    A null build type does not add any extra flags.
+    """
+    compiler_attrs = []
+    cuda_attrs = []
 
 
 class BasicDebug(BuildTypeBase):
@@ -86,7 +94,7 @@ class DebugMax(BuildTypeBase):
 
 debug_types = {"debug", "debug_opt", "debug_max"}
 build_types = {'debug': BasicDebug, 'debug_opt': DebugOptimized,
-               'debug_max': DebugMax}
+               'debug_max': DebugMax, "null": NullBuildType}
 
 
 def get_build_type(spec):
@@ -96,5 +104,5 @@ def get_build_type(spec):
     So we have a getter method that gets the class associated with the string
     """
     build_type = spec.variants.get('spack_build_type')
-    if build_type:
-        return build_types[build_type.value](spec)
+    build_type = "null" if not build_type else build_type.value
+    return build_types[build_type](spec)
