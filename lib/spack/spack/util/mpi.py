@@ -7,24 +7,26 @@ from llnl.util.filesystem import join_path
 import spack.config
 
 
-class MPIRunner(object):
-    """Class representing a resource manager command to run MPI-based code.
+# Class representing a resource manager command to run MPI-based code.
+#
+# A number of static methods are provided to help create MPIRunner's in
+# different ways. Users can set parameters in config files and create a
+# runner from these parameters. For example, the following section in
+# config.yaml provides special params for 'mvapich2' package:
+# 'mvapich2': {
+#     'mpi_runner_cmd': 'mpiexec',
+#     'mpi_runner_np_flags': '--npflags',
+#     'mpi_runner_pre_np_flags': '--pre',
+#     'mpi_runner_post_np_flags': '--post'
+# }
+# Users can also set parameters in a top level config section:
+# 'mpi_runner_cmd': 'srun',
+# 'mpi_runner_pre_np_flags': '-np'
+# The static function 'create_from_conf_key' first tries the provided
+# config section and then goes to the top level conf params.
 
-    A number of static methods are provided to help create MPIRunner's in
-    different ways. Users can set parameters in config files and create a
-    runner from these parameters. For example, the following section in
-    config.yaml provides special params for 'mvapich2' package:
-    'mvapich2': {
-        'mpi_runner_cmd': 'mpiexec',
-        'mpi_runner_np_flags': '--npflags',
-        'mpi_runner_pre_np_flags': '--pre',
-        'mpi_runner_post_np_flags': '--post'
-    }
-    Users can also set parameters in a top level config section:
-    'mpi_runner_cmd': 'srun',
-    'mpi_runner_pre_np_flags': '-np'
-    The static function 'create_from_conf_key' first tries the provided
-    config section and then goes to the top level conf params."""
+class MPIRunner(object):
+    """Class representing a resource manager command to run MPI-based code."""
 
     default_np_flags = '-n'
 
@@ -97,7 +99,7 @@ class MPIRunner(object):
     def create_def_runner(full_pkg_name, mpi_bindir):
         """First try specific runner config corresponding to the package name
         and then top level config; if neither is defined initialize the runner
-        with 'srun' or 'mpiexec'
+        with 'srun' or 'mpiexec'.
 
         Returns:
             MPIRunner: runner or None if conf is not defined
@@ -113,7 +115,7 @@ class MPIRunner(object):
     @staticmethod
     def query_res_manager(res_mgr, mpi_bindir):
         """Creates a runner for given resource manager; if resource manager
-        was not found, falls back to 'mpiexec' at given directory
+        was not found, falls back to 'mpiexec' at given directory.
 
         Returns:
             MPIRunner:
