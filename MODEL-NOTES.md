@@ -279,7 +279,7 @@ For fact generation, the structure depends on what we found (e.g., sometimes
 we don't have a location). I think this could probably be simplified a lot -
 the cases of what we should find aren't totally clear to me.
 
-#### Generate interfaces
+### Generate interfaces
 
 Functions are always labeled as interfaces.
 
@@ -335,14 +335,14 @@ a variable?
 # tag, corpus.basename, name, exported, die_type, loc
 ```
 
-### Case 6: A function with a die_type is a return type
+#### Case 6: A function with a die_type is a return type
 
 ```python
 # tag, cname, name, exported, die_type, "%rax")
 abi_typelocation("function","libtcl8.6.so","casecmp","export","int","%rax").
 ```
 
-### Case 7: Catch all
+#### Case 7: Catch all
 
 If we don't hit a case above, we generate the abi_typelocation fact
 and just include everything that might be there. In practice this does not
