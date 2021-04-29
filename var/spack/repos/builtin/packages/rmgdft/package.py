@@ -61,9 +61,13 @@ class Rmgdft(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         args = []
-        if '-qmcpack' in spec:
-            args.append('-DQMCPACK_SUPPORT=0')
-        if '-internal_pp' in spec:
+        if '+qmcpack' in spec:
+            args.append('-DQMCPACK=1')
+        else:
+            args.append('-DQMCPACK=0')
+        if '+internal_pp' in spec:
+            args.append('-DUSE_INTERNAL_PSEUDOPOTENTIALS=1')
+        else:
             args.append('-DUSE_INTERNAL_PSEUDOPOTENTIALS=0')
         return args
 
