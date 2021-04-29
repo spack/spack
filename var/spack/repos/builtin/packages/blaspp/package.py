@@ -18,7 +18,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['teonnik', 'Sely85', 'G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
-    version('2021.04.00', sha256='04fc1a693ea5017b0c866cb8a109e8d5ee03d5b0ccef5d046b50c427ed5bf5f2')
+    version('2021.04.01', sha256='11fc7b7e725086532ada58c0de53f30e480c2a06f1497b8081ea6d8f97e26150')
     version('2020.10.02', sha256='36e45bb5a8793ba5d7bc7c34fc263f91f92b0946634682937041221a6bf1a150')
     version('2020.10.01', sha256='1a05dbc46caf797d59a7c189216b876fdb1b2ff3e2eb48f1e6ca4b2756c59153')
     version('2020.10.00', sha256='ce148cfe397428d507c72d7d9eba5e9d3f55ad4cd842e6e873c670183dcb7795')
