@@ -96,3 +96,21 @@ def test_multiple_env_match_raises_error(mock_packages, mutable_mock_env_path):
             spack.cmd.matching_spec_from_env(spack.cmd.parse_specs(['a'])[0])
 
     assert 'matches multiple specs' in exc_info.value.message
+
+
+@pytest.mark.usefixtures('config')
+def test_root_and_dep_match_returns_root(mock_packages, mutable_mock_env_path):
+    e = ev.create('test')
+    e.add('b@0.9')
+    e.add('a foobar=bar')  # Depends on b, should choose b@1.0
+    e.concretize()
+    with e:
+        # This query matches the root b and b as a dependency of a. In that
+        # case the root instance should be preferred.
+        env_spec1 = spack.cmd.matching_spec_from_env(
+            spack.cmd.parse_specs(['b'])[0])
+        assert env_spec1.satisfies('@0.9')
+
+        env_spec2 = spack.cmd.matching_spec_from_env(
+            spack.cmd.parse_specs(['b@1.0'])[0])
+        assert env_spec2
