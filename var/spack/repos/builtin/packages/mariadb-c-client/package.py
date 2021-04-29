@@ -68,3 +68,9 @@ class MariadbCClient(CMakePackage):
     def cmake_args(self):
         args = ['-DWITH_EXTERNAL_ZLIB=ON', '-DWITH_MYSQLCOMPAT=ON']
         return args
+
+    @property
+    def libs(self):
+        return find_libraries(
+            ['libmariadb'], root=self.prefix, recursive=True, shared=True
+        )

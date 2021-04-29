@@ -41,7 +41,7 @@ class Hdf5(CMakePackage):
     version('1.10.0-patch1', sha256='6e78cfe32a10e6e0629393cdfddf6cfa536571efdaf85f08e35326e1b4e9eff0')
     version('1.10.0', sha256='81f6201aba5c30dced5dcd62f5d5477a2790fd5850e02ac514ca8bf3e2bb375a')
 
-    version('1.8.22', sha256='dcea864e16cb27ca9d2e325d2c49a5cac83ae314aec96ab1304a1200b6120a56')
+    version('1.8.22', sha256='8406d96d9355ef8961d2739fb8fd5474ad4cdf52f3cfac657733defd9709bfaa')
     version('1.8.21', sha256='87d8c82eba5cf766d97cd06c054f4639c1049c4adeaa3a79f77f8bd374f80f37')
     version('1.8.19', sha256='a4335849f19fae88c264fd0df046bc321a78c536b2548fc508627a790564dc38')
     version('1.8.18', sha256='cdb195ad8d9e6782acf24b2488061289f615628c2ccda8457b0a0c3fb7a8a063')
@@ -84,7 +84,7 @@ class Hdf5(CMakePackage):
     # numactl does not currently build on darwin
     if sys.platform != 'darwin':
         depends_on('numactl', when='+mpi+fortran')
-    depends_on('libaec', when='+szip')
+    depends_on('szip', when='+szip')
     depends_on('zlib@1.1.2:')
 
     # The Java wrappers and associated libhdf5_java library
@@ -138,6 +138,16 @@ class Hdf5(CMakePackage):
     # libraries fail to link; see https://github.com/spack/spack/issues/12586
     patch('h5public-skip-mpicxx.patch', when='@1.8.10:1.8.21,1.10.0:1.10.5+mpi~cxx',
           sha256='b61e2f058964ad85be6ee5ecea10080bf79e73f83ff88d1fa4b602d00209da9c')
+
+    # Fixes BOZ literal constant error when compiled with GCC 10.
+    # The issue is described here: https://github.com/spack/spack/issues/18625
+    patch('hdf5_1.8_gcc10.patch', when='@:1.8.21',
+          sha256='0e20187cda3980a4fdff410da92358b63de7ebef2df1d7a425371af78e50f666')
+
+    # Libtool fails to recognize NAG compiler behind the MPI wrappers and apply
+    # correct linker flags enabling shared libraries. # We support only versions
+    # based on Libtool 2.4.6.
+    patch('nag.mpi.libtool.patch', when='@1.8.18:%nag+fortran+mpi+shared')
 
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
@@ -260,15 +270,40 @@ class Hdf5(CMakePackage):
         ]
 
         if '+szip' in spec:
-            args.append(self.define('USE_LIBAEC', True))
             args.append(self.define('HDF5_ENABLE_SZIP_ENCODING', True))
             args.append(
-                self.define('SZIP_INCLUDE_DIR', spec['libaec'].prefix.include))
-            args.append(self.define('SZIP_DIR', spec['libaec'].prefix.lib))
+                self.define('SZIP_INCLUDE_DIR', spec['szip'].prefix.include))
+            # args.append(self.define('SZIP_DIR', spec['szip'].prefix.lib)) was
+            # sufficient for HDF5 versions released since 2019, but earlier 
+            # versions had a FindSZIP.cmake file that required a full path
+            # to libsz.so.2.  Since this will also work for the newer versions,
+            # that is used below.  The libaec puts its lib files in lib64, so
+            # the 64 is appended to spec['szip'].prefix.lib along with the
+            #/libs.so.2 in the lines below when using szip from Libaec.
+            if '^libaec' in spec:
+                szlib_name="64/libsz.so.2"
+            else:
+                szlib_name="/libsz.so.2"
+            szlib_path=spec['szip'].prefix.lib+szlib_name
+            args.append(self.define('SZIP_LIBRARY', szlib_path))
 
         api = spec.variants['api'].value
         if api != 'default':
             args.append(self.define('DEFAULT_API_VERSION', api))
+
+        # The variable CMAKE_POSITION_INDEPENDENT_CODE is set to True by default in 
+        # HDF5 Cmake code;  this should insure that it is off if '~pic' in spec. The 
+        # flags that were previously set for '+pic' in the Autotools version are kept
+        # in case CMake doesn't set them as expected.  Both the 'pic' variant and the
+        # CMAKE_POSITION_INDEPENDENT_CODE variable are True by default, but '~pic' 
+        # should disable them both.
+        args.append(self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
+        if '+pic' in self.spec:
+            args.extend([
+                'CFLAGS='   + self.compiler.cc_pic_flag,
+                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
+                'FCFLAGS='  + self.compiler.fc_pic_flag,
+            ])        
 
         return args
 

@@ -39,6 +39,7 @@ class Zstd(CMakePackage):
     variant('zlib', default=False, description='Build programs with zlib support')
     variant('lzma', default=False, description='Build programs with lzma support')
     variant('lz4', default=False, description='Build programs with zlib support')
+    variant('multithread', default=True, description='Build with pthread support')
 
     conflicts('+zlib', when='~programs', msg="zlib requires programs to be built")
     conflicts('+lzma', when='~programs', msg="lzma requires programs to be built")
@@ -53,5 +54,6 @@ class Zstd(CMakePackage):
             self.define_from_variant('ZSTD_BUILD_PROGRAMS', 'programs'),
             self.define_from_variant('ZSTD_BUILD_STATIC', 'static'),
             self.define_from_variant('ZSTD_BUILD_SHARED', 'shared'),
-            self.define_from_variant('ZSTD_LEGACY_SUPPORT', 'legacy')
+            self.define_from_variant('ZSTD_LEGACY_SUPPORT', 'legacy'),
+            self.define_from_variant('ZSTD_MULTITHREAD_SUPPORT', 'multithread')
         ]
