@@ -17,6 +17,8 @@ class Slepc(Package):
 
     maintainers = ['joseeroman', 'balay']
 
+    test_requires_compiler = True
+
     version('master', branch='master')
     version('3.14.2', sha256='3e54578dda1f4c54d35ac27d02f70a43f6837906cb7604dbcec0e033cfb264c8')
     version('3.14.1', sha256='cc78a15e34d26b3e6dde003d4a30064e595225f6185c1975bbd460cb5edd99c7')
@@ -161,12 +163,43 @@ class Slepc(Package):
                                  work_dir=test_dir)
 """
 
+    def run_hello_test(self):
+        """Run stand alone test: hello"""
+        test_dir = self.test_suite.current_test_data_dir
+
+        if not os.path.exists(test_dir):
+            return
+
+        exe = 'hello'
+        expected_output = ('Hello world')
+        cc_exe = os.environ['CC']
+
+        self.run_test(exe=cc_exe,
+                      options=['-I{0}'.format(self.prefix.include),
+                              '-L', '{0}'.format(self.prefix.lib),
+                              '-l', '{0}'.format(self.spec['slepc'].name),
+                              '-L', '{0}'.format(self.spec['petsc'].prefix.lib),
+                              '-l', '{0}'.format(self.spec['petsc'].name),
+                              '-L', '{0}'.format(self.spec['mpi'].prefix.lib),
+                              '-l', '{0}'.format(self.spec['mpi'].name),
+                              '-o', exe,
+                              test_dir],
+                      purpose='test: run {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        fake_options = ['-I{0}'.format(self.prefix),
+                              '-L', '{0}'.format(self.prefix.lib),
+                              '-l', '{0}'.format(self.spec['slepc'].name),
+                              '-L', '{0}'.format(self.spec['petsc'].prefix.lib),
+                              '-l', '{0}'.format(self.spec['petsc'].name),
+                              '-L', '{0}'.format(self.spec['mpi'].prefix.lib),
+                              '-l', '{0}'.format(self.spec['mpi'].name),
+                              '-o', exe,
+                              test_dir]
+        print('Shane {0}'.format(self.prefix))
+        print(fake_options)
+
+
     def test(self):
         print("running_tests")
-        print('hello {0}'.format(self.prefix))
-        test_dir = self.prefix.share.slepc.examples.src.pep.tests
-        output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
-        output = get_escaped_text_output(output_dir.join('test11_1.out'))
-        print(output)
-        print(test_dir)
-        self.run_pep_test11()
+        self.run_hello_test()
