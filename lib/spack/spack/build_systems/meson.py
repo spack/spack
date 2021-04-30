@@ -97,7 +97,7 @@ class MesonPackage(PackageBase):
         try:
             build_type = pkg.spec.variants['buildtype'].value
         except KeyError:
-            build_type = self.build_type.name
+            build_type = "release"
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
