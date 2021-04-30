@@ -777,7 +777,11 @@ def test_requeue_task(install_mockery, capfd):
     installer = create_installer(const_arg)
     task = create_build_task(installer.build_requests[0].pkg)
 
+    # temporarily set tty debug messages on so we can test output
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
     installer._requeue_task(task)
+    tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
@@ -785,6 +789,10 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.status == inst.STATUS_INSTALLING
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
+
+    out = capfd.readouterr()[1]
+    assert 'Installing a' in out
+    assert ' in progress by another process' in out
 
 
 def test_cleanup_all_tasks(install_mockery, monkeypatch):
