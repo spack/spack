@@ -27,11 +27,13 @@ class Silo(AutotoolsPackage):
             description='Produce position-independent code (for shared libs)')
     variant('mpi', default=True,
             description='Compile with MPI Compatibility')
+    variant('hdf5', default=True,
+            description='Use the HDF5 for database')
 
     depends_on('mpi', when='+mpi')
-    depends_on('hdf5@:1.10.999', when='@:4.10.2')
-    depends_on('hdf5~mpi', when='~mpi')
-    depends_on('hdf5+mpi', when='+mpi')
+    depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
+    depends_on('hdf5~mpi', when='~mpi+hdf5')
+    depends_on('hdf5+mpi', when='+mpi+hdf5')
     depends_on('qt+gui~framework@4.8:4.9', when='+silex')
     depends_on('libx11', when='+silex')
     # Xmu dependency is required on Ubuntu 18-20
@@ -45,8 +47,9 @@ class Silo(AutotoolsPackage):
     def flag_handler(self, name, flags):
         spec = self.spec
         if name == 'ldflags':
-            if spec['hdf5'].satisfies('~shared'):
-                flags.append('-ldl')
+            if '+hdf5' in spec:
+                if spec['hdf5'].satisfies('~shared'):
+                    flags.append('-ldl')
             flags.append(spec['readline'].libs.search_flags)
 
         if '+pic' in spec:
@@ -94,8 +97,6 @@ class Silo(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
-                                   spec['hdf5'].prefix.lib),
             '--with-zlib=%s,%s' % (spec['zlib'].prefix.include,
                                    spec['zlib'].prefix.lib),
             '--enable-install-lite-headers',
@@ -103,6 +104,12 @@ class Silo(AutotoolsPackage):
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
         ]
+
+        if '+hdf5' in spec:
+            config_args.extend([
+                '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
+                                       spec['hdf5'].prefix.lib),
+            ])
 
         if '+silex' in spec:
             x = spec['libx11']
