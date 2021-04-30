@@ -69,10 +69,13 @@ class Mxnet(CMakePackage, CudaPackage):
 
     # python/setup.py
     extends('python', when='+python')
-    depends_on('python@2.7:2.8,3.4:', when='+python', type=('build', 'run'))
+    depends_on('python@2.7:2.8,3.4:', when='@:1.8.0+python', type=('build', 'run'))
+    depends_on('python@3.6:', when='@2.0.0:+python', type=('build', 'run'))
+    depends_on('py-contextvars', when='@2.0.0:+python ^python@3.6.0:3.6.999', type=('build', 'run'))
     depends_on('py-setuptools', when='+python', type='build')
     depends_on('py-cython', when='+python', type='build')
-    depends_on('py-numpy@1.16.1:1.999', when='@1.6:+python', type=('build', 'run'))
+    depends_on('py-numpy@1.17:', when='@2.0.0:+python', type=('build', 'run'))
+    depends_on('py-numpy@1.16.1:1.999', when='@1.6:1.8.0+python', type=('build', 'run'))
     depends_on('py-numpy@1.8.2:1.15.0', when='@1.3.0+python', type=('build', 'run'))
     depends_on('py-requests@2.20.0:2.999', when='@1.6:+python', type=('build', 'run'))
     depends_on('py-requests@2.18.4:2.18.999', when='@1.3.0+python', type=('build', 'run'))
@@ -109,7 +112,7 @@ class Mxnet(CMakePackage, CudaPackage):
             args.append(self.define_from_variant('USE_MKLDNN', 'mkldnn'))
         if self.spec.satisfies('@2.0.0:'):
             args.append(self.define_from_variant('USE_ONEDNN', 'mkldnn'))
-            args.append('-DUSE_CUTENSOR:BOOL=OFF')
+            args.append(self.define('USE_CUTENSOR', False))
 
         if '+cuda' in self.spec:
             if 'cuda_arch=none' not in self.spec:
