@@ -18,6 +18,7 @@ class PyXarray(PythonPackage):
         'xarray.backends', 'xarray.coding'
     ]
 
+    version('0.17.0', sha256='9c2edad2a4e588f9117c666a4249920b9717fb75703b96998cf65fcd4f60551f')
     version('0.16.2', sha256='38e8439d6c91bcd5b7c0fca349daf8e0643ac68850c987262d53526e9d7d01e4')
     version('0.14.0', sha256='a8b93e1b0af27fa7de199a2d36933f1f5acc9854783646b0f1b37fed9b4da091')
     version('0.13.0', sha256='80e5746ffdebb96b997dba0430ff02d98028ef3828e6db6106cbbd6d62e32825')
@@ -31,9 +32,11 @@ class PyXarray(PythonPackage):
     depends_on('python@3.5:',           when='@0.12',   type=('build', 'run'))
     depends_on('python@3.5.3:',         when='@0.13',   type=('build', 'run'))
     depends_on('python@3.6:',           when='@0.14:',  type=('build', 'run'))
+    depends_on('python@3.7:',           when='@0.17:',  type=('build', 'run'))
 
     depends_on('py-setuptools',       when='@:0.15', type='build')
     depends_on('py-setuptools@38.4:', when='@0.16:', type=('build', 'run'))
+    depends_on('py-setuptools@40.4:', when='@0.17:', type=('build', 'run'))
     depends_on('py-setuptools-scm',   when='@0.15:', type='build')
 
     depends_on('py-pandas@0.15.0:', when='@0.9.1',      type=('build', 'run'))

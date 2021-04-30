@@ -12,7 +12,7 @@ class PyLuigiTools(PythonPackage):
     homepage = 'https://bbpcode.epfl.ch/code/#/admin/projects/common/luigi-tools'
     git      = 'ssh://bbpcode.epfl.ch/common/luigi-tools'
 
-    version('0.0.8', tag='luigi-tools-v0.0.8')
+    version('0.0.10', tag='luigi-tools-v0.0.10')
 
     depends_on('py-setuptools', type=('build'))
 
