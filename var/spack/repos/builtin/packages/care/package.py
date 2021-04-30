@@ -29,7 +29,9 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
     variant('loop_fuser', default=False, description='Enable loop fusion capability')
 
     depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+rocm')
+    depends_on('blt@0.3.6', type='build', when='care@:0.3.0')
+    # 0.3.6 + specific fix for rocm
+    depends_on('blt@0.3.6rocm', type='build', when='+rocm')
 
     depends_on('camp')
     depends_on('umpire@develop')
