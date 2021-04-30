@@ -4045,31 +4045,31 @@ other checks.
    * - Build System Class
      - Post-Build Phase Method (Runs)
      - Post-Install Phase Method (Runs)
-   * - `AutotoolsPackage <autotoolspackage>`
+   * - `AutotoolsPackage <build_systems/autotoolspackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `CMakePackage <cmakepackage>`
+   * - `CMakePackage <build_systems/cmakepackage>`
      - ``check`` (``make check``, ``make test``)
      - Not applicable
-   * - `MakefilePackage <makefilepackage>`
+   * - `MakefilePackage <build_systems/makefilepackage>`
      - ``check`` (``make test``, ``make check``)
      - ``installcheck`` (``make installcheck``)
-   * - `MesonPackage <mesonpackage>`
+   * - `MesonPackage <build_systems/mesonpackage>`
      - ``check`` (``make test``, ``make check``)
      - Not applicable
-   * - `PerlPackage <perlpackage>`
+   * - `PerlPackage <build_systems/perlpackage>`
      - ``check`` (``make test``)
      - Not applicable
-   * - `PythonPackage <pythonpackage>`
+   * - `PythonPackage <build_systems/pythonpackage>`
      - Not applicable
      - ``test`` (module imports)
-   * - `QMakePackage <qmakepackage>`
+   * - `QMakePackage <build_systems/qmakepackage>`
      - ``check`` (``make check``)
      - Not applicable
-   * - `SConsPackage <sconspackage>`
+   * - `SConsPackage <build_systems/sconspackage>`
      - ``build_test`` (must be overridden)
      - Not applicable
-   * - `SIPPackage <sippackage>`
+   * - `SIPPackage <build_systems/sippackage>`
      - Not applicable
      - ``test`` (module imports)
 
@@ -4284,9 +4284,9 @@ stage **after** the software is installed to the package's metadata
 directory. The result is the following directory and files will be
 available for use in stand-alone tests:
 
-* ``self.install_test_root/tests`` along with its files and subdirectories
-* ``self.install_test_root/examples/foo.c```
-* ``self.install_test_root/examples/bar.c```
+* ``join_path(self.install_test_root, 'tests')`` along with its files and subdirectories
+* ``join_path(self.install_test_root, 'examples', 'foo.c')``
+* ``join_path(self.install_test_root, 'examples', 'bar.c')``
 
 .. note::
 
@@ -4517,7 +4517,34 @@ where each argument has the following meaning:
   will run.
   
   The default of ``None`` corresponds to the current directory (``'.'``).
- 
+
+You may need to access files from one or more locations when writing
+the tests. This can happen if the software's repository does not
+include test source files or includes files but no way to build the
+executables using the installed headers and libraries. In these
+cases, you may need to reference the files relative to one or more
+root directory and associated package property. These are given in
+the table below.
+
+.. list-table:: Directory-to-property mapping
+   :header-rows: 1
+
+   * - Root Directory
+     - Package Property
+     - Example(s)
+   * - Package Installation Files
+     - ``self.prefix``
+     - ``self.prefix.include``, ``self.prefix.lib``
+   * - Package Dependency's Files
+     - ``self.spec['<dependency-package>'].prefix``
+     - ``self.spec['trilinos'].prefix.include``
+   * - Copied Build-time Files
+     - ``self.install_test_root``
+     - ``join_path(self.install_test_root, 'examples', 'foo.c')``
+   * - Custom Package Files
+     - ``self.test_suite.current_test_data_dir``
+     - ``join_path(self.test_suite.current_test_data_dir, 'hello.f90')``
+
 """"""""""""""""""""""""""""
 Inheriting stand-alone tests
 """"""""""""""""""""""""""""
@@ -4545,7 +4572,7 @@ with those provided in the package itself when executing stand-alone tests.
    * - `Mpi
        <https://github.com/spack/spack/blob/develop/var/spack/repos/builtin/packages/mpi>`_
      - Compiles and runs ``mpi_hello`` (``c``, ``fortran``)
-   * - `PythonPackage <pythonpackage>`
+   * - `PythonPackage <build_systems/pythonpackage>`
      - Imports installed modules
 
 These tests are very generic so it is important that package
