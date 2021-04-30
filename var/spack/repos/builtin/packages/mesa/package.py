@@ -19,6 +19,7 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.0.3', sha256='565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b')
     version('21.0.0', sha256='e6204e98e6a8d77cf9dc5d34f99dd8e3ef7144f3601c808ca0dd26ba522e0d84')
     version('20.3.4', sha256='dc21a987ec1ff45b278fe4b1419b1719f1968debbb80221480e44180849b4084')
     version('20.2.1', sha256='d1a46d9a3f291bc0e0374600bdcb59844fa3eafaa50398e472a36fc65fd0244a')
@@ -26,7 +27,6 @@ class Mesa(MesonPackage):
     depends_on('meson@0.52:', type='build')
 
     depends_on('pkgconfig', type='build')
-    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('cmake', type='build')
     depends_on('flex', type='build')
