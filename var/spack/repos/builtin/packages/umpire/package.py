@@ -60,7 +60,7 @@ class Umpire(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', when='+cuda', type='build')
 
-    depends_on('blt', type='build')
+    depends_on('blt', type='build', when='umpire@4.1.3:')
     depends_on('blt@0.3.6', type='build', when='umpire@:4.1.2')
     # 0.3.6 + specific fix for rocm
     depends_on('blt@0.3.6rocm', type='build', when='+rocm')
