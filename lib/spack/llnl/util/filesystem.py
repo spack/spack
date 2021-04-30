@@ -17,6 +17,8 @@ import stat
 import sys
 import tempfile
 from contextlib import contextmanager
+import codecs
+import encodings
 
 import six
 from llnl.util import tty
@@ -70,7 +72,8 @@ __all__ = [
     'traverse_tree',
     'unset_executable_mode',
     'working_dir',
-    'keep_modification_time'
+    'keep_modification_time',
+    'open_utf8'
 ]
 
 
@@ -1801,6 +1804,53 @@ def prefixes(path):
         pass
 
     return paths
+
+
+class Utf8ReaderWriter(object):
+    def __init__(self, file):
+        self.file = file
+
+    def read(self):
+        return codecs.decode(self.file.read(), 'utf-8')
+
+    def readline(self):
+        return codecs.decode(self.file.readline(), 'utf-8')
+
+    def close(self):
+        self.file.close()
+
+
+def open_utf8(path_or_fd, mode):
+    """Python 3.x before 3.7 does not open in UTF-8 by default. Python
+       2.x versions do not support 'encoding' without the 'codecs' module.
+    """
+    try:
+        fd = int(path_or_fd)
+        path = None
+    except ValueError:
+        path = path_or_fd
+        fd = None
+
+    if fd:
+        if sys.version_info < (3,):
+            if mode == 'r':
+                bytes_mode = 'rb'
+                stream_ctor = encodings.utf_8.StreamReader
+            elif mode == 'w':
+                bytes_mode = 'wb'
+                stream_ctor = encodings.utf_8.StreamWriter
+            else:
+                raise ValueError("Unexpected mode ('r' or 'w' expected): {0}"
+                                 .format(mode))
+            file = os.fdopen(fd, bytes_mode)
+            return stream_ctor(file)
+        else:
+            return os.fdopen(fd, mode, encoding='utf-8')
+    else:
+        if sys.version_info < (3,):
+            return codecs.open(path, mode, 'utf-8')
+        else:
+            return open(path, mode, encoding='utf-8')
 
 
 def md5sum(file):
