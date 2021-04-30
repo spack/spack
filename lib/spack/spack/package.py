@@ -2667,7 +2667,7 @@ class Package(PackageBase):
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
 
-    spack.directives.variant('spack_built_type', default='rel_with_deb',
+    spack.directives.variant('spack_build_type', default='rel_with_deb',
                              values=spack.build_types.build_types.values())
 
 
