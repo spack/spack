@@ -6,11 +6,14 @@
 """Build types can add different flags depending on the compiler.
 """
 
+from spack.util.naming import class_to_mod
+
 
 class BuildTypeBase(object):
     """A build type base provides base functions to look up flags for a compiler.
     """
-    default = None
+    compiler_attrs = []
+    cuda_attrs = []
 
     def __init__(self, spec):
         self.spec = spec
@@ -20,7 +23,7 @@ class BuildTypeBase(object):
     def name(self):
         """get the name for the class
         """
-        return self.__class__.__name__
+        return class_to_mod(self.__class__.__name__)
 
     def get_compiler_flags(self, group):
         """
@@ -73,7 +76,7 @@ class RelWithDeb(BuildTypeBase):
     cuda_attrs = []
 
 
-class BasicDebug(BuildTypeBase):
+class Debug(BuildTypeBase):
     """
     The debug build type corresponds with the user asking for
     spack_build_type=debug
@@ -82,7 +85,7 @@ class BasicDebug(BuildTypeBase):
     cuda_attrs = ['debug_flag']
 
 
-class DebugOptimized(BuildTypeBase):
+class DebugOpt(BuildTypeBase):
     compiler_attrs = ['debug_flag', 'debug_optimize_flag']
     cuda_attrs = ['debug_flag']
 
@@ -93,8 +96,8 @@ class DebugMax(BuildTypeBase):
 
 
 debug_types = {"debug", "debug_opt", "debug_max"}
-build_types = {'debug': BasicDebug, 'debug_opt': DebugOptimized,
-               'debug_max': DebugMax, "rel_with_deb": RelWithDeb}
+build_types = {'debug': Debug, 'debug_opt': DebugOpt, 'debug_max': DebugMax,
+               "rel_with_deb": RelWithDeb}
 
 
 def get_build_type(spec):
