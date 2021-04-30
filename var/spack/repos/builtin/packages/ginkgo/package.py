@@ -140,6 +140,7 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
         """Run the smoke tests."""
         # For now only develop and next releases support this scheme.
         if not self.spec.satisfies('@develop') and not self.spec.satisfies('@1.4.0:'):
+            print("SKIPPED: smoke tests not supported with this Ginkgo version.")
             return
         files = [('test_install', [r'REFERENCE',
                                    r'correctly detected and is complete']),
