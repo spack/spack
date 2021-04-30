@@ -45,7 +45,7 @@ class Blaspp(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
         backend_config = '-Duse_cuda=%s' % ('+cuda' in spec)
-        if self.version >= Version('2021.04.00'):
+        if self.version >= Version('2021.04.01'):
             backend = 'none'
             if '+cuda' in spec:
                 backend = 'cuda'

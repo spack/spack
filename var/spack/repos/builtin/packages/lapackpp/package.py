@@ -6,14 +6,16 @@
 from spack import *
 import os
 
+# Each LAPACK++ version requires a specific BLAS++ version
 _versions = [
-        #  LAPACK++,     BLAS++
-        [ 'master',     'master'     ],
-        [ '2020.10.00', '2020.10.00' ],
-        [ '2020.10.01', '2020.10.00' ],
-        [ '2020.10.02', '2020.10.02' ],
-        [ '2021.04.00', '2021.04.01:' ],  # or later
-    ]
+    # LAPACK++,     BLAS++
+    ['master',     'master'],
+    ['2020.10.00', '2020.10.00'],
+    ['2020.10.01', '2020.10.00'],
+    ['2020.10.02', '2020.10.02'],
+    ['2021.04.00', '2021.04.01:'],  # or later
+]
+
 
 class Lapackpp(CMakePackage):
     """LAPACK++: C++ API for the LAPACK Linear Algebra Package. Developed
@@ -33,9 +35,10 @@ class Lapackpp(CMakePackage):
 
     variant('shared', default=True, description='Build shared library')
 
-    # Each LAPACK++ version requires a specific BLAS++ version
+    # Match each LAPACK++ version to a specific BLAS++ version
     for (lpp_ver, bpp_ver) in _versions:
         depends_on('blaspp@' + bpp_ver, when='@' + lpp_ver)
+
     depends_on('blas')
     depends_on('lapack')
 
