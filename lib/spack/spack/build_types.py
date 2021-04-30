@@ -107,5 +107,4 @@ def get_build_type(spec):
     So we have a getter method that gets the class associated with the string
     """
     build_type = spec.variants.get('spack_build_type')
-    if build_type:
-        return build_types[build_type.value](spec)
+    return build_types[build_type.value](spec)

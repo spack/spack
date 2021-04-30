@@ -677,6 +677,9 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: specs.
     test_suite = None
 
+    spack.directives.variant('spack_build_type', default='rel_with_deb',
+                             values=spack.build_types.build_types.keys())
+
     def __init__(self, spec):
         # this determines how the package should be built.
         self.spec = spec
@@ -2666,9 +2669,6 @@ class Package(PackageBase):
     # This will be used as a registration decorator in user
     # packages, if need be
     run_after('install')(PackageBase.sanity_check_prefix)
-
-    spack.directives.variant('spack_build_type', default='rel_with_deb',
-                             values=spack.build_types.build_types.values())
 
 
 def install_dependency_symlinks(pkg, spec, prefix):
