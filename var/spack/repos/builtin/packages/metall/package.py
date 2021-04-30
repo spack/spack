@@ -21,7 +21,7 @@ class Metall(CMakePackage):
     version('0.10', sha256='58b4b5507d4db5baca315b1bed2b728981755d755b91ef63bd0b6dfaf320f46b')
     version('0.9', sha256='2d7bd9ea2f1e04136050f210884445a9e3dcb96c992cf42ff9ea4b392f85f927')
 
-    depends_on('cmake@3.10', type='build')
+    depends_on('cmake@3.10:', type='build')
     depends_on('boost@1.64:', type=('build', 'link'))
 
     def cmake_args(self):
