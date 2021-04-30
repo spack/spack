@@ -660,8 +660,7 @@ class TestConcretize(object):
 
         abstract_specs = [Spec(x) for x in abstract_specs]
         concrete_specs = spack.concretize.concretize_specs_together(
-            *abstract_specs
-        )
+            *abstract_specs)
 
         # Check there's only one configuration of each package in the DAG
         names = set(
@@ -690,7 +689,7 @@ class TestConcretize(object):
 
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
         ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
         ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
         ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
@@ -1089,6 +1088,9 @@ class TestConcretize(object):
         # having an additional dependency, but the dependency shouldn't
         # appear in the answer set
         ('external-buildable-with-variant@0.9 +baz', True, '@0.9'),
+        # This package has an external version declared that would be
+        # the least preferred if Spack had to build it
+        ('old-external', True, '@1.0.0'),
     ])
     def test_external_package_versions(self, spec_str, is_external, expected):
         s = Spec(spec_str).concretized()
@@ -1139,3 +1141,72 @@ class TestConcretize(object):
         s = Spec(spec_str)
         with pytest.raises(RuntimeError, match='not found in package'):
             s.concretize()
+
+    @pytest.mark.regression('22533')
+    @pytest.mark.parametrize('spec_str,variant_name,expected_values', [
+        # Test the default value 'auto'
+        ('mvapich2', 'file_systems', ('auto',)),
+        # Test setting a single value from the disjoint set
+        ('mvapich2 file_systems=lustre', 'file_systems', ('lustre',)),
+        # Test setting multiple values from the disjoint set
+        ('mvapich2 file_systems=lustre,gpfs', 'file_systems',
+         ('lustre', 'gpfs')),
+    ])
+    def test_mv_variants_disjoint_sets_from_spec(
+            self, spec_str, variant_name, expected_values
+    ):
+        s = Spec(spec_str).concretized()
+        assert set(expected_values) == set(s.variants[variant_name].value)
+
+    @pytest.mark.regression('22533')
+    def test_mv_variants_disjoint_sets_from_packages_yaml(self):
+        external_mvapich2 = {
+            'mvapich2': {
+                'buildable': False,
+                'externals': [{
+                    'spec': 'mvapich2@2.3.1 file_systems=nfs,ufs',
+                    'prefix': '/usr'
+                }]
+            }
+        }
+        spack.config.set('packages', external_mvapich2)
+
+        s = Spec('mvapich2').concretized()
+        assert set(s.variants['file_systems'].value) == set(['ufs', 'nfs'])
+
+    @pytest.mark.regression('22596')
+    def test_external_with_non_default_variant_as_dependency(self):
+        # This package depends on another that is registered as an external
+        # with 'buildable: true' and a variant with a non-default value set
+        s = Spec('trigger-external-non-default-variant').concretized()
+
+        assert '~foo' in s['external-non-default-variant']
+        assert '~bar' in s['external-non-default-variant']
+        assert s['external-non-default-variant'].external
+
+    @pytest.mark.regression('22871')
+    @pytest.mark.parametrize('spec_str,expected_os', [
+        ('mpileaks', 'os=debian6'),
+        # To trigger the bug in 22871 we need to have the same compiler
+        # spec available on both operating systems
+        ('mpileaks%gcc@4.5.0 platform=test os=debian6', 'os=debian6'),
+        ('mpileaks%gcc@4.5.0 platform=test os=redhat6', 'os=redhat6')
+    ])
+    def test_os_selection_when_multiple_choices_are_possible(
+            self, spec_str, expected_os
+    ):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_os)
+
+    @pytest.mark.regression('22718')
+    @pytest.mark.parametrize('spec_str,expected_compiler', [
+        ('mpileaks', '%gcc@4.5.0'),
+        ('mpileaks ^mpich%clang@3.3', '%clang@3.3')
+    ])
+    def test_compiler_is_unique(self, spec_str, expected_compiler):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_compiler)

@@ -276,8 +276,8 @@ diff -Naur upveto.f upveto.f
        RETURN
        END
 + 
---- src/pystrf.f.orig	2014-05-14 18:12:02.000000001 +0200
-+++ src/pystrf.f	2014-05-14 18:10:23.000000001 +0200
+--- pystrf.f.orig	2014-05-14 18:12:02.000000001 +0200
++++ pystrf.f	2014-05-14 18:10:23.000000001 +0200
 @@ -805,7 +805,9 @@
   
  C...Closed string: random initial breakup flavour, pT and vertex.

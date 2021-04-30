@@ -9,8 +9,6 @@ import re
 import sys
 import shutil
 import copy
-import socket
-
 import six
 
 from ordereddict_backport import OrderedDict
@@ -33,13 +31,11 @@ import spack.config
 import spack.user_environment as uenv
 from spack.filesystem_view import YamlFilesystemView
 import spack.util.environment
-import spack.architecture as architecture
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
-from spack.installer import PackageInstaller
 import spack.util.path
 
 #: environment variable used to indicate the active environment
@@ -132,7 +128,7 @@ def activate(
     if use_env_repo:
         spack.repo.path.put_first(_active_environment.repo)
 
-    tty.debug("Using environmennt '%s'" % _active_environment.name)
+    tty.debug("Using environment '%s'" % _active_environment.name)
 
     # Construct the commands to run
     cmds = ''
@@ -393,12 +389,12 @@ def read(name):
     return Environment(root(name))
 
 
-def create(name, init_file=None, with_view=None):
+def create(name, init_file=None, with_view=None, keep_relative=False):
     """Create a named environment in Spack."""
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
-    return Environment(root(name), init_file, with_view)
+    return Environment(root(name), init_file, with_view, keep_relative)
 
 
 def config_dict(yaml_data):
@@ -447,21 +443,11 @@ def _write_yaml(data, str_or_file):
 
 def _eval_conditional(string):
     """Evaluate conditional definitions using restricted variable scope."""
-    arch = architecture.Arch(
-        architecture.platform(), 'default_os', 'default_target')
-    arch_spec = spack.spec.Spec('arch=%s' % arch)
-    valid_variables = {
-        'target': str(arch.target),
-        'os': str(arch.os),
-        'platform': str(arch.platform),
-        'arch': arch_spec,
-        'architecture': arch_spec,
-        'arch_str': str(arch),
+    valid_variables = spack.util.environment.get_host_environment()
+    valid_variables.update({
         're': re,
         'env': os.environ,
-        'hostname': socket.gethostname()
-    }
-
+    })
     return eval(string, valid_variables)
 
 
@@ -587,7 +573,7 @@ class ViewDescriptor(object):
 
 
 class Environment(object):
-    def __init__(self, path, init_file=None, with_view=None):
+    def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
         """Create a new environment.
 
         The environment can be optionally initialized with either a
@@ -600,6 +586,10 @@ class Environment(object):
             with_view (str or bool): whether a view should be maintained for
                 the environment. If the value is a string, it specifies the
                 path to the view.
+            keep_relative (bool): if True, develop paths are copied verbatim
+                into the new environment file, otherwise they are made absolute
+                when the environment path is different from init_file's
+                directory.
         """
         self.path = os.path.abspath(path)
 
@@ -621,6 +611,13 @@ class Environment(object):
                     self._set_user_specs_from_lockfile()
                 else:
                     self._read_manifest(f, raw_yaml=default_manifest_yaml)
+
+                # Rewrite relative develop paths when initializing a new
+                # environment in a different location from the spack.yaml file.
+                if not keep_relative and hasattr(f, 'name') and \
+                   f.name.endswith('.yaml'):
+                    init_file_dir = os.path.abspath(os.path.dirname(f.name))
+                    self._rewrite_relative_paths_on_relocation(init_file_dir)
         else:
             with lk.ReadTransaction(self.txlock):
                 self._read()
@@ -636,6 +633,27 @@ class Environment(object):
                                                             with_view)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
+
+    def _rewrite_relative_paths_on_relocation(self, init_file_dir):
+        """When initializing the environment from a manifest file and we plan
+           to store the environment in a different directory, we have to rewrite
+           relative paths to absolute ones."""
+        if init_file_dir == self.path:
+            return
+
+        for name, entry in self.dev_specs.items():
+            dev_path = entry['path']
+            expanded_path = os.path.normpath(os.path.join(
+                init_file_dir, entry['path']))
+
+            # Skip if the expanded path is the same (e.g. when absolute)
+            if dev_path == expanded_path:
+                continue
+
+            tty.debug("Expanding develop path for {0} to {1}".format(
+                name, expanded_path))
+
+            self.dev_specs[name]['path'] = expanded_path
 
     def _re_read(self):
         """Reinitialize the environment object if it has been written (this
@@ -1044,8 +1062,7 @@ class Environment(object):
 
         if clone:
             # "steal" the source code via staging API
-            abspath = path if os.path.isabs(path) else os.path.join(
-                self.path, path)
+            abspath = os.path.normpath(os.path.join(self.path, path))
 
             stage = spec.package.stage
             stage.steal_source(abspath)
@@ -1064,7 +1081,7 @@ class Environment(object):
             return True
         return False
 
-    def concretize(self, force=False):
+    def concretize(self, force=False, tests=False):
         """Concretize user_specs in this environment.
 
         Only concretizes specs that haven't been concretized yet unless
@@ -1076,6 +1093,8 @@ class Environment(object):
         Arguments:
             force (bool): re-concretize ALL specs, even those that were
                already concretized
+            tests (bool or list or set): False to run no tests, True to test
+                all packages, or a list of package names to run tests for some
 
         Returns:
             List of specs that have been concretized. Each entry is a tuple of
@@ -1089,14 +1108,14 @@ class Environment(object):
 
         # Pick the right concretization strategy
         if self.concretization == 'together':
-            return self._concretize_together()
+            return self._concretize_together(tests=tests)
         if self.concretization == 'separately':
-            return self._concretize_separately()
+            return self._concretize_separately(tests=tests)
 
         msg = 'concretization strategy not implemented [{0}]'
         raise SpackEnvironmentError(msg.format(self.concretization))
 
-    def _concretize_together(self):
+    def _concretize_together(self, tests=False):
         """Concretization strategy that concretizes all the specs
         in the same DAG.
         """
@@ -1129,14 +1148,13 @@ class Environment(object):
         self.specs_by_hash = {}
 
         concrete_specs = spack.concretize.concretize_specs_together(
-            *self.user_specs
-        )
+            *self.user_specs, tests=tests)
         concretized_specs = [x for x in zip(self.user_specs, concrete_specs)]
         for abstract, concrete in concretized_specs:
             self._add_concrete_spec(abstract, concrete)
         return concretized_specs
 
-    def _concretize_separately(self):
+    def _concretize_separately(self, tests=False):
         """Concretization strategy that concretizes separately one
         user spec after the other.
         """
@@ -1159,12 +1177,12 @@ class Environment(object):
         for uspec, uspec_constraints in zip(
                 self.user_specs, self.user_specs.specs_as_constraints):
             if uspec not in old_concretized_user_specs:
-                concrete = _concretize_from_constraints(uspec_constraints)
+                concrete = _concretize_from_constraints(uspec_constraints, tests=tests)
                 self._add_concrete_spec(uspec, concrete)
                 concretized_specs.append((uspec, concrete))
         return concretized_specs
 
-    def concretize_and_add(self, user_spec, concrete_spec=None):
+    def concretize_and_add(self, user_spec, concrete_spec=None, tests=False):
         """Concretize and add a single spec to the environment.
 
         Concretize the provided ``user_spec`` and add it along with the
@@ -1187,7 +1205,7 @@ class Environment(object):
         spec = Spec(user_spec)
 
         if self.add(spec):
-            concrete = concrete_spec or spec.concretized()
+            concrete = concrete_spec or spec.concretized(tests=tests)
             self._add_concrete_spec(spec, concrete)
         else:
             # spec might be in the user_specs, but not installed.
@@ -1197,7 +1215,7 @@ class Environment(object):
             )
             concrete = self.specs_by_hash.get(spec.build_hash())
             if not concrete:
-                concrete = spec.concretized()
+                concrete = spec.concretized(tests=tests)
                 self._add_concrete_spec(spec, concrete)
 
         return concrete
@@ -1422,6 +1440,7 @@ class Environment(object):
             args (Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
+        from spack.installer import PackageInstaller
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
@@ -1904,7 +1923,7 @@ def display_specs(concretized_specs):
         print('')
 
 
-def _concretize_from_constraints(spec_constraints):
+def _concretize_from_constraints(spec_constraints, tests=False):
     # Accept only valid constraints from list and concretize spec
     # Get the named spec even if out of order
     root_spec = [s for s in spec_constraints if s.name]
@@ -1923,7 +1942,7 @@ def _concretize_from_constraints(spec_constraints):
             if c not in invalid_constraints:
                 s.constrain(c)
         try:
-            return s.concretized()
+            return s.concretized(tests=tests)
         except spack.spec.InvalidDependencyError as e:
             invalid_deps_string = ['^' + d for d in e.invalid_deps]
             invalid_deps = [c for c in spec_constraints

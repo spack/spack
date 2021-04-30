@@ -31,7 +31,7 @@ class Casacore(CMakePackage):
     variant('readline', default=True, description='Build readline support')
     # see note below about the reason for disabling the "sofa" variant
     # variant('sofa', default=False, description='Build SOFA support')
-    variant('fftw', default=False, description='Build FFTW3 support')
+    variant('fftpack', default=False, description='Build FFTPack')
     variant('hdf5', default=False, description='Build HDF5 support')
     variant('python', default=False, description='Build python support')
 
@@ -48,7 +48,8 @@ class Casacore(CMakePackage):
     depends_on('lapack')
     depends_on('cfitsio')
     depends_on('wcslib@4.20:+cfitsio')
-    depends_on('fftw@3.0.0:~mpi precision=float,double', when='+fftw')
+    depends_on('fftw@3.0.0: precision=float,double', when='@3.4.0:')
+    depends_on('fftw@3.0.0: precision=float,double', when='~fftpack')
     # SOFA dependency suffers the same problem in CMakeLists.txt as readline;
     # force a dependency when building unit tests
     depends_on('sofa-c', type='test')
@@ -65,12 +66,23 @@ class Casacore(CMakePackage):
         args.append(self.define_from_variant('USE_OPENMP', 'openmp'))
         args.append(self.define_from_variant('USE_READLINE', 'readline'))
         args.append(self.define_from_variant('USE_HDF5', 'hdf5'))
-        args.append(self.define_from_variant('USE_FFTW3', 'fftw'))
+
+        # fftw3 is required by casacore starting with v3.4.0, but the
+        # old fftpack is still available. For v3.4.0 and later, we
+        # always require FFTW3 dependency with the optional addition
+        # of FFTPack. In older casacore versions, only one of FFTW3 or
+        # FFTPack can be selected.
+        if spec.satisfies('@3.4.0:'):
+            if spec.satisfies('+fftpack'):
+                args.append('-DBUILD_FFTPACK_DEPRECATED=YES')
+            args.append(self.define('USE_FFTW3', True))
+        else:
+            args.append(self.define('USE_FFTW3', spec.satisfies('~fftpack')))
 
         # Python2 and Python3 binding
-        if '+python' not in spec:
+        if spec.satisfies('~python'):
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=NO'])
-        elif spec['python'].version >= Version('3.0.0'):
+        elif spec.satisfies('^python@3.0.0:'):
             args.extend(['-DBUILD_PYTHON=NO', '-DBUILD_PYTHON3=YES'])
         else:
             args.extend(['-DBUILD_PYTHON=YES', '-DBUILD_PYTHON3=NO'])

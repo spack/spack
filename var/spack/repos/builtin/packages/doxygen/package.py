@@ -18,6 +18,8 @@ class Doxygen(CMakePackage):
     git       = "https://github.com/doxygen/doxygen.git"
 
     # Doxygen versions on GitHub
+    version('1.9.1',  commit='ef9b20ac7f8a8621fcfc299f8bd0b80422390f4b')
+    version('1.9.0',  commit='71777ff3973331bd9453870593a762e184ba9f78')
     version('1.8.20', commit='f246dd2f1c58eea39ea3f50c108019e4d4137bd5')
     version('1.8.17', commit='b5fa3cd1c6e6240e20d3b80a70e3f04040b32021')
     version('1.8.16', commit='cfd73d5c4d1a66c620a3b7c08b72a3f3c3f94255')
@@ -61,10 +63,11 @@ class Doxygen(CMakePackage):
     depends_on("python", type='build')  # 2 or 3 OK; used in CMake build
     depends_on("iconv")
     depends_on("flex", type='build')
+    depends_on("bison", type='build')
     # code.l just checks subminor version <=2.5.4 or >=2.5.33
     # but does not recognize 2.6.x as newer...could be patched if needed
     depends_on("flex@2.5.39", type='build', when='@1.8.10')
-    depends_on("bison", type='build')
+    depends_on("bison@2.7:", type='build', when='@1.8.10:')
 
     # optional dependencies
     depends_on("graphviz", when="+graphviz", type='run')

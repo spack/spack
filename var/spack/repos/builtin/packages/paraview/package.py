@@ -20,7 +20,9 @@ class Paraview(CMakePackage, CudaPackage):
     maintainers = ['chuckatkins', 'danlipsa', 'vicentebolea']
 
     version('master', branch='master', submodules=True)
-    version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d')
+    version('5.9.1-RC2', sha256='87395d7d65e96d2a5f8a8086b5da52a78c7929397a03170cbd04c1e3b3bb501c')
+    version('5.9.1-RC1', sha256='bb3f12bd3d31bcb52455e1393e45f81a18754d3c3e8199d51532b0c067dc1595')
+    version('5.9.0', sha256='b03258b7cddb77f0ee142e3e77b377e5b1f503bcabc02bfa578298c99a06980d', preferred=True)
     version('5.8.1', sha256='7653950392a0d7c0287c26f1d3a25cdbaa11baa7524b0af0e6a1a0d7d487d034')
     version('5.8.0', sha256='219e4107abf40317ce054408e9c3b22fb935d464238c1c00c0161f1c8697a3f9')
     version('5.7.0', sha256='e41e597e1be462974a03031380d9e5ba9a7efcdb22e4ca2f3fec50361f310874')
@@ -53,8 +55,9 @@ class Paraview(CMakePackage, CudaPackage):
             description='Use module kits')
     variant('cuda_arch', default='native', multi=False,
             values=('native', 'fermi', 'kepler', 'maxwell',
-                    'pascal', 'volta', 'turing', 'all', 'none'),
+                    'pascal', 'volta', 'turing', 'ampere', 'all', 'none'),
             description='CUDA architecture')
+    variant('advanced_debug', default=False, description="Enable all other debug flags beside build_type, such as VTK_DEBUG_LEAK")
 
     conflicts('+python', when='+python3')
     # Python 2 support dropped with 5.9.0
@@ -126,7 +129,7 @@ class Paraview(CMakePackage, CudaPackage):
     depends_on('protobuf@3.4:')
     depends_on('libxml2')
     depends_on('lz4')
-    depends_on('lzma')
+    depends_on('xz')
     depends_on('zlib')
 
     # Older builds of pugi export their symbols differently,
@@ -396,5 +399,8 @@ class Paraview(CMakePackage, CudaPackage):
                     ":".join(self.rpath + pylibdirs)
                 )
             )
+
+        if '+advanced_debug' in spec:
+            cmake_args.append('-DVTK_DEBUG_LEAKS:BOOL=ON')
 
         return cmake_args

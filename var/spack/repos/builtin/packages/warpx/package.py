@@ -17,11 +17,13 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.04.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
     version('develop', branch='development')
+    version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
 
     variant('app', default=True,
             description='Build the WarpX executable application')
@@ -64,7 +66,10 @@ class Warpx(CMakePackage):
             description='Enable tiny profiling features')
 
     depends_on('ascent', when='+ascent')
-    depends_on('ascent +cuda', when='+ascent compute=cuda')
+    # note: ~shared is only needed until the new concretizer is in and
+    #       honors the conflict inside the Ascent package to find this
+    #       automatically
+    depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('blaspp', when='+psatd dims=rz')
     depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
@@ -93,6 +98,7 @@ class Warpx(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
             '-DWarpX_APP:BOOL={0}'.format(
                 'ON' if '+app' in spec else 'OFF'),
@@ -123,3 +129,12 @@ class Warpx(CMakePackage):
         ]
 
         return args
+
+    @property
+    def libs(self):
+        libsuffix = {'2': '2d', '3': '3d', 'rz': 'rz'}
+        dims = self.spec.variants['dims'].value
+        return find_libraries(
+            ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
+            shared=True
+        )

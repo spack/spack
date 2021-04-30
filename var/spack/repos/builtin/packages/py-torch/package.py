@@ -20,6 +20,7 @@ class PyTorch(PythonPackage, CudaPackage):
     import_modules = ['torch', 'torch.autograd', 'torch.nn', 'torch.utils']
 
     version('master', branch='master', submodules=True)
+    version('1.8.1', tag='v1.8.1', submodules=True)
     version('1.8.0', tag='v1.8.0', submodules=True)
     version('1.7.1', tag='v1.7.1', submodules=True)
     version('1.7.0', tag='v1.7.0', submodules=True)
@@ -107,6 +108,7 @@ class PyTorch(PythonPackage, CudaPackage):
     depends_on('py-typing-extensions', when='@1.7:', type=('build', 'run'))
     depends_on('py-pybind11', when='@0.4:', type=('build', 'link', 'run'))
     depends_on('py-dataclasses', when='@1.7: ^python@3.6.0:3.6.999', type=('build', 'run'))
+    depends_on('py-tqdm', type='run')
     depends_on('blas')
     depends_on('lapack')
     depends_on('protobuf', when='@0.4:')

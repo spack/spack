@@ -248,9 +248,9 @@ Users can add abstract specs to an Environment using the ``spack add``
 command. The most important component of an Environment is a list of
 abstract specs.
 
-Adding a spec adds to the manifest (the ``spack.yaml`` file) and to
-the roots of the Environment, but does not affect the concrete specs
-in the lockfile, nor does it install the spec.
+Adding a spec adds to the manifest (the ``spack.yaml`` file), which is
+used to define the roots of the Environment, but does not affect the
+concrete specs in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
@@ -398,6 +398,12 @@ There are two ways to include configuration information in a Spack Environment:
 #. Inline in the ``spack.yaml`` file
 
 #. Included in the ``spack.yaml`` file from another file.
+
+Many Spack commands also affect configuration information in files
+automatically. Those commands take a ``--scope`` argument, and the
+environment can be specified by ``env:NAME`` (to affect environment
+``foo``, set ``--scope env:foo``). These commands will automatically
+manipulate configuration inline in the ``spack.yaml`` file.
 
 """""""""""""""""""""
 Inline configurations

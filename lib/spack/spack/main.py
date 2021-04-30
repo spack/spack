@@ -40,7 +40,6 @@ import spack.util.path
 import spack.util.executable as exe
 from spack.error import SpackError
 
-
 #: names of profile statistics
 stat_names = pstats.Stats.sort_arg_dict_default
 
@@ -355,9 +354,13 @@ def make_argument_parser(**kwargs):
         dest='help', action='store_const', const='long', default=None,
         help="show help for all commands (same as spack help --all)")
     parser.add_argument(
-        '--color', action='store', default='auto',
+        '--color', action='store',
+        default=os.environ.get('SPACK_COLOR', 'auto'),
         choices=('always', 'never', 'auto'),
         help="when to colorize output (default: auto)")
+    parser.add_argument(
+        '-c', '--config', default=None, action="append", dest="config_vars",
+        help="add one or more custom, one off config settings.")
     parser.add_argument(
         '-C', '--config-scope', dest='config_scopes', action='append',
         metavar='DIR', help="add a custom configuration scope")
@@ -463,6 +466,10 @@ def setup_main_options(args):
         tty.warn("You asked for --insecure. Will NOT check SSL certificates.")
         spack.config.set('config:verify_ssl', False, scope='command_line')
 
+    # Use the spack config command to handle parsing the config strings
+    for config_var in (args.config_vars or []):
+        spack.config.add(fullpath=config_var, scope="command_line")
+
     # when to use color (takes always, auto, or never)
     color.set_color_when(args.color)
 
@@ -522,6 +529,8 @@ class SpackCommand(object):
 
         Keyword Args:
             fail_on_error (optional bool): Don't raise an exception on error
+            global_args (optional list): List of global spack arguments:
+                simulates ``spack [global_args] [command] [*argv]``
 
         Returns:
             (str): combined output and error as a string
@@ -534,8 +543,10 @@ class SpackCommand(object):
         self.returncode = None
         self.error = None
 
+        prepend = kwargs['global_args'] if 'global_args' in kwargs else []
+
         args, unknown = self.parser.parse_known_args(
-            [self.command_name] + list(argv))
+            prepend + [self.command_name] + list(argv))
 
         fail_on_error = kwargs.get('fail_on_error', True)
 
