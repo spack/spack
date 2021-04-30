@@ -91,7 +91,8 @@ class MesonPackage(PackageBase):
         std_meson_args += getattr(self, 'meson_flag_args', [])
         return std_meson_args
 
-    def _std_args(self, pkg):
+    @staticmethod
+    def _std_args(pkg):
         """Computes the standard meson arguments for a generic package"""
 
         try:
