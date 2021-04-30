@@ -133,36 +133,6 @@ class Slepc(Package):
         env.set('SLEPC_DIR', self.prefix)
         env.set('PETSC_DIR', self.spec['petsc'].prefix)
 
-    def run_pep_test11(self):
-        """Run smoke test: pep test11"""
-        test_dir = self.prefix.share.slepc.examples.src.pep.tests
-
-        if not os.path.exists(test_dir):
-            return
-
-        exe = 'test11'
-        output_dir = self.prefix.share.slepc.examples.src.pep.tests.output
-        expected_output = get_escaped_text_output(output_dir.join('test11_1.out'))
-
-        self.run_test(exe='{0}'.format(self.spec['arpack-ng'].prefix),
-                      options=[' --with-arpack-dir={0}'.format(self.spec['arpack-ng'].prefix),
-                               '--with-arpack-lib=-lparpack,-larpack', exe],
-                      purpose='test: configure pep example {0}'.format(exe),
-                      work_dir=test_dir)
-
-        """self.run_test(exe='make',
-                      options=[exe],
-                      purpose='test: build pep example {0}'.format(exe),
-                      work_dir=test_dir)
-
-        # This test ensures the test runs and produces
-        # the expected output
-        response = self.run_test(exe='./{0}'.format(exe),
-                                 expected=expected_output,
-                                 purpose='test: run pep example '.format(exe),
-                                 work_dir=test_dir)
-"""
-
     def run_hello_test(self):
         """Run stand alone test: hello"""
         test_dir = self.test_suite.current_test_data_dir
@@ -176,29 +146,28 @@ class Slepc(Package):
 
         self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
-                              '-L', '{0}'.format(self.prefix.lib),
-                              '-l', '{0}'.format(self.spec['slepc'].name),
-                              '-L', '{0}'.format(self.spec['petsc'].prefix.lib),
-                              '-l', '{0}'.format(self.spec['petsc'].name),
-                              '-L', '{0}'.format(self.spec['mpi'].prefix.lib),
-                              '-l', '{0}'.format(self.spec['mpi'].name),
-                              '-o', exe,
+                              '-L {0}'.format(self.prefix.lib),
+                              '-l {0}'.format(self.spec['slepc'].name),
+                              '-L {0}'.format(self.spec['petsc'].prefix.lib),
+                              '-l {0}'.format(self.spec['petsc'].name),
+                              '-L {0}'.format(self.spec['mpi'].prefix.lib),
+                              '-l {0}'.format(self.spec['mpi'].name),
+                              '-o ', exe,
                               test_dir],
                       purpose='test: run {0} example'.format(exe),
                       work_dir=test_dir)
 
         fake_options = ['-I{0}'.format(self.prefix),
-                              '-L', '{0}'.format(self.prefix.lib),
-                              '-l', '{0}'.format(self.spec['slepc'].name),
-                              '-L', '{0}'.format(self.spec['petsc'].prefix.lib),
-                              '-l', '{0}'.format(self.spec['petsc'].name),
-                              '-L', '{0}'.format(self.spec['mpi'].prefix.lib),
-                              '-l', '{0}'.format(self.spec['mpi'].name),
+                              '-L {0}'.format(self.prefix.lib),
+                              '-l {0}'.format(self.spec['slepc'].name),
+                              '-L {0}'.format(self.spec['petsc'].prefix.lib),
+                              '-l {0}'.format(self.spec['petsc'].name),
+                              '-L {0}'.format(self.spec['mpi'].prefix.lib),
+                              '-l mpi' #'{0}'.format(self.spec['mpi'].name),
                               '-o', exe,
                               test_dir]
         print('Shane {0}'.format(self.prefix))
         print(fake_options)
-
 
     def test(self):
         print("running_tests")
