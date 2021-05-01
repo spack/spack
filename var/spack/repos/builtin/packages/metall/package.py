@@ -5,7 +5,7 @@
 
 
 class Metall(CMakePackage):
-    """An allocator for persistent memory"""
+    """A Persistent Memory Allocator For Data-Centric Analytics"""
 
     homepage = "https://github.com/LLNL/metall"
     git      = "https://github.com/LLNL/metall.git"
@@ -23,11 +23,26 @@ class Metall(CMakePackage):
 
     depends_on('cmake@3.10:', type='build')
     depends_on('boost@1.64:', type=('build', 'link'))
+    # googletest is required only for test
+    # 'make test' is executed if '--run-tests' or '--test=root' is specified
+    depends_on('googletest', type=('test'))
 
     def cmake_args(self):
-        args = []
-        args.append('-DINSTALL_HEADER_ONLY=ON')
-        return args
+        if self.run_tests:
+            args = ['-DBUILD_TEST=ON', '-DSKIP_DOWNLOAD_GTEST=ON']
+            return args
+        else:
+            args = ['-DINSTALL_HEADER_ONLY=ON']
+            return args
 
+    def setup_environment(self, spack_env, run_env):
+        # Configure the directories for test
+        if self.run_tests:
+            spack_env.set(
+                'METALL_TEST_DIR',
+                join_path(self.build_directory, 'build_test')
+            )
+
+    # 'spack load metall' sets METALL_ROOT environmental variable
     def setup_run_environment(self, env):
         env.set('METALL_ROOT', self.prefix)
