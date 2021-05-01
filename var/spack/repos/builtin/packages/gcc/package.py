@@ -509,6 +509,10 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
             options.extend([
                 '--enable-bootstrap',
             ])
+        else:
+            options.extend([
+                '--disable-bootstrap',
+            ])
 
         # Configure include and lib directories explicitly for these
         # dependencies since the short GCC option assumes that libraries
