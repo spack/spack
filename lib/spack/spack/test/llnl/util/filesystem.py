@@ -580,7 +580,7 @@ def test_open_utf8_path(tmpdir):
 
     file = fs.open_utf8(target_fname, 'r')
     try:
-        read_string = file.readline()
+        file.readline()
     finally:
         file.close()
 
@@ -601,7 +601,7 @@ def test_open_utf8_fd():
         write.write(codecs.decode(b'\xED\x95\x9C', 'utf8'))
         write.close()
         write = None
-        str = read.read()
+        read.read()
     finally:
         if write:
             write.close()
