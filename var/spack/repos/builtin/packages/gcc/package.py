@@ -131,7 +131,7 @@ class Gcc(AutotoolsPackage, GNUMirrorPackage):
     depends_on('diffutils', type='build')
     depends_on('iconv', when='platform=darwin')
     depends_on('gnat', when='languages=ada')
-    depends_on('binutils+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
+    depends_on('binutils+gas+ld+plugins~libiberty', when='+binutils', type=('build', 'link', 'run'))
     depends_on('zip', type='build', when='languages=java')
     depends_on('cuda', when='+nvptx')
 

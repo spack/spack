@@ -172,7 +172,7 @@ class Llvm(CMakePackage, CudaPackage):
     depends_on("py-six", when="@5.0.0: +lldb +python")
 
     # gold support, required for some features
-    depends_on("binutils+gold+plugins", when="+gold")
+    depends_on("binutils+gold+ld+plugins", when="+gold")
 
     # polly plugin
     depends_on("gmp", when="@:3.6.999 +polly")
