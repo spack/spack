@@ -216,7 +216,7 @@ class ABIFactGenerator(object):
 
         # Parse common attributes of symbols
         self._parse_common_attributes(corpus, die, tag)
-
+            
         # We keep a handle on the root to return
         if not parent:
             parent = die.unique_id
