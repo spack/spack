@@ -12,7 +12,7 @@ class Ccache(CMakePackage):
     previous compilations and detecting when the same compilation is being done
     again."""
 
-    homepage = "https://ccache.samba.org/"
+    homepage = "https://ccache.dev/"
     url      = "https://github.com/ccache/ccache/releases/download/v4.2.1/ccache-4.2.1.tar.gz"
 
     executables = ['^ccache$']
