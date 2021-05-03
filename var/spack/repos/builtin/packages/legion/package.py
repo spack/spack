@@ -116,7 +116,7 @@ class Legion(CMakePackage):
     conflicts('+gasnet_debug', when='network=mpi')
     conflicts('+gasnet_debug', when='network=none')
 
-    variant('shared_libs', default=False,
+    variant('shared', default=False,
             description="Build shared libraries.")
 
     variant('bounds_checks', default=False,
@@ -221,7 +221,7 @@ class Legion(CMakePackage):
                 raise InstallError("'gasnet_root' is only valid when 'network=gasnet'.")
             options.append('-DLegion_EMBED_GASNet=OFF')
 
-        if '+shared_libs' in spec:
+        if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')
         else:
             options.append('-DBUILD_SHARED_LIBS=OFF')
