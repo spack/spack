@@ -23,11 +23,6 @@ class Blt(Package):
     #  projects if not handled properly. More info here:
     #  https://llnl-blt.readthedocs.io/en/develop/tutorial/exporting_targets.html
     version('0.4.0', sha256='f3bc45d28b9b2eb6df43b75d4f6f89a1557d73d012da7b75bac1be0574767193')
-
-    # 0.3.6 + a specific fix for versions of packages that rely on rocm and
-    # cannot move completely forward in BLT to the breaking change in 0.4.0
-    version('0.3.6rocm', commit='a98a5836c7a9e34b75a54eb46212812796fe5557')
-
     version('0.3.6', sha256='6276317c29e7ff8524fbea47d9288ddb40ac06e9f9da5e878bf9011e2c99bf71')
     version('0.3.5', sha256='68a1c224bb9203461ae6f5ab0ff3c50b4a58dcce6c2d2799489a1811f425fb84')
     version('0.3.0', sha256='bb917a67cb7335d6721c997ba9c5dca70506006d7bba5e0e50033dd0836481a5')
