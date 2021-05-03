@@ -12,7 +12,6 @@ class PyPytorchLightning(PythonPackage):
     homepage = "https://github.com/PyTorchLightning/pytorch-lightning"
     pypi     = "pytorch-lightning/pytorch-lightning-1.2.10.tar.gz"
 
-    version('1.3.0rc1', sha256='a9a7603ff50e3024f0adb80b620899af4bf67cb47a1f81e16b144c26115e368a')
     version('1.2.10', sha256='2d8365e30ded0c20e73ce6e5b6028478ae460b8fd33727df2275666df005a301')
 
     conflicts('py-pyyaml@5.4')          # OmegaConf requirement >=5.1
