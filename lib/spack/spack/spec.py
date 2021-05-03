@@ -1484,7 +1484,6 @@ class Spec(object):
         """
         # TODO: curently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
-        # TODO: Make this a spack json dump, make sure format is deterministic.
         node_dict = self.to_node_dict(hash=hash)
         # yaml_text = syaml.dump(node_dict, default_flow_style=True)
         json_text = sjson.dump(node_dict)
@@ -1678,43 +1677,59 @@ class Spec(object):
         ``spec.yaml`` file in each Spack installation directory.  For
         example, for sqlite::
 
-            {
-                'spec': { <--reformat
-                '_meta' : 2, <--keep int
-                'nodes' : <-- new key on node list
-                [
-                    {
-                        'sqlite': {
-                            'version': '3.28.0',
-                            'arch': {
-                                'platform': 'darwin',
-                                'platform_os': 'mojave',
-                                'target': 'x86_64',
-                            },
-                            'compiler': {
-                                'name': 'apple-clang',
-                                'version': '10.0.0',
-                            },
-                            'namespace': 'builtin',
-                            'parameters': {
-                                'fts': 'true',
-                                'functions': 'false',
-                                'cflags': [],
-                                'cppflags': [],
-                                'cxxflags': [],
-                                'fflags': [],
-                                'ldflags': [],
-                                'ldlibs': [],
-                            },
-                            'dependencies': {
-                                'readline': {
-                                    'hash': 'zvaa4lhlhilypw5quj3akyd3apbq5gap',
-                                    'type': ['build', 'link'],
-                                }
-                            },
-                            'hash': '722dzmgymxyxd6ovjvh4742kcetkqtfs'
-                        }
+        {
+            "spec": {
+                "_meta": {
+                "version": 2
+                },
+                "nodes": [
+                {
+                    "name": "sqlite",
+                    "version": "3.34.0",
+                    "arch": {
+                    "platform": "darwin",
+                    "platform_os": "catalina",
+                    "target": "x86_64"
                     },
+                    "compiler": {
+                    "name": "apple-clang",
+                    "version": "11.0.0"
+                    },
+                    "namespace": "builtin",
+                    "parameters": {
+                    "column_metadata": true,
+                    "fts": true,
+                    "functions": false,
+                    "rtree": false,
+                    "cflags": [],
+                    "cppflags": [],
+                    "cxxflags": [],
+                    "fflags": [],
+                    "ldflags": [],
+                    "ldlibs": []
+                    },
+                    "dependencies": [
+                    {
+                        "name": "readline",
+                        "_build_hash": "4f47cggum7p4qmp3xna4hi547o66unva",
+                        "type": [
+                        "build",
+                        "link"
+                        ]
+                    },
+                    {
+                        "name": "zlib",
+                        "_build_hash": "uvgh6p7rhll4kexqnr47bvqxb3t33jtq",
+                        "type": [
+                        "build",
+                        "link"
+                        ]
+                    }
+                    ],
+                    "_hash": "d2yzqp2highd7sn4nr5ndkw3ydcrlhtk",
+                    "_full_hash": "tve45xfqkfgmzwcyfetze2z6syrg7eaf",
+                    "_build_hash": "tsjnz7lgob7bu2wd4sqzzjenxewc2zha"
+                },
                     # ... more node dicts for readline and its dependencies ...
                 ]
             }
@@ -1740,7 +1755,6 @@ class Spec(object):
 
         """
         node_list = []
-        # TODO: Use a set 'visited' for the hashes we've seen.
         hash_list = []
         for s in self.traverse(order='pre', deptype=hash.deptype):
             spec_hash = s.node_dict_with_hashes(hash)[hash.attr]

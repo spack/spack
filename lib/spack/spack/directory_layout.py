@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 import ruamel.yaml as yaml
 
-from llnl.util.filesystem import mkdirp
+import llnl.util.filesystem as fs
 
 import spack.config
 import spack.hash_types as ht
@@ -76,8 +76,9 @@ class DirectoryLayout(object):
         # locate files in older upstream databases
         self.metadata_dir        = '.spack'
         self.deprecated_dir      = 'deprecated'
-        # TODO: Change to JSON
-        self.spec_file_name      = 'spec.yaml'
+        self.spec_file_name      = 'spec.json'
+        # Use for checking yaml and deprecated types
+        self._spec_file_name_yaml = 'spec.yaml'
         self.extension_file_name = 'extensions.yaml'
         self.packages_dir        = 'repos'  # archive of package.py files
         self.manifest_file_name  = 'install_manifest.json'
@@ -95,28 +96,29 @@ class DirectoryLayout(object):
 
     def write_spec(self, spec, path):
         """Write a spec out to a file."""
-        # TODO: Convert to writing only JSON.
         _check_concrete(spec)
         with open(path, 'w') as f:
             # The hash the the projection is the DAG hash but we write out the
             # full provenance by full hash so it's availabe if we want it later
-            spec.to_json(f, hash=ht.full_hash)
+            extension = os.path.splitext(path)[-1].lower()
+            if extension == '.json':
+                spec.to_json(f, hash=ht.full_hash)
+            elif extension == '.yaml':
+                spec.to_yaml(f, hash=ht.full_hash)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
-        # TODO: Needs to remain backwards-compatible with YAML.
-        # TODO: If you have write access to this directory, write a JSON,
-        # prefer JSON.
         try:
             with open(path) as f:
                 extension = os.path.splitext(path)[-1].lower()
                 if extension == '.json':
                     spec = spack.spec.Spec.from_json(f)
                 elif extension == '.yaml':
+                    # Too late for conversion; spec_file_path() already called.
                     spec = spack.spec.Spec.from_yaml(f)
                 else:
-                    raise SpecReadError('did not recognize extension: '
-                                        '{0}'.format(extension))
+                    raise SpecReadError('Did not recognize spec file extension:'
+                                        ' {0}'.format(extension))
         except Exception as e:
             if spack.config.get('config:debug'):
                 raise
@@ -130,12 +132,17 @@ class DirectoryLayout(object):
     def spec_file_path(self, spec):
         """Gets full path to spec file"""
         _check_concrete(spec)
-        return os.path.join(self.metadata_path(spec), self.spec_file_name)
-
-    def deprecated_file_name(self, spec):
-        """Gets name of deprecated spec file in deprecated dir"""
-        _check_concrete(spec)
-        return spec.dag_hash() + '_' + self.spec_file_name
+        # Attempts to convert to JSON if possible.
+        # Otherwise just returns the YAML.
+        # TODO: Needs a test case?
+        yaml_path = os.path.join(self.metadata_path(spec),
+                                 self._spec_file_name_yaml)
+        json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
+        if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
+            self.write_spec(spec, json_path)
+        elif os.path.exists(yaml_path):
+            return yaml_path
+        return json_path
 
     def deprecated_file_path(self, deprecated_spec, deprecator_spec=None):
         """Gets full path to spec file for deprecated spec
@@ -153,8 +160,20 @@ class DirectoryLayout(object):
             deprecator_spec
         ) if deprecator_spec else os.readlink(deprecated_spec.prefix)
 
-        return os.path.join(base_dir, self.metadata_dir, self.deprecated_dir,
-                            self.deprecated_file_name(deprecated_spec))
+        yaml_path = os.path.join(base_dir, self.metadata_dir,
+                                 self.deprecated_dir, deprecated_spec.dag_hash()
+                                 + '_' + self._spec_file_name_yaml)
+
+        json_path = os.path.join(base_dir, self.metadata_dir,
+                                 self.deprecated_dir, deprecated_spec.dag_hash()
+                                 + '_' + self.spec_file_name)
+
+        if (os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path)):
+            self.write_spec(deprecated_spec, json_path)
+        elif os.path.exists(yaml_path):
+            return yaml_path
+
+        return json_path
 
     @contextmanager
     def disable_upstream_check(self):
@@ -186,8 +205,8 @@ class DirectoryLayout(object):
         group = get_package_group(spec)
         perms = get_package_dir_permissions(spec)
 
-        mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
-        mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
+        fs.mkdirp(spec.prefix, mode=perms, group=group, default_perms='parents')
+        fs.mkdirp(self.metadata_path(spec), mode=perms, group=group)  # in prefix
 
         self.write_spec(spec, self.spec_file_path(spec))
 
@@ -234,7 +253,8 @@ class DirectoryLayout(object):
         specs = []
         for _, path_scheme in self.projections.items():
             path_elems = ["*"] * len(path_scheme.split(os.sep))
-            path_elems += [self.metadata_dir, self.spec_file_name]
+            # NOTE: Does not validate filename extension; should happen later
+            path_elems += [self.metadata_dir, 'spec.*']
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             specs.extend([self.read_spec(s) for s in spec_files])
@@ -247,8 +267,9 @@ class DirectoryLayout(object):
         deprecated_specs = set()
         for _, path_scheme in self.projections.items():
             path_elems = ["*"] * len(path_scheme.split(os.sep))
+            # NOTE: Does not validate filename extension; should happen later
             path_elems += [self.metadata_dir, self.deprecated_dir,
-                           '*_' + self.spec_file_name]
+                           '*_spec.*']  # + self.spec_file_name]
             pattern = os.path.join(self.root, *path_elems)
             spec_files = glob.glob(pattern)
             get_depr_spec_file = lambda x: os.path.join(
@@ -493,7 +514,7 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
 
         # Create a temp file in the same directory as the actual file.
         dirname, basename = os.path.split(path)
-        mkdirp(dirname)
+        fs.mkdirp(dirname)
 
         tmp = tempfile.NamedTemporaryFile(
             prefix=basename, dir=dirname, delete=False)
