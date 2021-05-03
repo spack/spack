@@ -26,7 +26,7 @@ class Arborx(CMakePackage):
         'serial': (True,  "enable Serial backend (default)"),
         'cuda': (False,  "enable Cuda backend"),
         'openmp': (False,  "enable OpenMP backend"),
-        'hip': (False,  "enable HIP backend")
+        'rocm': (False,  "enable HIP backend")
     }
 
     variant('mpi', default=True, description='enable MPI')
