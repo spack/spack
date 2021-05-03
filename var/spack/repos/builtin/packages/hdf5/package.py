@@ -173,6 +173,22 @@ class Hdf5(AutotoolsPackage):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
+    def flag_handler(self, name, flags):
+        if '+pic' in self.spec:
+            if name == "cflags":
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == "cxxflags":
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == "fflags":
+                flags.append(elf.compiler.fc_pic_flag)
+
+        # Quiet warnings/errors about implicit declaration of functions in C99
+        if name == "cflags":
+            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+                flags.append("-Wno-implicit-function-declaration")
+
+        return (None, None, flags)
+
     @when('@develop')
     def autoreconf(self, spec, prefix):
         autogen = Executable('./autogen.sh')
@@ -316,27 +332,6 @@ class Hdf5(AutotoolsPackage):
 
             if '+fortran' in self.spec:
                 extra_args.append('FC=%s' % self.spec['mpi'].mpifc)
-
-        # Append package specific compiler flags to the global ones
-        cflags = ' '.join(self.spec.compiler_flags['cflags'])
-        cxxflags = ' '.join(self.spec.compiler_flags['cxxflags'])
-        fflags = ' '.join(self.spec.compiler_flags['fflags'])
-
-        if '+pic' in self.spec:
-            cflags += " " + self.compiler.cc_pic_flag
-            cxxflags += " " + self.compiler.cxx_pic_flag
-            fflags += " " + self.compiler.fc_pic_flag
-
-        # Quiet warnings/errors about implicit declaration of functions in C99
-        if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
-            cflags += " -Wno-implicit-function-declaration"
-
-        if cflags:
-            extra_args.append('CFLAGS={0}'.format(cflags))
-        if cxxflags and '+cxx' in self.spec:
-            extra_args.append('CXXFLAGS={0}'.format(cxxflags))
-        if fflags and '+fortran' in self.spec:
-            extra_args.append('FCFLAGS={0}'.format(fflags))
 
         return extra_args
 
