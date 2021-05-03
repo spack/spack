@@ -29,5 +29,5 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-fsspec@0.8.1:+http',     type=('build', 'run'))
     depends_on('py-tensorboard@2.2.0:',     type=('build', 'run'))
     depends_on('py-torchmetrics@0.2.0',     type=('build', 'run'))
-    depends_on('py-pydeprecate@0.3.0',      type=('build', 'run'))
+    #depends_on('py-pydeprecate@0.3.0',      type=('build', 'run'))
     depends_on('py-packaging',              type=('build', 'run'))
