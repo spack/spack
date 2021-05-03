@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+from spack.util.environment import is_system_path
 
 
 class Silo(AutotoolsPackage):
@@ -97,19 +98,28 @@ class Silo(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = [
-            '--with-zlib=%s,%s' % (spec['zlib'].prefix.include,
-                                   spec['zlib'].prefix.lib),
             '--enable-install-lite-headers',
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
         ]
 
+        # Do not specify the prefix of zlib if it is in a system directory
+        # (see https://github.com/spack/spack/pull/21900).
+        zlib_prefix = self.spec['zlib'].prefix
+        if is_system_path(zlib_prefix):
+            config_args.append('--with-zlib=yes')
+        else:
+            config_args.append(
+                '--with-zlib=%s,%s' % (zlib_prefix.include,
+                                       zlib_prefix.lib),
+            )
+
         if '+hdf5' in spec:
-            config_args.extend([
+            config_args.append(
                 '--with-hdf5=%s,%s' % (spec['hdf5'].prefix.include,
                                        spec['hdf5'].prefix.lib),
-            ])
+            )
 
         if '+silex' in spec:
             x = spec['libx11']
