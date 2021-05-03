@@ -9,7 +9,7 @@ from spack import *
 class PyPytorchLightning(PythonPackage):
     """PyTorch Lightning is the lightweight PyTorch wrapper for ML researchers."""
 
-    homepage = "https://www.example.com"
+    homepage = "https://github.com/PyTorchLightning/pytorch-lightning"
     pypi     = "pytorch-lightning/pytorch-lightning-1.2.10.tar.gz"
 
     version('1.3.0rc1', sha256='a9a7603ff50e3024f0adb80b620899af4bf67cb47a1f81e16b144c26115e368a')
