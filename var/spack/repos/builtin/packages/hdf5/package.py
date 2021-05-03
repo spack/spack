@@ -178,7 +178,7 @@ class Hdf5(AutotoolsPackage):
             if name == "cflags":
                 flags.append(self.compiler.cc_pic_flag)
             elif name == "cxxflags":
-                xxflags.append(self.compiler.cxx_pic_flag)
+                flags.append(self.compiler.cxx_pic_flag)
             elif name == "fflags":
                 flags.append(elf.compiler.fc_pic_flag)
 
@@ -187,7 +187,7 @@ class Hdf5(AutotoolsPackage):
             if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
                 flags.append("-Wno-implicit-function-declaration")
 
-       return (flags, None, None)
+       return (None, None, flags)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):
