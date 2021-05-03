@@ -19,6 +19,8 @@ class PyFsspec(PythonPackage):
 
     variant('http', default=False, description='HTTPFileSystem support (Requires version 0.8.1+)')
 
+    conflicts('+http', when='@:0.8.0', msg='Only available in 0.8.1+')
+
     depends_on('python@3.5:', type=('build', 'run'))
     depends_on('python@3.6:', type=('build', 'run'), when='@0.6.3:')
     depends_on('py-setuptools', type='build')
