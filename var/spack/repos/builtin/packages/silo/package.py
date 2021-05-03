@@ -77,6 +77,10 @@ class Silo(AutotoolsPackage):
         # hasn't yet made it into silo.
         # https://github.com/LLNL/fpzip/blob/master/src/pcmap.h
 
+        if self.spec.satisfies('@4.10.2-bsd'):
+            # The files below don't exist in the BSD licenced version
+            return
+
         def repl(match):
             # Change macro-like uppercase to title-case.
             return match.group(1).title()
