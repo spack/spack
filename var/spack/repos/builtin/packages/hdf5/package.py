@@ -187,7 +187,7 @@ class Hdf5(AutotoolsPackage):
             if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
                 flags.append("-Wno-implicit-function-declaration")
 
-       return (None, None, flags)
+        return (None, None, flags)
 
     @when('@develop')
     def autoreconf(self, spec, prefix):
