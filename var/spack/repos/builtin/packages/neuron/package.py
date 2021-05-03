@@ -45,6 +45,7 @@ class Neuron(CMakePackage):
     depends_on("py-pytest",   when="+python+tests")
     depends_on("readline")
     depends_on("caliper",     when="+caliper")
+    depends_on("py-numpy",    type='run')
 
     conflicts("+rx3d",        when="~python")
 

@@ -391,7 +391,8 @@ class Trilinos(CMakePackage, CudaPackage):
     # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
-    depends_on('mumps@5.0:+mpi+shared', when='+mumps')
+    depends_on('mumps@5.0:+mpi+shared+openmp', when='+mumps+openmp')
+    depends_on('mumps@5.0:+mpi+shared~openmp', when='+mumps~openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
