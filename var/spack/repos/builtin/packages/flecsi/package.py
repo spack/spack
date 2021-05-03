@@ -62,7 +62,7 @@ class Flecsi(CMakePackage):
     depends_on('mpi', when='backend=mpi')
     depends_on('mpi', when='backend=legion')
     depends_on('mpi', when='backend=hpx')
-    depends_on('legion+shared+mpi', when='backend=legion')
+    depends_on('legion+shared', when='backend=legion')
     depends_on('legion+hdf5', when='backend=legion +hdf5')
     depends_on('legion build_type=Debug', when='backend=legion +debug_backend')
     depends_on('hpx@1.4.1 cxxstd=17 malloc=system max_cpu_count=128', when='backend=hpx')
