@@ -94,7 +94,8 @@ class ABIFactGenerator(object):
         if bind == "LOCAL":
             return
 
-        self.gen.fact(fn.symbol_definition(corpus.basename, symbol, defined))
+        self.gen.fact(fn.symbol_definition(corpus.basename, corpus.uid, symbol,
+                      defined))
         self.gen.fact(fn.has_symbol(corpus.basename, symbol))
 
         if detail:
@@ -216,7 +217,7 @@ class ABIFactGenerator(object):
 
         # Parse common attributes of symbols
         self._parse_common_attributes(corpus, die, tag)
-            
+
         # We keep a handle on the root to return
         if not parent:
             parent = die.unique_id
@@ -551,11 +552,13 @@ class ABIFactGenerator(object):
 
             # Is it a main corpus?
             if corpus.name == main:
-                self.gen.fact(fn.is_main_corpus(corpus.name, corpus.uid))
+                self.gen.fact(fn.is_main_corpus(corpus.name, corpus.basename,
+                              corpus.uid))
 
             # If the corpus has a soname:
             if corpus.soname:
-                self.gen.fact(fn.corpus_soname(corpus.name, corpus.soname))
+                self.gen.fact(fn.corpus_soname(corpus.name, corpus.basename,
+                              corpus.soname))
 
             # e_machine is the required architecture for the file
             self.gen.fact(fn.corpus_machine(corpus.name, hdr["e_machine"]))

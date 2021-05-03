@@ -73,7 +73,7 @@ def setup_parser(subparser):
     # Assume for now that we can only add one extra model
     subparser.add_argument(
         '-e', '--extra', action='store',
-        default=None, choices=['symbols'],
+        default=None, choices=['symbols', 'abi_type_location'],
         help='extra known models to add to the solve.')
     subparser.add_argument(
         '-p', '--lp', default=None,

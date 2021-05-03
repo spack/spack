@@ -50,6 +50,7 @@ undefined_symbol(Package, Version, Symbol, Corpus)
     % and it's definition is UND
     symbol_definition(Corpus, Symbol, "UND").
 
+
 % a symbol is undefined for a package version if
 undefined_symbol(Package, Version, Symbol) 
 
@@ -85,17 +86,22 @@ linkable(Package, Dependency)
 
     % And the dependency holds
     dependency_holds(Package, Dependency, _).
-    
 
-% A package and dependency are incompatible if:
-incompatible(Package, V1, Dependency, V2)
+% base rule for incompatible
+incompatible_base(Package, V1, Dependency, V2)
 
     % they are linkable
     :- linkable(Package, Dependency),
 
     % The package and dependency each have their own version
     version(Package, V1),
-    version(Dependency, V2),
+    version(Dependency, V2).
+
+
+% A package and dependency are incompatible if:
+incompatible(Package, V1, Dependency, V2)
+
+    :- incompatible_base(Package, V1, Dependency, V2),
 
     % The package has an undefined symbol
     undefined_symbol(Package, V1, Symbol),
@@ -105,5 +111,46 @@ incompatible(Package, V1, Dependency, V2)
 
     % and the symbol is not defined for the dependency
     not defined_symbol(Dependency, V2, Symbol).
-    
+
+
+% incompatible if matching variables are different types
+% abi_typelocation("variable","libtcl8.6.so","environ","export","char").
+incompatible(Package, V1, Corpus1, Type1, Dependency, V2, Corpus2, Variable, Type2, VariableType)
+
+    :- incompatible_base(Package, V1, Dependency, V2),
+
+    % it's a variable needed (imported) by Corpus1
+    abi_typelocation(VariableType, Corpus1, Variable, "import", Type1),
+
+    % it's exported by Corpus 2
+    abi_typelocation(VariableType, Corpus2, Variable, "export", Type2),
+
+    % but the type is wrong
+    Type1 != Type2.   
+
+% flatten into the rule that fits into solver
+incompatible(Package, V1, Dependency, V2)
+
+    % we don't care about the corpus, variable name, or type
+    :- incompatible(Package, V1, _, _, Dependency, V2, _, _, _, _).
+
+% abi_typelocation("variable","libtcl8.6.so","graphCharTable","export","short unsigned int","(DW_OP_addr: 206660)").
+
+% Not sure how to compare the last variables
+% abi_typelocation("function","libtcl8.6.so","carc_cmp","export","int","%rax").
+% incompatile if their locations are off
+%incompatible(Package, V1, Corpus1, Type1, Dependency, V2, Corpus2, Variable, Type2, VariableType)
+
+%    :- incompatible_base(Package, V1, Dependency, V2),
+
+    % it's a variable needed (imported) by Corpus1
+%    abi_typelocation(VariableType, Corpus1, Variable, "import", Type1),
+
+    % it's exported by Corpus 2
+%    abi_typelocation(VariableType, Corpus2, Variable, "export", Type2),
+
+    % but the type is wrong
+%    Type1 != Type2.   
+
+
 #show incompatible/4.
