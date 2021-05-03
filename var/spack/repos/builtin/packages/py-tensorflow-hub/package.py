@@ -64,7 +64,7 @@ class PyTensorflowHub(Package):
         install(join_path('tensorflow_hub', 'pip_package', 'setup.cfg'), insttmp_path)
         install('LICENSE', join_path(insttmp_path, 'LICENSE.txt'))
         mkdirp(join_path(insttmp_path, 'tensorflow_hub'))
-        install_tree(join_path(runfiles, tensorflow_hub),
+        install_tree(join_path(runfiles, 'tensorflow_hub'),
                      join_path(insttmp_path, 'tensorflow_hub'))
 
         with working_dir(insttmp_path):
