@@ -212,7 +212,7 @@ class Git(AutotoolsPackage):
                 release['version']),
             sha256=release['sha256_manpages'],
             placement='git-manpages',
-            when='@{0}'.format(release['version']))
+            when='@{0} +man'.format(release['version']))
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
@@ -220,10 +220,14 @@ class Git(AutotoolsPackage):
             description='Provide SVN Perl dependency in run environment')
     variant('perl', default=True,
             description='Do not use Perl scripts or libraries at all')
+    variant('nls', default=True,
+            description='Enable native language support')
+    variant('man', default=True,
+            description='Install manual pages')
 
     depends_on('curl')
     depends_on('expat')
-    depends_on('gettext')
+    depends_on('gettext', when='+nls')
     depends_on('iconv')
     depends_on('libidn2')
     depends_on('openssl')
@@ -276,7 +280,7 @@ class Git(AutotoolsPackage):
         # The test avoids failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
-        if 'gettext' in self.spec:
+        if '+nls' in self.spec:
             if 'intl' in self.spec['gettext'].libs.names:
                 env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                     self.spec['gettext'].prefix.lib))
@@ -323,12 +327,27 @@ class Git(AutotoolsPackage):
     def check(self):
         make('test')
 
+    def build(self, spec, prefix):
+        args = []
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
+    def install(self, spec, prefix):
+        args = ["install"]
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
     @run_after('install')
     def install_completions(self):
         install_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):
+        if '~man' in self.spec:
+            return
+
         prefix = self.prefix
 
         with working_dir('git-manpages'):

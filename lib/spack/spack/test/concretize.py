@@ -689,7 +689,7 @@ class TestConcretize(object):
 
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
         ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
         ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
         ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')

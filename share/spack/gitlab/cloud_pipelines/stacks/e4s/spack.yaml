@@ -121,7 +121,7 @@ spack:
     script:
       - . "./share/spack/setup-env.sh"
       - spack --version
-      - cd share/spack/gitlab/cloud_e4s_pipelines/stacks/e4s
+      - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
       - spack env activate --without-view .
       - spack -d ci rebuild
     mappings:
@@ -138,7 +138,7 @@ spack:
       before_script:
         - . "./share/spack/setup-env.sh"
         - spack --version
-        - cd share/spack/gitlab/cloud_e4s_pipelines/stacks/e4s
+        - cd share/spack/gitlab/cloud_pipelines/stacks/e4s
         - spack env activate --without-view .
       image: { "name": "ghcr.io/scottwittenburg/ecpe4s-ubuntu18.04-runner-x86_64:2020-09-01", "entrypoint": [""] }
       tags: ["spack", "public", "medium", "x86_64"]

@@ -166,7 +166,9 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('mpi', when='+superlu-dist')
 
     # Other parallelism dependencies
-    depends_on('raja', when='+raja')
+    depends_on('raja',      when='+raja')
+    depends_on('raja+cuda', when='+raja +cuda')
+    depends_on('raja+rocm', when='+raja +rocm')
 
     # External libraries
     depends_on('lapack',              when='+lapack')
@@ -272,7 +274,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
             archs = spec.variants['cuda_arch'].value
             if archs != 'none':
                 arch_str = ",".join(archs)
-            args.append('CMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
+            args.append('-DCMAKE_CUDA_ARCHITECTURES=%s' % arch_str)
         else:
             args.append('-DCUDA_ENABLE=OFF')
 
@@ -356,7 +358,7 @@ class Sundials(CMakePackage, CudaPackage, ROCmPackage):
         if '+raja' in spec:
             args.extend([
                 '-DRAJA_ENABLE=ON',
-                '-DRAJA_DIR=%s' % spec['raja'].prefix.share.raja.cmake
+                '-DRAJA_DIR=%s' % spec['raja'].prefix
             ])
         else:
             args.extend([

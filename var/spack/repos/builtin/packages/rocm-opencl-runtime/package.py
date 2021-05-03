@@ -12,10 +12,12 @@ class RocmOpenclRuntime(CMakePackage):
        It Supports offline and in-process/in-memory compilation"""
 
     homepage = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime"
+    git      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git"
     url      = "https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-4.1.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='main')
     version('4.1.0',  sha256='0729e6c2adf1e3cf649dc6e679f9cb936f4f423f4954ad9852857c0a53ef799c')
     version('4.0.0',  sha256='d43ea5898c6b9e730b5efabe8367cc136a9260afeac5d0fe85b481d625dd7df1')
     version('3.10.0', sha256='3aa9dc5a5f570320b04b35ee129ce9ff21062d2770df934c6c307913f975e93d')
@@ -28,7 +30,7 @@ class RocmOpenclRuntime(CMakePackage):
     depends_on('libelf', type='link', when="@3.7.0:3.8.0")
     depends_on('numactl', type='link', when="@3.7.0:")
 
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0']:
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0', 'master']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
