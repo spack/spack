@@ -34,7 +34,11 @@ class Cube(AutotoolsPackage):
 
     depends_on('cubelib@4.6', when='@4.6')
     depends_on('cubelib@4.5', when='@4.5')
-    depends_on('cubelib@4.4:4.4.99', when='@4.4')
+    # There is a backwards dependency in series 4
+    depends_on('cubelib@4.4:4.4.4', when='@4.4.4')
+    depends_on('cubelib@4.4:4.4.3', when='@4.4.3')
+    depends_on('cubelib@4.4:4.4.2', when='@4.4.2')
+    depends_on('cubelib@4.4', when='@4.4')
 
     depends_on('pkgconfig', type='build')
     depends_on('dbus')
