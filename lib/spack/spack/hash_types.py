@@ -6,7 +6,6 @@
 """Definitions that control how Spack creates Spec hashes."""
 
 import spack.dependency as dp
-from typing import List
 
 
 class SpecHashDescriptor(object):
@@ -20,7 +19,7 @@ class SpecHashDescriptor(object):
     We currently use different hashes for different use cases.
 
     """
-    hash_types = []  # type: List[str]
+    hash_types = []
 
     def __init__(self, deptype, package_hash, attr):
         self.deptype = dp.canonical_deptype(deptype)
