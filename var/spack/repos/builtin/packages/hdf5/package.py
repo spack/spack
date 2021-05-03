@@ -180,7 +180,7 @@ class Hdf5(AutotoolsPackage):
             elif name == "cxxflags":
                 flags.append(self.compiler.cxx_pic_flag)
             elif name == "fflags":
-                flags.append(elf.compiler.fc_pic_flag)
+                flags.append(self.compiler.fc_pic_flag)
 
         # Quiet warnings/errors about implicit declaration of functions in C99
         if name == "cflags":
