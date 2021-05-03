@@ -26,6 +26,7 @@ class NetcdfC(AutotoolsPackage):
     maintainers = ['skosukhin', 'WardF']
 
     version('master', branch='master')
+    version('4.8.0',   sha256='679635119a58165c79bb9736f7603e2c19792dd848f19195bf6881492246d6d5')
     version('4.7.4',   sha256='0e476f00aeed95af8771ff2727b7a15b2de353fb7bb3074a0d340b55c2bd4ea8')
     version('4.7.3',   sha256='8e8c9f4ee15531debcf83788594744bd6553b8489c06a43485a15c93b4e0448b')
     version('4.7.2',   sha256='b751cc1f314ac8357df2e0a1bacf35a624df26fe90981d3ad3fa85a5bbd8989a')
@@ -66,6 +67,7 @@ class NetcdfC(AutotoolsPackage):
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
     variant('jna', default=False, description='Enable JNA support')
+    variant('enable-fsync', default=False, description='Enable fsync support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
@@ -186,6 +188,12 @@ class NetcdfC(AutotoolsPackage):
         ldflags.append(hdf5_hl.libs.search_flags)
         if hdf5_hl.satisfies('~shared'):
             libs.append(hdf5_hl.libs.link_flags)
+
+        if '+enable-fsync' in self.spec:
+            # The flag was introduced in version 4.1.0. It was default
+            # `on` until 4.3.0 when it now defaults to `off`.
+            if self.spec.satisfies('@4.1:'):
+                config_args.append('--enable-fsync')
 
         if '+parallel-netcdf' in self.spec:
             config_args.append('--enable-pnetcdf')
