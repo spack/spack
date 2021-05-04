@@ -33,20 +33,24 @@ def _check_concrete(spec):
 
 class DirectoryLayout(object):
     """A directory layout is used to associate unique paths with specs.
-    Different installations are going to want differnet layouts for their
-    install, and they can use this to customize the nesting structure of
-    spack installs.
-    By default lays out installation directories like this::
-        <install root>/
-            <platform-os-target>/
-                <compiler>-<compiler version>/
-                    <name>-<version>-<hash>
+        Different installations are going to want different layouts for their
+        install, and they can use this to customize the nesting structure of
+        spack installs. The default layout is:
 
-    The hash here is a SHA-1 hash for the full DAG plus the build
-    spec.
+        * <install root>/
 
-    The installation directory projections can be modified with the
-    projections argument."""
+          * <platform-os-target>/
+
+            * <compiler>-<compiler version>/
+
+              * <name>-<version>-<hash>
+
+        The hash here is a SHA-1 hash for the full DAG plus the build
+        spec.
+
+        The installation directory projections can be modified with the
+        projections argument.
+    """
 
     def __init__(self, root, **kwargs):
         self.root = root

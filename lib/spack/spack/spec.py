@@ -1670,14 +1670,13 @@ class Spec(object):
         return d
 
     def to_dict(self, hash=ht.dag_hash):
-        # TODO: Update this docstring
         """Create a dictionary suitable for writing this spec to YAML or JSON.
 
         This dictionaries like the one that is ultimately written to a
-        ``spec.yaml`` file in each Spack installation directory.  For
+        ``spec.json`` file in each Spack installation directory.  For
         example, for sqlite::
 
-        {
+            {
             "spec": {
                 "_meta": {
                 "version": 2
