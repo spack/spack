@@ -28,8 +28,18 @@ def _for_each_enabled(spec, method_name):
 
 
 def post_install(spec):
-    _for_each_enabled(spec, 'write')
+    # If the spec is installed through an environment, we delegate to
+    # the post_env_write hook so that spack can manage interactions between
+    # env views and modules
+    import spack.environment  # break import cycle
+    env = spack.environment.get_env({}, '')
+    if not env:
+        _for_each_enabled(spec, 'write')
 
 
 def post_uninstall(spec):
     _for_each_enabled(spec, 'remove')
+
+def post_env_write(env):
+    for _, spec in env.concretized_specs():
+        _for_each_enabled(spec, 'write')
