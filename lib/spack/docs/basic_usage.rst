@@ -420,6 +420,7 @@ the tarballs in question to it (see :ref:`mirrors`):
 
        $ spack install galahad
 
+
 -------------------------
 Seeing installed packages
 -------------------------
