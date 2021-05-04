@@ -20,6 +20,7 @@ from llnl.util.tty.color import colorize
 import spack.concretize
 import spack.error
 import spack.hash_types as ht
+import spack.hooks
 import spack.repo
 import spack.schema.env
 import spack.spec
@@ -1816,17 +1817,16 @@ class Environment(object):
             self.concretized_order = [
                 old_hash_to_new.get(h, h) for h in self.concretized_order]
 
-    def write(self, regenerate_views=True):
+    def write(self, regenerate=True):
         """Writes an in-memory environment to its location on disk.
 
         Write out package files for each newly concretized spec.  Also
-        regenerate any views associated with the environment, if
-        regenerate_views is True.
+        regenerate any views associated with the environment and run post-write
+        hooks, if regenerate is True.
 
         Arguments:
-            regenerate_views (bool): regenerate views as well as
-                writing if True.
-
+            regenerate (bool): regenerate views and run post-write hooks as
+                well as writing if True.
         """
         # Intercept environment not using the latest schema format and prevent
         # them from being modified
@@ -1878,8 +1878,11 @@ class Environment(object):
         # call.  But, having it here makes the views consistent witht the
         # concretized environment for most operations.  Which is the
         # special case?
-        if regenerate_views:
+        if regenerate:
             self.regenerate_views()
+
+            # Run post_env_hooks
+            spack.hooks.post_env_write(self)
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
         """Update YAML manifest for this environment based on changes to
