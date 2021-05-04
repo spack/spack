@@ -58,7 +58,6 @@ will be responsible for compiler detection.
 """
 import contextlib
 import functools
-import inspect
 import warnings
 
 import archspec.cpu
@@ -74,7 +73,7 @@ import spack.paths
 import spack.error as serr
 import spack.util.executable
 import spack.version
-from spack.util.naming import mod_to_class
+import spack.util.classes
 from spack.util.spack_yaml import syaml_dict
 
 
@@ -502,23 +501,8 @@ def arch_for_spec(arch_spec):
 
 @lang.memoized
 def _all_platforms():
-    classes = []
     mod_path = spack.paths.platform_path
-    parent_module = "spack.platforms"
-
-    for name in lang.list_modules(mod_path):
-        mod_name = '%s.%s' % (parent_module, name)
-        class_name = mod_to_class(name)
-        mod = __import__(mod_name, fromlist=[class_name])
-        if not hasattr(mod, class_name):
-            tty.die('No class %s defined in %s' % (class_name, mod_name))
-        cls = getattr(mod, class_name)
-        if not inspect.isclass(cls):
-            tty.die('%s.%s is not a class' % (mod_name, class_name))
-
-        classes.append(cls)
-
-    return classes
+    return spack.util.classes.list_classes("spack.platforms", mod_path)
 
 
 @lang.memoized

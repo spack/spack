@@ -57,7 +57,7 @@ class Gromacs(CMakePackage):
     version('4.6.7', sha256='6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9')
     version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
-    variant('mpi', default=True, description='Activate MPI support')
+    variant('mpi', default=True, description='Activate MPI support (disable for Thread-MPI support)')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
     variant(
@@ -195,7 +195,8 @@ class Gromacs(CMakePackage):
             options.extend([
                 '-DCMAKE_C_COMPILER=%s' % spack_cc,
                 '-DCMAKE_CXX_COMPILER=%s' % spack_cxx,
-                '-DGMX_MPI:BOOL=OFF'])
+                '-DGMX_MPI:BOOL=OFF',
+                '-DGMX_THREAD_MPI:BOOL=ON'])
 
         if self.spec.satisfies('@2020:'):
             options.append('-DGMX_INSTALL_LEGACY_API=ON')

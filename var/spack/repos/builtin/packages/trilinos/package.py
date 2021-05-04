@@ -391,7 +391,8 @@ class Trilinos(CMakePackage, CudaPackage):
     # (or alike) and adding results to -DTrilinos_EXTRA_LINK_FLAGS together
     # with Blas and Lapack and ScaLAPACK and Blacs and -lgfortran and it may
     # work at the end. But let's avoid all this by simply using shared libs
-    depends_on('mumps@5.0:+mpi+shared', when='+mumps')
+    depends_on('mumps@5.0:+mpi+shared+openmp', when='+mumps+openmp')
+    depends_on('mumps@5.0:+mpi+shared~openmp', when='+mumps~openmp')
     depends_on('scalapack', when='+mumps')
     depends_on('superlu-dist', when='+superlu-dist')
     depends_on('superlu-dist@:4.3', when='@11.14.1:12.6.1+superlu-dist')
@@ -437,6 +438,10 @@ class Trilinos(CMakePackage, CudaPackage):
             elif name == 'ldflags':
                 flags.append('-fuse-ld=gold -L/opt/cray/pe/libsci/20.03.1/CRAY/8.5/x86_64/lib -lsci_cray')
             return (None, None, flags)
+
+    # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
+    # avoid calling deprecated functions with CUDA-11
+    patch('fix_cxx14_cuda11.patch', when='@13.0.0:13.0.1 cxxstd=14 ^cuda@11:')
 
     def url_for_version(self, version):
         url = "https://github.com/trilinos/Trilinos/archive/trilinos-release-{0}.tar.gz"

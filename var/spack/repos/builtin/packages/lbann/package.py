@@ -10,7 +10,8 @@ from spack import *
 class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     """LBANN: Livermore Big Artificial Neural Network Toolkit.  A distributed
     memory, HPC-optimized, model and data parallel training toolkit for deep
-    neural networks."""
+    neural networks.
+    """
 
     homepage = "http://software.llnl.gov/lbann/"
     url      = "https://github.com/LLNL/lbann/archive/v0.91.tar.gz"
@@ -77,6 +78,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~cuda', when='+nvshmem')
     conflicts('+cuda', when='+rocm', msg='CUDA and ROCm support are mutually exclusive')
     conflicts('+extras', when='~pfe', msg='Python extras require the Python front end support')
+
+    conflicts('~vision', when='@0.91:0.101')
+    conflicts('~numpy', when='@0.91:0.101')
+    conflicts('~python', when='@0.91:0.101')
+    conflicts('~pfe', when='@0.91:0.101')
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -159,17 +165,18 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     # Additionally disable video related options, they incorrectly link in a
     # bad OpenMP library when building with clang or Intel compilers
     depends_on('opencv@4.1.0: build_type=RelWithDebInfo +core +highgui '
-               '+imgcodecs +imgproc +jpeg +png +tiff +zlib +fast-math ~cuda',
+               '+imgcodecs +imgproc +jpeg +png +tiff +fast-math ~cuda',
                when='+vision')
 
-    # Note that for Power systems we want the environment to add  +powerpc +vsx
-    depends_on('opencv@4.1.0: +powerpc +vsx', when='+vision arch=ppc64le:')
+    # Note that for Power systems we want the environment to add  +powerpc
+    depends_on('opencv@4.1.0: +powerpc', when='+vision arch=ppc64le:')
 
     depends_on('cnpy', when='+numpy')
     depends_on('nccl', when='@0.94:0.98.2 +cuda')
 
     depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@0.94:0.99 +conduit')
-    depends_on('conduit@0.4.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
+    depends_on('conduit@0.5.0:0.6.99 +hdf5~hdf5_compat', when='@0.100:0.101 +conduit')
+    depends_on('conduit@0.6.0: +hdf5~hdf5_compat', when='@:0.90,0.99:')
 
     # LBANN can use Python in two modes 1) as part of an extensible framework
     # and 2) to drive the front end model creation and launch

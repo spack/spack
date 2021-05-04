@@ -478,6 +478,8 @@ node_os_inherit(Dependency, OS)
      not node_os_set(Dependency).
 node_os_inherit(Package) :- node_os_inherit(Package, _).
 
+node_os(Package, OS) :- node_os_inherit(Package, OS).
+
 % fall back to default if not set or inherited
 node_os(Package, OS)
   :- node(Package),
@@ -601,32 +603,19 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version).
 
-% If the compiler is what was prescribed from command line etc.
-% or is the same as a root node, there is a version match
+% If a package and one of its dependencies don't have the
+% same compiler there's a mismatch.
+compiler_mismatch(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_version(Package, Compiler1, _),
+     node_compiler_version(Dependency, Compiler2, _),
+     Compiler1 != Compiler2.
 
-% Compiler prescribed in the root spec
-node_compiler_version_match_pref(Package, Compiler, V)
- :- node_compiler_set(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
-    not external(Package).
-
-% Compiler inherited from a parent node
-node_compiler_version_match_pref(Dependency, Compiler, V)
- :- depends_on(Package, Dependency),
-    node_compiler_version_match_pref(Package, Compiler, V),
-    node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_set(Dependency, Compiler).
-
-% Compiler inherited from the root package
-node_compiler_version_match_pref(Dependency, Compiler, V)
- :- depends_on(Package, Dependency),
-    node_compiler_version(Package, Compiler, V), root(Package),
-    node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_set(Dependency, Compiler).
-
-compiler_version_match(Package, 1)
- :- node_compiler_version(Package, Compiler, V),
-    node_compiler_version_match_pref(Package, Compiler, V).
+compiler_mismatch(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_version(Package, Compiler, Version1),
+     node_compiler_version(Dependency, Compiler, Version2),
+     Version1 != Version2.
 
 #defined node_compiler_set/2.
 #defined node_compiler_version_set/3.
@@ -770,14 +759,10 @@ opt_criterion(8, "count of non-root multi-valued variants").
     not root(Package)
 }.
 
-% Try to maximize the number of compiler matches in the DAG,
-% while minimizing the number of nodes. This is done because
-% a maximization on the number of matches for compilers is highly
-% correlated to a preference to have as many nodes as possible
-opt_criterion(7, "compiler matches + number of nodes").
+% Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(7, "compiler mismatches").
 #minimize{ 0@7 : #true }.
-#minimize{ 1@7,Package : node(Package) }.
-#maximize{ Weight@7,Package : compiler_version_match(Package, Weight) }.
+#minimize{ 1@7,Package,Dependency : compiler_mismatch(Package, Dependency) }.
 
 % Choose more recent versions for nodes
 opt_criterion(6, "version badness").

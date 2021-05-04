@@ -372,8 +372,10 @@ class Version(object):
 
     @coerced
     def intersection(self, other):
-        if self == other:
+        if self in other:  # also covers `self == other`
             return self
+        elif other in self:
+            return other
         else:
             return VersionList()
 

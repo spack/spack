@@ -21,6 +21,7 @@ class Spath(CMakePackage):
 
     variant('mpi', default=True, description="Build with MPI support.")
     depends_on('mpi', when='+mpi')
+    depends_on('zlib', type='link')
 
     def cmake_args(self):
         args = []

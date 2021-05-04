@@ -67,6 +67,9 @@ class Stat(AutotoolsPackage):
 
     patch('configure_mpicxx.patch', when='@2.1.0')
 
+    # No Mac support due to dependencies like dyninst, elf etc.
+    conflicts('platform=darwin', msg='macOS is not supported')
+
     def configure_args(self):
         spec = self.spec
         args = [
