@@ -25,6 +25,8 @@ class Spark(Package):
     version('3.1.1', sha256='4e0846207bf10311de43451bc99309086fce7990aaf54bf3038608b1981afbe7')
     version('3.0.0', sha256='98f6b92e5c476d7abb93cc179c2616aa5dc897da25753bd197e20ef54a28d945')
 
+    patch("spark-daemon-quote-log.patch")
+
     def url_for_version(self, version):
         url = "http://archive.apache.org/dist/spark/spark-{0}/spark-{0}-bin-{1}.tgz"
         return url.format(version, 'hadoop2.7')

@@ -24,6 +24,8 @@ class Hadoop(Package):
 
     depends_on('java', type='run')
 
+    patch("hadoop-shell-quoting.patch")
+
     def install(self, spec, prefix):
 
         def install_dir(dirname):
