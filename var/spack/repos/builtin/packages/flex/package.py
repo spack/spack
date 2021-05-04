@@ -32,6 +32,7 @@ class Flex(AutotoolsPackage):
 
     depends_on('bison',         type='build')
     depends_on('gettext@0.19:', type='build', when='+nls')
+    depends_on('gettext@0.19:', type='build', when='@:2.6.0,2.6.4')
     depends_on('help2man',      type='build', when='@:2.6.0,2.6.4')
     depends_on('findutils',     type='build')
     depends_on('diffutils',     type='build')
