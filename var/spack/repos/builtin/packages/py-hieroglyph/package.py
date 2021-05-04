@@ -18,7 +18,8 @@ class PyHieroglyph(PythonPackage):
     version('1.0.0', sha256='8e137f0b1cd60c47b870011089790d3c8ddb74fcf409a75ddf2c7f2516ff337c')
     version('master')
 
+    depends_on('python@3:', when='@2:', type=('build', 'link', 'run'))
     depends_on('py-setuptools')
-    depends_on('py-sphinx@1.2:', when='@1.0.0:1.9.999')
-    depends_on('py-sphinx@2.0:', when='@2.0.0:')
-    depends_on('py-six', when='@1.0.0:1.9.999')
+    depends_on('py-sphinx@1.2:', when='@1.0.0:1.9.999', type=('build', 'run'))
+    depends_on('py-sphinx@2.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('py-six', when='@1.0.0:1.9.999', type=('build', 'run'))
