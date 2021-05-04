@@ -41,6 +41,10 @@ stage      = SpackCommand('stage')
 uninstall  = SpackCommand('uninstall')
 find       = SpackCommand('find')
 
+if sys.platform == 'win32':
+    sep = 'C:\\'
+else:
+    sep = os.sep
 
 def check_mpileaks_and_deps_in_view(viewdir):
     """Check that the expected install directories exist."""
@@ -612,7 +616,7 @@ env:
     assert 'test' not in out
 
 
-def test_env_with_config():
+def test_env_with_config(win_locks):
     test_config = """\
 env:
   specs:
@@ -621,18 +625,17 @@ env:
     mpileaks:
       version: [2.2]
 """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
+    _env_create('test', StringIO(test_config))
 
-        e = ev.read('test')
-        with e:
-            e.concretize()
+    e = ev.read('test')
+    with e:
+        e.concretize()
 
-        assert any(x.satisfies('mpileaks@2.2')
-                   for x in e._get_environment_specs())
+    assert any(x.satisfies('mpileaks@2.2')
+                for x in e._get_environment_specs())
 
 
-def test_with_config_bad_include(env_deactivate, capfd):
+def test_with_config_bad_include(env_deactivate, capfd, win_locks):
     env_name = 'test_bad_include'
     test_config = """\
 spack:
@@ -640,19 +643,18 @@ spack:
   - /no/such/directory
   - no/such/file.yaml
 """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create(env_name, StringIO(test_config))
+    _env_create(env_name, StringIO(test_config))
 
-        e = ev.read(env_name)
-        with pytest.raises(SystemExit):
-            with e:
-                e.concretize()
+    e = ev.read(env_name)
+    with pytest.raises(SystemExit):
+        with e:
+            e.concretize()
 
-        out, err = capfd.readouterr()
+    out, err = capfd.readouterr()
 
-        assert 'missing include' in err
-        assert '/no/such/directory' in err
-        assert 'no/such/file.yaml' in err
+    assert 'missing include' in err
+    assert '/no/such/directory' in err
+    assert os.path.join('no', 'such', 'file.yaml') in err
 
 
 def test_env_with_include_config_files_same_basename():
@@ -664,40 +666,39 @@ def test_env_with_include_config_files_same_basename():
             specs:
                 [libelf, mpileaks]
             """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
-        e = ev.read('test')
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
 
-        fs.mkdirp(os.path.join(e.path, 'path', 'to'))
-        with open(os.path.join(
-                e.path,
-                './path/to/included-config.yaml'), 'w') as f:
-            f.write("""\
-            packages:
-              libelf:
-                  version: [0.8.10]
-            """)
+    fs.mkdirp(os.path.join(e.path, 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './path/to/included-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+            libelf:
+                version: [0.8.10]
+        """)
 
-        fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
-        with open(os.path.join(
-                e.path,
-                './second/path/to/include-config.yaml'), 'w') as f:
-            f.write("""\
-            packages:
-              mpileaks:
-                  version: [2.2]
-            """)
+    fs.mkdirp(os.path.join(e.path, 'second', 'path', 'to'))
+    with open(os.path.join(
+            e.path,
+            './second/path/to/include-config.yaml'), 'w') as f:
+        f.write("""\
+        packages:
+            mpileaks:
+                version: [2.2]
+        """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        environment_specs = e._get_environment_specs(False)
+    environment_specs = e._get_environment_specs(False)
 
-        assert(environment_specs[0].satisfies('libelf@0.8.10'))
-        assert(environment_specs[1].satisfies('mpileaks@2.2'))
+    assert(environment_specs[0].satisfies('libelf@0.8.10'))
+    assert(environment_specs[1].satisfies('mpileaks@2.2'))
 
 
-def test_env_with_included_config_file():
+def test_env_with_included_config_file(win_locks):
     test_config = """\
 env:
   include:
@@ -705,25 +706,24 @@ env:
   specs:
   - mpileaks
 """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
-        e = ev.read('test')
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
 
-        with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
-            f.write("""\
+    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+        f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        assert any(x.satisfies('mpileaks@2.2')
-                   for x in e._get_environment_specs())
+    assert any(x.satisfies('mpileaks@2.2')
+                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_scope():
+def test_env_with_included_config_scope(win_locks):
     config_scope_path = os.path.join(ev.root('test'), 'config')
     test_config = """\
 env:
@@ -733,27 +733,26 @@ env:
   - mpileaks
 """ % config_scope_path
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
+    _env_create('test', StringIO(test_config))
 
-        e = ev.read('test')
+    e = ev.read('test')
 
-        fs.mkdirp(config_scope_path)
-        with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
-            f.write("""\
+    fs.mkdirp(config_scope_path)
+    with open(os.path.join(config_scope_path, 'packages.yaml'), 'w') as f:
+        f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        assert any(x.satisfies('mpileaks@2.2')
-                   for x in e._get_environment_specs())
+    assert any(x.satisfies('mpileaks@2.2')
+                for x in e._get_environment_specs())
 
 
-def test_env_with_included_config_var_path():
+def test_env_with_included_config_var_path(win_locks):
     config_var_path = os.path.join('$tempdir', 'included-config.yaml')
     test_config = """\
 env:
@@ -763,27 +762,26 @@ env:
   - mpileaks
 """ % config_var_path
 
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
-        e = ev.read('test')
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
 
-        config_real_path = substitute_path_variables(config_var_path)
-        fs.mkdirp(os.path.dirname(config_real_path))
-        with open(config_real_path, 'w') as f:
-            f.write("""\
+    config_real_path = substitute_path_variables(config_var_path)
+    fs.mkdirp(os.path.dirname(config_real_path))
+    with open(config_real_path, 'w') as f:
+        f.write("""\
 packages:
   mpileaks:
     version: [2.2]
 """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        assert any(x.satisfies('mpileaks@2.2')
-                   for x in e._get_environment_specs())
+    assert any(x.satisfies('mpileaks@2.2')
+                for x in e._get_environment_specs())
 
 
-def test_env_config_precedence():
+def test_env_config_precedence(win_locks):
     test_config = """\
 env:
   packages:
@@ -794,12 +792,11 @@ env:
   specs:
   - mpileaks
 """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
-        e = ev.read('test')
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
 
-        with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
-            f.write("""\
+    with open(os.path.join(e.path, 'included-config.yaml'), 'w') as f:
+        f.write("""\
 packages:
   mpileaks:
     version: [2.2]
@@ -807,16 +804,16 @@ packages:
     version: [0.8.11]
 """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        # ensure included scope took effect
-        assert any(
-            x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
+    # ensure included scope took effect
+    assert any(
+        x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
 
-        # ensure env file takes precedence
-        assert any(
-            x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
+    # ensure env file takes precedence
+    assert any(
+        x.satisfies('libelf@0.8.12') for x in e._get_environment_specs())
 
 
 @pytest.mark.skipif(sys.platform == "win32",
@@ -830,34 +827,33 @@ env:
   specs:
   - mpileaks
 """
-    with spack.config.override('config:locks', sys.platform != "win32"):
-        _env_create('test', StringIO(test_config))
-        e = ev.read('test')
+    _env_create('test', StringIO(test_config))
+    e = ev.read('test')
 
-        with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
-            f.write("""\
+    with open(os.path.join(e.path, 'high-config.yaml'), 'w') as f:
+        f.write("""\
 packages:
   libelf:
     version: [0.8.10]  # this should override libelf version below
 """)
 
-        with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
-            f.write("""\
+    with open(os.path.join(e.path, 'low-config.yaml'), 'w') as f:
+        f.write("""\
 packages:
-  mpileaks:
-    version: [2.2]
-  libelf:
-    version: [0.8.12]
+mpileaks:
+version: [2.2]
+libelf:
+version: [0.8.12]
 """)
 
-        with e:
-            e.concretize()
+    with e:
+        e.concretize()
 
-        assert any(
-            x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
+    assert any(
+        x.satisfies('mpileaks@2.2') for x in e._get_environment_specs())
 
-        assert any(
-            [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
+    assert any(
+        [x.satisfies('libelf@0.8.10') for x in e._get_environment_specs()])
 
 
 def test_bad_env_yaml_format(tmpdir):
@@ -876,7 +872,7 @@ env:
         assert "'spacks' was unexpected" in str(e)
 
 
-def test_env_loads(install_mockery, mock_fetch):
+def test_env_loads(install_mockery, mock_fetch, win_locks):
     env('create', 'test')
 
     with ev.read('test'):
@@ -935,7 +931,7 @@ def test_env_commands_die_with_no_env_arg():
     env('status')
 
 
-def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery):
+def test_env_blocks_uninstall(mock_stage, mock_fetch, install_mockery, win_locks):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -957,7 +953,7 @@ def test_roots_display_with_variants():
     assert "boost +shared" in out
 
 
-def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery):
+def test_uninstall_removes_from_env(mock_stage, mock_fetch, install_mockery, win_locks):
     env('create', 'test')
     with ev.read('test'):
         add('mpileaks')
@@ -1150,7 +1146,7 @@ def test_store_different_build_deps():
 
 
 def test_env_updates_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1161,7 +1157,7 @@ def test_env_updates_view_install(
 
 
 def test_env_view_fails(
-        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_packages, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1173,7 +1169,7 @@ def test_env_view_fails(
 
 
 def test_env_without_view_install(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     # Test enabling a view after installing specs
     env('create', '--without-view', 'test')
 
@@ -1216,7 +1212,7 @@ env:
 
 
 def test_env_updates_view_install_package(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1226,7 +1222,7 @@ def test_env_updates_view_install_package(
 
 
 def test_env_updates_view_add_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1238,7 +1234,7 @@ def test_env_updates_view_add_concretize(
 
 
 def test_env_updates_view_uninstall(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1253,7 +1249,7 @@ def test_env_updates_view_uninstall(
 
 
 def test_env_updates_view_uninstall_referenced_elsewhere(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1270,7 +1266,7 @@ def test_env_updates_view_uninstall_referenced_elsewhere(
 
 
 def test_env_updates_view_remove_concretize(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     install('--fake', 'mpileaks')
@@ -1288,7 +1284,7 @@ def test_env_updates_view_remove_concretize(
 
 
 def test_env_updates_view_force_remove(
-        tmpdir, mock_stage, mock_fetch, install_mockery):
+        tmpdir, mock_stage, mock_fetch, install_mockery, win_locks):
     view_dir = tmpdir.join('view')
     env('create', '--with-view=%s' % view_dir, 'test')
     with ev.read('test'):
@@ -1797,7 +1793,7 @@ env:
 
 
 def test_stack_combinatorial_view(tmpdir, mock_fetch, mock_packages,
-                                  mock_archive, install_mockery):
+                                  mock_archive, install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1829,7 +1825,7 @@ env:
 
 
 def test_stack_view_select(tmpdir, mock_fetch, mock_packages,
-                           mock_archive, install_mockery):
+                           mock_archive, install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1867,7 +1863,7 @@ env:
 
 
 def test_stack_view_exclude(tmpdir, mock_fetch, mock_packages,
-                            mock_archive, install_mockery):
+                            mock_archive, install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1905,7 +1901,7 @@ env:
 
 
 def test_stack_view_select_and_exclude(tmpdir, mock_fetch, mock_packages,
-                                       mock_archive, install_mockery):
+                                       mock_archive, install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1944,7 +1940,7 @@ env:
 
 
 def test_view_link_roots(tmpdir, mock_fetch, mock_packages, mock_archive,
-                         install_mockery):
+                         install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -1985,7 +1981,7 @@ env:
 
 
 def test_view_link_all(tmpdir, mock_fetch, mock_packages, mock_archive,
-                       install_mockery):
+                       install_mockery, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2026,7 +2022,7 @@ env:
 
 def test_stack_view_activate_from_default(tmpdir, mock_fetch, mock_packages,
                                           mock_archive, install_mockery,
-                                          env_deactivate):
+                                          env_deactivate, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2059,7 +2055,7 @@ env:
 def test_stack_view_no_activate_without_default(tmpdir, mock_fetch,
                                                 mock_packages, mock_archive,
                                                 install_mockery,
-                                                env_deactivate):
+                                                env_deactivate, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     viewdir = str(tmpdir.join('view'))
     with open(filename, 'w') as f:
@@ -2089,7 +2085,7 @@ env:
 
 def test_stack_view_multiple_views(tmpdir, mock_fetch, mock_packages,
                                    mock_archive, install_mockery,
-                                   env_deactivate):
+                                   env_deactivate, win_locks):
     filename = str(tmpdir.join('spack.yaml'))
     default_viewdir = str(tmpdir.join('default-view'))
     combin_viewdir = str(tmpdir.join('combinatorial-view'))
@@ -2487,7 +2483,7 @@ def test_rewrite_rel_dev_path_new_dir(tmpdir):
     env('create', '-d', str(dest_env), str(spack_yaml))
     with ev.Environment(str(dest_env)) as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep+os.path.join('some', 'other', 'path')
 
 
 def test_rewrite_rel_dev_path_named_env(tmpdir):
@@ -2497,7 +2493,7 @@ def test_rewrite_rel_dev_path_named_env(tmpdir):
     env('create', 'named_env', str(spack_yaml))
     with ev.read('named_env') as e:
         assert e.dev_specs['mypkg1']['path'] == str(build_folder)
-        assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+        assert e.dev_specs['mypkg2']['path'] == sep+os.path.join('some', 'other', 'path')
 
 
 def test_rewrite_rel_dev_path_original_dir(tmpdir):
