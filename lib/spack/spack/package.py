@@ -1889,7 +1889,6 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             assert runner.path.startswith(self.spec.prefix), msg
 
         try:
-            import pdb; pdb.set_trace()
             output = runner(*options, output=str.split, error=str.split)
 
             assert 0 in status, \

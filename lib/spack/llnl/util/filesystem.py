@@ -1806,20 +1806,6 @@ def prefixes(path):
     return paths
 
 
-class Utf8ReaderWriter(object):
-    def __init__(self, file):
-        self.file = file
-
-    def read(self):
-        return codecs.decode(self.file.read(), 'utf-8')
-
-    def readline(self):
-        return codecs.decode(self.file.readline(), 'utf-8')
-
-    def close(self):
-        self.file.close()
-
-
 def open_utf8(path_or_fd, mode):
     """Python 3.x before 3.7 does not open in UTF-8 by default. Python
        2.x versions do not support 'encoding' without the 'codecs' module.
