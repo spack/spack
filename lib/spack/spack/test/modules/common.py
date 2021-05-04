@@ -187,7 +187,7 @@ module_index:
 
 
 def test_load_installed_package_not_in_repo(install_mockery, mock_fetch,
-                                            monkeypatch):
+                                            monkeypatch, win_locks):
     # Get a basic concrete spec for the trivial install package.
     spec = Spec('trivial-install-test-package')
     spec.concretize()

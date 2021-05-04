@@ -40,7 +40,7 @@ def test_test_dirty_flag(arguments, expected):
 
 
 def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
-                     install_mockery_mutable_config):
+                     install_mockery_mutable_config, win_locks):
     """Ensure output printed from pkgs is captured by output redirection."""
     install('printing-package')
     spack_test('run', 'printing-package')
@@ -66,7 +66,7 @@ def test_test_output(mock_test_stage, mock_packages, mock_archive, mock_fetch,
 
 def test_test_output_on_error(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage
+    capfd, mock_test_stage, win_locks
 ):
     install('test-error')
     # capfd interferes with Spack's capturing
@@ -79,7 +79,7 @@ def test_test_output_on_error(
 
 def test_test_output_on_failure(
     mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config,
-    capfd, mock_test_stage
+    capfd, mock_test_stage, win_locks
 ):
     install('test-fail')
     with capfd.disabled():
@@ -91,7 +91,7 @@ def test_test_output_on_failure(
 
 def test_show_log_on_error(
     mock_packages, mock_archive, mock_fetch,
-    install_mockery_mutable_config, capfd, mock_test_stage
+    install_mockery_mutable_config, capfd, mock_test_stage, win_locks
 ):
     """Make sure spack prints location of test log on failure."""
     install('test-error')
@@ -110,7 +110,7 @@ def test_show_log_on_error(
     ('test-error', ['FAILED: Command exited', 'TestFailure']),
     ('test-fail', ['FAILED: Expected', 'TestFailure'])
 ])
-def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
+def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs, win_locks):
     install(pkg_name)
     with tmpdir.as_cwd():
         spack_test('run',
@@ -136,7 +136,7 @@ def test_junit_output_with_failures(tmpdir, mock_test_stage, pkg_name, msgs):
 
 def test_cdash_output_test_error(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
-        mock_archive, mock_test_stage, capfd):
+        mock_archive, mock_test_stage, capfd, win_locks):
     install('test-error')
     with tmpdir.as_cwd():
         spack_test('run',
@@ -154,7 +154,7 @@ def test_cdash_output_test_error(
 
 def test_cdash_upload_clean_test(
         tmpdir, mock_fetch, install_mockery_mutable_config, mock_packages,
-        mock_archive, mock_test_stage):
+        mock_archive, mock_test_stage, win_locks):
     install('printing-package')
     with tmpdir.as_cwd():
         spack_test('run',
@@ -197,7 +197,7 @@ def test_test_list_all(mock_packages):
 
 
 def test_test_list(
-    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config
+    mock_packages, mock_archive, mock_fetch, install_mockery_mutable_config, win_locks
 ):
     pkg_with_tests = 'printing-package'
     install(pkg_with_tests)
