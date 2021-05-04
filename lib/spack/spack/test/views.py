@@ -10,7 +10,7 @@ from spack.filesystem_view import YamlFilesystemView
 from spack.spec import Spec
 
 
-def test_global_activation(install_mockery, mock_fetch):
+def test_global_activation(install_mockery, mock_fetch, win_locks):
     """This test ensures that views which are maintained inside of an extendee
        package's prefix are maintained as expected and are compatible with
        global activations prior to #7152.
@@ -31,7 +31,7 @@ def test_global_activation(install_mockery, mock_fetch):
             expected_path)
 
 
-def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir):
+def test_remove_extensions_ordered(install_mockery, mock_fetch, tmpdir, win_locks):
     view_dir = str(tmpdir.join('view'))
     layout = DirectoryLayout(view_dir)
     view = YamlFilesystemView(view_dir, layout)

@@ -12,6 +12,7 @@ import json
 import os
 import os.path
 import re
+import sys
 import shutil
 import tempfile
 import xml.etree.ElementTree
@@ -399,6 +400,13 @@ def mock_pkg_install(monkeypatch):
 
 
 @pytest.fixture(scope='function')
+def win_locks():
+    if sys.platform == 'win32':
+        with spack.config.override('config:locks', False):
+            yield
+
+
+@pytest.fixture(scope='function')
 def mock_packages(mock_repo_path, mock_pkg_install):
     """Use the 'builtin.mock' repository instead of 'builtin'"""
     with spack.repo.use_repositories(mock_repo_path) as mock_repo:
@@ -590,13 +598,13 @@ def _populate(mock_db):
         s = spack.spec.Spec(spec).concretized()
         pkg = spack.repo.get(s)
         pkg.do_install(fake=True, explicit=True)
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        _install('mpileaks ^mpich')
+        _install('mpileaks ^mpich2')
+        _install('mpileaks ^zmpi')
+        _install('externaltest')
 
-    _install('mpileaks ^mpich')
-    _install('mpileaks ^mpich2')
-    _install('mpileaks ^zmpi')
-    _install('externaltest')
     _install('trivial-smoke-test')
-
 
 @pytest.fixture(scope='session')
 def _store_dir_and_cache(tmpdir_factory):

@@ -7,6 +7,7 @@ import filecmp
 import json
 import os
 import shutil
+import sys
 
 import pytest
 from jsonschema import ValidationError, validate
@@ -1321,7 +1322,8 @@ spack:
             with open(yaml_path, 'w') as ypfd:
                 ypfd.write(spec_yaml)
 
-            install_cmd('--keep-stage', '-f', yaml_path)
+            with spack.config.override('config:locks', sys.platform != "win32"):
+                install_cmd('--keep-stage', '-f', yaml_path)
             buildcache_cmd('create', '-u', '-a', '-f', '--mirror-url',
                            mirror_url, 'callpath')
             ci_cmd('rebuild-index')
@@ -1348,59 +1350,59 @@ def test_ci_generate_bootstrap_prune_dag(
     mirror_url = 'file://{0}'.format(mirror_dir.strpath)
 
     # Install a compiler, because we want to put it in a buildcache
-    install_cmd('gcc@10.1.0%gcc@4.5.0')
+    with spack.config.override('config:locks', sys.platform != "win32"):
+        install_cmd('gcc@10.1.0%gcc@4.5.0')
 
-    # Put installed compiler in the buildcache
-    buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
-                   'gcc@10.1.0%gcc@4.5.0')
+        # Put installed compiler in the buildcache
+        buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
+                       'gcc@10.1.0%gcc@4.5.0')
 
-    # Now uninstall the compiler
-    uninstall_cmd('-y', 'gcc@10.1.0%gcc@4.5.0')
+        # Now uninstall the compiler
+        uninstall_cmd('-y', 'gcc@10.1.0%gcc@4.5.0')
 
-    monkeypatch.setattr(spack.concretize.Concretizer,
-                        'check_for_compiler_existence', False)
-    spack.config.set('config:install_missing_compilers', True)
-    assert CompilerSpec('gcc@10.1.0') not in compilers.all_compiler_specs()
+        monkeypatch.setattr(spack.concretize.Concretizer,
+                            'check_for_compiler_existence', False)
+        spack.config.set('config:install_missing_compilers', True)
+        assert CompilerSpec('gcc@10.1.0') not in compilers.all_compiler_specs()
 
-    # Configure the mirror where we put that buildcache w/ the compiler
-    mirror_cmd('add', 'test-mirror', mirror_url)
+        # Configure the mirror where we put that buildcache w/ the compiler
+        mirror_cmd('add', 'test-mirror', mirror_url)
+        install_cmd('--no-check-signature', 'a%gcc@10.1.0')
 
-    install_cmd('--no-check-signature', 'a%gcc@10.1.0')
+        # Put spec built with installed compiler in the buildcache
+        buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
+                       'a%gcc@10.1.0')
 
-    # Put spec built with installed compiler in the buildcache
-    buildcache_cmd('create', '-u', '-a', '-f', '-d', mirror_dir.strpath,
-                   'a%gcc@10.1.0')
+        # Now uninstall the spec
+        uninstall_cmd('-y', 'a%gcc@10.1.0')
 
-    # Now uninstall the spec
-    uninstall_cmd('-y', 'a%gcc@10.1.0')
-
-    filename = str(tmpdir.join('spack.yaml'))
-    with open(filename, 'w') as f:
-        f.write("""\
-spack:
-  definitions:
-    - bootstrap:
-      - gcc@10.1.0%gcc@4.5.0
-  specs:
-    - a%gcc@10.1.0
-  mirrors:
-    atestm: {0}
-  gitlab-ci:
-    bootstrap:
-      - name: bootstrap
-        compiler-agnostic: true
-    mappings:
-      - match:
-          - arch=test-debian6-x86_64
-        runner-attributes:
-          tags:
-            - donotcare
-      - match:
-          - arch=test-debian6-core2
-        runner-attributes:
-          tags:
-            - meh
-""".format(mirror_url))
+        filename = str(tmpdir.join('spack.yaml'))
+        with open(filename, 'w') as f:
+            f.write("""\
+    spack:
+      definitions:
+        - bootstrap:
+          - gcc@10.1.0%gcc@4.5.0
+      specs:
+        - a%gcc@10.1.0
+      mirrors:
+        atestm: {0}
+      gitlab-ci:
+        bootstrap:
+          - name: bootstrap
+            compiler-agnostic: true
+        mappings:
+          - match:
+              - arch=test-debian6-x86_64
+            runner-attributes:
+              tags:
+                - donotcare
+          - match:
+              - arch=test-debian6-core2
+            runner-attributes:
+              tags:
+                - meh
+    """.format(mirror_url))
 
     # Without this monkeypatch, pipeline generation process would think that
     # nothing in the environment needs rebuilding.  With the monkeypatch, the
