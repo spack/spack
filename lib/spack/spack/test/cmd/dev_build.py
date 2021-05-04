@@ -250,7 +250,7 @@ env:
 
 
 def test_dev_build_multiple(tmpdir, mock_packages, install_mockery,
-                            mutable_mock_env_path, mock_fetch):
+                            mutable_mock_env_path, mock_fetch, win_locks):
     """Test spack install with multiple developer builds"""
     # setup dev-build-test-install package for dev build
     # Wait to concretize inside the environment to set dev_path on the specs;
@@ -305,7 +305,7 @@ env:
 
 
 def test_dev_build_env_dependency(tmpdir, mock_packages, install_mockery,
-                                  mock_fetch, mutable_mock_env_path):
+                                  mock_fetch, mutable_mock_env_path, win_locks):
     """
     Test non-root specs in an environment are properly marked for dev builds.
     """
@@ -356,7 +356,7 @@ env:
                                        'dependent-of-dev-build'])
 def test_dev_build_rebuild_on_source_changes(
         test_spec, tmpdir, mock_packages, install_mockery,
-        mutable_mock_env_path, mock_fetch):
+        mutable_mock_env_path, mock_fetch, win_locks):
     """Test dev builds rebuild on changes to source code.
 
     ``test_spec = dev-build-test-install`` tests rebuild for changes to package
