@@ -38,6 +38,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'sycl': [False, 'Whether to build the SYCL backend'],
     }
     conflicts("+rocm", when="@:3.0")
+    conflicts("+sycl", when="@:3.3")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],
