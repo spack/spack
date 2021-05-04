@@ -58,6 +58,7 @@ class Hip(CMakePackage):
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2218
     patch('0003-Improve-compilation-without-git-repo.3.7.0.patch', when='@3.7.0:3.9.0')
     patch('0003-Improve-compilation-without-git-repo.3.10.0.patch', when='@3.10.0:4.0.0')
+    patch('0003-Improve-compilation-without-git-repo.4.1.0.patch', when='@4.1.0')
 
     # See https://github.com/ROCm-Developer-Tools/HIP/pull/2219
     patch('0004-Drop-clang-rt-builtins-linking-on-hip-host.3.7.0.patch', when='@3.7.0:3.9.0')
@@ -85,7 +86,6 @@ class Hip(CMakePackage):
                 'hsa-rocr-dev': rocm_prefix.hsa,
                 'rocminfo': rocm_prefix,
                 'rocm-device-libs': rocm_prefix,
-                'hip-rocclr': rocm_prefix
             }
         else:
             paths = {
@@ -94,7 +94,6 @@ class Hip(CMakePackage):
                 'hsa-rocr-dev': self.spec['hsa-rocr-dev'].prefix,
                 'rocminfo': self.spec['rocminfo'].prefix,
                 'rocm-device-libs': self.spec['rocm-device-libs'].prefix,
-                'hip-rocclr': self.spec['hip-rocclr'].prefix
             }
 
         # `device_lib_path` is the path to the bitcode directory
@@ -150,9 +149,6 @@ class Hip(CMakePackage):
         # https://github.com/RadeonOpenCompute/ROCm-CompilerSupport/blob/rocm-4.0.0/lib/comgr/src/comgr-env.cpp
         env.set('LLVM_PATH', paths['llvm-amdgpu'])
 
-        if self.spec.satisfies('@4.1.0:'):
-            env.set('HIP_ROCCLR_HOME', paths['hip-rocclr'])
-
         # Finally we have to set --rocm-path=<prefix> ourselves, which is not
         # the same as --hip-device-lib-path (set by hipcc). It's used to set
         # default bin, include and lib folders in clang. If it's not set it is
@@ -206,7 +202,7 @@ class Hip(CMakePackage):
                 files = [
                     'hipify-perl', 'hipcc', 'roc-obj-extract',
                     'hipconfig', 'hipify-cmakefile',
-                    'roc-obj-ls'
+                    'roc-obj-ls', 'hipvars.pm'
                 ]
 
             filter_file(match, substitute, *files, **kwargs)
@@ -239,12 +235,9 @@ class Hip(CMakePackage):
         ]
         if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_RUNTIME', 'ROCclr'))
-        else:
-            args.append(self.define('HIP_RUNTIME', 'rocclr'))
-
-        if self.spec.satisfies('@:4.0.0'):
             args.append(self.define('HIP_PLATFORM', 'rocclr'))
         else:
+            args.append(self.define('HIP_RUNTIME', 'rocclr'))
             args.append(self.define('HIP_PLATFORM', 'amd'))
 
         # LIBROCclr_STATIC_DIR is unused from 3.6.0 and above

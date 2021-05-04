@@ -14,8 +14,11 @@ class Erlang(AutotoolsPackage):
     """
 
     homepage = "https://erlang.org/"
-    url      = "https://erlang.org/download/otp_src_22.2.tar.gz"
+    url      = "https://erlang.org/download/otp_src_23.3.tar.gz"
 
+    version('23.3', sha256='3c888d8f46124e134b75a9ba5d845f079020b7198ed2de64411e183d07e9002a')
+    version('23.2', sha256='40e03428826c92e409e4f1510f9c0539eafb3ac49d6c2f607f4fa274d11a8928')
+    version('23.1', sha256='cb5b7246eeaac9298c51c9915386df2f784e82a3f7ff93b68453591f0b370400')
     version('23.0', sha256='42dcf3c721f4de59fe74ae7b65950c2174c46dc8d1dd4e27c0594d86f606a635')
     version('22.2', sha256='89c2480cdac566065577c82704a48e10f89cf2e6ca5ab99e1cf80027784c678f')
     version('22.1', sha256='cd33a102cbac6dd1c7b1e7a9a0d82d13587771fac4e96e8fff92e403d15e32c8')
