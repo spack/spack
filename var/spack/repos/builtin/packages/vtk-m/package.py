@@ -83,8 +83,6 @@ class VtkM(CMakePackage, CudaPackage):
 
     conflicts("+hip", when="+cuda")
 
-    patch('scope_isSame.patch',when='%cce')
-
     def cmake_args(self):
         spec = self.spec
         options = []
