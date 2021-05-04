@@ -21,7 +21,6 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-setuptools',             type='build')
     depends_on('python@3.6:',               type=('build', 'run'))
     depends_on('py-torch@1.4:',             type=('build', 'run'))
-    depends_on('py-torchvision',            type=('build', 'run'))
     depends_on('py-numpy@1.16.6:',          type=('build', 'run'))
     depends_on('py-future@0.17.1:',         type=('build', 'run'))
     depends_on('py-pyyaml@5.1:',            type=('build', 'run'))
@@ -29,5 +28,4 @@ class PyPytorchLightning(PythonPackage):
     depends_on('py-fsspec@0.8.1:+http',     type=('build', 'run'))
     depends_on('py-tensorboard@2.2.0:',     type=('build', 'run'))
     depends_on('py-torchmetrics@0.2.0',     type=('build', 'run'))
-    #depends_on('py-pydeprecate@0.3.0',      type=('build', 'run'))
     depends_on('py-packaging',              type=('build', 'run'))
