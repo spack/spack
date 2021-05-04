@@ -1482,7 +1482,7 @@ class Spec(object):
         Arguments:
             hash (SpecHashDescriptor): type of hash to generate.
         """
-        # TODO: curently we strip build dependencies by default.  Rethink
+        # TODO: currently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
         node_dict = self.to_node_dict(hash=hash)
         # yaml_text = syaml.dump(node_dict, default_flow_style=True)

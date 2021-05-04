@@ -723,9 +723,9 @@ def generate_package_index(cache_prefix):
         cache_prefix))
     for file_path in file_list:
         try:
-            yaml_url = url_util.join(cache_prefix, file_path)
-            tty.debug('fetching {0}'.format(yaml_url))
-            _, _, yaml_file = web_util.read_from_url(yaml_url)
+            spec_url = url_util.join(cache_prefix, file_path)
+            tty.debug('fetching {0}'.format(spec_url))
+            _, _, yaml_file = web_util.read_from_url(spec_url)
             yaml_contents = codecs.getreader('utf-8')(yaml_file).read()
             # yaml_obj = syaml.load(yaml_contents)
             # s = Spec.from_yaml(yaml_obj)
@@ -868,7 +868,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     # need to copy the spec file so the build cache can be downloaded
     # without concretizing with the current spack packages
     # and preferences
-    spec_file = os.path.join(spec.prefix, ".spack", "spec.yaml")
+    spec_file = spack.store.layout.spec_file_path(spec)
     specfile_name = tarball_name(spec, '.spec.yaml')
     specfile_path = os.path.realpath(
         os.path.join(cache_prefix, specfile_name))
@@ -929,6 +929,7 @@ def build_tarball(spec, outdir, force=False, rel=False, unsigned=False,
     checksum = checksum_tarball(tarfile_path)
 
     # add sha256 checksum to spec.yaml
+    spec_dict = spack.store.layout.read_spec(spec_file)
     with open(spec_file, 'r') as inputfile:
         content = inputfile.read()
         spec_dict = yaml.load(content)

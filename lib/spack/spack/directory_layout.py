@@ -138,8 +138,8 @@ class DirectoryLayout(object):
         # Attempts to convert to JSON if possible.
         # Otherwise just returns the YAML.
         # TODO: Needs a test case?
-        yaml_path = os.path.join(self.metadata_path(spec),
-                                 self._spec_file_name_yaml)
+        yaml_path = os.path.join(
+            self.metadata_path(spec), self._spec_file_name_yaml)
         json_path = os.path.join(self.metadata_path(spec), self.spec_file_name)
         if os.path.exists(yaml_path) and fs.can_write_to_dir(yaml_path):
             self.write_spec(spec, json_path)
