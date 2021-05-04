@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import pytest
+import sys
 
 from llnl.util.filesystem import working_dir
 
@@ -44,6 +45,7 @@ def test_blame_file(mock_packages):
     assert 'EMAIL' in out
 
 
+@pytest.mark.skipif(sys.platform == 'win32', reason = "git hangs")
 def test_blame_by_git(mock_packages, capfd):
     """Sanity check the blame command to make sure it works."""
     with capfd.disabled():
