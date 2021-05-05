@@ -247,7 +247,7 @@ class Root(CMakePackage):
     depends_on('mysql-client',   when='+mysql')
     depends_on('openssl',   when='+ssl')
     depends_on('openssl',   when='+davix')  # Also with davix
-    depends_on('oracle-instant-client', when='+oracle')
+    depends_on('oracle-instant-client@19.10.0.0.0', when='+oracle @:6.24.01')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
