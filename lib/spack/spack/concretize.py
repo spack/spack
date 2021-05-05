@@ -724,16 +724,15 @@ def concretize_specs_together(*abstract_specs, **kwargs):
     Returns:
         List of concretized specs
     """
-    import spack.solver.asp
     if spack.config.get('config:concretizer') == 'original':
         return _concretize_specs_together_original(*abstract_specs, **kwargs)
     return _concretize_specs_together_new(*abstract_specs, **kwargs)
 
 
 def _concretize_specs_together_new(*abstract_specs, **kwargs):
+    import spack.solver.asp
     result = spack.solver.asp.solve(abstract_specs)
 
-    # TODO: refactor the following together with solve.py and spec.py
     if not result.satisfiable:
         result.print_cores()
         tty.die("Unsatisfiable spec.")
