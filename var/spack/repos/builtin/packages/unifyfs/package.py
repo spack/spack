@@ -57,6 +57,7 @@ class Unifyfs(AutotoolsPackage):
     conflicts('%xl',    when='+fortran')
 
     patch('unifyfs-sysio.c.patch', when='@0.9.1')
+    patch('unifyfs_log.h.patch')
 
     # Parallel disabled to prevent tests from being run out-of-order when
     # installed with the --test={root, all} option.

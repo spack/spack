@@ -18,7 +18,7 @@ class JsonC(CMakePackage):
     version('0.12',   sha256='000c01b2b3f82dcb4261751eb71f1b084404fb7d6a282f06074d3c17078b9f3f')
     version('0.11',   sha256='28dfc65145dc0d4df1dfe7701ac173c4e5f9347176c8983edbfac9149494448c')
 
-    depends_on('autoconf', when='@:0.13.1', type='build')
+    depends_on('autoconf', type='build')
 
     parallel = False
 
@@ -47,6 +47,7 @@ class JsonC(CMakePackage):
         filter_file('-Werror',
                     '',
                     'CMakeLists.txt')
-        filter_file('-Werror',
-                    '',
-                    'configure')
+#        filter_file('-Werror',
+#                    '',
+#                    'configure')
+        
