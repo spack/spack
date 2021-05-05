@@ -14,6 +14,25 @@
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
+  # Paths to check when creating modules for all module sets
+  prefix_inspections:
+    bin:
+      - PATH
+    man:
+      - MANPATH
+    share/man:
+      - MANPATH
+    share/aclocal:
+      - ACLOCAL_PATH
+    lib/pkgconfig:
+      - PKG_CONFIG_PATH
+    lib64/pkgconfig:
+      - PKG_CONFIG_PATH
+    share/pkgconfig:
+      - PKG_CONFIG_PATH
+    '':
+      - CMAKE_PREFIX_PATH
+
   # These are configurations for the module set named "default"
   default:
     # Where to install modules
@@ -23,24 +42,6 @@ modules:
     # What time of modules to use
     enable:
       - tcl
-    # Paths to check when creating modules
-    prefix_inspections:
-      bin:
-        - PATH
-      man:
-        - MANPATH
-      share/man:
-        - MANPATH
-      share/aclocal:
-        - ACLOCAL_PATH
-      lib/pkgconfig:
-        - PKG_CONFIG_PATH
-      lib64/pkgconfig:
-        - PKG_CONFIG_PATH
-      share/pkgconfig:
-        - PKG_CONFIG_PATH
-      '':
-        - CMAKE_PREFIX_PATH
 
     # Default configurations if lmod is enabled
     lmod:

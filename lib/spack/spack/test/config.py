@@ -708,7 +708,7 @@ def test_keys_are_ordered():
 
     data = config_scope.get_section('modules')
 
-    prefix_inspections = data['modules']['default']['prefix_inspections']
+    prefix_inspections = data['modules']['prefix_inspections']
 
     for actual, expected in zip(prefix_inspections, expected_order):
         assert actual == expected

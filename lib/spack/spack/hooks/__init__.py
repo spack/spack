@@ -94,4 +94,4 @@ on_install_failure = _HookRunner('on_install_failure')
 on_analyzer_save = _HookRunner('on_analyzer_save')
 
 # Environment hooks
-post_env_write = HookRunner('post_env_write')
+post_env_write = _HookRunner('post_env_write')

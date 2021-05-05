@@ -746,7 +746,7 @@ class Environment(object):
         if not os.path.exists(self.manifest_path):
             return
 
-        self.clear()
+        self.clear(re_read=True)
         self._read()
 
     def _read(self):
@@ -844,15 +844,18 @@ class Environment(object):
             )
         }
 
-    def clear(self):
+    def clear(self, re_read=False):
         self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
         self.dev_specs = {}               # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
         self.concretized_order = []       # roots of last concretize, in order
         self.specs_by_hash = {}           # concretized specs by hash
-        self.new_specs = []               # write packages for these on write()
         self._repo = None                 # RepoPath for this env (memoized)
         self._previous_active = None      # previously active environment
+        if not re_read:
+            # things that cannot be recreated from file
+            self.new_specs = []               # write packages for these on write()
+            self.new_installs = []            # write modules for these on write()
 
     @property
     def internal(self):
@@ -1589,6 +1592,7 @@ class Environment(object):
             # Ensure links are set appropriately
             for spec in specs_to_install:
                 if spec.package.installed:
+                    self.new_installs.append(spec)
                     try:
                         self._install_log_links(spec)
                     except OSError as e:
@@ -1862,7 +1866,6 @@ class Environment(object):
 
                     fs.mkdirp(pkg_dir)
                     spack.repo.path.dump_provenance(dep, pkg_dir)
-            self.new_specs = []
 
             # write the lock file last
             with fs.write_tmp_and_move(self.lock_path) as f:
@@ -1883,6 +1886,10 @@ class Environment(object):
 
             # Run post_env_hooks
             spack.hooks.post_env_write(self)
+
+        # new specs and new installs reset at write time
+        self.new_specs = []
+        self.new_installs = []
 
     def _update_and_write_manifest(self, raw_yaml_dict, yaml_dict):
         """Update YAML manifest for this environment based on changes to
