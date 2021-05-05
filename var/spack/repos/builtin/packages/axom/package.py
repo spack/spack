@@ -385,7 +385,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         return options
 
     def patch(self):
-        # Remove flags not recognized by the NVIDIA compiler
-        filter_file('PROPERTIES LINKER_LANGUAGE CXX',
-                    'PROPERTIES LINKER_LANGUAGE CXX \n                               LINK_FLAGS "-fopenmp"',
-                    'src/axom/quest/examples/CMakeLists.txt')
+        if '%cce' in self.spec:
+            filter_file('PROPERTIES LINKER_LANGUAGE CXX',
+                        'PROPERTIES LINKER_LANGUAGE CXX \n                               LINK_FLAGS "-fopenmp"',
+                        'src/axom/quest/examples/CMakeLists.txt')

@@ -108,7 +108,6 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
 
         if '+nls' in spec:
             args.append('--enable-nls')
-            args.append('LDFLAGS=-lintl')
 
         else:
             args.append('--disable-nls')
