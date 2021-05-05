@@ -858,7 +858,7 @@ _spack_env_st() {
 _spack_env_loads() {
     if $list_options
     then
-        SPACK_COMPREPLY="-h --help -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
+        SPACK_COMPREPLY="-h --help -n --module-set-name -m --module-type --input-only -p --prefix -x --exclude -r --dependencies"
     else
         _environments
     fi
