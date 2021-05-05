@@ -674,12 +674,13 @@ class BaseContext(tengine.Context):
     def environment_modifications(self):
         """List of environment modifications to be processed."""
         # Modifications guessed by inspecting the spec prefix
-        prefix_inspections = spack.config.get(
+        std_prefix_inspections = spack.config.get(
+            'modules:prefix_inspections', {})
+        set_prefix_inspections = spack.config.get(
             'modules:%s:prefix_inspections' % self.conf.name, {})
-        if self.conf.name == 'default' and not prefix_inspections:
-            # backwards compatibility on config format
-            prefix_inspections = spack.config.get(
-                'modules:prefix_inspections', {})
+        prefix_inspections = spack.config.merge_yaml(
+            std_prefix_inspections, set_prefix_inspections)
+
         use_view = spack.config.get(
             'modules:%s:use_view' % self.conf.name, False)
 
