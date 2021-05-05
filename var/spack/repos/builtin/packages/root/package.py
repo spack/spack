@@ -129,6 +129,8 @@ class Root(CMakePackage):
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
+    variant('oracle', default=True,
+            description='Enable support for Oracle databases')
     variant('postgres', default=False,
             description='Enable postgres support')
     variant('pythia6', default=False,
@@ -245,6 +247,7 @@ class Root(CMakePackage):
     depends_on('mysql-client',   when='+mysql')
     depends_on('openssl',   when='+ssl')
     depends_on('openssl',   when='+davix')  # Also with davix
+    depends_on('oracle-instant-client', when='+oracle')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
