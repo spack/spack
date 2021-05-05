@@ -46,8 +46,4 @@ class JsonC(CMakePackage):
     def patch(self):
         filter_file('-Werror',
                     '',
-                    'CMakeLists.txt')
-#        filter_file('-Werror',
-#                    '',
-#                    'configure')
-        
+                    'CMakeLists.txt')       
