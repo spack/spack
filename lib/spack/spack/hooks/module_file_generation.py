@@ -40,6 +40,7 @@ def post_install(spec):
 def post_uninstall(spec):
     _for_each_enabled(spec, 'remove')
 
+
 def post_env_write(env):
     for spec in env.new_installs:
         _for_each_enabled(spec, 'write')
