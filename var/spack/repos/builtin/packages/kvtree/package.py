@@ -31,7 +31,8 @@ class Kvtree(CMakePackage):
         if name in ['cflags', 'cxxflags', 'cppflags']:
             return (None, flags, None)
         elif name == 'ldflags':
-            flags.append('-Wl,-z,muldefs')
+            if '%cce' in self.spec:
+                flags.append('-Wl,-z,muldefs')
         return (flags, None, None)
 
 
