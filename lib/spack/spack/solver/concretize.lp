@@ -717,7 +717,7 @@ opt_criterion(14, "number of non-default variants (roots)").
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(13, "multi-valued variants + preferred providers for roots").
+opt_criterion(13, "multi-valued variants").
 #minimize{ 0@13 : #true }.
 #maximize {
     1@13,Package,Variant,Value
@@ -725,8 +725,11 @@ opt_criterion(13, "multi-valued variants + preferred providers for roots").
     not variant_single_value(Package, Variant),
     root(Package)
 }.
+
+opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@12 : #true }.
 #minimize{
-    Weight@13,Provider
+    Weight@12,Provider
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
