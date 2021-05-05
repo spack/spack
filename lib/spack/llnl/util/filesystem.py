@@ -1810,6 +1810,9 @@ def open_utf8(path_or_fd, mode):
     """Python 3.x before 3.7 does not open in UTF-8 by default. Python
        2.x versions do not support 'encoding' without the 'codecs' module.
     """
+    # This might receive a spack.util.prefix.Prefix object, which cannot be
+    # converted to an int in Python 2.x
+    path_or_fd = str(path_or_fd)
     try:
         fd = int(path_or_fd)
         path = None
