@@ -47,6 +47,6 @@ class PyKeras(PythonPackage):
     depends_on('py-keras-applications', type='run', when='@2.2')
     depends_on('py-keras-preprocessing', type='run', when='@2.2')
     depends_on('py-setuptools', type='build')
-    depends_on('py-theano', type=('build', 'run'))
+    depends_on('py-theano', type=('build', 'run'), when='@2.2')
     depends_on('py-pyyaml', type=('build', 'run'))
-    depends_on('py-six', type=('build', 'run'))
+    depends_on('py-six', type=('build', 'run'), when='@2.2')
