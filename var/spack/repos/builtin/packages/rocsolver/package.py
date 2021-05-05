@@ -49,10 +49,8 @@ class Rocsolver(CMakePackage):
         if self.spec.satisfies('@4.1.0:'):
             args.append('-DCMAKE_CXX_FLAGS:String=-I{0}/rocblas/include'.format(incl))
 
-        if '+optimal' in self.spec:
-            args.append('-DOPTIMAL={0}'.format('ON'))
-        else:
-            args.append('-DOPTIMAL={0}'.format('OFF'))
+        if self.spec.satisfies('@3.7.0:'):
+            args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
         return args
 
