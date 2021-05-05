@@ -142,7 +142,6 @@ class Root(CMakePackage):
     variant('qt4', default=False,
             description='Enable Qt graphics backend')
     variant('r', default=False,
-    variant('r', default=False,
             description='Enable R ROOT bindings')
     variant('rpath', default=True,
             description='Enable RPATH')
