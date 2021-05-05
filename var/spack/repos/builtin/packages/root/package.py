@@ -129,7 +129,7 @@ class Root(CMakePackage):
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
-    variant('oracle', default=True,
+    variant('oracle', default=False,
             description='Enable support for Oracle databases')
     variant('postgres', default=False,
             description='Enable postgres support')
@@ -141,6 +141,7 @@ class Root(CMakePackage):
             description='Enable Python ROOT bindings')
     variant('qt4', default=False,
             description='Enable Qt graphics backend')
+    variant('r', default=False,
     variant('r', default=False,
             description='Enable R ROOT bindings')
     variant('rpath', default=True,
@@ -405,7 +406,7 @@ class Root(CMakePackage):
             define_from_variant('mysql'),
             define('odbc', False),
             define_from_variant('opengl'),
-            define('oracle', False),
+            define_from_variant('oracle'),
             define_from_variant('pgsql', 'postgres'),
             define_from_variant('pythia6'),
             define_from_variant('pythia8'),
