@@ -1,3 +1,17 @@
+# Step 1: Install prerequisites
+
+* Visual Studio: Explanation, include CMake tools, etc.
+* Python
+* Git
+* CMake
+* Wix
+
+# Step 2: Get Spack
+
+Check out windows-support branch...
+
+# Step 3: Make the installer
+
 Use the contents of this directory and the spack 'make-installer' command to
 create a Windows installer. Installers are not supported on other platforms.
 
@@ -11,7 +25,15 @@ Note: Spack and Python may be installed using the Spack installer. This has the
 advantage of setting up the PATH automatically.
 
 To create the installer, first copy the spack_cmd executable and scripts directory
-to your top-level directory. Then, after launching spack_cmd (this may require you
+to your top-level directory.
+
+spack_install
+        |--------spack
+  		|--------scripts
+ 	 	|--------spack_cmd.bat
+
+
+Then, after launching spack_cmd (this may require you
 to Run as Administrator), run:
 
 spack make-installer -v <spack_version> <output directory>
