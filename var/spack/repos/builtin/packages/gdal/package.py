@@ -515,7 +515,7 @@ class Gdal(AutotoolsPackage):
             '--with-rasdaman=no',
         ])
 
-        # TODO: add packages for these dependencies (only for 3.2 and older
+        # TODO: add packages for these dependencies (only for 3.2 and older)
         if spec.satisfies('@:3.2'):
             # https://trac.osgeo.org/gdal/wiki/Epsilon
             args.append('--with-epsilon=no')
