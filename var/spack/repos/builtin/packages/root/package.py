@@ -90,6 +90,8 @@ class Root(CMakePackage):
             description='Enable Aqua interface')
     variant('davix', default=True,
             description='Compile with external Davix')
+    variant('dcache', default=False,
+            description='Enable support for dCache')
     variant('emacs', default=False,
             description='Enable Emacs support')
     variant('examples', default=True,
@@ -234,6 +236,7 @@ class Root(CMakePackage):
 
     # Optional dependencies
     depends_on('davix @0.7.1:', when='+davix')
+    depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
@@ -370,7 +373,7 @@ class Root(CMakePackage):
             define_from_variant('cocoa', 'aqua'),
             define('dataframe', True),
             define_from_variant('davix'),
-            define('dcache', False),
+            define_from_variant('dcache'),
             define_from_variant('fftw3', 'fftw'),
             define_from_variant('fitsio', 'fits'),
             define_from_variant('ftgl', 'opengl'),
