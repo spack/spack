@@ -219,7 +219,7 @@ class Phist(CMakePackage):
         filter_file('-fno-trapping-math',
                     '',
                     'cmake/SetCompilerFlagsCLANG.cmake')
-        if('%cce' in self.spec:
+        if '%cce' in self.spec:
             filter_file('^/','!/','drivers/matfuncs/brussolator.F90')
             filter_file('^/','!/','drivers/matfuncs/matpde.F90')
             filter_file('^/','!/','drivers/matfuncs/matpde3d.F90')
