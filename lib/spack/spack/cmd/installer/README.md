@@ -16,7 +16,7 @@ to Run as Administrator), run:
 
 spack make-installer -v <spack_version> <output directory>
 
-e.g. spack make-installer -v 0.16.0 tmp
+e.g. ``spack make-installer -v 0.16.0 tmp``
 
 This will download spack from https://github.com/spack/spack/releases/download/v0.16.0
 and create the installer in 'tmp'.
@@ -28,7 +28,7 @@ Alternatively, specify a local spack directory:
 
 spack make-installer -s <spack directory> <output directory>
 
-e.g. spack make-installer -s spack-0.16.0 tmp
+e.g. ``spack make-installer -s spack-0.16.0 tmp``
 
 The spack directory may be an absolute path or relative to the current
 directory. The entire contents of the specified directory will be included
@@ -39,7 +39,7 @@ the output directory and running the Spack.msi installer package.
 
 To get spack running on Windows, first run the following command:
 
-spack compiler find
+``spack compiler find``
 
 This creates a .spack directory in our home directory, along with a windows subdirectory
 containing a compilers.yaml file. In all likelihood, there is only one compiler listed and
@@ -48,13 +48,15 @@ it is some version of Microsoft Visual Studio.
 We need to provide the config.yaml and packages.yaml configurations by ourselves. The
 config file is the simpler of the two to set up. We simply need the following lines:
 
+```
 config:
   locks: false
   install_tree:
     root: $spack\opt\spack
     projections:
       all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
-	  
+```
+
 Notice that the projections stanza is identical to the one in the default config.yaml
 provided with the spack checkout (albeit with backslashes instead of forward ones).
 Also importantly, it is important that all indents in .yaml files are done with
@@ -74,6 +76,7 @@ installation for packages.yaml.
 Your packages.yaml file will look something like this, with possibly slight variants
 in the paths to CMake and Ninja:
 
+```
 packages:
   cmake:
     externals:
@@ -86,16 +89,17 @@ packages:
       prefix: 'c:\Program Files (x86)\Microsoft Visual Studio
 \2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
     buildable: False
-	
+```	
+
 It is also entirely possible to use the CMake that comes with the Visual Studio
 install. We use the one installed externally as that is likely a more recent
 version.
 
 Finally, in spack_cmd, it is time to give the installation a test:
 
-spack install cpuinfo
+``spack install cpuinfo``
 
 If you are a developer and want to use your source version of spack instead of
 a release version, simply replace spack in the above call with:
 
-python path\to\your\checkout\bin\spack
+``python path\to\your\checkout\bin\spack``
