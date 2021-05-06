@@ -3,11 +3,11 @@ start running it on a fresh Windows machine.
 
 # Step 1: Install prerequisites
 
-Before downloading and configuring spack, we have to prepare our box for the 
+Before downloading and configuring Spack, we have to prepare our box for the 
 installation. The following packages are required to successfully build and 
-run the installer, in addition to running spack in general:
+run the installer, in addition to running Spack in general:
 
-* Visual Studio: Explanation, include CMake tools, etc.
+* Visual Studio
 * Python
 * Git
 * CMake
@@ -100,13 +100,23 @@ checkout of Spack source (release or development), you can use the
 
 ``spack make-installer -s spack-0.16.0 tmp``
 
-Either way, a file called ``Spack.msi`` will be created inside the ``tmp``
-directory, which can then be run from Windows Explorer like any other
-installer. 
-
 # Step 4: Run the installer
 
-...
+Regardless of your method, a file called ``Spack.msi`` will be created
+inside the ``tmp``directory, which can then be run from Windows Explorer
+like any other installer. After accepting the terms of service, select
+where on your computer you would like Spack installed, and after a few minutes
+Spack will be installed and ready for use.
+
+If your Spack installation needs to be modified, repaired, or uninstalled, 
+you can do either of these things by rerunning Spack.msi.
+
+Running the installer also creates a shortcut on your desktop that,when launched,
+will load a console identical to ``spack_cmd``, but with its initial directory
+being wherever Spack was installed on your computer. Hence, the instructions in
+Step 5 can be done either in the ``spack_cmd`` console used in Steps 2 and 3
+or the one built by the installer, whichever is more convenient. For brevity,
+we will continue using the former in this tutorial.
 
 # Step 5: Configure Spack and test
 
