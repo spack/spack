@@ -22,7 +22,7 @@ class Ior(AutotoolsPackage):
 
     variant('hdf5',  default=False, description='support IO with HDF5 backend')
     variant('ncmpi', default=False, description='support IO with NCMPI backend')
-    variant('ime',  default=True, description='support IO with IME backend')
+    variant('ime',   default=False, description='support IO with IME backend')
 
     depends_on('autoconf', type='build')
     depends_on('automake', type='build')
