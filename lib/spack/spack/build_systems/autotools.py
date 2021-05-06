@@ -338,10 +338,11 @@ class AutotoolsPackage(PackageBase):
         """
         options = getattr(self, 'configure_flag_args', [])
         options += ['--prefix={0}'.format(prefix)]
-        if self.track_dependencies:
-            options += ['--enable-dependency-tracking']
-        else:
-            options += ['--disable-dependency-tracking']
+        if self.track_dependencies is not None:
+            if self.track_dependencies:
+                options += ['--enable-dependency-tracking']
+            else:
+                options += ['--disable-dependency-tracking']
 
         options += self.configure_args()
 
