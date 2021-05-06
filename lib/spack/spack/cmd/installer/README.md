@@ -95,10 +95,11 @@ directory itself must already exist.
 
 Alternatively, if you would like to build the installer using a local
 checkout of Spack source (release or development), you can use the
--s flag. For example, if you already have a checkout of the version
-0.16.0 source, you can use:
+-s flag to specify the directory where that checkout is. For example,
+if you are doing development in a directory called ``spack-develop``
+and want to generate an installer with the source there, you can use:
 
-``spack make-installer -s spack-0.16.0 tmp``
+``spack make-installer -s spack-develop tmp``
 
 # Step 4: Run the installer
 
@@ -113,10 +114,7 @@ you can do any of these things by rerunning Spack.msi.
 
 Running the installer also creates a shortcut on your desktop that, when launched,
 will load a console identical to ``spack_cmd``, but with its initial directory
-being wherever Spack was installed on your computer. Hence, the instructions in
-Step 5 can be done either in the ``spack_cmd`` console used in Steps 2 and 3
-or the one built by the installer, whichever is more convenient. For brevity,
-we will continue using the former in this tutorial.
+being wherever Spack was installed on your computer.
 
 # Step 5: Configure Spack and test
 
@@ -124,7 +122,7 @@ The last thing to do after running the installer is to finish Spack configuratio
 is covered in the online documentation for Spack, but there are a few Windows-specific
 steps that are necessary.
 
-First, inside the ``spack_cmd`` console, run the following command:
+First, inside the Spack console, run the following command:
 
 ``spack compiler find``
 
@@ -146,8 +144,8 @@ config:
 
 (These settings are identical to those in the default config.yaml
 provided with your Spack checkout, except with forward slashes replaced by backslashes for
-Windows compatibility.) It is important that all indentions in .yaml files are done with spaces and not tabs, so take care
-when editing one by hand.
+Windows compatibility.) It is important that all indentions in .yaml files are done with spaces
+and not tabs, so take care when editing one by hand.
 
 For the packages.yaml file, we need to direct spack towards both our CMake
 installation and towards Ninja. Therefore, your packages.yaml file will look something
@@ -175,8 +173,8 @@ obtain it by running the Visual Studio Insaller and following the instructions
 in Step 1 of this walkthrough.
 
 Once all three of these files are present in your ``.spack/windows`` directory,
-it is time to give the installation a test. Install a basic package with 
-``spack_cmd`` via:
+it is time to give the installation a test. Install a basic package though the
+Spack console via:
 
 ``spack install cpuinfo``
 
