@@ -452,12 +452,16 @@ def _eval_conditional(string):
 
 
 class ViewDescriptor(object):
-    _real_root_names = ['._view_1', '._view_2']
-
     def __init__(self, base_path, root, projections={}, select=[], exclude=[],
                  link=default_view_link):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
+
+        # construct the names of the implementation diirectories
+        root_name = os.path.basename(self.root)
+        self._real_root_names = ['._{0}_impl_{1}'.format(root_name, idx)
+                                 for idx in range(2)]
+
         self.projections = projections
         self.select = select
         self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
@@ -570,8 +574,8 @@ class ViewDescriptor(object):
             # we always regenerate the view from scratch.
             # We will do this by alternating directories in which the real view
             # is created, and then having a symlink to the real view in the
-            # root. The real root will always be either dirname(root)/._view_1
-            # or dirname(root)/._view_2
+            # root. The real root for a view at /dirname/basename will be
+            # /dirname/._basename_impl_0 or dirname/._basename_impl_1
             # This allows for atomic swaps when we update the view
             # construct view at new_root
             tty.msg("Updating view at {0}".format(self.root))
@@ -587,7 +591,7 @@ class ViewDescriptor(object):
 
             # create symlink from tmpname to new_root
             root_dirname = os.path.dirname(self.root)
-            tmp_symlink_name = os.path.join(root_dirname, '._view_link_impl')
+            tmp_symlink_name = os.path.join(root_dirname, '._view_impl_link')
             os.symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
