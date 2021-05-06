@@ -1,4 +1,4 @@
-diff -Naur spack-src/configure spack-src.patched/configure
+diff -Naur spack-src/configure spack-src.patched/configure 
 --- spack-src/configure	2020-03-10 13:55:53.000000000 -0400
 +++ spack-src.patched/configure	2021-05-06 11:33:59.062284048 -0400
 @@ -19263,10 +19263,11 @@
