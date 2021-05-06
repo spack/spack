@@ -173,6 +173,22 @@ class Hdf5(AutotoolsPackage):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
 
+    def flag_handler(self, name, flags):
+        if '+pic' in self.spec:
+            if name == "cflags":
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == "cxxflags":
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == "fflags":
+                flags.append(self.compiler.fc_pic_flag)
+
+        # Quiet warnings/errors about implicit declaration of functions in C99
+        if name == "cflags":
+            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+                flags.append("-Wno-implicit-function-declaration")
+
+        return (None, None, flags)
+
     @when('@develop')
     def autoreconf(self, spec, prefix):
         autogen = Executable('./autogen.sh')
@@ -298,14 +314,7 @@ class Hdf5(AutotoolsPackage):
             extra_args.append('--disable-shared')
             extra_args.append('--enable-static-exec')
 
-        if '+pic' in self.spec:
-            extra_args.extend([
-                'CFLAGS='   + self.compiler.cc_pic_flag,
-                'CXXFLAGS=' + self.compiler.cxx_pic_flag,
-                'FCFLAGS='  + self.compiler.fc_pic_flag,
-            ])
-
-        # Fujitsu Compiler dose not add  Fortran runtime in rpath.
+        # Fujitsu Compiler does not add Fortran runtime in rpath.
         if '+fortran %fj' in self.spec:
             extra_args.append('LDFLAGS=-lfj90i -lfj90f -lfjsrcinfo -lelf')
 

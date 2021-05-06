@@ -209,6 +209,13 @@ class QuantumEspresso(Package):
     patch_checksum = '72564c168231dd4a1279a74e76919af701d47cee9a851db6e205753004fe9bb5'
     patch(patch_url, sha256=patch_checksum, when='@6.7+qmcpack')
 
+    # Need OpenMP threaded FFTW and BLAS libraries when configured
+    # with OpenMP support
+    conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^amdfftw~openmp', when='+openmp')
+    conflicts('^openblas threads=none', when='+openmp')
+    conflicts('^openblas threads=pthreads', when='+openmp')
+
     # 6.4.1
     patch_url = 'https://raw.githubusercontent.com/QMCPACK/qmcpack/develop/external_codes/quantum_espresso/add_pw2qmcpack_to_qe-6.4.1.diff'
     patch_checksum = '57cb1b06ee2653a87c3acc0dd4f09032fcf6ce6b8cbb9677ae9ceeb6a78f85e2'
@@ -347,7 +354,10 @@ class QuantumEspresso(Package):
         if '^fftw@3:' in spec:
             fftw_prefix = spec['fftw'].prefix
             options.append('FFTW_INCLUDE={0}'.format(fftw_prefix.include))
-            fftw_ld_flags = spec['fftw'].libs.ld_flags
+            if '+openmp' in spec:
+                fftw_ld_flags = spec['fftw:openmp'].libs.ld_flags
+            else:
+                fftw_ld_flags = spec['fftw'].libs.ld_flags
             options.append('FFT_LIBS={0}'.format(fftw_ld_flags))
 
         if '^amdfftw' in spec:

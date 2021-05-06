@@ -270,7 +270,7 @@ class Boost(Package):
     # Fix B2 bootstrap toolset during installation
     # See https://github.com/spack/spack/issues/20757
     # and https://github.com/spack/spack/pull/21408
-    patch("bootstrap-toolset.patch", when="@1.75:")
+    patch("bootstrap-toolset.patch", when="@1.75")
 
     def patch(self):
         # Disable SSSE3 and AVX2 when using the NVIDIA compiler
@@ -287,7 +287,7 @@ class Boost(Package):
 
     def url_for_version(self, version):
         if version >= Version('1.63.0'):
-            url = "https://dl.bintray.com/boostorg/release/{0}/source/boost_{1}.tar.bz2"
+            url = "https://boostorg.jfrog.io/artifactory/main/release/{0}/source/boost_{1}.tar.bz2"
         else:
             url = "http://downloads.sourceforge.net/project/boost/boost/{0}/boost_{1}.tar.bz2"
 

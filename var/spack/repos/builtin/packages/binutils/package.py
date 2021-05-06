@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
@@ -30,9 +28,9 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version('2.23.2', sha256='fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097')
     version('2.20.1', sha256='71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64')
 
-    variant('plugins', default=False,
+    variant('plugins', default=True,
             description="enable plugins, needed for gold linker")
-    variant('gold', default=(sys.platform != 'darwin'),
+    variant('gold', default=False,
             description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
@@ -68,6 +66,10 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     # "unable to initialize decompress status for section .debug_info"
     # when compiling with debug symbols on gcc.
     conflicts('+gas', '~ld', msg="Assembler not always compatible with system ld")
+
+    # When you build ld.gold you automatically get ld, even when you add the
+    # --disable-ld flag
+    conflicts('~ld', '+gold')
 
     def configure_args(self):
         spec = self.spec

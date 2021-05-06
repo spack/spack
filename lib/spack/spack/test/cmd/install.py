@@ -743,6 +743,25 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
             assert 'Using CDash auth token from environment' in out
 
 
+@pytest.mark.disable_clean_stage_check
+def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            # Test would fail if install raised an error.
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'configure-warning')
+            # Verify Configure.xml exists with expected contents.
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Configure.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'foo: No such file or directory' in content
+
+
 def test_compiler_bootstrap(
         install_mockery_mutable_config, mock_packages, mock_fetch,
         mock_archive, mutable_config, monkeypatch):

@@ -31,7 +31,7 @@ class PyAstroid(PythonPackage):
     depends_on('py-lazy-object-proxy@1.4:1.4.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-six@1.12:1.999', when='@2.3.3:', type=('build', 'run'))
-    depends_on('py-wrapt', type=('build', 'run'))
+    depends_on('py-wrapt', when='@:2.2.999', type=('build', 'run'))
     depends_on('py-wrapt@1.11:1.11.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-enum34@1.1.3:', when='^python@:3.3.99', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3.99', type=('build', 'run'))
