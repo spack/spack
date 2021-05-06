@@ -16,6 +16,11 @@ class Rocsolver(CMakePackage):
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    variant('optimal', default=True,
+            description='This option improves performance at the cost of increased binary \
+            size and compile time by adding specialized kernels \
+            for small matrix sizes')
+
     version('4.1.0', sha256='da5cc800dabf7367b02b73c93780b2967f112bb45232e4b06e5fd07b4d5b8d88')
     version('4.0.0', sha256='be9a52644c276813f76d78f2c11eddaf8c2d7f9dd04f4570f23d328ad30d5880')
     version('3.10.0', sha256='bc72483656b6b23a1e321913a580ca460da3bc5976404647536a01857f178dd2')
@@ -45,6 +50,9 @@ class Rocsolver(CMakePackage):
         ]
         if self.spec.satisfies('@4.1.0:'):
             args.append('-DCMAKE_CXX_FLAGS:String=-I{0}/rocblas/include'.format(incl))
+
+        if self.spec.satisfies('@3.7.0:'):
+            args.append(self.define_from_variant('OPTIMAL', 'optimal'))
 
         return args
 
