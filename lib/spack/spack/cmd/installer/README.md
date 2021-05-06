@@ -1,4 +1,11 @@
+This README.md will guide you through the steps needed to install Spack and 
+start running it on a fresh Windows machine.
+
 # Step 1: Install prerequisites
+
+Before downloading and configuring spack, we have to prepare our box for the 
+installation. The following packages are required to successfully build and 
+run the installer, in addition to running spack in general:
 
 * Visual Studio: Explanation, include CMake tools, etc.
 * Python
@@ -6,69 +13,120 @@
 * CMake
 * Wix
 
+## Visual Studio
+
+Microsoft Visual Studio is Windows' C/C++ compiler of choice, and it is a
+highly customizable suite with plenty of third-party libraries and
+utilities to select from. 
+
+We require one specific workflow download from the Visual Studio
+Installer. If you already have Visual Studio installed, you can simply
+rerun the installer to acquire this workflow. Next to your installation,
+select "Modify" and look at the "Installation details" pane on the right.
+If there is no "Desktop development with C++" subheader, then select that
+workflow for download from the left pane. Most importantly, when selecting
+what optional packages to install for that workflow, make sure that
+"C++ CMake tools for Windows" is selected. This will provide a CMake and
+Ninja installation for use during Spack configuration.
+
+## Python
+
+Python 3 can be downloaded from the Windows Store and will appear in your
+path if installed from there.
+
+## Git
+
+Git is a version control system similar to Subversion and will be needed to
+download Spack and the appropriate installation files. A bash console and GUI
+can be downloaded from https://git-scm.com/downloads. If you are unfamiliar
+with Git, there are a myriad of resources online to help guide you through
+checking out repositories and switching development branches.
+
+## CMake
+
+CMake is a buildfile generator that will be used to help create the Windows
+installer and, later on, install packages with Spack. While your Visual
+Studio installation will have a CMake installation as well (see above), we
+recommend you still download CMake from https://cmake.org/download/ as
+there may be a newer version available.
+
+## Wix Toolset
+
+Wix is a utility used for .msi creation and can be downloaded and
+installed at https://wixtoolset.org/releases/. The Visual Studio
+extensions are not necessary.
+
 # Step 2: Get Spack
 
-Check out windows-support branch...
+We are now ready to get the Spack environment set up on our machine. We
+begin by creating a top-level directory to do our work in: we will call
+it ``spack_install`` in this tutorial. Inside this directory, use Git to
+clone the Spack repo, hosted at https://github.com/spack/spack.git.
+
+The files and scripts used for Windows installation are on the
+features/windows-support branch; ``cd`` into the repo and use 
+``git checkout`` to switch to it. Then navigate to 
+``lib\spack\spack\cmd\installer`` and copy the ``scripts`` directory and
+``spack_cmd.bat`` up to the top-level ``spack_install`` directory.
+
+Your file structure should look like this after following the above
+steps:
+
+```
+spack_install
+    |--------spack
+    |--------scripts
+    |--------spack_cmd.bat
+```
 
 # Step 3: Make the installer
 
-Use the contents of this directory and the spack 'make-installer' command to
-create a Windows installer. Installers are not supported on other platforms.
+To actually make the installer, start by running ``spack_cmd.bat`` from
+Windows Explorer (this may require you to Run as Administrator). If a
+warning appears that Python is not in your path, which can happen if you
+installed Python from the website instead of Windows Store, add it in now.
 
-The installer must be created on Windows and requires the following:
-* Spack (https://github.com/spack/spack)
-* Python (https://www.python.org/downloads/)
-* CMake (https://cmake.org/download/)
-* Wix (https://wixtoolset.org/releases/)
+``spack_cmd.bat`` will produce a DOS console window. Navigate to your
+``spack_install`` directory (i.e. where you placed ``spack_cmd.bat``), and
+create a new directory to store the installation (say, ``tmp``). This ``tmp``
+directory must exist for the following commands to not fail.
 
-Note: Spack and Python may be installed using the Spack installer. This has the
-advantage of setting up the PATH automatically.
+There are two ways to create the installer. If you would like to create it
+from a release version of Spack, say, 0.16.0, and store it in ``tmp``, you
+can use the following command:
 
-To create the installer, first copy the spack_cmd executable and scripts directory
-to your top-level directory.
+``spack make-installer -v 0.16.0 tmp``
 
-spack_install
-        |--------spack
-  		|--------scripts
- 	 	|--------spack_cmd.bat
+The path to ``tmp`` can be either relative or absolute, but again, the
+directory itself must already exist.
 
+Alternatively, if you would like to build the installer using a local
+checkout of Spack source (release or development), you can use the
+-s flag. For example, if you already have a checkout of the version
+0.16.0 source, you can use:
 
-Then, after launching spack_cmd (this may require you
-to Run as Administrator), run:
+``spack make-installer -s spack-0.16.0 tmp``
 
-spack make-installer -v <spack_version> <output directory>
+Either way, a file called ``Spack.msi`` will be created inside the ``tmp``
+directory, which can then be run from Windows Explorer like any other
+installer. 
 
-e.g. ``spack make-installer -v 0.16.0 tmp``
+## Step 4: Configure Spack and test
 
-This will download spack from https://github.com/spack/spack/releases/download/v0.16.0
-and create the installer in 'tmp'.
+The last thing to do after running the installer is to finish Spack configuration. This
+is covered in the online documentation for Spack, but there are a few Windows-specific
+nuances that are worth mentioning here.
 
-The output directory may be an absolute path or relative to the current
-directory. It *must* already exist.
-
-Alternatively, specify a local spack directory:
-
-spack make-installer -s <spack directory> <output directory>
-
-e.g. ``spack make-installer -s spack-0.16.0 tmp``
-
-The spack directory may be an absolute path or relative to the current
-directory. The entire contents of the specified directory will be included
-in the installed (e.g. .git files or local changes). 
-
-Regardless of the method you use, you can obtain the spack environment by entering
-the output directory and running the Spack.msi installer package.
-
-To get spack running on Windows, first run the following command:
+First, inside the ``spack_cmd`` console, run the following command:
 
 ``spack compiler find``
 
 This creates a .spack directory in our home directory, along with a windows subdirectory
-containing a compilers.yaml file. In all likelihood, there is only one compiler listed and
-it is some version of Microsoft Visual Studio.
+containing a compilers.yaml file. On a fresh Windows install, the only compiler that
+should be found is your installation of Microsoft Visual Studio.
 
-We need to provide the config.yaml and packages.yaml configurations by ourselves. The
-config file is the simpler of the two to set up. We simply need the following lines:
+We need to provide the config.yaml and packages.yaml configurations by ourselves. Open 
+your text editor of choice and enter the following lines for config.yaml:
 
 ```
 config:
@@ -79,24 +137,13 @@ config:
       all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
 ```
 
-Notice that the projections stanza is identical to the one in the default config.yaml
-provided with the spack checkout (albeit with backslashes instead of forward ones).
-Also importantly, it is important that all indents in .yaml files are done with
-spaces and not indents (i.e. tabs), so take care when editing one by hand.
+Note that the projections stanza is identical to the one in the default config.yaml
+provided with your Spack checkout. It is important that all indentions in .yaml files
+are done with spaces and not tabs, so take care when editing one by hand.
 
 For the packages.yaml file, we need to direct spack towards both our CMake
-installation and towards Ninja. We know we have CMake from our previous steps,
-but the Ninja install we want will need to be installed alongside Microsoft VS.
-
-To see if your installation of Visual Studio has Ninja, you can run the Visual Studio
-Installer. Select "Modify" next to your Visual Studio version, and look at the
-"Installation details" pane. If the install does not have the subheader
-"Desktop development with C++", download that workload. In particular, make sure that
-the download includes "C++ CMake tools for Windows", as that will have the Ninja
-installation for packages.yaml.
-
-Your packages.yaml file will look something like this, with possibly slight variants
-in the paths to CMake and Ninja:
+installation and towards Ninja. Therefore, your packages.yaml file will look something
+like this, with possibly slight variants in the paths to CMake and Ninja:
 
 ```
 packages:
@@ -115,13 +162,17 @@ packages:
 
 It is also entirely possible to use the CMake that comes with the Visual Studio
 install. We use the one installed externally as that is likely a more recent
-version.
+version. If you don't have a path to Ninja analogous to the above, then you can
+obtain it by running the Visual Studio Insaller and following the instructions
+in Step 1 of this walkthrough.
 
-Finally, in spack_cmd, it is time to give the installation a test:
+Once all three of these files are present in your ``.spack/windows`` directory,
+it is time to give the installation a test. Install a basic package with 
+``spack_cmd`` via:
 
 ``spack install cpuinfo``
 
-If you are a developer and want to use your source version of spack instead of
-a release version, simply replace spack in the above call with:
+If you are a developer and want to use your source version of Spack instead of
+a release version, simply replace Spack in the above call with:
 
 ``python path\to\your\checkout\bin\spack``
