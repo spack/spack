@@ -19,8 +19,8 @@ class PyMorphologyRepairWorkflow(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-neuroc', type='run')
-    depends_on('py-morph-tool', type='run')
-    depends_on('py-neuror', type='run')
-    depends_on('py-more-itertools', type='run')
-    depends_on('py-morph-validator', type='run')
+    # depends_on('py-neuroc', type='run')
+    # depends_on('py-morph-tool', type='run')
+    # depends_on('py-neuror', type='run')
+    # depends_on('py-more-itertools', type='run')
+    # depends_on('py-morph-validator', type='run')

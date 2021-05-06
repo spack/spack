@@ -42,8 +42,10 @@ class Brainbuilder(PythonPackage):
     depends_on('py-six@1.0:', type='run')
     depends_on('py-tqdm@4.0:', type='run')
 
-    depends_on('py-bluepy@0.12.5:', type='run')
     depends_on('py-voxcell@:2.6.9', type='run', when='@:0.11.7')
     depends_on('py-voxcell@2.7:2.999', type='run', when='@0.12:0.14.0')
     depends_on('py-voxcell@3.0.0:', type='run', when='@0.14.1:')
     depends_on('py-morph-tool@0.2.3:', type='run', when='@0.11.9:')
+
+    # removal of the v2 from bluepy in 2.3.0
+    depends_on('py-bluepy@0.12.5:2.2.0', type='run')

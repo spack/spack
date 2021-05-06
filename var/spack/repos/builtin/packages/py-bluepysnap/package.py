@@ -11,8 +11,9 @@ class PyBluepysnap(PythonPackage):
 
     homepage = "https://github.com/BlueBrain/snap"
     git      = "https://github.com/BlueBrain/snap.git"
-    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.11.0.tar.gz"
+    url      = "https://pypi.io/packages/source/b/bluepysnap/bluepysnap-0.12.0.tar.gz"
 
+    version('0.12.0', sha256='a2cc24031905310941296ca975814ee0c0f27229a2c133d6a13ca92cc8dc6c9b')
     version('0.11.0', sha256='01360cd20d04be9d0458bf8eda154299857a5b3c72db8babedd336c7740d51b9')
     version('0.10.0', sha256='0cc73e82c5f54a2eb6e4b22b59bc1c714915bd8df7fec156af5f2e24755e805e')
     version('0.9.0', sha256='140e06b9a7cc90719ffaf4c71ffaa9320c13bdd8ef25ffb598fd348b850b6695')
@@ -41,8 +42,11 @@ class PyBluepysnap(PythonPackage):
     depends_on('py-h5py@2.2:2.99', type='run', when='@:0.7.9')
     depends_on('py-h5py@3.0.1:', type='run', when='@0.8.0:')
 
+    # morphologies
     depends_on('py-neurom@1.3:1.5.99', type='run', when='@:0.7.9')
-    depends_on('py-neurom@1.6:1.99.99', type='run', when='@0.8.0:')
+    depends_on('py-neurom@1.6:1.99.99', type='run', when='@0.8.0:0.11.0')
+    depends_on('py-morph-tool@2.4.0:', type='run', when='@0.12.0:')
+    depends_on('py-morphio@3.0.0:', type='run', when='@0.12.0:')
 
     # python2 only so only < 0.8.0
     depends_on('py-pathlib2@2.3:', type='run', when='@:0.7.9')
