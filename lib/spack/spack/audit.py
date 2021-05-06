@@ -35,6 +35,7 @@ Calls to each of these functions are triggered by the ``run`` method of
 the decorator object, that will forward the keyword arguments passed
 as input.
 """
+import collections
 import itertools
 try:
     from collections.abc import Sequence  # novm
@@ -91,7 +92,6 @@ class AuditClass(Sequence):
         CALLBACKS[self.tag] = self
 
     def __call__(self, func):
-        # TODO: Check function signature
         self.callbacks.append(func)
 
     def __getitem__(self, item):
@@ -143,6 +143,53 @@ def _search_duplicate_compilers(error_cls):
                 str(x._start_mark).strip() for x in group
             ])
         )
+
+    return errors
+
+
+#: Sanity checks on packages.yaml
+audit_cfgpkg = AuditClass(
+    tag='CFG-PACKAGES',
+    description='Sanity checks on packages.yaml',
+    kwargs=()
+)
+
+
+@audit_cfgpkg
+def _search_duplicate_specs_in_externals(error_cls):
+    """Search for duplicate specs declared as externals."""
+    import spack.config
+
+    errors, externals = [], collections.defaultdict(list)
+    packages_yaml = spack.config.get('packages')
+
+    for name, pkg_config in packages_yaml.items():
+        # No externals can be declared under all
+        if name == 'all' or 'externals' not in pkg_config:
+            continue
+
+        current_externals = pkg_config['externals']
+        for entry in current_externals:
+            # Ask for the string representation of the spec to normalize
+            # aspects of the spec that may be represented in multiple ways
+            # e.g. +foo or foo=true
+            key = str(spack.spec.Spec(entry['spec']))
+            externals[key].append(entry)
+
+    for spec, entries in sorted(externals.items()):
+        # If there's a single external for a spec we are fine
+        if len(entries) < 2:
+            continue
+
+        # Otherwise wwe need to report an error
+        error_msg = 'Multiple externals share the same spec: {0}'.format(spec)
+        details = [
+            'Please remove all but one of the following entries:'
+        ] + [str(x._start_mark).strip() for x in entries] + [
+            'as they might result in non-deterministic hashes'
+        ]
+
+        errors.append(error_cls(summary=error_msg, details=details))
 
     return errors
 
