@@ -35,6 +35,11 @@ class Glvis(MakefilePackage):
 
     version('develop', branch='master')
 
+    version('4.0',
+            sha256='68331eaea8b93968ed6bf395388c2730b27bbcb4b7809ce44277726edccd9f08',
+            url='https://bit.ly/glvis-4-0',
+            extension='.tar.gz')
+
     version('3.4',
             sha256='289fbd2e09d4456e5fee6162bdc3e0b4c8c8d54625f3547ad2a69fef319279e7',
             url='https://bit.ly/glvis-3-4',
@@ -63,6 +68,7 @@ class Glvis(MakefilePackage):
             description='Use antialiased fonts via freetype & fontconfig')
 
     depends_on('mfem@develop', when='@develop')
+    depends_on('mfem@4.0.0:', when='@4.0')
     depends_on('mfem@3.4.0', when='@3.4')
     depends_on('mfem@3.3', when='@3.3')
     depends_on('mfem@3.2', when='@3.2')
@@ -71,6 +77,10 @@ class Glvis(MakefilePackage):
     depends_on('gl')
     depends_on('glu')
     depends_on('libx11')
+
+    depends_on('sdl2', when='@4.0:,develop')
+    depends_on('glm', when='@4.0:,develop')
+    depends_on('glew', when='@4.0:,develop')
 
     depends_on('libpng', when='screenshots=png')
     depends_on('libtiff', when='screenshots=tiff')
@@ -120,6 +130,11 @@ class Glvis(MakefilePackage):
                 'FT_LIBS={0} {1}'.format(
                     spec['freetype'].libs.ld_flags,
                     spec['fontconfig'].libs.ld_flags)]
+
+        if "@4.0:" in spec or "@develop" in spec:
+            args += ['GLM_DIR={0}'.format(spec['glm'].prefix),
+                     'SDL_DIR={0}'.format(spec['sdl2'].prefix),
+                     'GLEW_DIR={0}'.format(spec['glew'].prefix)]
 
         self.build_targets = args
         self.install_targets += args
