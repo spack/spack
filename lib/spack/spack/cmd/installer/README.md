@@ -1,4 +1,4 @@
-This README.md will guide you through the steps needed to install Spack and 
+This README will guide you through the steps needed to install Spack and 
 start running it on a fresh Windows machine.
 
 # Step 1: Install prerequisites
@@ -15,19 +15,12 @@ run the installer, in addition to running spack in general:
 
 ## Visual Studio
 
-Microsoft Visual Studio is Windows' C/C++ compiler of choice, and it is a
-highly customizable suite with plenty of third-party libraries and
-utilities to select from. 
+Microsoft Visual Studio provides the Windows C/C++ compiler that is currently supported by Spack.
 
-We require one specific workflow download from the Visual Studio
-Installer. If you already have Visual Studio installed, you can simply
-rerun the installer to acquire this workflow. Next to your installation,
-select "Modify" and look at the "Installation details" pane on the right.
-If there is no "Desktop development with C++" subheader, then select that
-workflow for download from the left pane. Most importantly, when selecting
-what optional packages to install for that workflow, make sure that
-"C++ CMake tools for Windows" is selected. This will provide a CMake and
-Ninja installation for use during Spack configuration.
+We require several specific components to be included in the Visual Studio installation.  One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools," depending on installation type (Professional, Build Tools, etc.)  The other required component is "C++ CMake tools for Windows," which can be selected from among the optional packages.  This provides CMake and Ninja for use during Spack configuration.
+
+If you already have Visual Studio installed, you can make sure these components are installed by
+rerunning the installer.  Next to your installation, select "Modify" and look at the "Installation details" pane on the right.
 
 ## Python
 
@@ -111,7 +104,11 @@ Either way, a file called ``Spack.msi`` will be created inside the ``tmp``
 directory, which can then be run from Windows Explorer like any other
 installer. 
 
-## Step 4: Configure Spack and test
+# Step 4: Run the installer
+
+...
+
+# Step 5: Configure Spack and test
 
 The last thing to do after running the installer is to finish Spack configuration. This
 is covered in the online documentation for Spack, but there are a few Windows-specific
@@ -137,9 +134,10 @@ config:
       all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
 ```
 
-Note that the projections stanza is identical to the one in the default config.yaml
-provided with your Spack checkout. It is important that all indentions in .yaml files
-are done with spaces and not tabs, so take care when editing one by hand.
+(These settings are identical to those in the default config.yaml
+provided with your Spack checkout, except with forward slashes replaced by backslashes for
+Windows compatibility.) It is important that all indentions in .yaml files are done with spaces and not tabs, so take care
+when editing one by hand.
 
 For the packages.yaml file, we need to direct spack towards both our CMake
 installation and towards Ninja. Therefore, your packages.yaml file will look something
