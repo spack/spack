@@ -32,7 +32,7 @@ class Arrow(CMakePackage, CudaPackage):
     depends_on('rapidjson')
     depends_on('snappy~shared')
     depends_on('zlib+pic')
-    depends_on('zstd+pic')
+    depends_on('zstd')
     depends_on('thrift+pic', when='+parquet')
     depends_on('orc', when='+orc')
 
