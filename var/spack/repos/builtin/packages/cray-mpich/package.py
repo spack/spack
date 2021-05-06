@@ -6,6 +6,7 @@
 from spack import *
 from spack.util.module_cmd import module
 from spack.util.module_cmd import get_path_args_from_module_line
+import os
 
 
 class CrayMpich(Package):
@@ -79,7 +80,7 @@ class CrayMpich(Package):
     def headers(self):
         hdrs = find_headers('mpi', self.prefix.include, recursive=True)
         hdrs.directories = os.path.dirname(hdrs[0])
-        return hdrs or None
+        return hdrs
 
     @property
     def libs(self):
