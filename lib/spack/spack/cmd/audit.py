@@ -12,7 +12,7 @@ section = "system"
 level = "short"
 
 CHECKS = {
-    'configs': ['CFG-COMPILER'],
+    'configs': ['CFG-COMPILER', 'CFG-PACKAGES'],
     'packages': ['PKG-DIRECTIVES']
 }
 
