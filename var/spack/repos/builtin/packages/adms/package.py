@@ -20,6 +20,7 @@ class Adms(AutotoolsPackage):
 
     depends_on('bison@2.5:', type='build')
     depends_on('flex', type='build')
+    depends_on('perl-xml-libxml', type='build')
 
     @when('@master')
     def autoreconf(self, spec, prefix):
