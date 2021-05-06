@@ -2454,3 +2454,18 @@ def test_does_not_rewrite_rel_dev_path_when_keep_relative_is_set(tmpdir):
         print(e.dev_specs)
         assert e.dev_specs['mypkg1']['path'] == '../build_folder'
         assert e.dev_specs['mypkg2']['path'] == '/some/other/path'
+
+
+@pytest.mark.regression('23440')
+def test_custom_version_concretize_together(tmpdir):
+    # Custom versions should be permitted in specs when
+    # concretizing together
+    e = ev.create('custom_version')
+    e.concretization = 'together'
+
+    # Concretize a first time using 'mpich' as the MPI provider
+    e.add('hdf5@myversion')
+    e.add('mpich')
+    e.concretize()
+
+    assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
