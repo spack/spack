@@ -112,7 +112,7 @@ installer.
 
 The last thing to do after running the installer is to finish Spack configuration. This
 is covered in the online documentation for Spack, but there are a few Windows-specific
-nuances that are worth mentioning here.
+steps that are necessary.
 
 First, inside the ``spack_cmd`` console, run the following command:
 
