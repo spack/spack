@@ -76,6 +76,7 @@ class CrayMpich(Package):
         raise InstallError(
             self.spec.format('{name} is not installable, you need to specify '
                              'it as an external package in packages.yaml'))
+
     @property
     def headers(self):
         hdrs = find_headers('mpi', self.prefix.include, recursive=True)

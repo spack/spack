@@ -28,7 +28,6 @@ class CrayFftw(Package):
 
     provides('fftw-api@3')
 
-
     variant(
         'precision', values=any_combination_of(
             'float', 'double'
