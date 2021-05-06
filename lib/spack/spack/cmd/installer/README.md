@@ -103,15 +103,15 @@ checkout of Spack source (release or development), you can use the
 # Step 4: Run the installer
 
 Regardless of your method, a file called ``Spack.msi`` will be created
-inside the ``tmp``directory, which can then be run from Windows Explorer
+inside the ``tmp`` directory, which can then be run from Windows Explorer
 like any other installer. After accepting the terms of service, select
 where on your computer you would like Spack installed, and after a few minutes
 Spack will be installed and ready for use.
 
 If your Spack installation needs to be modified, repaired, or uninstalled, 
-you can do either of these things by rerunning Spack.msi.
+you can do any of these things by rerunning Spack.msi.
 
-Running the installer also creates a shortcut on your desktop that,when launched,
+Running the installer also creates a shortcut on your desktop that, when launched,
 will load a console identical to ``spack_cmd``, but with its initial directory
 being wherever Spack was installed on your computer. Hence, the instructions in
 Step 5 can be done either in the ``spack_cmd`` console used in Steps 2 and 3
