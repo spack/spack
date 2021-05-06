@@ -2369,3 +2369,18 @@ spack:
             e.clear()
             e.write()
     assert os.path.exists(str(spack_lock))
+
+
+@pytest.mark.regression('23440')
+def test_custom_version_concretize_together(tmpdir):
+    # Custom versions should be permitted in specs when
+    # concretizing together
+    e = ev.create('custom_version')
+    e.concretization = 'together'
+
+    # Concretize a first time using 'mpich' as the MPI provider
+    e.add('hdf5@myversion')
+    e.add('mpich')
+    e.concretize()
+
+    assert any('hdf5@myversion' in spec for _, spec in e.concretized_specs())
