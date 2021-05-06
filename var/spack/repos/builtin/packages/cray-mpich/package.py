@@ -89,7 +89,7 @@ class CrayMpich(Package):
         libraries = ['libmpich']
 
         if 'cxx' in query_parameters:
-            libraries.append('libmpicxx', 'libmpichcxx')
+            libraries.extend(['libmpicxx', 'libmpichcxx'])
 
         if 'f77' in query_parameters:
             libraries.extend(['libmpifort', 'libmpichfort',
