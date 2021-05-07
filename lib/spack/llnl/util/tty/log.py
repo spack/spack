@@ -721,7 +721,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
     if sys.version_info < (3, 8) or sys.platform != 'darwin':
         os.close(write_fd)
 
-    in_pipe = fs.open_utf8(read_multiprocess_fd.fd, 'r')
+    in_pipe = fs.open_utf8(read_multiprocess_fd.fd, 'r', limit_buffering=True)
 
     if stdin_multiprocess_fd:
         stdin = os.fdopen(stdin_multiprocess_fd.fd)

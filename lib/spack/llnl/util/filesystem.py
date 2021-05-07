@@ -1806,7 +1806,7 @@ def prefixes(path):
     return paths
 
 
-def open_utf8(path_or_fd, mode):
+def open_utf8(path_or_fd, mode, limit_buffering=False):
     """Python 3.x before 3.7 does not open in UTF-8 by default. Python
        2.x versions do not support 'encoding' without the 'codecs' module.
     """
@@ -1831,7 +1831,11 @@ def open_utf8(path_or_fd, mode):
             else:
                 raise ValueError("Unexpected mode ('r' or 'w' expected): {0}"
                                  .format(mode))
-            file = os.fdopen(fd, bytes_mode)
+            if limit_buffering:
+                buffering = 0  # No buffering
+            else:
+                buffering = -1  # Default
+            file = os.fdopen(fd, bytes_mode, buffering=buffering)
             return stream_ctor(file)
         else:
             return os.fdopen(fd, mode, encoding='utf-8')
