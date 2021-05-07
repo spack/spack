@@ -9,9 +9,14 @@ from spack import *
 class Mummi(PythonPackage):
     """FIXME: Put a proper description of your package here."""
 
-    NEW_REPO = True
 
-    if NEW_REPO:
+    # -------------------------------------------------------------------
+    REPO_GENERATION = 1
+
+    if 2 == REPO_GENERATION:
+        pass
+
+    elif 1 == REPO_GENERATION:
         homepage = "https://code.ornl.gov/bhatiah/mummi"
         git      = "git@code.ornl.gov:bhatiah/mummi.git"
         version('develop', branch='develop')
@@ -32,9 +37,7 @@ class Mummi(PythonPackage):
         #version('2014-10-08', commit='9d38cd4e2c94c3cea97d0e2924814acc')
         #version('1.0', 'f43fb8126c138db96b489655914ed2bd5a469412')
 
-
     # -------------------------------------------------------------------
-
     extends('python@3.7:')
 
     # build dependencies
@@ -46,17 +49,9 @@ class Mummi(PythonPackage):
     depends_on('py-scipy')
 
     # ml
-    #depends_on('py-tensorflow@2.1.0 ~cuda~nccl')
     depends_on('faiss@1.6.3 +python')
-
-    '''
-    depends_on('cudnn@7.5.1-10.1-ppc64le')			      	        #TODO: these settings are for powerpc
-    depends_on('faiss@1.5.3 +python')
-    #depends_on('py-theano@1.0.4 +cuda ^cudnn@7.5.1-10.1-ppc64le')	#TODO: these settings are for powerpc
-    #depends_on('py-theano@1.0.4 +cuda')
-    depends_on('py-keras@2.2.4')
-    #depends_on('py-h5py@2.9.0~mpi ^hdf5~mpi+hl')
-    '''
+    depends_on('py-theano@1.0.4 ~cuda')
+    depends_on('py-h5py ~mpi')
 
     # analysis
     depends_on('talass@process-statistics')
@@ -68,7 +63,7 @@ class Mummi(PythonPackage):
 
     # cg and aa
     depends_on('ddcmdconverter@1.0.4')
-    depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
+    #depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
 
     depends_on('dssp@3.1.4')
     depends_on('py-parmed@3.2.0')
@@ -78,6 +73,8 @@ class Mummi(PythonPackage):
     depends_on('gromacs@2019.6 +cuda')
 
     # databroker
+    depends_on('redis')
+    depends_on('py-redis')
     #depends_on('databroker@0.7.1 +python')
 
     # flux
@@ -85,4 +82,4 @@ class Mummi(PythonPackage):
     #depends_on('py-maestrowf')
 
     # shared daemon
-    depends_on('py-cryptography@2.3.1')
+    depends_on('py-cryptography')
