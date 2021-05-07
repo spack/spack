@@ -21,7 +21,8 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['G-Ragghianti', 'mgates3']
 
     version('master', branch='master')
-    version('2021.05.00', sha256='ad03f21a8cbab1535822656be9e2ca198590757f2cb7445f719374de2634bd07')
+    version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
+    version('2021.05.00', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94e9910d8387c221183654218')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 
     variant('mpi',    default=True, description='Build with MPI support.')
@@ -33,9 +34,10 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blaspp ~cuda', when='~cuda')
     depends_on('blaspp +cuda', when='+cuda')
     depends_on('blaspp ~rocm', when='~rocm')
-    depends_on('blaspp +rocm', when='+rocm')
-    depends_on('lapackpp@2021.04.00:', when='@2021.05.00')
-    depends_on('lapackpp@2020.10.02:', when='@2020.10.00')
+    for val in ROCmPackage.amdgpu_targets:
+        depends_on('blaspp +rocm amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    depends_on('lapackpp@2021.04.00:', when='@2021.05.00:')
+    depends_on('lapackpp@2020.10.02', when='@2020.10.00')
     depends_on('lapackpp@master', when='@master')
     depends_on('scalapack')
 
@@ -44,7 +46,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('%xl', msg=cpp_17_msg)
     conflicts('%xl_r', msg=cpp_17_msg)
     conflicts('%intel@19:', msg='Does not currently build with icpc >= 2019')
-    conflicts('+rocm', when='@:2020.10.00', msg='ROCm support requires SLATE 2021.05.00 or greater')
+    conflicts('+rocm', when='@:2020.10.00', msg='ROCm support requires SLATE 2021.05.01 or greater')
     conflicts('+rocm', when='+cuda', msg='SLATE only supports one GPU backend at a time')
 
     def cmake_args(self):
