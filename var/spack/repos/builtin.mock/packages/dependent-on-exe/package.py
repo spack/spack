@@ -10,7 +10,9 @@ import stat
 
 
 class DependentOnExe(Package):
-    """Simple package with one optional dependency"""
+    """This package has a runtime dependency on another package which needs
+       to perform shell modifications to run.
+    """
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"

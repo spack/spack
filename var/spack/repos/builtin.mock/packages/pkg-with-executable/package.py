@@ -10,7 +10,7 @@ import stat
 
 
 class PkgWithExecutable(Package):
-    """Dependency package which needs to make env modifications when run"""
+    """Dependency package which needs to make shell modifications to run"""
 
     homepage = "http://www.example.com"
     url      = "http://www.example.com/a-1.0.tar.gz"
