@@ -191,7 +191,7 @@ class Openmpi(AutotoolsPackage):
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
-    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
+    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.0')
 
     variant(
         'fabrics',
