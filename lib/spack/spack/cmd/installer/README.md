@@ -10,7 +10,6 @@ run the installer, in addition to running Spack in general:
 * Visual Studio
 * Python
 * Git
-* CMake
 * Wix
 
 ## Visual Studio
@@ -34,14 +33,6 @@ download Spack and the appropriate installation files. A bash console and GUI
 can be downloaded from https://git-scm.com/downloads. If you are unfamiliar
 with Git, there are a myriad of resources online to help guide you through
 checking out repositories and switching development branches.
-
-## CMake
-
-CMake is a buildfile generator that will be used to help create the Windows
-installer and, later on, install packages with Spack. While your Visual
-Studio installation will have a CMake installation as well (see above), we
-recommend you still download CMake from https://cmake.org/download/ as
-there may be a newer version available.
 
 ## Wix Toolset
 
@@ -147,16 +138,17 @@ provided with your Spack checkout, except with forward slashes replaced by backs
 Windows compatibility.) It is important that all indentions in .yaml files are done with spaces
 and not tabs, so take care when editing one by hand.
 
-For the packages.yaml file, we need to direct spack towards both our CMake
-installation and towards Ninja. Therefore, your packages.yaml file will look something
+For the packages.yaml file, we need to direct spack towards the CMake and Ninja installations
+we set up with Visual Studio. Therefore, your packages.yaml file will look something
 like this, with possibly slight variants in the paths to CMake and Ninja:
 
 ```
 packages:
   cmake:
     externals:
-    - spec: cmake@3.20.1
-      prefix: 'c:\Program Files\CMake'
+    - spec: cmake@3.19
+      prefix: 'c:\Program Files (x86)\Microsoft Visual Studio
+\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake'
     buildable: False
   ninja:
     externals:
@@ -166,9 +158,8 @@ packages:
     buildable: False
 ```	
 
-It is also entirely possible to use the CMake that comes with the Visual Studio
-install. We use the one installed externally as that is likely a more recent
-version. If you don't have a path to Ninja analogous to the above, then you can
+You can also use an external installation of CMake if you have one and prefer
+to use it. If you don't have a path to Ninja analogous to the above, then you can
 obtain it by running the Visual Studio Insaller and following the instructions
 in Step 1 of this walkthrough.
 
