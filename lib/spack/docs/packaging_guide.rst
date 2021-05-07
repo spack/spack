@@ -1180,14 +1180,14 @@ version directive.
 CVS
 ^^^
 
-CVS is an old centralized version control system similar to
-Subversion.
+CVS (Concurrent Versions System) is an old centralized version control
+system. It is a predecessor of Subversion.
 
 To fetch with CVS, use the ``cvs`` and ``date`` parameters. The
 destination directory will be the standard stage source path.
 
 Fetching the head
-  Simply add an ``cvs`` parameter to the package:
+  Simply add a ``cvs`` parameter to the package:
 
   .. code-block:: python
 
@@ -1197,7 +1197,7 @@ Fetching the head
 
          version('1.1.2.4')
 
-  CVS repositories locations are described using an older syntax that
+  CVS repository locations are described using an older syntax that
   is different from today's ubiquitous URL syntax. ``:pserver:``
   denotes the transport method. CVS servers can host multiple
   repositories (called "modules") at the same location, and one needs
@@ -1209,11 +1209,12 @@ Fetching the head
 
 Fetching a date
   Versions in CVS are commonly specified by date. To fetch a
-  particular date, add a ``date`` argument to the version directive:
+  particular branch or date, add a ``branch`` and/or ``date`` argument
+  to the version directive:
 
   .. code-block:: python
 
-     version('2021.4.22', date='2021-04-22')
+     version('2021.4.22', branch='branchname', date='2021-04-22')
 
   This download method is untrusted.
 
