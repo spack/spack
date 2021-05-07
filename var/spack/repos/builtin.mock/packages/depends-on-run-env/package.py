@@ -16,7 +16,7 @@ class DependsOnRunEnv(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('pkg-with-run-env', type=('run',))
+    depends_on('modifies-run-env', type=('run',))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

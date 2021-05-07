@@ -6,7 +6,7 @@
 from spack import *
 
 
-class PkgWithRunEnv(Package):
+class ModifiesRunEnv(Package):
     """Dependency package which needs to make shell modifications to run"""
 
     homepage = "http://www.example.com"
