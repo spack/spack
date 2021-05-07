@@ -21,15 +21,3 @@ class DependentOnExe(Package):
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)
-
-        exe_fname = join_path(prefix.bin, 'dependent-exe')
-
-        with open(exe_fname, 'w') as exe_file:
-            exe_file.write("""\
-#!/bin/bash
-echo "Dependent bash script"
-dependency-exe
-""")
-
-        st = os.stat(exe_fname)
-        os.chmod(exe_fname, st.st_mode | stat.S_IEXEC)

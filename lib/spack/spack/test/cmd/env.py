@@ -201,7 +201,7 @@ def test_env_modifications_error_on_activate(
 
 
 def test_activate_adds_transitive_run_deps_to_path(
-        install_mockery, mock_fetch, monkeypatch, capfd):
+        install_mockery, mock_fetch, monkeypatch):
     env('create', 'test')
     install = SpackCommand('install')
 
@@ -209,12 +209,8 @@ def test_activate_adds_transitive_run_deps_to_path(
     with e:
         install('dependent-on-exe')
 
-    with e:
-        import pdb; pdb.set_trace()
-        exe = spack.util.executable.which('dependent-exe')
-        exe()
-
-    out, err = capfd.readouterr()
+    cmds = spack.environment.activate(e)
+    assert 'DEPENDENCY_ENV_VAR=1' in cmds
 
 
 def test_env_install_same_spec_twice(install_mockery, mock_fetch):
