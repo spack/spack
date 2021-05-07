@@ -51,7 +51,7 @@ class SuiteSparse(Package):
 
     depends_on('cuda', when='+cuda')
 
-    # needed  for cce+cray-libsci if scalapack is needed 
+    # needed  for cce+cray-libsci if scalapack is needed
     # (cray-libsci's scalapack depends on mpi)
     depends_on('mpi', when='%cce+mpi')
 
