@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import itertools
 import os
 
 
@@ -60,12 +61,16 @@ class Gromacs(CMakePackage):
     version('4.6.7', sha256='6afb1837e363192043de34b188ca3cf83db6bd189601f2001a1fc5b0b2a214d9')
     version('4.5.5', sha256='e0605e4810b0d552a8761fef5540c545beeaf85893f4a6e21df9905a33f871ba')
 
-    variant('mpi', default=True, description='Activate MPI support (disable for Thread-MPI support)')
+    variant('parallel', default='thread-mpi,mpi',
+            values=('thread-mpi', 'mpi'),
+            multi=True,
+            description='parallelization mode (Thread-MPI or MPI support)')
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant(
-        'double', default=False,
-        description='Produces a double precision version of the executables')
+    variant('precision', default='single',
+            values=('single', 'double'),
+            multi=True,
+            description='Floating poing precision of the executables')
     variant('plumed', default=False, description='Enable PLUMED support')
     variant('cuda', default=False, description='Enable CUDA support')
     variant('opencl', default=False, description='Enable OpenCL support')
@@ -95,7 +100,7 @@ class Gromacs(CMakePackage):
     variant('cycle_subcounters', default=False,
             description='Enables cycle subcounters')
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='parallel=mpi')
 
     # Plumed 2.7.2 needs Gromacs 2021, 2020.6, 2019.6
     # Plumed 2.7.1 needs Gromacs 2021, 2020.5, 2019.6
@@ -171,6 +176,13 @@ class Gromacs(CMakePackage):
         '*.cmake',
         relative_root=os.path.join('share', 'cmake', 'gromacs'))
 
+    flavor = ('', '')
+
+    @property
+    def build_directory(self):
+        (precision, parallel) = self.flavor
+        return join_path(super().build_directory, join_path(precision, parallel))
+
     def patch(self):
         # Otherwise build fails with GCC 11 (11.2)
         if self.spec.satisfies('@2018:2020.6'):
@@ -224,7 +236,9 @@ class Gromacs(CMakePackage):
 
         options = []
 
-        if '+mpi' in self.spec:
+        (precision, parallel) = self.flavor
+
+        if parallel == 'mpi':
             options.append('-DGMX_MPI:BOOL=ON')
             if self.version < Version('2020'):
                 # Ensures gmxapi builds properly
@@ -257,7 +271,7 @@ class Gromacs(CMakePackage):
         if self.spec.satisfies('@2020:'):
             options.append('-DGMX_INSTALL_LEGACY_API=ON')
 
-        if '+double' in self.spec:
+        if precision == 'double':
             options.append('-DGMX_DOUBLE:BOOL=ON')
 
         if '+nosuffix' in self.spec:
@@ -415,3 +429,28 @@ class Gromacs(CMakePackage):
         else:
             options.append('-DGMX_VERSION_STRING_OF_FORK=spack')
         return options
+
+    def cmake(self, spec, prefix):
+        precisions = []
+        if 'precision=single' in self.spec:
+            precisions.append('single')
+        if 'precision=double' in self.spec:
+            precisions.append('double')
+
+        parallels = []
+        if 'parallel=thread-mpi' in self.spec:
+            parallels.append('thread-mpi')
+        if 'parallel=mpi' in self.spec:
+            parallels.append('mpi')
+
+        self.flavors = [p for p in itertools.product(*[precisions, parallels])]
+        for self.flavor in self.flavors:
+            super().cmake(spec, prefix)
+
+    def build(self, spec, prefix):
+        for self.flavor in self.flavors:
+            super().build(spec, prefix)
+
+    def install(self, spec, prefix):
+        for self.flavor in self.flavors:
+            super().install(spec, prefix)
