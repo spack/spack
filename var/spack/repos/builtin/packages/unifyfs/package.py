@@ -113,5 +113,5 @@ class Unifyfs(AutotoolsPackage):
 
     @when('%cce@11.0.3:')
     def patch(self):
-        filter_file('-Werror','','client/src/Makefile.in')
-        filter_file('-Werror','','client/src/Makefile.am')
+        filter_file('-Werror', '', 'client/src/Makefile.in')
+        filter_file('-Werror', '', 'client/src/Makefile.am')
