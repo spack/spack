@@ -60,7 +60,6 @@ class FluxCore(AutotoolsPackage):
     # versions up to 0.8.0 uses pylint to check Flux's python binding
     # later versions provide a configure flag and disable the check by default
     depends_on("py-pylint", when='@:0.8.0', type='build')
->>>>>>> 8a1ed6ed12 (squash and merge "bhatia-mummi" branch (copied into mummi1))
 
     depends_on("asciidoc", type='build', when="+docs")
 
