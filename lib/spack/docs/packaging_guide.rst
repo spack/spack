@@ -1183,8 +1183,8 @@ CVS
 CVS (Concurrent Versions System) is an old centralized version control
 system. It is a predecessor of Subversion.
 
-To fetch with CVS, use the ``cvs`` and ``date`` parameters. The
-destination directory will be the standard stage source path.
+To fetch with CVS, use the ``cvs``, branch, and ``date`` parameters.
+The destination directory will be the standard stage source path.
 
 Fetching the head
   Simply add a ``cvs`` parameter to the package:
