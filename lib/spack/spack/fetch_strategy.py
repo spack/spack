@@ -941,7 +941,6 @@ class GitFetchStrategy(VCSFetchStrategy):
 
 @fetcher
 class CvsFetchStrategy(VCSFetchStrategy):
-
     """Fetch strategy that gets source code from a CVS repository.
        Use like this in a package:
 
