@@ -32,11 +32,14 @@ class Pdt(AutotoolsPackage):
 
     variant('pic', default=False, description="Builds with pic")
 
+    patch('cray_configure.patch',when='%cce')
+
     def patch(self):
         spec = self.spec
         if spec.satisfies('%clang') or spec.satisfies('%apple-clang'):
             filter_file(r'PDT_GXX=g\+\+ ',
                         r'PDT_GXX=clang++ ', 'ductape/Makefile')
+
 
     def configure(self, spec, prefix):
         options = ['-prefix=%s' % prefix]
@@ -50,6 +53,8 @@ class Pdt(AutotoolsPackage):
             options.append('-GNU')
         elif self.compiler.name == 'clang':
             options.append('-clang')
+        elif self.compiler.name == 'cce':
+            options.append('-CC')
         else:
             raise InstallError('Unknown/unsupported compiler family')
 
