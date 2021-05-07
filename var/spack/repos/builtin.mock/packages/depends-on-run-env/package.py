@@ -5,9 +5,6 @@
 
 from spack import *
 
-import os
-import stat
-
 
 class DependsOnRunEnv(Package):
     """This package has a runtime dependency on another package which needs

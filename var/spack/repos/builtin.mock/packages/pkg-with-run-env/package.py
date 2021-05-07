@@ -5,9 +5,6 @@
 
 from spack import *
 
-import os
-import stat
-
 
 class PkgWithRunEnv(Package):
     """Dependency package which needs to make shell modifications to run"""
