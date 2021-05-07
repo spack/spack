@@ -7,13 +7,14 @@
 """
 
 from spack.util.naming import class_to_mod
+from typing import List  # novm
 
 
 class BuildTypeBase(object):
     """A build type base provides base functions to look up flags for a compiler.
     """
-    compiler_attrs = []
-    cuda_attrs = []
+    compiler_attrs: List[str] = []
+    cuda_attrs: List[str] = []
 
     def __init__(self, spec):
         self.spec = spec
@@ -72,8 +73,8 @@ class RelWithDeb(BuildTypeBase):
     """
     Eventually will be the default
     """
-    compiler_attrs = []
-    cuda_attrs = []
+    compiler_attrs: List[str] = []
+    cuda_attrs: List[str] = []
 
 
 class Debug(BuildTypeBase):
@@ -81,18 +82,18 @@ class Debug(BuildTypeBase):
     The debug build type corresponds with the user asking for
     spack_build_type=debug
     """
-    compiler_attrs = ['debug_flag']
-    cuda_attrs = ['debug_flag']
+    compiler_attrs: List[str] = ['debug_flag']
+    cuda_attrs: List[str] = ['debug_flag']
 
 
 class DebugOpt(BuildTypeBase):
-    compiler_attrs = ['debug_flag', 'debug_optimize_flag']
-    cuda_attrs = ['debug_flag']
+    compiler_attrs: List[str] = ['debug_flag', 'debug_optimize_flag']
+    cuda_attrs: List[str] = ['debug_flag']
 
 
 class DebugMax(BuildTypeBase):
-    compiler_attrs = ['debug_max_flag']
-    cuda_attrs = ['debug_flag']
+    compiler_attrs: List[str] = ['debug_max_flag']
+    cuda_attrs: List[str] = ['debug_flag']
 
 
 debug_types = {"debug", "debug_opt", "debug_max"}
