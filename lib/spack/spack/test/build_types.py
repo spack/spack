@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import inspect
-
 import spack.build_types
 from spack.util.naming import class_to_mod
 
@@ -13,15 +11,8 @@ def test_class_to_mod():
     """
     Ensure that every module in build_types has a key via class_to_mod.
     """
-    classes = inspect.getmembers(spack.build_types, inspect.isclass)
-    for classname, _ in classes:
-
-        # This is more of an abstract class
-        if classname == "BuildTypeBase":
-            continue
-
-        build_type = class_to_mod(classname)
-        assert build_type in spack.build_types.build_types
+    build_type = class_to_mod("DebugMax")
+    assert build_type in spack.build_types.build_types
 
 
 def test_build_type_flags():
