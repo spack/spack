@@ -66,7 +66,7 @@ class CrayLibsci(Package):
         else:
             lib = ["libsci_{0}"]
 
-        libname = [ ]
+        libname = []
         for i in range(len(lib)):
             libname.append(lib[i].format(self.canonical_names[compiler].lower()))
 
