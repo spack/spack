@@ -9,7 +9,7 @@ import os
 import stat
 
 
-class DependentOnExe(Package):
+class DependsOnRunEnv(Package):
     """This package has a runtime dependency on another package which needs
        to perform shell modifications to run.
     """
@@ -19,7 +19,7 @@ class DependentOnExe(Package):
 
     version('1.0', '0123456789abcdef0123456789abcdef')
 
-    depends_on('pkg-with-executable', type=('run',))
+    depends_on('pkg-with-run-env', type=('run',))
 
     def install(self, spec, prefix):
         mkdirp(prefix.bin)

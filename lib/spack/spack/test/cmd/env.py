@@ -207,7 +207,7 @@ def test_activate_adds_transitive_run_deps_to_path(
 
     e = ev.read('test')
     with e:
-        install('dependent-on-exe')
+        install('depends-on-run-env')
 
     cmds = spack.environment.activate(e)
     assert 'DEPENDENCY_ENV_VAR=1' in cmds

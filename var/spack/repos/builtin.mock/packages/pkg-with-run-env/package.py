@@ -9,7 +9,7 @@ import os
 import stat
 
 
-class PkgWithExecutable(Package):
+class PkgWithRunEnv(Package):
     """Dependency package which needs to make shell modifications to run"""
 
     homepage = "http://www.example.com"
