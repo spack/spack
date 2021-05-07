@@ -20,7 +20,7 @@ class PyBrian2(PythonPackage):
     variant('docs', default=False, description='Build the documentation')
 
     depends_on('python@2.7:', type=('build', 'run'))
-    depends_on('python@3.6:', type=('build', 'run'), when='@2.4')
+    depends_on('python@3.6:', type=('build', 'run'), when='@2.4:')
     depends_on('py-numpy@1.10:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', type=('build', 'run'), when='@2.4:')
     depends_on('py-cython@0.29:', type=('build', 'run'))

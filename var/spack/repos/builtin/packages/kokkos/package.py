@@ -12,7 +12,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     homepage = "https://github.com/kokkos/kokkos"
     git = "https://github.com/kokkos/kokkos.git"
-    url = "https://github.com/kokkos/kokkos/archive/3.3.01.tar.gz"
+    url = "https://github.com/kokkos/kokkos/archive/3.4.00.tar.gz"
 
     test_requires_compiler = True
 
@@ -20,6 +20,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master',  branch='master')
     version('develop', branch='develop')
+    version('3.4.00', sha256='2e4438f9e4767442d8a55e65d000cc9cde92277d415ab4913a96cd3ad901d317')
     version('3.3.01', sha256='4919b00bb7b6eb80f6c335a32f98ebe262229d82e72d3bae6dd91aaf3d234c37')
     version('3.2.00', sha256='05e1b4dd1ef383ca56fe577913e1ff31614764e65de6d6f2a163b2bddb60b3e9')
     version('3.1.01', sha256='ff5024ebe8570887d00246e2793667e0d796b08c77a8227fe271127d36eec9dd')
@@ -34,8 +35,10 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'pthread': [False, 'Whether to build Pthread backend'],
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
+        'sycl': [False, 'Whether to build the SYCL backend'],
     }
     conflicts("+rocm", when="@:3.0")
+    conflicts("+sycl", when="@:3.3")
 
     tpls_variants = {
         'hpx': [False, 'Whether to enable the HPX library'],

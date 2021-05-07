@@ -30,6 +30,10 @@ class Silo(AutotoolsPackage):
             description='Compile with MPI Compatibility')
     variant('hdf5', default=True,
             description='Use the HDF5 for database')
+    variant('hzip', default=True,
+            description='Enable hzip support')
+    variant('fpzip', default=True,
+            description='Enable fpzip support')
 
     depends_on('mpi', when='+mpi')
     depends_on('hdf5@:1.10.999', when='@:4.10.2+hdf5')
@@ -106,6 +110,8 @@ class Silo(AutotoolsPackage):
             '--enable-fortran' if '+fortran' in spec else '--disable-fortran',
             '--enable-silex' if '+silex' in spec else '--disable-silex',
             '--enable-shared' if '+shared' in spec else '--disable-shared',
+            '--enable-hzip' if '+hzip' in spec else '--disable-hzip',
+            '--enable-fpzip' if '+fpzip' in spec else '--disable-fpzip',
         ]
 
         # Do not specify the prefix of zlib if it is in a system directory

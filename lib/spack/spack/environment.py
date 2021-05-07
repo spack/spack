@@ -1440,21 +1440,31 @@ class Environment(object):
             args (Namespace): argparse namespace with command arguments
             install_args (dict): keyword install arguments
         """
+        self.install_specs(None, args=args, **install_args)
+
+    def install_specs(self, specs=None, args=None, **install_args):
         from spack.installer import PackageInstaller
+
         tty.debug('Assessing installation status of environment packages')
         # If "spack install" is invoked repeatedly for a large environment
         # where all specs are already installed, the operation can take
         # a large amount of time due to repeatedly acquiring and releasing
         # locks, this does an initial check across all specs within a single
-        # DB read transaction to reduce time spent in this case.
-        specs_to_install = self.uninstalled_specs()
+        # DB read transaction to reduce time spent in this case. In the next
+        # three lines we remove any already-installed root specs from the list
+        # to install.  However, uninstalled_specs() only considers root specs,
+        # so this will allow dep specs to be unnecessarily re-installed.
+        uninstalled_roots = self.uninstalled_specs()
+        specs_to_install = specs or uninstalled_roots
+        specs_to_install = [s for s in specs_to_install
+                            if s not in self.roots() or s in uninstalled_roots]
 
         if not specs_to_install:
             tty.msg('All of the packages are already installed')
             return
 
-        tty.debug('Processing {0} uninstalled specs'
-                  .format(len(specs_to_install)))
+        tty.debug('Processing {0} uninstalled specs'.format(
+            len(specs_to_install)))
 
         install_args['overwrite'] = install_args.get(
             'overwrite', []) + self._get_overwrite_specs()
@@ -1574,7 +1584,7 @@ class Environment(object):
                             if abstract)
 
         if len(root_matches) == 1:
-            return root_matches[0][1]
+            return list(root_matches.items())[0][0]
 
         # More than one spec matched, and either multiple roots matched or
         # none of the matches were roots
