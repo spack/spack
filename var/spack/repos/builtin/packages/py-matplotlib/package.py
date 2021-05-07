@@ -189,6 +189,9 @@ class PyMatplotlib(PythonPackage):
                 setup.write('[libs]\n')
                 setup.write('system_freetype = True\n')
                 setup.write('system_qhull = True\n')
+                setup.write('enable_lto = False\n')
+            if self.spec.satisfies('%clang'):
+                setup.write('enable_lto = False\n')
 
     @run_after('build')
     @on_package_attributes(run_tests=True)
