@@ -645,9 +645,11 @@ class Python(AutotoolsPackage):
                 return Executable(path)
             else:
                 path = self.prefix.bin.replace(os.sep+"bin","")
-                path = os.path.join(path, 'python{0}'.format(ver))
-                if sys.platform == 'win32':
-                    path = path + ".exe"
+                if sys.platform != "win32":
+                   path = os.path.join(self.prefix.bin, 'python{0}'.format(ver))
+                else:
+                   path = os.path.join(self.prefix, 'python{0}'.format(ver))
+                   path = path + ".exe"
                 if os.path.exists(path):
                     return Executable(path)
 

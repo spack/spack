@@ -50,15 +50,16 @@ class Ninja(Package):
         env.prepend_path('PYTHONPATH', self.prefix.misc)
 
     def install(self, spec, prefix):
-        if sys.platform == 'win32':
-            ext = '.exe'
-        else:
-            ext = ''
         mkdir(prefix.bin)
-        install('ninja'+ext, prefix.bin)
+        name = 'ninja'
+        if sys.platform == 'win32':
+            name = name + '.exe'
+        install(name, prefix.bin)
         install_tree('misc', prefix.misc)
 
+        if sys.platform == "win32":
+            return
         # Some distros like Fedora install a 'ninja-build' executable
         # instead of 'ninja'. Install both for uniformity.
         with working_dir(prefix.bin):
-            symlink('ninja'+ext, 'ninja-build'+ext)
+            symlink('ninja', 'ninja-build')
