@@ -19,25 +19,52 @@ class Berkeleygw(MakefilePackage):
             url='https://berkeley.box.com/shared/static/ze3azi5vlyw7hpwvl9i5f82kaiid6g0x.gz',
             expand=False)
 
+    variant('mpi', default=True, description='Builds with MPI support')
     variant('elpa', default=True, description='Build with ELPA support')
+    variant('python', default=False, description='Build with Python support')
     variant('openmp', default=True, description='Build with OpenMP support')
+    variant('scalapack', default=True, description='Build with ScaLAPACK support')
+    variant('hdf5', default=True, description='Builds with HDF5 support')
+    variant('debug', default=False, description='Builds with DEBUG flag')
+    variant('verbose', default=False, description='Builds with VERBOSE flag')
 
-    depends_on('mpi')
     depends_on('blas')
     depends_on('lapack')
     depends_on('scalapack')
-
-    depends_on('fftw+openmp', when='+openmp')
-    depends_on('fftw~openmp', when='~openmp')
-
+    depends_on('mpi', when='+mpi')
+    depends_on('hdf5+fortran+hl', when='+hdf5~mpi')
+    depends_on('hdf5+fortran+hl+mpi', when='+hdf5+mpi')
+    depends_on('scalapack', when='+scalapack+mpi')
     depends_on('elpa+openmp', when='+elpa+openmp')
     depends_on('elpa~openmp', when='+elpa~openmp')
+    depends_on('fftw-api@3+openmp', when='+openmp')
+    depends_on('fftw-api@3~openmp', when='~openmp')
 
-    depends_on('hdf5+fortran+hl')
-
-    depends_on('py-h5py', type=('build', 'run'))
+    depends_on('python@:2', type=('build', 'run'), when='+python')
+    depends_on('py-numpy@:1.16', type=('build', 'run'), when='+python')
+    depends_on('py-setuptools@:44', type=('build', 'run'), when='+python')
+    depends_on('py-h5py@:2', type=('build', 'run'), when='+hdf5+python')
 
     depends_on('perl', type='test')
+
+    conflicts(
+        '+scalapack',
+        when='~mpi',
+        msg='scalapack is a parallel library and needs MPI support'
+    )
+
+    conflicts(
+        '+elpa',
+        when='~mpi',
+        msg='elpa is a parallel library and needs MPI support'
+    )
+
+    # the concretizer is selecting non threaded versions of fftw and openblas even though +openmp is set...
+    # as a workaround, the conflicts below force the user to spec ^fftw+openmp ^openblas threads=openmp
+    # but this may also happen for other providers of fftw and blas...
+    conflicts('^fftw~openmp', when='+openmp')
+    conflicts('^openblas threads=none', when='+openmp')
+    conflicts('^openblas threads=pthreads', when='+openmp')
 
     parallel = False
 
@@ -52,6 +79,10 @@ class Berkeleygw(MakefilePackage):
 
         # don't try to install missing file
         filter_file('install manual.html', '#install manual.html', 'Makefile')
+
+        # don't rebuild in the install and test steps
+        filter_file('install: all', 'install:', 'Makefile')
+        filter_file('check: all', 'check:', 'Makefile')
 
         # use parallelization in tests
         filter_file(r'cd testsuite \&\& \$\(MAKE\) check$',
@@ -73,7 +104,8 @@ class Berkeleygw(MakefilePackage):
         buildopts = []
         paraflags = []
 
-        paraflags.append('-DMPI')
+        if '+mpi' in spec:
+            paraflags.append('-DMPI')
 
         if '+openmp' in spec:
             paraflags.append('-DOMP')
@@ -82,10 +114,12 @@ class Berkeleygw(MakefilePackage):
         buildopts.append('C_PARAFLAG=-DPARA')
         buildopts.append('PARAFLAG=%s' % ' '.join(paraflags))
 
+        debugflag = ""
         if '+debug' in spec:
-            buildopts.append('DEBUGFLAG=-DDEBUG -DVERBOSE')
-        else:
-            buildopts.append('DEBUGFLAG=')
+            debugflag += "-DDEBUG "
+        if '+verbose' in spec:
+            debugflag += "-DVERBOSE "
+        buildopts.append('DEBUGFLAG=%s' % debugflag)
 
         buildopts.append('LINK=%s' % spec['mpi'].mpifc)
         buildopts.append('C_LINK=%s' % spec['mpi'].mpicxx)
@@ -94,16 +128,17 @@ class Berkeleygw(MakefilePackage):
         buildopts.append('C_OPTS=%s' % ' '.join(spec.compiler_flags['cflags']))
 
         mathflags = []
-        mathflags.append('-DUSEFFTW3')
-        buildopts.append('FFTWINCLUDE=%s' % spec['fftw'].prefix.include)
-        fftwlibs = '-lfftw3 -lfftw3f'
-        if '+openmp' in spec:
-            fftwlibs = '-lfftw3_omp ' + fftwlibs
-        buildopts.append('FFTWLIB=-L%s %s' % (spec['fftw'].libs, fftwlibs))
 
-        mathflags.append('-DUSESCALAPACK')
+        mathflags.append('-DUSEFFTW3')
+        buildopts.append('FFTWINCLUDE=%s' % spec['fftw-api'].prefix.include)
+        fftwspec = spec['fftw-api:openmp' if '+openmp' in spec else 'fftw-api']
+        buildopts.append('FFTWLIB=%s' % fftwspec.libs.ld_flags)
+
         buildopts.append('LAPACKLIB=%s' % spec['lapack'].libs.ld_flags)
-        buildopts.append('SCALAPACKLIB=%s' % spec['scalapack'].libs.ld_flags)
+
+        if '+scalapack' in spec:
+            mathflags.append('-DUSESCALAPACK')
+            buildopts.append('SCALAPACKLIB=%s' % spec['scalapack'].libs.ld_flags)
 
         if spec.satisfies('%intel'):
             buildopts.append('COMPFLAG=-DINTEL')
@@ -114,6 +149,7 @@ class Berkeleygw(MakefilePackage):
             buildopts.append('CC_COMP=%s' % spec['mpi'].mpicxx)
             buildopts.append('BLACSDIR=%s' % spec['scalapack'].libs)
             buildopts.append('BLACS=%s' % spec['scalapack'].libs.ld_flags)
+            buildopts.append('FOPTS=%s' % ' '.join(spec.compiler_flags['fflags']))
         elif spec.satisfies('%gcc'):
             c_flags = '-std=c99'
             cxx_flags = '-std=c++0x'
@@ -128,13 +164,26 @@ class Berkeleygw(MakefilePackage):
             buildopts.append('FCPP=cpp -C -nostdinc')
             buildopts.append('C_COMP=%s %s' % (spec['mpi'].mpicc, c_flags))
             buildopts.append('CC_COMP=%s %s' % (spec['mpi'].mpicxx, cxx_flags))
+            buildopts.append('FOPTS=%s' % ' '.join(spec.compiler_flags['fflags']))
+        elif spec.satisfies('%fj'):
+            c_flags = '-std=c99'
+            cxx_flags = '-std=c++0x'
+            f90_flags = "-Free"
+            buildopts.append('COMPFLAG=')
+            buildopts.append('MOD_OPT=-module ')
+            buildopts.append('F90free=%s %s' % (spec['mpi'].mpifc, f90_flags))
+            buildopts.append('FCPP=cpp -C -nostdinc')
+            buildopts.append('C_COMP=%s %s' % (spec['mpi'].mpicc, c_flags))
+            buildopts.append('CC_COMP=%s %s' % (spec['mpi'].mpicxx, cxx_flags))
+            buildopts.append('FOPTS=-Kfast -Knotemparraystack %s' % ' '.join(spec.compiler_flags['fflags']))
         else:
             raise InstallError("Spack does not yet have support for building "
                                "BerkeleyGW with compiler %s" % spec.compiler)
 
-        mathflags.append('-DHDF5')
-        buildopts.append('HDF5INCLUDE=%s' % spec['hdf5'].prefix.include)
-        buildopts.append('HDF5LIB=%s' % spec['hdf5:hl,fortran'].libs.ld_flags)
+        if '+hdf5' in spec:
+            mathflags.append('-DHDF5')
+            buildopts.append('HDF5INCLUDE=%s' % spec['hdf5'].prefix.include)
+            buildopts.append('HDF5LIB=%s' % spec['hdf5:hl,fortran'].libs.ld_flags)
 
         if '+elpa' in spec:
             mathflags.append('-DUSEELPA')
