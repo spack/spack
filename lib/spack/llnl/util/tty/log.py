@@ -322,7 +322,8 @@ class FileWrapper(object):
     def unwrap(self):
         if self.open:
             if self.file_like:
-                self.file = fs.open_utf8(self.file_like, 'w')
+                self.file = fs.open_utf8(self.file_like, 'w',
+                                         limit_buffering=True)
             else:
                 self.file = StringIO()
             return self.file

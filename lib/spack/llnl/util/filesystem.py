@@ -1835,7 +1835,7 @@ def open_utf8(path_or_fd, mode, limit_buffering=False):
                 buffering = 0  # No buffering
             else:
                 buffering = -1  # Default
-            file = os.fdopen(fd, bytes_mode, buffering=buffering)
+            file = os.fdopen(fd, bytes_mode, buffering)
             return stream_ctor(file)
         else:
             return os.fdopen(fd, mode, encoding='utf-8')
