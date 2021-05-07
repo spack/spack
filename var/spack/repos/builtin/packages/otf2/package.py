@@ -35,12 +35,12 @@ class Otf2(AutotoolsPackage):
     patch('collective_callbacks.patch', when='@2.1:2.2')
 
     # when using Cray's cs-prgenv, allow the build system to detect the systems as an XC
-    patch('cray_ac_scorep_sys_detection-m4.patch',when='%cce')
+    patch('cray_ac_scorep_sys_detection-m4.patch', when='%cce')
 
     @property
     def force_autoreconf(self):
         return self.spec.satisfies('%cce')
-        
+
     def configure_args(self):
         return [
             '--enable-shared',
