@@ -33,6 +33,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         description="Select an X toolkit (gtk, athena)"
     )
     variant('tls', default=False, description="Build Emacs with gnutls")
+    variant('native', default=False, description="enable native compilation of elisp")
 
     depends_on('pkgconfig', type='build')
 
@@ -53,6 +54,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('autoconf', when="@master:")
     depends_on('automake', when="@master:")
     depends_on('libtool', when="@master:")
+    depends_on('gcc@11.1.0 +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
 
@@ -79,6 +81,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         # doing so throws an error at build-time
         if sys.platform == 'darwin':
             args.append('--without-ns')
+
+        if '+native' in spec:
+            args.append('--with-native-compilation')
 
         if '+tls' in spec:
             args.append('--with-gnutls')
