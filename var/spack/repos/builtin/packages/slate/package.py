@@ -22,7 +22,6 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
 
     version('master', branch='master')
     version('2021.05.01', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94ed910d8387c221183654218')
-    version('2021.05.00', sha256='d9db2595f305eb5b1b49a77cc8e8c8e43c3faab94e9910d8387c221183654218')
     version('2020.10.00', sha256='ff58840cdbae2991d100dfbaf3ef2f133fc2f43fc05f207dc5e38a41137882ab')
 
     variant('mpi',    default=True, description='Build with MPI support.')
@@ -36,7 +35,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blaspp ~rocm', when='~rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('blaspp +rocm amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
-    depends_on('lapackpp@2021.04.00:', when='@2021.05.00:')
+    depends_on('lapackpp@2021.04.00:', when='@2021.05.01:')
     depends_on('lapackpp@2020.10.02', when='@2020.10.00')
     depends_on('lapackpp@master', when='@master')
     depends_on('scalapack')
@@ -52,7 +51,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     def cmake_args(self):
         spec = self.spec
         backend_config = '-Duse_cuda=%s' % ('+cuda' in spec)
-        if self.version >= Version('2021.05.00'):
+        if self.version >= Version('2021.05.01'):
             backend = 'none'
             if '+cuda' in spec:
                 backend = 'cuda'
