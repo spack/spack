@@ -13,8 +13,8 @@ from typing import List  # novm
 class BuildTypeBase(object):
     """A build type base provides base functions to look up flags for a compiler.
     """
-    compiler_attrs: List[str] = []
-    cuda_attrs: List[str] = []
+    compiler_attrs = []  # type: List[str]
+    cuda_attrs = []  # type: List[str]
 
     def __init__(self, spec):
         self.spec = spec
@@ -49,7 +49,7 @@ class BuildTypeBase(object):
         flags = []
         for attr in getattr(self, group):
             flags += getattr(self.spec[package].package, attr, self.default)
-        return list(set(flags))
+        return list({flags})
 
     def get_flags(self, group=None):
         """
@@ -73,8 +73,8 @@ class RelWithDeb(BuildTypeBase):
     """
     Eventually will be the default
     """
-    compiler_attrs: List[str] = []
-    cuda_attrs: List[str] = []
+    compiler_attrs = []  # type: List[str]
+    cuda_attrs = []  # type: List[str]
 
 
 class Debug(BuildTypeBase):
@@ -82,18 +82,18 @@ class Debug(BuildTypeBase):
     The debug build type corresponds with the user asking for
     spack_build_type=debug
     """
-    compiler_attrs: List[str] = ['debug_flag']
-    cuda_attrs: List[str] = ['debug_flag']
+    compiler_attrs = ['debug_flag']  # type: List[str]
+    cuda_attrs = ['debug_flag']  # type: List[str]
 
 
 class DebugOpt(BuildTypeBase):
-    compiler_attrs: List[str] = ['debug_flag', 'debug_optimize_flag']
-    cuda_attrs: List[str] = ['debug_flag']
+    compiler_attrs = ['debug_flag', 'debug_optimize_flag']  # type: List[str]
+    cuda_attrs = ['debug_flag']  # type: List[str]
 
 
 class DebugMax(BuildTypeBase):
-    compiler_attrs: List[str] = ['debug_max_flag']
-    cuda_attrs: List[str] = ['debug_flag']
+    compiler_attrs = ['debug_max_flag']  # type: List[str]
+    cuda_attrs = ['debug_flag']  # type: List[str]
 
 
 debug_types = {"debug", "debug_opt", "debug_max"}
