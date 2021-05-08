@@ -48,8 +48,10 @@ class BuildTypeBase(object):
 
         flags = []
         for attr in getattr(self, group):
-            flags += getattr(self.spec[package].package, attr, self.default)
-        return list(set(flags))
+            for new_flag in getattr(self.spec[package].package, attr, self.default):
+                if new_flag not in flags:
+                    flags.append(new_flag)
+        return flags
 
     def get_flags(self, group=None):
         """
