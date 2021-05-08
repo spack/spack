@@ -22,9 +22,12 @@ class Libcircle(AutotoolsPackage):
     depends_on('pkgconfig', type='build')
     depends_on('libpciaccess', type='link')
 
-    patch('configure.patch')
-    patch('Makefile.in.patch')
+    patch('CrayPE_configure-ac.patch', when='%cce')
 
+    @when('%cce')
+    def autoreconf(self, spec, prefix):
+        which('autoreconf')('--force',  '--verbose', '--install')
+        
     @when('@master')
     def autoreconf(self, spec, prefix):
         with working_dir(self.configure_directory):
