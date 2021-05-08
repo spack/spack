@@ -939,6 +939,7 @@ class GitFetchStrategy(VCSFetchStrategy):
     def __str__(self):
         return '[git] {0}'.format(self._repo_info())
 
+
 @fetcher
 class CvsFetchStrategy(VCSFetchStrategy):
     """Fetch strategy that gets source code from a CVS repository.
