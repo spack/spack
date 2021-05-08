@@ -43,7 +43,6 @@ def test_fetch(
     """
     # Retrieve the right test parameters
     t = mock_cvs_repository.checks[type_of_test]
-    h = mock_cvs_repository.hash
 
     # Construct the package under test
     spec = Spec('cvs-test')
