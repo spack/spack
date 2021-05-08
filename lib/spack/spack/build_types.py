@@ -49,7 +49,7 @@ class BuildTypeBase(object):
         flags = []
         for attr in getattr(self, group):
             flags += getattr(self.spec[package].package, attr, self.default)
-        return list({flags})
+        return list(set(flags))
 
     def get_flags(self, group=None):
         """
