@@ -46,7 +46,6 @@ class Clang(Compiler):
 
     version_argument = '--version'
 
-    # https://clang.llvm.org/docs/UsersManual.html#controlling-debug-information
     debug_optimize_flag = ["-⁠g", "-fuse-ctor-homing"]
     debug_max_flag = ["-g", "-fno-eliminate-unused-debug-types"]
     debug_flag = ["-g"]
