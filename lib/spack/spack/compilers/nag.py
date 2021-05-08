@@ -33,7 +33,7 @@ class Nag(spack.compiler.Compiler):
     version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
 
     # https://www.nag.com/nagware/np/r62_doc/manual/compiler_2_4.html
-    debug_optimize_flag = ["-⁠g", "-O2"]
+    debug_optimize_flag = ["-g", "-02"]
     debug_max_flag = ["-g"]
     debug_flag = ["-g"]
 
