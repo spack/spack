@@ -27,7 +27,7 @@ class Libcircle(AutotoolsPackage):
     @when('%cce')
     def autoreconf(self, spec, prefix):
         which('autoreconf')('--force',  '--verbose', '--install')
-        
+
     @when('@master')
     def autoreconf(self, spec, prefix):
         with working_dir(self.configure_directory):
