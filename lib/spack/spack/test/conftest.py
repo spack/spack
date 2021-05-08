@@ -921,34 +921,15 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('-d', cvsroot, 'add', r1_file)
         cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
 
-    # CVS doesn't have a notion of unique revision for a source tree, so we
-    # fake it
-    def get_rev():
-        return '1.1'
+    # CVS does not have the notion of a unique branch; branches and revisions
+    # are managed separately for every file
+    def get_branch():
+        return 'main'
 
     checks = {
         'default': Bunch(
             file=r1_file,
-            hash=get_rev,
-            revision='1.1',
-            date=None,
-            branch=None,
-            args={'cvs': url}
-        ),
-        'branch': Bunch(
-            file=r1_file,
-            hash=get_rev,
-            revision='1.1',
-            date=None,
-            branch=None,
-            args={'cvs': url}
-        ),
-        'date': Bunch(
-            file=r1_file,
-            hash=get_rev,
-            revision='1.1',
-            date=None,
-            branch=None,
+            hash=get_branch,
             args={'cvs': url}
         ),
     }
@@ -956,10 +937,7 @@ def mock_cvs_repository(tmpdir_factory):
     t = Bunch(
         checks=checks,
         url=url,
-        hash=get_rev,
-        revision='1.1',
-        date=None,
-        branch=None,
+        hash=get_branch,
         path=str(repodir)
     )
 
