@@ -689,7 +689,7 @@ class BaseContext(tengine.Context):
             if use_view is True:
                 use_view = ev.default_view_name
 
-            env = ev.get_env({}, '', required=True)
+            env = ev.get_env({}, 'post_env_write_hook', required=True)
             view = env.views[use_view].view()
 
             spec.prefix = view.get_projection_for_spec(spec)

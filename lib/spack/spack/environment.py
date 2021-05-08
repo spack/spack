@@ -459,11 +459,14 @@ class ViewDescriptor(object):
         self.root = spack.util.path.canonicalize_path(root)
         self.projections = projections
         self.select = select
-        self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
         self.exclude = exclude
-        self.exclude_fn = lambda x: not any(x.satisfies(e)
-                                            for e in self.exclude)
         self.link = link
+
+    def select_fn(self, spec):
+        return any(spec.satisfies(s) for s in self.select)
+
+    def exclude_fn(self, spec):
+        return not any(spec.satisfies(e) for e in self.exclude)
 
     def __eq__(self, other):
         return all([self.root == other.root,
