@@ -2501,7 +2501,7 @@ spack:
     _env_create('test', StringIO(spack_yaml))
 
     with ev.read('test') as e:
-        install('-v')
+        install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.view().get_projection_for_spec(spec)
@@ -2536,7 +2536,7 @@ spack:
     _env_create('test', StringIO(spack_yaml))
 
     with ev.read('test') as e:
-        print(install())
+        install()
 
         spec = e.specs_by_hash[e.concretized_order[0]]
         view_prefix = e.default_view.view().get_projection_for_spec(spec)
