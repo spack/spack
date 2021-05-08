@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(
     reason='requires CVS to be installed')
 
 
-@pytest.mark.parametrize("type_of_test", ['default', 'date'])
+@pytest.mark.parametrize("type_of_test", ['default', 'branch', 'date'])
 def test_fetch(
         type_of_test,
         mock_cvs_repository,
@@ -35,7 +35,7 @@ def test_fetch(
     1. Fetch the repo using a fetch strategy constructed with
        supplied args (they depend on type_of_test).
     2. Check if the test_file is in the checked out repository.
-    3. Assert that the repository is at the date supplied.
+    3. Assert that the repository is at the branch or date supplied.
     4. Add and remove some files, then reset the repo, and
        ensure it's all there again.
     """

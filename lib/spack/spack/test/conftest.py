@@ -927,14 +927,30 @@ def mock_cvs_repository(tmpdir_factory):
         return '1.1'
 
     checks = {
-        'default':
-        Bunch(
+        'default': Bunch(
             file=r1_file,
             hash=get_rev,
             revision='1.1',
             date=None,
+            branch=None,
             args={'cvs': url}
-        )
+        ),
+        'branch': Bunch(
+            file=r1_file,
+            hash=get_rev,
+            revision='1.1',
+            date=None,
+            branch=None,
+            args={'cvs': url}
+        ),
+        'date': Bunch(
+            file=r1_file,
+            hash=get_rev,
+            revision='1.1',
+            date=None,
+            branch=None,
+            args={'cvs': url}
+        ),
     }
 
     t = Bunch(
@@ -943,6 +959,7 @@ def mock_cvs_repository(tmpdir_factory):
         hash=get_rev,
         revision='1.1',
         date=None,
+        branch=None,
         path=str(repodir)
     )
 
