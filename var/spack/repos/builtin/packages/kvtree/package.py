@@ -35,7 +35,7 @@ class Kvtree(CMakePackage):
             if name == 'ldflags':
                 flags.append('-Wl,-z,muldefs')
             return (flags, None, None)
-    
+
     def cmake_args(self):
         args = []
         if self.spec.satisfies('+mpi'):
