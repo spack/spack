@@ -68,10 +68,9 @@ class Cce(Compiler):
     @property
     def cxx14_flag(self):
         if self.is_clang_based:
-            if self.real_version < ver('3.5'):
+            if self.real_version < ver('3.4'):
                 raise UnsupportedCompilerFlag(
-                    self, "the C++14 standard", "cxx14_flag", "< 3.5"
-                )
+                    self, "the C++14 standard", "cxx14_flag", "< 3.5")
             return '-std=c++14'
         # Raise an error because I don't know
         # modern CCE is clang-based, so it's likely old CCE
