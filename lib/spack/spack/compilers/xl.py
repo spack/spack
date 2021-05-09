@@ -30,7 +30,7 @@ class Xl(Compiler):
     version_regex = r'([0-9]?[0-9]\.[0-9])'
 
     # https://www.cenapad.unicamp.br/parque/manuais/Xlf/UG34.HTM
-    debug_optimize_flag = ["-02", "-⁠g"]
+    debug_optimize_flag = ["-02", "-g"]
     debug_max_flag = ["-g"]
     debug_flag = ["-g"]
 
