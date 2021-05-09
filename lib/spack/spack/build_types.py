@@ -98,7 +98,7 @@ class DebugMax(BuildTypeBase):
     cuda_attrs = ['debug_flag']  # type: List[str]
 
 
-debug_types = {"debug", "debug_opt", "debug_max"}
+debug_types = set(["debug", "debug_opt", "debug_max"])
 build_types = {'debug': Debug, 'debug_opt': DebugOpt, 'debug_max': DebugMax,
                "rel_with_deb": RelWithDeb}
 
