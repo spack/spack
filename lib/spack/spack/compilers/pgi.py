@@ -30,7 +30,7 @@ class Pgi(Compiler):
     PrgEnv_compiler = 'pgi'
 
     # https://docs.nvidia.com/hpc-sdk/pgi-compilers/19.7/x86/pgdbg-user-guide/index.htm
-    debug_optimize_flag = ["-02", "-⁠gopt"]
+    debug_optimize_flag = ["-02", "-gopt"]
     debug_max_flag = ["-g"]
     debug_flag = ["-g"]
 
