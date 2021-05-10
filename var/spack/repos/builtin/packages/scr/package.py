@@ -124,7 +124,7 @@ class Scr(CMakePackage):
             description='Compile time default location for control directory.')
 
     def flag_handler(self, name, flags):
-        if '%cce' in self.spec:
+        if self.spec.satisfies('%cce'):
             if name in ['cflags', 'cxxflags', 'cppflags']:
                 return (None, flags, None)
             elif name == 'ldflags':
