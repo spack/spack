@@ -23,7 +23,7 @@ pytestmark = pytest.mark.skipif(
     reason='requires CVS to be installed')
 
 
-@pytest.mark.parametrize("type_of_test", ['default'])
+@pytest.mark.parametrize("type_of_test", ['default', 'branch', 'date'])
 def test_fetch(
         type_of_test,
         mock_cvs_repository,
@@ -34,28 +34,39 @@ def test_fetch(
 
     1. Fetch the repo using a fetch strategy constructed with
        supplied args (they depend on type_of_test).
-    2. Check if the test_file is in the checked out repository.
-    3. Add and remove some files, then reset the repo, and
+    2. Check whether the checkout is on the correct branch or date
+    3. Check if the test_file is in the checked out repository.
+    4. Add and remove some files, then reset the repo, and
        ensure it's all there again.
 
     CVS does not have the notion of a unique branch; branches and revisions
     are managed separately for every file.
     """
     # Retrieve the right test parameters
-    t = mock_cvs_repository.checks[type_of_test]
+    test = mock_cvs_repository.checks[type_of_test]
+    get_branch = mock_cvs_repository.get_branch
+    get_date = mock_cvs_repository.get_date
 
     # Construct the package under test
     spec = Spec('cvs-test')
     spec.concretize()
     pkg = spack.repo.get(spec)
-    pkg.versions[ver('cvs')] = t.args
+    pkg.versions[ver('cvs')] = test.args
 
     # Enter the stage directory and check some properties
     with pkg.stage:
         pkg.do_stage()
 
         with working_dir(pkg.stage.source_path):
-            file_path = os.path.join(pkg.stage.source_path, t.file)
+            # Check branch
+            if test.branch is not None:
+                assert get_branch() == test.branch
+
+            # Check date
+            if test.date is not None:
+                assert get_date() <= test.date
+
+            file_path = os.path.join(pkg.stage.source_path, test.file)
             assert os.path.isdir(pkg.stage.source_path)
             assert os.path.isfile(file_path)
 

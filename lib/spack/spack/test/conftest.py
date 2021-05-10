@@ -4,12 +4,15 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 import collections
+from datetime import datetime
 import errno
+import glob
 import inspect
 import itertools
 import json
 import os
 import os.path
+import re
 import shutil
 import tempfile
 import xml.etree.ElementTree
@@ -886,7 +889,7 @@ def mock_archive(request, tmpdir_factory):
 
 @pytest.fixture(scope='session')
 def mock_cvs_repository(tmpdir_factory):
-    """Creates a very simple CVS repository with two commits."""
+    """Creates a very simple CVS repository with two commits and a branch."""
     cvs = spack.util.executable.which('cvs', required=True)
 
     tmpdir = tmpdir_factory.mktemp('mock-cvs-repo-dir')
@@ -921,27 +924,76 @@ def mock_cvs_repository(tmpdir_factory):
         cvs('-d', cvsroot, 'add', r1_file)
         cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
 
+        # Create branch 'mock-branch'
+        cvs('-d', cvsroot, 'tag', 'mock-branch-root')
+        cvs('-d', cvsroot, 'tag', '-b', 'mock-branch')
+
     # CVS does not have the notion of a unique branch; branches and revisions
     # are managed separately for every file
     def get_branch():
-        return 'main'
+        """Return the branch name if all files are on the same branch, else
+        return None. Also return None if all files are on the trunk."""
+        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
+        branch = None
+        for line in lines:
+            m = re.search(r'(\S+)\s+[(]branch:', line)
+            if m:
+                tag = m.group(1)
+                if branch is None:
+                    # First branch name found
+                    branch = tag
+                elif tag == branch:
+                    # Later branch name found; all branch names agree
+                    pass
+                else:
+                    # Later branch name found; branch names differ
+                    branch = None
+                    break
+        return branch
+
+    # CVS does not have the notion of a unique revision; usually, one uses
+    # commit dates instead
+    def get_date():
+        """Return newest (youngest) file"""
+        # See
+        # <https://stackoverflow.com/questions/39327032/how-to-get-the-latest-file-in-a-folder>
+        files = glob.iglob('*')
+        dates = map(os.path.getctime, files)
+        newest = max(dates)
+        date = datetime.fromtimestamp(newest)
+        return date.__format__('%Y-%m-%d %H:%M:%S')
 
     checks = {
         'default': Bunch(
             file=r1_file,
-            hash=get_branch,
-            args={'cvs': url}
+            branch=None,
+            date=None,
+            args={'cvs': url},
+        ),
+        'branch': Bunch(
+            file=r1_file,
+            branch='mock-branch',
+            date=None,
+            args={'cvs': url, 'branch': 'mock-branch'},
+        ),
+        'date': Bunch(
+            file=r1_file,
+            branch=None,
+            date=datetime.now().__format__('%Y-%m-%d %H:%M:%S'),
+            args={'cvs': url,
+                  'date': datetime.now().__format__('%Y-%m-%d %H:%M:%S')},
         ),
     }
 
-    t = Bunch(
+    test = Bunch(
         checks=checks,
         url=url,
-        hash=get_branch,
-        path=str(repodir)
+        get_branch=get_branch,
+        get_date=get_date,
+        path=str(repodir),
     )
 
-    yield t
+    yield test
 
 
 @pytest.fixture(scope='session')
