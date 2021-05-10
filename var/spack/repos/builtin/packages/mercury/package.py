@@ -59,7 +59,7 @@ class Mercury(CMakePackage):
     patch('fix-cmake-3.15-check_symbol_exists.patch', when='@1.0.0:1.0.1')
 
     def flag_handler(self, name, flags):
-        if ('%cce' in self.spec):
+        if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-Wl,-z,muldefs')
             return (None, None, flags)
