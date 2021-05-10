@@ -6,7 +6,6 @@
 import collections
 from datetime import datetime
 import errno
-import glob
 import inspect
 import itertools
 import json
