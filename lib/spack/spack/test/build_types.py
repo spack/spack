@@ -11,7 +11,7 @@ def test_class_to_mod():
     """
     Ensure that every module in build_types has a key via class_to_mod.
     """
-    build_type = class_to_mod("DebugMax")
+    build_type = class_to_mod("Debugmax")
     assert build_type in spack.build_types.build_types
 
 

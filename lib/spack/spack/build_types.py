@@ -71,7 +71,7 @@ class BuildTypeBase(object):
         return self.default
 
 
-class RelWithDeb(BuildTypeBase):
+class Relwithdeb(BuildTypeBase):
     """
     Eventually will be the default
     """
@@ -88,19 +88,19 @@ class Debug(BuildTypeBase):
     cuda_attrs = ['debug_flag']  # type: List[str]
 
 
-class DebugOpt(BuildTypeBase):
+class Debugopt(BuildTypeBase):
     compiler_attrs = ['debug_flag', 'debug_optimize_flag']  # type: List[str]
     cuda_attrs = ['debug_flag']  # type: List[str]
 
 
-class DebugMax(BuildTypeBase):
+class Debugmax(BuildTypeBase):
     compiler_attrs = ['debug_max_flag']  # type: List[str]
     cuda_attrs = ['debug_flag']  # type: List[str]
 
 
-debug_types = set(["debug", "debug_opt", "debug_max"])
-build_types = {'debug': Debug, 'debug_opt': DebugOpt, 'debug_max': DebugMax,
-               "rel_with_deb": RelWithDeb}
+debug_types = set(["debug", "debugopt", "debugmax"])
+build_types = {'debug': Debug, 'debugopt': Debugopt, 'debugmax': Debugmax,
+               "relwithdeb": Relwithdeb}
 
 
 def get_build_type(spec):
