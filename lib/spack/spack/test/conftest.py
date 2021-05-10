@@ -904,6 +904,10 @@ def mock_cvs_repository(tmpdir_factory):
     sourcedirparent.ensure(module, dir=True)
     sourcedir = sourcedirparent.join(module)
 
+    def format_date(date):
+        return date.__format__('%Y-%m-%d %H:%M:%S')
+    revision_date = {}
+
     # Initialize the repository
     with sourcedir.as_cwd():
         cvs('-d', cvsroot, 'init')
@@ -917,12 +921,14 @@ def mock_cvs_repository(tmpdir_factory):
         sourcedir.ensure(r0_file)
         cvs('-d', cvsroot, 'add', r0_file)
         cvs('-d', cvsroot, 'commit', '-m', 'revision 0', r0_file)
+        revision_date['1.1'] = format_date(datetime.now())
 
         # Commit file r1
         r1_file = 'r1_file'
         sourcedir.ensure(r1_file)
         cvs('-d', cvsroot, 'add', r1_file)
         cvs('-d', cvsroot, 'commit', '-m' 'revision 1', r1_file)
+        revision_date['1.2'] = format_date(datetime.now())
 
         # Create branch 'mock-branch'
         cvs('-d', cvsroot, 'tag', 'mock-branch-root')
@@ -954,14 +960,19 @@ def mock_cvs_repository(tmpdir_factory):
     # CVS does not have the notion of a unique revision; usually, one uses
     # commit dates instead
     def get_date():
-        """Return newest (youngest) file"""
-        # See
-        # <https://stackoverflow.com/questions/39327032/how-to-get-the-latest-file-in-a-folder>
-        files = glob.iglob('*')
-        dates = map(os.path.getctime, files)
-        newest = max(dates)
-        date = datetime.fromtimestamp(newest)
-        return date.__format__('%Y-%m-%d %H:%M:%S')
+        """Return latest date of the revisions of all files"""
+        lines = cvs('-d', cvsroot, 'status', '-v', output=str).splitlines()
+        date = datetime.fromtimestamp(0)
+        for line in lines:
+            m = re.search(r'Working revision:\s+(\S+)', line)
+            if m:
+                rev = m.group(1)
+                try:
+                    rdate = revision_date[rev]
+                    date = max(date, rdate)
+                except:
+                    pass
+        return format_date(date)
 
     checks = {
         'default': Bunch(
