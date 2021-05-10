@@ -39,10 +39,6 @@ class Hiop(CMakePackage, CudaPackage):
         'shared',
         default=False,
         description='Enable/Disable shared libraries')
-    variant(
-        'static',
-        default=True,
-        description='Enable/Disable static libraries')
     variant('mpi', default=True, description='Enable/Disable MPI')
     variant('raja', default=False, description='Enable/Disable RAJA')
     variant('kron', default=False, description='Enable/Disable Kron reduction')
@@ -84,7 +80,6 @@ class Hiop(CMakePackage, CudaPackage):
             '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)
         ])
 
-        args.append(self.define_from_variant('HIOP_BUILD_STATIC','static'))
         args.append(self.define_from_variant('HIOP_BUILD_SHARED','shared'))
         args.append(self.define_from_variant('HIOP_USE_MPI','mpi'))
         args.append(self.define_from_variant('HIOP_DEEPCHECKS','deepchecking'))
@@ -100,9 +95,9 @@ class Hiop(CMakePackage, CudaPackage):
         
         if '+mpi' in spec:
             args.append('-DMPI_HOME={0}'.format(spec['mpi'].prefix))
-            args.append('-DMPI_C={0}'.format(spec['mpi'].mpicc))
-            args.append('-DMPI_CXX={0}'.format(spec['mpi'].mpicxx))
-            args.append('-DMPI_Fortran={0}'.format(spec['mpi'].mpifc))
+            args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
+            args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
+            args.append('-DMPI_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
 
         # HIP flags are a part of the buildsystem, but full support is not
         # yet ready for public release
@@ -117,10 +112,6 @@ class Hiop(CMakePackage, CudaPackage):
             if '+magma' in spec:
                 args.append(
                     "-DHIOP_MAGMA_DIR={0}".format(spec['magma'].prefix))
-
-        if '+raja' in spec:
-            args.append("-Dumpire_DIR={0}".format(spec['umpire'].prefix))
-            args.append("-DRAJA_DIR={0}".format(spec['raja'].prefix))
 
         if '+kron' in spec:
             args.append(
