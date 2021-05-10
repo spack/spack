@@ -55,14 +55,12 @@ class MesonPackage(PackageBase):
     variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
-    variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=False, description='Build static libraries')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
     variant('strip', default=False, description='Strip targets on install')
 
     depends_on('meson', type='build')
     depends_on('ninja', type='build')
-
-    conflicts('~shared', when='~static', msg='Enable shared or static libraries')
 
     @property
     def archive_files(self):
@@ -103,11 +101,10 @@ class MesonPackage(PackageBase):
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
-        if '+static' in pkg.spec:
-            if '+shared' in pkg.spec:
-                default_library = 'both'
-            else:
-                default_library = 'static'
+        if 'libs=static,shared' in pkg.spec:
+            default_library = 'both'
+        elif 'libs=static' in pkg.spec:
+            default_library = 'static'
         else:
             default_library = 'shared'
 
