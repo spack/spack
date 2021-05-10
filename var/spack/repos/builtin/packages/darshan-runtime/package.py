@@ -34,6 +34,7 @@ class DarshanRuntime(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('zlib')
+    depends_on('papi', when='+apxc')
 
     variant('slurm', default=False, description='Use Slurm Job ID')
     variant('cobalt', default=False, description='Use Coblat Job Id')
@@ -41,11 +42,14 @@ class DarshanRuntime(Package):
     variant('mpi', default=True, description='Compile with MPI support')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
     variant('apmpi_sync', default=False, description='Compile with AutoPerf MPI module (with collective synchronization timing)')
+    variant('apxc', default=False, description='Compile with AutoPerf XC module')
 
     conflicts('+apmpi', when='@:3.2.1',
               msg='+apmpi variant only available starting from version 3.3.0')
     conflicts('+apmpi_sync', when='@:3.2.1',
               msg='+apmpi variant only available starting from version 3.3.0')
+    conflicts('+apxc', when='@:3.2.1',
+              msg='+apxc variant only available starting from version 3.3.0')
 
     def install(self, spec, prefix):
 
@@ -69,6 +73,8 @@ class DarshanRuntime(Package):
         if '+apmpi_sync' in spec:
             options.extend(['--enable-apmpi-mod',
                             '--enable-apmpi-coll-sync'])
+        if '+apxc' in spec:
+            options.extend(['--enable-apxc-mod'])
 
         options.extend(['--with-mem-align=8',
                         '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
