@@ -1276,8 +1276,8 @@ class PackageInstaller(object):
             task (BuildTask): the installation build task for a package
         """
         if task.status not in [STATUS_INSTALLED, STATUS_INSTALLING]:
-            tty.msg('{0} {1}'.format(install_msg(task.pkg_id, self.pid),
-                                     'in progress by another process'))
+            tty.debug('{0} {1}'.format(install_msg(task.pkg_id, self.pid),
+                                       'in progress by another process'))
 
         new_task = task.next_attempt(self.installed)
         new_task.status = STATUS_INSTALLING
