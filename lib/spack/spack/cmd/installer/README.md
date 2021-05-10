@@ -69,6 +69,15 @@ To actually make the installer, start by running ``spack_cmd.bat`` from
 Windows Explorer (this may require you to Run as Administrator). If a
 warning appears that Python is not in your path, which can happen if you
 installed Python from the website instead of Windows Store, add it in now.
+You will also need to add the CMake executable provided by Visual Studio
+to your path as well, the path to which will look something like:
+
+``C:\Program Files (x86)\Microsoft Visual Studio\<year>\<distribution>\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake``
+
+**IMPORTANT**: If you use Tab to complete any part of this path, the console will automatically
+add quotation marks to the start and the end since it will see the spaces and want to parse the
+whole of it as a string. This is incorrect for our purposes so before submitting the command,
+ensure that the quotes are removed. You will encounter configuration errors if you fail to do this. 
 
 ``spack_cmd.bat`` will produce a DOS console window. Navigate to your
 ``spack_install`` directory (i.e. where you placed ``spack_cmd.bat``), and
