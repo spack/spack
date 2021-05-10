@@ -378,10 +378,6 @@ def reinitialize():
     layout = llnl.util.lang.LazyReference(_store_layout)
 
 
-def retrieve_upstream_dbs():
-    other_spack_instances = spack.config.get('upstreams', {})
-
-
 def initialize_upstream_pointer_if_unset(root, init_upstream_root):
     """Set the installation to point to the specified upstream."""
     if not os.path.exists(root):

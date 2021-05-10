@@ -89,6 +89,7 @@ class ConfigPath(object):
         self.universal = universal
         self.user = user
 
+
 #: Builtin paths to configuration files in Spack
 #: Used in _bootstrap_config_scopes() in bootstrap.py
 configuration_paths = (
