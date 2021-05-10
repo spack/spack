@@ -95,7 +95,7 @@ class Slepc(Package):
         # its symlink in spack/stage/ !
         os.environ['SLEPC_DIR'] = os.getcwd()
 
-        if '%cce' in self.spec:
+        if self.spec.satisfies('%cce'):
             filter_file('          flags = l',
                         '          flags = l\n        flags += ["-fuse-ld=gold"]',
                         'config/package.py')
