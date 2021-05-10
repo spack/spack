@@ -2,6 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -55,13 +56,13 @@ class Ngspice(AutotoolsPackage):
     depends_on('bison', type='build', when='@master')
     depends_on('flex', type='build', when='@master')
 
-    # INSTALL indicates dependency on these but they are underlying
-    # depends_on('freetype', when='+X build=bin')
-    # depends_on('libxrender', when='+X build=bin')
-    # depends_on('fontconfig', when='+X build=bin')
-    # depends_on('libxft', when='+X build=bin')
-    # depends_on('libxext', when='+X build=bin')
-    # depends_on('libxmu', when='+X build=bin')
+    # INSTALL indicates dependency on these :v
+    depends_on('freetype', when='+X build=bin')
+    depends_on('libxrender', when='+X build=bin')
+    depends_on('fontconfig', when='+X build=bin')
+    depends_on('libxft', when='+X build=bin')
+    depends_on('libxext', when='+X build=bin')
+    depends_on('libxmu', when='+X build=bin')
     depends_on('libxaw', when='+X build=bin')
     depends_on('libx11', when='+X build=bin')
 
