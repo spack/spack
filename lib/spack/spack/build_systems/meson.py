@@ -9,7 +9,7 @@ import os
 from typing import List  # novm
 
 from llnl.util.filesystem import working_dir
-from spack.directives import depends_on, variant
+from spack.directives import depends_on, variant, conflicts
 from spack.package import PackageBase, run_after
 
 
@@ -55,13 +55,14 @@ class MesonPackage(PackageBase):
     variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
-    variant('default_library', default='shared',
-            description=' Default library type',
-            values=('shared', 'static', 'both'))
+    variant('shared', default=True, description='Build shared libraries')
+    variant('static', default=False, description='Build static libraries')
     variant('strip', default=False, description='Strip targets on install')
 
     depends_on('meson', type='build')
     depends_on('ninja', type='build')
+
+    conflicts('~shared', when='~static', msg='Enable shared or static libraries')
 
     @property
     def archive_files(self):
@@ -102,9 +103,12 @@ class MesonPackage(PackageBase):
 
         strip = 'true' if '+strip' in pkg.spec else 'false'
 
-        try:
-            default_library = pkg.spec.variants['default_library'].value
-        except KeyError:
+        if '+static' in pkg.spec:
+            if '+shared' in pkg.spec:
+                default_library = 'both'
+            else:
+                default_library = 'static'
+        else:
             default_library = 'shared'
 
         args = [
