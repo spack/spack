@@ -26,8 +26,10 @@ class Lz4(MakefilePackage):
 
     depends_on('valgrind', type='test')
 
-    variant('shared', default=True, description='Build shared library')
-    variant('static', default=True, description='Build static library')
+    # Note: may be replaced with libs=shared,static
+    variant('shared', default=True, description='Build shared libraries')
+    variant('static', default=True, description='Build static libraries')
+    conflicts('~shared', when='~static', msg='Select either shared or static libraries')
 
     def url_for_version(self, version):
         url = "https://github.com/lz4/lz4/archive"

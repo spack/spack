@@ -28,12 +28,14 @@ class Xz(AutotoolsPackage, SourceforgePackage):
 
     variant('pic', default=False,
             description='Compile with position independent code.')
+
+    # Note: may be replaced with libs=shared,static
     variant('shared', default=True, description='Build shared libraries')
     variant('static', default=True, description='Build static libraries')
+    conflicts('~shared', when='~static', msg='Select either shared or static libraries')
 
     def configure_args(self):
-        args = []
-        args += self.enable_or_disable('shared')
+        args = self.enable_or_disable('shared')
         args += self.enable_or_disable('static')
         return args
 
