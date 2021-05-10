@@ -969,7 +969,7 @@ def mock_cvs_repository(tmpdir_factory):
                 try:
                     rdate = revision_date[rev]
                     date = max(date, rdate)
-                except:
+                except ex:
                     pass
         return format_date(date)
 
