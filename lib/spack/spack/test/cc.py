@@ -632,6 +632,11 @@ def test_linker_strips_loopopt(wrapper_flags):
         result = result.strip().split('\n')
         assert '-loopopt=0' not in result
 
+        # ensure that -loopopt=0 is not present in ccld mode
+        result = ccld(*(test_args + ["-loopopt=0"]), output=str)
+        result = result.strip().split('\n')
+        assert '-loopopt=0' not in result
+        
         # ensure that -loopopt=0 is present in compile mode
         result = cc(*(test_args + ["-loopopt=0"]), output=str)
         result = result.strip().split('\n')
