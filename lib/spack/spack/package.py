@@ -677,7 +677,7 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
     #: specs.
     test_suite = None
 
-    spack.directives.variant('spack_build_type', default='rel_with_deb',
+    spack.directives.variant('spack_build_type', default='relwithdeb',
                              values=spack.build_types.build_types.keys())
 
     def __init__(self, spec):
