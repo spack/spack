@@ -969,7 +969,7 @@ def mock_cvs_repository(tmpdir_factory):
                 try:
                     rdate = revision_date[rev]
                     date = max(date, rdate)
-                except ex:
+                except Exception:
                     pass
         return format_date(date)
 
@@ -989,9 +989,9 @@ def mock_cvs_repository(tmpdir_factory):
         'date': Bunch(
             file=r1_file,
             branch=None,
-            date=datetime.now().__format__('%Y-%m-%d %H:%M:%S'),
+            date=format_date(datetime.now()),
             args={'cvs': url,
-                  'date': datetime.now().__format__('%Y-%m-%d %H:%M:%S')},
+                  'date': format_date(datetime.now())},
         ),
     }
 
