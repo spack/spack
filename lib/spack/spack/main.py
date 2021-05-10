@@ -416,6 +416,7 @@ def make_argument_parser(**kwargs):
         help="print additional output during builds")
     parser.add_argument(
         '--stacktrace', action='store_true',
+        default='SPACK_STACKTRACE' in os.environ,
         help="add stacktraces to all printed statements")
     parser.add_argument(
         '-V', '--version', action='store_true',

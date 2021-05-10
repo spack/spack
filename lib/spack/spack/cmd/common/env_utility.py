@@ -53,6 +53,9 @@ def emulate_env_utility(cmd_name, context, args):
         spec = args.spec[0]
         cmd = args.spec[1:]
 
+    if not spec:
+        tty.die("spack %s requires a spec." % cmd_name)
+
     specs = spack.cmd.parse_specs(spec, concretize=False)
     if len(specs) > 1:
         tty.die("spack %s only takes one spec." % cmd_name)

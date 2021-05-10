@@ -18,7 +18,8 @@ class Hdf5(CMakePackage):
     list_url = "https://support.hdfgroup.org/ftp/HDF5/releases"
     list_depth = 3
     git      = "https://github.com/HDFGroup/hdf5.git"
-    maintainers = ['lrknox']
+    maintainers = ['lrknox', 'brtnfld', 'byrnHDF', 'ChristopherHogan', 'epourmal',
+                   'gheber', 'hyoklee', 'lkurz', 'soumagne']
 
     test_requires_compiler = True
 
@@ -91,6 +92,10 @@ class Hdf5(CMakePackage):
     # The Java wrappers cannot be built without shared libs.
     conflicts('+java', when='~shared')
 
+    # Earlier versions of HDF5 will not correctly find szip without the patches
+    # in the <version>_cmake.patch files
+    conflicts('+szip', when='@:1.18.19,1.9.0:1.10.5')
+
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
     #    it works.
@@ -147,6 +152,15 @@ class Hdf5(CMakePackage):
     # based on Libtool 2.4.6.
     patch('nag.mpi.libtool.patch', when='@1.8.18:%nag+fortran+mpi+shared')
 
+    patch('1.12.0_cmake.patch', when='@1.12.0',
+          sha256='e5b3bc2eecb693e88ce084dfceb35fdce68a0749945173c4bff7cf29fa81de4c')
+    patch('1.10.7_cmake.patch', when='@1.10.6:1.10.7',
+          sha256='dd9491bbe833b13929cb14b52137f7f44a539b4bfc89fc31e6e50a36e3e1b171')
+    patch('1.8.22_cmake.patch', when='@1.8.22',
+          sha256='2ca847df0f4aa24e8fe9aa7f156d48aae505a0226ca8df5d3e9b21d8087035bd')
+    patch('1.8.21_cmake.patch', when='@1.8.21',
+          sha256='b6a39255b2cc4fdf5767969a3f0cf83fc278b1750221b55ad48352a6ee3e4071')
+
     # The argument 'buf_size' of the C function 'h5fget_file_image_c' is
     # declared as intent(in) though it is modified by the invocation. As a
     # result, aggressive compilers such as Fujitsu's may do a wrong
@@ -168,6 +182,22 @@ class Hdf5(CMakePackage):
     def url_for_version(self, version):
         url = "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-{0}/hdf5-{1}/src/hdf5-{1}.tar.gz"
         return url.format(version.up_to(2), version)
+
+    def flag_handler(self, name, flags):
+        if '+pic' in self.spec:
+            if name == "cflags":
+                flags.append(self.compiler.cc_pic_flag)
+            elif name == "cxxflags":
+                flags.append(self.compiler.cxx_pic_flag)
+            elif name == "fflags":
+                flags.append(self.compiler.fc_pic_flag)
+
+        # Quiet warnings/errors about implicit declaration of functions in C99
+        if name == "cflags":
+            if "clang" in self.compiler.cc or "gcc" in self.compiler.cc:
+                flags.append("-Wno-implicit-function-declaration")
+
+        return (None, None, flags)
 
     @property
     def libs(self):
@@ -269,21 +299,6 @@ class Hdf5(CMakePackage):
 
         if '+szip' in spec:
             args.append(self.define('HDF5_ENABLE_SZIP_ENCODING', True))
-            args.append(
-                self.define('SZIP_INCLUDE_DIR', spec['szip'].prefix.include))
-            # args.append(self.define('SZIP_DIR', spec['szip'].prefix.lib)) was
-            # sufficient for HDF5 versions released since 2019, but earlier
-            # versions had a FindSZIP.cmake file that required a full path
-            # to libsz.so.2.  Since this will also work for the newer versions,
-            # that is used below.  The libaec puts its lib files in lib64, so
-            # the 64 is appended to spec['szip'].prefix.lib along with the
-            # /libs.so.2 in the lines below when using szip from Libaec.
-            if '^libaec' in spec:
-                szlib_name = "64/libsz.so.2"
-            else:
-                szlib_name = "/libsz.so.2"
-            szlib_path = spec['szip'].prefix.lib + szlib_name
-            args.append(self.define('SZIP_LIBRARY', szlib_path))
 
         api = spec.variants['api'].value
         if api != 'default':
