@@ -56,7 +56,7 @@ class Ngspice(AutotoolsPackage):
     depends_on('bison', type='build', when='@master')
     depends_on('flex', type='build', when='@master')
 
-    # INSTALL indicates dependency on these :v
+    # INSTALL indicates dependency on these :
     depends_on('freetype', when='+X build=bin')
     depends_on('libxrender', when='+X build=bin')
     depends_on('fontconfig', when='+X build=bin')
