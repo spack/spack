@@ -34,16 +34,20 @@ class DarshanRuntime(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('zlib')
+    depends_on('hdf5', when='+hdf5')
     depends_on('papi', when='+apxc')
 
     variant('slurm', default=False, description='Use Slurm Job ID')
     variant('cobalt', default=False, description='Use Coblat Job Id')
     variant('pbs', default=False, description='Use PBS Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
+    variant('hdf5', default=False, description='Compile with HDF5 module')
     variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
     variant('apmpi_sync', default=False, description='Compile with AutoPerf MPI module (with collective synchronization timing)')
     variant('apxc', default=False, description='Compile with AutoPerf XC module')
 
+    conflicts('+hdf5', when='@:3.1.8',
+              msg='+hdf5 variant only available starting from version 3.3.0')
     conflicts('+apmpi', when='@:3.2.1',
               msg='+apmpi variant only available starting from version 3.3.0')
     conflicts('+apmpi_sync', when='@:3.2.1',
@@ -67,6 +71,9 @@ class DarshanRuntime(Package):
             options = ['CC=%s' % spec['mpi'].mpicc]
         else:
             options = ['--without-mpi']
+
+        if '+hdf5' in spec:
+            options.extend(['--enable-hdf5-mod=%s' % spec['hdf5'].prefix])
 
         if '+apmpi' in spec:
             options.extend(['--enable-apmpi-mod'])
