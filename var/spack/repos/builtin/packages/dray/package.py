@@ -33,7 +33,8 @@ class Dray(Package, CudaPackage):
 
     maintainers = ['mclarsen', 'cyrush']
 
-    version('develop',  branch='develop', submodules='True', preferred=True)
+    version('develop',  branch='develop', submodules='True')
+    version('0.1.5',  sha256='aaf0975561a8e7910b9353e2dc30bd78abf9f01c306ec042422b7da223d3a8b8')
     version('0.1.4',  sha256='e763a3aa537b23486a4788f9d68db0a3eb545f6a2e617cd7c8a876682ca2d0a0')
     version('0.1.3',  sha256='b2f624a072463189997343b1ed911cc34c9bb1b6c7f0c3e48efeb40c05dd0d92')
     version('0.1.2',  sha256='46937f20124b28dc78a634e8e063a3e7a3bbfd9f424ce2680b08417010c376da')
@@ -67,20 +68,20 @@ class Dray(Package, CudaPackage):
     depends_on("apcomp~shared~openmp~mpi", when="~shared~openmp~mpi")
     depends_on("apcomp+shared~openmp~mpi", when="+shared~openmp~mpi")
 
-    depends_on("raja@0.9.0+cuda~openmp+shared", when="+cuda~openmp+shared")
-    depends_on("raja@0.9.0+cuda+openmp+shared", when="+cuda+openmp+shared")
-    depends_on("raja@0.9.0+cuda~openmp~shared", when="+cuda~openmp~shared")
-    depends_on("raja@0.9.0+cuda+openmp~shared", when="+cuda+openmp~shared")
+    depends_on("raja+cuda~openmp+shared", when="+cuda~openmp+shared")
+    depends_on("raja+cuda+openmp+shared", when="+cuda+openmp+shared")
+    depends_on("raja+cuda~openmp~shared", when="+cuda~openmp~shared")
+    depends_on("raja+cuda+openmp~shared", when="+cuda+openmp~shared")
 
-    depends_on("raja@0.9.0~cuda~openmp+shared", when="~cuda~openmp+shared")
-    depends_on("raja@0.9.0~cuda+openmp+shared", when="~cuda+openmp+shared")
-    depends_on("raja@0.9.0~cuda~openmp~shared", when="~cuda~openmp~shared")
-    depends_on("raja@0.9.0~cuda+openmp~shared", when="~cuda+openmp~shared")
+    depends_on("raja~cuda~openmp+shared", when="~cuda~openmp+shared")
+    depends_on("raja~cuda+openmp+shared", when="~cuda+openmp+shared")
+    depends_on("raja~cuda~openmp~shared", when="~cuda~openmp~shared")
+    depends_on("raja~cuda+openmp~shared", when="~cuda+openmp~shared")
 
-    depends_on("umpire@1.0.0+cuda+shared", when="+cuda+shared")
-    depends_on("umpire@1.0.0+cuda~shared", when="+cuda~shared")
-    depends_on("umpire@1.0.0~cuda+shared", when="~cuda+shared")
-    depends_on("umpire@1.0.0~cuda~shared", when="~cuda~shared")
+    depends_on("umpire+cuda+shared", when="+cuda+shared")
+    depends_on("umpire+cuda~shared", when="+cuda~shared")
+    depends_on("umpire~cuda+shared", when="~cuda+shared")
+    depends_on("umpire~cuda~shared", when="~cuda~shared")
 
     depends_on("mfem+shared+conduit~threadsafe", when="+shared")
     depends_on("mfem~shared+conduit~threadsafe", when="~shared")

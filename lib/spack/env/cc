@@ -277,14 +277,22 @@ other_args=()
 isystem_system_includes=()
 isystem_includes=()
 
-while [ -n "$1" ]; do
+while [ $# -ne 0 ]; do
+
     # an RPATH to be added after the case statement.
     rp=""
+
+    # Multiple consecutive spaces in the command line can
+    # result in blank arguments
+    if [ -z "$1" ]; then
+        shift
+        continue
+    fi
 
     case "$1" in
         -isystem*)
             arg="${1#-isystem}"
-	    isystem_was_used=true
+            isystem_was_used=true
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             if system_dir "$arg"; then
                 isystem_system_includes+=("$arg")
@@ -311,6 +319,14 @@ while [ -n "$1" ]; do
             fi
             ;;
         -l*)
+            # -loopopt=0 is passed to the linker erroneously in
+            # autoconf <= 2.69. Filter it out.
+            # TODO: generalize filtering of args with an env var, so that
+            # TODO: we do not have to special case this here.
+            if [ "$mode" = "ld" ] && [ "$1" != "${1#-loopopt}" ]; then
+                shift
+                continue
+            fi
             arg="${1#-l}"
             if [ -z "$arg" ]; then shift; arg="$1"; fi
             other_args+=("-l$arg")
@@ -502,9 +518,9 @@ for dir in "${isystem_includes[@]}";         do args+=("-isystem" "$dir"); done
 IFS=':' read -ra spack_include_dirs <<< "$SPACK_INCLUDE_DIRS"
 if [[ $mode == cpp || $mode == cc || $mode == as || $mode == ccld ]]; then
     if [[ "$isystem_was_used" == "true" ]] ; then
-	for dir in "${spack_include_dirs[@]}";  do args+=("-isystem" "$dir"); done
+        for dir in "${spack_include_dirs[@]}";  do args+=("-isystem" "$dir"); done
     else
-	for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
+        for dir in "${spack_include_dirs[@]}";  do args+=("-I$dir"); done
     fi
 fi
 

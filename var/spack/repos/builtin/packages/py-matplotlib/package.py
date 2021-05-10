@@ -24,6 +24,9 @@ class PyMatplotlib(PythonPackage):
         'matplotlib.testing.jpl_units', 'pylab'
     ]
 
+    version('3.4.2', sha256='d8d994cefdff9aaba45166eb3de4f5211adb4accac85cbf97137e98f26ea0219')
+    version('3.4.1', sha256='84d4c4f650f356678a5d658a43ca21a41fca13f9b8b00169c0b76e6a6a948908')
+    version('3.4.0', sha256='424ddb3422c65b284a38a97eb48f5cb64b66a44a773e0c71281a347f1738f146')
     version('3.3.4', sha256='3e477db76c22929e4c6876c44f88d790aacdf3c3f8f3a90cb1975c0bf37825b0')
     version('3.3.3', sha256='b1b60c6476c4cfe9e5cf8ab0d3127476fd3d5f05de0f343a452badaad0e4bdec')
     version('3.3.2', sha256='3d2edbf59367f03cd9daf42939ca06383a7d7803e3993eb5ff1bee8e8a3fbb6b')
@@ -86,19 +89,22 @@ class PyMatplotlib(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@:2', type=('build', 'link', 'run'))
     depends_on('python@3.5:', when='@3:', type=('build', 'link', 'run'))
     depends_on('python@3.6:', when='@3.1:', type=('build', 'link', 'run'))
+    depends_on('python@3.7:', when='@3.4:', type=('build', 'link', 'run'))
     depends_on('freetype@2.3:')  # freetype 2.6.1 needed for tests to pass
     depends_on('qhull@2015.2:', when='@3.3:')
     depends_on('libpng@1.2:')
-    depends_on('py-certifi@2020.6.20:', when='@3.3.1:3.3.2', type=('build', 'run'))
-    depends_on('py-certifi@2020.6.20:', when='@3.3.3:', type='build')
+    depends_on('py-setuptools', type=('build', 'run'))  # See #3813
+    depends_on('py-certifi@2020.6.20:', when='@3.3.1:', type='build')
     depends_on('py-numpy@1.11:', type=('build', 'run'))
     depends_on('py-numpy@1.15:', when='@3.3:', type=('build', 'run'))
-    depends_on('py-setuptools', type=('build', 'run'))  # See #3813
+    depends_on('py-numpy@1.16:', when='@3.4:', type=('build', 'run'))
     depends_on('py-cycler@0.10:', type=('build', 'run'))
-    depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
     depends_on('py-kiwisolver@1.0.1:', type=('build', 'run'), when='@2.2.0:')
-    depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
     depends_on('pil@6.2.0:', when='@3.3:', type=('build', 'run'))
+    depends_on('py-pyparsing@2.0.3,2.0.5:2.1.1,2.1.3:2.1.5,2.1.7:', type=('build', 'run'))
+    depends_on('py-pyparsing@2.2.1:', when='@3.4:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.1:', type=('build', 'run'))
+    depends_on('py-python-dateutil@2.7:', when='@3.4:', type=('build', 'run'))
     depends_on('py-pytz', type=('build', 'run'), when='@:2')
     depends_on('py-subprocess32', type=('build', 'run'), when='^python@:2.7')
     depends_on('py-functools32', type=('build', 'run'), when='@:2.0.999 ^python@:2.7')
@@ -134,7 +140,7 @@ class PyMatplotlib(PythonPackage):
     depends_on('imagemagick', when='+animation')
     depends_on('pil@3.4:', when='+image', type=('build', 'run'))
     depends_on('texlive', when='+latex', type='run')
-    depends_on('ghostscript@0.9:', when='+latex', type='run')
+    depends_on('ghostscript@9.0:', when='+latex', type='run')
     depends_on('fontconfig@2.7:', when='+fonts')
     depends_on('pkgconfig', type='build')
 
@@ -184,6 +190,8 @@ class PyMatplotlib(PythonPackage):
                 setup.write('[libs]\n')
                 setup.write('system_freetype = True\n')
                 setup.write('system_qhull = True\n')
+                if self.spec.satisfies('%clang'):
+                    setup.write('enable_lto = False\n')
 
     @run_after('build')
     @on_package_attributes(run_tests=True)

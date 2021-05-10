@@ -318,6 +318,15 @@ def _store():
     root, unpadded_root, projections = parse_install_tree(config_dict)
     hash_length = spack.config.get('config:install_hash_length')
 
+    # Check that the user is not trying to install software into the store
+    # reserved by Spack to bootstrap its own dependencies, since this would
+    # lead to bizarre behaviors (e.g. cleaning the bootstrap area would wipe
+    # user installed software)
+    if spack.paths.user_bootstrap_store == root:
+        msg = ('please change the install tree root "{0}" in your '
+               'configuration [path reserved for Spack internal use]')
+        raise ValueError(msg.format(root))
+
     return Store(root=root,
                  unpadded_root=unpadded_root,
                  projections=projections,
@@ -354,6 +363,23 @@ layout = llnl.util.lang.LazyReference(_store_layout)
 def upstream_set(root):
     upstream_root_description = os.path.join(root, 'upstream-spack')
     return os.path.exists(upstream_root_description)
+
+
+def reinitialize():
+    """Restore globals to the same state they would have at start-up"""
+    global store
+    global root, unpadded_root, db, layout
+
+    store = llnl.util.lang.Singleton(_store)
+
+    root = llnl.util.lang.LazyReference(_store_root)
+    unpadded_root = llnl.util.lang.LazyReference(_store_unpadded_root)
+    db = llnl.util.lang.LazyReference(_store_db)
+    layout = llnl.util.lang.LazyReference(_store_layout)
+
+
+def retrieve_upstream_dbs():
+    other_spack_instances = spack.config.get('upstreams', {})
 
 
 def initialize_upstream_pointer_if_unset(root, init_upstream_root):

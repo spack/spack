@@ -17,11 +17,13 @@ class Warpx(CMakePackage):
     """
 
     homepage = "https://ecp-warpx.github.io"
+    url      = "https://github.com/ECP-WarpX/WarpX/archive/refs/tags/21.04.tar.gz"
     git      = "https://github.com/ECP-WarpX/WarpX.git"
 
     maintainers = ['ax3l', 'dpgrote', 'MaxThevenet', 'RemiLehe']
 
     version('develop', branch='development')
+    version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
 
     variant('app', default=True,
             description='Build the WarpX executable application')
@@ -64,19 +66,23 @@ class Warpx(CMakePackage):
             description='Enable tiny profiling features')
 
     depends_on('ascent', when='+ascent')
-    depends_on('ascent +cuda', when='+ascent compute=cuda')
+    # note: ~shared is only needed until the new concretizer is in and
+    #       honors the conflict inside the Ascent package to find this
+    #       automatically
+    depends_on('ascent +cuda ~shared', when='+ascent compute=cuda')
     depends_on('ascent +mpi', when='+ascent +mpi')
     depends_on('blaspp', when='+psatd dims=rz')
+    depends_on('blaspp +cuda', when='+psatd dims=rz compute=cuda')
     depends_on('boost@1.66.0: +math', when='+qedtablegen')
     depends_on('cmake@3.15.0:', type='build')
     depends_on('cuda@9.2.88:', when='compute=cuda')
-    depends_on('fftw@3:', when='+psatd compute=openmp')
-    depends_on('fftw +mpi', when='+psatd +mpi compute=openmp')
+    depends_on('fftw@3:', when='+psatd compute=omp')
+    depends_on('fftw +mpi', when='+psatd +mpi compute=omp')
     depends_on('lapackpp', when='+psatd dims=rz')
     depends_on('mpi', when='+mpi')
     depends_on('openpmd-api@0.13.1:,dev', when='+openpmd')
     depends_on('openpmd-api +mpi', when='+openpmd +mpi')
-    depends_on('pkgconfig', type='build', when='+psatd compute=openmp')
+    depends_on('pkgconfig', type='build', when='+psatd compute=omp')
     depends_on('rocfft', when='+psatd compute=hip')
     depends_on('llvm-openmp', when='%apple-clang compute=omp')
 
@@ -92,6 +98,7 @@ class Warpx(CMakePackage):
         args = [
             '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
                 'ON' if '+shared' in spec else 'OFF'),
+            '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
             '-DWarpX_APP:BOOL={0}'.format(
                 'ON' if '+app' in spec else 'OFF'),
@@ -122,3 +129,12 @@ class Warpx(CMakePackage):
         ]
 
         return args
+
+    @property
+    def libs(self):
+        libsuffix = {'2': '2d', '3': '3d', 'rz': 'rz'}
+        dims = self.spec.variants['dims'].value
+        return find_libraries(
+            ['libwarpx.' + libsuffix[dims]], root=self.prefix, recursive=True,
+            shared=True
+        )

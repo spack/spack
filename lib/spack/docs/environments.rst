@@ -248,9 +248,9 @@ Users can add abstract specs to an Environment using the ``spack add``
 command. The most important component of an Environment is a list of
 abstract specs.
 
-Adding a spec adds to the manifest (the ``spack.yaml`` file) and to
-the roots of the Environment, but does not affect the concrete specs
-in the lockfile, nor does it install the spec.
+Adding a spec adds to the manifest (the ``spack.yaml`` file), which is
+used to define the roots of the Environment, but does not affect the
+concrete specs in the lockfile, nor does it install the spec.
 
 The ``spack add`` command is environment aware. It adds to the
 currently active environment. All environment aware commands can also
@@ -356,6 +356,18 @@ command also stores a Spack repo containing the ``package.py`` file
 used at install time for each package in the ``repos/`` directory in
 the Environment.
 
+The ``--no-add`` option can be used in a concrete environment to tell
+spack to install specs already present in the environment but not to
+add any new root specs to the environment.  For root specs provided
+to ``spack install`` on the command line, ``--no-add`` is the default,
+while for dependency specs on the other hand, it is optional.  In other
+words, if there is an unambiguous match in the active concrete environment
+for a root spec provided to ``spack install`` on the command line, spack
+does not require you to specify the ``--no-add` option to prevent the spec
+from being added again.  At the same time, a spec that already exists in the
+environment, but only as a dependency, will be added to the environment as a
+root spec without the ``--no-add`` option.
+
 ^^^^^^^
 Loading
 ^^^^^^^
@@ -398,6 +410,12 @@ There are two ways to include configuration information in a Spack Environment:
 #. Inline in the ``spack.yaml`` file
 
 #. Included in the ``spack.yaml`` file from another file.
+
+Many Spack commands also affect configuration information in files
+automatically. Those commands take a ``--scope`` argument, and the
+environment can be specified by ``env:NAME`` (to affect environment
+``foo``, set ``--scope env:foo``). These commands will automatically
+manipulate configuration inline in the ``spack.yaml`` file.
 
 """""""""""""""""""""
 Inline configurations

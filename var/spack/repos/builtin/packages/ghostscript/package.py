@@ -16,6 +16,8 @@ class Ghostscript(AutotoolsPackage):
 
     executables = [r'^gs$']
 
+    version('9.54.0', sha256='0646bb97f6f4d10a763f4919c54fa28b4fbdd3dff8e7de3410431c81762cade0')
+    version('9.53.3', sha256='6eaf422f26a81854a230b80fd18aaef7e8d94d661485bd2e97e695b9dce7bf7f')
     version('9.50', sha256='0f53e89fd647815828fc5171613e860e8535b68f7afbc91bf89aee886769ce89')
     version('9.27', sha256='9760e8bdd07a08dbd445188a6557cb70e60ccb6a5601f7dbfba0d225e28ce285')
     version('9.26', sha256='831fc019bd477f7cc2d481dc5395ebfa4a593a95eb2fe1eb231a97e450d7540d')
@@ -35,6 +37,11 @@ class Ghostscript(AutotoolsPackage):
     depends_on('gtkplus')
 
     patch('nogoto.patch', when='%fj@:4.1.0')
+
+    # Related bug report: https://bugs.ghostscript.com/show_bug.cgi?id=702985
+    patch("https://github.com/ArtifexSoftware/ghostpdl/commit/41ef9a0bc36b9db7115fbe9623f989bfb47bbade.patch",
+          when='@:9.53.3^freetype@2.10.3:',
+          sha256="49c353106d97c40b3b2c78f72ce34e3eef66e6b04861c313f87bad11ab4189e6")
 
     def url_for_version(self, version):
         baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"

@@ -19,8 +19,8 @@ class Kcov(CMakePackage):
     depends_on('cmake@2.8.4:', type='build')
     depends_on('zlib')
     depends_on('curl')
-    depends_on('elfutils')
-    depends_on('binutils +libiberty', type='link')
+    depends_on('elfutils', when='platform=linux')
+    depends_on('binutils +libiberty', when='platform=linux', type='link')
 
     def cmake_args(self):
         # Necessary at least on macOS, fixes linking error to LLDB

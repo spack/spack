@@ -19,12 +19,14 @@ class Mesa(MesonPackage):
     url = "https://archive.mesa3d.org/mesa-20.2.1.tar.xz"
 
     version('master', tag='master')
+    version('21.0.3', sha256='565c6f4bd2d5747b919454fc1d439963024fc78ca56fd05158c3b2cde2f6912b')
+    version('21.0.0', sha256='e6204e98e6a8d77cf9dc5d34f99dd8e3ef7144f3601c808ca0dd26ba522e0d84')
+    version('20.3.4', sha256='dc21a987ec1ff45b278fe4b1419b1719f1968debbb80221480e44180849b4084')
     version('20.2.1', sha256='d1a46d9a3f291bc0e0374600bdcb59844fa3eafaa50398e472a36fc65fd0244a')
 
     depends_on('meson@0.52:', type='build')
 
     depends_on('pkgconfig', type='build')
-    depends_on('binutils', when=(sys.platform != 'darwin'), type='build')
     depends_on('bison', type='build')
     depends_on('cmake', type='build')
     depends_on('flex', type='build')
@@ -75,6 +77,10 @@ class Mesa(MesonPackage):
     depends_on('xrandr', when='+glx')
     depends_on('glproto@1.4.14:', when='+glx')
 
+    # version specific issue
+    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=96130
+    conflicts('%gcc@10.1.0', msg='GCC 10.1.0 has a bug')
+
     # Require at least 1 front-end
     # TODO: Add egl to this conflict once made available
     conflicts('~osmesa ~glx')
@@ -85,6 +91,9 @@ class Mesa(MesonPackage):
 
     # OpenGL ES requires OpenGL
     conflicts('~opengl +opengles')
+
+    # requires native to be added to llvm_modules when using gallium swrast
+    patch('https://cgit.freedesktop.org/mesa/mesa/patch/meson.build?id=054dd668a69acc70d47c73abe4646e96a1f23577', sha256='36096a178070e40217945e12d542dfe80016cb897284a01114d616656c577d73', when='@21.0.0:21.0.3')
 
     # 'auto' needed when shared llvm is built
     @when('^llvm~shared_libs')
@@ -117,11 +126,17 @@ class Mesa(MesonPackage):
             args.append('-Dlibunwind=disabled')
 
         num_frontends = 0
+
+        if spec.satisfies('@:20.3'):
+            osmesa_enable, osmesa_disable = ('gallium', 'none')
+        else:
+            osmesa_enable, osmesa_disable = ('true', 'false')
+
         if '+osmesa' in spec:
             num_frontends += 1
-            args.append('-Dosmesa=gallium')
+            args.append('-Dosmesa={0}'.format(osmesa_enable))
         else:
-            args.append('-Dosmesa=none')
+            args.append('-Dosmesa={0}'.format(osmesa_disable))
 
         if '+glx' in spec:
             num_frontends += 1
