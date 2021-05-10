@@ -39,6 +39,21 @@ else()
 endif()
 
 
+# GIT DOWNLOAD----------------------------------------------------
+set(GIT_FILENAME, "Git-2.31.1-64-bit.exe")
+file(DOWNLOAD "https://github.com/git-for-windows/git/releases/download/v2.31.1.windows.1/Git-2.31.1-64-bit.exe"
+    "${CMAKE_CURRENT_BINARY_DIR}/${GIT_FILENAME}"
+    STATUS download_status
+    EXPECTED_HASH "SHA256=6abc8c83945ee8046c7337d2376c4dcb1e4d63ed9614e161b42a30a5fe9dc6ec"
+)
+list(GET download_status 0 res)
+if(res)
+  list(GET download_status 1 err)
+  message(FATAL_ERROR "Failed to download ${GIT_FILENAME} ${err}")
+endif()
+message(STATUS "Successfully downloaded ${GIT_FILENAME}")
+
+
 # PYTHON DOWLOAD AND EXTRACTION-----------------------------------
 file(DOWNLOAD "${PY_DOWNLOAD_LINK}/${PY_FILENAME}"
   "${CMAKE_CURRENT_BINARY_DIR}/${PY_FILENAME}"
