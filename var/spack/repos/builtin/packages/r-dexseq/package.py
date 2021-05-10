@@ -17,15 +17,18 @@ class RDexseq(RPackage):
     and generalized linear models for testing. The package also provides
     functions for the visualization and exploration of the results."""
 
-    homepage = "http://www.bioconductor.org/packages/release/bioc/html/DEXSeq.html"
-    url      = "http://www.bioconductor.org/packages/release/bioc/src/contrib/DEXSeq_1.36.0.tar.gz"
-    bioc     = "DEXSeq"
+    git  = "https://github.com/areyesq89/DEXSeq.git"
+    bioc = "DEXSeq"
 
     maintainers = ['dorton21']
 
-    version('1.36.0', sha256='111b107cd70f770d1c6f1d5d6d2e447eb61008398b14a390979c64d60559d271')
+    version('1.36.0', commit='ecc9bca9961ad2c2414703cdf8fc8bcb38c9b729')
 
     depends_on('r@2.14:', type=('build', 'run'))
+    depends_on('r-stringr', type=('build', 'run'))
+    depends_on('r-geneplotter', type=('build', 'run'))
+    depends_on('r-genefilter', type=('build', 'run'))
+    depends_on('r-biocgenerics', type=('build', 'run'))
     depends_on('r-biomart', type=('build', 'run'))
     depends_on('r-hwriter', type=('build', 'run'))
     depends_on('r-rsamtools', type=('build', 'run'))
