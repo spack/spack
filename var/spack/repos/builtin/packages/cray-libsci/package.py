@@ -67,8 +67,8 @@ class CrayLibsci(Package):
             lib = ["libsci_{0}"]
 
         libname = []
-        for i in range(len(lib)):
-            libname.append(lib[i].format(self.canonical_names[compiler].lower()))
+        for lib_fmt in lib:
+            libname.append(lib_fmt.format(self.canonical_names[compiler].lower()))
 
         return find_libraries(
             libname,
