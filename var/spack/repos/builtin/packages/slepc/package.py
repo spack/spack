@@ -129,7 +129,7 @@ class Slepc(Package):
         make('install', parallel=False)
 
     def setup_run_environment(self, env):
-        # set SLEPC_DIR in the module file
+        # set SLEPC_DIR & PETSC_DIR in the module file
         env.set('SLEPC_DIR', self.prefix)
         env.set('PETSC_DIR', self.spec['petsc'].prefix)
 
@@ -138,6 +138,7 @@ class Slepc(Package):
         test_dir = self.test_suite.current_test_data_dir
 
         if not os.path.exists(test_dir):
+            print('Skipping slepc test')
             return
 
         exe = 'hello'
@@ -146,29 +147,23 @@ class Slepc(Package):
 
         self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
-                              '-L {0}'.format(self.prefix.lib),
-                              '-l {0}'.format(self.spec['slepc'].name),
-                              '-L {0}'.format(self.spec['petsc'].prefix.lib),
-                              '-l {0}'.format(self.spec['petsc'].name),
-                              '-L {0}'.format(self.spec['mpi'].prefix.lib),
-                              '-l {0}'.format(self.spec['mpi'].name),
-                              '-o ', exe,
-                              test_dir],
+                              '-L', self.prefix.lib,
+                              '-l', 'slepc',
+                              '-L', self.spec['petsc'].prefix.lib,
+                              '-l', 'petsc',
+                              '-L', self.spec['mpi'].prefix.lib,
+                              '-l', 'mpi',
+                              '-o', exe,
+                              join_path(test_dir, 'hello.c')],
+                      purpose='test: compile {0} example'.format(exe),
+                      work_dir=test_dir)
+
+        self.run_test(exe=exe,
+                      options=[],
+                      expected=['Hello world'],
                       purpose='test: run {0} example'.format(exe),
                       work_dir=test_dir)
 
-        fake_options = ['-I{0}'.format(self.prefix),
-                              '-L {0}'.format(self.prefix.lib),
-                              '-l {0}'.format(self.spec['slepc'].name),
-                              '-L {0}'.format(self.spec['petsc'].prefix.lib),
-                              '-l {0}'.format(self.spec['petsc'].name),
-                              '-L {0}'.format(self.spec['mpi'].prefix.lib),
-                              '-l mpi' #'{0}'.format(self.spec['mpi'].name),
-                              '-o', exe,
-                              test_dir]
-        print('Shane {0}'.format(self.prefix))
-        print(fake_options)
 
     def test(self):
-        print("running_tests")
         self.run_hello_test()
