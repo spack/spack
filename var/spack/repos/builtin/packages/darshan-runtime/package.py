@@ -39,6 +39,13 @@ class DarshanRuntime(Package):
     variant('cobalt', default=False, description='Use Coblat Job Id')
     variant('pbs', default=False, description='Use PBS Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
+    variant('apmpi', default=False, description='Compile with AutoPerf MPI module')
+    variant('apmpi_sync', default=False, description='Compile with AutoPerf MPI module (with collective synchronization timing)')
+
+    conflicts('+apmpi', when='@:3.2.1',
+              msg='+apmpi variant only available starting from version 3.3.0')
+    conflicts('+apmpi_sync', when='@:3.2.1',
+              msg='+apmpi variant only available starting from version 3.3.0')
 
     def install(self, spec, prefix):
 
@@ -56,6 +63,13 @@ class DarshanRuntime(Package):
             options = ['CC=%s' % spec['mpi'].mpicc]
         else:
             options = ['--without-mpi']
+
+        if '+apmpi' in spec:
+            options.extend(['--enable-apmpi-mod'])
+        if '+apmpi_sync' in spec:
+            options.extend(['--enable-apmpi-mod',
+                            '--enable-apmpi-coll-sync'])
+
         options.extend(['--with-mem-align=8',
                         '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
                         '--with-jobid-env=%s' % job_id,

@@ -32,11 +32,15 @@ class DarshanUtil(Package):
 
     variant('bzip2', default=False, description="Enable bzip2 compression")
     variant('shared', default=True, description='Build shared libraries')
+    variant('apmpi', default=False, description='Compile with AutoPerf MPI module support')
 
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
 
     patch('retvoid.patch', when='@3.2.0:3.2.1')
+
+    conflicts('+apmpi', when='@:3.2.1',
+              msg='+apmpi variant only available starting from version 3.3.0')
 
     def install(self, spec, prefix):
 
@@ -44,6 +48,9 @@ class DarshanUtil(Package):
                    '--with-zlib=%s' % spec['zlib'].prefix]
         if '+shared' in spec:
             options.extend(['--enable-shared'])
+
+        if '+apmpi' in spec:
+            options.extend(['--enable-autoperf-apmpi'])
 
         with working_dir('spack-build', create=True):
             configure = Executable('../darshan-util/configure')
