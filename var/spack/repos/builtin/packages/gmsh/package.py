@@ -16,8 +16,8 @@ class Gmsh(CMakePackage):
     files using Gmsh's own scripting language.
     """
 
-    homepage = 'http://gmsh.info'
-    url = 'http://gmsh.info/src/gmsh-4.4.1-source.tgz'
+    homepage = 'https://gmsh.info'
+    url = 'https://gmsh.info/src/gmsh-4.4.1-source.tgz'
     git = 'https://gitlab.onelab.info/gmsh/gmsh.git'
 
     version('develop', branch='master')
