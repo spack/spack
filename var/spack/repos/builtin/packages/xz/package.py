@@ -29,15 +29,11 @@ class Xz(AutotoolsPackage, SourceforgePackage):
     variant('pic', default=False,
             description='Compile with position independent code.')
 
-    # Note: may be replaced with libs=shared,static
-    variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=True, description='Build static libraries')
-    conflicts('~shared', when='~static', msg='Select either shared or static libraries')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     def configure_args(self):
-        args = self.enable_or_disable('shared')
-        args += self.enable_or_disable('static')
-        return args
+        return self.enable_or_disable('libs')
 
     def flag_handler(self, name, flags):
         if name == 'cflags' and '+pic' in self.spec:

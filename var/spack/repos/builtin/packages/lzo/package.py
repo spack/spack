@@ -19,13 +19,10 @@ class Lzo(AutotoolsPackage):
     version('2.06', sha256='ff79e6f836d62d3f86ef6ce893ed65d07e638ef4d3cb952963471b4234d43e73')
     version('2.05', sha256='449f98186d76ba252cd17ff1241ca2a96b7f62e0d3e4766f88730dab0ea5f333')
 
-    # Note: may be replaced with libs=shared,static
-    variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=True, description='Build static libraries')
-    conflicts('~shared', when='~static', msg='Select either shared or static libraries')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     def configure_args(self):
         args = ['--disable-dependency-tracking']
-        args += self.enable_or_disable('shared')
-        args += self.enable_or_disable('static')
+        args += self.enable_or_disable('libs')
         return args

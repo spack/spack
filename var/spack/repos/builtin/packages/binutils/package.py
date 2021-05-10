@@ -39,11 +39,8 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     variant('ld', default=False, description='Enable ld.')
     variant('gas', default=False, description='Enable as assembler.')
     variant('interwork', default=False, description='Enable interwork.')
-
-    # Note: may be replaced with libs=shared,static
-    variant('shared', default=True, description='Build shared libraries')
-    variant('static', default=True, description='Build static libraries')
-    conflicts('~shared', when='~static', msg='Select either shared or static libraries')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -89,8 +86,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
             '--with-sysroot=/',
         ]
 
-        args += self.enable_or_disable('static')
-        args += self.enable_or_disable('shared')
+        args += self.enable_or_disable('libs')
         args += self.enable_or_disable('lto')
         args += self.enable_or_disable('ld')
         args += self.enable_or_disable('gas')
