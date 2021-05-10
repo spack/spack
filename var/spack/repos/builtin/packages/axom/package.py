@@ -371,7 +371,7 @@ class Axom(CachedCMakePackage, CudaPackage):
     def cmake_args(self):
         options = []
 
-        if '%cce' in self.spec:
+        if self.spec.satisfies('%cce'):
             options.append('-DCMAKE_Fortran_FLAGS=-ef')
 
         if self.run_tests is False:
