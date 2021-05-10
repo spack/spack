@@ -67,7 +67,7 @@ class NetcdfC(AutotoolsPackage):
     variant('shared', default=True, description='Enable shared library')
     variant('dap', default=False, description='Enable DAP support')
     variant('jna', default=False, description='Enable JNA support')
-    variant('fsync', default=False, description='Enable fsync sypport')
+    variant('fsync', default=False, description='Enable fsync support')
 
     # It's unclear if cdmremote can be enabled if '--enable-netcdf-4' is passed
     # to the configure script. Since netcdf-4 support is mandatory we comment
