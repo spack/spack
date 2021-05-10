@@ -8,14 +8,18 @@ from spack import *
 
 
 class PyPlotlyHelper(PythonPackage):
-    """Python morphology manipulation toolkit"""
+    """Package that makes plotly easy."""
 
-    homepage = "https://bbpcode.epfl.ch/code/#/admin/projects/nse/plotly-helper"
-    git      = "ssh://bbpcode.epfl.ch/nse/plotly-helper"
+    homepage = "https://github.com/bluebrain/plotly-helper"
+    git = "https://github.com/BlueBrain/plotly-helper.git"
+    url = "https://pypi.io/packages/source/p/plotly-helper/plotly-helper-0.0.7.tar.gz"
 
     version('develop', branch='master')
-    version('0.0.2', tag='plotly-helper-v0.0.2')
+    version('0.0.7', sha256='9cd3f005b65f6697b9229f2c2d1ef483ac5b62e036463fa28b267f8ffd861b54')
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    depends_on('py-neurom+plotly', type='run')
+    depends_on('py-plotly@3.4.2:', type='run')
+    depends_on('py-numpy@1.15.4:', type='run')
+    depends_on('py-neurom+plotly@2.0:2.999', type='run')
+    depends_on('py-click@6.0:', type='run')

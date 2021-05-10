@@ -10,17 +10,12 @@ class Morphio(CMakePackage):
     """Library for reading / writing morphology files"""
 
     homepage = "https://github.com/BlueBrain/MorphIO"
-    url      = "https://github.com/BlueBrain/MorphIO.git"
     git      = "https://github.com/BlueBrain/MorphIO.git"
+    url      = "https://pypi.io/packages/source/m/morphio/MorphIO-3.1.1.tar.gz"
 
-    version('develop', git=url, submodules=True)
-    version('3.1.1', tag='v3.1.1', submodules=True)
-    version('3.0.2', tag='v3.0.2', submodules=True)
-    version('2.3.9', tag='v2.3.9', submodules=True)
-    version('2.3.4', tag='v2.3.4', submodules=True)
-    version('2.2.1', tag='v2.2.1', submodules=True)
-    version('2.1.2', tag='v2.1.2', submodules=True)
-    version('2.0.8', tag='v2.0.8', submodules=True)
+    version('develop', submodules=True)
+
+    version('3.1.1', sha256="ad9f0e363f09f03c6eda54f5f3b006d204236677d2f2c9675421e0441033a503")
 
     variant('mpi', default=True, description="Build with MPI support")
 

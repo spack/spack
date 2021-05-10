@@ -9,24 +9,18 @@ from spack import *
 class PyMorphio(PythonPackage):
     """Python library for reading / writing morphology files"""
 
-    homepage = "https://github.com/BlueBrain/MorphIO/"
+    homepage = "https://github.com/BlueBrain/MorphIO"
     git      = "https://github.com/BlueBrain/MorphIO.git"
+    url      = "https://pypi.io/packages/source/m/morphio/MorphIO-3.1.1.tar.gz"
 
     version('develop', branch='master', submodules=True, get_full_repo=True)
     version('unifurcation', branch='unifurcation', submodules=True, get_full_repo=True)
 
-    version('3.1.1', tag='v3.1.1', submodules=True, get_full_repo=True)
-    version('3.0.2', tag='v3.0.2', submodules=True, get_full_repo=True)
-    version('2.7.1', tag='v2.7.1', submodules=True, get_full_repo=True)
-    version('2.3.10', tag='v2.3.10', submodules=True, get_full_repo=True)
-    version('2.3.4', tag='v2.3.4', submodules=True, get_full_repo=True)
-    version('2.2.1', tag='v2.2.1', submodules=True, get_full_repo=True)
-    version('2.1.2', tag='v2.1.2', submodules=True, get_full_repo=True)
-    version('2.0.8', tag='v2.0.8', submodules=True, get_full_repo=True)
+    version('3.1.1', sha256="ad9f0e363f09f03c6eda54f5f3b006d204236677d2f2c9675421e0441033a503")
 
     depends_on('py-setuptools', type='build')
     depends_on('py-setuptools-scm', type='build')
 
     depends_on('cmake@3.2:', type='build')
-    depends_on('py-numpy', type='run')
+    depends_on('py-numpy@1.14.1:', type='run')
     depends_on('hdf5', type=('build', 'run'))

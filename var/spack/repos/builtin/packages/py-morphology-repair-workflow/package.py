@@ -19,8 +19,20 @@ class PyMorphologyRepairWorkflow(PythonPackage):
 
     depends_on('py-setuptools', type=('build', 'run'))
 
-    # depends_on('py-neuroc', type='run')
-    # depends_on('py-morph-tool', type='run')
-    # depends_on('py-neuror', type='run')
-    # depends_on('py-more-itertools', type='run')
-    # depends_on('py-morph-validator', type='run')
+    depends_on('py-click@7.0:', type='run')
+    depends_on('py-dask+bag@2.19.0:', type='run')
+    depends_on('py-more-itertools@8.4.0:', type='run')
+    depends_on('py-numpy@1.19.1:', type='run')
+    depends_on('py-pandas@1.1.0:', type='run')
+    depends_on('py-pyyaml@3.10:', type='run')
+    depends_on('py-six@1.11.0:', type='run')
+    depends_on('py-toolz@0.11.1:', type='run')
+    depends_on('py-xmltodict@0.12.0:', type='run')
+
+    depends_on('py-morph-tool@0.2.3:', type='run')
+    depends_on('py-morphio@2.5.0:', type='run')
+    depends_on('py-neuror@1.1.9:', type='run')
+    depends_on('py-neurom@2.0:', type='run')
+
+    depends_on('py-morph-validator@0.2.2:', type='run')
+    depends_on('py-neuroc@0.2.4:', type='run')
