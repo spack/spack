@@ -4,11 +4,10 @@ start running it on a fresh Windows machine.
 # Step 1: Install prerequisites
 
 Before downloading and configuring Spack, we have to prepare our box for the 
-installation. The following packages are required to successfully build and 
-run the installer, in addition to running Spack in general:
+installation. If you are interested in building the installer yourself,
+you will need the following packages.
 
 * Visual Studio
-* Python
 * Git
 * Wix
 
@@ -20,11 +19,6 @@ We require several specific components to be included in the Visual Studio insta
 
 If you already have Visual Studio installed, you can make sure these components are installed by
 rerunning the installer.  Next to your installation, select "Modify" and look at the "Installation details" pane on the right.
-
-## Python
-
-Python 3 can be downloaded from the Windows Store and will appear in your
-path if installed from there.
 
 ## Git
 
@@ -38,7 +32,15 @@ checking out repositories and switching development branches.
 
 Wix is a utility used for .msi creation and can be downloaded and
 installed at https://wixtoolset.org/releases/. The Visual Studio
-extensions are not necessary.
+extensions are not necessary. You can also skip this package if
+you do not plan on creating the installer yourself.
+
+## Python
+
+While Spack is a Python-based package, an installation of Python will be
+provided when the Spack installer is run. If you will not be running the
+installer, you can download Python 3 from the Windows Store. This will have
+the added benefit of it being automatically added to your ``PATH`` variable.
 
 # Step 2: Get Spack
 
@@ -62,6 +64,10 @@ spack_install
     |--------scripts
     |--------spack_cmd.bat
 ```
+
+This setup will suffice for developers not interested in making or running
+the installer. If this describes your workflow, you can skip to Step 5
+of this walkthrough.
 
 # Step 3: Make the installer
 
@@ -100,6 +106,11 @@ if you are doing development in a directory called ``spack-develop``
 and want to generate an installer with the source there, you can use:
 
 ``spack make-installer -s spack-develop tmp``
+
+Similar to the -v build, the ``spack-develop`` directory may be an absolute
+path or relative to the current working directory. The entire contents of the 
+specified directory will be included in the installed (e.g. .git files or 
+local changes).
 
 # Step 4: Run the installer
 
@@ -178,7 +189,7 @@ Spack console via:
 
 ``spack install cpuinfo``
 
-If you are a developer and want to use your source version of Spack instead of
-a release version, simply replace Spack in the above call with:
+If you are a developer and want to use a different checkout of Spack instead of
+the installed version (if you ran the installer), simply replace spack in the above call with:
 
 ``python path\to\your\checkout\bin\spack``
