@@ -1393,7 +1393,10 @@ class SpackSolverSetup(object):
             )
             for clause in self.spec_clauses(spec):
                 self.gen.fact(clause)
-
+                if clause.name == 'variant_set':
+                    self.gen.fact(fn.variant_default_value_from_cli(
+                        *clause.args
+                    ))
         self.gen.h1("Variant Values defined in specs")
         self.define_variant_values()
 
