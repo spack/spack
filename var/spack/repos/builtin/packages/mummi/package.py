@@ -41,17 +41,17 @@ class Mummi(PythonPackage):
     extends('python@3.7:')
 
     # build dependencies
-    depends_on('cmake',  type='build')
-    depends_on('swig',  type='build')
+    depends_on('cmake', type='build')
+    depends_on('swig', type='build')
 
     # generic
     depends_on('py-numpy')
     depends_on('py-scipy')
 
     # ml
-    depends_on('faiss@1.6.3 +python')
-    depends_on('py-theano@1.0.4 ~cuda')
-    depends_on('py-h5py ~mpi')
+    #depends_on('faiss@1.6.3 +python')
+    #depends_on('py-theano@1.0.4 ~cuda')
+    #depends_on('py-h5py ~mpi')
 
     # analysis
     depends_on('talass@process-statistics')
@@ -63,14 +63,13 @@ class Mummi(PythonPackage):
 
     # cg and aa
     depends_on('ddcmdconverter@1.0.4')
-    #depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
+    depends_on('py-mdanalysis-mummi@mda_1.0.1_ddcmd')
 
     depends_on('dssp@3.1.4')
     depends_on('py-parmed@3.2.0')
-    depends_on('py-tqdm@4.36.1')
 
     depends_on('fftw@3.3.8 +mpi~openmp~pfft_patches precision=double,float')
-    depends_on('gromacs@2019.6 +cuda')
+    depends_on('gromacs@2019.6 +blas+lapack~cuda~mpi~double build_type=Release')
 
     # databroker
     depends_on('redis')
