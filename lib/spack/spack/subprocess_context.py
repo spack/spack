@@ -23,7 +23,6 @@ import multiprocessing
 
 import spack.architecture
 import spack.config
-import spack.environment as ev
 
 
 _serialize = sys.version_info >= (3, 8) and sys.platform == 'darwin'
@@ -66,6 +65,7 @@ class PackageInstallContext(object):
     needs to be transmitted to a child process.
     """
     def __init__(self, pkg):
+        import spack.environment as ev  # break import cycle
         if _serialize:
             self.serialized_pkg = serialize(pkg)
             self.serialized_env = serialize(ev._active_environment)
@@ -76,6 +76,7 @@ class PackageInstallContext(object):
         self.test_state = TestState()
 
     def restore(self):
+        import spack.environment as ev  # break import cycle
         self.test_state.restore()
         spack.main.spack_working_dir = self.spack_working_dir
         if _serialize:
