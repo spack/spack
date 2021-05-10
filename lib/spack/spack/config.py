@@ -89,6 +89,21 @@ class ConfigPath(object):
         self.universal = universal
         self.user = user
 
+#: Builtin paths to configuration files in Spack
+#: Used in _bootstrap_config_scopes() in bootstrap.py
+configuration_paths = (
+    # Default configuration scope is the lowest-level scope. These are
+    # versioned with Spack and can be overridden by systems, sites or users
+    ('defaults', os.path.join(spack.paths.etc_path, 'spack', 'defaults')),
+
+    # System configuration is per machine.
+    # No system-level configs should be checked into spack by default
+    ('system', os.path.join(spack.paths.system_etc_path, 'spack')),
+
+    # Site configuration is per spack instance, for sites or projects
+    # No site-level configs should be checked into spack by default.
+    ('site', os.path.join(spack.paths.etc_path, 'spack'))
+)
 
 default_config_paths = ConfigPath(
     universal={
