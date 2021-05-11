@@ -29,7 +29,7 @@ class Libcircle(AutotoolsPackage):
     @property
     def force_autoreconf(self):
         return self.spec.satisfies('%cce')
-        
+
     @when('@master')
     def autoreconf(self, spec, prefix):
         with working_dir(self.configure_directory):
