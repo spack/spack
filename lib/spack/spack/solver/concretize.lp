@@ -403,14 +403,23 @@ variant_not_default(Package, Variant, Value, 0)
     external_with_variant_set(Package, Variant, Value),
     node(Package).
 
-% The default value for a variant in a package is what is written
-% in the package.py file, unless some preference is set in packages.yaml
+% The default value for a variant in a package is what is prescribed:
+%
+% 1. On the command line
+% 2. In packages.yaml (if there's no command line settings)
+% 3. In the package.py file (if there are no settings in
+%    packages.yaml and the command line)
+%
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_package_py(Package, Variant, Value),
-    not variant_default_value_from_packages_yaml(Package, Variant, _).
+    not variant_default_value_from_packages_yaml(Package, Variant, _),
+    not variant_default_value_from_cli(Package, Variant, _).
 
 variant_default_value(Package, Variant, Value)
- :- variant_default_value_from_packages_yaml(Package, Variant, Value).
+ :- variant_default_value_from_packages_yaml(Package, Variant, Value),
+    not variant_default_value_from_cli(Package, Variant, _).
+
+variant_default_value(Package, Variant, Value) :- variant_default_value_from_cli(Package, Variant, Value).
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
@@ -435,6 +444,7 @@ variant_single_value(Package, "dev_path")
 #defined variant_single_value/2.
 #defined variant_default_value/3.
 #defined variant_possible_value/3.
+#defined variant_default_value_from_cli/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
 #defined variant_value_from_disjoint_sets/4.
@@ -704,7 +714,7 @@ opt_criterion(14, "number of non-default variants (roots)").
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
-opt_criterion(13, "multi-valued variants + preferred providers for roots").
+opt_criterion(13, "multi-valued variants").
 #minimize{ 0@13 : #true }.
 #maximize {
     1@13,Package,Variant,Value
@@ -712,8 +722,10 @@ opt_criterion(13, "multi-valued variants + preferred providers for roots").
     not variant_single_value(Package, Variant),
     root(Package)
 }.
+opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@12 : #true }.
 #minimize{
-    Weight@13,Provider
+    Weight@12,Provider
     : provider_weight(Provider, Weight), root(Provider)
 }.
 

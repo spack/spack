@@ -1210,3 +1210,21 @@ class TestConcretize(object):
 
         for node in s.traverse():
             assert node.satisfies(expected_compiler)
+
+    @pytest.mark.parametrize('spec_str,expected_dict', [
+        # Check the defaults from the package (libs=shared)
+        ('multivalue-variant', {
+            'libs=shared': True,
+            'libs=static': False
+        }),
+        # Check that libs=static doesn't extend the default
+        ('multivalue-variant libs=static', {
+            'libs=shared': False,
+            'libs=static': True
+        }),
+    ])
+    def test_multivalued_variants_from_cli(self, spec_str, expected_dict):
+        s = Spec(spec_str).concretized()
+
+        for constraint, value in expected_dict.items():
+            assert s.satisfies(constraint) == value
