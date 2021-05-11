@@ -94,7 +94,7 @@ class Hdf5(CMakePackage):
 
     # Earlier versions of HDF5 will not correctly find szip without the patches
     # in the <version>_cmake.patch files
-    conflicts('+szip', when='@:1.18.19,1.9.0:1.10.5')
+    conflicts('+szip', when='@:1.8.19,1.9.0:1.10.5')
 
     # There are several officially unsupported combinations of the features:
     # 1. Thread safety is not guaranteed via high-level C-API but in some cases
