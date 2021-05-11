@@ -356,6 +356,18 @@ command also stores a Spack repo containing the ``package.py`` file
 used at install time for each package in the ``repos/`` directory in
 the Environment.
 
+The ``--no-add`` option can be used in a concrete environment to tell
+spack to install specs already present in the environment but not to
+add any new root specs to the environment.  For root specs provided
+to ``spack install`` on the command line, ``--no-add`` is the default,
+while for dependency specs on the other hand, it is optional.  In other
+words, if there is an unambiguous match in the active concrete environment
+for a root spec provided to ``spack install`` on the command line, spack
+does not require you to specify the ``--no-add` option to prevent the spec
+from being added again.  At the same time, a spec that already exists in the
+environment, but only as a dependency, will be added to the environment as a
+root spec without the ``--no-add`` option.
+
 ^^^^^^^
 Loading
 ^^^^^^^
