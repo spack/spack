@@ -20,3 +20,9 @@ class Rempi(AutotoolsPackage):
     depends_on("automake", type='build')
     depends_on("libtool", type='build')
     depends_on("libpciaccess", type='link')
+
+    def setup_build_environment(self, env):
+        if self.spec.satisfies('%cce'):
+            spack_env.set('MPICC', 'mpicc')
+            spack_env.set('MPICXX', 'mpicxx')
+            spack_env.set('MPICH_CC', 'cc')
