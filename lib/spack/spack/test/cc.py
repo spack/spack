@@ -67,7 +67,6 @@ pkg_prefix = '/spack-test-prefix'
 # Compilers to use during tests
 cc = Executable(os.path.join(build_env_path, "cc"))
 ld = Executable(os.path.join(build_env_path, "ld"))
-#FTWccld = Executable(os.path.join(build_env_path, "cc"))
 cpp = Executable(os.path.join(build_env_path, "cpp"))
 cxx = Executable(os.path.join(build_env_path, "c++"))
 fc = Executable(os.path.join(build_env_path, "fc"))
