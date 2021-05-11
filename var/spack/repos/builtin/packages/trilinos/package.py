@@ -431,7 +431,7 @@ class Trilinos(CMakePackage, CudaPackage):
     patch('cray_secas.patch', when='@12.14.1:%cce')
 
     def flag_handler(self, name, flags):
-        if '%cce' in self.spec:
+        if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-fuse-ld=gold')
             return (None, None, flags)
