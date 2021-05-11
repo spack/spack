@@ -45,6 +45,7 @@ class Gmsh(CMakePackage):
     variant('gmp',         default=True,  description='Enable GMP for Kbipack (advanced)')
     variant('cairo',       default=False, description='Enable Cairo to render fonts (experimental)')
     variant('compression', default=True,  description='Enables IO compression through zlib')
+    variant('med',         default=True,  description='Build with MED(HDF5)')
     variant('mmg',         default=True,  description='Build with Mmg3d')
     variant('netgen',      default=True,  description='Build with Netgen')
     variant('opencascade', default=False, description='Build with OpenCASCADE')
@@ -68,12 +69,13 @@ class Gmsh(CMakePackage):
     depends_on('fltk+gl', when='+fltk')
     depends_on('cairo',   when='+cairo')
     depends_on('hdf5',    when='+hdf5')
+    depends_on('med',     when='+med')
     depends_on('mmg',     when='+mmg')
     depends_on('netgen',  when='+netgen')
     depends_on('opencascade', when='+opencascade')
     depends_on('oce',     when='+oce')
     depends_on('petsc+mpi', when='+petsc+mpi')
-    depends_on('petsc',   when='+petsc~mpi')
+    depends_on('petsc~mpi', when='+petsc~mpi')
     depends_on('slepc',   when='+slepc+petsc')
     depends_on('tetgen',  when='+tetgen')
     depends_on('zlib',    when='+compression')
@@ -94,6 +96,7 @@ class Gmsh(CMakePackage):
             self.define_from_variant('EIGEN'),
             self.define_from_variant('FLTK'),
             self.define_from_variant('GMP'),
+            self.define_from_variant('MED'),
             self.define_from_variant('METIS'),
             self.define_from_variant('MMG'),
             self.define_from_variant('MPI'),
