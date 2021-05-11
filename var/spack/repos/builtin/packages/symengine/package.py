@@ -42,9 +42,6 @@ class Symengine(CMakePackage):
             description='Enable thread safety option')
     variant('shared',       default=True,
             description='Enables the build of shared libraries')
-    variant('build_type', default='Release',
-            description='The build type to build',
-            values=('Debug', 'Release'))
 
     # NOTE: mpir is a drop-in replacement for gmp
     # NOTE: [mpc,mpfr,flint,piranha] could also be built against mpir

@@ -27,8 +27,6 @@ class HsakmtRoct(CMakePackage):
     version('3.7.0', sha256='b357fe7f425996c49f41748923ded1a140933de7564a70a828ed6ded6d896458')
     version('3.5.0', sha256='d9f458c16cb62c3c611328fd2f2ba3615da81e45f3b526e45ff43ab4a67ee4aa')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-
     depends_on('cmake@3:', type='build')
     depends_on('numactl')
 

@@ -26,8 +26,6 @@ class LlvmAmdgpu(CMakePackage):
     version('3.7.0', sha256='3e2542ce54b91b5c841f33d542143e0e43eae95e8785731405af29f08ace725b')
     version('3.5.0', sha256='4878fa85473b24d88edcc89938441edc85d2e8a785e567b7bd7ce274ecc2fd9c')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-
     variant('openmp', default=True, description='Enable OpenMP')
 
     depends_on('cmake@3.4.3:',  type='build', when='@:3.8.99')

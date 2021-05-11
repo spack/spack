@@ -28,8 +28,6 @@ class HsaRocrDev(CMakePackage):
     version('3.7.0', sha256='0071d14431f73ce74574e61d0786f2b7cf34b14ea898a1f54b6e1b06b2d468c0')
     version('3.5.0', sha256='52c12eec3e3404c0749c70f156229786ee0c3e6d3c979aed9bbaea500fa1f3b8')
 
-    variant('build_type', default='Release', values=("Release", "Debug"), description='CMake build type')
-
     depends_on('cmake@3:', type="build")
     depends_on('libelf@0.8:', type='link')
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
