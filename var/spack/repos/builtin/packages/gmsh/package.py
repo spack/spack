@@ -78,7 +78,6 @@ class Gmsh(CMakePackage):
     depends_on('tetgen',  when='+tetgen')
     depends_on('zlib',    when='+compression')
     depends_on('metis',   when='+metis')
-    depends_on('eigen',   when='+eigen')
     depends_on('cgns',    when='+cgns')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
     depends_on('gl2ps')
@@ -92,10 +91,13 @@ class Gmsh(CMakePackage):
         options = [
             self.define_from_variant('CAIRO'),
             self.define_from_variant('CGNS'),
+            self.define_from_variant('EIGEN'),
             self.define_from_variant('FLTK'),
-            self.define_from_variant('GMP') ,
+            self.define_from_variant('GMP'),
             self.define_from_variant('METIS'),
+            self.define_from_variant('MMG'),
             self.define_from_variant('MPI'),
+            self.define_from_variant('NETGEN'),
             self.define_from_variant('OPENMP'),
             self.define_from_variant('PRIVATE_API', 'privateapi'),
         ]
@@ -109,10 +111,7 @@ class Gmsh(CMakePackage):
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
 
         # Make sure GMSH picks up correct BlasLapack by providing linker flags
-        if '+eigen' in spec:
-            options.append('-DENABLE_EIGEN=ON')
-        else:
-            options.append('-DENABLE_EIGEN=OFF')
+        if '~eigen' in spec:
             options.append('-DENABLE_BLAS_LAPACK=ON')
             blas_lapack = spec['lapack'].libs + spec['blas'].libs
             options.append(
@@ -133,24 +132,19 @@ class Gmsh(CMakePackage):
         else:
             options.append('-DENABLE_PETSC=OFF')
 
-        if '+tetgen' in spec:
-            env['TETGEN_DIR'] = spec['tetgen'].prefix
-            options.append('-DENABLE_TETGEN=ON')
-        else:
-            options.append('-DENABLE_TETGEN=OFF')
+        if '@:3.0.6' in spec:
+            if '+tetgen' in spec:
+                env['TETGEN_DIR'] = spec['tetgen'].prefix
+            options.append(self.define_from_variant('tetgen'))
 
         if '+netgen' in spec:
             env['NETGEN_DIR'] = spec['netgen'].prefix
-            options.append('-DENABLE_NETGEN=ON')
-        else:
-            options.append('-DENABLE_NETGEN=OFF')
 
-        if '+mmg' in spec:
-            options.append('-DENABLE_MMG3D=ON')
-            options.append('-DENABLE_MMG=ON')
-        else:
-            options.append('-DENABLE_MMG3D=OFF')
-            options.append('-DENABLE_MMG=OFF')
+        if '@:4.6' in spec:
+            if '+mmg' in spec:
+                options.append('-DENABLE_MMG3D=ON')
+            else:
+                options.append('-DENABLE_MMG3D=OFF')
 
         if '+slepc' in spec:
             env['SLEPC_DIR'] = spec['slepc'].prefix
