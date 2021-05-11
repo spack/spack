@@ -144,10 +144,7 @@ class Gmsh(CMakePackage):
             env['NETGEN_DIR'] = spec['netgen'].prefix
 
         if '@:4.6' in spec:
-            if '+mmg' in spec:
-                options.append('-DENABLE_MMG3D=ON')
-            else:
-                options.append('-DENABLE_MMG3D=OFF')
+            options.append(self.define_from_variant('ENABLE_MMG3D', 'mmg'))
 
         if '+slepc' in spec:
             env['SLEPC_DIR'] = spec['slepc'].prefix
