@@ -32,15 +32,10 @@ checking out repositories and switching development branches.
 
 Wix is a utility used for .msi creation and can be downloaded and
 installed at https://wixtoolset.org/releases/. The Visual Studio
-extensions are not necessary. You can also skip this package if
-you do not plan on creating the installer yourself.
+extensions are not necessary. 
 
-## Python
-
-While Spack is a Python-based package, an installation of Python will be
-provided when the Spack installer is run. If you will not be running the
-installer, you can download Python 3 from the Windows Store. This will have
-the added benefit of it being automatically added to your ``PATH`` variable.
+The installer will provide a Python installation when the Spack
+installer is run.
 
 # Step 2: Get Spack
 
@@ -64,10 +59,6 @@ spack_install
     |--------scripts
     |--------spack_cmd.bat
 ```
-
-This setup will suffice for developers not interested in making or running
-the installer. If this describes your workflow, you can skip to Step 5
-of this walkthrough.
 
 # Step 3: Make the installer
 
@@ -126,70 +117,3 @@ you can do any of these things by rerunning Spack.msi.
 Running the installer also creates a shortcut on your desktop that, when launched,
 will load a console identical to ``spack_cmd``, but with its initial directory
 being wherever Spack was installed on your computer.
-
-# Step 5: Configure Spack and test
-
-The last thing to do after running the installer is to finish Spack configuration. This
-is covered in the online documentation for Spack, but there are a few Windows-specific
-steps that are necessary.
-
-First, inside the Spack console, run the following command:
-
-``spack compiler find``
-
-This creates a .spack directory in our home directory, along with a windows subdirectory
-containing a compilers.yaml file. On a fresh Windows install, the only compiler that
-should be found is your installation of Microsoft Visual Studio.
-
-We need to provide the config.yaml and packages.yaml configurations by ourselves. Open 
-your text editor of choice and enter the following lines for config.yaml:
-
-```
-config:
-  locks: false
-  install_tree:
-    root: $spack\opt\spack
-    projections:
-      all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
-```
-
-(These settings are identical to those in the default config.yaml
-provided with your Spack checkout, except with forward slashes replaced by backslashes for
-Windows compatibility.) It is important that all indentions in .yaml files are done with spaces
-and not tabs, so take care when editing one by hand.
-
-For the packages.yaml file, we need to direct spack towards the CMake and Ninja installations
-we set up with Visual Studio. Therefore, your packages.yaml file will look something
-like this, with possibly slight variants in the paths to CMake and Ninja:
-
-```
-packages:
-  cmake:
-    externals:
-    - spec: cmake@3.19
-      prefix: 'c:\Program Files (x86)\Microsoft Visual Studio
-\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake'
-    buildable: False
-  ninja:
-    externals:
-    - spec: ninja@1.8.2
-      prefix: 'c:\Program Files (x86)\Microsoft Visual Studio
-\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
-    buildable: False
-```	
-
-You can also use an external installation of CMake if you have one and prefer
-to use it. If you don't have a path to Ninja analogous to the above, then you can
-obtain it by running the Visual Studio Insaller and following the instructions
-in Step 1 of this walkthrough.
-
-Once all three of these files are present in your ``.spack/windows`` directory,
-it is time to give the installation a test. Install a basic package though the
-Spack console via:
-
-``spack install cpuinfo``
-
-If you are a developer and want to use a different checkout of Spack instead of
-the installed version (if you ran the installer), simply replace spack in the above call with:
-
-``python path\to\your\checkout\bin\spack``
