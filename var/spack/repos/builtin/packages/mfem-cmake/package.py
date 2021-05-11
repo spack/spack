@@ -8,36 +8,38 @@ from spack import *
 
 import socket
 import os
-import shutil
 
 from os import environ as env
 from os.path import join as pjoin
 
-#TODO (bernede1@llnl.gov):
+# TODO (bernede1@llnl.gov):
 # - no mesquite dep
 # - no direct parmetis
 # - no mumps
 # - no direct scotch
 # - no direct scalapack
 
+
 def cmake_cache_entry(name, value, comment=""):
     """Generate a string for a cmake cache variable"""
 
-    return 'set(%s "%s" CACHE PATH "%s")\n\n' % (name,value,comment)
+    return 'set(%s "%s" CACHE PATH "%s")\n\n' % (name, value, comment)
+
 
 def cmake_cache_string(name, string, comment=""):
     """Generate a string for a cmake cache variable"""
 
-    return 'set(%s "%s" CACHE STRING "%s")\n\n' % (name,string,comment)
+    return 'set(%s "%s" CACHE STRING "%s")\n\n' % (name, string, comment)
+
 
 def cmake_cache_option(name, boolean_value, comment=""):
     """Generate a string for a cmake configuration option"""
 
     value = "ON" if boolean_value else "OFF"
-    return 'set(%s %s CACHE BOOL "%s")\n\n' % (name,value,comment)
+    return 'set(%s %s CACHE BOOL "%s")\n\n' % (name, value, comment)
 
 
-def get_spec_path(spec, package_name, path_replacements = {}, use_bin = False) :
+def get_spec_path(spec, package_name, path_replacements={}, use_bin=False):
     """Extracts the prefix path for the given spack package
        path_replacements is a dictionary with string replacements for the path.
     """
@@ -58,7 +60,7 @@ def get_spec_path(spec, package_name, path_replacements = {}, use_bin = False) :
 def path_replace(path, path_replacements):
     """Replaces path key/value pairs from path_replacements in path"""
     for key in path_replacements:
-        path = path.replace(key,path_replacements[key])
+        path = path.replace(key, path_replacements[key])
     return path
 
 
@@ -344,9 +346,10 @@ class MfemCmake(CMakePackage, CudaPackage):
         return sys_type
 
     def _get_host_config_path(self, spec):
-        host_config_path = "hc-%s-%s-%s.cmake" % (socket.gethostname().rstrip('1234567890'),
-                                               self._get_sys_type(spec),
-                                               spec.format('{name}-{version}-{compiler}-{hash:8}'))
+        host_config_path = "hc-%s-%s-%s.cmake" % \
+                           (socket.gethostname().rstrip('1234567890'),
+                            self._get_sys_type(spec),
+                            spec.format('{name}-{version}-{compiler}-{hash:8}'))
         dest_dir = self.stage.source_path
         host_config_path = os.path.abspath(pjoin(dest_dir, host_config_path))
         return host_config_path
@@ -409,7 +412,6 @@ class MfemCmake(CMakePackage, CudaPackage):
                         return lib
             return LibraryList([])
 
-
         metis5_str = False
         if ('+metis' in spec) and spec['metis'].satisfies('@5:'):
             metis5_str = True
@@ -441,15 +443,17 @@ class MfemCmake(CMakePackage, CudaPackage):
 
         host_config_path = self._get_host_config_path(spec)
         cfg = open(host_config_path, "w")
-        cfg.write("####################################################################\n")
+        cfg.write("########{0}\n".format("#" * 60))
         cfg.write("# Generated host-config - Edit at own risk!\n")
-        cfg.write("####################################################################\n")
-        cfg.write("# Copyright (c) 2019-2020, Lawrence Livermore National Security, LLC and\n")
-        cfg.write("# other Serac Project Developers. See the top-level LICENSE file for\n")
+        cfg.write("########{0}\n".format("#" * 60))
+        cfg.write("# Copyright (c) 2019-2020, "
+                  "Lawrence Livermore National Security, LLC and\n")
+        cfg.write("# other Serac Project Developers. "
+                  "See the top-level LICENSE file for\n")
         cfg.write("# details.\n")
         cfg.write("#\n")
         cfg.write("# SPDX-License-Identifier: (BSD-3-Clause) \n")
-        cfg.write("####################################################################\n\n")
+        cfg.write("########{0}\n".format("#" * 60))
 
         cfg.write("#---------------------------------------\n")
         cfg.write("# SYS_TYPE: {0}\n".format(sys_type))
@@ -482,15 +486,15 @@ class MfemCmake(CMakePackage, CudaPackage):
 
         if '+debug' in spec:
             if not debug_flag_found:
-                cxxflags = ' '.join([cxxflags,'-g'])
+                cxxflags = ' '.join([cxxflags, '-g'])
             if not opt_flag_found:
-                cxxflags = ' '.join([cxxflags,'-O0'])
+                cxxflags = ' '.join([cxxflags, '-O0'])
         else:
             if not opt_flag_found:
-                cxxflags = ' '.join([cxxflags,'-O2'])
+                cxxflags = ' '.join([cxxflags, '-O2'])
 
         if self.spec.satisfies('@4.0.0:'):
-            cxxflags = ' '.join([cxxflags,self.compiler.cxx11_flag])
+            cxxflags = ' '.join([cxxflags, self.compiler.cxx11_flag])
 
         if cflags:
             cfg.write(cmake_cache_entry("CMAKE_C_FLAGS", cflags))
@@ -521,27 +525,29 @@ class MfemCmake(CMakePackage, CudaPackage):
                 env['CUDAHOSTCXX'] = spec['mpi'].mpicxx
 
             if spec.satisfies('cuda_arch=none'):
-                cfg.write("# No cuda_arch specified in Spack spec, this is likely to fail\n\n")
+                cfg.write("# No cuda_arch specified in Spack spec, "
+                          "this is likely to fail\n\n")
             else:
                 cuda_arch = spec.variants['cuda_arch'].value
                 flag = '-arch sm_{0}'.format(cuda_arch[0])
                 # CXX flags will be propagated to the host compiler
                 cuda_flags = ' '.join([flag, cxxflags])
                 cfg.write(cmake_cache_string("CMAKE_CUDA_FLAGS", cuda_flags))
-                cfg.write(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES", ' '.join(cuda_arch)))
+                cfg.write(cmake_cache_string("CMAKE_CUDA_ARCHITECTURES",
+                                             ' '.join(cuda_arch)))
 
         else:
             cfg.write(cmake_cache_option("MFEM_USE_CUDA", False))
 
-        xcompiler = ''
+        # xcompiler = ''
         xlinker = '-Wl,'
-        #if '+cuda' in spec:
+        # if '+cuda' in spec:
         #    xcompiler = '-Xcompiler='
         #    xlinker = '-Xlinker='
 
-        #cxxflags = [(xcompiler + flag) for flag in cxxflags]
+        # cxxflags = [(xcompiler + flag) for flag in cxxflags]
 
-        #if '+cuda' in spec:
+        # if '+cuda' in spec:
         #        cxxflags += [
         #            '-x=cu --expt-extended-lambda -arch=%s' % cuda_arch,
         #            '-ccbin %s' % (spec['mpi'].mpicxx if '+mpi' in spec
@@ -553,18 +559,18 @@ class MfemCmake(CMakePackage, CudaPackage):
 
         # Determine how to run MPI tests, e.g. when using '--test=root', when
         # Spack is run inside a batch system job.
-        mfem_mpiexec    = 'mpirun'
-        mfem_mpiexec_np = '-np'
-        if 'SLURM_JOBID' in os.environ:
-            mfem_mpiexec    = 'srun'
-            mfem_mpiexec_np = '-n'
-        elif 'LSB_JOBID' in os.environ:
-            if 'LLNL_COMPUTE_NODES' in os.environ:
-                mfem_mpiexec    = 'lrun'
-                mfem_mpiexec_np = '-n'
-            else:
-                mfem_mpiexec    = 'jsrun'
-                mfem_mpiexec_np = '-p'
+        # mfem_mpiexec    = 'mpirun'
+        # mfem_mpiexec_np = '-np'
+        # if 'SLURM_JOBID' in os.environ:
+        #     mfem_mpiexec    = 'srun'
+        #     mfem_mpiexec_np = '-n'
+        # elif 'LSB_JOBID' in os.environ:
+        #     if 'LLNL_COMPUTE_NODES' in os.environ:
+        #         mfem_mpiexec    = 'lrun'
+        #         mfem_mpiexec_np = '-n'
+        #     else:
+        #         mfem_mpiexec    = 'jsrun'
+        #         mfem_mpiexec_np = '-p'
 
         cfg.write("#---------------------------------------\n")
         cfg.write("# MPI\n")
@@ -582,7 +588,7 @@ class MfemCmake(CMakePackage, CudaPackage):
         #        else:
         #            cfg.write(cmake_cache_string("MPIEXEC", mfem_mpiexec))
 
-        #else:
+        # else:
         #    cfg.write(cmake_cache_option("MFEM_USE_MPI", False))
 
         # JBE: PREFIX interferes with generation of CUDA link command
@@ -638,14 +644,14 @@ class MfemCmake(CMakePackage, CudaPackage):
             lapack = spec['lapack'].libs
             lapack_inc = spec['lapack'].prefix.include
             lapack_lib = ld_flags_from_library_list(lapack)
-            cfg.write(cmake_cache_string("LAPACK_LIBRARIES",lapack_lib))
-            cfg.write(cmake_cache_string("LAPACK_INCLUDE_DIRS",lapack_inc))
+            cfg.write(cmake_cache_string("LAPACK_LIBRARIES", lapack_lib))
+            cfg.write(cmake_cache_string("LAPACK_INCLUDE_DIRS", lapack_inc))
 
             blas = spec['blas'].libs
             blas_inc = spec['blas'].prefix.include
             blas_lib = ld_flags_from_library_list(blas)
-            cfg.write(cmake_cache_string("BLAS_LIBRARIES",blas_lib))
-            cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS",blas_inc))
+            cfg.write(cmake_cache_string("BLAS_LIBRARIES", blas_lib))
+            cfg.write(cmake_cache_string("BLAS_INCLUDE_DIRS", blas_inc))
 
             # Parmetis is reguired by superlu-dist.
             # The MFEM way is to provide superlu with it's parmetis dependency
@@ -655,21 +661,21 @@ class MfemCmake(CMakePackage, CudaPackage):
             parmetis_dir = get_spec_path(spec, "parmetis")
             cfg.write(cmake_cache_entry("ParMETIS_DIR", parmetis_dir))
 
-            #TODO (bernede1@llnl.gov): what about PARMETIS_REQUIRED_PACKAGES
+            # TODO (bernede1@llnl.gov): what about PARMETIS_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
 
         if '+superlu-dist' in spec:
             superludist_dir = get_spec_path(spec, "superlu-dist")
             cfg.write(cmake_cache_entry("SuperLUDist_DIR", superludist_dir))
 
-            #TODO (bernede1@llnl.gov): what about SUPERLUDIST_REQUIRED_PACKAGES
+            # TODO (bernede1@llnl.gov): what about SUPERLUDIST_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
 
         if '+strumpack' in spec:
             strumpack_dir = get_spec_path(spec, "strumpack")
             cfg.write(cmake_cache_entry("STRUMPACK_DIR", strumpack_dir))
 
-            #TODO (bernede1@llnl.gov): what about STRUMPACK_REQUIRED_PACKAGES
+            # TODO (bernede1@llnl.gov): what about STRUMPACK_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
 
         if '+suite-sparse' in spec:
@@ -685,18 +691,18 @@ class MfemCmake(CMakePackage, CudaPackage):
             cfg.write(cmake_cache_entry("PETSC_DIR", petsc_dir))
             cfg.write(cmake_cache_entry("PETSC_ARCH", ""))
 
-            #TODO (bernede1@llnl.gov): what about PETSC_REQUIRED_PACKAGES
+            # TODO (bernede1@llnl.gov): what about PETSC_REQUIRED_PACKAGES
             # see MFEM config/defaults.cmake
 
-            #petsc = spec['petsc']
-            #if '+shared' in petsc:
-            #    petsc_opt = petsc.headers.cpp_flags
-            #    petsc_lib = ld_flags_from_library_list(petsc.libs)
+            # petsc = spec['petsc']
+            # if '+shared' in petsc:
+            #     petsc_opt = petsc.headers.cpp_flags
+            #     petsc_lib = ld_flags_from_library_list(petsc.libs)
 
-            #    cfg.write(cmake_cache_string("PETSC_OPT", petsc_opt))
-            #    cfg.write(cmake_cache_string("PETSC_LIB", petsc_lib))
-            #else:
-            #    cfg.write(cmake_cache_string("PETSC_DIR", petsc.prefix))
+            #     cfg.write(cmake_cache_string("PETSC_OPT", petsc_opt))
+            #     cfg.write(cmake_cache_string("PETSC_LIB", petsc_lib))
+            # else:
+            #     cfg.write(cmake_cache_string("PETSC_DIR", petsc.prefix))
 
         if '+pumi' in spec:
             pumi_dir = get_spec_path(spec, "pumi")
@@ -768,7 +774,7 @@ class MfemCmake(CMakePackage, CudaPackage):
         timer_ids = {'std': '0', 'posix': '2', 'mac': '4', 'mpi': '6'}
         timer = spec.variants['timer'].value
         if timer != 'auto':
-            cfg.write(cmake_cache_string("MFEM_TIMER_TYPE",timer_ids[timer]))
+            cfg.write(cmake_cache_string("MFEM_TIMER_TYPE", timer_ids[timer]))
 
         if '+conduit' in spec:
             conduit_dir = get_spec_path(spec, "conduit")
