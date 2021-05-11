@@ -20,7 +20,7 @@ class Gmsh(CMakePackage):
     url = 'https://gmsh.info/src/gmsh-4.4.1-source.tgz'
     git = 'https://gitlab.onelab.info/gmsh/gmsh.git'
 
-    version('develop', branch='master')
+    version('master', branch='master')
     version('4.8.4', sha256='760dbdc072eaa3c82d066c5ba3b06eacdd3304eb2a97373fe4ada9509f0b6ace')
     version('4.7.1', sha256='c984c295116c757ed165d77149bd5fdd1068cbd7835e9bcd077358b503891c6a')
     version('4.7.0', sha256='e27f32f92b374ba2a746a9d9c496401c13f66ac6e3e70753e16fa4012d14320e')
@@ -71,7 +71,6 @@ class Gmsh(CMakePackage):
     depends_on('mmg',     when='+mmg')
     depends_on('netgen',  when='+netgen')
     depends_on('opencascade', when='+opencascade')
-    depends_on('mmg',     when='+mmg')
     depends_on('oce',     when='+oce')
     depends_on('petsc+mpi', when='+petsc+mpi')
     depends_on('petsc',   when='+petsc~mpi')
@@ -107,7 +106,7 @@ class Gmsh(CMakePackage):
         # Make sure native file dialogs are used
         options.append('-DENABLE_NATIVE_FILE_CHOOSER=ON')
 
-        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix)
+        options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s' % self.prefix.lib)
 
         # Prevent GMsh from using its own strange directory structure on OSX
         options.append('-DENABLE_OS_SPECIFIC_INSTALL=OFF')
