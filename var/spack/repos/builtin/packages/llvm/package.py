@@ -245,6 +245,12 @@ class Llvm(CMakePackage, CudaPackage):
     # Workaround for issue https://github.com/spack/spack/issues/18197
     patch('llvm7_intel.patch', when='@7 %intel@18.0.2,19.0.4')
 
+    # workaround for missing include: https://reviews.llvm.org/D89450
+    patch("limits_include.patch", when="@8:11.999")
+
+    # https://reviews.llvm.org/D64937
+    patch("uint8_t_typedef.patch", when="@8")
+
     # The functions and attributes below implement external package
     # detection for LLVM. See:
     #
