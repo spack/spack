@@ -142,19 +142,14 @@ class Slepc(Package):
             return
 
         exe = 'hello'
-        expected_output = ('Hello world')
         cc_exe = os.environ['CC']
 
         self.run_test(exe=cc_exe,
                       options=['-I{0}'.format(self.prefix.include),
-                              '-L', self.prefix.lib,
-                              '-l', 'slepc',
-                              '-L', self.spec['petsc'].prefix.lib,
-                              '-l', 'petsc',
-                              '-L', self.spec['mpi'].prefix.lib,
-                              '-l', 'mpi',
-                              '-o', exe,
-                              join_path(test_dir, 'hello.c')],
+                               '-L', self.prefix.lib, '-l', 'slepc',
+                               '-L', self.spec['petsc'].prefix.lib, '-l', 'petsc',
+                               '-L', self.spec['mpi'].prefix.lib, '-l', 'mpi',
+                               '-o', exe, join_path(test_dir, 'hello.c')],
                       purpose='test: compile {0} example'.format(exe),
                       work_dir=test_dir)
 
@@ -163,7 +158,6 @@ class Slepc(Package):
                       expected=['Hello world'],
                       purpose='test: run {0} example'.format(exe),
                       work_dir=test_dir)
-
 
     def test(self):
         self.run_hello_test()
