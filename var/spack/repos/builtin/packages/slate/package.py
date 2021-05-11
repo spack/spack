@@ -35,6 +35,7 @@ class Slate(CMakePackage, CudaPackage, ROCmPackage):
     depends_on('blaspp ~rocm', when='~rocm')
     for val in ROCmPackage.amdgpu_targets:
         depends_on('blaspp +rocm amdgpu_target=%s' % val, when='amdgpu_target=%s' % val)
+    depends_on('rocblas', when='+rocm')
     depends_on('lapackpp@2021.04.00:', when='@2021.05.01:')
     depends_on('lapackpp@2020.10.02', when='@2020.10.00')
     depends_on('lapackpp@master', when='@master')
