@@ -20,7 +20,6 @@ def test_build_tarball_overwrite(
     with tmpdir.as_cwd():
         spec = spack.spec.Spec('trivial-install-test-package').concretized()
         install(str(spec))
-
         # Runs fine the first time, throws the second time
         spack.binary_distribution.build_tarball(spec, '.', unsigned=True)
         with pytest.raises(spack.binary_distribution.NoOverwriteException):

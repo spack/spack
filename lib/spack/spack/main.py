@@ -548,7 +548,6 @@ class SpackCommand(object):
             prepend + [self.command_name] + list(argv))
 
         fail_on_error = kwargs.get('fail_on_error', True)
-
         out = StringIO()
         try:
             with log_output(out):
