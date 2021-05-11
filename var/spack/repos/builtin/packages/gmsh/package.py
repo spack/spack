@@ -89,19 +89,16 @@ class Gmsh(CMakePackage):
     def cmake_args(self):
         spec = self.spec
 
-        var_opt_list = [
-            ('+cairo', 'CAIRO'),
-            ('+cgns', 'CGNS'),
-            ('+fltk', 'FLTK'),
-            ('+gmp', 'GMP'),
-            ('+metis', 'METIS'),
-            ('+mpi', 'MPI'),
-            ('+openmp', 'OPENMP'),
-            ('+privateapi', 'PRIVATE_API'),
+        options = [
+            self.define_from_variant('CAIRO'),
+            self.define_from_variant('CGNS'),
+            self.define_from_variant('FLTK'),
+            self.define_from_variant('GMP') ,
+            self.define_from_variant('METIS'),
+            self.define_from_variant('MPI'),
+            self.define_from_variant('OPENMP'),
+            self.define_from_variant('PRIVATE_API', 'privateapi'),
         ]
-        # options setting copied from gribapi
-        options = ['-DENABLE_%s=%s' % (opt, 'ON' if var in spec else 'OFF')
-                   for var, opt in var_opt_list]
 
         # Make sure native file dialogs are used
         options.append('-DENABLE_NATIVE_FILE_CHOOSER=ON')
