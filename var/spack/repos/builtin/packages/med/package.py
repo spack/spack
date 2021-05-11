@@ -40,11 +40,10 @@ class Med(CMakePackage):
         spec = self.spec
 
         options = [
-            '-DHDF5_ROOT_DIR=%s' % spec['hdf5'].prefix,
-            '-DMEDFILE_BUILD_TESTS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DMEDFILE_BUILD_PYTHON=OFF',
-            '-DMEDFILE_INSTALL_DOC=OFF',
+            self.define('HDF5_ROOT_DIR', spec['hdf5'].prefix),
+            self.define('MEDFILE_BUILD_TESTS', self.run_tests),
+            self.define('MEDFILE_BUILD_PYTHON', False),
+            self.define('MEDFILE_INSTALL_DOC', False),
         ]
         if '~fortran' in spec:
             options.append('-DCMAKE_Fortran_COMPILER=')
