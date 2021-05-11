@@ -71,13 +71,11 @@ class Gmsh(CMakePackage):
     depends_on('hdf5',    when='+hdf5')
     depends_on('med',     when='+med')
     depends_on('mmg',     when='+mmg')
-    depends_on('netgen',  when='+netgen')
     depends_on('opencascade', when='+opencascade')
     depends_on('oce',     when='+oce')
     depends_on('petsc+mpi', when='+petsc+mpi')
     depends_on('petsc~mpi', when='+petsc~mpi')
     depends_on('slepc',   when='+slepc+petsc')
-    depends_on('tetgen',  when='+tetgen')
     depends_on('zlib',    when='+compression')
     depends_on('metis',   when='+metis')
     depends_on('cgns',    when='+cgns')
@@ -102,7 +100,9 @@ class Gmsh(CMakePackage):
             self.define_from_variant('MPI'),
             self.define_from_variant('NETGEN'),
             self.define_from_variant('OPENMP'),
+            self.define_from_variant('PETSC'),
             self.define_from_variant('PRIVATE_API', 'privateapi'),
+            self.define_from_variant('SLEPC'),
         ]
 
         # Make sure native file dialogs are used
@@ -121,36 +121,17 @@ class Gmsh(CMakePackage):
                 '-DBLAS_LAPACK_LIBRARIES={0}'.format(blas_lapack.ld_flags))
 
         if '+oce' in spec:
-            env['CASROOT'] = spec['oce'].prefix
             options.append('-DENABLE_OCC=ON')
         elif '+opencascade' in spec:
-            env['CASROOT'] = spec['opencascade'].prefix
             options.append('-DENABLE_OCC=ON')
         else:
             options.append('-DENABLE_OCC=OFF')
 
-        if '+petsc' in spec:
-            env['PETSC_DIR'] = spec['petsc'].prefix
-            options.append('-DENABLE_PETSC=ON')
-        else:
-            options.append('-DENABLE_PETSC=OFF')
-
         if '@:3.0.6' in spec:
-            if '+tetgen' in spec:
-                env['TETGEN_DIR'] = spec['tetgen'].prefix
             options.append(self.define_from_variant('tetgen'))
-
-        if '+netgen' in spec:
-            env['NETGEN_DIR'] = spec['netgen'].prefix
 
         if '@:4.6' in spec:
             options.append(self.define_from_variant('ENABLE_MMG3D', 'mmg'))
-
-        if '+slepc' in spec:
-            env['SLEPC_DIR'] = spec['slepc'].prefix
-            options.append('-DENABLE_SLEPC=ON')
-        else:
-            options.append('-DENABLE_SLEPC=OFF')
 
         if '+shared' in spec:
             # Builds dynamic executable and installs shared library
