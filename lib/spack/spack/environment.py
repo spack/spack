@@ -1286,6 +1286,12 @@ class Environment(object):
                         # It is expected that only one instance of the package
                         # can be added to the environment - do not attempt to
                         # add multiple.
+                        tty.debug(
+                            "Not adding {0} to shell modifications: "
+                            "this package has already been added".format(
+                                spec.format("{name}/{hash:7}")
+                            )
+                        )
                         continue
                     else:
                         visited.add(spec.name)
