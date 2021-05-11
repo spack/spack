@@ -47,7 +47,7 @@ class DarshanRuntime(Package):
     variant('apxc', default=False, description='Compile with AutoPerf XC module')
 
     conflicts('+hdf5', when='@:3.1.8',
-              msg='+hdf5 variant only available starting from version 3.3.0')
+              msg='+hdf5 variant only available starting from version 3.2.0')
     conflicts('+apmpi', when='@:3.2.1',
               msg='+apmpi variant only available starting from version 3.3.0')
     conflicts('+apmpi_sync', when='@:3.2.1',
