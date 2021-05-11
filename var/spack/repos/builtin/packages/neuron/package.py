@@ -32,7 +32,8 @@ class Neuron(CMakePackage):
     patch("fix_brew_py_18e97a2d.patch", when="@7.8.0c")
 
     version("develop", branch="master")
-    version("8.0b",  commit="eb8d038", preferred=True)
+    version("8.0.0", tag="8.0.0", preferred=True)
+    version("8.0b",  commit="eb8d038")
     version("8.0a",  tag="8.0a")
     version("7.9.0b",  commit="94147e5")
     version("7.9.0a",  commit="fc74b85")
@@ -113,7 +114,7 @@ class Neuron(CMakePackage):
     depends_on("tau",         when="+profile")
     depends_on("coreneuron+legacy-unit", when="+coreneuron+legacy-unit")
     depends_on("coreneuron~legacy-unit", when="+coreneuron~legacy-unit")
-    depends_on("py-pytest-cov", when="+tests@develop:")
+    depends_on("py-pytest-cov", when="+tests@8.0b:")
 
     conflicts("+cmake",   when="@0:7.8.0b,2018-10")
     conflicts("~shared",  when="+python")

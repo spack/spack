@@ -19,7 +19,10 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master')
-    version('1.0b', tag="1.0b", submodules=True, preferred=True)
+    # 1.0.0 > 1.0b > 1.0 as far as Spack is concerned
+    version('1.0.1', commit='251ee12', preferred=True)
+    version('1.0.0', tag='1.0', preferred=True)
+    version('1.0b', tag="1.0b", submodules=True)
     version('1.0a', commit="857551a", submodules=True)
     version('0.23b', commit="be131ec", submodules=True)
     version('0.22', tag='0.22', submodules=True)
@@ -57,7 +60,8 @@ class Coreneuron(CMakePackage):
 
     depends_on('boost', when='+tests')
     depends_on('cuda', when='+gpu')
-    depends_on('flex', type='build')
+    depends_on('flex', type='build', when='~nmodl')
+    depends_on('flex@2.6:', type='build', when='+nmodl')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
     depends_on('libsonata-report', when='+report')
@@ -65,7 +69,8 @@ class Coreneuron(CMakePackage):
     depends_on('tau', when='+profile')
 
     # nmodl specific dependency
-    depends_on('nmodl@0.3b:', when='@0.17:+nmodl')
+    depends_on('nmodl@0.3.0:', when='@1.0.0:+nmodl')
+    depends_on('nmodl@0.3b', when='@0.17:1.0b+nmodl')
     depends_on('nmodl@0.3a', when='@0:0.16+nmodl')
     depends_on('eigen@3.3.4:', when='+nmodl')
     depends_on('ispc', when='+ispc')

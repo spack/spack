@@ -14,6 +14,8 @@ class Nmodl(CMakePackage):
     git      = "https://github.com/BlueBrain/nmodl.git"
 
     version('develop', branch='master', submodules=True)
+    # 0.3.0 > 0.3b > 0.3 as far as Spack is concerned
+    version('0.3.0', tag='0.3', preferred=True)
     version('0.3b', commit="c30ea06", submodules=True)
     version('0.3a', commit="86fc52d", submodules=True)
     version('0.2', tag='0.2', submodules=True)
