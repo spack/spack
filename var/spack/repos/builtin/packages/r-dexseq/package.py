@@ -17,14 +17,12 @@ class RDexseq(RPackage):
     and generalized linear models for testing. The package also provides
     functions for the visualization and exploration of the results."""
 
-    git  = "https://github.com/areyesq89/DEXSeq.git"
     bioc = "DEXSeq"
 
     maintainers = ['dorton21']
 
-    version('1.36.0', commit='ecc9bca9961ad2c2414703cdf8fc8bcb38c9b729')
+    version('1.36.0', commit='f0a361af6954fcc2abb2db801c26e303570669b2')
 
-    depends_on('r@2.14:', type=('build', 'run'))
     depends_on('r-stringr', type=('build', 'run'))
     depends_on('r-geneplotter', type=('build', 'run'))
     depends_on('r-genefilter', type=('build', 'run'))
