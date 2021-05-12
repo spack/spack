@@ -738,6 +738,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
     events = []
     try:
         with keyboard_input(stdin) as kb:
+            nlines = 0
             while True:
                 # fix the terminal settings if we recently came to
                 # the foreground
@@ -757,6 +758,9 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                         try:
                             if stdin.read(1) == 'v':
                                 echo = not echo
+                                events.append(
+                                    'v:' + str(echo) + ':' + str(nlines))
+                                nlines = 0
                         except IOError as e:
                             # If SIGTTIN is ignored, the system gives EIO
                             # to let the caller know the read failed b/c it
@@ -769,6 +773,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                     line = _retry(in_pipe.readline)()
                     if not line:
                         break
+                    nlines += 1
 
                     # find control characters and strip them.
                     controls = control.findall(line)
@@ -784,8 +789,12 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
                     log_file.flush()
 
                     if xon in controls:
+                        events.append('force_echo:on:' + str(nlines))
+                        nlines = 0
                         force_echo = True
                     if xoff in controls:
+                        events.append('force_echo:off:' + str(nlines))
+                        nlines = 0
                         force_echo = False
 
     except BaseException:
