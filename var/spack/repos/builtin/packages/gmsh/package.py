@@ -120,7 +120,7 @@ class Gmsh(CMakePackage):
 
         # Use system versions of contrib libraries, when possible:
         if '+external' in spec:
-            options.append('-DENABLE_SYSTEM_CONTRIB=ON')
+            options.append(self.define('ENABLE_SYSTEM_CONTRIB', True))
 
         # Make sure native file dialogs are used
         options.append('-DENABLE_NATIVE_FILE_CHOOSER=ON')
