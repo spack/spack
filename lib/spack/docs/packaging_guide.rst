@@ -480,6 +480,12 @@ like so:
 .. literalinclude:: _spack_root/var/spack/repos/builtin/packages/openmpi/package.py
    :pyobject: Openmpi.url_for_version
 
+.. note::
+
+   If only the extension of the source archive changes, it is easier to use `extension`
+   argument to `version()`
+
+
 With the use of this ``url_for_version()``, Spack knows to download OpenMPI ``2.1.1``
 from http://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.bz2
 but download OpenMPI ``1.10.7`` from http://www.open-mpi.org/software/ompi/v1.10/downloads/openmpi-1.10.7.tar.bz2.
