@@ -23,6 +23,6 @@ class Rempi(AutotoolsPackage):
 
     def setup_build_environment(self, env):
         if self.spec.satisfies('%cce'):
-            spack_env.set('MPICC', 'mpicc')
-            spack_env.set('MPICXX', 'mpicxx')
-            spack_env.set('MPICH_CC', 'cc')
+            env.set('MPICC', 'mpicc')
+            env.set('MPICXX', 'mpicxx')
+            env.set('MPICH_CC', 'cc')
