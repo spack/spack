@@ -22,9 +22,12 @@ def symlink(real_path, link_path):
     if sys.platform != "win32" or _win32_can_symlink():
         os.symlink(real_path, link_path)
     else:
-        # Use junctions
-        _win32_junction(real_path, link_path)
-
+        try:
+            # Try to use junctions
+            _win32_junction(real_path, link_path)
+        except OSError:
+            # If all else fails, fall back to copying files
+            shutil.copyfile(real_path, link_path)
 
 # Based on https://github.com/Erotemic/ubelt/blob/master/ubelt/util_links.py
 def _win32_junction(path, link):
