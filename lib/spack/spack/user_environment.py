@@ -72,7 +72,7 @@ def environment_modifications_for_spec(spec, view=None):
     the view."""
     spec = spec.copy()
     if view and not spec.external:
-        spec.prefix = prefix.Prefix(view.view().get_projection_for_spec(spec))
+        spec.prefix = prefix.Prefix(view.get_projection_for_spec(spec))
 
     # generic environment modifications determined by inspecting the spec
     # prefix

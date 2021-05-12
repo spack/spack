@@ -2,8 +2,9 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
+import base64
 import collections
+import hashlib
 import os
 import re
 import sys
@@ -509,24 +510,51 @@ class ViewDescriptor(object):
         else:
             return None
 
-    @property
-    def _next_root(self):
+    def _next_root(self, specs):
+        content_hash = self.content_hash(specs)
         root_dir = os.path.dirname(self.root)
-        current_root = self._current_root
-        candidates = [
-            os.path.join(root_dir, name)
-            for name in self._real_root_names
-            if not current_root or name != os.path.basename(current_root)
-        ]
-        return candidates[0]  # list guaranteed non-empty
+        root_name = os.path.basename(self.root)
+        return os.path.join(root_dir, '._%s_%s' % (root_name, content_hash))
+
+    def content_hash(self, specs):
+        d = {
+            'descriptor': self.to_dict(),
+            'specs': [(spec.full_hash(), spec.prefix) for spec in sorted(specs)]
+        }
+        contents = sjson.dump(d)
+        sha = hashlib.sha1(contents.encode('utf-8'))
+        b32_hash = base64.b32encode(sha.digest()).lower()
+
+        if sys.version_info[0] >= 3:
+            b32_hash = b32_hash.decode('utf-8')
+
+        return b32_hash
+
+    def get_projection_for_spec(self, spec):
+        """Get projection for spec relative to view root
+
+        Getting the projection from the underlying root will get the temporary
+        projection. This gives the permanent projection relative to the root
+        symlink.
+        """
+        view = self.view()
+        view_path = view.get_projection_for_spec(spec)
+        rel_path = os.path.relpath(view_path, self._current_root)
+        return os.path.join(self.root, rel_path)
 
     def view(self, new=False):
-        # new=True option to generate a new view during regeneration
-        # should not be used to access specs.
+        # new option to generate a view for a new underlying root
+        # during regeneration, should not be used to access specs.
         # Otherwise, give the current view if there is one.
+        # Raise if there is no current view
         root = self._current_root
-        if new or not root:
-            root = self._next_root
+        if new:
+            root = new
+        if not root:
+            # This can only be hit if we write a future bug
+            msg = ("Attempting to get nonexistent view from environment. "
+                   "View root is at %s" % self.root)
+            raise RuntimeError(msg)
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections)
@@ -548,9 +576,10 @@ class ViewDescriptor(object):
 
         return True
 
-    def regenerate(self, all_specs, roots):
+    def specs_for_view(self, all_specs, roots):
         specs_for_view = []
         specs = all_specs if self.link == 'all' else roots
+
         for spec in specs:
             # The view does not store build deps, so if we want it to
             # recognize environment specs (which do store build deps),
@@ -562,6 +591,10 @@ class ViewDescriptor(object):
                 spec_copy._hash = spec._hash
                 spec_copy._normal = spec._normal
                 specs_for_view.append(spec_copy)
+        return specs_for_view
+
+    def regenerate(self, all_specs, roots):
+        specs_for_view = self.specs_for_view(all_specs, roots)
 
         # regeneration queries the database quite a bit; this read
         # transaction ensures that we don't repeatedly lock/unlock.
@@ -572,36 +605,38 @@ class ViewDescriptor(object):
             # To ensure there are no conflicts with packages being installed
             # that cannot be resolved or have repos that have been removed
             # we always regenerate the view from scratch.
-            # We will do this by alternating directories in which the real view
-            # is created, and then having a symlink to the real view in the
-            # root. The real root for a view at /dirname/basename will be
-            # /dirname/._basename_impl_0 or dirname/._basename_impl_1
+            # We will do this by hashing the view contents and putting the view
+            # in a directory by hash, and then having a symlink to the real
+            # view in the root. The real root for a view at /dirname/basename
+            # will be /dirname/._basename_<hash>.
             # This allows for atomic swaps when we update the view
             # construct view at new_root
             tty.msg("Updating view at {0}".format(self.root))
 
             # cache the roots because the way we determine which is which does
             # not work while we are updating
-            new_root = self._next_root
+            new_root = self._next_root(installed_specs_for_view)
             old_root = self._current_root
 
-            view = self.view(new=True)
-            fs.mkdirp(new_root)
-            view.add_specs(*installed_specs_for_view, with_dependencies=False)
+            if new_root != old_root:  # if equal, we're constructing same view
+                view = self.view(new=new_root)
+                fs.mkdirp(new_root)
+                view.add_specs(*installed_specs_for_view,
+                               with_dependencies=False)
 
-            # create symlink from tmpname to new_root
-            root_dirname = os.path.dirname(self.root)
-            tmp_symlink_name = os.path.join(root_dirname, '._view_impl_link')
-            os.symlink(new_root, tmp_symlink_name)
+                # create symlink from tmpname to new_root
+                root_dirname = os.path.dirname(self.root)
+                tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+                os.symlink(new_root, tmp_symlink_name)
 
-            # mv symlink atomically over root symlink to old_root
-            if os.path.exists(self.root) and not os.path.islink(self.root):
-                raise RuntimeError("Cannot create view: file already exists")
-            os.rename(tmp_symlink_name, self.root)
+                # mv symlink atomically over root symlink to old_root
+                if os.path.exists(self.root) and not os.path.islink(self.root):
+                    raise RuntimeError("Cannot create view: file already exists")
+                os.rename(tmp_symlink_name, self.root)
 
-            # remove old_root
-            if old_root and os.path.exists(old_root):
-                shutil.rmtree(old_root)
+                # remove old_root
+                if old_root and os.path.exists(old_root):
+                    shutil.rmtree(old_root)
 
 
 class Environment(object):
