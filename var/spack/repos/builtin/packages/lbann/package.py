@@ -69,6 +69,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
 
+    # LBANN benefits from high performance linkers, but passing these in as command
+    # line options forces the linker flags to unnecessarily propagate to all
+    # dependent packages. Don't include gold or lld as dependencies
+    variant('gold', default=False, description='Use gold high performance linker')
+    variant("lld", default=False, description="Use lld high performance linker")
+    # Don't expose this a dependency until Spack can find the external properly
+    # depends_on('binutils+gold', type='build', when='+gold')
+
     # Variant Conflicts
     conflicts('@:0.90,0.99:', when='~conduit')
     conflicts('@0.90:0.101.99', when='+fft')
@@ -83,6 +91,14 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     conflicts('~numpy', when='@0.91:0.101')
     conflicts('~python', when='@0.91:0.101')
     conflicts('~pfe', when='@0.91:0.101')
+
+    for comp in spack.compilers.supported_compilers():
+        if comp != 'clang':
+            conflicts('+lld', when='%' + comp)
+
+    conflicts("+lld", when="+gold")
+    conflicts('+gold', when='platform=darwin', msg="gold does not work on Darwin")
+    conflicts('+lld', when='platform=darwin', msg="lld does not work on Darwin")
 
     depends_on('cmake@3.17.0:', type='build')
 
@@ -236,6 +252,18 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
             args.append(
                 '-DCNPY_DIR={0}'.format(spec['cnpy'].prefix),
             )
+
+        # Use lld high performance linker
+        if '+lld' in spec:
+            args.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=lld',
+                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=lld'])
+
+        # Use gold high performance linker
+        if '+gold' in spec:
+            args.extend([
+                '-DCMAKE_EXE_LINKER_FLAGS=-fuse-ld=gold',
+                '-DCMAKE_SHARED_LINKER_FLAGS=-fuse-ld=gold'])
 
         return args
 
