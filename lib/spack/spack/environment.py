@@ -2,9 +2,7 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-import base64
 import collections
-import hashlib
 import os
 import re
 import sys
@@ -35,6 +33,7 @@ import spack.util.environment
 from spack.spec import Spec
 from spack.spec_list import SpecList, InvalidSpecConstraintError
 from spack.variant import UnknownVariantError
+import spack.util.hash
 import spack.util.lock as lk
 from spack.util.path import substitute_path_variables
 import spack.util.path
@@ -519,13 +518,7 @@ class ViewDescriptor(object):
             ('specs', [(spec.full_hash(), spec.prefix) for spec in sorted(specs)])
         ])
         contents = sjson.dump(d)
-        sha = hashlib.sha1(contents.encode('utf-8'))
-        b32_hash = base64.b32encode(sha.digest()).lower()
-
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode('utf-8')
-
-        return b32_hash
+        return spack.util.hash.b32_hash(contents)
 
     def get_projection_for_spec(self, spec):
         """Get projection for spec relative to view root
