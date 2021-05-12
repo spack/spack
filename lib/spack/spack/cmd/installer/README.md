@@ -1,20 +1,14 @@
-This README will guide you through the steps needed to install Spack and 
-start running it on a fresh Windows machine. Before doing so, we strongly
-recommend following the setup instructions outlined in
+This README is a guide for creating a Spack installer for Windows.  This is an .msi executable file
+that users can run to install Spack like any other Windows binary.
+
+Before proceeding, follow the setup instructions in
 https://spack.readthedocs.io/en/latest/getting_started.html for getting
-Spack operational without the installer. Specifically, ensure that your
-machine has Git installed and Visual Studio installed with the appropriate
-workflow and CMake toolkit.
+Spack operational without the installer.
 
 # Step 1: Install prerequisites
 
-We will assume that you have Visual Studio appropriately configured and
-all other prerequisites installed. If you do not have a Python installation,
-the installer will provide you with one and add it to your path in the console.
-
-The only utility that is required for making the installer that is not covered 
-in the above documentation is Wis. Wix is a utility used for .msi creation and
-can be downloaded and installed at https://wixtoolset.org/releases/. The Visual Studio
+The only additional prerequisite for making the installer is Wix.  Wix is a utility used for .msi creation and
+can be downloaded and installed at https://wixtoolset.org/releases/.  The Visual Studio
 extensions are not necessary. 
 
 # Step 2: Make the installer
