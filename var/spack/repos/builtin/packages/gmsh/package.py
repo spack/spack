@@ -47,7 +47,7 @@ class Gmsh(CMakePackage):
     variant('cairo',       default=False, description='Enable Cairo to render fonts (experimental)')
     variant('compression', default=True,  description='Enables IO compression through zlib')
     variant('med',         default=True,  description='Build with MED(HDF5) (system)')
-    variant('mmg',         default=True,  description='Build with Mmg3d (system)')
+    variant('mmg',         default=True,  description='Build with Mmg3d')
     variant('netgen',      default=True,  description='Build with Netgen (built-in)')
     variant('opencascade', default=False, description='Build with OpenCASCADE')
     variant('oce',         default=False, description='Build with OCE')
