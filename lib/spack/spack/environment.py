@@ -544,7 +544,7 @@ class ViewDescriptor(object):
             # This can only be hit if we write a future bug
             msg = ("Attempting to get nonexistent view from environment. "
                    "View root is at %s" % self.root)
-            raise RuntimeError(msg)
+            raise SpackEnvironmentViewError(msg)
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
                                   projections=self.projections)
@@ -625,7 +625,9 @@ class ViewDescriptor(object):
 
             # mv symlink atomically over root symlink to old_root
             if os.path.exists(self.root) and not os.path.islink(self.root):
-                raise RuntimeError("Cannot create view: file already exists")
+                msg = "Cannot create view: "
+                msg += "file already exists and is not a link: %" % self.root
+                raise SpackEnvironmentViewError(msg)
             os.rename(tmp_symlink_name, self.root)
 
             # remove old_root
@@ -2143,3 +2145,7 @@ def is_latest_format(manifest):
 
 class SpackEnvironmentError(spack.error.SpackError):
     """Superclass for all errors to do with Spack environments."""
+
+
+class SpackEnvironmentViewError(SpackEnvironmentError):
+    """Class for errors regarding view generation."""
