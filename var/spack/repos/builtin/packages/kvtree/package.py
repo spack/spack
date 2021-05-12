@@ -34,7 +34,7 @@ class Kvtree(CMakePackage):
         if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-Wl,-z,muldefs')
-            return (flags, None, None)
+        return (flags, None, None)
 
     def cmake_args(self):
         args = []
