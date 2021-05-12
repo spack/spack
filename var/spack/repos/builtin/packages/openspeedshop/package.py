@@ -40,7 +40,7 @@ class Openspeedshop(CMakePackage):
     variant('cuda', default=False,
             description="build with cuda packages included.")
 
-    variant('gui', default='qt3', values=('none', 'qt3', 'qt4'),
+    variant('gui', default='none', values=('none', 'qt3', 'qt4'),
             description='Build or not build a GUI of choice')
 
     variant('build_type', default='RelWithDebInfo',
@@ -87,7 +87,7 @@ class Openspeedshop(CMakePackage):
     depends_on("boost@1.70.0:")
 
     depends_on("dyninst@develop", when='@develop')
-    depends_on("dyninst@10:", when='@2.3.1.3:9999')
+    depends_on("dyninst@10:", when='@2.4.0:9999')
 
     depends_on("python@2.7.14:2.7.99", type=('build', 'run'))
 
@@ -97,44 +97,44 @@ class Openspeedshop(CMakePackage):
 
     # Dependencies for the openspeedshop cbtf packages.
     depends_on("cbtf@develop", when='@develop', type=('build', 'link', 'run'))
-    depends_on("cbtf@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("cbtf@1.9.3:9999", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     depends_on("cbtf-krell@develop", when='@develop', type=('build', 'link', 'run'))
-    depends_on("cbtf-krell@1.9.1.0:9999", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("cbtf-krell@1.9.3:9999", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+crayfe', when='@develop+crayfe', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+crayfe', when='@2.3.1.3:9999+crayfe', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+crayfe', when='@2.4.0:9999+crayfe', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+cti', when='@develop+cti', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+cti', when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+cti', when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpich', when='@develop+mpich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich', when='@2.3.1.3:9999+mpich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpich', when='@2.4.0:9999+mpich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpich2', when='@develop+mpich2', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpich2', when='@2.3.1.3:9999+mpich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpich2', when='@2.4.0:9999+mpich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mpt', when='@develop+mpt', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mpt', when='@2.3.1.3:9999+mpt', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mpt', when='@2.4.0:9999+mpt', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich', when='@develop+mvapich', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich', when='@2.3.1.3:9999+mvapich', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mvapich', when='@2.4.0:9999+mvapich', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+mvapich2', when='@develop+mvapich2', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+mvapich2', when='@2.3.1.3:9999+mvapich2', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+mvapich2', when='@2.4.0:9999+mvapich2', type=('build', 'link', 'run'))
 
     depends_on('cbtf-krell@develop+openmpi', when='@develop+openmpi', type=('build', 'link', 'run'))
-    depends_on('cbtf-krell@1.9.1.0:9999+openmpi', when='@2.3.1.3:9999+openmpi', type=('build', 'link', 'run'))
+    depends_on('cbtf-krell@1.9.3:9999+openmpi', when='@2.4.0:9999+openmpi', type=('build', 'link', 'run'))
 
     depends_on("cbtf-argonavis@develop", when='@develop+cuda', type=('build', 'link', 'run'))
-    depends_on("cbtf-argonavis@1.9.1.0:9999", when='@2.3.1.3:9999+cuda', type=('build', 'link', 'run'))
+    depends_on("cbtf-argonavis@1.9.3:9999", when='@2.4.0:9999+cuda', type=('build', 'link', 'run'))
 
     # For MRNet
     depends_on("mrnet@5.0.1-3:+cti", when='@develop+cti', type=('build', 'link', 'run'))
     depends_on("mrnet@5.0.1-3:+lwthreads", when='@develop', type=('build', 'link', 'run'))
 
-    depends_on("mrnet@5.0.1-3:+cti", when='@2.3.1.3:9999+cti', type=('build', 'link', 'run'))
-    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.3.1.3:9999', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+cti", when='@2.4.0:9999+cti', type=('build', 'link', 'run'))
+    depends_on("mrnet@5.0.1-3:+lwthreads", when='@2.4.0:9999', type=('build', 'link', 'run'))
 
     patch('arm.patch', when='target=aarch64:')
     parallel = False
@@ -158,7 +158,7 @@ class Openspeedshop(CMakePackage):
 
         # Equivalent to install-tool cmake arg:
         # '-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
-        #               % <base dir>/cbtf_v2.3.1.release/compute)
+        #               % <base dir>/cbtf_v2.4.0.release/compute)
         cray_login_node_options.append('-DCBTF_KRELL_CN_RUNTIME_DIR=%s'
                                        % be_ck.prefix)
         cray_login_node_options.append('-DRUNTIME_PLATFORM=%s'
