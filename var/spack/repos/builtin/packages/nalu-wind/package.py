@@ -44,6 +44,8 @@ class NaluWind(CMakePackage, CudaPackage):
             description='Compile with Catalyst support')
     variant('fftw', default=False,
             description='Compile with FFTW support')
+    variant('boost', default=False,
+            description='Enable Boost integration')
     variant('wind-utils', default=False,
             description='Build wind-utils')
 
@@ -64,6 +66,7 @@ class NaluWind(CMakePackage, CudaPackage):
                    when='+hypre+cuda cuda_arch={0}'.format(_arch))
     depends_on('trilinos-catalyst-ioss-adapter', when='+catalyst')
     depends_on('fftw+mpi', when='+fftw')
+    depends_on('boost cxxstd=14', when='+boost')
 
     def cmake_args(self):
         spec = self.spec
@@ -77,6 +80,7 @@ class NaluWind(CMakePackage, CudaPackage):
             self.define('YAML_DIR', spec['yaml-cpp'].prefix),
             self.define_from_variant('ENABLE_CUDA', 'cuda'),
             self.define_from_variant('ENABLE_WIND_UTILS', 'wind-utils'),
+            self.define_from_variant('ENABLE_BOOST', 'boost'),
         ]
 
         args.append(self.define_from_variant('ENABLE_OPENFAST', 'openfast'))
