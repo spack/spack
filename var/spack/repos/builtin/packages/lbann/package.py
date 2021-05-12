@@ -69,11 +69,11 @@ class Lbann(CMakePackage, CudaPackage, ROCmPackage):
     variant('pfe', default=True, description='Python Frontend for generating and launching models')
     variant('boost', default=False, description='Enable callbacks that use Boost libraries')
 
-    # LBANN benefits from high performance linkers, but passing these in as command line options
-    # forces the linker flags to unnecessarily propagate to all dependent packages
-    # Don't include gold or lld as dependencies
-    variant('gold', default=False, description='Use a high performance linker (e.g. gold or lld')
-    variant("lld", default=True, description="Build the LLVM linker")
+    # LBANN benefits from high performance linkers, but passing these in as command
+    # line options forces the linker flags to unnecessarily propagate to all
+    # dependent packages. Don't include gold or lld as dependencies
+    variant('gold', default=False, description='Use gold high performance linker')
+    variant("lld", default=False, description="Use lld high performance linker")
     # Don't expose this a dependency until Spack can find the external properly
     # depends_on('binutils+gold', type='build', when='+gold')
 
