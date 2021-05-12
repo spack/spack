@@ -74,7 +74,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     def setup_build_environment(self, env):
 
         if self.spec.satisfies('%cce'):
-            setup_env.append_flags('LDFLAGS', '-Wl,-z,muldefs')
+            env.append_flags('LDFLAGS', '-Wl,-z,muldefs')
 
         if '+nls' in spec:
             setup_env.append_flags('LDFLAGS', '-lintl')
