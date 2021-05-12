@@ -55,7 +55,7 @@ jobs:
         key: ccache-build-${{ matrix.package }}
         restore-keys: |
           ccache-build-${{ matrix.package }}
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v2.2.2
       with:
         python-version: 3.9
     - name: Install System Packages
