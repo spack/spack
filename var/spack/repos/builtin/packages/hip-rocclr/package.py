@@ -26,6 +26,8 @@ class HipRocclr(CMakePackage):
         return url.format(version)
 
     version('master', branch='main')
+
+    version('4.2.0', sha256='c57525af32c59becf56fd83cdd61f5320a95024d9baa7fb729a01e7a9fcdfd78')
     version('4.1.0', sha256='9eb1d88cfc9474979aaf29b99bcf9d3769a0f7f1f8f10660941aabf83d9eeb0c')
     version('4.0.0', sha256='8db502d0f607834e3b882f939d33e8abe2f9b55ddafaf1b0c2cd29a0425ed76a')
     version('3.10.0', sha256='d1ac02840c2dcb3d5fa3008fe9e313767ebe6d1dcf978a924341834ec96ebfe2')
@@ -40,7 +42,7 @@ class HipRocclr(CMakePackage):
     depends_on('numactl', type='link', when="@3.7.0:")
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
-                'master']:
+                '4.2.0', 'master']:
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
@@ -104,6 +106,13 @@ class HipRocclr(CMakePackage):
              destination='',
              placement='opencl-on-vdi',
              when='@4.1.0')
+    resource(name='opencl-on-vdi',
+             url='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime/archive/rocm-4.2.0.tar.gz',
+             sha256='18133451948a83055ca5ebfb5ba1bd536ed0bcb611df98829f1251a98a38f730',
+             expand=True,
+             destination='',
+             placement='opencl-on-vdi',
+             when='@4.2.0')
     resource(name='opencl-on-vdi',
              git='https://github.com/RadeonOpenCompute/ROCm-OpenCL-Runtime.git',
              destination='',
