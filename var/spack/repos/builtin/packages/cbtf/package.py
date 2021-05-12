@@ -20,10 +20,6 @@ class Cbtf(CMakePackage):
     version('1.9.4.1', branch='1.9.4.1')
     version('1.9.4', branch='1.9.4')
     version('1.9.3', branch='1.9.3')
-    version('1.9.2', branch='1.9.2')
-    version('1.9.1.2', branch='1.9.1.2')
-    version('1.9.1.1', branch='1.9.1.1')
-    version('1.9.1.0', branch='1.9.1.0')
 
     variant('cti', default=False,
             description="Build MRNet with the CTI startup option")

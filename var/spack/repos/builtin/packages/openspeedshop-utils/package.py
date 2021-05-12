@@ -37,10 +37,6 @@ class OpenspeedshopUtils(CMakePackage):
     version('2.4.2.1', branch='2.4.2.1')
     version('2.4.2', branch='2.4.2')
     version('2.4.1', branch='2.4.1')
-    version('2.4.0', branch='2.4.0')
-    version('2.3.1.5', branch='2.3.1.5')
-    version('2.3.1.4', branch='2.3.1.4')
-    version('2.3.1.3', branch='2.3.1.3')
 
     variant('runtime', default=False,
             description="build only the runtime libraries and collectors.")
