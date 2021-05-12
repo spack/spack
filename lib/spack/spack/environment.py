@@ -626,7 +626,7 @@ class ViewDescriptor(object):
             # mv symlink atomically over root symlink to old_root
             if os.path.exists(self.root) and not os.path.islink(self.root):
                 msg = "Cannot create view: "
-                msg += "file already exists and is not a link: %" % self.root
+                msg += "file already exists and is not a link: %s" % self.root
                 raise SpackEnvironmentViewError(msg)
             os.rename(tmp_symlink_name, self.root)
 

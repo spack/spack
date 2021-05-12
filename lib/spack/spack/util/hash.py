@@ -9,6 +9,7 @@ import sys
 
 import spack.util.crypto
 
+
 def b32_hash(content):
     sha = hashlib.sha1(content.encode('utf-8'))
     b32_hash = base64.b32encode(sha.digest()).lower()
