@@ -35,8 +35,9 @@ class Gmsh(CMakePackage):
     version('3.0.1',  sha256='830b5400d9f1aeca79c3745c5c9fdaa2900cdb2fa319b664a5d26f7e615c749f')
     version('2.16.0', sha256='e829eaf32ea02350a385202cc749341f2a3217c464719384b18f653edd028eea')
     version('2.15.0', sha256='992a4b580454105f719f5bc05441d3d392ab0b4b80d4ea07b61ca3bdc974070a')
-    version('2.12.0', sha256='7fbd2ec8071e79725266e72744d21e902d4fe6fa9e7c52340ad5f4be5c159d09')
 
+    variant('external',    default=False,
+            description='Use system versions of contrib libraries, when possible')
     variant('shared',      default=True,  description='Enables the build of shared libraries')
     variant('mpi',         default=False, description='Builds MPI support for parser and solver')
     variant('openmp',      default=False, description='Enable OpenMP support')
@@ -47,63 +48,79 @@ class Gmsh(CMakePackage):
     variant('compression', default=True,  description='Enables IO compression through zlib')
     variant('med',         default=True,  description='Build with MED(HDF5)')
     variant('mmg',         default=True,  description='Build with Mmg3d')
-    variant('netgen',      default=True,  description='Build with Netgen')
+    variant('netgen',      default=True,  description='Build with Netgen (built-in)')
     variant('opencascade', default=False, description='Build with OpenCASCADE')
     variant('oce',         default=False, description='Build with OCE')
     variant('petsc',       default=False, description='Build with PETSc')
     variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
-    variant('tetgen',      default=False, description='Build with Tetgen')
-    variant('metis',       default=True,  description='Build with Metis')
+    variant('tetgen',      default=False, description='Build with Tetgen (built-in)')
+    variant('metis',       default=True,  description='Build with Metis (built-in)')
     variant('privateapi',  default=False, description='Enable the private API')
-    variant('eigen',       default=False, description='Build with Eigen')
+    variant('alglib',      default=True,  description='Build with Alglib (built-in or 3rd party)')
+    variant('eigen',       default=False, description='Build with Eigen (built-in or 3rd party)')
+    variant('voropp',      default=True,  description='Build with voro++ (built-in or 3rd party')
     variant('cgns',        default=True,  description='Build with CGNS')
 
     # https://gmsh.info/doc/texinfo/gmsh.html#Compiling-the-source-code
     # We make changes to the GMSH default, such as external blas.
     depends_on('blas',    when='~eigen')
     depends_on('lapack',  when='~eigen')
+    depends_on('eigen@3:', when='+eigen+external')
+    depends_on('alglib',  when='+alglib+external')
+    depends_on('voropp',  when='+voropp+external')
     depends_on('cmake@2.8:', type='build')
-    depends_on('gmp',  when='+gmp')
-    depends_on('mpi',  when='+mpi')
+    depends_on('gmp',     when='+gmp')
+    depends_on('mpi',     when='+mpi')
     # Assumes OpenGL with GLU is already provided by the system:
     depends_on('fltk+gl', when='+fltk')
     depends_on('cairo',   when='+cairo')
     depends_on('hdf5',    when='+hdf5')
+    depends_on('hdf5',    when='+med')
     depends_on('med',     when='+med')
     depends_on('mmg',     when='+mmg')
     depends_on('opencascade', when='+opencascade')
     depends_on('oce',     when='+oce')
+    depends_on('freetype', when='+oce')
+    depends_on('freetype', when='+opencascade')
     depends_on('petsc+mpi', when='+petsc+mpi')
-    depends_on('petsc~mpi', when='+petsc~mpi')
+    depends_on('petsc',    when='+petsc~mpi')
     depends_on('slepc',   when='+slepc+petsc')
     depends_on('zlib',    when='+compression')
-    depends_on('metis',   when='+metis')
+    depends_on('metis',   when='+metis+external')
     depends_on('cgns',    when='+cgns')
     # Gmsh's high quality vector PostScript, PDF and SVG output is produced by GL2PS.
     depends_on('gl2ps')
 
     conflicts('+slepc', when='~petsc')
     conflicts('+oce', when='+opencascade')
+    conflicts('+metis', when='+external',
+              msg="External Metis cannot build with GMSH")
 
     def cmake_args(self):
         spec = self.spec
 
         options = [
-            self.define_from_variant('CAIRO'),
-            self.define_from_variant('CGNS'),
-            self.define_from_variant('EIGEN'),
-            self.define_from_variant('FLTK'),
-            self.define_from_variant('GMP'),
-            self.define_from_variant('MED'),
-            self.define_from_variant('METIS'),
-            self.define_from_variant('MMG'),
-            self.define_from_variant('MPI'),
-            self.define_from_variant('NETGEN'),
-            self.define_from_variant('OPENMP'),
-            self.define_from_variant('PETSC'),
-            self.define_from_variant('PRIVATE_API', 'privateapi'),
-            self.define_from_variant('SLEPC'),
+            self.define_from_variant('ENABLE_ALGLIB', 'alglib'),
+            self.define_from_variant('ENABLE_CAIRO', 'cairo'),
+            self.define_from_variant('ENABLE_CGNS', 'cgns'),
+            self.define_from_variant('ENABLE_EIGEN', 'eigen'),
+            self.define_from_variant('ENABLE_FLTK', 'fltk'),
+            self.define_from_variant('ENABLE_GMP', 'gmp'),
+            self.define_from_variant('ENABLE_MED', 'med'),
+            self.define_from_variant('ENABLE_METIS', 'metis'),
+            self.define_from_variant('ENABLE_MMG', 'mmg'),
+            self.define_from_variant('ENABLE_MPI', 'mpi'),
+            self.define_from_variant('ENABLE_NETGEN', 'netgen'),
+            self.define_from_variant('ENABLE_OPENMP', 'openmp'),
+            self.define_from_variant('ENABLE_PETSC', 'petsc'),
+            self.define_from_variant('ENABLE_PRIVATE_API', 'privateapi'),
+            self.define_from_variant('ENABLE_SLEPC', 'slepc'),
+            self.define_from_variant('ENABLE_VOROPP', 'voropp'),
         ]
+
+        # Use system versions of contrib libraries, when possible:
+        if '+external' in spec:
+            options.append(self.define('ENABLE_SYSTEM_CONTRIB', True))
 
         # Make sure native file dialogs are used
         options.append('-DENABLE_NATIVE_FILE_CHOOSER=ON')
@@ -128,20 +145,20 @@ class Gmsh(CMakePackage):
             options.append('-DENABLE_OCC=OFF')
 
         if '@:3.0.6' in spec:
-            options.append(self.define_from_variant('tetgen'))
+            options.append(self.define_from_variant('ENABLE_TETGEN', 'tetgen'))
 
         if '@:4.6' in spec:
             options.append(self.define_from_variant('ENABLE_MMG3D', 'mmg'))
 
         if '+shared' in spec:
             # Builds dynamic executable and installs shared library
-            options.extend(['-DENABLE_BUILD_SHARED:BOOL=ON',
-                            '-DENABLE_BUILD_DYNAMIC:BOOL=ON'])
+            options.append(self.define('ENABLE_BUILD_SHARED', True))
+            options.append(self.define('ENABLE_BUILD_DYNAMIC', True))
         else:
             # Builds and installs static library
-            options.append('-DENABLE_BUILD_LIB:BOOL=ON')
+            options.append(self.define('ENABLE_BUILD_LIB', True))
 
         if '+compression' in spec:
-            options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
+            options.append(self.define('ENABLE_COMPRESSED_IO', True))
 
         return options
