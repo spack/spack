@@ -36,7 +36,8 @@ class Acts(CMakePackage, CudaPackage):
     tags = ['hep']
 
     # Supported Acts versions
-    version('master', branch='master')
+    version('main', branch='main')
+    version('master', branch='main') # Alias kept for script compatibility
     version('8.01.0', commit='ccc8c77bbc011f3adc020c565a509815be0ea029')
     version('8.00.0', commit='50c972823144c007b406ae12d7ca25a1e0c35532')
     version('7.00.0', commit='e663df7ab023bdb5ef206202efc2e54ccb71d416')
