@@ -629,7 +629,7 @@ class log_output(object):
 
         # recover and store echo settings from the child before it dies
         try:
-            self.echo = self.parent_pipe.recv()
+            self.echo, self.events = self.parent_pipe.recv()
         except EOFError:
             # This may occur if some exception prematurely terminates the
             # _writer_daemon. An exception will have already been generated.
@@ -735,6 +735,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
 
     log_file = log_file_wrapper.unwrap()
 
+    events = []
     try:
         with keyboard_input(stdin) as kb:
             while True:
@@ -801,7 +802,7 @@ def _writer_daemon(stdin_multiprocess_fd, read_multiprocess_fd, write_fd, echo,
             close_connection_and_file(stdin_multiprocess_fd, stdin)
 
         # send echo value back to the parent so it can be preserved.
-        control_pipe.send(echo)
+        control_pipe.send((echo, events))
 
 
 def _retry(function):

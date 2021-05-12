@@ -333,6 +333,8 @@ def synchronized_logger(**kwargs):
                     print("on")       # lock held; v is toggled on
             time.sleep(1e-2)
 
+    print(str(logger.events))
+
 
 def mock_shell_v_v(proc, ctl, **kwargs):
     """Controller function for test_foreground_background_output."""
@@ -430,7 +432,7 @@ def test_foreground_background_output(
     assert exitcode == 0
 
     # split output into lines
-    output = out.strip().split("\n")
+    output = out.strip().split("\n")[:-1]
 
     # also get lines of log file
     assert os.path.exists(log_path)
