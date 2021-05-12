@@ -1333,10 +1333,6 @@ Windows support for Spack is currently under development.  While this work is st
 it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
 you through the steps needed to install Spack and start running it on a fresh Windows machine. 
 
-You can also create a .msi executable file that you can run to install Spack like any other Windows binary.
-The instructions for that process can be found at
-https://github.com/spack/spack/blob/features/windows-support/lib/spack/spack/cmd/installer/README.md
-
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -1476,7 +1472,9 @@ Spack console via:
 
    spack install cpuinfo
 
-**Windows Compatible Packages**
+"""""""""""""""""""""""""""
+Windows Compatible Packages
+"""""""""""""""""""""""""""
 
 Many Spack packages are not currently compatible with Windows, due to Unix dependencies
 or incompatible build tools like autoconf. Here are several packages known to work on Windows:
@@ -1485,3 +1483,10 @@ or incompatible build tools like autoconf. Here are several packages known to wo
 * cpuinfo
 * glm
 
+^^^^^^^^^^^^^^
+For developers
+^^^^^^^^^^^^^^
+
+The intent is to provide a Windows installer that will automatically set up Python, Git, and Spack, instead of
+requiring the user to do so manually.  Instructions for creating the installer are at
+https://github.com/spack/spack/blob/features/windows-support/lib/spack/spack/cmd/installer/README.md.
