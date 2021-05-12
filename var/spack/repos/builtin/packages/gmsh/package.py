@@ -46,7 +46,7 @@ class Gmsh(CMakePackage):
     variant('gmp',         default=True,  description='Enable GMP for Kbipack (advanced)')
     variant('cairo',       default=False, description='Enable Cairo to render fonts (experimental)')
     variant('compression', default=True,  description='Enables IO compression through zlib')
-    variant('med',         default=True,  description='Build with MED(HDF5) (system)')
+    variant('med',         default=True,  description='Build with MED(HDF5)')
     variant('mmg',         default=True,  description='Build with Mmg3d')
     variant('netgen',      default=True,  description='Build with Netgen (built-in)')
     variant('opencascade', default=False, description='Build with OpenCASCADE')
@@ -54,11 +54,11 @@ class Gmsh(CMakePackage):
     variant('petsc',       default=False, description='Build with PETSc')
     variant('slepc',       default=False, description='Build with SLEPc (only when PETSc is enabled)')
     variant('tetgen',      default=False, description='Build with Tetgen (built-in)')
-    variant('metis',       default=True,  description='Build with Metis (system or built-in)')
+    variant('metis',       default=True,  description='Build with Metis (built-in)')
     variant('privateapi',  default=False, description='Enable the private API')
-    variant('alglib',      default=True,  description='Build with Alglib (system or built-in)')
-    variant('eigen',       default=False, description='Build with Eigen (system or built-in)')
-    variant('voropp',      default=True,  description='Build with voro++ (system or built-in)')
+    variant('alglib',      default=True,  description='Build with Alglib (built-in or 3rd party)')
+    variant('eigen',       default=False, description='Build with Eigen (built-in or 3rd party)')
+    variant('voropp',      default=True,  description='Build with voro++ (built-in or 3rd party')
     variant('cgns',        default=True,  description='Build with CGNS')
 
     # https://gmsh.info/doc/texinfo/gmsh.html#Compiling-the-source-code
@@ -69,8 +69,8 @@ class Gmsh(CMakePackage):
     depends_on('alglib',  when='+alglib+external')
     depends_on('voropp',  when='+voropp+external')
     depends_on('cmake@2.8:', type='build')
-    depends_on('gmp',  when='+gmp')
-    depends_on('mpi',  when='+mpi')
+    depends_on('gmp',     when='+gmp')
+    depends_on('mpi',     when='+mpi')
     # Assumes OpenGL with GLU is already provided by the system:
     depends_on('fltk+gl', when='+fltk')
     depends_on('cairo',   when='+cairo')
@@ -152,13 +152,13 @@ class Gmsh(CMakePackage):
 
         if '+shared' in spec:
             # Builds dynamic executable and installs shared library
-            options.extend(['-DENABLE_BUILD_SHARED:BOOL=ON',
-                            '-DENABLE_BUILD_DYNAMIC:BOOL=ON'])
+            options.append(self.define('ENABLE_BUILD_SHARED', True))
+            options.append(self.define('ENABLE_BUILD_DYNAMIC', True))
         else:
             # Builds and installs static library
-            options.append('-DENABLE_BUILD_LIB:BOOL=ON')
+            options.append(self.define('ENABLE_BUILD_LIB', True))
 
         if '+compression' in spec:
-            options.append('-DENABLE_COMPRESSED_IO:BOOL=ON')
+            options.append(self.define('ENABLE_COMPRESSED_IO', True))
 
         return options
