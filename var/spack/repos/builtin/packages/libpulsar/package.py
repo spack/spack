@@ -21,9 +21,10 @@ class Libpulsar(CMakePackage):
     depends_on('zstd')
     depends_on('boost')
     depends_on('protobuf')
-    depends_on('pkg-config')
+    depends_on('pkgconfig')
     depends_on('openssl')
     depends_on('cmake @3.14:', type='build')
+    depends_on('curl', type=('build', 'link'))
 
     root_cmakelists_dir = 'pulsar-client-cpp'
 

@@ -8,6 +8,7 @@
 import ordereddict_backport
 
 import spack.util.naming
+import spack.provider_index
 from spack.dependency import Dependency
 from spack.spec import Spec
 from spack.version import Version
@@ -80,6 +81,8 @@ class MockPackageMultiRepo(object):
 
     def __init__(self):
         self.spec_to_pkg = {}
+        self.namespace = 'mock'                 # repo namespace
+        self.full_namespace = 'spack.pkg.mock'  # python import namespace
 
     def get(self, spec):
         if not isinstance(spec, spack.spec.Spec):
@@ -89,6 +92,10 @@ class MockPackageMultiRepo(object):
         return self.spec_to_pkg[spec.name]
 
     def get_pkg_class(self, name):
+        namespace, _, name = name.rpartition(".")
+        if namespace and namespace != self.namespace:
+            raise spack.repo.InvalidNamespaceError(
+                "bad namespace: %s" % self.namespace)
         return self.spec_to_pkg[name]
 
     def exists(self, name):
@@ -171,3 +178,7 @@ class MockPackageMultiRepo(object):
         self.spec_to_pkg["mockrepo." + name] = mock_package
 
         return mock_package
+
+    @property
+    def provider_index(self):
+        return spack.provider_index.ProviderIndex()

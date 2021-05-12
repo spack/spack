@@ -14,6 +14,9 @@ class Root(CMakePackage):
 
     homepage = "https://root.cern.ch"
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
+    git      = "https://github.com/root-project/root.git"
+
+    executables = ['^root$', '^root-config$']
 
     tags = ['hep']
 
@@ -22,12 +25,13 @@ class Root(CMakePackage):
     # ###################### Versions ##########################
 
     # Master branch
-    version('master', git="https://github.com/root-project/root.git",
-            branch='master')
+    version('master', branch='master')
 
     # Development version (when more recent than production).
 
     # Production version
+    version('6.24.00', sha256='9da30548a289211c3122d47dacb07e85d35e61067fac2be6c5a5ff7bda979989')
+    version('6.22.08', sha256='6f061ff6ef8f5ec218a12c4c9ea92665eea116b16e1cd4df4f96f00c078a2f6f')
     version('6.22.06', sha256='c4688784a7e946cd10b311040b6cf0b2f75125a7520e04d1af0b746505911b57')
     version('6.22.02', sha256='89784afa9c9047e9da25afa72a724f32fa8aa646df267b7731e4527cc8a0c340')
     version('6.22.00', sha256='efd961211c0f9cd76cf4a486e4f89badbcf1d08e7535bba556862b3c1a80beed')
@@ -165,6 +169,8 @@ class Root(CMakePackage):
             description='Enable Vc for adding new types for SIMD programming')
     variant('vdt', default=True,
             description='Enable set of fast and vectorisable math functions')
+    variant('veccore', default=False,
+            description='Enable support for VecCore SIMD abstraction library')
     variant('vmc', default=False,
             description='Enable the Virtual Monte Carlo interface')
     variant('x', default=True,
@@ -195,6 +201,7 @@ class Root(CMakePackage):
     depends_on('libpng')
     depends_on('lz4', when='@6.13.02:')  # See cmake_args, below.
     depends_on('ncurses')
+    depends_on('nlohmann-json', when='@6.24:')
     depends_on('pcre')
     depends_on('xxhash', when='@6.13.02:')  # See cmake_args, below.
     depends_on('xz')
@@ -247,9 +254,16 @@ class Root(CMakePackage):
     depends_on('shadow',    when='+shadow')
     depends_on('sqlite',    when='+sqlite')
     depends_on('tbb',       when='+tbb')
+    # See: https://github.com/root-project/root/issues/6933
+    conflicts('^intel-tbb@2021.1:', when='@:6.22',
+              msg='Please use an older intel-tbb version')
+    conflicts('^intel-oneapi-tbb@2021.1:', when='@:6.22',
+              msg='Please use an older intel-tbb/intel-oneapi-tbb version')
+    # depends_on('intel-tbb@:2021.0', when='@:6.22 ^intel-tbb')
     depends_on('unuran',    when='+unuran')
     depends_on('vc',        when='+vc')
     depends_on('vdt',       when='+vdt')
+    depends_on('veccore',   when='+veccore')
     depends_on('libxml2',   when='+xml')
     depends_on('xrootd',          when='+xrootd')
     depends_on('xrootd@:4.99.99', when='@:6.22.03 +xrootd')
@@ -284,6 +298,25 @@ class Root(CMakePackage):
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # no need to check the root executable itself
+            # we can get all information from root-config
+            if exe.endswith('root'):
+                continue
+            result.append(exe)
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # turn the output of root-config --version
+        # (something like 6.22/06)
+        # into the format used in this recipe (6.22.06)
+        return output.strip().replace('/', '.')
 
     def cmake_args(self):
         spec = self.spec
@@ -329,6 +362,7 @@ class Root(CMakePackage):
             define('builtin_llvm', True),
             define('builtin_lz4', self.spec.satisfies('@6.12.02:6.12.99')),
             define('builtin_lzma', False),
+            define('builtin_nlohmannjson', False),
             define('builtin_openssl', False),
             define('builtin_pcre', False),
             define('builtin_tbb', False),
@@ -410,7 +444,7 @@ class Root(CMakePackage):
             define_from_variant('unuran'),
             define_from_variant('vc'),
             define_from_variant('vdt'),
-            define('veccore', False),
+            define_from_variant('veccore'),
             define_from_variant('vmc'),
             define_from_variant('webui', 'root7'),  # requires root7
             define_from_variant('x11', 'x'),
@@ -420,7 +454,7 @@ class Root(CMakePackage):
         ]
 
         # Some special features
-        if self.spec.satisfies('@6.20:'):
+        if self.spec.satisfies('@6.20.02:'):
             options.append(define_from_variant('pyroot', 'python'))
         else:
             options.append(define_from_variant('python'))

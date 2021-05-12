@@ -15,7 +15,9 @@ import ruamel.yaml as yaml
 from llnl.util.filesystem import mkdirp
 
 import spack.config
+import spack.hash_types as ht
 import spack.spec
+import spack.util.spack_json as sjson
 from spack.error import SpackError
 
 
@@ -242,7 +244,20 @@ class YamlDirectoryLayout(DirectoryLayout):
         """Write a spec out to a file."""
         _check_concrete(spec)
         with open(path, 'w') as f:
-            spec.to_yaml(f)
+            # The hash the the projection is the DAG hash but we write out the
+            # full provenance by full hash so it's availabe if we want it later
+            spec.to_yaml(f, hash=ht.full_hash)
+
+    def write_host_environment(self, spec):
+        """The host environment is a json file with os, kernel, and spack
+        versioning. We use it in the case that an analysis later needs to
+        easily access this information.
+        """
+        from spack.util.environment import get_host_environment_metadata
+        env_file = self.env_metadata_path(spec)
+        environ = get_host_environment_metadata()
+        with open(env_file, 'w') as fd:
+            sjson.dump(environ, fd)
 
     def read_spec(self, path):
         """Read the contents of a file and parse them as a spec"""
@@ -297,6 +312,9 @@ class YamlDirectoryLayout(DirectoryLayout):
     def metadata_path(self, spec):
         return os.path.join(spec.prefix, self.metadata_dir)
 
+    def env_metadata_path(self, spec):
+        return os.path.join(self.metadata_path(spec), "install_environment.json")
+
     def build_packages_path(self, spec):
         return os.path.join(self.metadata_path(spec), self.packages_dir)
 
@@ -344,7 +362,13 @@ class YamlDirectoryLayout(DirectoryLayout):
         #
         # TODO: remove this when we do better concretization and don't
         # ignore build-only deps in hashes.
-        elif installed_spec == spec.copy(deps=('link', 'run')):
+        elif (installed_spec.copy(deps=('link', 'run')) ==
+              spec.copy(deps=('link', 'run'))):
+            # The directory layout prefix is based on the dag hash, so among
+            # specs with differing full-hash but matching dag-hash, only one
+            # may be installed. This means for example that for two instances
+            # that differ only in CMake version used to build, only one will
+            # be installed.
             return path
 
         if spec.dag_hash() == installed_spec.dag_hash():
@@ -420,8 +444,8 @@ class YamlViewExtensionsLayout(ExtensionsLayout):
     def check_extension_conflict(self, spec, ext_spec):
         exts = self._extension_map(spec)
         if ext_spec.name in exts:
-            installed_spec = exts[ext_spec.name]
-            if ext_spec == installed_spec:
+            installed_spec = exts[ext_spec.name].copy(deps=('link', 'run'))
+            if ext_spec.copy(deps=('link', 'run')) == installed_spec:
                 raise ExtensionAlreadyInstalledError(spec, ext_spec)
             else:
                 raise ExtensionConflictError(spec, ext_spec, installed_spec)

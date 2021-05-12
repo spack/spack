@@ -94,7 +94,8 @@ class Cp2k(MakefilePackage, CudaPackage):
 
     depends_on('libxc@2.2.2:3.99.0', when='+libxc@:5.5999', type='build')
     depends_on('libxc@4.0.3:4.99.0', when='+libxc@6.0:6.9', type='build')
-    depends_on('libxc@4.0.3:4.99.0', when='+libxc@7.0:')
+    depends_on('libxc@4.0.3:4.99.0', when='+libxc@7.0:8.1')
+    depends_on('libxc@5.1.3:5.1.99', when='+libxc@8.2:')
 
     depends_on('mpi@2:', when='+mpi')
     depends_on('scalapack', when='+mpi')
@@ -127,7 +128,8 @@ class Cp2k(MakefilePackage, CudaPackage):
     depends_on('py-numpy', when='@7:+cuda', type='build')
     depends_on('python@3.6:', when='@7:+cuda', type='build')
 
-    depends_on('libvori@201219:', when='@8:+libvori', type='build')
+    depends_on('libvori@201219:', when='@8.1+libvori', type='build')
+    depends_on('libvori@210412:', when='@8.2:+libvori', type='build')
     depends_on('spglib', when='+spglib')
 
     # PEXSI, ELPA, COSMA and SIRIUS depend on MPI
@@ -271,6 +273,7 @@ class Cp2k(MakefilePackage, CudaPackage):
         elif '%aocc' in spec:
             fcflags += [
                 '-ffree-form',
+                '-Mbackslash',
             ]
         elif '%pgi' in spec or '%nvhpc' in spec:
             fcflags += ['-Mfreeform', '-Mextend']
@@ -399,7 +402,10 @@ class Cp2k(MakefilePackage, CudaPackage):
                 libs.append(str(libxc.libs))
             else:
                 fcflags += pkgconf('--cflags', 'libxcf03', output=str).split()
-                libs += pkgconf('--libs', 'libxcf03', output=str).split()
+                # some Fortran functions seem to be direct wrappers of the
+                # C functions such that we get a direct dependency on them,
+                # requiring `-lxc` to be present in addition to `-lxcf03`
+                libs += pkgconf('--libs', 'libxcf03', 'libxc', output=str).split()
 
         if '+pexsi' in spec:
             cppflags.append('-D__LIBPEXSI')

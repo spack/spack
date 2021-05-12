@@ -16,6 +16,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
 
     version('develop', branch='develop', submodules='True')
     version('master', branch='main', submodules='True')
+    version('2.3.0', tag='v2.3.0', submodules='True')
     version('2.1.1', tag='v2.1.1', submodules='True')
     version('2.1.0', tag='v2.1.0', submodules='True')
     version('2.0.0', tag='v2.0.0', submodules='True')
@@ -34,8 +35,10 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.8:', type='build')
     depends_on('cmake@3.9:', type='build', when="+cuda")
-    depends_on('blt', type='build')
-    depends_on('blt@0.3.7:', type='build', when='+rocm')
+
+    depends_on('blt@0.4.0:', type='build', when='@2.3.1:')
+    depends_on('blt@:0.3.6', type='build', when='@:2.3.0')
+
     depends_on('umpire')
     depends_on('raja', when="+raja")
 
