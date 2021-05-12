@@ -630,7 +630,10 @@ class ViewDescriptor(object):
 
             # remove old_root
             if old_root and os.path.exists(old_root):
-                shutil.rmtree(old_root)
+                try:
+                    shutil.rmtree(old_root)
+                except (IOError, OSError):
+                    tty.warn("Failed to remove old view at %s" % old_root)
 
 
 class Environment(object):
