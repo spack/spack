@@ -63,7 +63,7 @@ class Mercury(CMakePackage):
         if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-Wl,-z,muldefs')
-            return (None, None, flags)
+        return (None, None, flags)
 
     def cmake_args(self):
         """Populate cmake arguments for Mercury."""
