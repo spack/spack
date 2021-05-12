@@ -457,12 +457,6 @@ class ViewDescriptor(object):
                  link=default_view_link):
         self.base = base_path
         self.root = spack.util.path.canonicalize_path(root)
-
-        # construct the names of the implementation diirectories
-        root_name = os.path.basename(self.root)
-        self._real_root_names = ['._{0}_impl_{1}'.format(root_name, idx)
-                                 for idx in range(2)]
-
         self.projections = projections
         self.select = select
         self.select_fn = lambda x: any(x.satisfies(s) for s in self.select)
@@ -479,9 +473,11 @@ class ViewDescriptor(object):
                     self.link == other.link])
 
     def to_dict(self):
-        ret = {'root': self.root}
+        ret = syaml.syaml_dict([('root', self.root)])
         if self.projections:
-            ret['projections'] = self.projections
+            projections_dict = syaml.syaml_dict(
+                sorted(self.projections.items()))
+            ret['projections'] = projections_dict
         if self.select:
             ret['select'] = self.select
         if self.exclude:
@@ -501,14 +497,15 @@ class ViewDescriptor(object):
 
     @property
     def _current_root(self):
-        if os.path.exists(self.root):
-            root = os.readlink(self.root)
-            if not os.path.isabs(root):
-                root_dir = os.path.dirname(self.root)
-                root = os.path.join(root_dir, root)
-            return root
-        else:
+        if not os.path.exists(self.root):
             return None
+
+        root = os.readlink(self.root)
+        if os.path.isabs(root):
+            return root
+
+        root_dir = os.path.dirname(self.root)
+        return os.path.join(root_dir, root)
 
     def _next_root(self, specs):
         content_hash = self.content_hash(specs)
@@ -517,10 +514,10 @@ class ViewDescriptor(object):
         return os.path.join(root_dir, '._%s_%s' % (root_name, content_hash))
 
     def content_hash(self, specs):
-        d = {
-            'descriptor': self.to_dict(),
-            'specs': [(spec.full_hash(), spec.prefix) for spec in sorted(specs)]
-        }
+        d = syaml.syaml_dict([
+            ('descriptor', self.to_dict()),
+            ('specs', [(spec.full_hash(), spec.prefix) for spec in sorted(specs)])
+        ])
         contents = sjson.dump(d)
         sha = hashlib.sha1(contents.encode('utf-8'))
         b32_hash = base64.b32encode(sha.digest()).lower()
