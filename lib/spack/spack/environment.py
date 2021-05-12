@@ -600,33 +600,37 @@ class ViewDescriptor(object):
             # view in the root. The real root for a view at /dirname/basename
             # will be /dirname/._basename_<hash>.
             # This allows for atomic swaps when we update the view
-            # construct view at new_root
-            tty.msg("Updating view at {0}".format(self.root))
 
             # cache the roots because the way we determine which is which does
             # not work while we are updating
             new_root = self._next_root(installed_specs_for_view)
             old_root = self._current_root
 
-            if new_root != old_root:  # if equal, we're constructing same view
-                view = self.view(new=new_root)
-                fs.mkdirp(new_root)
-                view.add_specs(*installed_specs_for_view,
-                               with_dependencies=False)
+            if new_root == old_root:
+                tty.msg("View at %s does not need regeneration." % self.root)
+                return
 
-                # create symlink from tmpname to new_root
-                root_dirname = os.path.dirname(self.root)
-                tmp_symlink_name = os.path.join(root_dirname, '._view_link')
-                os.symlink(new_root, tmp_symlink_name)
+            # construct view at new_root
+            tty.msg("Updating view at {0}".format(self.root))
 
-                # mv symlink atomically over root symlink to old_root
-                if os.path.exists(self.root) and not os.path.islink(self.root):
-                    raise RuntimeError("Cannot create view: file already exists")
-                os.rename(tmp_symlink_name, self.root)
+            view = self.view(new=new_root)
+            fs.mkdirp(new_root)
+            view.add_specs(*installed_specs_for_view,
+                           with_dependencies=False)
 
-                # remove old_root
-                if old_root and os.path.exists(old_root):
-                    shutil.rmtree(old_root)
+            # create symlink from tmpname to new_root
+            root_dirname = os.path.dirname(self.root)
+            tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+            os.symlink(new_root, tmp_symlink_name)
+
+            # mv symlink atomically over root symlink to old_root
+            if os.path.exists(self.root) and not os.path.islink(self.root):
+                raise RuntimeError("Cannot create view: file already exists")
+            os.rename(tmp_symlink_name, self.root)
+
+            # remove old_root
+            if old_root and os.path.exists(old_root):
+                shutil.rmtree(old_root)
 
 
 class Environment(object):
