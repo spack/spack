@@ -27,9 +27,8 @@ def setup_parser(subparser):
     # Audit package recipes
     pkg_parser = sp.add_parser('packages', help='audit package recipes')
     pkg_parser.add_argument(
-        '--name',
-        help='restrict which packages to analyze (may be given multiple times)',
-        action='append'
+        'name', metavar='PKG', nargs='*',
+        help='package to be analyzed (if none all packages will be processed)',
     )
 
     # List all checks

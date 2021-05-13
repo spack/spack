@@ -395,7 +395,12 @@ _spack_audit_configs() {
 }
 
 _spack_audit_packages() {
-    SPACK_COMPREPLY="-h --help --name"
+    if $list_options
+    then
+        SPACK_COMPREPLY="-h --help"
+    else
+        SPACK_COMPREPLY=""
+    fi
 }
 
 _spack_audit_list() {

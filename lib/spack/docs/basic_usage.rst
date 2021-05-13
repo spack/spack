@@ -1760,7 +1760,7 @@ reported to stdout:
 
 .. code-block:: console
 
-   % spack audit packages --name=lammps
+   % spack audit packages lammps
    PKG-DIRECTIVES: 1 issue found
    1. lammps: wrong variant in "conflicts" directive
        the variant 'adios' does not exist
