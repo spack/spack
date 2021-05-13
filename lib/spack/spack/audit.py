@@ -157,7 +157,7 @@ audit_cfgpkg = AuditClass(
 
 @audit_cfgpkg
 def _search_duplicate_specs_in_externals(error_cls):
-    """Search for duplicate specs declared as externals."""
+    """Search for duplicate specs declared as externals"""
     import spack.config
 
     errors, externals = [], collections.defaultdict(list)

@@ -1734,11 +1734,20 @@ A nicer error message is TBD in future versions of Spack.
 Troubleshooting
 ---------------
 
-To troubleshoot issues, Spack provides the ``spack audit`` command:
+When dealing with a large stack of software or with the development of complex
+applications, users may face issues that are very specific to their use case.
+These issues are usually too expensive to track down during normal Spack operations
+or difficult to resolve automatically.
+
+For instance a user may, during development, change the name or values of a
+variant in a package and miss to update all of the dependents. Scanning all the
+packages all of the time to look for inconsistencies would be detrimental to
+the performance and usability of Spack so, to troubleshoot issues of this kind
+Spack provides the ``spack audit`` command:
 
 .. command-output:: spack audit -h
 
-that is meant to run sanity checks on various aspects of Spack,
+This command is meant to run sanity checks on various aspects of Spack,
 such as configuration files, package recipes, etc. A detailed list
 of the checks currently implemented for each subcommand can be
 printed with:
