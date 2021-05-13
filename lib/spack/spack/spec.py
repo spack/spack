@@ -76,10 +76,8 @@ thing.  Spack uses ~variant in directory names and in the canonical form of
 specs to avoid ambiguity.  Both are provided because ~ can cause shell
 expansion when it is the first character in an id typed on the command line.
 """
-import base64
 import sys
 import collections
-import hashlib
 import itertools
 import operator
 import os
@@ -108,6 +106,7 @@ import spack.solver
 import spack.store
 import spack.util.crypto
 import spack.util.executable
+import spack.util.hash
 import spack.util.module_cmd as md
 import spack.util.prefix
 import spack.util.spack_json as sjson
@@ -1505,13 +1504,7 @@ class Spec(object):
         # this when we move to using package hashing on all specs.
         node_dict = self.to_node_dict(hash=hash)
         yaml_text = syaml.dump(node_dict, default_flow_style=True)
-        sha = hashlib.sha1(yaml_text.encode('utf-8'))
-        b32_hash = base64.b32encode(sha.digest()).lower()
-
-        if sys.version_info[0] >= 3:
-            b32_hash = b32_hash.decode('utf-8')
-
-        return b32_hash
+        return spack.util.hash.b32_hash(yaml_text)
 
     def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
@@ -1567,7 +1560,7 @@ class Spec(object):
 
     def dag_hash_bit_prefix(self, bits):
         """Get the first <bits> bits of the DAG hash as an integer type."""
-        return base32_prefix_bits(self.dag_hash(), bits)
+        return spack.util.hash.base32_prefix_bits(self.dag_hash(), bits)
 
     def to_node_dict(self, hash=ht.dag_hash):
         """Create a dictionary representing the state of this Spec.
@@ -4762,16 +4755,6 @@ def save_dependency_spec_yamls(
 
         with open(yaml_path, 'w') as fd:
             fd.write(dep_spec.to_yaml(hash=ht.build_hash))
-
-
-def base32_prefix_bits(hash_string, bits):
-    """Return the first <bits> bits of a base32 string as an integer."""
-    if bits > len(hash_string) * 5:
-        raise ValueError("Too many bits! Requested %d bit prefix of '%s'."
-                         % (bits, hash_string))
-
-    hash_bytes = base64.b32decode(hash_string, casefold=True)
-    return spack.util.crypto.prefix_bits(hash_bytes, bits)
 
 
 class SpecParseError(spack.error.SpecError):
