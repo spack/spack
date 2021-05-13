@@ -141,10 +141,7 @@ class NetcdfC(AutotoolsPackage):
                        '--enable-largefile',
                        '--enable-netcdf-4']
 
-        if "+fsync" in self.spec:
-            config_args.append('--enable-fsync')
-        else:
-            config_args.append('--disable-fsync')
+        config_args.extend(self.enable_or_disable('fsync'))
 
         # The flag was introduced in version 4.3.1
         if self.spec.satisfies('@4.3.1:'):
