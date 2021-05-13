@@ -616,7 +616,7 @@ class ViewDescriptor(object):
             old_root = self._current_root
 
             if new_root == old_root:
-                tty.msg("View at %s does not need regeneration." % self.root)
+                tty.debug("View at %s does not need regeneration." % self.root)
                 return
 
             # construct view at new_root
@@ -645,8 +645,10 @@ class ViewDescriptor(object):
             if old_root and os.path.exists(old_root):
                 try:
                     shutil.rmtree(old_root)
-                except (IOError, OSError):
-                    tty.warn("Failed to remove old view at %s" % old_root)
+                except (IOError, OSError) as e:
+                    msg = "Failed to remove old view at %s\n" % old_root
+                    msg += str(e)
+                    tty.warn(msg)
 
 
 class Environment(object):
