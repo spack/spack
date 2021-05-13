@@ -55,7 +55,7 @@ class MesonPackage(PackageBase):
     variant('buildtype', default='debugoptimized',
             description='Meson build type',
             values=('plain', 'debug', 'debugoptimized', 'release', 'minsize'))
-    variant('libs', default='shared,static', values=('shared', 'static'),
+    variant('default_library', default='shared', values=('shared', 'static'),
             multi=True, description='Build shared libs, static libs or both')
     variant('strip', default=False, description='Strip targets on install')
 
