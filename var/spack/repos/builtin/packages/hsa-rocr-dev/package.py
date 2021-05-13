@@ -37,6 +37,7 @@ class HsaRocrDev(CMakePackage):
         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
     for ver in ['3.7.0', '3.8.0', '3.9.0', '4.0.0', '4.1.0', 'master']:
         depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
+        depends_on('rocm-device-libs@' + ver, type=('link', 'run'), when='@' + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
@@ -49,6 +50,6 @@ class HsaRocrDev(CMakePackage):
         args = ['-DLIBELF_INCLUDE_DIRS=%s' % libelf_include]
 
         if '@3.7.0:' in self.spec:
-            args.append('-DIMAGE_SUPPORT=OFF')
+            args.append('-DIMAGE_SUPPORT=ON')
 
         return args
