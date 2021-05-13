@@ -1417,11 +1417,12 @@ To configure Spack, first run the following command inside the Spack console:
 
    spack compiler find
 
-This creates a ``.spack`` directory in our home directory, along with a windows subdirectory
+This creates a ``.spack`` directory in our home directory, along with a ``windows`` subdirectory
 containing a ``compilers.yaml`` file. On a fresh Windows install, the only compiler that
 should be found is your installation of Microsoft Visual Studio.
 
-We need to provide the ``config.yaml`` and ``packages.yaml`` configurations by ourselves. Open 
+We need to provide the ``config.yaml`` and ``packages.yaml`` configurations by ourselves. These
+go in the ``.spack\windows`` directory in your home directory. Open 
 your text editor of choice and enter the following lines for ``config.yaml``:
 
 .. code-block:: yaml
