@@ -226,7 +226,7 @@ class Hypre(Package, CudaPackage):
         self.cache_extra_test_sources(srcs)
 
     def test(self):
-        """Perform smoke test on installed HYPRE package."""
+        """Perform stand-alone/smoke test on installed HYPRE package."""
 
         if '+mpi' in self.spec:
             examples_dir = join_path(self.install_test_root, 'src/examples')
@@ -240,6 +240,8 @@ class Hypre(Package, CudaPackage):
                               purpose=reason, skip_missing=True, work_dir='.')
 
                 make("distclean")
+        else:
+            print('SKIPPING: Must enable mpi for stand-alone tests')
 
     @property
     def headers(self):
