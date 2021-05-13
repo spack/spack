@@ -2,7 +2,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
 	 xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
   <Bundle Version="1.0.0.0" UpgradeCode="63C4E213-0297-4CFE-BB7B-7A77EB68E966"
-          IconSourceFile="@CPACK_WIX_PRODUCT_ICON@.ico"
+          IconSourceFile="@CPACK_WIX_PRODUCT_ICON@"
 		  Name="Spack Package Manager"
 		  Manufacturer="Lawrence Livermore National Laboratory">
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
