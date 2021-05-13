@@ -15,7 +15,7 @@ class Openfast(CMakePackage):
     maintainers = ['jrood-nrel']
 
     version('develop', branch='dev')
-    version('master', branch='master')
+    version('master', branch='main')
 
     variant('shared', default=True,
             description="Build shared libraries")

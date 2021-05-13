@@ -57,7 +57,7 @@ class Tau(Package):
     variant('papi', default=darwin_default, description='Activates Performance API')
     variant('binutils', default=True, description='Activates support of BFD GNU Binutils')
     variant('libdwarf', default=darwin_default, description='Activates support of libdwarf')
-    variant('libelf', default=darwin_default, description='Activates support of libelf')
+    variant('elf', default=darwin_default, description='Activates support of elf')
     variant('libunwind', default=darwin_default, description='Activates support of libunwind')
     variant('otf2', default=True, description='Activates support of Open Trace Format (OTF)')
     variant('pdt', default=True, description='Use PDT for source code instrumentation')
@@ -93,7 +93,7 @@ class Tau(Package):
     depends_on('likwid', when='+likwid')
     depends_on('papi', when='+papi')
     depends_on('libdwarf', when='+libdwarf')
-    depends_on('libelf', when='+libdwarf')
+    depends_on('elf', when='+elf')
     # TAU requires the ELF header support, libiberty and demangle.
     depends_on('binutils@:2.33.1+libiberty+headers+plugins', when='+binutils')
     depends_on('python@2.7:', when='+python')
@@ -106,7 +106,7 @@ class Tau(Package):
     depends_on('hwloc')
 
     # Elf only required from 2.28.1 on
-    conflicts('+libelf', when='@:2.28.0')
+    conflicts('+elf', when='@:2.28.0')
     conflicts('+libdwarf', when='@:2.28.0')
 
     # ADIOS2, SQLite only available from 2.29.1 on
@@ -210,8 +210,8 @@ class Tau(Package):
         if '+libdwarf' in spec:
             options.append("-dwarf=%s" % spec['libdwarf'].prefix)
 
-        if '+libelf' in spec:
-            options.append("-elf=%s" % spec['libelf'].prefix)
+        if '+elf' in spec:
+            options.append("-elf=%s" % spec['elf'].prefix)
 
         if '+libunwind' in spec:
             options.append("-unwind=%s" % spec['libunwind'].prefix)
