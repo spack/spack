@@ -39,6 +39,21 @@ else()
 endif()
 
 
+# GIT DOWNLOAD----------------------------------------------------
+set(GIT_FILENAME "Git-2.31.1-64-bit.exe")
+file(DOWNLOAD "https://github.com/git-for-windows/git/releases/download/v2.31.1.windows.1/Git-2.31.1-64-bit.exe"
+    "${CMAKE_CURRENT_BINARY_DIR}/${GIT_FILENAME}"
+    STATUS download_status
+    EXPECTED_HASH "SHA256=c43611eb73ad1f17f5c8cc82ae51c3041a2e7279e0197ccf5f739e9129ce426e"
+)
+list(GET download_status 0 res)
+if(res)
+  list(GET download_status 1 err)
+  message(FATAL_ERROR "Failed to download ${GIT_FILENAME} ${err}")
+endif()
+message(STATUS "Successfully downloaded ${GIT_FILENAME}")
+
+
 # PYTHON DOWLOAD AND EXTRACTION-----------------------------------
 file(DOWNLOAD "${PY_DOWNLOAD_LINK}/${PY_FILENAME}"
   "${CMAKE_CURRENT_BINARY_DIR}/${PY_FILENAME}"
@@ -93,6 +108,7 @@ set(CPACK_WIX_PATCH_FILE "${CMAKE_CURRENT_SOURCE_DIR}/patch.xml")
 # Set full path to icon, shortcut in spack.wxs
 set(SPACK_SHORTCUT "${CMAKE_CURRENT_SOURCE_DIR}/spack_cmd.bat")
 configure_file("spack.wxs.in" "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
+configure_file("bundle.wxs.in" "${CMAKE_CURRENT_BINARY_DIR}/bundle.wxs")
 set(CPACK_WIX_EXTRA_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/spack.wxs")
 
 include(CPack)
