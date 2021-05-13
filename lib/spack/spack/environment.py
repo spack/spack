@@ -510,7 +510,7 @@ class ViewDescriptor(object):
         content_hash = self.content_hash(specs)
         root_dir = os.path.dirname(self.root)
         root_name = os.path.basename(self.root)
-        return os.path.join(root_dir, '._%s_%s' % (root_name, content_hash))
+        return os.path.join(root_dir, '._%s' % root_name, content_hash)
 
     def content_hash(self, specs):
         d = syaml.syaml_dict([
