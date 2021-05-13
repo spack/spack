@@ -532,11 +532,20 @@ class ViewDescriptor(object):
         rel_path = os.path.relpath(view_path, self._current_root)
         return os.path.join(self.root, rel_path)
 
-    def view(self, new=False):
-        # new option to generate a view for a new underlying root
-        # during regeneration, should not be used to access specs.
-        # Otherwise, give the current view if there is one.
-        # Raise if there is no current view
+    def view(self, new=None):
+        """
+        Generate the FilesystemView object for this ViewDescriptor
+
+        By default, this method returns a FilesystemView object rooted at the
+        current underlying root of this ViewDescriptor (self._current_root)
+
+        Raise if new is None and there is no current view
+
+        Arguments:
+            new (string or None): If a string, create a FilesystemView
+                rooted at that path. Default None. This should only be used to
+                regenerate the view, and cannot be used to access specs.
+        """
         root = self._current_root
         if new:
             root = new
