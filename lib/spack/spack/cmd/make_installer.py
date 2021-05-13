@@ -72,5 +72,19 @@ def make_installer(parser, args):
         except subprocess.CalledProcessError:
             print("Failed to generate installer")
             return
+        try:
+            subprocess.check_call(
+                '"%s/bin/candle.exe" -ext WixBalExtension "%s/bundle.wxs" -out "%s/bundle.wixobj"'
+                % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
+        except subprocess.CalledProcessError:
+            print("Failed to generate installer chain")
+            return
+        try:
+            subprocess.check_call(
+                '"%s/bin/light.exe" -ext WixBalExtension "%s/bundle.wixobj" -out "%s/Spack.exe"'
+                % (os.environ.get('WIX'), output_dir, output_dir), shell=True)
+        except subprocess.CalledProcessError:
+            print("Failed to generate installer chain")
+            return
     else:
-        print('The generate command is currently only supported on Windows.')
+        print('The make-installer command is currently only supported on Windows.')
