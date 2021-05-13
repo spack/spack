@@ -630,6 +630,8 @@ class ViewDescriptor(object):
             # create symlink from tmpname to new_root
             root_dirname = os.path.dirname(self.root)
             tmp_symlink_name = os.path.join(root_dirname, '._view_link')
+            if os.path.exists(tmp_symlink_name):
+                os.unlink(tmp_symlink_name)
             os.symlink(new_root, tmp_symlink_name)
 
             # mv symlink atomically over root symlink to old_root
