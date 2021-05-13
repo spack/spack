@@ -4141,11 +4141,10 @@ class Spec(object):
         return self.format(*args, **kwargs)
 
     def __str__(self):
-        spec_str = self.format()
-        dependencies = [x for x in self.traverse(root=False)]
-        dependencies.sort(key=lambda x: x.name)
-        for current_dependency in dependencies:
-            spec_str += " ^" + current_dependency.format()
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: x.name
+        )
+        spec_str = " ^".join(d.format() for d in sorted_nodes)
         return spec_str.strip()
 
     def install_status(self):
