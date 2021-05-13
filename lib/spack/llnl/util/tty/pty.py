@@ -127,6 +127,7 @@ class ProcessController(object):
     def write(self, byte_string):
         self.horizontal_line("write '%s'" % byte_string.decode("utf-8"))
         os.write(self.controller_fd, byte_string)
+        os.fsync(self.controller_fd)
 
     def wait(self, condition):
         start = time.time()
