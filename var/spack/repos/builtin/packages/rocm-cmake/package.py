@@ -33,7 +33,6 @@ class RocmCmake(CMakePackage):
     depends_on('cmake@3:', type='build')
 
     def cmake_args(self):
-        if '+ldconfig' in self.spec:
-            return ['-DROCM_DISABLE_LDCONFIG=ON']
-        else:
-            return ['-DROCM_DISABLE_LDCONFIG=OFF']
+        return [
+            self.define_from_variant('ROCM_DISABLE_LDCONFIG', 'ldconfig')
+        ]

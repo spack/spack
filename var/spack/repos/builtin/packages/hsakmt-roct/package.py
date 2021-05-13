@@ -42,7 +42,6 @@ class HsakmtRoct(CMakePackage):
             return ['install']
 
     def cmake_args(self):
-        if '+shared' in self.spec:
-            return ['-DBUILD_SHARED_LIBS=ON']
-        else:
-            return ['-DDBUILD_SHARED_LIBS=OFF']
+        return [
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
+        ]
