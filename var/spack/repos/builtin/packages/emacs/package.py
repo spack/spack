@@ -57,6 +57,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gcc@11: +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
+    conflicts('+native', when='@:27.99.99', msg="native compilation require @master")
 
     @when('platform=darwin')
     def setup_build_environment(self, env):
