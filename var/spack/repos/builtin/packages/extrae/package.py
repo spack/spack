@@ -3,6 +3,7 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import os
 from spack import *
 
 # typical working line with extrae 3.0.1
@@ -83,6 +84,11 @@ class Extrae(AutotoolsPackage):
                 "--with-elf=%s" % spec['elf'].prefix,
                 "--with-xml-prefix=%s" % spec['libxml2'].prefix,
                 "--with-binutils=%s" % spec['binutils'].prefix]
+
+        if '^intel-oneapi-mpi' in spec:
+                mpiroot = spec['mpi'].prefix
+                args += ["--with-mpi-headers=%s" % os.path.join(mpiroot, "include")]
+                args += ["--with-mpi-libs=%s" % os.path.join(mpiroot, "lib/release")]
 
         args += (["--with-papi=%s" % spec['papi'].prefix]
                  if '+papi' in self.spec else
