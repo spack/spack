@@ -40,7 +40,12 @@ class PyPyautogui(PythonPackage):
     # if you need specific versions. A generic python dependency is
     # added implicity by the PythonPackage class.
     # depends_on('python@2.X:2.Y,3.Z:', type=('build', 'run'))
-    # depends_on('py-setuptools', type='build')
+    depends_on('py-setuptools', type='build')
+    depends_on('py-pymsgbox', type=('build', 'run'))
+    depends_on('py-pytweening@1.0.1:', type=('build', 'run'))
+    depends_on('py-pyscreeze@0.1.21:', type=('build', 'run'))
+    depends_on('py-pygetwindow@0.0.5:', type=('build', 'run'))
+    depends_on('py-mouseinfo', type=('build', 'run'))
     # depends_on('py-foo',        type=('build', 'run'))
 
     def build_args(self, spec, prefix):
