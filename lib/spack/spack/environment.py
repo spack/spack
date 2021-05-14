@@ -848,6 +848,14 @@ class Environment(object):
         }
 
     def clear(self, re_read=False):
+        """Clear the contents of the environment
+
+        Arguments:
+            re_read (boolean): If True, do not clear ``new_specs`` nor
+                ``new_installs`` values. These values cannot be read from
+                yaml, and need to be maintained when re-reading an existing
+                environment.
+        """
         self.spec_lists = {user_speclist_name: SpecList()}  # specs from yaml
         self.dev_specs = {}               # dev-build specs from yaml
         self.concretized_user_specs = []  # user specs from last concretize
