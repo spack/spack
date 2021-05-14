@@ -93,8 +93,8 @@ class Extrae(AutotoolsPackage):
 
         if '^intel-oneapi-mpi' in spec:
                 mpiroot = spec['mpi'].prefix
-                args += ["--with-mpi-headers=%s" % os.path.join(mpiroot, "include")]
-                args += ["--with-mpi-libs=%s" % os.path.join(mpiroot, "lib/release")]
+                args += ["--with-mpi-headers=%s" % os.path.join(mpiroot, "mpi/latest/include")]
+                args += ["--with-mpi-libs=%s" % os.path.join(mpiroot, "mpi/latest/lib/release")]
 
         args += (["--with-papi=%s" % spec['papi'].prefix]
                  if '+papi' in self.spec else
