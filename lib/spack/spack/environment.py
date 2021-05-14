@@ -478,9 +478,7 @@ class ViewDescriptor(object):
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
         if self.projections:
-            projections_dict = syaml.syaml_dict(
-                sorted(self.projections.items()))
-            ret['projections'] = projections_dict
+            ret['projections'] = self.projections
         if self.select:
             ret['select'] = self.select
         if self.exclude:
