@@ -63,11 +63,11 @@ class Slate(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
-        if '@master' in self.spec:
+        if self.spec.satisfies('@master'):
             self.cache_extra_test_sources([self.examples_src_dir])
 
     def test(self):
-        if '@master' in self.spec and '+mpi' in self.spec:
+        if self.spec.satisfies('@master') and '+mpi' in self.spec:
             test_dir = join_path(self.install_test_root,
                                  self.examples_src_dir)
             test_bld_dir = join_path(test_dir, 'build')
