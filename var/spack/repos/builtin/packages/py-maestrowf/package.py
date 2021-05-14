@@ -22,6 +22,9 @@ class PyMaestrowf(PythonPackage):
     version('flux-dev', branch='bugfix/flux_broker')
     version('flux-c3', branch='merge/flux2')
     version('flux-c3.beta_1123', tag='flux_beta_1123')
+    
+    # New tags for C4 -- supporting new Flux install
+    version('1.1.9', tag='1.1.9dev1')
 
     # Pre-release candidates
     version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0')
@@ -29,7 +32,7 @@ class PyMaestrowf(PythonPackage):
     # pypi releases
     version('1.1.8', sha256='fa8f8eb8dd3adfb9646d7b0dfd498a00423d2131adbc8dbc8016c4159b2ec1d5', preferred=True)
     version('1.1.7', sha256='ff1b6696f30254b105fcadd297ad437c0c666ebc70124b231a713b89f47f4e94')
-    version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0', url="https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.7.dev0.tar.gz")
+    # version('1.1.7dev0', sha256='bcef838f13da396dd33cc7f503655de7a8f16ee5fe7b1e2a553044334a03f1f0', url="https://pypi.io/packages/source/m/maestrowf/maestrowf-1.1.7.dev0.tar.gz")
     version('1.1.6', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')
     version('1.1.4', sha256='6603b93494e8e9d939a4ab40ecdfe7923a85960a8a8bddea4734e230d8144016')
     version('1.1.3', sha256='9812e67d9bd83c452cc99d82fbceb3017b5e36dafdf52eda939748bad4a88756')
@@ -50,3 +53,4 @@ class PyMaestrowf(PythonPackage):
     depends_on('py-chainmap',          type=('build', 'run'), when='@1.1.7: ^python@:2')
     depends_on('py-dill',              type=('build', 'run'), when='@1.1.7:')
     depends_on('py-jsonschema@3.2.0:', type=('build', 'run'), when='@1.1.7:')
+    depends_on('py-pyaestro@0.0.1a2',  type=('build', 'run'))

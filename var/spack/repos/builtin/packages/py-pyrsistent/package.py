@@ -26,6 +26,6 @@ class PyPyrsistent(PythonPackage):
     depends_on('py-sphinx')
     depends_on('py-sphinx-rtd-theme')
     depends_on('py-memory-profiler')
-    depends_on('py-psutil@2.1.1')
+    depends_on('py-psutil')
     #depends_on('py-pyperform')
     depends_on('py-hypothesis')

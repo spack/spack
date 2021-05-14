@@ -49,9 +49,9 @@ class Mummi(PythonPackage):
     depends_on('py-scipy')
 
     # ml
-    #depends_on('faiss@1.6.3 +python')
-    #depends_on('py-theano@1.0.4 ~cuda')
-    #depends_on('py-h5py ~mpi')
+    depends_on('faiss@1.6.3 +cuda+python')
+    depends_on('py-theano@1.0.4 ~cuda')
+    depends_on('py-h5py~mpi ^hdf5~mpi')
 
     # analysis
     depends_on('talass@process-statistics')
