@@ -46,7 +46,7 @@ class PyMouseinfo(PythonPackage):
     # 'python3-Xlib;platform_system=="Linux" and python_version>="3.0"',
     # 'Xlib;platform_system=="Linux" and python_version<"3.0"',
     depends_on('py-python3-xlib', when='^python@3 platform=linux', type=('build', 'run'))
-    
+
     depends_on('py-pyperclip', type=('build', 'run'))
     depends_on('py-pillow@5.2.0:', when='^python@3.7:', type=('build', 'run'))
     depends_on('py-pillow@4.0.0:', when='^python@3.6', type=('build', 'run'))
