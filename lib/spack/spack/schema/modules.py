@@ -116,7 +116,11 @@ module_type_configuration = {
 }
 
 
-top_level_properties = {
+#: The "real" module properties -- the actual configuration parameters.
+#: They are separate from ``properties`` because they can appear both
+#: at the top level of a Spack ``modules:`` config (old, deprecated format),
+#: and within a named module set (new format with multiple module sets).
+module_config_properties = {
     'use_view': {'anyOf': [
         {'type': 'string'},
         {'type': 'boolean'}
@@ -191,7 +195,7 @@ properties = {
                 'type': 'object',
                 'default': {},
                 'additionalProperties': False,
-                'properties': top_level_properties,
+                'properties': module_config_properties,
                 'deprecatedProperties': {
                     'properties': ['dotkit'],
                     'message': 'the "dotkit" section in modules.yaml has no effect'
@@ -201,7 +205,7 @@ properties = {
             },
         },
         # Available here for backwards compatibility
-        'properties': top_level_properties,
+        'properties': module_config_properties,
         'deprecatedProperties': {
             'properties': ['dotkit'],
             'message': 'the "dotkit" section in modules.yaml has no effect'
