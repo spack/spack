@@ -1,4 +1,4 @@
-# Copyright 2013-2020 Lawrence Livermore National Security, LLC and other
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
@@ -7,9 +7,13 @@ from spack import *
 
 
 class RAssertive(RPackage):
-    """assertive: Readable Check Functions to Ensure Code Integrity"""
+    """assertive: Readable Check Functions to Ensure Code Integrity
 
-    homepage = "https://cloud.r-project.org/package=assertive"
+    Lots of predicates (is_* functions) to check the state of your
+    variables, and assertions (assert_* functions) to throw errors if
+    they aren't in the right form."""
+
+    homepage = "https://bitbucket.org/richierocks/assertive"
     url      = "https://cloud.r-project.org/src/contrib/assertive_0.3-6.tar.gz"
     list_url = "https://cloud.r-project.org/src/contrib/Archive/assertive"
 
