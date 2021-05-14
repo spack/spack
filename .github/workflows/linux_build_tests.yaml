@@ -42,7 +42,7 @@ jobs:
         package:
         - lz4  # MakefilePackage
         - mpich~fortran  # AutotoolsPackage
-        - tut  # WafPackage
+        - 'tut%gcc@:10.99.99'  # WafPackage
         - py-setuptools  # PythonPackage
         - openjpeg  # CMakePackage
         - r-rcpp  # RPackage
