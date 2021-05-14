@@ -3566,11 +3566,6 @@ class Spec(object):
         else:
             return any(s.satisfies(spec) for s in self.traverse(root=False))
 
-    def sorted_deps(self):
-        """Return a list of all dependencies sorted by name."""
-        deps = self.flat_dependencies()
-        return tuple(deps[name] for name in sorted(deps))
-
     def eq_dag(self, other, deptypes=True, vs=None, vo=None):
         """True if the full dependency DAGs of specs are equal."""
         if vs is None:
@@ -3880,7 +3875,9 @@ class Spec(object):
                 'Format string terminated while reading attribute.'
                 'Missing terminating }.'
             )
-        return out.getvalue()
+
+        formatted_spec = out.getvalue()
+        return formatted_spec.strip()
 
     def old_format(self, format_string='$_$@$%@+$+$=', **kwargs):
         """
@@ -4136,12 +4133,12 @@ class Spec(object):
         kwargs.setdefault('color', None)
         return self.format(*args, **kwargs)
 
-    def dep_string(self):
-        return ''.join(" ^" + dep.format() for dep in self.sorted_deps())
-
     def __str__(self):
-        ret = self.format() + self.dep_string()
-        return ret.strip()
+        sorted_nodes = [self] + sorted(
+            self.traverse(root=False), key=lambda x: x.name
+        )
+        spec_str = " ^".join(d.format() for d in sorted_nodes)
+        return spec_str.strip()
 
     def install_status(self):
         """Helper for tree to print DB install status."""
