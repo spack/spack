@@ -364,7 +364,7 @@ def env_loads_setup_parser(subparser):
     subparser.add_argument(
         'env', nargs='?', help='name of env to generate loads file for')
     subparser.add_argument(
-        '-n', '--module-set-name',
+        '-n', '--module-set-name', default='default',
         help='module set for which to generate load operations')
     subparser.add_argument(
         '-m', '--module-type', choices=('tcl', 'lmod'),
