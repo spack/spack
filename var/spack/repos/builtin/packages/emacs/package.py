@@ -33,6 +33,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         description="Select an X toolkit (gtk, athena)"
     )
     variant('tls', default=False, description="Build Emacs with gnutls")
+    variant('native', default=False, description="enable native compilation of elisp")
 
     depends_on('pkgconfig', type='build')
 
@@ -49,12 +50,14 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gtkplus', when='+X toolkit=gtk')
     depends_on('gnutls', when='+tls')
     depends_on('jpeg')
-    depends_on('m4', when="@master:")
-    depends_on('autoconf', when="@master:")
-    depends_on('automake', when="@master:")
-    depends_on('libtool', when="@master:")
+    depends_on('m4', type='build', when="@master:")
+    depends_on('autoconf', type='build', when="@master:")
+    depends_on('automake', type='build', when="@master:")
+    depends_on('libtool', type='build', when="@master:")
+    depends_on('gcc@11: +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
+    conflicts('+native', when='@:27.99.99', msg="native compilation require @master")
 
     @when('platform=darwin')
     def setup_build_environment(self, env):
@@ -79,6 +82,9 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
         # doing so throws an error at build-time
         if sys.platform == 'darwin':
             args.append('--without-ns')
+
+        if '+native' in spec:
+            args.append('--with-native-compilation')
 
         if '+tls' in spec:
             args.append('--with-gnutls')
