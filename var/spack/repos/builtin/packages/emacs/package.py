@@ -54,6 +54,7 @@ class Emacs(AutotoolsPackage, GNUMirrorPackage):
     depends_on('autoconf', type='build', when="@master:")
     depends_on('automake', type='build', when="@master:")
     depends_on('libtool', type='build', when="@master:")
+    depends_on('texinfo', type='build', when="@master:")
     depends_on('gcc@11: +strip languages=jit', when="+native")
 
     conflicts('@:26.3', when='platform=darwin os=catalina')
