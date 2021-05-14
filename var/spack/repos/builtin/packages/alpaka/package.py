@@ -7,7 +7,7 @@
 from spack import *
 
 
-class Alpaka(CMakePackage):
+class Alpaka(CMakePackage, CudaPackage):
     """Abstraction Library for Parallel Kernel Acceleration."""
 
     homepage = "https://alpaka.readthedocs.io"
@@ -19,39 +19,50 @@ class Alpaka(CMakePackage):
     version('develop', branch='develop')
     version('0.6.0', sha256='7424ecaee3af15e587b327e983998410fa379c61d987bfe923c7e95d65db11a3')
 
-    variant("acc_cpu_b_seq_t_seq", default=True, description="Enable the serial CPU back-end")
-    variant("acc_cpu_b_seq_t_threads", default=True,
-            description="Enable the threads CPU block thread back-end")
-    variant("acc_cpu_b_seq_t_fibers", default=False, description="Enable the fibers CPU block thread back-end")
-    variant("acc_cpu_b_tbb_t_seq", default=False, description="Enable the TBB CPU grid block back-end")
-    variant("acc_cpu_b_omp2_t_seq", default=False, description="Enable the OpenMP 2.0 CPU grid block back-end")
-    variant("acc_cpu_b_seq_t_omp2", default=False, description="Enable the OpenMP 2.0 CPU block thread back-end")
-    variant("acc_any_bt_omp5", default=False, description="Enable the OpenMP 5.0 CPU block and block thread back-end")
-    variant("acc_any_bt_oacc", default=False, description="Enable the OpenACC block and block thread back-end")
+    variant("backend", multi=True, values=('serial', 'threads', 'fibers', 'tbb', 'omp2_gridblock', 'omp2_blockthread', 'cuda', 'cuda_only', 'hip', 'hip_only'), description="Backends to enable")
+
     variant("examples", default=False, description="Build alpaka examples")
 
     depends_on('boost')
 
+    # make sure no other backend is enabled if using cuda_only or hip_only
+    for v in ('serial', 'threads', 'fibers', 'tbb',
+              'omp2_gridblock', 'omp2_blockthread',):
+        conflicts('backend=cuda_only backend=%s' % v)
+    conflicts('backend=cuda_only backend=hip_only')
+
     def cmake_args(self):
-        args = [self.define_from_variant("ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE",
-                                         "acc_cpu_b_seq_t_seq"),
-                self.define_from_variant("ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE",
-                                         "acc_cpu_b_seq_t_threads"),
-                self.define_from_variant("ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE",
-                                         "acc_cpu_b_seq_t_fibers"),
-                self.define_from_variant("ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE",
-                                         "acc_cpu_b_tbb_t_seq"),
-                self.define_from_variant("ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE",
-                                         "acc_cpu_b_omp2_t_seq"),
-                self.define_from_variant("ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE",
-                                         "acc_cpu_b_seq_t_omp2"),
-                self.define_from_variant("ALPAKA_ACC_ANY_BT_OMP5_ENABLE",
-                                         "acc_any_bt_omp5"),
-                self.define_from_variant("ALPAKA_ACC_ANY_BT_OACC_ENABLE",
-                                         "acc_any_bt_oacc"),
-                self.define_from_variant("alpaka_BUILD_EXAMPLES",
-                                         "examples"),
-                # need to define, as it is explicitly declared as an option by alpaka:
-                self.define("BUILD_TESTING", self.run_tests),
-                ]
+        spec = self.spec
+        args = []
+        if 'backend=serial' in spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_SEQ_ENABLE", True))
+        if 'backend=threads' in self.spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_THREADS_ENABLE", True))
+        if 'backend=fiber' in spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_FIBERS_ENABLE", True))
+        if 'backend=tbb' in spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_TBB_T_SEQ_ENABLE", True))
+        if 'backend=omp2_gridblock' in spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_OMP2_T_SEQ_ENABLE", True))
+        if 'backend=omp2_blockthread' in spec:
+            args.append(self.define("ALPAKA_ACC_CPU_B_SEQ_T_OMP2_ENABLE", True))
+        if 'backend=omp5' in spec:
+            args.append(self.define("ALPAKA_ACC_ANY_BT_OMP5_ENABLE", True))
+        if 'backend=oacc' in spec:
+            args.append(self.define("ALPAKA_ACC_ANY_BT_OACC_ENABLE", True))
+        if 'backend=cuda' in spec:
+            args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
+        if 'backend=cuda_only' in spec:
+            args.append(self.define("ALPAKA_ACC_GPU_CUDA_ENABLE", True))
+            args.append(self.define("ALPAKA_ACC_GPU_CUDA_ONLY_MODE", True))
+        if 'backend=hip' in spec:
+            args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
+        if 'backend=hip_only' in spec:
+            args.append(self.define("ALPAKA_ACC_GPU_HIP_ENABLE", True))
+            args.append(self.define("ALPAKA_ACC_GPU_HIP_ONLY_MODE", True))
+
+        args.append(self.define_from_variant("alpaka_BUILD_EXAMPLES",
+                                             "examples"))
+        # need to define, as it is explicitly declared as an option by alpaka:
+        ags.append(self.define("BUILD_TESTING", self.run_tests))
         return args
