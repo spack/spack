@@ -885,6 +885,8 @@ class Trilinos(CMakePackage, CudaPackage):
 
         if sys.platform == 'darwin':
             options.append(define('Trilinos_ENABLE_FEI', False))
+            if '+stk' in spec:
+                cxx_flags.extend(['-DSTK_NO_BOOST_STACKTRACE'])
 
         if sys.platform == 'darwin' and macos_version() >= Version('10.12'):
             # use @rpath on Sierra due to limit of dynamic loader
