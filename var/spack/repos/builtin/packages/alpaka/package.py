@@ -19,7 +19,7 @@ class Alpaka(CMakePackage, CudaPackage):
     version('develop', branch='develop')
     version('0.6.0', sha256='7424ecaee3af15e587b327e983998410fa379c61d987bfe923c7e95d65db11a3')
 
-    variant("backend", multi=True, values=('serial', 'threads', 'fibers', 'tbb', 'omp2_gridblock', 'omp2_blockthread', 'cuda', 'cuda_only', 'hip', 'hip_only'), description="Backends to enable")
+    variant("backend", multi=True, values=('serial', 'threads', 'fibers', 'tbb', 'omp2_gridblock', 'omp2_blockthread', 'cuda', 'cuda_only', 'hip', 'hip_only'), description="Backends to enable", default='serial')
 
     variant("examples", default=False, description="Build alpaka examples")
 
