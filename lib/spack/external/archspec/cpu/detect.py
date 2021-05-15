@@ -99,17 +99,29 @@ def sysctl_info_dict():
     def sysctl(*args):
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
-    flags = (
-        sysctl("-n", "machdep.cpu.features").lower()
-        + " "
-        + sysctl("-n", "machdep.cpu.leaf7_features").lower()
-    )
-    info = {
-        "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
-        "flags": flags,
-        "model": sysctl("-n", "machdep.cpu.model"),
-        "model name": sysctl("-n", "machdep.cpu.brand_string"),
-    }
+    if platform.machine() == "x86_64":
+        flags = (
+            sysctl("-n", "machdep.cpu.features").lower()
+            + " "
+            + sysctl("-n", "machdep.cpu.leaf7_features").lower()
+        )
+        info = {
+            "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
+            "flags": flags,
+            "model": sysctl("-n", "machdep.cpu.model"),
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
+    else:
+        model = (
+            "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
+        )
+        info = {
+            "vendor_id": "Apple",
+            "flags": [],
+            "model": model,
+            "CPU implementer": "Apple",
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
     return info
 
 

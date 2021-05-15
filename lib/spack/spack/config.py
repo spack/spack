@@ -129,7 +129,7 @@ def first_existing(dictionary, keys):
     try:
         return next(k for k in keys if k in dictionary)
     except StopIteration:
-        raise KeyError("None of %s is in dict!" % keys)
+        raise KeyError("None of %s is in dict!" % str(keys))
 
 
 class ConfigScope(object):
@@ -571,16 +571,17 @@ class Configuration(object):
         YAML config file that looks like this::
 
            config:
-             install_tree: $spack/opt/spack
-             module_roots:
-               lmod:   $spack/share/spack/lmod
+             install_tree:
+               root: $spack/opt/spack
+             build_stage:
+             - $tmpdir/$user/spack-stage
 
         ``get_config('config')`` will return::
 
-           { 'install_tree': '$spack/opt/spack',
-             'module_roots: {
-                 'lmod': '$spack/share/spack/lmod'
+           { 'install_tree': {
+                 'root': '$spack/opt/spack',
              }
+             'build_stage': ['$tmpdir/$user/spack-stage']
            }
 
         """

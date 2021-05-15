@@ -62,8 +62,9 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
 
     # Specify the correct version of Aluminum
     depends_on('aluminum@0.4:0.4.99', when='@0.1:0.1.99 +al')
-    depends_on('aluminum@0.5.0:0.7.99', when='@0.2.0:0.2.1 +al')
-    depends_on('aluminum@0.5.0:', when='@:0.0,0.2.1: +al')
+    depends_on('aluminum@0.5.0:0.5.99', when='@0.2.0 +al')
+    depends_on('aluminum@0.7.0:0.7.99', when='@0.2.1 +al')
+    depends_on('aluminum@0.7.0:', when='@:0.0,0.2.1: +al')
 
     # Add Aluminum variants
     depends_on('aluminum +cuda +nccl +ht +cuda_rma', when='+al +cuda')
@@ -155,17 +156,6 @@ class Dihydrogen(CMakePackage, CudaPackage, ROCmPackage):
                 args.append('-DCMAKE_CUDA_STANDARD=17')
             else:
                 args.append('-DCMAKE_CUDA_STANDARD=14')
-
-            cuda_arch = spec.variants['cuda_arch'].value
-            if len(cuda_arch) == 1 and cuda_arch[0] == 'auto':
-                args.append('-DCMAKE_CUDA_FLAGS=-arch=sm_60')
-            else:
-                cuda_arch = [x for x in spec.variants['cuda_arch'].value
-                             if x != 'auto']
-                if cuda_arch:
-                    args.append('-DCMAKE_CUDA_FLAGS={0}'.format(
-                        ' '.join(self.cuda_flags(cuda_arch))
-                    ))
 
         if '+cuda' in spec or '+distconv' in spec:
             args.append('-DcuDNN_DIR={0}'.format(

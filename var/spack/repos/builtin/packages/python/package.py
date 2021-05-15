@@ -26,10 +26,14 @@ class Python(AutotoolsPackage):
 
     maintainers = ['adamjstewart', 'skosukhin']
 
+    version('3.9.5',  sha256='e0fbd5b6e1ee242524430dee3c91baf4cbbaba4a72dd1674b90fda87b713c7ab')
+    version('3.9.4',  sha256='66c4de16daa74a825cf9da9ddae1fe020b72c3854b73b1762011cc33f9e4592f')
     version('3.9.2',  sha256='7899e8a6f7946748830d66739f2d8f2b30214dad956e56b9ba216b3de5581519')
     version('3.9.1',  sha256='29cb91ba038346da0bd9ab84a0a55a845d872c341a4da6879f462e94c741f117')
     version('3.9.0',  sha256='df796b2dc8ef085edae2597a41c1c0a63625ebd92487adaef2fed22b567873e8')
-    version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7', preferred=True)
+    version('3.8.10', sha256='b37ac74d2cbad2590e7cd0dd2b3826c29afe89a734090a87bf8c03c45066cb65', preferred=True)
+    version('3.8.9',  sha256='9779ec1df000bf86914cdd40860b88da56c1e61db59d37784beca14a259ac9e9')
+    version('3.8.8',  sha256='76c0763f048e4f9b861d24da76b7dd5c7a3ba7ec086f40caedeea359263276f7')
     version('3.8.7',  sha256='20e5a04262f0af2eb9c19240d7ec368f385788bba2d8dfba7e74b20bab4d2bac')
     version('3.8.6',  sha256='313562ee9986dc369cd678011bdfd9800ef62fbf7b1496228a18f86b36428c21')
     version('3.8.5',  sha256='015115023c382eb6ab83d512762fe3c5502fa0c6c52ffebc4831c4e1a06ffc49')
@@ -379,6 +383,7 @@ class Python(AutotoolsPackage):
     def configure_args(self):
         spec = self.spec
         config_args = []
+        cflags = []
 
         # setup.py needs to be able to read the CPPFLAGS and LDFLAGS
         # as it scans for the library and headers to build
@@ -440,7 +445,7 @@ class Python(AutotoolsPackage):
             config_args.append('--without-ensurepip')
 
         if '+pic' in spec:
-            config_args.append('CFLAGS={0}'.format(self.compiler.cc_pic_flag))
+            cflags.append(self.compiler.cc_pic_flag)
 
         if '+ssl' in spec:
             if spec.satisfies('@3.7:'):
@@ -474,6 +479,12 @@ class Python(AutotoolsPackage):
         # https://docs.python.org/3.8/library/sqlite3.html#f1
         if spec.satisfies('@3.2: +sqlite3'):
             config_args.append('--enable-loadable-sqlite-extensions')
+
+        if spec.satisfies('%oneapi'):
+            cflags.append('-fp-model=strict')
+
+        if cflags:
+            config_args.append('CFLAGS={0}'.format(' '.join(cflags)))
 
         return config_args
 

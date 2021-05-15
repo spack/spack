@@ -1359,9 +1359,24 @@
         "popcnt",
         "clwb",
         "vaes",
-        "vpclmulqdq"
+        "vpclmulqdq",
+        "pku"
       ],
       "compilers": {
+        "gcc": [
+          {
+            "versions": "10.3:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
+        "clang": [
+          {
+            "versions": "12.0:",
+            "name": "znver3",
+            "flags": "-march={name} -mtune={name}"
+          }
+        ],
         "aocc": [
           {
             "versions": "3.0:",
@@ -1540,6 +1555,12 @@
           }
         ],
         "clang": [
+          {
+            "versions": ":",
+            "flags": "-march=armv8-a -mtune=generic"
+          }
+        ],
+        "apple-clang": [
           {
             "versions": ":",
             "flags": "-march=armv8-a -mtune=generic"
@@ -1750,6 +1771,31 @@
                   "flags" : "-march=armv8.2-a+fp16+rcpc+dotprod+crypto"
               }
           ]
+      }
+    },
+    "m1": {
+      "from": ["aarch64"],
+      "vendor": "Apple",
+      "features": [],
+      "compilers": {
+        "gcc": [
+          {
+            "versions": "8.0:",
+            "flags" : "-march=armv8.4-a -mtune=generic"
+          }
+        ],
+        "clang" : [
+          {
+            "versions": "9.0:",
+            "flags" : "-march=armv8.4-a"
+          }
+        ],
+        "apple-clang": [
+          {
+            "versions": "11.0:",
+            "flags" : "-march=armv8.4-a"
+          }
+        ]
       }
     },
     "arm": {

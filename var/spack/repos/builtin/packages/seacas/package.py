@@ -26,6 +26,8 @@ class Seacas(CMakePackage):
 
     # ###################### Versions ##########################
     version('master', branch='master')
+    version('2021-05-12', sha256='92663767f0317018d6f6e422e8c687e49f6f7eb2b92e49e837eb7dc0ca0ac33d')
+    version('2021-04-05', sha256='76f66eec1fec7aba30092c94c7609495e6b90d9dcb6f35b3ee188304d02c6e04')
     version('2021-01-20', sha256='7814e81981d03009b6816be3eb4ed3845fd02cc69e006ee008a2cbc85d508246')
     version('2021-01-06', sha256='b233502a7dc3e5ab69466054cf358eb033e593b8679c6721bf630b03999bd7e5')
     version('2020-08-13', sha256='e5eaf203eb2dbfb33c61ccde26deea459d058aaea79b0847e2f4bdb0cef1ddcb')
@@ -79,11 +81,11 @@ class Seacas(CMakePackage):
 
     # Everything should be compiled position independent (-fpic)
 
-    depends_on('netcdf-c@4.6.2:+mpi+parallel-netcdf', when='+mpi')
-    depends_on('netcdf-c@4.6.2:~mpi', when='~mpi')
+    depends_on('netcdf-c@4.8.0:+mpi+parallel-netcdf', when='+mpi')
+    depends_on('netcdf-c@4.8.0:~mpi', when='~mpi')
     depends_on('hdf5+hl~mpi', when='~mpi')
-    depends_on('cgns@develop+mpi+scoping', when='+cgns +mpi')
-    depends_on('cgns@develop~mpi+scoping', when='+cgns ~mpi')
+    depends_on('cgns@4.2.0:+mpi+scoping', when='+cgns +mpi')
+    depends_on('cgns@4.2.0:~mpi+scoping', when='+cgns ~mpi')
     depends_on('adios2@develop~mpi', when='+adios2 ~mpi')
     depends_on('adios2@develop+mpi', when='+adios2 +mpi')
     depends_on('matio', when='+matio')

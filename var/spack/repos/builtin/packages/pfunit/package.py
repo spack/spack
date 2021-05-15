@@ -103,7 +103,7 @@ class Pfunit(CMakePackage):
 
     def compiler_vendor(self):
         vendors = {'%gcc': 'GNU', '%clang': 'GNU', '%intel': 'Intel',
-                   '%pgi': 'PGI', '%nag': 'NAG'}
+                   '%pgi': 'PGI', '%nag': 'NAG', '%cce': 'Cray'}
         for key, value in vendors.items():
             if self.spec.satisfies(key):
                 return value

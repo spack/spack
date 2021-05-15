@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
-import sys
-
 
 class Binutils(AutotoolsPackage, GNUMirrorPackage):
     """GNU binutils, which contain the linker, assembler, objdump and others"""
@@ -30,16 +28,19 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     version('2.23.2', sha256='fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097')
     version('2.20.1', sha256='71d37c96451333c5c0b84b170169fdcb138bbb27397dc06281905d9717c8ed64')
 
-    variant('plugins', default=False,
+    variant('plugins', default=True,
             description="enable plugins, needed for gold linker")
-    variant('gold', default=(sys.platform != 'darwin'),
+    variant('gold', default=False,
             description="build the gold linker")
     variant('libiberty', default=False, description='Also install libiberty.')
     variant('nls', default=True, description='Enable Native Language Support')
     variant('headers', default=False, description='Install extra headers (e.g. ELF)')
     variant('lto', default=False, description='Enable lto.')
     variant('ld', default=False, description='Enable ld.')
+    variant('gas', default=False, description='Enable as assembler.')
     variant('interwork', default=False, description='Enable interwork.')
+    variant('libs', default='shared,static', values=('shared', 'static'),
+            multi=True, description='Build shared libs, static libs or both')
 
     patch('cr16.patch', when='@:2.29.1')
     patch('update_symbol-2.26.patch', when='@2.26')
@@ -60,51 +61,57 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
     conflicts('+gold', when='platform=darwin',
               msg="Binutils cannot build linkers on macOS")
 
+    # When you build binutils with ~ld and +gas and load it in your PATH, you
+    # may end up with incompatibilities between a potentially older system ld
+    # and a recent assembler. For instance the linker on ubuntu 16.04 from
+    # binutils 2.26 and the assembler from binutils 2.36.1 will result in:
+    # "unable to initialize decompress status for section .debug_info"
+    # when compiling with debug symbols on gcc.
+    conflicts('+gas', '~ld', msg="Assembler not always compatible with system ld")
+
+    # When you build ld.gold you automatically get ld, even when you add the
+    # --disable-ld flag
+    conflicts('~ld', '+gold')
+
     def configure_args(self):
         spec = self.spec
 
-        configure_args = [
+        args = [
             '--disable-dependency-tracking',
             '--disable-werror',
             '--enable-multilib',
-            '--enable-shared',
             '--enable-64-bit-bfd',
             '--enable-targets=all',
             '--with-system-zlib',
             '--with-sysroot=/',
         ]
 
-        if '+lto' in spec:
-            configure_args.append('--enable-lto')
-
-        if '+ld' in spec:
-            configure_args.append('--enable-ld')
-
-        if '+interwork' in spec:
-            configure_args.append('--enable-interwork')
-
-        if '+gold' in spec:
-            configure_args.append('--enable-gold')
-
-        if '+plugins' in spec:
-            configure_args.append('--enable-plugins')
+        args += self.enable_or_disable('libs')
+        args += self.enable_or_disable('lto')
+        args += self.enable_or_disable('ld')
+        args += self.enable_or_disable('gas')
+        args += self.enable_or_disable('interwork')
+        args += self.enable_or_disable('gold')
+        args += self.enable_or_disable('plugins')
 
         if '+libiberty' in spec:
-            configure_args.append('--enable-install-libiberty')
+            args.append('--enable-install-libiberty')
+        else:
+            args.append('--disable-install-libiberty')
 
         if '+nls' in spec:
-            configure_args.append('--enable-nls')
-            configure_args.append('LDFLAGS=-lintl')
+            args.append('--enable-nls')
+            args.append('LDFLAGS=-lintl')
         else:
-            configure_args.append('--disable-nls')
+            args.append('--disable-nls')
 
         # To avoid namespace collisions with Darwin/BSD system tools,
         # prefix executables with "g", e.g., gar, gnm; see Homebrew
         # https://github.com/Homebrew/homebrew-core/blob/master/Formula/binutils.rb
         if spec.satisfies('platform=darwin'):
-            configure_args.append('--program-prefix=g')
+            args.append('--program-prefix=g')
 
-        return configure_args
+        return args
 
     # 2.36 is missing some dependencies and requires serial make install.
     # https://sourceware.org/bugzilla/show_bug.cgi?id=27482
@@ -127,17 +134,20 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
                     extradir)
 
     def flag_handler(self, name, flags):
+        # Use a separate variable for injecting flags. This way, installing
+        # `binutils cflags='-O2'` will still work as expected.
+        iflags = []
         # To ignore the errors of narrowing conversions for
         # the Fujitsu compiler
         if name == 'cxxflags' and (
             self.spec.satisfies('@:2.31.1') and
             self.compiler.name in ('fj', 'clang', 'apple-clang')
         ):
-            flags.append('-Wno-narrowing')
+            iflags.append('-Wno-narrowing')
         elif name == 'cflags':
             if self.spec.satisfies('@:2.34 %gcc@10:'):
-                flags.append('-fcommon')
-        return (flags, None, None)
+                iflags.append('-fcommon')
+        return (iflags, None, flags)
 
     def test(self):
         spec_vers = str(self.spec.version)

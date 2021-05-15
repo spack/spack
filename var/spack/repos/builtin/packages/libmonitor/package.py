@@ -16,6 +16,7 @@ class Libmonitor(AutotoolsPackage):
     maintainers = ['mwkrentel']
 
     version('master', branch='master')
+    version('2021.04.27', commit='a2d1b6be23410ef1ad2c9d0006672453803243c2')
     version('2020.10.15', commit='36e5cb7ebeadfff01476b79ff04f6ec772ba831d')
     version('2019.05.31', commit='c9767087d52e58a719aa7f149136b101e499db44')
     version('2018.07.18', commit='d28cc1d3c08c02013a68a022a57a6ac73db88166')

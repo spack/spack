@@ -24,12 +24,17 @@ class Stat(AutotoolsPackage):
     version('4.0.0', sha256='1c4f62686645f6dc1d9ef890acc9c2839c150789dc220718775878feb41bdabf',
             url='https://github.com/LLNL/STAT/releases/download/v4.0.0/stat-4.0.0.tar.gz')
     version('3.0.1', sha256='540916ffb92026ca7aa825a2320095a89b9b4fd3426ee7657b44ac710618947e',
-            url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip')
+            url='https://github.com/LLNL/STAT/files/911503/stat-3.0.1.zip',
+            deprecated=True)
     version('3.0.0', sha256='b95cac82989e273e566f16ba17a75526374ee8e0ef066a411977e1935967df57',
-            url='https://github.com/LLNL/STAT/releases/download/v3.0.0/STAT-3.0.0.tar.gz')
-    version('2.2.0', sha256='ed4732bfbe942ca8e29342f24f48e0c295989b0639a548febe7a1c1390ae1993')
-    version('2.1.0', sha256='497ed2bd1127cb2e97b32a30a4f62b6b298d18f3313c0278dd908c6ecba64f43')
-    version('2.0.0', sha256='b19587c2166b5d4d3a89a0ec5433ac61335aa7ad5cfa5a3b4406f5ea6c0bf0ac')
+            url='https://github.com/LLNL/STAT/releases/download/v3.0.0/STAT-3.0.0.tar.gz',
+            deprecated=True)
+    version('2.2.0', sha256='ed4732bfbe942ca8e29342f24f48e0c295989b0639a548febe7a1c1390ae1993',
+            deprecated=True)
+    version('2.1.0', sha256='497ed2bd1127cb2e97b32a30a4f62b6b298d18f3313c0278dd908c6ecba64f43',
+            deprecated=True)
+    version('2.0.0', sha256='b19587c2166b5d4d3a89a0ec5433ac61335aa7ad5cfa5a3b4406f5ea6c0bf0ac',
+            deprecated=True)
 
     # TODO: dysect requires Dyninst patch for version 3.0.0b
     variant('dysect', default=False, description="enable DySectAPI")
@@ -53,7 +58,7 @@ class Stat(AutotoolsPackage):
     depends_on('mrnet')
     depends_on('python')
     depends_on('python@:2.8', when='@:4.0.0')
-    depends_on('py-pygtk', type=('build', 'run'), when='@:4.0.0')
+    depends_on('py-pygtk', type=('build', 'run'), when='@:4.0.0 +gui')
     depends_on('py-enum34', type=('run'), when='@:4.0.0')
     depends_on('py-xdot@1.0', when='@4.0.1: +gui')
     depends_on('swig')
@@ -61,6 +66,9 @@ class Stat(AutotoolsPackage):
     depends_on('boost')
 
     patch('configure_mpicxx.patch', when='@2.1.0')
+
+    # No Mac support due to dependencies like dyninst, elf etc.
+    conflicts('platform=darwin', msg='macOS is not supported')
 
     def configure_args(self):
         spec = self.spec
