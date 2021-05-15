@@ -9,6 +9,7 @@ import sys
 import shutil
 import copy
 import six
+import ruamel.yaml as yaml
 
 from ordereddict_backport import OrderedDict
 
@@ -478,9 +479,12 @@ class ViewDescriptor(object):
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
         if self.projections:
-            projections_dict = syaml.syaml_dict(
-                sorted(self.projections.items()))
-            ret['projections'] = projections_dict
+            # projections guaranteed to be ordered dict if true-ish
+            # for python2.6, may be syaml or ruamel.yaml implementation
+            # so we have to check for both
+            types = (OrderedDict, syaml.syaml_dict, yaml.comments.CommentedMap)
+            assert isinstance(self.projections, types)
+            ret['projections'] = self.projections
         if self.select:
             ret['select'] = self.select
         if self.exclude:
