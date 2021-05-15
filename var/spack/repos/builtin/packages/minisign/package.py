@@ -20,6 +20,11 @@ class Minisign(CMakePackage):
     variant('static', default=True,
             description='builds a static version of the executable')
 
+    # Since this package ships only a single executable under
+    # <prefix>/bin it seems fair to model the static library as
+    # a 'build' only dependency. The idea is there won't be any other
+    # package that may need it upstream and dependents of this
+    # package will be of either 'run' or 'build' type
     depends_on('libsodium', type='link', when='~static')
     depends_on('libsodium', type='build', when='+static')
 
