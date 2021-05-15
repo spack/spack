@@ -25,8 +25,6 @@ class Perfstubs(CMakePackage):
     variant('static', default=False, description='Build static executable support')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
             self.define_from_variant('PERFSTUBS_USE_STATIC', 'static')
         ]

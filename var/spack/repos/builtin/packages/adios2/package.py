@@ -139,31 +139,32 @@ class Adios2(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         args = [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DADIOS2_BUILD_EXAMPLES=OFF',
-            self.define_from_variant('ADIOS2_USE_MPI', 'mpi'),
+            from_variant('ADIOS2_USE_MPI', 'mpi'),
             '-DADIOS2_USE_MGARD=OFF',
-            self.define_from_variant('ADIOS2_USE_ZFP', 'zfp'),
-            self.define_from_variant('ADIOS2_USE_SZ', 'sz'),
-            self.define_from_variant('ADIOS2_USE_DataMan', 'dataman'),
-            self.define_from_variant('ADIOS2_USE_SST', 'sst'),
-            self.define_from_variant('ADIOS2_USE_HDF5', 'hdf5'),
-            self.define_from_variant('ADIOS2_USE_Python', 'python'),
-            self.define_from_variant('ADIOS2_USE_Fortran', 'fortran'),
-            self.define_from_variant('ADIOS2_USE_Endian_Reverse', 'endian_reverse'),
+            from_variant('ADIOS2_USE_ZFP', 'zfp'),
+            from_variant('ADIOS2_USE_SZ', 'sz'),
+            from_variant('ADIOS2_USE_DataMan', 'dataman'),
+            from_variant('ADIOS2_USE_SST', 'sst'),
+            from_variant('ADIOS2_USE_HDF5', 'hdf5'),
+            from_variant('ADIOS2_USE_Python', 'python'),
+            from_variant('ADIOS2_USE_Fortran', 'fortran'),
+            from_variant('ADIOS2_USE_Endian_Reverse', 'endian_reverse'),
             self.define('BUILD_TESTING', self.run_tests),
         ]
 
         if spec.version >= Version('2.4.0'):
-            args.append(self.define_from_variant('ADIOS2_USE_Blosc', 'blosc'))
-            args.append(self.define_from_variant('ADIOS2_USE_BZip2', 'bzip2'))
-            args.append(self.define_from_variant('ADIOS2_USE_PNG', 'png'))
-            args.append(self.define_from_variant('ADIOS2_USE_SSC', 'ssc'))
+            args.append(from_variant('ADIOS2_USE_Blosc', 'blosc'))
+            args.append(from_variant('ADIOS2_USE_BZip2', 'bzip2'))
+            args.append(from_variant('ADIOS2_USE_PNG', 'png'))
+            args.append(from_variant('ADIOS2_USE_SSC', 'ssc'))
 
         if spec.version >= Version('2.5.0'):
-            args.append(self.define_from_variant('ADIOS2_USE_DataSpaces', 'dataspaces'))
+            args.append(from_variant('ADIOS2_USE_DataSpaces', 'dataspaces'))
 
         if spec.version >= Version('2.6.0'):
             args.append('-DADIOS2_USE_IME=OFF')
@@ -181,7 +182,7 @@ class Adios2(CMakePackage):
             ])
 
         if spec.satisfies('~shared'):
-            args.append(self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
+            args.append(from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'))
 
         if spec.satisfies('%fj'):
             args.extend([

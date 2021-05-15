@@ -63,6 +63,7 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         options = []
         options.append('-DBLT_SOURCE_DIR={0}'.format(spec['blt'].prefix))
@@ -98,36 +99,33 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append('-DENABLE_HIP=OFF')
 
-        options.append(self.define_from_variant('CARE_ENABLE_IMPLICIT_CONVERSIONS', 'implicit_conversions'))
+        options.extend([
+            from_variant('CARE_ENABLE_IMPLICIT_CONVERSIONS',
+                         'implicit_conversions'),
+            from_variant('CARE_ENABLE_LOOP_FUSER', 'loop_fuser'),
+            self.define('CAMP_DIR', spec['camp'].prefix.share.camp.cmake),
+            self.define('UMPIRE_DIR', spec['umpire'].prefix.share.umpire.cmake),
+            self.define('RAJA_DIR', spec['raja'].prefix.share.raja.cmake),
+            self.define('CHAI_DIR', spec['chai'].prefix.share.chai.cmake),
+            from_variant('CARE_ENABLE_TESTS', 'tests'),
+        ])
 
-        options.append(self.define_from_variant('CARE_ENABLE_LOOP_FUSER', 'loop_fuser'))
-
-        options.append('-DCAMP_DIR:PATH='
-                       + spec['camp'].prefix.share.camp.cmake)
-        options.append('-DUMPIRE_DIR:PATH='
-                       + spec['umpire'].prefix.share.umpire.cmake)
-        options.append('-DRAJA_DIR:PATH='
-                       + spec['raja'].prefix.share.raja.cmake)
-        options.append('-DCHAI_DIR:PATH='
-                       + spec['chai'].prefix.share.chai.cmake)
-
-        options.append(self.define_from_variant('CARE_ENABLE_TESTS', 'tests'))
         # For tests to work, we also need BLT_ENABLE_TESTS to be on.
         # This will take care of the gtest dependency. CARE developers should
         # consider consolidating these flags in the future.
-        options.append(self.define_from_variant('BLT_ENABLE_TESTS', 'tests'))
+        options.append(from_variant('BLT_ENABLE_TESTS', 'tests'))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
         # infrastructure. The goal is to just be able to use the CARE_ENABLE_*
         # variables, but CARE isn't set up correctly for that yet.
-        options.append(self.define_from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
-        options.append(self.define_from_variant('CARE_ENABLE_BENCHMARKS', 'benchmarks'))
+        options.append(from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
+        options.append(from_variant('CARE_ENABLE_BENCHMARKS', 'benchmarks'))
 
-        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
-        options.append(self.define_from_variant('CARE_ENABLE_EXAMPLES', 'examples'))
+        options.append(from_variant('ENABLE_EXAMPLES', 'examples'))
+        options.append(from_variant('CARE_ENABLE_EXAMPLES', 'examples'))
 
-        options.append(self.define_from_variant('ENABLE_DOCS', 'docs'))
-        options.append(self.define_from_variant('CARE_ENABLE_DOCS', 'docs'))
+        options.append(from_variant('ENABLE_DOCS', 'docs'))
+        options.append(from_variant('CARE_ENABLE_DOCS', 'docs'))
 
         return options

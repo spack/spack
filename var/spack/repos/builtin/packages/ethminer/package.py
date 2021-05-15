@@ -28,8 +28,8 @@ class Ethminer(CMakePackage):
     depends_on('mesa', when='+opencl')
 
     def cmake_args(self):
-        spec = self.spec
         return [
             self.define_from_variant('ETHASHCL', 'opencl'),
             self.define_from_variant('ETHASHCUDA', 'cuda'),
-            self.define_from_variant('ETHSTRATUM', 'stratum')]
+            self.define_from_variant('ETHSTRATUM', 'stratum')
+        ]

@@ -35,11 +35,12 @@ class Datatransferkit(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         options = [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DDataTransferKit_ENABLE_DataTransferKit=ON',
-            self.define_from_variant('DataTransferKit_ENABLE_ArborX_TPL', 'external-arborx'),
+            from_variant('DataTransferKit_ENABLE_ArborX_TPL', 'external-arborx'),
             '-DDataTransferKit_ENABLE_TESTS=OFF',
             '-DDataTransferKit_ENABLE_EXAMPLES=OFF',
             '-DCMAKE_CXX_EXTENSIONS=OFF',

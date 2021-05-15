@@ -99,6 +99,7 @@ class Seacas(CMakePackage):
 
     def cmake_args(self):
         spec = self.spec
+        from_variant = self.define_from_variant
 
         options = []
 
@@ -116,14 +117,14 @@ class Seacas(CMakePackage):
         options.extend([
             '-DSEACASProj_ENABLE_TESTS:BOOL=ON',
             '-DSEACASProj_ENABLE_CXX11:BOOL=ON',
-            self.define_from_variant('CMAKE_INSTALL_RPATH_USE_LINK_PATH', 'shared'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('CMAKE_INSTALL_RPATH_USE_LINK_PATH', 'shared'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DSEACASProj_ENABLE_Kokkos:BOOL=OFF',
             '-DSEACASProj_HIDE_DEPRECATED_CODE:BOOL=OFF',
-            self.define_from_variant('SEACASExodus_ENABLE_THREADSAFE', 'thread_safe'),
-            self.define_from_variant('SEACASIoss_ENABLE_THREADSAFE', 'thread_safe'),
-            self.define_from_variant('SEACASProj_ENABLE_Fortran', 'fortran'),
-            self.define_from_variant('TPL_ENABLE_X11', 'x11'),
+            from_variant('SEACASExodus_ENABLE_THREADSAFE', 'thread_safe'),
+            from_variant('SEACASIoss_ENABLE_THREADSAFE', 'thread_safe'),
+            from_variant('SEACASProj_ENABLE_Fortran', 'fortran'),
+            from_variant('TPL_ENABLE_X11', 'x11'),
         ])
 
         # ########## What applications should be built #############
@@ -142,8 +143,8 @@ class Seacas(CMakePackage):
                 '-DSEACASProj_ENABLE_SECONDARY_TESTED_CODE:BOOL=OFF',
                 '-DSEACASProj_ENABLE_SEACASIoss:BOOL=ON',
                 '-DSEACASProj_ENABLE_SEACASExodus:BOOL=ON',
-                self.define_from_variant('SEACASProj_ENABLE_SEACASExodus_for', 'fortran'),
-                self.define_from_variant('SEACASProj_ENABLE_SEACASExoIIv2for32', 'fortran'),
+                from_variant('SEACASProj_ENABLE_SEACASExodus_for', 'fortran'),
+                from_variant('SEACASProj_ENABLE_SEACASExoIIv2for32', 'fortran'),
             ])
 
             if '+applications' in spec:
@@ -156,8 +157,8 @@ class Seacas(CMakePackage):
                     '-DSEACASProj_ENABLE_SEACASExo2mat:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASExo_format:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASExodiff:BOOL=ON',
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASExplore', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASGrepos', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASExplore', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASGrepos', 'fortran'),
                     '-DSEACASProj_ENABLE_SEACASMat2exo:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASNas2exo:BOOL=ON',
                     '-DSEACASProj_ENABLE_SEACASNemslice:BOOL=ON',
@@ -167,23 +168,23 @@ class Seacas(CMakePackage):
 
             if '+legacy' in spec:
                 options.extend([
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASAlgebra', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASBlot', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASEx1ex2v2', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASEx2ex1v2', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASExomatlab', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASExotec2', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASExotxt', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASFastq', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASGen3D', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASGenshell', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASGjoin', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASMapvar', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASAlgebra', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASBlot', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASEx1ex2v2', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASEx2ex1v2', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASExomatlab', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASExotec2', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASExotxt', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASFastq', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASGen3D', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASGenshell', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASGjoin', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASMapvar', 'fortran'),
                     '-DSEACASProj_ENABLE_SEACASMapvar-kd:BOOL=%s' % (
                         'ON' if '+fortran' in spec else 'OFF'),
                     '-DSEACASProj_ENABLE_SEACASNemesis:BOOL=ON',
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASNumbers', 'fortran'),
-                    self.define_from_variant('SEACASProj_ENABLE_SEACASTxtexo', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASNumbers', 'fortran'),
+                    from_variant('SEACASProj_ENABLE_SEACASTxtexo', 'fortran'),
                 ])
 
         # ##################### Dependencies ##########################

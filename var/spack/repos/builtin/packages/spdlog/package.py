@@ -42,8 +42,6 @@ class Spdlog(CMakePackage):
     depends_on('cmake@3.2:', type='build')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = []
 
         if self.spec.version >= Version('1.4.0'):

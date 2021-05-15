@@ -53,8 +53,6 @@ class Paradiseo(CMakePackage):
     patch('fix_tutorials.patch')
 
     def cmake_args(self):
-        spec = self.spec
-
         return [
             '-DINSTALL_TYPE:STRING=MIN',
             self.define_from_variant('MPI', 'mpi'),

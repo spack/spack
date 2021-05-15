@@ -73,14 +73,15 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
                 InstallError('Ginkgo requires a C++14-compliant C++ compiler')
 
         spec = self.spec
+        from_variant = self.define_from_variant
         args = [
-            self.define_from_variant('GINKGO_BUILD_CUDA', 'cuda'),
-            self.define_from_variant('GINKGO_BUILD_HIP', 'rocm'),
-            self.define_from_variant('GINKGO_BUILD_OMP', 'openmp'),
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
-            self.define_from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
-            self.define_from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
-            self.define_from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
+            from_variant('GINKGO_BUILD_CUDA', 'cuda'),
+            from_variant('GINKGO_BUILD_HIP', 'rocm'),
+            from_variant('GINKGO_BUILD_OMP', 'openmp'),
+            from_variant('BUILD_SHARED_LIBS', 'shared'),
+            from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
+            from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',

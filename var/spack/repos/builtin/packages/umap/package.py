@@ -28,7 +28,6 @@ class Umap(CMakePackage):
     variant('tests', default=False, description='Build test programs.')
 
     def cmake_args(self):
-        spec = self.spec
         args = [
             self.define_from_variant('ENABLE_LOGGING', 'logging'),
             self.define_from_variant('ENABLE_TESTS', 'tests'),

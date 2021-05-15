@@ -40,7 +40,6 @@ class ModernWheel(CMakePackage):
     patch('add_virtual_destructor.patch')
 
     def cmake_args(self):
-        spec = self.spec
         return [
             self.define_from_variant('BUILD_UNIT_TEST', 'test'),
             self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),

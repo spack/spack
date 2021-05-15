@@ -31,7 +31,6 @@ class DmlcCore(CMakePackage):
                     'make/config.mk')
 
     def cmake_args(self):
-        spec = self.spec
         return [
             self.define_from_variant('USE_OPENMP', 'openmp'),
         ]

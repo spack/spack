@@ -52,8 +52,6 @@ class Wt(CMakePackage):
     depends_on('zlib', when='+zlib')
 
     def cmake_args(self):
-        spec = self.spec
-
         cmake_args = [
             '-DBUILD_EXAMPLES:BOOL=OFF',
             '-DCONNECTOR_FCGI:BOOL=OFF',

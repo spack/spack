@@ -50,7 +50,6 @@ class Ibmisc(CMakePackage):
     depends_on('doxygen', type='build')
 
     def cmake_args(self):
-        spec = self.spec
         return [
             self.define_from_variant('USE_EVERYTRACE', 'everytrace'),
             self.define_from_variant('USE_PROJ4', 'proj'),
@@ -58,4 +57,5 @@ class Ibmisc(CMakePackage):
             self.define_from_variant('USE_NETCDF', 'netcdf'),
             self.define_from_variant('USE_BOOST', 'boost'),
             self.define_from_variant('USE_UDUNITS2', 'udunits2'),
-            self.define_from_variant('USE_GTEST', 'googletest')]
+            self.define_from_variant('USE_GTEST', 'googletest'),
+        ]

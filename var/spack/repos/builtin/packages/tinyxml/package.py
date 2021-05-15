@@ -26,6 +26,4 @@ class Tinyxml(CMakePackage):
              "CMakeLists.txt"), "CMakeLists.txt")
 
     def cmake_args(self):
-        spec = self.spec
-        return [
-            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
+        return [self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]
