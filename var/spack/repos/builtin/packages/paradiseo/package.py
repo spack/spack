@@ -57,14 +57,11 @@ class Paradiseo(CMakePackage):
 
         return [
             '-DINSTALL_TYPE:STRING=MIN',
-            '-DMPI:BOOL=%s' % ('TRUE' if '+mpi' in spec else 'FALSE'),
+            self.define_from_variant('MPI', 'mpi'),
             # Note: This requires a C++11 compatible compiler
-            '-DSMP:BOOL=%s' % ('TRUE' if '+smp' in spec else 'FALSE'),
-            '-DEDO:BOOL=%s' % ('TRUE' if '+edo' in spec else 'FALSE'),
-            '-DENABLE_CMAKE_TESTING:BOOL=%s' % (
-                'TRUE' if self.run_tests else 'FALSE'),
-            '-DENABLE_OPENMP:BOOL=%s' % (
-                'TRUE' if '+openmp' in spec else 'FALSE'),
-            '-DENABLE_GNUPLOT:BOOL=%s' % (
-                'TRUE' if '+gnuplot' in spec else 'FALSE')
+            self.define_from_variant('SMP', 'smp'),
+            self.define_from_variant('EDO', 'edo'),
+            self.define('ENABLE_CMAKE_TESTING', self.run_tests),
+            self.define_from_variant('ENABLE_OPENMP', 'openmp'),
+            self.define_from_variant('ENABLE_GNUPLOT', 'gnuplot')
         ]

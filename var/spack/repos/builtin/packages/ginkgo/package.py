@@ -74,21 +74,19 @@ class Ginkgo(CMakePackage, CudaPackage, ROCmPackage):
 
         spec = self.spec
         args = [
-            '-DGINKGO_BUILD_CUDA=%s' % ('ON' if '+cuda' in spec else 'OFF'),
-            '-DGINKGO_BUILD_HIP=%s' % ('ON' if '+rocm' in spec else 'OFF'),
-            '-DGINKGO_BUILD_OMP=%s' % ('ON' if '+openmp' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS=%s' % ('ON' if '+shared' in spec else 'OFF'),
-            '-DGINKGO_JACOBI_FULL_OPTIMIZATIONS=%s' % (
-                'ON' if '+full_optimizations' in spec else 'OFF'),
-            '-DGINKGO_BUILD_HWLOC=%s' % ('ON' if '+hwloc' in spec else 'OFF'),
-            '-DGINKGO_DEVEL_TOOLS=%s' % (
-                'ON' if '+develtools' in spec else 'OFF'),
+            self.define_from_variant('GINKGO_BUILD_CUDA', 'cuda'),
+            self.define_from_variant('GINKGO_BUILD_HIP', 'rocm'),
+            self.define_from_variant('GINKGO_BUILD_OMP', 'openmp'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('GINKGO_JACOBI_FULL_OPTIMIZATIONS', 'full_optimizations'),
+            self.define_from_variant('GINKGO_BUILD_HWLOC', 'hwloc'),
+            self.define_from_variant('GINKGO_DEVEL_TOOLS', 'develtools'),
             # As we are not exposing benchmarks, examples, tests nor doc
             # as part of the installation, disable building them altogether.
             '-DGINKGO_BUILD_BENCHMARKS=OFF',
             '-DGINKGO_BUILD_DOC=OFF',
             '-DGINKGO_BUILD_EXAMPLES=OFF',
-            '-DGINKGO_BUILD_TESTS=%s' % ('ON' if self.run_tests else 'OFF'),
+            self.define('GINKGO_BUILD_TESTS', self.run_tests),
             # Let spack handle the RPATH
             '-DGINKGO_INSTALL_RPATH=OFF'
         ]

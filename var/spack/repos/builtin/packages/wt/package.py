@@ -61,17 +61,11 @@ class Wt(CMakePackage):
             '-DENABLE_QT4:BOOL=OFF'
         ]
         cmake_args.extend([
-            '-DENABLE_SSL:BOOL={0}'.format((
-                'ON' if '+openssl' in spec else 'OFF')),
-            '-DENABLE_HARU:BOOL={0}'.format((
-                'ON' if '+libharu' in spec else 'OFF')),
-            '-DENABLE_PANGO:BOOL={0}'.format((
-                'ON' if '+pango' in spec else 'OFF')),
-            '-DENABLE_SQLITE:BOOL={0}'.format((
-                'ON' if '+sqlite' in spec else 'OFF')),
-            '-DENABLE_MYSQL:BOOL={0}'.format((
-                'ON' if '+mariadb' in spec else 'OFF')),
-            '-DENABLE_POSTGRES:BOOL={0}'.format((
-                'ON' if '+postgres' in spec else 'OFF'))
+            self.define('ENABLE_SSL', 'openssl'),
+            self.define('ENABLE_HARU', 'libharu'),
+            self.define('ENABLE_PANGO', 'pango'),
+            self.define('ENABLE_SQLITE', 'sqlite'),
+            self.define('ENABLE_MYSQL', 'mariadb'),
+            self.define('ENABLE_POSTGRES', 'postgres')
         ])
         return cmake_args

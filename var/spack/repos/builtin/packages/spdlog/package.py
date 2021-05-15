@@ -48,13 +48,10 @@ class Spdlog(CMakePackage):
 
         if self.spec.version >= Version('1.4.0'):
             args.extend([
-                '-DSPDLOG_BUILD_SHARED:BOOL={0}'.format(
-                    'ON' if '+shared' in spec else 'OFF'),
+                self.define_from_variant('SPDLOG_BUILD_SHARED', 'shared'),
                 # tests and examples
-                '-DSPDLOG_BUILD_TESTS:BOOL={0}'.format(
-                    'ON' if self.run_tests else 'OFF'),
-                '-DSPDLOG_BUILD_EXAMPLE:BOOL={0}'.format(
-                    'ON' if self.run_tests else 'OFF')
+                self.define('SPDLOG_BUILD_TESTS', self.run_tests),
+                self.define('SPDLOG_BUILD_EXAMPLE', self.run_tests)
             ])
 
         return args

@@ -28,10 +28,8 @@ class Snappy(CMakePackage):
         args = [
             '-DCMAKE_INSTALL_LIBDIR:PATH={0}'.format(
                 self.prefix.lib),
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DSNAPPY_BUILD_TESTS:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define('SNAPPY_BUILD_TESTS', self.run_tests)
         ]
 
         return args

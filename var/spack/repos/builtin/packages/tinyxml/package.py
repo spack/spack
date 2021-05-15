@@ -28,4 +28,4 @@ class Tinyxml(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DBUILD_SHARED_LIBS=%s' % ('YES' if '+shared' in spec else 'NO')]
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared')]

@@ -55,12 +55,9 @@ class Arrayfire(CMakePackage, CudaPackage):
     def cmake_args(self):
         args = []
         args.extend([
-            '-DAF_BUILD_CUDA={0}'.format(
-                'ON' if '+cuda' in self.spec else 'OFF'),
-            '-DAF_BUILD_FORGE={0}'.format(
-                'ON' if '+forge' in self.spec else 'OFF'),
-            '-DAF_BUILD_OPENCL={0}'.format(
-                'ON' if '+opencl' in self.spec else 'OFF'),
+            self.define_from_variant('AF_BUILD_CUDA', 'cuda'),
+            self.define_from_variant('AF_BUILD_FORGE', 'forge'),
+            self.define_from_variant('AF_BUILD_OPENCL', 'opencl'),
         ])
         if '^mkl' in self.spec:
             args.append('-DUSE_CPU_MKL=ON')

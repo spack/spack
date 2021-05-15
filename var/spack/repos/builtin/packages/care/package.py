@@ -98,11 +98,9 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         else:
             options.append('-DENABLE_HIP=OFF')
 
-        options.append('-DCARE_ENABLE_IMPLICIT_CONVERSIONS={0}'.format(
-            'ON' if '+implicit_conversions' in spec else 'OFF'))
+        options.append(self.define_from_variant('CARE_ENABLE_IMPLICIT_CONVERSIONS', 'implicit_conversions'))
 
-        options.append('-DCARE_ENABLE_LOOP_FUSER={0}'.format(
-            'ON' if '+loop_fuser' in spec else 'OFF'))
+        options.append(self.define_from_variant('CARE_ENABLE_LOOP_FUSER', 'loop_fuser'))
 
         options.append('-DCAMP_DIR:PATH='
                        + spec['camp'].prefix.share.camp.cmake)
@@ -113,31 +111,23 @@ class Care(CMakePackage, CudaPackage, ROCmPackage):
         options.append('-DCHAI_DIR:PATH='
                        + spec['chai'].prefix.share.chai.cmake)
 
-        options.append('-DCARE_ENABLE_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'))
+        options.append(self.define_from_variant('CARE_ENABLE_TESTS', 'tests'))
         # For tests to work, we also need BLT_ENABLE_TESTS to be on.
         # This will take care of the gtest dependency. CARE developers should
         # consider consolidating these flags in the future.
-        options.append('-DBLT_ENABLE_TESTS={0}'.format(
-            'ON' if '+tests' in spec else 'OFF'))
+        options.append(self.define_from_variant('BLT_ENABLE_TESTS', 'tests'))
 
         # There are both CARE_ENABLE_* and ENABLE_* variables in here because
         # one controls the BLT infrastructure and the other controls the CARE
         # infrastructure. The goal is to just be able to use the CARE_ENABLE_*
         # variables, but CARE isn't set up correctly for that yet.
-        options.append('-DENABLE_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
+        options.append(self.define_from_variant('CARE_ENABLE_BENCHMARKS', 'benchmarks'))
 
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
+        options.append(self.define_from_variant('CARE_ENABLE_EXAMPLES', 'examples'))
 
-        options.append('-DENABLE_DOCS={0}'.format(
-            'ON' if '+docs' in spec else 'OFF'))
-        options.append('-DCARE_ENABLE_DOCS={0}'.format(
-            'ON' if '+docs' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_DOCS', 'docs'))
+        options.append(self.define_from_variant('CARE_ENABLE_DOCS', 'docs'))
 
         return options

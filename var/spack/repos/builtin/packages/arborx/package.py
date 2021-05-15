@@ -61,7 +61,7 @@ class Arborx(CMakePackage):
         options = [
             '-DKokkos_ROOT=%s' % (spec['kokkos'].prefix if '~trilinos' in spec
                                   else spec['trilinos'].prefix),
-            '-DARBORX_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF')
+            self.define_from_variant('ARBORX_ENABLE_MPI', 'mpi')
         ]
 
         if '+cuda' in spec:

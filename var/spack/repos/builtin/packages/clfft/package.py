@@ -29,9 +29,7 @@ class Clfft(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_CLIENT:BOOL={0}'.format((
-                'ON' if '+client' in spec else 'OFF')),
-            '-DBUILD_CALLBACK_CLIENT:BOOL={0}'.format((
-                'ON' if '+client' in spec else 'OFF'))
+            self.define('BUILD_CLIENT', 'client'),
+            self.define('BUILD_CALLBACK_CLIENT', 'client')
         ]
         return args

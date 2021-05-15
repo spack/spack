@@ -30,6 +30,6 @@ class Ethminer(CMakePackage):
     def cmake_args(self):
         spec = self.spec
         return [
-            '-DETHASHCL=%s' % ('YES' if '+opencl' in spec else 'NO'),
-            '-DETHASHCUDA=%s' % ('YES' if '+cuda' in spec else 'NO'),
-            '-DETHSTRATUM=%s' % ('YES' if '+stratum' in spec else 'NO')]
+            self.define_from_variant('ETHASHCL', 'opencl'),
+            self.define_from_variant('ETHASHCUDA', 'cuda'),
+            self.define_from_variant('ETHSTRATUM', 'stratum')]

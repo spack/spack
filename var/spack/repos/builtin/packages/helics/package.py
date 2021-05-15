@@ -78,32 +78,23 @@ class Helics(CMakePackage):
         ]
 
         # HELICS core type CMake options
-        args.append('-DENABLE_ZMQ_CORE={0}'.format(
-            'ON' if '+zmq' in spec else 'OFF'))
-        args.append('-DENABLE_TCP_CORE={0}'.format(
-            'ON' if '+tcp' in spec else 'OFF'))
-        args.append('-DENABLE_UDP_CORE={0}'.format(
-            'ON' if '+udp' in spec else 'OFF'))
-        args.append('-DENABLE_IPC_CORE={0}'.format(
-            'ON' if '+ipc' in spec else 'OFF'))
-        args.append('-DENABLE_INPROC_CORE={0}'.format(
-            'ON' if '+inproc' in spec else 'OFF'))
-        args.append('-DENABLE_MPI_CORE={0}'.format(
-            'ON' if '+mpi' in spec else 'OFF'))
+        args.append(self.define_from_variant('ENABLE_ZMQ_CORE', 'zmq'))
+        args.append(self.define_from_variant('ENABLE_TCP_CORE', 'tcp'))
+        args.append(self.define_from_variant('ENABLE_UDP_CORE', 'udp'))
+        args.append(self.define_from_variant('ENABLE_IPC_CORE', 'ipc'))
+        args.append(self.define_from_variant('ENABLE_INPROC_CORE', 'inproc'))
+        args.append(self.define_from_variant('ENABLE_MPI_CORE', 'mpi'))
 
         # HELICS shared library options
         args.append('-DHELICS_DISABLE_C_SHARED_LIB={0}'.format(
             'OFF' if '+c_shared' in spec else 'ON'))
-        args.append('-DHELICS_BUILD_CXX_SHARED_LIB={0}'.format(
-            'ON' if '+cxx_shared' in spec else 'OFF'))
+        args.append(self.define_from_variant('HELICS_BUILD_CXX_SHARED_LIB', 'cxx_shared'))
 
         # HELICS executable app options
-        args.append('-DHELICS_BUILD_APP_EXECUTABLES={0}'.format(
-            'ON' if '+apps' in spec else 'OFF'))
+        args.append(self.define_from_variant('HELICS_BUILD_APP_EXECUTABLES', 'apps'))
         args.append('-DHELICS_DISABLE_WEBSERVER={0}'.format(
             'OFF' if '+webserver' in spec else 'ON'))
-        args.append('-DHELICS_BUILD_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
+        args.append(self.define_from_variant('HELICS_BUILD_BENCHMARKS', 'benchmarks'))
 
         # Extra HELICS library dependencies
         args.append('-DHELICS_DISABLE_BOOST={0}'.format(
@@ -112,12 +103,10 @@ class Helics(CMakePackage):
             'OFF' if '+asio' in spec else 'ON'))
 
         # SWIG
-        args.append('-DHELICS_ENABLE_SWIG={0}'.format(
-            'ON' if '+swig' in spec else 'OFF'))
+        args.append(self.define_from_variant('HELICS_ENABLE_SWIG', 'swig'))
 
         # Python
-        args.append('-DBUILD_PYTHON_INTERFACE={0}'.format(
-            'ON' if '+python' in spec else 'OFF'))
+        args.append(self.define_from_variant('BUILD_PYTHON_INTERFACE', 'python'))
 
         return args
 

@@ -28,5 +28,5 @@ class Gotcha(CMakePackage):
     def configure_args(self):
         spec = self.spec
         return [
-            '-DGOTCHA_ENABLE_TESTS=%s' % ('ON' if '+test' in spec else 'OFF')
+            self.define_from_variant('GOTCHA_ENABLE_TESTS', 'test')
         ]

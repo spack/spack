@@ -28,7 +28,6 @@ class Perfstubs(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DPERFSTUBS_USE_STATIC:BOOL={0}'.format(
-                'ON' if '+static' in spec else 'OFF')
+            self.define_from_variant('PERFSTUBS_USE_STATIC', 'static')
         ]
         return args
