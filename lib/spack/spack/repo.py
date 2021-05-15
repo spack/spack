@@ -918,9 +918,9 @@ class Repo(object):
     @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
-        if not self.exists(spec.name):
-            raise UnknownPackageError(spec.name)
-
+        # NOTE: we don't eagerly check whether the package exists here, because
+        # we know we have to load it anyway. This avoids all calls to get()
+        # having to construct a FastPackageChecker and stat all packages.
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(spec.name, self.namespace)
 
@@ -1331,7 +1331,7 @@ class UnknownPackageError(UnknownEntityError):
         long_msg = None
         if name:
             if repo:
-                msg = "Package '{0}' not found in repository '{1}'"
+                msg = "Package '{0}' not found in repository '{1.root}'"
                 msg = msg.format(name, repo)
             else:
                 msg = "Package '{0}' not found.".format(name)
