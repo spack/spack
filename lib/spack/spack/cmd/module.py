@@ -11,7 +11,7 @@ import llnl.util.tty as tty
 import spack.cmd.modules.lmod
 import spack.cmd.modules.tcl
 
-description = "manipulate module files"
+description = "generate/manage module files"
 section = "user environment"
 level = "short"
 
