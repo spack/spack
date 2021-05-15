@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libceed(Package):
+class Libceed(Package, ROCmPackage):
     """The CEED API Library: Code for Efficient Extensible Discretizations."""
 
     homepage = "https://github.com/CEED/libCEED"
@@ -25,7 +25,6 @@ class Libceed(Package):
 
     variant('occa', default=False, description='Enable OCCA backends')
     variant('cuda', default=False, description='Enable CUDA support')
-    variant('hip', default=False, description='Enable HIP support')
     variant('debug', default=False, description='Enable debug build')
     variant('libxsmm', default=False, description='Enable LIBXSMM backend')
     variant('magma', default=False, description='Enable MAGMA backend')
@@ -35,9 +34,9 @@ class Libceed(Package):
     conflicts('+hip', when='@:0.6')
 
     depends_on('cuda', when='+cuda')
-    depends_on('hip@3.8.0', when='@0.7:0.7.99+hip')
-    depends_on('hip@3.8.0:', when='@0.8:+hip')
-    depends_on('hipblas@3.8.0:', when='@0.8:+hip')
+    depends_on('hip@3.8.0', when='@0.7:0.7.99+rocm')
+    depends_on('hip@3.8.0:', when='@0.8:+rocm')
+    depends_on('hipblas@3.8.0:', when='@0.8:+rocm')
 
     depends_on('occa@develop', when='@develop+occa')
     depends_on('occa@1.1.0', when='@0.7:+occa')
@@ -50,7 +49,7 @@ class Libceed(Package):
 
     depends_on('magma', when='+magma')
 
-    patch('libceed-v0.8-hip.patch', when='@0.8+hip')
+    patch('libceed-v0.8-hip.patch', when='@0.8+rocm')
     patch('pkgconfig-version-0.4.diff', when='@0.4')
 
     # occa: do not occaFree kernels
@@ -118,7 +117,7 @@ class Libceed(Package):
                 # Disable CUDA auto-detection:
                 makeopts += ['CUDA_DIR=/disable-cuda']
 
-            if '+hip' in spec:
+            if '+rocm' in spec:
                 makeopts += ['HIP_DIR=%s' % spec['hip'].prefix]
                 if spec.satisfies('@0.8'):
                     makeopts += ['HIPBLAS_DIR=%s' % spec['hipblas'].prefix]

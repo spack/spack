@@ -261,7 +261,7 @@ class Mfem(Package, ROCmPackage):
     depends_on('libceed@0.6:', when='@:4.1.99+libceed')
     depends_on('libceed@0.7:', when='@4.2.0:+libceed')
     depends_on('libceed+cuda', when='+libceed+cuda')
-    depends_on('libceed+hip', when='+libceed+rocm')
+    depends_on('libceed+rocm', when='+libceed+rocm')
 
     depends_on('umpire@2.0.0:', when='+umpire')
     depends_on('umpire+cuda', when='+umpire+cuda')
