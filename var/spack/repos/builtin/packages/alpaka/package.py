@@ -27,6 +27,7 @@ class Alpaka(CMakePackage, CudaPackage):
     variant("examples", default=False, description="Build alpaka examples")
 
     depends_on('boost')
+    depends_on('boost+fiber', when="backend=fiber")
 
     # make sure no other backend is enabled if using cuda_only or hip_only
     for v in ('serial', 'threads', 'fiber', 'tbb', 'oacc',
