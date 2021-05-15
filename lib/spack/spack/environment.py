@@ -478,6 +478,8 @@ class ViewDescriptor(object):
     def to_dict(self):
         ret = syaml.syaml_dict([('root', self.root)])
         if self.projections:
+            # guaranteed to be syaml/ruamel ordered dict if true-ish
+            assert isinstance(self.projections, OrderedDict)
             ret['projections'] = self.projections
         if self.select:
             ret['select'] = self.select
