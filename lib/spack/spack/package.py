@@ -1397,6 +1397,8 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
             # Support for post-install hooks requires a stage.source_path
             fsys.mkdirp(self.stage.source_path)
 
+        tty.msg("Source code staged at: %s" % self.stage.path)
+
     def do_patch(self):
         """Applies patches if they haven't been applied already."""
         if not self.spec.concrete:

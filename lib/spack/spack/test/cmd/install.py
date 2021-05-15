@@ -1010,9 +1010,7 @@ def test_cache_install_full_hash_match(
     # Finally, make sure that if we insist on the full hash match, spack
     # installs from source.
     install_output = install('--require-full-hash-match', s.name, output=str)
-    expect_msg = 'No binary for {0} found: installing from source'.format(
-        package_id)
-
+    expect_msg = 'No binary found, installing from source'
     assert expect_msg in install_output
 
     uninstall('-y', s.name)

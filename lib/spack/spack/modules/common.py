@@ -821,10 +821,15 @@ class BaseModuleFileWriter(object):
         # Print a warning in case I am accidentally overwriting
         # a module file that is already there (name clash)
         if not overwrite and os.path.exists(self.layout.filename):
-            message = 'Module file already exists : skipping creation\n'
-            message += 'file : {0.filename}\n'
-            message += 'spec : {0.spec}'
-            tty.warn(message.format(self.layout))
+            msg = "Module file exists; won't overwrite. Use `spack module` to refresh."
+            if not tty.is_debug():
+                tty.msg(msg)
+            else:
+                tty.debug(
+                    msg,
+                    'file : {0.filename}\n'.format(self.layout),
+                    'spec : {0.spec}'.format(self.layout)
+                )
             return
 
         # If we are here it means it's ok to write the module file

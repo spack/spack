@@ -275,11 +275,11 @@ def _install_from_cache(pkg, cache_only, explicit, unsigned=False,
         pkg, explicit, unsigned=unsigned, full_hash_match=full_hash_match)
     pkg_id = package_id(pkg)
     if not installed_from_cache:
-        pre = 'No binary for {0} found'.format(pkg_id)
+        pre = 'No binary found'
         if cache_only:
-            tty.die('{0} when cache-only specified'.format(pre))
+            tty.die('{0}, but you asked for cache-only.'.format(pre))
 
-        tty.msg('{0}: installing from source'.format(pre))
+        tty.msg('{0}, installing from source'.format(pre))
         return False
 
     tty.debug('Successfully extracted {0} from binary cache'.format(pkg_id))
