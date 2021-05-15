@@ -17,7 +17,7 @@ class CBlosc2(CMakePackage):
     maintainers = ['ax3l']
 
     version('develop', branch='master')
-    version('2.0.0', sha256='c30b72af5446f052bad1791000e5a44d156c96b0e39b4bc8e9f97a013c7d1b69')
+    version('2.0.0.rc1', sha256='c30b72af5446f052bad1791000e5a44d156c96b0e39b4bc8e9f97a013c7d1b69')
 
     variant('avx2', default=True, description='Enable AVX2 support')
 
