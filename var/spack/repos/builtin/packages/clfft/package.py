@@ -29,7 +29,7 @@ class Clfft(CMakePackage):
         spec = self.spec
 
         args = [
-            self.define('BUILD_CLIENT', 'client'),
-            self.define('BUILD_CALLBACK_CLIENT', 'client')
+            self.define_from_variant('BUILD_CLIENT', 'client'),
+            self.define_from_variant('BUILD_CALLBACK_CLIENT', 'client')
         ]
         return args
