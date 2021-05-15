@@ -5,7 +5,7 @@
 import os
 
 
-class Petsc(Package, ROCmPackage):
+class Petsc(Package, CudaPackage, ROCmPackage):
     """PETSc is a suite of data structures and routines for the scalable
     (parallel) solution of scientific applications modeled by partial
     differential equations.
@@ -76,7 +76,6 @@ class Petsc(Package, ROCmPackage):
     variant('shared',  default=True,
             description='Enables the build of shared libraries')
     variant('mpi',     default=True,  description='Activates MPI support')
-    variant('cuda',    default=False, description='Activates CUDA support')
     variant('double',  default=True,
             description='Switches between single and double precision')
     variant('complex', default=False, description='Build with complex numbers')

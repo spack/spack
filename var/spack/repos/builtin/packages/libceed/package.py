@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Libceed(Package, ROCmPackage):
+class Libceed(Package, CudaPackage, ROCmPackage):
     """The CEED API Library: Code for Efficient Extensible Discretizations."""
 
     homepage = "https://github.com/CEED/libCEED"
@@ -24,7 +24,6 @@ class Libceed(Package, ROCmPackage):
     version('0.1', tag='v0.1')
 
     variant('occa', default=False, description='Enable OCCA backends')
-    variant('cuda', default=False, description='Enable CUDA support')
     variant('debug', default=False, description='Enable debug build')
     variant('libxsmm', default=False, description='Enable LIBXSMM backend')
     variant('magma', default=False, description='Enable MAGMA backend')
