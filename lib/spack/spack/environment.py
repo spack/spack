@@ -389,12 +389,13 @@ def read(name):
     return Environment(root(name))
 
 
-def create(name, init_file=None, with_view=None, keep_relative=False):
+def create(name, init_file=None, with_view=None, keep_relative=False,
+           link=default_view_link):
     """Create a named environment in Spack."""
     validate_env_name(name)
     if exists(name):
         raise SpackEnvironmentError("'%s': environment already exists" % name)
-    return Environment(root(name), init_file, with_view, keep_relative)
+    return Environment(root(name), init_file, with_view, keep_relative, link)
 
 
 def config_dict(yaml_data):
@@ -498,6 +499,7 @@ class ViewDescriptor(object):
             root = os.path.normpath(os.path.join(self.base, self.root))
         return YamlFilesystemView(root, spack.store.layout,
                                   ignore_conflicts=True,
+                                  link=self.link,
                                   projections=self.projections)
 
     def __contains__(self, spec):
@@ -573,7 +575,8 @@ class ViewDescriptor(object):
 
 
 class Environment(object):
-    def __init__(self, path, init_file=None, with_view=None, keep_relative=False):
+    def __init__(self, path, init_file=None, with_view=None, keep_relative=False,
+                 link=default_view_link):
         """Create a new environment.
 
         The environment can be optionally initialized with either a
@@ -592,6 +595,7 @@ class Environment(object):
                 directory.
         """
         self.path = os.path.abspath(path)
+        self.link_fn = link
 
         self.txlock = lk.Lock(self._transaction_lock_path)
 
@@ -627,10 +631,12 @@ class Environment(object):
         elif with_view is True:
             self.views = {
                 default_view_name: ViewDescriptor(self.path,
-                                                  self.view_path_default)}
+                                                  self.view_path_default,
+                                                  link=link)}
         elif isinstance(with_view, six.string_types):
             self.views = {default_view_name: ViewDescriptor(self.path,
-                                                            with_view)}
+                                                            with_view,
+                                                            link=link)}
         # If with_view is None, then defer to the view settings determined by
         # the manifest file
 
@@ -723,10 +729,12 @@ class Environment(object):
         if enable_view is True or enable_view is None:
             self.views = {
                 default_view_name: ViewDescriptor(self.path,
-                                                  self.view_path_default)}
+                                                  self.view_path_default,
+                                                  link=self.link_fn)}
         elif isinstance(enable_view, six.string_types):
             self.views = {default_view_name: ViewDescriptor(self.path,
-                                                            enable_view)}
+                                                            enable_view,
+                                                            link=self.link_fn)}
         elif enable_view:
             path = self.path
             self.views = dict((name, ViewDescriptor.from_dict(path, values))
@@ -1241,7 +1249,8 @@ class Environment(object):
             if name in self.views:
                 self.default_view.root = viewpath
             else:
-                self.views[name] = ViewDescriptor(self.path, viewpath)
+                self.views[name] = ViewDescriptor(self.path, viewpath,
+                                                  link=self.link_fn)
         else:
             self.views.pop(name, None)
 
@@ -1814,9 +1823,11 @@ class Environment(object):
         if self.views and len(self.views) == 1 and default_name in self.views:
             path = self.default_view.root
             if self.default_view == ViewDescriptor(self.path,
-                                                   self.view_path_default):
+                                                   self.view_path_default,
+                                                   link=self.link_fn):
                 view = True
-            elif self.default_view == ViewDescriptor(self.path, path):
+            elif self.default_view == ViewDescriptor(self.path, path,
+                                                     link=self.link_fn):
                 view = path
             else:
                 view = dict((name, view.to_dict())

@@ -22,7 +22,7 @@ import spack.cmd.modules
 import spack.cmd.common.arguments as arguments
 import spack.environment as ev
 import spack.util.string as string
-
+from spack.filesystem_view import view_symlink, view_copy
 
 description = "manage virtual environments"
 section = "environments"
@@ -170,12 +170,21 @@ def env_create_setup_parser(subparser):
         help='specify that this environment should maintain a view at the'
              ' specified path (by default the view is maintained in the'
              ' environment directory)')
+    view_opts.add_argument(
+        '--copy',
+        help='when adding a view, use copy instead of link.')
     subparser.add_argument(
         'envfile', nargs='?', default=None,
         help='optional init file; can be spack.yaml or spack.lock')
 
 
 def env_create(args):
+
+    # What method are we using for this view?
+    link_fn = view_symlink
+    if args.copy:
+        link_fn = view_copy
+
     if args.with_view:
         with_view = args.with_view
     elif args.without_view:
@@ -188,14 +197,15 @@ def env_create(args):
     if args.envfile:
         with open(args.envfile) as f:
             _env_create(args.create_env, f, args.dir,
-                        with_view=with_view, keep_relative=args.keep_relative)
+                        with_view=with_view, keep_relative=args.keep_relative,
+                        link=link_fn)
     else:
         _env_create(args.create_env, None, args.dir,
-                    with_view=with_view)
+                    with_view=with_view, link=link_fn)
 
 
 def _env_create(name_or_path, init_file=None, dir=False, with_view=None,
-                keep_relative=False):
+                keep_relative=False, link="all"):
     """Create a new environment, with an optional yaml description.
 
     Arguments:
@@ -209,13 +219,13 @@ def _env_create(name_or_path, init_file=None, dir=False, with_view=None,
             new environment is in a different location
     """
     if dir:
-        env = ev.Environment(name_or_path, init_file, with_view, keep_relative)
+        env = ev.Environment(name_or_path, init_file, with_view, keep_relative, link)
         env.write()
         tty.msg("Created environment in %s" % env.path)
         tty.msg("You can activate this environment with:")
         tty.msg("  spack env activate %s" % env.path)
     else:
-        env = ev.create(name_or_path, init_file, with_view, keep_relative)
+        env = ev.create(name_or_path, init_file, with_view, keep_relative, link)
         env.write()
         tty.msg("Created environment '%s' in %s" % (name_or_path, env.path))
         tty.msg("You can activate this environment with:")
