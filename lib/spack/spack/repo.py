@@ -918,9 +918,13 @@ class Repo(object):
     @autospec
     def get(self, spec):
         """Returns the package associated with the supplied spec."""
-        # NOTE: we don't eagerly check whether the package exists here, because
-        # we know we have to load it anyway. This avoids all calls to get()
-        # having to construct a FastPackageChecker and stat all packages.
+        # NOTE: we only check whether the package is None here, not whether it
+        # actually exists, because we have to load it anyway, and that ends up
+        # checking for existence. We avoid constructing FastPackageChecker,
+        # which will stat all packages.
+        if spec.name is None:
+            raise UnknownPackageError(None, self)
+
         if spec.namespace and spec.namespace != self.namespace:
             raise UnknownPackageError(spec.name, self.namespace)
 
@@ -1064,7 +1068,16 @@ class Repo(object):
 
     def exists(self, pkg_name):
         """Whether a package with the supplied name exists."""
-        return pkg_name in self._pkg_checker
+        if pkg_name is None:
+            return False
+
+        # if the FastPackageChecker is already constructed, use it
+        if self._fast_package_checker:
+            return pkg_name in self._pkg_checker
+
+        # if not, check for the package.py file
+        path = self.filename_for_package_name(pkg_name)
+        return os.path.exists(path)
 
     def last_mtime(self):
         """Time a package file in this repo was last updated."""
