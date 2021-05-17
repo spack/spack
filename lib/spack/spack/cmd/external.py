@@ -8,6 +8,7 @@ import argparse
 import os
 import re
 import sys
+import subprocess
 from collections import defaultdict, namedtuple
 
 import six
@@ -22,6 +23,7 @@ import spack.cmd.common.arguments
 import spack.error
 import spack.util.environment
 import spack.util.spack_yaml as syaml
+import spack.operating_systems.windows_os as winOs
 
 description = "manage external packages in Spack configuration"
 section = "config"
@@ -67,10 +69,20 @@ def _get_system_executables():
     There may be multiple paths with the same basename. In this case it is
     assumed there are two different instances of the executable.
     """
+    # build_environment.py::1013: If we're on a Windows box, run vswhere, steal the installationPath using
+    # windows_os.py logic, construct paths to CMake and Ninja, add to PATH
     path_hints = spack.util.environment.get_path('PATH')
+    if sys.platform == 'win32':
+      msvcPaths = winOs.WindowsOs.vsInstallPaths
+      msvcCMakePaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "CMake", "bin")
+                   for path in msvcPaths]
+      [path_hints.insert(0, path) for path in msvcCMakePaths]
+      msvcNinjaPaths = [os.path.join(path, "Common7", "IDE", "CommonExtensions", "Microsoft", "CMake", "Ninja")
+                   for path in msvcPaths]
+      [path_hints.insert(0, path) for path in msvcNinjaPaths]
+            
     search_paths = llnl.util.filesystem.search_paths_for_executables(
         *path_hints)
-
     path_to_exe = {}
     # Reverse order of search directories so that an exe in the first PATH
     # entry overrides later entries
@@ -217,11 +229,12 @@ def _convert_to_iterable(single_val_or_multiple):
 def _determine_base_dir(prefix):
     # Given a prefix where an executable is found, assuming that prefix ends
     # with /bin/, strip off the 'bin' directory to get a Spack-compatible
-    # prefix
+    # prefix. Otherwise, leave it alone and send it back
     assert os.path.isdir(prefix)
     if os.path.basename(prefix) == 'bin':
         return os.path.dirname(prefix)
-    return prefix
+    else:
+        return prefix
 
 
 def _get_predefined_externals():
@@ -303,7 +316,6 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
             # usable.
             specs = _convert_to_iterable(
                 pkg.determine_spec_details(prefix, exes_in_prefix))
-
             if not specs:
                 tty.debug(
                     'The following executables in {0} were decidedly not '
@@ -311,7 +323,6 @@ def _get_external_packages(packages_to_check, system_path_to_exe=None):
                     .format(prefix, pkg.name, ', '.join(
                         _convert_to_iterable(exes_in_prefix)))
                 )
-
             for spec in specs:
                 pkg_prefix = _determine_base_dir(prefix)
 
