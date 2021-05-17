@@ -557,6 +557,7 @@ class Trilinos(CMakePackage, CudaPackage):
             define_trilinos_enable('ROL'),
             define_trilinos_enable('Rythmos'),
             define_trilinos_enable('Sacado'),
+            define_trilinos_enable('SCOREC'),
             define_trilinos_enable('Shards'),
             define_trilinos_enable('ShyLU'),
             define_trilinos_enable('STK'),
@@ -612,11 +613,6 @@ class Trilinos(CMakePackage, CudaPackage):
             options.extend([
                 define('Trilinos_ENABLE_SEACASChaco', False),
                 define('Trilinos_ENABLE_SEACASNemslice', False)
-            ])
-
-        if '+scorec' in spec:
-            options.extend([
-                define('Trilinos_ENABLE_SCOREC', True),
             ])
 
         if '+stratimikos' in spec:
