@@ -385,7 +385,7 @@ class Axom(CachedCMakePackage, CudaPackage):
         return options
 
     def patch(self):
-        if '%cce' in self.spec:
+        if self.spec.satisfies('%cce'):
             filter_file('PROPERTIES LINKER_LANGUAGE CXX',
                         'PROPERTIES LINKER_LANGUAGE CXX \n LINK_FLAGS "-fopenmp"',
                         'src/axom/quest/examples/CMakeLists.txt')
