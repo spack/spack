@@ -218,6 +218,16 @@ class R(AutotoolsPackage):
             env.prepend_path('R_LIBS', join_path(
                 dependent_spec.prefix, self.r_lib_dir))
 
+    def setup_run_environment(self, env):
+        env.prepend_path('LD_LIBRARY_PATH',
+                         join_path(self.prefix, 'rlib', 'R', 'lib'))
+        env.prepend_path('PKG_CONFIG_PATH',
+                         join_path(self.prefix, 'rlib', 'pkgconfig'))
+
+        if '+rmath' in self.spec:
+            env.prepend_path('LD_LIBRARY_PATH',
+                             join_path(self.prefix, 'rlib'))
+
     def setup_dependent_package(self, module, dependent_spec):
         """Called before R modules' install() methods. In most cases,
         extensions will only need to have one line:
