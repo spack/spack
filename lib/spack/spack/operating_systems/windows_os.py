@@ -10,7 +10,6 @@ import glob
 from spack.architecture import OperatingSystem
 from spack.version import Version
 
-
 # FIXME: To get the actual Windows version, we need a python that runs
 # natively on Windows, not Cygwin.
 def windows_version():
@@ -22,21 +21,23 @@ def windows_version():
 class WindowsOs(OperatingSystem):
     """This class represents the Windows operating system.  This will be
     auto detected using the python platform.win32_ver() once we have a
-    python setup that runs natively.  The Windows platform will be represented
-    using the major version operating system number, e.g. 10.
+    python setup that runs natively.  The Windows platform will be
+    represented using the major version operating system number, e.g.
+    10.
     """
 
     # Find MSVC directories using vswhere
     compSearchPaths = []
+    vsInstallPaths = []
     root = os.environ.get('ProgramFiles(x86)') or os.environ.get('ProgramFiles')
     if root:
         try:
             extra_args = {}
             if sys.version_info[:3] >= (3, 6, 0):
                 extra_args = {'encoding': 'mbcs', 'errors': 'strict'}
-            paths = subprocess.check_output([
-                os.path.join(root, "Microsoft Visual Studio", "Installer",
-                             "vswhere.exe"),
+            paths = subprocess.check_output([  # novermin
+                os.path.join(root, "Microsoft Visual Studio",
+                             "Installer", "vswhere.exe"),
                 "-prerelease",
                 "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
                 "-property", "installationPath",
@@ -44,16 +45,22 @@ class WindowsOs(OperatingSystem):
             ], **extra_args).strip()
             if (3, 0) <= sys.version_info[:2] <= (3, 5):
                 paths = paths.decode()
-            msvcPaths = paths.split('\n')
+            vsInstallPaths = paths.split('\n')
             msvcPaths = [os.path.join(path, "VC", "Tools", "MSVC")
-                         for path in msvcPaths]
+                         for path in vsInstallPaths]
             for p in msvcPaths:
                 compSearchPaths.extend(
                     glob.glob(os.path.join(p, '*', 'bin', 'Hostx64', 'x64')))
+            if os.getenv("ONEAPI_ROOT"):
+                comp_search_paths.extend(glob.glob(os.path.join(
+                    str(os.getenv("ONEAPI_ROOT")),
+                    'compiler', '*',
+                    'windows', 'bin')))
         except (subprocess.CalledProcessError, OSError, UnicodeDecodeError):
             pass
     if compSearchPaths:
         compiler_search_paths = compSearchPaths
+    # print(vsInstallPaths)
 
     def __init__(self):
         super(WindowsOs, self).__init__('Windows10', '10')

@@ -1523,11 +1523,9 @@ linux distro.
 Spack On Windows
 ----------------
 
-Windows support for Spack is currently under development. While this work is
-still in an early stage, it is currently possible to set up Spack and
-perform a few operations on Windows. This section will guide
-you through the steps needed to install Spack and start running it on a
-fresh Windows machine.
+Windows support for Spack is currently under development.  While this work is still in an early stage,
+it is currently possible to set up Spack and perform a few operations on Windows.  This section will guide
+you through the steps needed to install Spack and start running it on a fresh Windows machine. 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 1: Install prerequisites
@@ -1536,48 +1534,82 @@ Step 1: Install prerequisites
 To use Spack on Windows, you will need the following packages:
 
 * Microsoft Visual Studio
-* Python
+* Intel Fortran (needed for some packages)
+* Python 
 * Git
+* Perl (needed for some packages)
+* NASM (needed for some packages)
+* CMake
 
 """""""""""""""""""""""
 Microsoft Visual Studio
 """""""""""""""""""""""
 
-Microsoft Visual Studio provides the Windows C/C++ compiler that is
-currently supported by Spack.
+Microsoft Visual Studio provides the Windows C/C++ compiler that is currently supported by Spack.
 
-We require several specific components to be included in the Visual Studio
-installation. One is the C/C++ toolset, which can be selected as "Desktop
-development with C++" or "C++ build tools," depending on installation type
-(Professional, Build Tools, etc.)  The other required component is
-"C++ CMake tools for Windows," which can be selected from among the optional
-packages. This provides CMake and Ninja for use during Spack configuration.
+We require several specific components to be included in the Visual Studio installation.
+One is the C/C++ toolset, which can be selected as "Desktop development with C++" or "C++ build tools,"
+depending on installation type (Professional, Build Tools, etc.)  The other required component is
+"C++ CMake tools for Windows," which can be selected from among the optional packages.
+This provides CMake and Ninja for use during Spack configuration.
 
-If you already have Visual Studio installed, you can make sure these
-components are installed by rerunning the installer. Next to your
-installation, select "Modify" and look at the "Installation details" pane on the right.
+If you already have Visual Studio installed, you can make sure these components are installed by
+rerunning the installer.  Next to your installation, select "Modify" and look at the
+"Installation details" pane on the right.
+
+"""""""""""""
+Intel Fortran
+"""""""""""""
+
+For Fortran-based packages on Windows, we strongly recommend Intel's oneAPI Fortran compilers.
+The suite is free to download from Intel's website, located at 
+https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/fortran-compiler.html#gs.70t5tw.
+The executable of choice for Spack will be Intel's Beta Compiler, ifx, which supports the classic
+compiler's (ifort's) frontend and runtime libraries by using LLVM.
 
 """"""
 Python
 """"""
 
-As Spack is a Python-based package, an installation of Python will be needed
-to run it. Python 3 can be downloaded and installed from the Windows Store,
-and will be automatically added to your ``PATH`` in this case.
+As Spack is a Python-based package, an installation of Python will be needed to run it.
+Python 3 can be downloaded and installed from the Windows Store, and will be automatically added
+to your ``PATH`` in this case.
 
 """
 Git
 """
 
 A bash console and GUI can be downloaded from https://git-scm.com/downloads.
+If you are unfamiliar with Git, there are a myriad of resources online to help
+guide you through checking out repositories and switching development branches.
 
 When given the option of adjusting your ``PATH``, choose the ``Git from the
 command line and also from 3rd-party software`` option. This will automatically
 update your ``PATH`` variable to include the ``git`` command.
 
-If you are unfamiliar with Git, there are a myriad of resources online to help
-guide you through checking out repositories and switching development
-branches.
+""""
+Perl
+""""
+
+Perl is a flexible and feature-rich programming language that comes built-in
+on Unix boxes but needs to be installed externally for Windows users. Fortunately,
+you can find the most recent release at https://www.perl.org/get.html.
+
+""""
+NASM
+""""
+
+The Netwide Assembler (NASM) is a x86-64 assembler that some Windows packages
+will use to create binaries and can be found at https://www.nasm.us.
+
+"""""
+CMake
+"""""
+
+While the CMake provided by your Microsoft Visual Studio installation should
+suffice for most packages, we still recommend downloading and installing the
+most recent version of the software at https://cmake.org/download/ in case
+of version restrictions.
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Step 2: Install and setup Spack
@@ -1629,31 +1661,19 @@ To configure Spack, first run the following command inside the Spack console:
 
    spack compiler find
 
-This creates a ``.spack`` directory in our home directory, along with a
-``windows`` subdirectory containing a ``compilers.yaml`` file. On a fresh
-Windows install, the only compiler that should be found is your installation
-of Microsoft Visual Studio.
+This creates a ``.spack`` directory in our home directory, along with a ``windows`` subdirectory
+containing a ``compilers.yaml`` file. On a fresh Windows install with the above packages
+installed, this command should only detect Microsoft Visual Studio and the Intel Fortran
+compiler will be integrated within the first version of MSVC present in the ``compilers.yaml``
+output.
 
-We need to provide the ``config.yaml`` configuration by ourselves. This goes
-in the ``.spack\windows`` directory in your home directory. Open your text
-editor of choice and enter the following lines for ``config.yaml``:
-
-.. code-block:: yaml
-
-   config:
-     locks: false
-     install_tree:
-       root: $spack\opt\spack
-       projections:
-         all: '${ARCHITECTURE}\${COMPILERNAME}-${COMPILERVER}\${PACKAGE}-${VERSION}-${HASH}'
-     build_stage:
-       - ~/.spack/stage
-
-(These settings are identical to those in the default ``config.yaml``
-provided with your Spack checkout, except with forward slashes replaced by
-backslashes for Windows compatibility.) It is important that all indentions
-in .yaml files are done with spaces and not tabs, so take care when editing
-one by hand.
+Spack provides a default ``config.yaml`` file for Windows that it will use unless overridden.
+This file is located at ``etc\spack\defaults\windows\config.yaml``. You can read more on how to
+do this and write your own configuration files in the :ref:`Configuration Files<configuration>` section of our
+documentation. If you do this, pay particular attention to the ``build_stage`` block of the file
+as this specifies the directory that will temporarily hold the source code for the packages to
+be installed. This path name must be sufficiently short for compliance with cmd, otherwise you
+will see build errors during installation (particularly with CMake) tied to long path names.
 
 For the ``packages.yaml`` file, there are two options. The first
 and easiest choice is to use Spack to find installation on your system. In
@@ -1668,10 +1688,9 @@ The ``spack external find <name>`` will find executables on your system
 with the same name given. The command will store the items found in
 ``packages.yaml`` in the ``.spack\`` directory.
 
-Assuming the Spack found CMake and Ninja executables in the previous
-step, continue to Step 4. If no executables were found, we will need to
-direct spack towards the CMake and Ninja installations we set up with
-Visual Studio. Therefore, your ``packages.yaml`` file will look something
+Assuming that the command found CMake and Ninja executables in the previous
+step, continue to Step 4. If no executables were found, we need to manually direct spack towards the CMake
+and Ninja installations we set up with Visual Studio. Therefore, your ``packages.yaml`` file will look something
 like this, with possibly slight variants in the paths to CMake and Ninja:
 
 .. code-block:: yaml
@@ -1688,27 +1707,18 @@ like this, with possibly slight variants in the paths to CMake and Ninja:
          prefix: 'c:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja'
        buildable: False
 
-It is important to note that the version of your Ninja and CMake could
-be different than what is shown here. If there is a difference, make sure
-to use your version instead of the version listed above. Similiarly, if
-you use a different version of Visual Studio ("Community" for example),
-make sure the Professional part of the location is changed to your version.
-
-The ``packages.yaml`` file should be placed inside either the ``.spack``
-directory or the ``.spack\windows`` directory.
-
 You can also use an separate installation of CMake if you have one and prefer
-to use it. If you don't have a path to Ninja analogous to the above, then
-you can obtain it by running the Visual Studio Installer and following the
-instructions at the start of this section.
-
+to use it. If you don't have a path to Ninja analogous to the above, then you can
+obtain it by running the Visual Studio Installer and following the instructions
+at the start of this section. Also note that .yaml files use spaces for indentation
+and not tabs, so ensure that this is the case when editing one directly.
 
 ^^^^^^^^^^^^^^^^^
 Step 4: Use Spack
 ^^^^^^^^^^^^^^^^^
 
-Once the configuration is complete, it is time to give the installation a
-test. Install a basic package through the Spack console via:
+Once the configuration is complete, it is time to give the installation a test.  Install a basic package though the
+Spack console via:
 
 .. code-block:: console
 
@@ -1725,6 +1735,9 @@ packages known to work on Windows:
 * abseil-cpp
 * cpuinfo
 * glm
+* netlib-lapack (requires Intel Fortran)
+* openssl
+* zlib
 
 ^^^^^^^^^^^^^^
 For developers

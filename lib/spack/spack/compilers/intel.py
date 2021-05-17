@@ -3,6 +3,8 @@
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
+import sys
+
 from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
 
@@ -29,8 +31,15 @@ class Intel(Compiler):
     PrgEnv = 'PrgEnv-intel'
     PrgEnv_compiler = 'intel'
 
-    version_argument = '--version'
-    version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
+    if sys.platform == 'win32':
+        version_argument = '/QV'
+    else:
+        version_argument = '--version'
+
+    if sys.platform == 'win32':
+        version_regex = r'([1-9][0-9]*\.[0-9]*\.[0-9]*)'
+    else:
+        version_regex = r'\((?:IFORT|ICC)\) ([^ ]+)'
 
     @property
     def verbose_flag(self):
