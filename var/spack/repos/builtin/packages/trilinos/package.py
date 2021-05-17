@@ -442,7 +442,13 @@ class Trilinos(CMakePackage, CudaPackage):
     patch('xlf_tpetra.patch', when='@12.12.1%clang')
     patch('fix_clang_errors_12_18_1.patch', when='@12.18.1%clang')
     patch('cray_secas_12_12_1.patch', when='@12.12.1%cce')
-    patch('cray_secas.patch', when='@12.14.1:12.18.1%cce')
+    patch('cray_secas.patch', when='@12.14.1:%cce')
+
+    def flag_handler(self, name, flags):
+        if self.spec.satisfies('%cce'):
+            if name == 'ldflags':
+                flags.append('-fuse-ld=gold')
+        return (None, None, flags)
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
