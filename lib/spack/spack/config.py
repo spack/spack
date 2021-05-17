@@ -649,7 +649,11 @@ class Configuration(object):
 
         while parts:
             key = parts.pop(0)
-            value = value.get(key, default)
+            # cannot use value.get(key, default) in case there is another part
+            # and default is not a dict
+            if key not in value:
+                return default
+            value = value[key]
 
         return value
 
