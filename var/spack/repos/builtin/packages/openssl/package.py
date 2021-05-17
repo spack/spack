@@ -89,6 +89,8 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
             description=('Use certificates from the ca-certificates-mozilla '
                          'package, symlink system certificates, or none'))
     variant('docs', default=False, description='Install docs and manpages')
+    variant('shared', default=False, description="Build shared library version")
+    variant('dynamic', default=False, description="Link with MSVC's dynamic runtime library")
 
     depends_on('zlib')
     depends_on('perl@5.14.0:', type=('build', 'test'))
@@ -134,26 +136,65 @@ class Openssl(Package):   # Uses Fake Autotools, should subclass Package
         if self.spec.satisfies('%nvhpc os=centos7'):
             options.append('-D__STDC_NO_ATOMICS__')
 
-        config = Executable('./config')
-        config('--prefix=%s' % prefix,
-               '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
-               '-I{0}'.format(self.spec['zlib'].prefix.include),
-               '-L{0}'.format(self.spec['zlib'].prefix.lib),
-               *options)
+        # Make a flag for shared library builds
+        shared_flag = ''
+        if spec.satisfies('~shared'):
+            shared_flag = 'no-shared'
+
+        # On Windows, we use perl for configuration and build through MSVC
+        # nmake.
+        if spec.satisfies('platform=windows'):
+            config = Executable('perl')
+            config('Configure',
+                   '--prefix=%s' % prefix,
+                   '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
+                   'CC=\"%s\"' % os.environ.get('SPACK_CC'),
+                   'CXX=\"%s\"' % os.environ.get('SPACK_CXX'),
+                   '%s' % shared_flag,
+                   'VC-WIN64A')
+        else:
+            config = Executable('./config')
+            config('--prefix=%s' % prefix,
+                   '--openssldir=%s' % join_path(prefix, 'etc', 'openssl'),
+                   '-I{0}'.format(self.spec['zlib'].prefix.include),
+                   '-L{0}'.format(self.spec['zlib'].prefix.lib),
+                   *options)
 
         # Remove non-standard compiler options if present. These options are
         # present e.g. on Darwin. They are non-standard, i.e. most compilers
         # (e.g. gcc) will not accept them.
         filter_file(r'-arch x86_64', '', 'Makefile')
 
-        make()
+        if spec.satisfies('+dynamic'):
+            # This variant only makes sense for Windows
+            if spec.satisfies('platform=windows'):
+                filter_file(r'MT', 'MD', 'makefile')
+            else:
+                tty.warn("Dynamic runtime builds are only available for "
+                         "Windows operating systems. Please disable "
+                         "+dynamic to suppress this warning.")
+
+        if spec.satisfies('platform=windows'):
+            nmake = Executable('nmake')
+            nmake()
+        else:
+            make()
+
         if self.run_tests:
-            make('test', parallel=False)  # 'VERBOSE=1'
+            if spec.satisfies('platform=windows'):
+                nmake = Executable('nmake')
+                nmake('test', parallel=False)
+            else:
+                make('test', parallel=False)  # 'VERBOSE=1'
 
         install_tgt = 'install' if self.spec.satisfies('+docs') else 'install_sw'
 
         # See https://github.com/openssl/openssl/issues/7466#issuecomment-432148137
-        make(install_tgt, parallel=False)
+        if spec.satisfies('platform=windows'):
+            nmake = Executable('nmake')
+            nmake(install_tgt, parallel=False)
+        else:
+            make(install_tgt, parallel=False)
 
     @run_after('install')
     def link_system_certs(self):

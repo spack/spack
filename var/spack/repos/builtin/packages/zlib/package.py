@@ -6,7 +6,7 @@
 
 # Although zlib comes with a configure script, it does not use Autotools
 # The AutotoolsPackage causes zlib to fail to build with PGI
-class Zlib(Package):
+class Zlib(CMakePackage):
     """A free, general-purpose, legally unencumbered lossless
     data-compression library.
     """
@@ -37,19 +37,54 @@ class Zlib(Package):
             ['libz'], root=self.prefix, recursive=True, shared=shared
         )
 
+    def cmake_args(self):
+        args = ['-DBUILD_SHARED_LIBS:BOOL=' +
+                ('ON' if self._building_shared else 'OFF')]
+        return args
+
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path,
+                         'spack-build-shared' if self._building_shared
+                         else 'spack-build-static')
+
     def setup_build_environment(self, env):
         if '+pic' in self.spec:
             env.append_flags('CFLAGS', self.compiler.cc_pic_flag)
         if '+optimize' in self.spec:
-            env.append_flags('CFLAGS', '-O2')
+            env.append_flags('CFLAGS', '-O2')            
+ 
+    # Build, install, and check both static and shared versions of the
+    # libraries when +shared
+    @when('+shared platform=windows')
+    def cmake(self, spec, prefix):
+        for self._building_shared in (False, True):
+            super(Zlib, self).cmake(spec, prefix)
+
+    @when('+shared platform=windows')
+    def build(self, spec, prefix):
+        for self._building_shared in (False, True):
+            super(Zlib, self).build(spec, prefix)
+       
+    @when('+shared platform=windows')
+    def check(self):
+        for self._building_shared in (False, True):
+            super(Zlib, self).check()
 
     def install(self, spec, prefix):
-        config_args = []
-        if '~shared' in spec:
-            config_args.append('--static')
-        configure('--prefix={0}'.format(prefix), *config_args)
+        if 'platform=windows' in self.spec and '+shared' in self.spec:
+            for self._building_shared in (False, True):
+                super(Zlib, self).install(spec, prefix)
+        else:
+            config_args = []
+            if '~shared' in spec:
+                config_args.append('--static')
+            configure('--prefix={0}'.format(prefix), *config_args)
+ 
+            make()
+            if self.run_tests:
+                make('check')
+            make('install')
 
-        make()
-        if self.run_tests:
-            make('check')
-        make('install')
+
+    
