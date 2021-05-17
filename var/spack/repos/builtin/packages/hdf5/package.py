@@ -63,7 +63,7 @@ class Hdf5(CMakePackage):
     variant('java', default=False, description='Enable Java support')
     variant('threadsafe', default=False,
             description='Enable thread-safe capabilities')
-    variant('tools', default=False, description='Enable build tools')
+    variant('tools', default=True, description='Enable building tools')
     variant('mpi', default=True, description='Enable MPI support')
     variant('szip', default=False, description='Enable szip support')
     variant('pic', default=True,
@@ -346,27 +346,6 @@ class Hdf5(CMakePackage):
                 args.append('FC=%s' % self.spec['mpi'].mpifc)
 
         return args
-
-    @run_after('cmake')
-    def patch_postdeps(self):
-        if '@:1.8.14' in self.spec:
-            # On Ubuntu14, HDF5 1.8.12 (and maybe other versions)
-            # mysteriously end up with "-l -l" in the postdeps in the
-            # libtool script.  Patch this by removing the spurious -l's.
-            filter_file(
-                r'postdeps="([^"]*)"',
-                lambda m: 'postdeps="%s"' % ' '.join(
-                    arg for arg in m.group(1).split(' ') if arg != '-l'),
-                'libtool')
-
-    @run_after('cmake')
-    def patch_libtool(self):
-        """AOCC support for HDF5"""
-        if '%aocc' in self.spec:
-            filter_file(
-                r'\$wl-soname \$wl\$soname',
-                r'-fuse-ld=ld -Wl,-soname,\$soname',
-                'libtool', string=True)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
