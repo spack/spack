@@ -3148,25 +3148,23 @@ class Spec(object):
         if other.concrete:
             return self.concrete and self.dag_hash() == other.dag_hash()
 
-        # A concrete provider can satisfy a virtual dependency.
-        if not self.virtual and other.virtual:
-            try:
-                pkg = spack.repo.get(self.fullname)
-            except spack.repo.UnknownEntityError:
-                # If we can't get package info on this spec, don't treat
-                # it as a provider of this vdep.
-                return False
-
-            if pkg.provides(other.name):
-                for provided, when_specs in pkg.provided.items():
-                    if any(self.satisfies(when_spec, deps=False, strict=strict)
-                           for when_spec in when_specs):
-                        if provided.satisfies(other):
-                            return True
-            return False
-
-        # Otherwise, first thing we care about is whether the name matches
+        # If the names are different, we need to consider virtuals
         if self.name != other.name and self.name and other.name:
+            # A concrete provider can satisfy a virtual dependency.
+            if not self.virtual and other.virtual:
+                try:
+                    pkg = spack.repo.get(self.fullname)
+                except spack.repo.UnknownEntityError:
+                    # If we can't get package info on this spec, don't treat
+                    # it as a provider of this vdep.
+                    return False
+
+                if pkg.provides(other.name):
+                    for provided, when_specs in pkg.provided.items():
+                        if any(self.satisfies(when, deps=False, strict=strict)
+                               for when in when_specs):
+                            if provided.satisfies(other):
+                                return True
             return False
 
         # namespaces either match, or other doesn't require one.
@@ -4513,7 +4511,8 @@ class SpecParser(spack.parse.Parser):
                     break
 
             elif self.accept(HASH):
-                # Get spec by hash and confirm it matches what we already have
+                # Get spec by hash and confirm it matches any constraints we
+                # already read in
                 hash_spec = self.spec_by_hash()
                 if hash_spec.satisfies(spec):
                     spec._dup(hash_spec)

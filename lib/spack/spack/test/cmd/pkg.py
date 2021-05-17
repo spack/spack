@@ -129,7 +129,8 @@ def test_pkg_add(mock_pkg_git_repo):
         finally:
             shutil.rmtree('pkg-e')
             # Removing a package mid-run disrupts Spack's caching
-            spack.repo.path.repos[0]._fast_package_checker.invalidate()
+            if spack.repo.path.repos[0]._fast_package_checker:
+                spack.repo.path.repos[0]._fast_package_checker.invalidate()
 
     with pytest.raises(spack.main.SpackCommandError):
         pkg('add', 'does-not-exist')
