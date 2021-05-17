@@ -434,7 +434,7 @@ class Trilinos(CMakePackage, CudaPackage):
         if self.spec.satisfies('%cce'):
             if name == 'ldflags':
                 flags.append('-fuse-ld=gold')
-            return (None, None, flags)
+        return (None, None, flags)
 
     # workaround an NVCC bug with c++14 (https://github.com/trilinos/Trilinos/issues/6954)
     # avoid calling deprecated functions with CUDA-11
