@@ -65,13 +65,16 @@ class Brion(CMakePackage):
                 '-DBRION_REQUIRE_PYTHON=%s' % ("ON" if "+python" in self.spec
                                                else "OFF")]
 
-    @when('+python')
     def setup_run_environment(self, env):
-        site_dir = self._get_site_dir()
-        for target in (self.prefix.lib, self.prefix.lib64):
-            pathname = os.path.join(target, *site_dir)
-            if os.path.isdir(pathname):
-                env.prepend_path('PYTHONPATH', pathname)
+        if self.spec.satisfies('+python'):
+            site_dir = self._get_site_dir()
+            for target in (self.prefix.lib, self.prefix.lib64):
+                pathname = os.path.join(target, *site_dir)
+                if os.path.isdir(pathname):
+                    env.prepend_path('PYTHONPATH', pathname)
+
+    def setup_dependent_run_environment(self, env, dependent_spec):
+        self.setup_run_environment(env)
 
     def build(self, spec, prefix):
         with working_dir(self.build_directory):
