@@ -28,6 +28,14 @@ config:
     # assuming it is higher than the length of the install_tree root.
     # padded_length: 128
 
+  # Configuration handles for bootstrapping. If "enable" is false Spack will not
+  # bootstrap missing software, but will instead raise an error.
+  bootstrap:
+    enable: true
+    # Spack stores all the information related to bootstrapping in the
+    # ${HOME}/.spack/bootstrap directory by default. It's possible to customize
+    # this location by setting the "root" attribute below.
+    # root: $spack/opt/bootstrap
 
   # Locations where templates should be found
   template_dirs:

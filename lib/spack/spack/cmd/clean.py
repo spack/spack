@@ -9,6 +9,7 @@ import shutil
 
 import llnl.util.tty as tty
 
+import spack.bootstrap
 import spack.caches
 import spack.cmd.common.arguments as arguments
 import spack.cmd.test
@@ -102,7 +103,7 @@ def clean(parser, args):
 
     if args.bootstrap:
         msg = 'Removing software in "{0}"'
-        tty.msg(msg.format(spack.paths.user_bootstrap_store))
-        with spack.store.use_store(spack.paths.user_bootstrap_store):
+        tty.msg(msg.format(spack.bootstrap.store_path()))
+        with spack.store.use_store(spack.bootstrap.store_path()):
             uninstall = spack.main.SpackCommand('uninstall')
             uninstall('-a', '-y')

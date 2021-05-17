@@ -99,6 +99,18 @@ properties = {
             },
             'allow_sgid': {'type': 'boolean'},
             'binary_index_root': {'type': 'string'},
+            'bootstrap': {
+                'type': 'object',
+                'properties': {
+                    'enable': {'type': 'boolean'},
+                    'root': {
+                        'anyOf': [
+                            {'type': 'string'},
+                            {'type': 'null'},
+                        ],
+                    },
+                }
+            }
         },
     },
 }

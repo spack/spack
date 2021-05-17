@@ -1,6 +1,8 @@
 config:
   install_tree:
     root: $spack/opt/spack
+  bootstrap:
+    enable: true
   template_dirs:
   - $spack/share/spack/templates
   - $spack/lib/spack/spack/test/data/templates
