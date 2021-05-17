@@ -71,7 +71,6 @@ class Swig(AutotoolsPackage, SourceforgePackage):
         def autoreconf(self, spec, prefix):
             which('sh')('./autogen.sh')
 
-
     @property
     def _installed_exe(self):
         return join_path(self.prefix, 'bin', 'swig')
@@ -89,11 +88,16 @@ class Swig(AutotoolsPackage, SourceforgePackage):
                       purpose="test: version")
 
     def _test_swiglib(self):
+        # Get SWIG's alleged path to library files
         swig = Executable(self._installed_exe)
         swiglib = swig('-swiglib', output=str).strip()
+
+        # Check that the lib dir exists
         if not os.path.isdir(swiglib):
             msg = "SWIG library does not exist at '{0}'".format(swiglib)
             self.test_failures.append([None, msg])
+
+        # Check for existence of other critical SWIG library files
         swigfile = join_path(swiglib, 'swig.swg')
         if not os.path.exists(swigfile):
             msg = "SWIG runtime does not exist at '{0}'".format(swigfile)
