@@ -14,6 +14,7 @@ class PyJinja2(PythonPackage):
     homepage = "https://palletsprojects.com/p/jinja/"
     pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
 
+    version('2.11.3', sha256='a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6')
     version('2.10.3', sha256='9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de')
     version('2.10.1', sha256='065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013')
     version('2.10',   sha256='f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4')
