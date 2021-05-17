@@ -129,7 +129,7 @@ class Scr(CMakePackage):
                 return (None, flags, None)
             elif name == 'ldflags':
                 flags.append('-ldl')
-            return (flags, None, None)
+        return (flags, None, None)
 
     def get_abs_path_rel_prefix(self, path):
         # Return path if absolute, otherwise prepend prefix
