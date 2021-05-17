@@ -72,6 +72,11 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         "-t", "--types", action="store_true", default=False, help="show dependency types"
     )
+    subparser.add_argument(
+        '--runtime', action='store_true',
+        help='only show the dependencies that are strictly '
+             'required for the package to run'
+    )
     arguments.add_common_arguments(subparser, ["specs"])
     arguments.add_concretizer_args(subparser)
 
@@ -112,6 +117,10 @@ def spec(parser, args):
         return
 
     with tree_context():
+        deptypes = ('build', 'link', 'run')
+        if args.runtime:
+            deptypes = ('link', 'run')
+
         print(
             spack.spec.tree(
                 concrete_specs,
@@ -119,6 +128,7 @@ def spec(parser, args):
                 format=fmt,
                 hashlen=None if args.very_long else 7,
                 show_types=args.types,
+                deptypes=deptypes,
                 status_fn=install_status_fn if args.install_status else None,
                 hashes=args.long or args.very_long,
                 key=spack.traverse.by_dag_hash,
