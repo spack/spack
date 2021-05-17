@@ -371,6 +371,9 @@ class Axom(CachedCMakePackage, CudaPackage):
     def cmake_args(self):
         options = []
 
+        if self.spec.satisfies('%cce'):
+            options.append('-DCMAKE_Fortran_FLAGS=-ef')
+
         if self.run_tests is False:
             options.append('-DENABLE_TESTS=OFF')
         else:
@@ -380,3 +383,9 @@ class Axom(CachedCMakePackage, CudaPackage):
             'BUILD_SHARED_LIBS', 'shared'))
 
         return options
+
+    def patch(self):
+        if self.spec.satisfies('%cce'):
+            filter_file('PROPERTIES LINKER_LANGUAGE CXX',
+                        'PROPERTIES LINKER_LANGUAGE CXX \n LINK_FLAGS "-fopenmp"',
+                        'src/axom/quest/examples/CMakeLists.txt')
