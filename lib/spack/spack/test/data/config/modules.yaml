@@ -14,9 +14,8 @@
 #   ~/.spack/modules.yaml
 # -------------------------------------------------------------------------
 modules:
-  default:
-    enable:
-      - tcl
+  enable:
+    - tcl
   prefix_inspections:
     bin:
       - PATH

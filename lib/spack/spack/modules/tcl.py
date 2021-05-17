@@ -20,38 +20,32 @@ from .common import BaseContext, BaseModuleFileWriter
 
 
 #: TCL specific part of the configuration
-def configuration(module_set_name):
-    config_path = 'modules:%s:tcl' % module_set_name
-    config = spack.config.get(config_path, {})
-    if not config and module_set_name == 'default':
-        # return old format for backward compatibility
-        return spack.config.get('modules:tcl', {})
-    return config
+def configuration():
+    return spack.config.get('modules:tcl', {})
 
 
 #: Caches the configuration {spec_hash: configuration}
 configuration_registry = {}  # type: Dict[str, Any]
 
 
-def make_configuration(spec, module_set_name):
+def make_configuration(spec):
     """Returns the tcl configuration for spec"""
-    key = (spec.dag_hash(), module_set_name)
+    key = spec.dag_hash()
     try:
         return configuration_registry[key]
     except KeyError:
-        return configuration_registry.setdefault(
-            key, TclConfiguration(spec, module_set_name))
+        return configuration_registry.setdefault(key, TclConfiguration(spec))
 
 
-def make_layout(spec, module_set_name):
+def make_layout(spec):
     """Returns the layout information for spec """
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec)
     return TclFileLayout(conf)
 
 
-def make_context(spec, module_set_name):
+def make_context(spec):
     """Returns the context information for spec"""
-    conf = make_configuration(spec, module_set_name)
+    conf = make_configuration(spec)
     return TclContext(conf)
 
 
