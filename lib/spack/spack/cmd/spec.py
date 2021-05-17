@@ -58,6 +58,12 @@ for further documentation regarding the spec syntax, see:
     subparser.add_argument(
         '-t', '--types', action='store_true', default=False,
         help='show dependency types')
+    subparser.add_argument(
+        '--runtime', action='store_true',
+        help='only show the dependencies that are strictly '
+             'required for the package to run'
+    )
+
     arguments.add_common_arguments(subparser, ['specs'])
 
     spack.cmd.common.arguments.add_concretizer_args(subparser)
@@ -121,4 +127,7 @@ def spec(parser, args):
                 print("--------------------------------")
 
             tree_kwargs['hashes'] = args.long or args.very_long
+            if args.runtime:
+                tree_kwargs['deptypes'] = ('link', 'run')
+
             print(output.tree(**tree_kwargs))
