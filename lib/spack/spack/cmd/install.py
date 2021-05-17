@@ -305,6 +305,7 @@ environment variables:
             host=args.monitor_host,
             prefix=args.monitor_prefix,
             disable_auth=args.monitor_disable_auth,
+            tags=args.monitor_tags,
         )
 
     reporter = spack.report.collect_info(
