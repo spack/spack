@@ -408,6 +408,7 @@ Spack understands several special variables. These are:
   <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
   variable.
 * ``$user``: name of the current user
+* ``$user_config``: name of the current user
 
 Note that, as with shell variables, you can write these as ``$varname``
 or with braces to distinguish the variable from surrounding characters:

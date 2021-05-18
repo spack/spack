@@ -11,7 +11,7 @@
 #   $SPACK_ROOT/etc/spack/config.yaml
 #
 # Per-user settings (overrides default and site settings):
-#   ~/.spack/config.yaml
+#   $user_config/config.yaml
 # -------------------------------------------------------------------------
 config:
   # This is the path to the root of the Spack install tree.
@@ -67,7 +67,7 @@ config:
   # identifies Spack staging to avoid accidentally wiping out non-Spack work.
   build_stage:
     - $tempdir/$user/spack-stage
-    - ~/.spack/stage
+    - $user_config/stage
   # - $spack/var/spack/stage
 
   # Directory in which to run tests and store test results.
@@ -82,7 +82,7 @@ config:
 
   # Cache directory for miscellaneous files, like the package index.
   # This can be purged with `spack clean --misc-cache`
-  misc_cache: ~/.spack/cache
+  misc_cache: $user_config/cache
 
 
   # Timeout in seconds used for downloading sources etc. This only applies

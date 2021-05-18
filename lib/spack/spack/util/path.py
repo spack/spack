@@ -29,6 +29,7 @@ replacements = {
     'spack': spack.paths.prefix,
     'user': getpass.getuser(),
     'tempdir': tempfile.gettempdir(),
+    'user_config': spack.paths.user_config_path,
 }
 
 # This is intended to be longer than the part of the install path
@@ -73,6 +74,7 @@ def substitute_config_variables(path):
     - $user      The current user's username
     - $tempdir   Default temporary directory returned by tempfile.gettempdir()
     - $env       The active Spack environment.
+    - $user_config User configuration directory
 
     These are substituted case-insensitively into the path, and users can
     use either ``$var`` or ``${var}`` syntax for the variables. $env is only
