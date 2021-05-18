@@ -220,26 +220,50 @@ class Hypre(Package, CudaPackage):
                         '-rhsone')
             make("install")
 
+    extra_install_tests = join_path('src', 'examples')
+
     @run_after('install')
     def cache_test_sources(self):
-        srcs = ['src/examples']
-        self.cache_extra_test_sources(srcs)
+        self.cache_extra_test_sources(self.extra_install_tests)
+
+    @property
+    def _cached_tests_work_dir(self):
+        """The working directory for cached test sources."""
+        return join_path(self.test_suite.current_test_cache_dir,
+                         self.extra_install_tests)
+
+    def _test_build_examples(self):
+        """Build cached test examples."""
+        return self.run_test('make',
+                             ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],
+                             purpose='test: building selected examples',
+                             work_dir=self._cached_tests_work_dir)
+
+    def _test_clean_examples(self):
+        """Clean up any test example build files."""
+        return self.run_test('make', ['distclean'], [],
+                             purpose='test: removing prior test example build',
+                             work_dir=self._cached_tests_work_dir)
 
     def test(self):
         """Perform smoke test on installed HYPRE package."""
+        if '+mpi' not in self.spec:
+            print('Skipping: HYPRE must be installed with +mpi to run tests')
+            return
 
-        if '+mpi' in self.spec:
-            examples_dir = join_path(self.install_test_root, 'src/examples')
-            with working_dir(examples_dir, create=False):
-                make("HYPRE_DIR=" + self.prefix, "bigint")
+        if not self._test_clean_examples():
+            print('Skipping: Unable to remove previous build of test examples')
+            return
 
-                reason = "test: ensuring HYPRE examples run"
-                self.run_test('./ex5big', [], [], installed=True,
-                              purpose=reason, skip_missing=True, work_dir='.')
-                self.run_test('./ex15big', [], [], installed=True,
-                              purpose=reason, skip_missing=True, work_dir='.')
+        if not self._test_build_examples():
+            print('Skipping: Unable to build test examples')
+            return
 
-                make("distclean")
+        for exe in ['./ex5big', './ex15big']:
+            self.run_test(exe, [], [], installed=False,
+                          purpose='test: ensuring {0} runs'.format(exe),
+                          skip_missing=True,
+                          work_dir=self._cached_tests_work_dir)
 
     @property
     def headers(self):
