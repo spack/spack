@@ -17,4 +17,3 @@ class PyGsutilFeedstock(PythonPackage):
     version('4.59', sha256='349e0e0b48c281659acec205917530ae57e2eb23db7220375f5add44688d3ddf')
 
     depends_on('py-setuptools', type=('build', 'run'))
-
