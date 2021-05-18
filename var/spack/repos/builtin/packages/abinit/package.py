@@ -89,8 +89,12 @@ class Abinit(AutotoolsPackage):
     conflicts('%gcc@7:', when='@:8.8')
     conflicts('%gcc@9:', when='@:8.10')
 
-    # need fftw+openmp for abinit+openmp
+    # need openmp threading for abinit+openmp
+    mkl_message = 'Need to set dependent variant to threads=openmp'
     conflicts('+openmp', when='^fftw~openmp')
+    conflicts('+openmp', when='^intel-mkl threads=none', msg=mkl_message)
+    conflicts('+openmp', when='^intel-mkl threads=tbb', msg=mkl_message)
+    conflicts('+openmp', when='^intel-parallel-studio threads=none', msg=mkl_message)
 
     patch('rm_march_settings.patch', when='@:8')
     patch('rm_march_settings_v9.patch', when='@9:')
