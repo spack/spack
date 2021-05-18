@@ -58,7 +58,7 @@ class ProcessController(object):
         """
         self.pid = pid
         self.pgid = os.getpgid(pid)
-        self.controller_fd = controller_fd
+        self.controller_fd = os.fdopen(controller_fd, 'w')
         self.timeout = timeout
         self.sleep_time = sleep_time
         self.debug = debug
@@ -68,7 +68,7 @@ class ProcessController(object):
 
     def get_canon_echo_attrs(self):
         """Get echo and canon attributes of the terminal of controller_fd."""
-        cfg = termios.tcgetattr(self.controller_fd)
+        cfg = termios.tcgetattr(self.controller_fd.fileno())
         return (
             bool(cfg[3] & termios.ICANON),
             bool(cfg[3] & termios.ECHO),
@@ -99,7 +99,7 @@ class ProcessController(object):
 
     def background(self):
         """True if pgid is in a background pgroup of controller_fd's tty."""
-        return self.pgid != os.tcgetpgrp(self.controller_fd)
+        return self.pgid != os.tcgetpgrp(self.controller_fd.fileno())
 
     def tstp(self):
         """Send SIGTSTP to the controlled process."""
@@ -115,19 +115,19 @@ class ProcessController(object):
     def fg(self):
         self.horizontal_line("fg")
         with log.ignore_signal(signal.SIGTTOU):
-            os.tcsetpgrp(self.controller_fd, os.getpgid(self.pid))
+            os.tcsetpgrp(self.controller_fd.fileno(), os.getpgid(self.pid))
         time.sleep(self.sleep_time)
 
     def bg(self):
         self.horizontal_line("bg")
         with log.ignore_signal(signal.SIGTTOU):
-            os.tcsetpgrp(self.controller_fd, os.getpgrp())
+            os.tcsetpgrp(self.controller_fd.fileno(), os.getpgrp())
         time.sleep(self.sleep_time)
 
-    def write(self, byte_string):
-        self.horizontal_line("write '%s'" % byte_string.decode("utf-8"))
-        os.write(self.controller_fd, byte_string)
-        os.fsync(self.controller_fd)
+    def write(self, string):
+        self.horizontal_line("write '%s'" % string)
+        self.controller_fd.write(string)
+        self.controller_fd.flush()
 
     def wait(self, condition):
         start = time.time()
@@ -340,8 +340,21 @@ class PseudoShell(object):
         except BaseException:
             error = 1
             traceback.print_exc()
+        #finally:
+        #    controller.controller_fd.close()
+
+        if error:
+            sys.stderr.write("Controller function error: " + str(error))
+        else:
+            sys.stderr.write("No controller function error\n")
+        sys.stderr.write("Joining minion")
 
         minion_process.join()
+        sys.stderr.write("Minion joined")
+        if minion_process.exitcode:
+            sys.stderr.write("Minion error " + str(minion_process.exitcode))
+        else:
+            sys.stderr.write("No minion error: " + str(minion_process.exitcode))
 
         # return whether either the parent or minion failed
         return error or minion_process.exitcode

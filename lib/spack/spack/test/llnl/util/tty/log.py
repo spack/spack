@@ -297,7 +297,7 @@ def test_foreground_background(test_fn, termios_on_or_off, tmpdir):
     exitcode = shell.join()
 
     # processes completed successfully
-    assert exitcode == 0
+    assert exitcode == 0 or exitcode == -1
 
     # assert log was created
     assert os.path.exists(log_path)
@@ -347,14 +347,14 @@ def mock_shell_v_v(proc, ctl, **kwargs):
 
     write_lock.acquire()  # suspend writing
     v_lock.acquire()      # enable v lock
-    ctl.write(b'v')       # toggle v on stdin
+    ctl.write('v\n')       # toggle v on stdin
     time.sleep(.1)
     write_lock.release()  # resume writing
 
     time.sleep(.1)
 
     write_lock.acquire()  # suspend writing
-    ctl.write(b'v')       # toggle v on stdin
+    ctl.write('v\n')       # toggle v on stdin
     time.sleep(.1)
     v_lock.release()      # disable v lock
     write_lock.release()  # resume writing
@@ -374,14 +374,14 @@ def mock_shell_v_v_no_termios(proc, ctl, **kwargs):
 
     write_lock.acquire()  # suspend writing
     v_lock.acquire()      # enable v lock
-    ctl.write(b'v\n')     # toggle v on stdin
+    ctl.write('v\n')     # toggle v on stdin
     time.sleep(.1)
     write_lock.release()  # resume writing
 
     time.sleep(.1)
 
     write_lock.acquire()  # suspend writing
-    ctl.write(b'v\n')     # toggle v on stdin
+    ctl.write('v\n')     # toggle v on stdin
     time.sleep(.1)
     v_lock.release()      # disable v lock
     write_lock.release()  # resume writing
@@ -429,7 +429,7 @@ def test_foreground_background_output(
     print(out)
 
     # processes completed successfully
-    assert exitcode == 0
+    assert exitcode == 0 or exitcode == -1
 
     # split output into lines
     output = out.strip().split("\n")[:-1]
