@@ -21,7 +21,7 @@ EOF
   # Install all the required software
   . /opt/spack/share/spack/setup-env.sh
   spack env activate .
-  spack install --fail-fast
+  spack install {% if monitor.enabled %}--monitor {% if monitor.prefix %}--monitor-prefix {{ monitor.prefix }} {% endif %}{% if monitor.tags %}--monitor-tags {{ monitor.tags }} {% endif %}{% if monitor.keep_going %}--monitor-keep-going {% endif %}{% if monitor.host %}--monitor-host {{ monitor.host }} {% endif %}{% if monitor.disable_auth %}--monitor-disable-auth {% endif %}{% endif %}--fail-fast
   spack gc -y
   spack env deactivate
   spack env activate --sh -d . >> {{ paths.environment }}/environment_modifications.sh

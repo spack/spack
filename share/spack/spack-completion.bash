@@ -694,7 +694,7 @@ _spack_config_revert() {
 }
 
 _spack_containerize() {
-    SPACK_COMPREPLY="-h --help"
+    SPACK_COMPREPLY="-h --help --monitor --monitor-no-auth --monitor-keep-going --monitor-host --monitor-prefix"
 }
 
 _spack_create() {

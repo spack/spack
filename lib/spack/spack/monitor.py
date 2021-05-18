@@ -244,6 +244,12 @@ class SpackMonitorClient:
             elif hasattr(e, 'code'):
                 msg = e.code
 
+            # If we can parse the message, try it
+            try:
+                msg += "\n%s" % e.read().decode("utf8", 'ignore')
+            except Exception:
+                pass
+
             if self.allow_fail:
                 tty.warning("Request to %s was not successful, but continuing." % e.url)
                 return
