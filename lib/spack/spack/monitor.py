@@ -228,7 +228,7 @@ class SpackMonitorClient:
         except URLError as e:
 
             # If we have an authorization request, retry once with auth
-            if e.code == 401 and retry:
+            if hasattr(e, "code") and e.code == 401 and retry:
                 if self.authenticate_request(e):
                     request = self.prepare_request(
                         e.url,
