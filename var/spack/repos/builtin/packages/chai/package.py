@@ -110,7 +110,4 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options.append('-DENABLE_BENCHMARKS={0}'.format(
             'ON' if '+benchmarks' in spec else 'OFF'))
 
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
-
         return options
