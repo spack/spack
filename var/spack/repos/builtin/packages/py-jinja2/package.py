@@ -25,6 +25,7 @@ class PyJinja2(PythonPackage):
     version('2.7.1',  sha256='5cc0a087a81dca1c08368482fb7a92fe2bdd8cfbb22bc0fccfe6c85affb04c8b')
     version('2.7',    sha256='474f1518d189ae7e318b139fecc1d30b943f124448cfa0f09582ca23e069fa4d')
 
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
     depends_on('py-setuptools', type='build')
     depends_on('py-markupsafe@0.23:', type=('build', 'run'))
     depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n
