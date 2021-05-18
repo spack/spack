@@ -16,7 +16,6 @@ class PyHaphpipe(PythonPackage):
 
     version('1.0.3', sha256='9a9e8632a217ff4207c1dea66887a471e0ea04bbb7c0f0d72631acaba214bd37')
 
-    depends_on('llvm@11.1.0')
     depends_on('python@3.7:', type=('build', 'run'))
     depends_on('py-pip')
     depends_on('py-future', type=('build', 'run'))
@@ -29,7 +28,7 @@ class PyHaphpipe(PythonPackage):
 
     depends_on('bowtie2', type=('build', 'run'))
     depends_on('blast-plus', type=('build', 'run'))
-    depends_on('freebayes-meson', type=('build', 'run'))
+    depends_on('freebayes', type=('build', 'run'))
     depends_on('modeltest-ng', type=('build', 'run'))
     depends_on('libdeflate', type=('build', 'run'))
     depends_on('sratoolkit', type=('build', 'run'))
