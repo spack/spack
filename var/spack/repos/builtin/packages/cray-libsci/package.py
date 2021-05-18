@@ -36,7 +36,8 @@ class CrayLibsci(Package):
         'gcc': 'GNU',
         'cce': 'CRAY',
         'intel': 'INTEL',
-        'clang': 'ALLINEA'
+        'clang': 'ALLINEA',
+        'aocc': 'AOCC'
     }
 
     @property
