@@ -1368,8 +1368,13 @@ class PackageBase(six.with_metaclass(PackageMeta, PackageViewMixin, object)):
 
         self.stage.create()
         err_msg = None if not self.manual_download else self.download_instr
+
         start_time = time.time()
-        self.stage.fetch(mirror_only, err_msg=err_msg)
+        try:
+            self.stage.fetch(mirror_only, err_msg=err_msg)
+        except fs.FetchError:
+            tty.error('Failed to fetch {0}'.format(self.spec.cformat('{name}{@version}')))
+            raise
         self._fetch_time = time.time() - start_time
 
         if checksum and self.version in self.versions:
