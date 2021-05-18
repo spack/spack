@@ -32,9 +32,9 @@ class Rdkit(CMakePackage):
 
     depends_on('py-numpy')
     depends_on('sqlite')
-    
+
     extends("python")
-    
+
     def cmake_args(self):
         args = ['-DCMAKE_CXX_STANDARD=14',
                 '-DRDK_INSTALL_INTREE=OFF']
