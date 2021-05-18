@@ -567,6 +567,7 @@ def _populate(mock_db):
     _install('mpileaks ^mpich2')
     _install('mpileaks ^zmpi')
     _install('externaltest')
+    _install('trivial-smoke-test')
 
 
 @pytest.fixture(scope='session')
