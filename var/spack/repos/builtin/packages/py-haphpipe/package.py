@@ -7,7 +7,8 @@ from spack import *
 
 
 class PyHaphpipe(PythonPackage):
-    """HAplotype and PHylodynamics pipeline for viral assembly, population genetics, and phylodynamics."""
+    """HAplotype and PHylodynamics pipeline for viral assembly,
+    population genetics, and phylodynamics."""
 
     homepage = "https://github.com/gwcbi/haphpipe"
     url      = "https://github.com/gwcbi/haphpipe/archive/v1.0.3.tar.gz"
