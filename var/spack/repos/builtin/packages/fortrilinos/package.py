@@ -86,7 +86,8 @@ class Fortrilinos(CMakePackage):
     def test(self):
         example_src_dir = join_path(self.install_test_root,
                                     self.examples_src_dir)
-        test_build_dir = join_path(self.install_test_root, 'build')
+        test_build_dir = join_path(self.test_suite.current_test_data_dir,
+                                   'build_example')
         with working_dir(test_build_dir, create=True):
             cmake(
                 self.define('CMAKE_PREFIX_PATH', self.prefix),
@@ -97,8 +98,3 @@ class Fortrilinos(CMakePackage):
             make()
             self.run_test('ctest', ['-V'], [], installed=False,
                           purpose='test: installation')
-
-        # TODO: spack might be updated to use a temporary directory for
-        # building/running tests, at which point this will no longer be neededd
-        import shutil
-        shutil.rmtree(test_build_dir)
