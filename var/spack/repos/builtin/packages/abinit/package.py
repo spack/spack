@@ -61,8 +61,7 @@ class Abinit(AutotoolsPackage):
 
     depends_on('scalapack', when='+scalapack+mpi')
 
-    depends_on('fftw+openmp', when='+openmp')
-    depends_on('fftw-api', when='~openmp')  # NOTE: This allows MKL to be used
+    depends_on('fftw-api')
 
     depends_on('netcdf-fortran')
     depends_on('netcdf-c+mpi', when='+mpi')
@@ -89,6 +88,9 @@ class Abinit(AutotoolsPackage):
 
     conflicts('%gcc@7:', when='@:8.8')
     conflicts('%gcc@9:', when='@:8.10')
+
+    # need fftw+openmp for abinit+openmp
+    conflicts('+openmp', when='^fftw~openmp')
 
     patch('rm_march_settings.patch', when='@:8')
     patch('rm_march_settings_v9.patch', when='@9:')
