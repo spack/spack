@@ -9,10 +9,10 @@ from spack import *
 class ProcessInProcess(Package):
     """Process-in-Process"""
 
-    github = 'git@github.com'
+    github = 'https://github.com/'
 
-    homepage = 'https://github.com/procinproc/procinproc.github.io'
-    git      = "https://github.com/procinproc/PiP.git"
+    homepage = github+'procinproc/procinproc.github.io'
+    git      = github+'procinproc/PiP.git'
 
     maintainers = ['ahori']
 
@@ -37,23 +37,23 @@ class ProcessInProcess(Package):
     #  PiP-glibc resource
     #   for rhel/centos 7
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@2 os=centos7')
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@2 os=rhel7')
     #   for rhel/centos 8
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
              destination='PiP-glibc',
              when='@2 os=centos8')
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
              destination='PiP-glibc',
              when='@2 os=rhel8')
@@ -61,23 +61,23 @@ class ProcessInProcess(Package):
     #  PiP-gdb resource
     #   for rhel/centos 7
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@2 os=centos7')
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@2 os=rhel7')
     #   for rhel/centos 8
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@2 os=centos8')
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@2 os=rhel8')
@@ -86,23 +86,23 @@ class ProcessInProcess(Package):
     #  PiP-glibc resource
     #   for rhel/centos 7
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@3 os=centos7')
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.17-260.el7.pip.branch',
              destination='PiP-glibc',
              when='@3 os=rhel7')
     #   for rhel/centos 8
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
              destination='PiP-glibc',
              when='@3 os=centos8')
     resource(name='PiP-glibc',
-             git='git@github.com:procinproc/PiP-glibc.git',
+             git=github+'procinproc/PiP-glibc.git',
              branch='centos/glibc-2.28-72.el8_1.1.pip.branch',
              destination='PiP-glibc',
              when='@3 os=rhel8')
@@ -110,30 +110,30 @@ class ProcessInProcess(Package):
     #  PiP-gdb resource
     #   for rhel/centos 7
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@3 os=centos7')
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-7.6.1-94.el7.pip.branch',
              destination='PiP-gdb',
              when='@3 os=rhel7')
     #   for rhel/centos 8
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@3 os=centos8')
     resource(name='PiP-gdb',
-             git='git@github.com:procinproc/PiP-gdb.git',
+             git=github+'procinproc/PiP-gdb.git',
              branch='centos/gdb-8.2-12.el8.pip.branch',
              destination='PiP-gdb',
              when='@3 os=rhel8')
 
     # PiP testsuite (agnostic with PiP and OS versions)
     resource(name='PiP-Testsuite',
-             git='git@github.com:procinproc/PiP-Testsuite.git',
+             git=github+'procinproc/PiP-Testsuite.git',
              destination='PiP-Testsuite')
 
     def install(self, spec, prefix):
