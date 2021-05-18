@@ -19,9 +19,9 @@ class Coreneuron(CMakePackage):
     git      = "https://github.com/BlueBrain/CoreNeuron"
 
     version('develop', branch='master')
-    # 1.0.0 > 1.0b > 1.0 as far as Spack is concerned
-    version('1.0.1', commit='251ee12', preferred=True)
-    version('1.0.0', tag='1.0', preferred=True)
+    version('1.0.2a', commit='c938e4f', submodules=True, preferred=True)
+    version('1.0.1', commit='251ee12', submodules=True)
+    version('1.0.0', tag='1.0', submodules=True)
     version('1.0b', tag="1.0b", submodules=True)
     version('1.0a', commit="857551a", submodules=True)
     version('0.23b', commit="be131ec", submodules=True)
@@ -41,6 +41,7 @@ class Coreneuron(CMakePackage):
     variant('mpi', default=True, description="Enable MPI support")
     variant('openmp', default=False, description="Enable OpenMP support")
     variant('profile', default=False, description="Enable profiling using Tau")
+    variant('caliper', default=True, description="Enable Calipher instrumentation")
     variant('report', default=True, description="Enable SONATA and binary reports")
     variant('shared', default=True, description="Build shared library")
     variant('tests', default=False, description="Enable building tests")
@@ -64,9 +65,12 @@ class Coreneuron(CMakePackage):
     depends_on('flex@2.6:', type='build', when='+nmodl')
     depends_on('mpi', when='+mpi')
     depends_on('reportinglib', when='+report')
-    depends_on('libsonata-report', when='+report')
+    depends_on('libsonata-report@1.0:', when='@1.0.1:+report')
+    depends_on('libsonata-report@:0.1', when='@:1.0.0+report')
     depends_on('reportinglib+profile', when='+report+profile')
     depends_on('tau', when='+profile')
+    depends_on('caliper+mpi', when='@1.0.2a:+caliper+mpi')
+    depends_on('caliper~mpi', when='@1.0.2a:+caliper~mpi')
 
     # nmodl specific dependency
     depends_on('nmodl@0.3.0:', when='@1.0.0:+nmodl')
@@ -91,6 +95,9 @@ class Coreneuron(CMakePackage):
     conflicts('+sympy', when='coreneuron@0.17')  # issue with include directories
     conflicts('+codegenopt', when='~nmodl')
     conflicts('+ispc', when='~nmodl')
+
+    # Caliper instrumentation is only supported after 1.0.1
+    conflicts('+caliper', when='@:1.0.1')
 
     # An old comment said "PGI compiler not able to compile nrnreport.cpp when
     # enabled OpenMP, OpenACC and Reporting. Disable ReportingLib for GPU", but
@@ -155,6 +162,9 @@ class Coreneuron(CMakePackage):
              '-DCORENRN_ENABLE_TIMEOUT=OFF',
              '-DPYTHON_EXECUTABLE=%s' % spec["python"].command.path
              ]
+
+        if spec.satisfies('+caliper'):
+            options.append('-DCORENRN_ENABLE_CALIPER_PROFILING=ON')
 
         if "+legacy-unit" in self.spec:
             options.append('-DCORENRN_ENABLE_LEGACY_UNITS=ON')
