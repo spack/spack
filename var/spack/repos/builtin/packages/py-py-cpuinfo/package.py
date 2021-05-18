@@ -12,6 +12,7 @@ class PyPyCpuinfo(PythonPackage):
     homepage = "https://github.com/workhorsy/py-cpuinfo"
     pypi = "py-cpuinfo/py-cpuinfo-0.2.3.tar.gz"
 
+    version('6.0.0', sha256='7ffb31dea845b9f359b99bd5f7eea72dc70f852e0e34547d261a630f2b8c9c61')
     version('0.2.3', sha256='f6a016fdbc4e7fadf2d519090fcb4fa9d0831bad4e85245d938e5c2fe7623ca6')
 
     depends_on('py-setuptools', type='build')
