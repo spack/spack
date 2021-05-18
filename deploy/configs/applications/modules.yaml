@@ -48,6 +48,7 @@ modules:
       - neurodamus-mousify
       - parquet-converters
       - placement-algorithm
+      - py-region-grower
       - psp-validation
       - py-basalt
       - py-bbp-analysis-framework
