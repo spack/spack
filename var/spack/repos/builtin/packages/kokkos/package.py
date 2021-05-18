@@ -34,6 +34,7 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
         'pthread': [False, 'Whether to build Pthread backend'],
         'serial': [True,  'Whether to build serial backend'],
         'rocm': [False, 'Whether to build HIP backend'],
+        'spir': [False, 'Whether to build OneAPI OpenMP SPIR device backend'],
     }
     conflicts("+rocm", when="@:3.0")
 
@@ -273,6 +274,11 @@ class Kokkos(CMakePackage, CudaPackage, ROCmPackage):
             var = "+%s" % tpl
             if var in self.spec:
                 options.append("-D%s_DIR=%s" % (tpl, spec[tpl].prefix))
+
+        if '%oneapi' in self.spec and '+spir' in self.spec:
+#            options.append('-DCMAKE_CXX_FLAGS=-fopenmp-targets=spir64')
+#            self.flag_handler('cxxflags', ['-fiopenmp','-fopenmp-targets=spir64'])
+            pass
 
         if '+rocm' in self.spec:
             options.append('-DCMAKE_CXX_COMPILER=%s' %
