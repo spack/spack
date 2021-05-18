@@ -15,6 +15,7 @@ class PyPynn(PythonPackage):
     pypi = "PyNN/PyNN-0.8.3.tar.gz"
     git      = "https://github.com/NeuralEnsemble/PyNN.git"
 
+    version('0.9.5', sha256='91af2126b639a6a795bfc2709ac49423278c4794b6d0da143908b9afcb415f80')
     version('0.9.1', sha256='bbc60fea3235427191feb2daa0e2fa07eb1c3946104c068ac8a2a0501263b0b1')
     version('0.8.3', sha256='9d59e6cffa4714f0c892ec6b32d1f5f8f75ba3a20d8635bac50c047aa6f2537e')
     version('0.8beta', commit='ffb0cb1661f2b0f2778db8f71865978fe7a7a6a4')
@@ -30,3 +31,6 @@ class PyPynn(PythonPackage):
 
     depends_on('py-neo@0.3:0.4.1',      type=('build', 'run'), when="@:0.8.3")
     depends_on('py-neo@0.5.0:',         type=('build', 'run'), when="@0.9.0:")
+    depends_on('py-lazyarray',          type=('build', 'run'), when="@0.9.0:")
+
+    depends_on('py-mock@1.0:', type='test')
