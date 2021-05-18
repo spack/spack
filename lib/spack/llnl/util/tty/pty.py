@@ -340,8 +340,6 @@ class PseudoShell(object):
         except BaseException:
             error = 1
             traceback.print_exc()
-        #finally:
-        #    controller.controller_fd.close()
 
         if error:
             sys.stderr.write("Controller function error: " + str(error))
