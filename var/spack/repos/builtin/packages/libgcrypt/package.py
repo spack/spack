@@ -12,6 +12,10 @@ class Libgcrypt(AutotoolsPackage):
     homepage = "https://gnupg.org/software/libgcrypt/index.html"
     url      = "https://gnupg.org/ftp/gcrypt/libgcrypt/libgcrypt-1.8.5.tar.bz2"
 
+    maintainers = ['alalazo']
+
+    version('1.9.3', sha256='97ebe4f94e2f7e35b752194ce15a0f3c66324e0ff6af26659bbfb5ff2ec328fd')
+    version('1.9.2', sha256='b2c10d091513b271e47177274607b1ffba3d95b188bbfa8797f948aec9053c5a')
     version('1.9.1', sha256='c5a67a8b9b2bd370fb415ed1ee31c7172e5683076493cf4a3678a0fbdf0265d9')
     version('1.8.7', sha256='03b70f028299561b7034b8966d7dd77ef16ed139c43440925fe8782561974748')
     version('1.8.6', sha256='0cba2700617b99fc33864a0c16b1fa7fdf9781d9ed3509f5d767178e5fd7b975')
