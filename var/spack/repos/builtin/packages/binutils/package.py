@@ -78,7 +78,7 @@ class Binutils(AutotoolsPackage, GNUMirrorPackage):
         if self.spec.satisfies('%cce'):
             env.append_flags('LDFLAGS', '-Wl,-z,muldefs')
 
-        if '+nls' in spec:
+        if '+nls' in self.spec:
             env.append_flags('LDFLAGS', '-lintl')
 
     def configure_args(self):
