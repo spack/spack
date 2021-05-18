@@ -31,7 +31,6 @@ class Freebayes(MesonPackage):
     depends_on('bc', type=('build', 'run'), when='@1.3.5')
     depends_on('samtools', type=('build', 'run'), when='@1.3.5')
 
-
     parallel = False
 
     @when('@1.1.0:')
