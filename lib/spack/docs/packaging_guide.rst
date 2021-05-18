@@ -4296,17 +4296,9 @@ stage **after** the software is installed to the package's metadata
 directory. The result is the following directory and files will be
 available for use in stand-alone tests:
 
-* ``join_path(self.install_test_root, 'tests')`` along with its files
-  and subdirectories
+* ``join_path(self.install_test_root, 'tests')`` along with its files and subdirectories
 * ``join_path(self.install_test_root, 'examples', 'foo.c')``
 * ``join_path(self.install_test_root, 'examples', 'bar.c')``
-
-.. note::
-
-   You **could** build and run the examples in place, which means
-   you'll want to be sure to the directory is cleaned up between
-   test runs, or you could copy them to a suitable location within
-   the test stage directory (`self.test_suite.stage`) before processing.
 
 .. note::
 
