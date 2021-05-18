@@ -44,75 +44,28 @@ class Openvdb(CMakePackage):
     depends_on('boost+iostreams+system+python+numpy', when='+python')
     depends_on('boost+iostreams+system', when='~python')
 
-    # AX requires quite a few things. I've only managed to build llvm@8 under centos8.
-    depends_on('llvm@8', when='+ax')
+    # AX requires quite a few things, and hasn't been properly released
+    # yet. I've only managed to build llvm@8.0.1 under centos8. It
+    # looks like the next version of OpenVDB will support llvm@12.0.0.
+    depends_on('llvm@8.0.1', when='+ax')
     depends_on('bison', when='+ax')
     depends_on('flex', when='+ax')
 
     depends_on('git', type='build', when='@develop')
 
     def cmake_args(self):
-
-        spec = self.spec
-
-        cmake_args = ['-DOPENVDB_BUILD_CORE=ON']
-
-        if '+shared' in spec:
-            cmake_args.extend([
-                '-DBUILD_SHARED_LIBS=ON'
-            ])
-        else:
-            cmake_args.extend([
-                '-DBUILD_SHARED_LIBS=OFF'
-            ])
-        if '+ax' in spec:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_AX=ON',
-                '-DOPENVDB_BUILD_AX_BINARIES=ON'
-            ])
-        else:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_AX=OFF',
-                '-DOPENVDB_BUILD_AX_BINARIES=OFF'
-            ])
-
-        if '+vdb_print' in spec:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_PRINT=ON'
-            ])
-        else:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_PRINT=OFF'
-            ])
-
-        if '+vdb_lod' in spec:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_LOD=ON'
-            ])
-        else:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_LOD=OFF'
-            ])
-
-        if '+vdb_render' in spec:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_RENDER=ON'
-            ])
-        else:
-            cmake_args.extend([
-                '-DOPENVDB_BUILD_VDB_RENDER=OFF'
-            ])
-
-        if '+python' in spec:
-            cmake_args.extend([
-                '-DUSE_NUMPY:BOOL=ON',
-                '-DOPENVDB_BUILD_PYTHON_MODULE:BOOL=ON'])
-        else:
-            cmake_args.extend([
-                '-DUSE_NUMPY:BOOL=OFF',
-                '-DOPENVDB_BUILD_PYTHON_MODULE:BOOL=OFF'])
-
-        return cmake_args
+        args = [
+            self.define('OPENVDB_BUILD_CORE', True),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('OPENVDB_BUILD_VDB_PRINT', 'vdb_print'),
+            self.define_from_variant('OPENVDB_BUILD_VDB_LOD', 'vdb_lod'),
+            self.define_from_variant('OPENVDB_BUILD_VDB_RENDER', 'vdb_render'),
+            self.define_from_variant('OPENVDB_BUILD_AX', 'ax'),
+            self.define_from_variant('OPENVDB_BUILD_AX_BINARIES', 'ax'),
+            self.define_from_variant('OPENVDB_BUILD_PYTHON_MODULE', 'python'),
+            self.define_from_variant('USE_NUMPY', 'python')
+        ]
+        return args
 
     # The python extension is being put in the wrong directory
     # by OpenVDB's cmake, instead it needs to be in
@@ -124,7 +77,6 @@ class Openvdb(CMakePackage):
         spec = self.spec
 
         if '+python' in spec:
-
             if sys.platform == "darwin":
                 pyso = "pyopenvdb.dylib"
             else:
