@@ -4192,9 +4192,11 @@ outputs can be added for use in these tests.
 Configuring the test stage directory
 """"""""""""""""""""""""""""""""""""
 
-The default stand-alone test stage directory, ``~/.spack/test``, is
-defined in :ref:`etc/spack/defaults/config.yaml <config-yaml>`.
-You can change the location in the high-level ``config`` by adding
+Stand-alone tests rely on a stage directory for building, running,
+and tracking results.
+The default directory, ``~/.spack/test``, is defined in
+:ref:`etc/spack/defaults/config.yaml <config-yaml>`.
+You can configure the location in the high-level ``config`` by adding
 or changing the ``test_stage`` path in the appropriate ``config.yaml``
 file such that:
 
@@ -4202,6 +4204,16 @@ file such that:
 
    config:
      test_stage: /path/to/stage
+
+The package can access this path **during test processing** using
+`self.test_suite.stage`. 
+
+.. note::
+
+   The test stage path is established for the entire suite. That
+   means it is the root directory for all specs being installed
+   with the same `spack test run` command. Each spec gets its
+   own stage subdirectory.
 
 """""""""""""""""""""""""
 Enabling test compilation
