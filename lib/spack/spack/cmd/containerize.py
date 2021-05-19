@@ -32,6 +32,6 @@ def containerize(parser, args):
                                       "host": args.monitor_host,
                                       "keep_going": args.monitor_keep_going,
                                       "prefix": args.monitor_prefix,
-                                      "tags": getattr(args, "monitor_tags", None)}
+                                      "tags": args.monitor_tags}
     recipe = spack.container.recipe(config)
     print(recipe)
