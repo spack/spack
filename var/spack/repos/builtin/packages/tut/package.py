@@ -20,6 +20,10 @@ class Tut(WafPackage):
     # https://github.com/mrzechonek/tut-framework/issues/18
     depends_on('python@:3.6', type='build')
 
+    # Tut is used for smoke build tests in CI, and started failing as
+    # soon as gcc@11 was introduced in the environment
+    conflicts('%gcc@11:')
+
     def build_args(self):
         args = []
 
