@@ -47,16 +47,11 @@ class Openfast(CMakePackage):
         options.extend([
             '-DBUILD_DOCUMENTATION:BOOL=OFF',
             '-DBUILD_TESTING:BOOL=OFF',
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DDOUBLE_PRECISION:BOOL=%s' % (
-                'ON' if '+double-precision' in spec else 'OFF'),
-            '-DUSE_DLL_INTERFACE:BOOL=%s' % (
-                'ON' if '+dll-interface' in spec else 'OFF'),
-            '-DBUILD_OPENFAST_CPP_API:BOOL=%s' % (
-                'ON' if '+cxx' in spec else 'OFF'),
-            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=%s' % (
-                'ON' if '+pic' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('DOUBLE_PRECISION', 'double-precision'),
+            self.define_from_variant('USE_DLL_INTERFACE', 'dll-interface'),
+            self.define_from_variant('BUILD_OPENFAST_CPP_API', 'cxx'),
+            self.define_from_variant('CMAKE_POSITION_INDEPENDENT_CODE', 'pic'),
         ])
 
         # Make sure we use Spack's blas/lapack:

@@ -175,3 +175,15 @@ class Upcxx(Package):
             if 'cross=none' in self.spec:
                 make('run-tests', 'NETWORKS=smp')  # runs tests for smp backend
             make('tests-clean')  # cleanup
+
+    def test(self):
+        if self.spec.version <= Version('2019.9.0'):
+            spack.main.send_warning_to_tty(
+                "post-install tests not supported in UPC++ version " +
+                self.spec.version.string + " -- SKIPPED")
+        else:   # run post-install smoke test:
+            test_install = join_path(self.prefix.bin, 'test-upcxx-install.sh')
+            self.run_test(test_install, expected=['SUCCESS'], status=0,
+                          installed=True,
+                          purpose='Checking UPC++ compile+link ' +
+                                  'for all installed backends')

@@ -92,8 +92,7 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
             options.extend(['-DENABLE_RAJA_PLUGIN=ON',
                             '-DRAJA_DIR=' + spec['raja'].prefix])
 
-        options.append('-DENABLE_PICK={0}'.format(
-            'ON' if '+enable_pick' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_PICK', 'enable_pick'))
 
         options.append('-Dumpire_DIR:PATH='
                        + spec['umpire'].prefix.share.umpire.cmake)
@@ -101,10 +100,8 @@ class Chai(CMakePackage, CudaPackage, ROCmPackage):
         options.append('-DENABLE_TESTS={0}'.format(
             'ON' if '+tests' in spec  else 'OFF'))
 
-        options.append('-DENABLE_BENCHMARKS={0}'.format(
-            'ON' if '+benchmarks' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_BENCHMARKS', 'benchmarks'))
 
-        options.append('-DENABLE_EXAMPLES={0}'.format(
-            'ON' if '+examples' in spec else 'OFF'))
+        options.append(self.define_from_variant('ENABLE_EXAMPLES', 'examples'))
 
         return options

@@ -54,8 +54,7 @@ class Flatbuffers(CMakePackage):
 
     def cmake_args(self):
         args = []
-        args.append('-DFLATBUFFERS_BUILD_SHAREDLIB={0}'.format(
-            'ON' if '+shared' in self.spec else 'OFF'))
+        args.append(self.define_from_variant('FLATBUFFERS_BUILD_SHAREDLIB', 'shared'))
         args.append('-DFLATBUFFERS_BUILD_FLATLIB={0}'.format(
             'ON' if '+shared' not in self.spec else 'OFF'))
         if 'darwin' in self.spec.architecture:

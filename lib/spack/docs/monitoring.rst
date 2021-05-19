@@ -227,4 +227,15 @@ You can then build the container as your normally would.
 
     $ sudo singularity build container.sif Singularity 
 
+=======
+don't provide the ``--monitor`` flag! Finally, if you want to provide one or
+more tags to your build, you can do:
+
+.. code-block:: console
+
+    # Add one tag, "pizza"
+    $ spack install --monitor --monitor-tags pizza hdf5
+
+    # Add two tags, "pizza" and "pasta"
+    $ spack install --monitor --monitor-tags pizza,pasta hdf5
 
