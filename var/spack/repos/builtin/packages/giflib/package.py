@@ -30,10 +30,12 @@ class Giflib(MakefilePackage, SourceforgePackage):
         if self.spec.satisfies('@5.2.0:'):
             targets.append('PREFIX={0}'.format(self.spec.prefix))
 
+        return targets
+
     def check(self):
         make('check', parallel=False)
 
     def edit(self, spec, prefix):
         if spec.satisfies('@:5.2.0'):
-            configure = which('configure')
+            configure = Executable('./configure')
             configure('--prefix={0}'.format(prefix))
