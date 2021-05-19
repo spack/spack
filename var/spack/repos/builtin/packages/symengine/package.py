@@ -66,15 +66,11 @@ class Symengine(CMakePackage):
             '-DWITH_SYMENGINE_RCP:BOOL=ON',
             '-DWITH_SYMENGINE_THREAD_SAFE:BOOL=%s' % (
                 'ON' if ('+thread_safe' or '+openmp') in spec else 'OFF'),
-            '-DBUILD_TESTS:BOOL=%s' % (
-                'ON' if self.run_tests else 'OFF'),
+            self.define('BUILD_TESTS', self.run_tests),
             '-DBUILD_BENCHMARKS:BOOL=ON',
-            '-DWITH_LLVM:BOOL=%s' % (
-                'ON' if '+llvm' in spec else 'OFF'),
-            '-DWITH_OPENMP:BOOL=%s' % (
-                'ON' if '+openmp' in spec else 'OFF'),
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('WITH_LLVM', 'llvm'),
+            self.define_from_variant('WITH_OPENMP', 'openmp'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
         ])
 
         if sys.platform == 'darwin':
@@ -91,10 +87,8 @@ class Symengine(CMakePackage):
             ])
         else:
             options.extend([
-                '-DWITH_MPC:BOOL=%s' % (
-                    'ON' if '+mpc' in spec else 'OFF'),
-                '-DWITH_MPFR:BOOL=%s' % (
-                    'ON' if '+mpfr' in spec else 'OFF'),
+                self.define_from_variant('WITH_MPC', 'mpc'),
+                self.define_from_variant('WITH_MPFR', 'mpfr'),
             ])
             if '+flint' in spec:
                 options.extend([

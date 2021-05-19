@@ -23,6 +23,7 @@ class PyUproot(PythonPackage):
 
     tags = ['hep']
 
+    version('4.0.7', sha256='7adb688601fda1e9ab8eeb9a9de681f645827dac0943c6180cf85f03f73fb789')
     version('4.0.6', sha256='1bea2ccc899c6959fb2af69d7e5d1e2df210caab30d3510e26f3fc07c143c37e')
 
     variant('xrootd', default=True,

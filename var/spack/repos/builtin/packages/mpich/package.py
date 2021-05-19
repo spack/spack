@@ -190,6 +190,17 @@ spack package at this time.''',
     # see https://github.com/pmodels/mpich/pull/5031
     conflicts('%clang@:7', when='@3.4:')
 
+    @run_after('configure')
+    def patch_cce(self):
+        # Configure misinterprets output from the cce compiler
+        # Patching configure instead should be possible, but a first
+        # implementation failed in obscure ways that were not worth
+        # tracking down when this worked
+        if self.spec.satisfies('%cce'):
+            filter_file('-L -L', '', 'config.lt', string=True)
+            filter_file('-L -L', '', 'libtool', string=True)
+            filter_file('-L -L', '', 'config.status', string=True)
+
     @classmethod
     def determine_version(cls, exe):
         output = Executable(exe)(output=str, error=str)
@@ -299,6 +310,8 @@ spack package at this time.''',
             env.set('FFLAGS', '-fallow-argument-mismatch')
         # Same fix but for macOS - avoids issue #17934
         if self.spec.satisfies('%apple-clang@11:'):
+            env.set('FFLAGS', '-fallow-argument-mismatch')
+        if self.spec.satisfies('%clang@11:'):
             env.set('FFLAGS', '-fallow-argument-mismatch')
 
     def setup_run_environment(self, env):

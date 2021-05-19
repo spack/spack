@@ -36,9 +36,10 @@ class Openmpi(AutotoolsPackage):
     version('master', branch='master')
 
     # Current
-    version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
+    version('4.1.1', sha256='e24f7a778bd11a71ad0c14587a7f5b00e68a71aa5623e2157bafee3d44c07cda')  # libmpi.so.40.30.1
 
     # Still supported
+    version('4.1.0', sha256='73866fb77090819b6a8c85cb8539638d37d6877455825b74e289d647a39fd5b5')  # libmpi.so.40.30.0
     version('4.0.5', preferred=True, sha256='c58f3863b61d944231077f344fe6b4b8fbb83f3d1bc93ab74640bf3e5acac009')  # libmpi.so.40.20.5
     version('4.0.4', sha256='47e24eb2223fe5d24438658958a313b6b7a55bb281563542e1afc9dec4a31ac4')  # libmpi.so.40.20.4
     version('4.0.3', sha256='1402feced8c3847b3ab8252165b90f7d1fa28c23b6b2ca4632b6e4971267fd03')  # libmpi.so.40.20.3
@@ -190,7 +191,7 @@ class Openmpi(AutotoolsPackage):
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
-    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
+    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.0')
 
     variant(
         'fabrics',
@@ -948,14 +949,29 @@ class Openmpi(AutotoolsPackage):
             self.run_test(exe, '--version', expected, installed=True,
                           purpose=purpose, skip_missing=True)
 
-    def _test_examples(self):
-        # First build the examples
-        self.run_test('make', ['all'], [],
-                      purpose='test: ensuring ability to build the examples',
-                      work_dir=join_path(self.install_test_root,
-                                         self.extra_install_tests))
+    def _test_build_examples(self):
+        # Build the examples copied during installation and return "status"
+        reason = 'test: ensuring ability to build the examples'
+        return self.run_test('make', ['all'], [],
+                             purpose=reason,
+                             work_dir=join_path(self.install_test_root,
+                                                self.extra_install_tests))
 
-        # Now run those with known results
+    def _test_clean_examples(self):
+        # Clean up any example build files
+        reason = 'test: ensuring copied examples cleaned up'
+        return self.run_test('make', ['clean'], [],
+                             purpose=reason,
+                             work_dir=join_path(self.install_test_root,
+                                                self.extra_install_tests))
+
+    def _test_examples(self):
+        # First ensure can build copied examples
+        if not self._test_build_examples():
+            self._test_clean_examples()
+            return
+
+        # Now run examples with known, simple-to-verify results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
@@ -994,10 +1010,15 @@ class Openmpi(AutotoolsPackage):
         }
 
         for exe in checks:
-            expected = checks[exe]
-            reason = 'test: checking example {0} output'.format(exe)
-            self.run_test(exe, [], expected, 0, installed=True,
-                          purpose=reason, skip_missing=True)
+            expected, status = checks[exe]
+            reason = 'test: checking {0} example output and status ({1})' \
+                .format(exe, status)
+            self.run_test(exe, [], expected, status, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=join_path(self.install_test_root,
+                                             self.extra_install_tests))
+
+        self._test_clean_examples()
 
     def test(self):
         """Perform smoke tests on the installed package."""

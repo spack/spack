@@ -24,12 +24,13 @@ class PyWarpx(PythonPackage):
     maintainers = ['ax3l', 'dpgrote', 'RemiLehe']
 
     version('develop', branch='development')
+    version('21.05', sha256='f835f0ae6c5702550d23191aa0bb0722f981abb1460410e3d8952bc3d945a9fc')
     version('21.04', sha256='51d2d8b4542eada96216e8b128c0545c4b7527addc2038efebe586c32c4020a0')
 
     variant('mpi', default=True,
             description='Enable MPI support')
 
-    for v in ['21.04', 'develop']:
+    for v in ['21.05', '21.04', 'develop']:
         depends_on('warpx@{0}'.format(v),
                    when='@{0}'.format(v),
                    type=['build', 'link'])

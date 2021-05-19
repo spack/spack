@@ -20,6 +20,7 @@ class Zstd(CMakePackage):
     maintainers = ['haampie']
 
     version('develop', branch='dev')
+    version('1.5.0', sha256='0d9ade222c64e912d6957b11c923e214e2e010a18f39bec102f572e693ba2867')
     version('1.4.9', sha256='acf714d98e3db7b876e5b540cbf6dee298f60eb3c0723104f6d3f065cd60d6a8')
     version('1.4.8', sha256='f176f0626cb797022fbf257c3c644d71c1c747bb74c32201f9203654da35e9fa')
     version('1.4.7', sha256='085500c8d0b9c83afbc1dc0d8b4889336ad019eba930c5d6a9c6c86c20c769c8')
@@ -39,6 +40,7 @@ class Zstd(CMakePackage):
     variant('zlib', default=False, description='Build programs with zlib support')
     variant('lzma', default=False, description='Build programs with lzma support')
     variant('lz4', default=False, description='Build programs with zlib support')
+    variant('multithread', default=True, description='Build with pthread support')
 
     conflicts('+zlib', when='~programs', msg="zlib requires programs to be built")
     conflicts('+lzma', when='~programs', msg="lzma requires programs to be built")
@@ -53,5 +55,6 @@ class Zstd(CMakePackage):
             self.define_from_variant('ZSTD_BUILD_PROGRAMS', 'programs'),
             self.define_from_variant('ZSTD_BUILD_STATIC', 'static'),
             self.define_from_variant('ZSTD_BUILD_SHARED', 'shared'),
-            self.define_from_variant('ZSTD_LEGACY_SUPPORT', 'legacy')
+            self.define_from_variant('ZSTD_LEGACY_SUPPORT', 'legacy'),
+            self.define_from_variant('ZSTD_MULTITHREAD_SUPPORT', 'multithread')
         ]

@@ -689,7 +689,7 @@ class TestConcretize(object):
 
     # Include targets to prevent regression on 20537
     @pytest.mark.parametrize('spec, best_achievable', [
-        ('mpileaks%gcc@4.4.7 target=x86_64:', 'core2'),
+        ('mpileaks%gcc@4.4.7 ^dyninst@10.2.1 target=x86_64:', 'core2'),
         ('mpileaks%gcc@4.8 target=x86_64:', 'haswell'),
         ('mpileaks%gcc@5.3.0 target=x86_64:', 'broadwell'),
         ('mpileaks%apple-clang@5.1.0 target=x86_64:', 'x86_64')
@@ -1183,3 +1183,64 @@ class TestConcretize(object):
         assert '~foo' in s['external-non-default-variant']
         assert '~bar' in s['external-non-default-variant']
         assert s['external-non-default-variant'].external
+
+    @pytest.mark.regression('22871')
+    @pytest.mark.parametrize('spec_str,expected_os', [
+        ('mpileaks', 'os=debian6'),
+        # To trigger the bug in 22871 we need to have the same compiler
+        # spec available on both operating systems
+        ('mpileaks%gcc@4.5.0 platform=test os=debian6', 'os=debian6'),
+        ('mpileaks%gcc@4.5.0 platform=test os=redhat6', 'os=redhat6')
+    ])
+    def test_os_selection_when_multiple_choices_are_possible(
+            self, spec_str, expected_os
+    ):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_os)
+
+    @pytest.mark.regression('22718')
+    @pytest.mark.parametrize('spec_str,expected_compiler', [
+        ('mpileaks', '%gcc@4.5.0'),
+        ('mpileaks ^mpich%clang@3.3', '%clang@3.3')
+    ])
+    def test_compiler_is_unique(self, spec_str, expected_compiler):
+        s = Spec(spec_str).concretized()
+
+        for node in s.traverse():
+            assert node.satisfies(expected_compiler)
+
+    @pytest.mark.parametrize('spec_str,expected_dict', [
+        # Check the defaults from the package (libs=shared)
+        ('multivalue-variant', {
+            'libs=shared': True,
+            'libs=static': False
+        }),
+        # Check that libs=static doesn't extend the default
+        ('multivalue-variant libs=static', {
+            'libs=shared': False,
+            'libs=static': True
+        }),
+    ])
+    def test_multivalued_variants_from_cli(self, spec_str, expected_dict):
+        s = Spec(spec_str).concretized()
+
+        for constraint, value in expected_dict.items():
+            assert s.satisfies(constraint) == value
+
+    @pytest.mark.regression('22351')
+    @pytest.mark.parametrize('spec_str,expected', [
+        # Version 1.1.0 is deprecated and should not be selected, unless we
+        # explicitly asked for that
+        ('deprecated-versions', ['deprecated-versions@1.0.0']),
+        ('deprecated-versions@1.1.0', ['deprecated-versions@1.1.0']),
+    ])
+    def test_deprecated_versions_not_selected(self, spec_str, expected):
+        if spack.config.get('config:concretizer') == 'original':
+            pytest.xfail('Known failure of the original concretizer')
+
+        s = Spec(spec_str).concretized()
+
+        for abstract_spec in expected:
+            assert abstract_spec in s

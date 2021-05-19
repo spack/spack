@@ -27,6 +27,9 @@ class Hpx(CMakePackage, CudaPackage):
     version('1.2.0', sha256='20942314bd90064d9775f63b0e58a8ea146af5260a4c84d0854f9f968077c170')
     version('1.1.0', sha256='1f28bbe58d8f0da600d60c3a74a644d75ac777b20a018a5c1c6030a470e8a1c9')
 
+    generator = 'Ninja'
+    depends_on('ninja', type='build')
+
     variant('cxxstd',
             default='17',
             values=('11', '14', '17'),

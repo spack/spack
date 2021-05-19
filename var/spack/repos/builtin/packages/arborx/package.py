@@ -26,7 +26,7 @@ class Arborx(CMakePackage):
         'serial': (True,  "enable Serial backend (default)"),
         'cuda': (False,  "enable Cuda backend"),
         'openmp': (False,  "enable OpenMP backend"),
-        'hip': (False,  "enable HIP backend")
+        'rocm': (False,  "enable HIP backend")
     }
 
     variant('mpi', default=True, description='enable MPI')
@@ -61,7 +61,7 @@ class Arborx(CMakePackage):
         options = [
             '-DKokkos_ROOT=%s' % (spec['kokkos'].prefix if '~trilinos' in spec
                                   else spec['trilinos'].prefix),
-            '-DARBORX_ENABLE_MPI=%s' % ('ON' if '+mpi' in spec else 'OFF')
+            self.define_from_variant('ARBORX_ENABLE_MPI', 'mpi')
         ]
 
         if '+cuda' in spec:
@@ -83,7 +83,6 @@ class Arborx(CMakePackage):
         """Build test."""
         cmake_build_path = join_path(self.install_test_root,
                                      self.examples_src_dir, "build")
-        mkdirp(cmake_build_path)
         cmake_prefix_path = "-DCMAKE_PREFIX_PATH={0}".format(self.spec['arborx'].prefix)
 
         # We don't need to append the path to Kokkos to CMAKE_PREFIX_PATH
@@ -92,7 +91,7 @@ class Arborx(CMakePackage):
         # being installed as a standalone or as part of Trilinos.
         if '+mpi' in self.spec:
             cmake_prefix_path += ";{0}".format(self.spec['mpi'].prefix)
-        with working_dir(cmake_build_path):
+        with working_dir(cmake_build_path, create=True):
             cmake_args = ["..",
                           cmake_prefix_path,
                           "-DCMAKE_CXX_COMPILER={0}".format(self.compiler.cxx)]

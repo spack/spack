@@ -579,6 +579,32 @@ def test_clear_failures_errs(install_mockery, monkeypatch, capsys):
     monkeypatch.setattr(os, 'remove', orig_fn)
 
 
+def test_combine_phase_logs(tmpdir):
+    """Write temporary files, and assert that combine phase logs works
+    to combine them into one file. We aren't currently using this function,
+    but it's available when the logs are refactored to be written separately.
+    """
+    log_files = ['configure-out.txt', 'install-out.txt', 'build-out.txt']
+    phase_log_files = []
+
+    # Create and write to dummy phase log files
+    for log_file in log_files:
+        phase_log_file = os.path.join(str(tmpdir), log_file)
+        with open(phase_log_file, 'w') as plf:
+            plf.write('Output from %s\n' % log_file)
+        phase_log_files.append(phase_log_file)
+
+    # This is the output log we will combine them into
+    combined_log = os.path.join(str(tmpdir), "combined-out.txt")
+    spack.installer.combine_phase_logs(phase_log_files, combined_log)
+    with open(combined_log, 'r') as log_file:
+        out = log_file.read()
+
+    # Ensure each phase log file is represented
+    for log_file in log_files:
+        assert "Output from %s\n" % log_file in out
+
+
 def test_check_deps_status_install_failure(install_mockery, monkeypatch):
     const_arg = installer_args(['a'], {})
     installer = create_installer(const_arg)
@@ -751,7 +777,11 @@ def test_requeue_task(install_mockery, capfd):
     installer = create_installer(const_arg)
     task = create_build_task(installer.build_requests[0].pkg)
 
+    # temporarily set tty debug messages on so we can test output
+    current_debug_level = tty.debug_level()
+    tty.set_debug(1)
     installer._requeue_task(task)
+    tty.set_debug(current_debug_level)
 
     ids = list(installer.build_tasks)
     assert len(ids) == 1
@@ -760,7 +790,7 @@ def test_requeue_task(install_mockery, capfd):
     assert qtask.sequence > task.sequence
     assert qtask.attempts == task.attempts + 1
 
-    out = capfd.readouterr()[0]
+    out = capfd.readouterr()[1]
     assert 'Installing a' in out
     assert ' in progress by another process' in out
 

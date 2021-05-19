@@ -197,6 +197,8 @@ class Ascent(Package, CudaPackage):
                 for arg in std_cmake_args:
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
+            if self.spec.satisfies('%cce'):
+                cmake_args.extend(["-DCMAKE_Fortran_FLAGS=-ef"])
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             print("Configuring Ascent...")
             cmake(*cmake_args)
