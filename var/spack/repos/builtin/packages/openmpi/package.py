@@ -957,31 +957,14 @@ class Openmpi(AutotoolsPackage):
         return join_path(self.test_suite.current_test_cache_dir,
                          self.extra_install_tests)
 
-    def _test_build_examples(self):
-        """Build the cached test examples."""
-        return self.run_test('make', ['all'], [],
-                             purpose='test: building cached test examples',
-                             work_dir=self._cached_tests_work_dir)
-
-    def _test_clean_examples(self):
-        """Remove any cached test example build files from the test stage."""
-        return self.run_test('make', ['clean'], [],
-                             purpose='test: cleaning test examples build',
-                             work_dir=self._cached_tests_work_dir)
-
     def _test_examples(self):
         """Run test examples copied from source at build-time."""
-        # Remove any previous cached test builds from the test stage
-        if not self._test_clean_examples():
-            print('Skipping: Cannot remove previous build of cached tests')
-            return
+        # Build the copied, cached test examples
+        self.run_test('make', ['all'], [],
+                      purpose='test: building cached test examples',
+                      work_dir=self._cached_tests_work_dir)
 
-        # Ensure can build copied examples
-        if not self._test_build_examples():
-            print('Skipping: Cannot build cached test examples')
-            return
-
-        # Now run examples with known, simple-to-verify results
+        # Run examples with known, simple-to-verify results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)

@@ -232,33 +232,19 @@ class Hypre(Package, CudaPackage):
         return join_path(self.test_suite.current_test_cache_dir,
                          self.extra_install_tests)
 
-    def _test_build_examples(self):
-        """Build cached test examples."""
-        return self.run_test('make',
-                             ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],
-                             purpose='test: building selected examples',
-                             work_dir=self._cached_tests_work_dir)
-
-    def _test_clean_examples(self):
-        """Clean up any test example build files."""
-        return self.run_test('make', ['distclean'], [],
-                             purpose='test: removing prior test example build',
-                             work_dir=self._cached_tests_work_dir)
-
     def test(self):
         """Perform smoke test on installed HYPRE package."""
         if '+mpi' not in self.spec:
             print('Skipping: HYPRE must be installed with +mpi to run tests')
             return
 
-        if not self._test_clean_examples():
-            print('Skipping: Unable to remove previous build of test examples')
-            return
+        # Build copied and cached test examples
+        self.run_test('make',
+                      ['HYPRE_DIR={0}'.format(self.prefix), 'bigint'],
+                      purpose='test: building selected examples',
+                      work_dir=self._cached_tests_work_dir)
 
-        if not self._test_build_examples():
-            print('Skipping: Unable to build test examples')
-            return
-
+        # Run the examples built above
         for exe in ['./ex5big', './ex15big']:
             self.run_test(exe, [], [], installed=False,
                           purpose='test: ensuring {0} runs'.format(exe),
