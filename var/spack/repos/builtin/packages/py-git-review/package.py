@@ -22,6 +22,7 @@ class PyGitReview(PythonPackage):
     depends_on('python@3.5:',      type=('build', 'run'), when='@2:')
     depends_on('py-setuptools',    type=('build'))
     depends_on('py-pbr',           type=('build'))
+    depends_on('py-pbr@4.1.0:',    type=('build'),        when='@2:')
     depends_on('py-six',           type=('build', 'run'), when='@1.28.0')
     depends_on('py-requests@1.1:', type=('build', 'run'))
     depends_on('git',              type=('run'))
