@@ -43,6 +43,11 @@ class Gnupg(AutotoolsPackage):
     depends_on('iconv')
     depends_on('zlib')
 
+    @run_after('install')
+    @when('@2.0:2.999')
+    def add_gpg2_symlink(self):
+        symlink('gpg', join_path(self.prefix, 'bin', 'gpg2'))
+
     def configure_args(self):
         args = [
             '--disable-bzip2',
