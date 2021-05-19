@@ -20,15 +20,12 @@ class ModeltestNg(CMakePackage):
     variant('mpi', default=False, description="Enable MPI")
 
     depends_on('cmake', type='build')
-    depends_on('glib', type=('build', 'run'))
-    depends_on('bison', type=('build', 'run'))
-    depends_on('flex', type=('build', 'run'))
-    depends_on('openmpi', type=('build', 'run'))
+    depends_on('glib')
+    depends_on('bison')
+    depends_on('flex')
+    depends_on('openmpi', when='+mpi')
 
     def cmake_args(self):
-        args = []
-
-        if ('+mpi' in self.spec):
-            args.append('-DENABLE_MPI=ON')
-
-        return args
+        return [
+            self.define_from_variant('ENABLE_MPI', 'mpi')
+                ]
