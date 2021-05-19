@@ -40,10 +40,12 @@ class Rocalution(CMakePackage):
         depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        if ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
-            depends_on('rocrand@' + ver, type='link', when='@' + ver)
-        if ver in ['4.1.0:']:
-            depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
+
+    for ver in ['3.9.0', '3.10.0', '4.0.0', '4.1.0', '4.2.0']:
+        depends_on('rocrand@' + ver, type='link', when='@' + ver)
+
+    for ver in ['4.1.0', '4.2.0']:
+        depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
 
     patch('0001-fix-hip-build-error.patch')
 

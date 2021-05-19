@@ -40,8 +40,8 @@ class HsaRocrDev(CMakePackage):
         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
         depends_on('rocm-device-libs@' + ver, type=('build', 'link'), when='@' + ver)
 
-        if ver in ['3.7.0', '3.8.0', '3.9.0', '4.0.0', '4.1.0', '4.2.0', 'master']:
-            depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
+    for ver in ['3.7.0', '3.8.0', '3.9.0', '4.0.0', '4.1.0', '4.2.0', 'master']:
+        depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
@@ -53,15 +53,10 @@ class HsaRocrDev(CMakePackage):
         libelf_include = self.spec['libelf'].prefix.include.libelf
         args = ['-DLIBELF_INCLUDE_DIRS=%s' % libelf_include]
 
-        if '+shared' in self.spec:
-            args.append('-DBUILD_SHARED_LIBS=ON')
-        else:
-            args.append('-DBUILD_SHARED_LIBS=OFF')
+        self.define_from_variant('BUILD_SHARED_LIBS', 'shared')
 
-        if ('@3.7.0:' in self.spec and '+image' in self.spec):
-            args.append('-DIMAGE_SUPPORT=ON')
-        else:
-            args.append('-DIMAGE_SUPPORT=OFF')
+        if '@3.7.0:' in self.spec:
+            self.define_from_variant('IMAGE_SUPPORT', 'image')
 
         if '@4.2.0:' in self.spec:
             bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode
