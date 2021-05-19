@@ -24,6 +24,7 @@ class Ghostscript(AutotoolsPackage):
     version('9.21', sha256='02bceadbc4dddeb6f2eec9c8b1623d945d355ca11b8b4df035332b217d58ce85')
     version('9.18', sha256='5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b')
 
+    # https://www.ghostscript.com/ocr.html
     variant('tesseract', default=False, description='Use the Tesseract library for OCR')
 
     depends_on('pkgconfig', type='build')
