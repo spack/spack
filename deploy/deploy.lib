@@ -340,14 +340,14 @@ configure_compilers() {
             echo "set PREOPTIONS=-D__GCC_ATOMIC_TEST_AND_SET_TRUEVAL=1;" >> "${template}"
             log "NVIDIA localrc template"
             cat "${template}"
-            gpu_nodes=$(sinfo -h -N -o %n\ %f|awk '/volta/ {if (!c[$1]) {print $1}; c[$1]=1}')
-            jenkins_nodes=$(squeue -h -o %N\ %j -u bbprelman|awk '/ BB5-[0-9]+$/ {print $1}')
+            compute_nodes=$(sinfo -h -N -o %n | sort -u)
             if [[ "${PGI_DIR}" != "${SPACK_INSTALL_PREFIX}"* ]]; then
                 log "...installation does not match install prefix, skipping modification of files"
+            else
+                for node in bbpv1 bbpv2 bbptadm tds03 tds04 ${compute_nodes}; do
+                    cp $template $PGI_DIR/localrc.$node || true
+                done
             fi
-            for node in bbpv1 bbpv2 bbptadm tds03 tds04 ${gpu_nodes} ${jenkins_nodes}; do
-                cp $template $PGI_DIR/localrc.$node || true
-            done
             rm -rf "${PGI_TMPDIR}"
         fi
         cmd=${cmd/load/unload}
