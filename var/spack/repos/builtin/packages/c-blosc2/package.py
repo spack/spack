@@ -60,12 +60,9 @@ class CBlosc2(CMakePackage):
             '-DPREFER_EXTERNAL_ZSTD=ON',
             '-DDEACTIVATE_AVX2={0}'.format(
                 'ON' if '~avx2' in spec else 'OFF'),
-            '-DBUILD_TESTS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_BENCHMARKS={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DBUILD_EXAMPLES={0}'.format(
-                'ON' if self.run_tests else 'OFF')
+            self.define('BUILD_TESTS', self.run_tests),
+            self.define('BUILD_BENCHMARKS', self.run_tests),
+            self.define('BUILD_EXAMPLES', self.run_tests)
         ]
 
         return args

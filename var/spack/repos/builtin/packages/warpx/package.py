@@ -99,36 +99,25 @@ class Warpx(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DCMAKE_INSTALL_LIBDIR=lib',
             # variants
-            '-DWarpX_APP:BOOL={0}'.format(
-                'ON' if '+app' in spec else 'OFF'),
-            '-DWarpX_ASCENT:BOOL={0}'.format(
-                'ON' if '+ascent' in spec else 'OFF'),
+            self.define_from_variant('WarpX_APP', 'app'),
+            self.define_from_variant('WarpX_ASCENT', 'ascent'),
             '-DWarpX_COMPUTE={0}'.format(
                 spec.variants['compute'].value.upper()),
             '-DWarpX_DIMS={0}'.format(
                 spec.variants['dims'].value.upper()),
-            '-DWarpX_EB:BOOL={0}'.format(
-                'ON' if '+eb' in spec else 'OFF'),
-            '-DWarpX_LIB:BOOL={0}'.format(
-                'ON' if '+lib' in spec else 'OFF'),
-            '-DWarpX_MPI:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DWarpX_MPI_THREAD_MULTIPLE:BOOL={0}'.format(
-                'ON' if '+mpithreadmultiple' in spec else 'OFF'),
-            '-DWarpX_OPENPMD:BOOL={0}'.format(
-                'ON' if '+openpmd' in spec else 'OFF'),
+            self.define_from_variant('WarpX_EB', 'eb'),
+            self.define_from_variant('WarpX_LIB', 'lib'),
+            self.define_from_variant('WarpX_MPI', 'mpi'),
+            self.define_from_variant('WarpX_MPI_THREAD_MULTIPLE', 'mpithreadmultiple'),
+            self.define_from_variant('WarpX_OPENPMD', 'openpmd'),
             '-DWarpX_PRECISION={0}'.format(
                 spec.variants['precision'].value.upper()),
-            '-DWarpX_PSATD:BOOL={0}'.format(
-                'ON' if '+psatd' in spec else 'OFF'),
-            '-DWarpX_QED:BOOL={0}'.format(
-                'ON' if '+qed' in spec else 'OFF'),
-            '-DWarpX_QED_TABLE_GEN:BOOL={0}'.format(
-                'ON' if '+qedtablegen' in spec else 'OFF'),
+            self.define_from_variant('WarpX_PSATD', 'psatd'),
+            self.define_from_variant('WarpX_QED', 'qed'),
+            self.define_from_variant('WarpX_QED_TABLE_GEN', 'qedtablegen'),
         ]
 
         return args

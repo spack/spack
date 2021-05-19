@@ -72,16 +72,16 @@ class Pfunit(CMakePackage):
         spec = self.spec
         args = [
             '-DPYTHON_EXECUTABLE=%s' % spec['python'].command,
-            '-DBUILD_SHARED=%s' % ('YES' if '+shared' in spec else 'NO'),
+            self.define_from_variant('BUILD_SHARED', 'shared'),
             '-DCMAKE_Fortran_MODULE_DIRECTORY=%s' % spec.prefix.include,
-            '-DBUILD_DOCS=%s' % ('YES' if '+docs' in spec else 'NO'),
-            '-DOPENMP=%s' % ('YES' if '+openmp' in spec else 'NO'),
+            self.define_from_variant('BUILD_DOCS', 'docs'),
+            self.define_from_variant('OPENMP', 'openmp'),
             '-DMAX_RANK=%s' % spec.variants['max_array_rank'].value]
 
         if spec.satisfies('@4.0.0:'):
             args.append('-DSKIP_MPI=%s' % ('YES' if '~mpi' in spec else 'NO'))
         else:
-            args.append('-DMPI=%s' % ('YES' if '+mpi' in spec else 'NO'))
+            args.append(self.define_from_variant('MPI', 'mpi'))
 
         if spec.satisfies('+mpi'):
             args.extend(['-DMPI_USE_MPIEXEC=YES',
