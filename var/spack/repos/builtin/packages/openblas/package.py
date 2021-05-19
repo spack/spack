@@ -66,8 +66,8 @@ class Openblas(MakefilePackage):
     #  UPD: the patch has been merged starting version 0.2.20
     patch('openblas_icc.patch', when='@:0.2.19%intel')
     patch('openblas_icc_openmp.patch', when='@:0.2.20%intel@16.0:')
-    patch('openblas_icc_fortran.patch', when='%intel@16.0:')
-    patch('openblas_icc_fortran2.patch', when='%intel@18.0:')
+    patch('openblas_icc_fortran.patch', when='@:0.3.14%intel@16.0:')
+    patch('openblas_icc_fortran2.patch', when='@:0.3.14%intel@18.0:')
     # See https://github.com/spack/spack/issues/15385
     patch('lapack-0.3.9-xerbl.patch', when='@0.3.8:0.3.9 %intel')
 
