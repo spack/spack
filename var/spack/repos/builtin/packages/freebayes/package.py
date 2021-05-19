@@ -16,20 +16,20 @@ class Freebayes(MesonPackage):
 
     version('1.3.5', sha256='7e2635690e916ed85cec36b3263e6e5357413a4f2bf3035362d9749335e8a696')
     version('1.1.0', commit='39e5e4bcb801556141f2da36aba1df5c5c60701f',
-            submodules=True)
+            submodules=True, deprecated=True)
 
     depends_on('cmake', type='build')
     depends_on('zlib')
 
-    # Deps for @1.3.5
-    depends_on('htslib', when='@1.3.5')
-    depends_on('zlib', type=('build', 'run'), when='@1.3.5')
-    depends_on('xz', type=('build', 'run'), when='@1.3.5')
-    depends_on('parallel', type=('build', 'run'), when='@1.3.5')
-    depends_on('ninja', type=('build', 'run'), when='@1.3.5')
-    depends_on('vcftools', type=('build', 'run'), when='@1.3.5')
-    depends_on('bc', type=('build', 'run'), when='@1.3.5')
-    depends_on('samtools', type=('build', 'run'), when='@1.3.5')
+    # Deps for @1.3.5 and beyond
+    depends_on('htslib', when='@1.3.5:')
+    depends_on('zlib', type=('build', 'run'), when='@1.3.5:')
+    depends_on('xz', type=('build', 'run'), when='@1.3.5:')
+    depends_on('parallel', type=('build', 'run'), when='@1.3.5:')
+    depends_on('ninja', type=('build', 'run'), when='@1.3.5:')
+    depends_on('vcftools', type=('build', 'run'), when='@1.3.5:')
+    depends_on('bc', type=('build', 'run'), when='@1.3.5:')
+    depends_on('samtools', type=('build', 'run'), when='@1.3.5:')
 
     parallel = False
 
