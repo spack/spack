@@ -32,13 +32,13 @@ spack:
     - nest@2.20.0
     - neurodamus-core~common%intel
     - neurodamus-core+common
-    - neurodamus-hippocampus+coreneuron%intel
-    - neurodamus-hippocampus+coreneuron%intel^coreneuron+knl
-    - neurodamus-mousify+coreneuron%intel
-    - neurodamus-neocortex+coreneuron%intel
-    - neurodamus-neocortex+coreneuron%intel^coreneuron+knl
-    - neurodamus-thalamus+coreneuron%intel
-    - neurodamus-thalamus+coreneuron%intel^coreneuron+knl
+    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper
+    - neurodamus-hippocampus+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-mousify+coreneuron%intel^coreneuron+caliper
+    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper
+    - neurodamus-neocortex+coreneuron%intel^coreneuron+caliper+knl
+    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper
+    - neurodamus-thalamus+coreneuron%intel^coreneuron+caliper+knl
     - parquet-converters
     - placement-algorithm
     - py-region-grower
