@@ -52,10 +52,7 @@ class RoctracerDev(CMakePackage):
                     string=True)
         kwargs = {'ignore_absent': False, 'backup': False, 'string': False}
         with working_dir('script'):
-            if self.spec.satisfies('@:4.1.0'):
-                match = '^#!/usr/bin/python[2]'
-            else:
-                match = '^#!/usr/bin/python[3]'
+            match = '^#!/usr/bin/python[23]'
             python = self.spec['python'].command.path
             substitute = "#!{python}".format(python=python)
             files = [
