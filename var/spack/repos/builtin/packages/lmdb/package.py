@@ -24,6 +24,10 @@ class Lmdb(MakefilePackage):
     build_directory = 'libraries/liblmdb'
 
     @property
+    def build_targets(self):
+        return ['CC={0}'.format(spack_cc)]
+
+    @property
     def install_targets(self):
         return ['prefix={0}'.format(self.prefix), 'install']
 
