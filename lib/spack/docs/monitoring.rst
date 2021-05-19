@@ -91,7 +91,16 @@ This could mean that if a request fails, you only have partial or no data
 added to your monitoring database. This setting will not be applied to the
 first request to check if the server is running, but to subsequent requests.
 If you don't have a monitor server running and you want to build, simply
-don't provide the ``--monitor`` flag!
+don't provide the ``--monitor`` flag! Finally, if you want to provide one or
+more tags to your build, you can do:
+
+.. code-block:: console
+
+    # Add one tag, "pizza"
+    $ spack install --monitor --monitor-tags pizza hdf5
+
+    # Add two tags, "pizza" and "pasta"
+    $ spack install --monitor --monitor-tags pizza,pasta hdf5
 
 
 ----------------------------
@@ -226,16 +235,3 @@ You can then build the container as your normally would.
 .. code-block:: console
 
     $ sudo singularity build container.sif Singularity 
-
-=======
-don't provide the ``--monitor`` flag! Finally, if you want to provide one or
-more tags to your build, you can do:
-
-.. code-block:: console
-
-    # Add one tag, "pizza"
-    $ spack install --monitor --monitor-tags pizza hdf5
-
-    # Add two tags, "pizza" and "pasta"
-    $ spack install --monitor --monitor-tags pizza,pasta hdf5
-
