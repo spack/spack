@@ -69,7 +69,7 @@ class Faodel(CMakePackage):
             '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
             '-DBUILD_DOCS:BOOL=OFF',
             self.define_from_variant('Faodel_ENABLE_IOM_HDF5', 'hdf5'),
-            self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
+            # self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
             self.define_from_variant('Faodel_ENABLE_MPI_SUPPORT', 'mpi'),
             self.define_from_variant('Faodel_ENABLE_TCMALLOC', 'tcmalloc'),
             '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
