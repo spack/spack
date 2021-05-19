@@ -147,7 +147,7 @@ More information
 This section describes basic use of oneAPI, especially if it has
 changed compared to Parallel Studio. See :ref:`intelpackage` for more
 information on :ref:`intel-virtual-packages`,
-:ref:`intel-unrelated-packages>`,
+:ref:`intel-unrelated-packages`,
 :ref:`intel-integrating-external-libraries`, and
 :ref:`using-mkl-tips`.
 
