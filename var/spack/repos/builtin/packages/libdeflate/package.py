@@ -16,8 +16,8 @@ class Libdeflate(MakefilePackage):
 
     version('1.7', sha256='a5e6a0a9ab69f40f0f59332106532ca76918977a974e7004977a9498e3f11350')
 
-    depends_on('zlib', type=('build', 'run'))
-    depends_on('gzip', type=('build', 'run'))
+    depends_on('zlib')
+    depends_on('gzip')
 
     def patch(self):
         filter_file(r'\/usr\/local', self.prefix, 'Makefile')
