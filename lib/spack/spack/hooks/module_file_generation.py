@@ -23,7 +23,7 @@ def _for_each_enabled(spec, method_name):
             enabled = spack.config.merge_yaml(old_default_enabled,  enabled)
         if not enabled:
             tty.debug('NO MODULE WRITTEN: list of enabled module files is empty')
-            return
+            continue
 
         for type in enabled:
             generator = spack.modules.module_types[type](spec, name)
