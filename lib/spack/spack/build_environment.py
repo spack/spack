@@ -360,6 +360,13 @@ def set_build_environment_variables(pkg, env, dirty):
     build_and_supporting_deps = _place_externals_last(
         _order(build_and_supporting_deps))
 
+    tty.debug("Build deps: " + " ".join(x.name for x in build_deps))
+    tty.debug("Link deps: " + " ".join(x.name for x in link_deps))
+    tty.debug("Build+Link deps: " + " ".join(x.name for x in build_link_deps))
+    tty.debug("RPATH deps: " + " ".join(x.name for x in rpath_deps))
+    tty.debug("Build+Supporting deps: " + " ".join(
+        x.name for x in build_and_supporting_deps))
+
     link_dirs = []
     include_dirs = []
     rpath_dirs = []
