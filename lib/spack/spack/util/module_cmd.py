@@ -198,7 +198,7 @@ def get_path_from_module_contents(text, module_name):
             # Search for the first occurence of any separator marking the end of
             # the path.
             separators = (' ', '"', "'")
-            occurrences = [line.find(s, start=flag_idx) for s in separators]
+            occurrences = [line.find(s, flag_idx) for s in separators]
             indices = [idx for idx in occurrences if idx >= 0]
             if indices:
                 path = line[flag_idx + len(flag):min(indices)]
