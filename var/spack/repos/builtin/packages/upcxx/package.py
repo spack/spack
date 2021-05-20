@@ -55,7 +55,7 @@ class Upcxx(Package):
     # This variant allows overriding with a particular version of GASNet-EX sources.
     variant('gasnet', default=False,
             description="Override embedded GASNet-EX version")
-    depends_on('gasnet~smp', when='+gasnet')
+    depends_on('gasnet conduits=none', when='+gasnet')
 
     depends_on('mpi', when='+mpi')
     depends_on('cuda', when='+cuda')

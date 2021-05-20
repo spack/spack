@@ -41,20 +41,21 @@ class Gasnet(Package):
     # GASNet-EX releases over 2 years old are not supported.
 
     # The optional network backends:
-    variant('smp', default=True, description="SMP conduit for single-node operation")
-    variant('mpi', default=False, description="Low-performance/portable MPI conduit")
-    variant('ibv', default=False, description="Native InfiniBand verbs conduit")
-    variant('udp', default=False, description="Portable UDP conduit, for Ethernet networks")
+    variant('conduits',
+            values=any_combination_of('smp', 'mpi', 'ibv', 'udp').with_default('smp'),
+            description="The hardware-dependent network backends to enable.\n" +
+                        "(smp) = SMP conduit for single-node operation ;\n" +
+                        "(ibv) = Native InfiniBand verbs conduit ;\n" +
+                        "(udp) = Portable UDP conduit, for Ethernet networks ;\n" +
+                        "(mpi) = Low-performance/portable MPI conduit ;\n" +
+                        "For detailed recommendations, consult https://gasnet.lbl.gov")
 
     variant('debug', default=False, description="Enable library debugging mode")
 
-    depends_on('mpi', when='+mpi')
+    depends_on('mpi', when='conduits=mpi')
 
     depends_on('autoconf@2.69', type='build', when='@master:')
     depends_on('automake@1.16:', type='build', when='@master:')
-
-    def conduits(self):
-        return [c for c in ['smp', 'mpi', 'ibv', 'udp'] if "+" + c in self.spec]
 
     def install(self, spec, prefix):
         if spec.satisfies('@master:'):
@@ -73,26 +74,26 @@ class Gasnet(Package):
         install_tree('.', prefix + "/src")
 
         # Library build is provided for unit-testing purposes only (see notice above)
-        if len(self.conduits()) > 0:
+        if 'conduits=none' not in spec:
             options = ["--prefix=%s" % prefix]
 
             if '+debug' in spec:
                 options.append("--enable-debug")
 
-            if '+mpi' in spec:
+            if 'conduits=mpi' in spec:
                 options.append("--enable-mpi-compat")
             else:
                 options.append("--disable-mpi-compat")
 
             options.append("--disable-auto-conduit-detect")
-            for c in self.conduits():
+            for c in spec.variants['conduits'].value:
                 options.append("--enable-" + c)
 
             configure(*options)
             make()
             make('install')
 
-            for c in self.conduits():
+            for c in spec.variants['conduits'].value:
                 testdir = join_path(self.prefix.tests, c)
                 mkdirp(testdir)
                 make('-C', c + '-conduit', 'testgasnet-par')
@@ -103,14 +104,18 @@ class Gasnet(Package):
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def test_install(self):
-        if '+smp' in self.spec:
+        if 'conduits=smp' in self.spec:
             make('-C', 'smp-conduit', 'run-tests')
-        if len(self.conduits()) > 0:
+        if 'conduits=none' not in self.spec:
             self.run_test(join_path(self.prefix.tests, 'testtools'),
                           expected=['Done.'], status=0,
                           installed=True, purpose="Running testtools")
 
     def test(self):
+        if 'conduits=none' in self.spec:
+            spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")
+            return
+
         ranks = '4'
         spawner = {
             'smp': ['env', 'GASNET_PSHM_NODES=' + ranks],
@@ -123,14 +128,11 @@ class Gasnet(Package):
         if 'GASNET_SSH_SERVERS' not in os.environ:
             os.environ['GASNET_SSH_SERVERS'] = "localhost " * 4
 
-        if len(self.conduits()) > 0:
-            self.run_test(join_path(self.prefix.tests, 'testtools'),
-                          expected=['Done.'], status=0,
-                          installed=True, purpose="Running testtools")
-        else:
-            spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")
+        self.run_test(join_path(self.prefix.tests, 'testtools'),
+                      expected=['Done.'], status=0,
+                      installed=True, purpose="Running testtools")
 
-        for c in self.conduits():
+        for c in self.spec.variants['conduits'].value:
             os.environ['GASNET_SUPERNODE_MAXSIZE'] = '0' if (c == 'smp') else '1'
             test = join_path(self.prefix.tests, c, 'testgasnet')
             self.run_test(spawner[c][0], spawner[c][1:] + [test],
