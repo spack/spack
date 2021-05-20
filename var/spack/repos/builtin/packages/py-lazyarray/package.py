@@ -17,7 +17,9 @@ class PyLazyarray(PythonPackage):
     version('0.2.10', sha256='7a53f81b5f3a098c04003d2ad179fc197451fd96bc921510f8534c6af8cc8e19')
     version('0.2.8',  sha256='aaee4e18117cc512de7a4e64522f37bc6f4bf125ecffdbdbf4e4e390fbdd9ba2')
 
-    depends_on('python@2.7:', when='@0.3:')
+    # Required versions come from doc/installation.txt or:
+    # https://lazyarray.readthedocs.io/en/latest/installation.html#dependencies
+    depends_on('python@2.7:', when='@0.3:', type=('build', 'run'))
     depends_on('py-numpy@1.3:', type=('build', 'run'))
     depends_on('py-numpy@1.8:', type=('build', 'run'), when='@0.3:')
     depends_on('py-numpy@1.5:', type=('build', 'run'), when='^python@3:')
