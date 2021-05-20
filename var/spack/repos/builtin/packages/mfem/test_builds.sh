@@ -15,7 +15,8 @@ hdf5_spec='^hdf5@1.8.19:1.8.999'
 # petsc spec
 petsc_spec='^petsc+suite-sparse+mumps'
 # strumpack spec without cuda
-strumpack_spec='^strumpack~cuda'
+strumpack_spec='^strumpack~slate~openmp~cuda'
+strumpack_cuda_spec='^strumpack~slate~openmp'
 
 builds=(
     # preferred version:
@@ -98,33 +99,28 @@ builds2=(
 )
 
 builds_cuda=(
-    ${mfem}'+cuda cuda_arch=sm_'"${cuda_arch}"
+    ${mfem}'+cuda cuda_arch='"${cuda_arch}"
 
-    ${mfem}'+cuda+raja+occa+libceed cuda_arch=sm_'"${cuda_arch}"' \
-        ^raja+cuda~openmp cuda_arch='"${cuda_arch}"' \
-        ^occa+cuda ^libceed+cuda'
+    ${mfem}'+cuda+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
+        ^raja+cuda~openmp'
 
-    ${mfem}'+cuda+openmp+raja+occa+libceed cuda_arch=sm_'"${cuda_arch}"' \
+    ${mfem}'+cuda+openmp+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
         +superlu-dist+strumpack+suite-sparse+petsc+slepc \
         +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        ^raja+cuda+openmp cuda_arch='"${cuda_arch}"' \
-        ^occa+cuda ^libceed+cuda'" $petsc_spec"' \
-        ^strumpack cuda_arch='"${cuda_arch} $hdf5_spec"
+        ^raja+cuda+openmp'" $strumpack_cuda_spec $petsc_spec $hdf5_spec"
 
     # same builds as above with ${mfem_dev}
-    ${mfem_dev}'+cuda cuda_arch=sm_'"${cuda_arch}"
+    ${mfem_dev}'+cuda cuda_arch='"${cuda_arch}"
 
-    ${mfem_dev}'+cuda+raja+occa+libceed cuda_arch=sm_'"${cuda_arch}"' \
-        ^raja+cuda~openmp cuda_arch='"${cuda_arch}"' \
-        ^occa+cuda ^libceed+cuda'
+    ${mfem_dev}'+cuda+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
+        ^raja+cuda~openmp'
 
     # add '^sundials+hypre' to help the concretizer
-    ${mfem_dev}'+cuda+openmp+raja+occa+libceed cuda_arch=sm_'"${cuda_arch}"' \
+    ${mfem_dev}'+cuda+openmp+raja+occa+libceed cuda_arch='"${cuda_arch}"' \
         +superlu-dist+strumpack+suite-sparse+petsc+slepc \
         +sundials+pumi+gslib+mpfr+netcdf+zlib+gnutls+libunwind+conduit \
-        ^raja+cuda+openmp cuda_arch='"${cuda_arch}"' \
-        ^occa+cuda ^libceed+cuda'" $petsc_spec ^sundials+hypre"' \
-        ^strumpack cuda_arch='"${cuda_arch} $hdf5_spec"
+        ^raja+cuda+openmp'" $strumpack_cuda_spec $petsc_spec"' \
+        ^sundials+hypre'" $hdf5_spec"
 )
 
 
