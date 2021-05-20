@@ -343,7 +343,10 @@ def _verify_exe_or_raise(exe):
 
 
 def _gpgconf():
-    exe = spack.util.executable.which('gpgconf', 'gpg2conf', 'gpgconf2')
+    exe = spack.util.executable.which(
+        'gpgconf', 'gpg2conf', 'gpgconf2',
+        path=os.environ.get('SPACK_GNUPGBIN')
+    )
     _verify_exe_or_raise(exe)
 
     # ensure that the gpgconf we found can run "gpgconf --create-socketdir"
@@ -357,7 +360,9 @@ def _gpgconf():
 
 
 def _gpg():
-    exe = spack.util.executable.which('gpg2', 'gpg')
+    exe = spack.util.executable.which(
+        'gpg2', 'gpg', path=os.environ.get('SPACK_GNUPGBIN')
+    )
     _verify_exe_or_raise(exe)
     return exe
 
