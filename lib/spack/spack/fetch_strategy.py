@@ -308,7 +308,7 @@ class URLFetchStrategy(FetchStrategy):
 
             try:
                 partial_file, save_file = self._fetch_from_url(url)
-                if save_file and partial_file != None:
+                if save_file and (partial_file is not None):
                     os.rename(partial_file, save_file)
                 break
             except FailedDownloadError as e:
@@ -348,7 +348,7 @@ class URLFetchStrategy(FetchStrategy):
             return self._fetch_urllib(url)
 
     def _check_headers(self, headers):
-    	# Check if we somehow got an HTML file rather than the archive we
+        # Check if we somehow got an HTML file rather than the archive we
         # asked for.  We only look at the last content type, to handle
         # redirects properly.
         content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
@@ -376,7 +376,7 @@ class URLFetchStrategy(FetchStrategy):
             raise FailedDownloadError(url, msg)
         _data = response.read()
         with open(save_file, 'wb') as _open_file:
-        	_open_file.write(_data)
+            _open_file.write(_data)
         headers = _data.decode('utf-8', 'ignore')
 
         self._check_headers(headers)
