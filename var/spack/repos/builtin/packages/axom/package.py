@@ -326,11 +326,10 @@ class Axom(CachedCMakePackage, CudaPackage):
             else:
                 entries.append('# %s not build\n' % dep.upper())
 
-
         if '+scr' in spec:
             dep_dir = get_spec_path(spec, 'scr', path_replacements)
             entries.append(cmake_cache_path('SCR_DIR', dep_dir))
-           
+
             # scr's dependencies
             for dep in ('kvtree', 'dtcmp'):
                 if spec.satisfies('^{0}'.format(dep)):
