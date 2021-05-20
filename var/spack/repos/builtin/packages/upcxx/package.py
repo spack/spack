@@ -128,7 +128,7 @@ class Upcxx(Package):
             else:
                 env['CXX'] = self.compiler.cxx
             if '+gasnet' in self.spec:
-                env['GASNET'] = join_path(spec['gasnet'].prefix, 'src')
+                env['GASNET'] = spec['gasnet'].prefix.src
             installsh = Executable("./install")
             installsh(prefix)
         else:
