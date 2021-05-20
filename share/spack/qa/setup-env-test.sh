@@ -104,11 +104,11 @@ contains "usage: spack module " spack -m module --help
 contains "usage: spack module " spack -m module
 
 title 'Testing `spack load`'
-contains "export LD_LIBRARY_PATH=$(spack -m location -i b)/lib" spack -m load --only package --sh b
+contains "export PATH=$(spack -m location -i b)/bin" spack -m load --only package --sh b
 succeeds spack -m load b
 fails spack -m load -l
 # test a variable MacOS clears and one it doesn't for recursive loads
-contains "export LD_LIBRARY_PATH=$(spack -m location -i a)/lib:$(spack -m location -i b)/lib" spack -m load --sh a
+contains "export PATH=$(spack -m location -i a)/bin:$(spack -m location -i b)/bin" spack -m load --sh a
 succeeds spack -m load --only dependencies a
 succeeds spack -m load --only package a
 fails spack -m load d
