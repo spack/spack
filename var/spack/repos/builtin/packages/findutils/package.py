@@ -45,10 +45,6 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     version('4.1.20', sha256='8c5dd50a5ca54367fa186f6294b81ec7a365e36d670d9feac62227cb513e63ab')
     version('4.1',    sha256='487ecc0a6c8c90634a11158f360977e5ce0a9a6701502da6cb96a5a7ec143fac')
 
-    # https://www.mail-archive.com/bug-findutils@gnu.org/msg06290.html
-    # not just on Catalina, same problem on Mojave with apple-clang@10.0.1
-    conflicts('@4.8.0', when='%apple-clang')
-
     # The NVIDIA compilers do not currently support some GNU builtins.
     # Detect this case and use the fallback path.
     patch('nvhpc.patch', when='@4.6.0 %nvhpc')
@@ -56,6 +52,12 @@ class Findutils(AutotoolsPackage, GNUMirrorPackage):
     patch('nvhpc-long-width.patch', when='@4.8.0:4.8.99 %nvhpc')
 
     build_directory = 'spack-build'
+
+    # Taken from here to build 4.8.0 with apple-clang:
+    # https://github.com/Homebrew/homebrew-core/blob/master/Formula/findutils.rb
+    def setup_build_environment(self, spack_env):
+        if self.spec.satisfies('@4.8.0 %apple-clang'):
+            spack_env.set('CFLAGS', '-D__nonnull\\(params\\)=')
 
     @classmethod
     def determine_version(cls, exe):
