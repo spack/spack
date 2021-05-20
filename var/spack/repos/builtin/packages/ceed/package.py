@@ -6,7 +6,7 @@
 from spack import *
 
 
-class Ceed(BundlePackage):
+class Ceed(BundlePackage, CudaPackage, ROCmPackage):
     """Ceed is a collection of benchmarks, miniapps, software libraries and
        APIs for efficient high-order finite element and spectral element
        discretizations for exascale applications developed in the Department of
@@ -23,10 +23,6 @@ class Ceed(BundlePackage):
     version('2.0.0')
     version('1.0.0')
 
-    variant('cuda', default=False,
-            description='Enable CUDA support')
-    variant('hip', default=False,
-            description='Enable HIP support for ROCm GPUs')
     variant('mfem', default=True, description='Build MFEM, Laghos and Remhos')
     variant('nek', default=True,
             description='Build Nek5000, GSLIB, Nekbone, and NekCEM')
@@ -43,9 +39,13 @@ class Ceed(BundlePackage):
     # LibCEED
     # ceed 4.0
     depends_on('libceed@0.8~cuda', when='@4.0.0~cuda')
-    depends_on('libceed@0.8+cuda+magma', when='@4.0.0+cuda')
-    depends_on('libceed@0.8~hip', when='@4.0.0~hip')
-    depends_on('libceed@0.8+hip', when='@4.0.0+hip')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('libceed@0.8+cuda+magma cuda_arch={0}'.format(arch),
+                   when='@4.0.0+cuda cuda_arch={0}'.format(arch))
+    depends_on('libceed@0.8~rocm', when='@4.0.0~rocm')
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('libceed@0.8+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+rocm amdgpu_target={0}'.format(target))
     depends_on('libceed@0.8+occa', when='@4.0.0+occa')
     depends_on('libceed@0.8~occa', when='@4.0.0~occa')
     # ceed-3.0
@@ -81,8 +81,12 @@ class Ceed(BundlePackage):
     # NekRS
     # ceed-4.0
     depends_on('nekrs@21.0', when='@4.0.0+nek')
-    depends_on('nekrs@21.0+cuda', when='@4.0.0+nek+cuda')
-    depends_on('nekrs@21.0+rocm', when='@4.0.0+nek+hip')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('nekrs@21.0+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+nek+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('nekrs@21.0+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+nek+rocm amdgpu_target={0}'.format(target))
 
     # Nek5000, GSLIB, Nekbone, and NekCEM
     # ceed-3.0 and ceed-4.0
@@ -107,8 +111,12 @@ class Ceed(BundlePackage):
     # PETSc
     # ceed 4.0
     depends_on('petsc@3.15.0:3.15.99', when='@4.0.0:4.99.99+petsc')
-    depends_on('petsc+cuda', when='@4.0.0+petsc+cuda')
-    depends_on('petsc@3.15.0:3.15.99+hip', when='@4.0.0:4.99.99+petsc+hip')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('petsc+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+petsc+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('petsc@3.15.0:3.15.99+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0:4.99.99+petsc+rocm amdgpu_target={0}'.format(target))
     depends_on('petsc@3.15.0:3.15.99~hdf5~superlu-dist',
                when='@4.0.0+petsc+quickbuild')
     depends_on('petsc@3.15.0:3.15.99+mpi+double~int64', when='@4.0.0:4.99.99+petsc~mfem')
@@ -152,7 +160,9 @@ class Ceed(BundlePackage):
 
     # MAGMA
     # ceed-4.0
-    depends_on('magma@2.5.4', when='@4.0.0+cuda')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('magma@2.5.4 cuda_arch={0}'.format(arch),
+                   when='@4.0.0+cuda cuda_arch={0}'.format(arch))
     # ceed-3.0
     depends_on('magma@2.5.3', when='@3.0.0+cuda')
     # ceed-2.0
@@ -178,8 +188,12 @@ class Ceed(BundlePackage):
     depends_on('mfem@4.2.0+pumi', when='@4.0.0+mfem+pumi')
     depends_on('mfem@4.2.0+gslib', when='@4.0.0+mfem+nek')
     depends_on('mfem@4.2.0+libceed', when='@4.0.0+mfem')
-    depends_on('mfem@4.2.0+cuda', when='@4.0.0+mfem+cuda')
-    depends_on('mfem@4.2.0+rocm', when='@4.0.0+mfem+hip')
+    for arch in CudaPackage.cuda_arch_values:
+        depends_on('mfem@4.2.0+cuda cuda_arch={0}'.format(arch),
+                   when='@4.0.0+mfem+cuda cuda_arch={0}'.format(arch))
+    for target in ROCmPackage.amdgpu_targets:
+        depends_on('mfem@4.2.0+rocm amdgpu_target={0}'.format(target),
+                   when='@4.0.0+mfem+rocm amdgpu_target={0}'.format(target))
     depends_on('mfem@4.2.0+occa', when='@4.0.0+mfem+occa')
     depends_on('laghos@3.1', when='@4.0.0+mfem')
     depends_on('remhos@1.0', when='@4.0.0+mfem')
