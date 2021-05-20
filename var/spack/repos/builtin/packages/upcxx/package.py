@@ -162,7 +162,7 @@ class Upcxx(Package):
             options = ["--prefix=%s" % prefix]
 
             if '+gasnet' in self.spec:
-                options.append('--with-gasnet=%s/src' % spec['gasnet'].prefix)
+                options.append('--with-gasnet=' + spec['gasnet'].prefix.src)
 
             configure(*options)
 
