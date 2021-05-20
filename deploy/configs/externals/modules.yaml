@@ -62,6 +62,7 @@ modules:
       - '%gcc'
       - '%intel'
       - '%clang'
+      - '%nvhpc'
       - '%pgi'
     projections:
       all: '{name}/{version}'
