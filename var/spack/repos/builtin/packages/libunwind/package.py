@@ -59,6 +59,10 @@ class Libunwind(AutotoolsPackage):
             if '+pic' in self.spec:
                 wrapper_flags.append(self.compiler.cc_pic_flag)
 
+        elif name == 'ldflags':
+            if self.spec.satisfies('%cce'):
+                wrapper_flags.append('-Wl,-z,muldefs')
+
         return (wrapper_flags, None, flags)
 
     def configure_args(self):
