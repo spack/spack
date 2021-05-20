@@ -60,6 +60,6 @@ class HsaRocrDev(CMakePackage):
 
         if '@4.2.0:' in self.spec:
             bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode
-            args.append('-DBITCODE_DIR={}'.format(bitcode_dir))
+            args.append('-DBITCODE_DIR={0}'.format(bitcode_dir))
 
         return args
