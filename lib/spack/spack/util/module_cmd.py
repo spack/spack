@@ -95,6 +95,7 @@ def load_module(mod):
     load that module. It then loads the provided module. Depends on the
     modulecmd implementation of modules used in cray and lmod.
     """
+    tty.debug("module_cmd.load_module: {0}".format(mod))
     # Read the module and remove any conflicting modules
     # We do this without checking that they are already installed
     # for ease of programming because unloading a module that is not
