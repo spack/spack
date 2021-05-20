@@ -18,7 +18,11 @@ class Rpm(AutotoolsPackage):
 
     homepage = "https://github.com/rpm-software-management/rpm"
     url      = "https://github.com/rpm-software-management/rpm/archive/rpm-4.16.0-release.tar.gz"
+    git      = "https://github.com/rpm-software-management/rpm.git"
 
+    maintainers = ['haampie']
+
+    version('master', branch='master')
     version('4.16.1.2', sha256='3d2807807a8ccaa92a8ced74e09b5bf5b2417a5bbf9bee4abc7c6aa497547bf3')
     version('4.16.0', sha256='a62b744e3404b107e8467e1a36ff0f2bf9e5c1b748dbfeb36db54bbb859446ea')
 
@@ -26,7 +30,7 @@ class Rpm(AutotoolsPackage):
             multi=False, description='What cryptographic library to use')
     variant('sqlite', default=False, description='Use sqlite instead of ndb')
     variant('berkeley-db', values=('full', 'readonly', 'none'), default='none',
-            multi=False, description='Type of support for Berkeley DB databases')
+            multi=False, description='Type of support for Berkeley DB')
     variant('selinux', default=False, description="Enable support for SELinux")
     variant('python', default=False, description="Build Python bindings to RPM library")
     variant('lua', default=True, description='Build with lua support')
