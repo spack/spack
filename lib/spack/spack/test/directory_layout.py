@@ -190,7 +190,7 @@ def test_handle_unknown_package(temporary_store, config, mock_packages):
         # enough to read a spec from the spec file.
         for spec, path in installed_specs.items():
             spec_from_file = layout.read_spec(
-                os.path.join(path, '.spack', 'spec.yaml'))
+                os.path.join(path, '.spack', 'spec.json'))
 
             # To satisfy these conditions, directory layouts need to
             # read in concrete specs from their install dirs somehow.

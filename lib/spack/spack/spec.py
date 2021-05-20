@@ -2135,7 +2135,7 @@ class Spec(object):
                 continue
 
             yaml_deps = node[name]['dependencies']
-            for dname, dhash, dtypes in Spec.read_yaml_dep_specs(yaml_deps):
+            for dname, dhash, dtypes, _ in Spec.read_yaml_dep_specs(yaml_deps):
                 deps[name]._add_dependency(deps[dname], dtypes)
 
         return spec
@@ -2147,6 +2147,10 @@ class Spec(object):
         Parameters:
         data -- a nested dict/list data structure read from YAML or JSON.
         """
+        # Check for the old format
+
+        if isinstance(data['spec'], list):
+            return Spec.from_old_dict(data)
 
         # New Design
 

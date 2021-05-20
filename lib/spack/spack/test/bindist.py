@@ -436,7 +436,6 @@ def test_spec_needs_rebuild(monkeypatch, tmpdir):
 
 
 def test_generate_indices_key_error(monkeypatch, capfd):
-
     def mock_list_url(url, recursive=False):
         print('mocked list_url({0}, {1})'.format(url, recursive))
         raise KeyError('Test KeyError handling')
@@ -459,7 +458,6 @@ def test_generate_indices_key_error(monkeypatch, capfd):
 
 
 def test_generate_indices_exception(monkeypatch, capfd):
-
     def mock_list_url(url, recursive=False):
         print('mocked list_url({0}, {1})'.format(url, recursive))
         raise Exception('Test Exception handling')

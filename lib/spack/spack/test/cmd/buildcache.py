@@ -89,7 +89,7 @@ def tests_buildcache_create(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
@@ -111,7 +111,7 @@ def tests_buildcache_create_env(
 
     spec = Spec(pkg).concretized()
     tarball_path = spack.binary_distribution.tarball_path_name(spec, '.spack')
-    tarball = spack.binary_distribution.tarball_name(spec, '.spec.yaml')
+    tarball = spack.binary_distribution.tarball_name(spec, '.spec.json')
     assert os.path.exists(
         os.path.join(str(tmpdir), 'build_cache', tarball_path))
     assert os.path.exists(
