@@ -308,7 +308,7 @@ class URLFetchStrategy(FetchStrategy):
 
             try:
                 partial_file, save_file = self._fetch_from_url(url)
-                if save_file:
+                if save_file and partial_file != None:
                     os.rename(partial_file, save_file)
                 break
             except FailedDownloadError as e:
@@ -347,13 +347,20 @@ class URLFetchStrategy(FetchStrategy):
         else:
             return self._fetch_urllib(url)
 
+    def _check_headers(self, headers):
+    	# Check if we somehow got an HTML file rather than the archive we
+        # asked for.  We only look at the last content type, to handle
+        # redirects properly.
+        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
+                                   flags=re.IGNORECASE)
+        if content_types and 'text/html' in content_types[-1]:
+            warn_content_type_mismatch(self.archive_file or "the archive")
+
     @_needs_stage
     def _fetch_urllib(self, url):
         save_file = None
-        partial_file = None
         if self.stage.save_filename:
             save_file = self.stage.save_filename
-            partial_file = self.stage.save_filename + '.part'
         tty.msg('Fetching {0}'.format(url))
 
         # Run urllib but grab the mime type from the http headers
@@ -363,22 +370,17 @@ class URLFetchStrategy(FetchStrategy):
             # clean up archive on failure.
             if self.archive_file:
                 os.remove(self.archive_file)
-            if partial_file and os.path.exists(partial_file):
-                os.remove(partial_file)
+            if save_file and os.path.exists(save_file):
+                os.remove(save_file)
             msg = 'urllib failed to fetch with error {0}'.format(e)
             raise FailedDownloadError(url, msg)
         _data = response.read()
-        open(partial_file, 'wb').write(_data)
+        with open(save_file, 'wb') as _open_file:
+        	_open_file.write(_data)
         headers = _data.decode('utf-8', 'ignore')
 
-        # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
-        # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
-                                   flags=re.IGNORECASE)
-        if content_types and 'text/html' in content_types[-1]:
-            warn_content_type_mismatch(self.archive_file or "the archive")
-        return partial_file, save_file
+        self._check_headers(headers)
+        return None, save_file
 
     @_needs_stage
     def _fetch_curl(self, url):
@@ -465,13 +467,7 @@ class URLFetchStrategy(FetchStrategy):
                     url,
                     "Curl failed with error %d" % curl.returncode)
 
-        # Check if we somehow got an HTML file rather than the archive we
-        # asked for.  We only look at the last content type, to handle
-        # redirects properly.
-        content_types = re.findall(r'Content-Type:[^\r\n]+', headers,
-                                   flags=re.IGNORECASE)
-        if content_types and 'text/html' in content_types[-1]:
-            warn_content_type_mismatch(self.archive_file or "the archive")
+        self._check_headers(headers)
         return partial_file, save_file
 
     @property  # type: ignore # decorated properties unsupported in mypy
