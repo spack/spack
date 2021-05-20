@@ -4,6 +4,7 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 from spack import *
+import os
 
 
 class Gasnet(Package):
@@ -92,12 +93,12 @@ class Gasnet(Package):
             make('install')
 
             for c in self.conduits():
-                testdir = join_path(prefix, 'tests', c)
+                testdir = join_path(self.prefix.tests, c)
                 mkdirp(testdir)
                 make('-C', c + '-conduit', 'testgasnet-par')
                 install(c + "-conduit/testgasnet", testdir)
             make('-C', c + '-conduit', 'testtools-par')
-            install(c + "-conduit/testtools", join_path(prefix, 'tests'))
+            install(c + "-conduit/testtools", self.prefix.tests)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
@@ -105,7 +106,7 @@ class Gasnet(Package):
         if '+smp' in self.spec:
             make('-C', 'smp-conduit', 'run-tests')
         if len(self.conduits()) > 0:
-            self.run_test(join_path(prefix, 'tests', 'testtools'),
+            self.run_test(join_path(self.prefix.tests, 'testtools'),
                           expected=['Done.'], status=0,
                           installed=True, purpose="Running testtools")
 
@@ -118,20 +119,20 @@ class Gasnet(Package):
             'udp': [join_path(self.prefix.bin, 'amudprun'), '-spawn', 'L', '-np', ranks]
         }
 
-        env['GASNET_VERBOSEENV'] = '1'  # include diagnostic info
-        if 'GASNET_SSH_SERVERS' not in env:
-            env['GASNET_SSH_SERVERS'] = "localhost " * 4
+        os.environ['GASNET_VERBOSEENV'] = '1'  # include diagnostic info
+        if 'GASNET_SSH_SERVERS' not in os.environ:
+            os.environ['GASNET_SSH_SERVERS'] = "localhost " * 4
 
         if len(self.conduits()) > 0:
-            self.run_test(join_path(prefix, 'tests', 'testtools'),
+            self.run_test(join_path(self.prefix.tests, 'testtools'),
                           expected=['Done.'], status=0,
                           installed=True, purpose="Running testtools")
         else:
             spack.main.send_warning_to_tty("No conduit libraries built -- SKIPPED")
 
         for c in self.conduits():
-            env['GASNET_SUPERNODE_MAXSIZE'] = '0' if (c == 'smp') else '1'
-            test = join_path(self.prefix, 'tests', c, 'testgasnet')
+            os.environ['GASNET_SUPERNODE_MAXSIZE'] = '0' if (c == 'smp') else '1'
+            test = join_path(self.prefix.tests, c, 'testgasnet')
             self.run_test(spawner[c][0], spawner[c][1:] + [test],
                           expected=['done.'], status=0,
                           installed=(c != 'smp'),
