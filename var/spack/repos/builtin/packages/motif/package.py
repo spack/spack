@@ -37,6 +37,11 @@ class Motif(AutotoolsPackage):
 
     patch('add_xbitmaps_dependency.patch')
 
+    # Solve "implicit declaration of function is invalid in C99 error" with apple-clang:
+    def setup_build_environment(self, spack_env):
+        if spec.satisfies('%apple-clang'):
+            spack_env.set('CFLAGS', '-Wno-implicit-function-declaration')
+
     def autoreconf(self, spec, prefix):
         autoreconf = which('autoreconf')
         with working_dir(self.configure_directory):
