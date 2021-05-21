@@ -183,7 +183,7 @@ class IntelTbb(CMakePackage):
             options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', self.spec['hwloc'].prefix.lib),
                         define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
         else:
-            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
+            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib),
                         define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
 
         return options
