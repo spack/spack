@@ -794,6 +794,12 @@ def setup_package(pkg, dirty, context='build'):
     if not dirty:
         clean_environment()
 
+    # setup compilers for build contexts
+    need_compiler = context == 'build' or (context == 'test' and
+                                           pkg.test_requires_compiler)
+    if need_compiler:
+        set_compiler_environment_variables(pkg, env)
+
     # architecture specific setup
     pkg.architecture.platform.setup_platform_environment(pkg, env)
 
@@ -820,11 +826,10 @@ def setup_package(pkg, dirty, context='build'):
         set_module_variables_for_package(pkg)
         env.prepend_path('PATH', '.')
 
-    # setup compilers and build tools for build contexts
-    need_compiler = context == 'build' or (context == 'test' and
-                                           pkg.test_requires_compiler)
+    # setup PATH etc. for dependencies. This is run after custom package
+    # environment modifications so that PrependPath actions performed
+    # here take precedence
     if need_compiler:
-        set_compiler_environment_variables(pkg, env)
         set_build_environment_variables(pkg, env, dirty)
 
     # Loading modules, in particular if they are meant to be used outside
