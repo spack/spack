@@ -31,8 +31,10 @@ from copy import deepcopy
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
-    """a common function to get a client for a particular host and prefix.
+def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None):
+    """
+    Get a monitor client for a particular host and prefix.
+
     If the client is not running, we exit early, unless allow_fail is set
     to true, indicating that we should continue the build even if the
     server is not present. Note that this client is defined globally as "cli"
@@ -44,7 +46,8 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
     the monitor use it.
     """
     global cli
-    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail)
+    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
+                             tags=tags)
 
     # If we don't disable auth, environment credentials are required
     if not disable_auth:
@@ -67,7 +70,10 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
 
 
 def get_monitor_group(subparser):
-    """Since the monitor group is shared between commands, we provide a common
+    """
+    Retrieve the monitor group for the argument parser.
+
+    Since the monitor group is shared between commands, we provide a common
     function to generate the group for it. The user can pass the subparser, and
     the group is added, and returned.
     """
@@ -79,6 +85,9 @@ def get_monitor_group(subparser):
     monitor_group.add_argument(
         '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
         default=False, help="the monitoring server does not require auth.")
+    monitor_group.add_argument(
+        '--monitor-tags', dest='monitor_tags', default=None,
+        help="One or more (comma separated) tags for a build.")
     monitor_group.add_argument(
         '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
         default=False, help="continue the build if a request to monitor fails.")
@@ -92,15 +101,16 @@ def get_monitor_group(subparser):
 
 
 class SpackMonitorClient:
-    """The SpackMonitorClient is a handle to interact with a spack monitor
-    server. We require the host url, along with the prefix to discover the
+    """Client to interact with a spack monitor server.
+
+    We require the host url, along with the prefix to discover the
     service_info endpoint. If allow_fail is set to True, we will not exit
-    on error with tty.fail given that a request is not successful. The spack
+    on error with tty.die given that a request is not successful. The spack
     version is one of the fields to uniquely identify a spec, so we add it
     to the client on init.
     """
 
-    def __init__(self, host=None, prefix="ms1", allow_fail=False):
+    def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None):
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
@@ -109,12 +119,16 @@ class SpackMonitorClient:
         self.allow_fail = allow_fail
         self.spack_version = spack.main.get_version()
         self.capture_build_environment()
+        self.tags = tags
 
         # We keey lookup of build_id by full_hash
         self.build_ids = {}
 
     def load_build_environment(self, spec):
-        """If we are running an analyze command, we will need to load previously
+        """
+        Load a build environment from install_environment.json.
+
+        If we are running an analyze command, we will need to load previously
         used build environment metadata from install_environment.json to capture
         what was done during the build.
         """
@@ -133,10 +147,12 @@ class SpackMonitorClient:
             self.build_environment = build_environment
 
     def capture_build_environment(self):
-        """Use spack.util.environment.get_host_environment_metadata to capture the
-        environment for the build. This is important because it's a unique
-        identifier, along with the spec, for a Build. It should look something
-        like this:
+        """
+        Capture the environment for the build.
+
+        This uses spack.util.environment.get_host_environment_metadata to do so.
+        This is important because it's a unique identifier, along with the spec,
+        for a Build. It should look something like this:
 
         {'host_os': 'ubuntu20.04',
          'platform': 'linux',
@@ -153,8 +169,10 @@ class SpackMonitorClient:
         self.build_environment = get_host_environment_metadata()
 
     def require_auth(self):
-        """Require authentication, meaning that the token and username must
-        not be unset
+        """
+        Require authentication.
+
+        The token and username must not be unset
         """
         if not self.token or not self.username:
             tty.die("You are required to export SPACKMON_TOKEN and SPACKMON_USER")
@@ -163,13 +181,16 @@ class SpackMonitorClient:
         self.headers.update({name: value})
 
     def set_basic_auth(self, username, password):
-        """A wrapper to adding basic authentication to the Request"""
+        """
+        A wrapper to adding basic authentication to the Request
+        """
         auth_str = "%s:%s" % (username, password)
         auth_header = base64.b64encode(auth_str.encode("utf-8"))
         self.set_header("Authorization", "Basic %s" % auth_header.decode("utf-8"))
 
     def reset(self):
-        """Reset and prepare for a new request.
+        """
+        Reset and prepare for a new request.
         """
         if "Authorization" in self.headers:
             self.headers = {"Authorization": self.headers['Authorization']}
@@ -177,13 +198,16 @@ class SpackMonitorClient:
             self.headers = {}
 
     def prepare_request(self, endpoint, data, headers):
-        """Given an endpoint url and data, prepare the request. If data
-        is provided, urllib makes the request a POST
+        """
+        Prepare a request given an endpoint, data, and headers.
+
+        If data is provided, urllib makes the request a POST
         """
         # Always reset headers for new request.
         self.reset()
 
-        headers = headers or {}
+        # Preserve previously used auth token
+        headers = headers or self.headers
 
         # The calling function can provide a full or partial url
         if not endpoint.startswith("http"):
@@ -198,7 +222,10 @@ class SpackMonitorClient:
         return Request(endpoint, data=data, headers=headers)
 
     def issue_request(self, request, retry=True):
-        """Given a prepared request, issue it. If we get an error, die. If
+        """
+        Given a prepared request, issue it.
+
+        If we get an error, die. If
         there are times when we don't want to exit on error (but instead
         disable using the monitoring service) we could add that here.
         """
@@ -207,7 +234,7 @@ class SpackMonitorClient:
         except URLError as e:
 
             # If we have an authorization request, retry once with auth
-            if e.code == 401 and retry:
+            if hasattr(e, "code") and e.code == 401 and retry:
                 if self.authenticate_request(e):
                     request = self.prepare_request(
                         e.url,
@@ -232,7 +259,10 @@ class SpackMonitorClient:
         return response
 
     def do_request(self, endpoint, data=None, headers=None, url=None):
-        """Do a request. If data is provided, it is POST, otherwise GET.
+        """
+        Do the actual request.
+
+        If data is provided, it is POST, otherwise GET.
         If an entire URL is provided, don't use the endpoint
         """
         request = self.prepare_request(endpoint, data, headers)
@@ -247,7 +277,10 @@ class SpackMonitorClient:
         return response
 
     def authenticate_request(self, originalResponse):
-        """Given a response (an HTTPError 401), look for a Www-Authenticate
+        """
+        Authenticate the request.
+
+        Given a response (an HTTPError 401), look for a Www-Authenticate
         header to parse. We return True/False to indicate if the request
         should be retried.
         """
@@ -290,13 +323,17 @@ class SpackMonitorClient:
 
     # Functions correspond to endpoints
     def service_info(self):
-        """get the service information endpoint"""
+        """
+        Get the service information endpoint
+        """
         # Base endpoint provides service info
         return self.do_request("")
 
     def new_configuration(self, specs):
-        """Given a list of specs, generate a new configuration for each. We
-        return a lookup of specs with their package names. This assumes
+        """
+        Given a list of specs, generate a new configuration for each.
+
+        We return a lookup of specs with their package names. This assumes
         that we are only installing one version of each package. We aren't
         starting or creating any builds, so we don't need a build environment.
         """
@@ -314,7 +351,10 @@ class SpackMonitorClient:
         return configs
 
     def new_build(self, spec):
-        """Create a new build, meaning sending the hash of the spec to be built,
+        """
+        Create a new build.
+
+        This means sending the hash of the spec to be built,
         along with the build environment. These two sets of data uniquely can
         identify the build, and we will add objects (the binaries produced) to
         it. We return the build id to the calling client.
@@ -322,7 +362,8 @@ class SpackMonitorClient:
         return self.get_build_id(spec, return_response=True)
 
     def get_build_id(self, spec, return_response=False, spec_exists=True):
-        """Retrieve a build id, either in the local cache, or query the server
+        """
+        Retrieve a build id, either in the local cache, or query the server.
         """
         full_hash = spec.full_hash()
         if full_hash in self.build_ids:
@@ -331,6 +372,10 @@ class SpackMonitorClient:
         # Prepare build environment data (including spack version)
         data = self.build_environment.copy()
         data['full_hash'] = full_hash
+
+        # If the build should be tagged, add it
+        if self.tags:
+            data['tags'] = self.tags
 
         # If we allow the spec to not exist (meaning we create it) we need to
         # include the full spec.yaml here
@@ -351,11 +396,11 @@ class SpackMonitorClient:
         return bid
 
     def update_build(self, spec, status="SUCCESS"):
-        """update task will just update the relevant package to indicate a
-        successful install. Unlike cancel_task that sends a cancalled request
-        to the main package, here we don't need to cancel or otherwise update any
-        other statuses. This endpoint can take a general status to update just
-        one
+        """
+        Update a build with a new status.
+
+        This typically updates the relevant package to indicate a
+        successful install. This endpoint can take a general status to update.
         """
         data = {"build_id": self.get_build_id(spec), "status": status}
         return self.do_request("builds/update/", data=sjson.dump(data))
@@ -367,7 +412,10 @@ class SpackMonitorClient:
         return self.update_build(spec, status="FAILED")
 
     def send_analyze_metadata(self, pkg, metadata):
-        """Given a dictionary of analyzers (with key as analyzer type, and
+        """
+        Send spack analyzer metadata to the spack monitor server.
+
+        Given a dictionary of analyzers (with key as analyzer type, and
         value as the data) upload the analyzer output to Spack Monitor.
         Spack Monitor should either have a known understanding of the analyzer,
         or if not (the key is not recognized), it's assumed to be a dictionary
@@ -382,7 +430,10 @@ class SpackMonitorClient:
         return self.do_request("analyze/builds/", data=sjson.dump(data))
 
     def send_phase(self, pkg, phase_name, phase_output_file, status):
-        """Given a package, phase name, and status, update the monitor endpoint
+        """
+        Send the result of a phase during install.
+
+        Given a package, phase name, and status, update the monitor endpoint
         to alert of the status of the stage. This includes parsing the package
         metadata folder for phase output and error files
         """
@@ -396,7 +447,10 @@ class SpackMonitorClient:
         return self.do_request("builds/phases/update/", data=sjson.dump(data))
 
     def upload_specfile(self, filename):
-        """Given a spec file (must be json) upload to the UploadSpec endpoint.
+        """
+        Upload a spec file to the spack monitor server.
+
+        Given a spec file (must be json) upload to the UploadSpec endpoint.
         This function is not used in the spack to server workflow, but could
         be useful is Spack Monitor is intended to send an already generated
         file in some kind of separate analysis. For the environment file, we
@@ -411,7 +465,9 @@ class SpackMonitorClient:
 # Helper functions
 
 def parse_auth_header(authHeaderRaw):
-    """parse authentication header into pieces"""
+    """
+    Parse an authentication header into relevant pieces
+    """
     regex = re.compile('([a-zA-z]+)="(.+?)"')
     matches = regex.findall(authHeaderRaw)
     lookup = dict()
@@ -429,7 +485,8 @@ class authHeader:
 
 
 def read_file(filename):
-    """Read a file, if it exists. Otherwise return None
+    """
+    Read a file, if it exists. Otherwise return None
     """
     if not os.path.exists(filename):
         return
@@ -439,21 +496,27 @@ def read_file(filename):
 
 
 def write_file(content, filename):
-    """write content to file"""
+    """
+    Write content to file
+    """
     with open(filename, 'w') as fd:
         fd.writelines(content)
     return content
 
 
 def write_json(obj, filename):
-    """Write a json file, if the output directory exists."""
+    """
+    Write a json file, if the output directory exists.
+    """
     if not os.path.exists(os.path.dirname(filename)):
         return
     return write_file(sjson.dump(obj), filename)
 
 
 def read_json(filename):
-    """Read a file and load into json, if it exists. Otherwise return None"""
+    """
+    Read a file and load into json, if it exists. Otherwise return None.
+    """
     if not os.path.exists(filename):
         return
     return sjson.load(read_file(filename))

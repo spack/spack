@@ -52,15 +52,12 @@ class Xsdktrilinos(CMakePackage):
             '-DxSDKTrilinos_ENABLE_TESTS:BOOL=ON',
             '-DxSDKTrilinos_ENABLE_EXAMPLES:BOOL=ON',
             '-DTrilinos_INSTALL_DIR=%s' % spec['trilinos'].prefix,
-            '-DBUILD_SHARED_LIBS:BOOL=%s' % (
-                'ON' if '+shared' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
             '-DTPL_ENABLE_MPI:BOOL=ON',
             '-DMPI_BASE_DIR:PATH=%s' % spec['mpi'].prefix,
             '-DxSDKTrilinos_ENABLE_CXX11:BOOL=ON',
-            '-DTPL_ENABLE_HYPRE:BOOL=%s' % (
-                'ON' if '+hypre' in spec else 'OFF'),
-            '-DTPL_ENABLE_PETSC:BOOL=%s' % (
-                'ON' if '+petsc' in spec else 'OFF'),
+            self.define_from_variant('TPL_ENABLE_HYPRE', 'hypre'),
+            self.define_from_variant('TPL_ENABLE_PETSC', 'petsc'),
             '-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % self.prefix
         ])
 

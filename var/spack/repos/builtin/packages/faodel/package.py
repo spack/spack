@@ -63,26 +63,19 @@ class Faodel(CMakePackage):
         spec = self.spec
 
         args = [
-            '-DBUILD_SHARED_LIBS:BOOL={0}'.format(
-                'ON' if '+shared' in spec else 'OFF'),
-            '-DBUILD_TESTS:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'shared'),
+            self.define_from_variant('BUILD_TESTS', 'mpi'),
             '-DBOOST_ROOT:PATH={0}'.format(spec['boost'].prefix),
             '-DGTEST_ROOT:PATH={0}'.format(spec['googletest'].prefix),
             '-DBUILD_DOCS:BOOL=OFF',
-            '-DFaodel_ENABLE_IOM_HDF5:BOOL={0}'.format(
-                'ON' if '+hdf5' in spec else 'OFF'),
-            '-DFaodel_ENABLE_IOM_LEVELDB:BOOL={0}'.format(
-                'ON' if '+leveldb' in spec else 'OFF'),
-            '-DFaodel_ENABLE_MPI_SUPPORT:BOOL={0}'.format(
-                'ON' if '+mpi' in spec else 'OFF'),
-            '-DFaodel_ENABLE_TCMALLOC:BOOL={0}'.format(
-                'ON' if '+tcmalloc' in spec else 'OFF'),
+            self.define_from_variant('Faodel_ENABLE_IOM_HDF5', 'hdf5'),
+            # self.define_from_variant('Faodel_ENABLE_IOM_LEVELDB', 'leveldb'),
+            self.define_from_variant('Faodel_ENABLE_MPI_SUPPORT', 'mpi'),
+            self.define_from_variant('Faodel_ENABLE_TCMALLOC', 'tcmalloc'),
             '-DFaodel_LOGGING_METHOD:STRING={0}'.format(
                 spec.variants['logging'].value),
             '-DFaodel_NETWORK_LIBRARY:STRING={0}'.format(
                 spec.variants['network'].value),
-            '-DFaodel_ENABLE_CEREAL:BOOL={0}'.format(
-                'ON' if '+cereal' in spec else 'OFF')
+            self.define_from_variant('Faodel_ENABLE_CEREAL', 'cereal')
         ]
         return args

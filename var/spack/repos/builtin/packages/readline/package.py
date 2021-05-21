@@ -30,3 +30,11 @@ class Readline(AutotoolsPackage, GNUMirrorPackage):
 
     def build(self, spec, prefix):
         make('SHLIB_LIBS=' + spec['ncurses'].libs.ld_flags)
+
+    def patch(self):
+        # Remove flags not recognized by the NVIDIA compiler
+        if self.spec.satisfies('%nvhpc'):
+            filter_file('${GCC+-Wno-parentheses}', '', 'configure',
+                        string=True)
+            filter_file('${GCC+-Wno-format-security}', '', 'configure',
+                        string=True)

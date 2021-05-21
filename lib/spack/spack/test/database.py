@@ -638,10 +638,6 @@ def test_090_non_root_ref_counts(mutable_database):
     assert mpich_rec.ref_count == 0
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_100_no_write_with_exception_on_remove(database):
     def fail_while_writing():
         with database.write_transaction():
@@ -659,10 +655,6 @@ def test_100_no_write_with_exception_on_remove(database):
         assert len(database.query('mpileaks ^zmpi', installed=any)) == 1
 
 
-@pytest.mark.skipif(
-    os.environ.get('SPACK_TEST_SOLVER') == 'clingo',
-    reason='Test for Clingo are run in a container with root permissions'
-)
 def test_110_no_write_with_exception_on_install(database):
     def fail_while_writing():
         with database.write_transaction():

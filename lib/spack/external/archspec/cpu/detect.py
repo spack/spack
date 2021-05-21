@@ -99,17 +99,29 @@ def sysctl_info_dict():
     def sysctl(*args):
         return _check_output(["sysctl"] + list(args), env=child_environment).strip()
 
-    flags = (
-        sysctl("-n", "machdep.cpu.features").lower()
-        + " "
-        + sysctl("-n", "machdep.cpu.leaf7_features").lower()
-    )
-    info = {
-        "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
-        "flags": flags,
-        "model": sysctl("-n", "machdep.cpu.model"),
-        "model name": sysctl("-n", "machdep.cpu.brand_string"),
-    }
+    if platform.machine() == "x86_64":
+        flags = (
+            sysctl("-n", "machdep.cpu.features").lower()
+            + " "
+            + sysctl("-n", "machdep.cpu.leaf7_features").lower()
+        )
+        info = {
+            "vendor_id": sysctl("-n", "machdep.cpu.vendor"),
+            "flags": flags,
+            "model": sysctl("-n", "machdep.cpu.model"),
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
+    else:
+        model = (
+            "m1" if "Apple" in sysctl("-n", "machdep.cpu.brand_string") else "unknown"
+        )
+        info = {
+            "vendor_id": "Apple",
+            "flags": [],
+            "model": model,
+            "CPU implementer": "Apple",
+            "model name": sysctl("-n", "machdep.cpu.brand_string"),
+        }
     return info
 
 
@@ -173,6 +185,11 @@ def compatible_microarchitectures(info):
         info (dict): dictionary containing information on the host cpu
     """
     architecture_family = platform.machine()
+    # On Apple M1 platform.machine() returns "arm64" instead of "aarch64"
+    # so we should normalize the name here
+    if architecture_family == "arm64":
+        architecture_family = "aarch64"
+
     # If a tester is not registered, be conservative and assume no known
     # target is compatible with the host
     tester = COMPATIBILITY_CHECKS.get(architecture_family, lambda x, y: False)

@@ -2,7 +2,6 @@
 # Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
-
 from spack import *
 import datetime as dt
 
@@ -149,11 +148,11 @@ class Lammps(CMakePackage, CudaPackage):
         msg='+user-reaction only supported for version 20200505 and later')
     conflicts('+mliap', when='~snap')
     conflicts(
-        '+adios +mpi', when='^adios2~mpi',
-        msg='With +adios, mpi setting for adios2 and lammps must be the same')
+        '+user-adios +mpi', when='^adios2~mpi',
+        msg='With +user-adios, mpi setting for adios2 and lammps must be the same')
     conflicts(
-        '+adios ~mpi', when='^adios2+mpi',
-        msg='With +adios, mpi setting for adios2 and lammps must be the same')
+        '+user-adios ~mpi', when='^adios2+mpi',
+        msg='With +user-adios, mpi setting for adios2 and lammps must be the same')
 
     patch("lib.patch", when="@20170901")
     patch("660.patch", when="@20170922")
@@ -173,15 +172,12 @@ class Lammps(CMakePackage, CudaPackage):
             pkg_prefix = 'PKG'
 
         args = [
-            '-DBUILD_SHARED_LIBS={0}'.format(
-                'ON' if '+lib' in spec else 'OFF'),
-            '-DLAMMPS_EXCEPTIONS={0}'.format(
-                'ON' if '+exceptions' in spec else 'OFF'),
+            self.define_from_variant('BUILD_SHARED_LIBS', 'lib'),
+            self.define_from_variant('LAMMPS_EXCEPTIONS', 'exceptions'),
             '-D{0}_MPI={1}'.format(
                 mpi_prefix,
                 'ON' if '+mpi' in spec else 'OFF'),
-            '-DBUILD_OMP={0}'.format(
-                'ON' if '+openmp' in spec else 'OFF'),
+            self.define_from_variant('BUILD_OMP', 'openmp'),
         ]
         if spec.satisfies('+cuda'):
             args.append('-DPKG_GPU=ON')
@@ -189,8 +185,7 @@ class Lammps(CMakePackage, CudaPackage):
             cuda_arch = spec.variants['cuda_arch'].value
             if cuda_arch != 'none':
                 args.append('-DGPU_ARCH=sm_{0}'.format(cuda_arch[0]))
-            args.append('-DCUDA_MPS_SUPPORT={0}'.format(
-                'ON' if '+cuda_mps' in spec else 'OFF'))
+            args.append(self.define_from_variant('CUDA_MPS_SUPPORT', 'cuda_mps'))
         elif spec.satisfies('+opencl'):
             args.append('-DPKG_GPU=ON')
             args.append('-DGPU_API=opencl')
@@ -200,12 +195,9 @@ class Lammps(CMakePackage, CudaPackage):
         if spec.satisfies('@20180629:+lib'):
             args.append('-DBUILD_LIB=ON')
 
-        args.append('-DWITH_JPEG={0}'.format(
-            'ON' if '+jpeg' in spec else 'OFF'))
-        args.append('-DWITH_PNG={0}'.format(
-            'ON' if '+png' in spec else 'OFF'))
-        args.append('-DWITH_FFMPEG={0}'.format(
-            'ON' if '+ffmpeg' in spec else 'OFF'))
+        args.append(self.define_from_variant('WITH_JPEG', 'jpeg'))
+        args.append(self.define_from_variant('WITH_PNG', 'png'))
+        args.append(self.define_from_variant('WITH_FFMPEG', 'ffmpeg'))
 
         for pkg in self.supported_packages:
             opt = '-D{0}_{1}'.format(pkg_prefix, pkg.upper())

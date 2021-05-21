@@ -32,6 +32,7 @@ add = SpackCommand('add')
 mirror = SpackCommand('mirror')
 uninstall = SpackCommand('uninstall')
 buildcache = SpackCommand('buildcache')
+find = SpackCommand('find')
 
 
 @pytest.fixture()
@@ -712,6 +713,112 @@ def test_install_only_dependencies_of_all_in_env(
                 assert os.path.exists(dep.prefix)
 
 
+def test_install_no_add_in_env(tmpdir, mock_fetch, install_mockery,
+                               mutable_mock_env_path):
+    # To test behavior of --no-add option, we create the following environment:
+    #
+    #     mpileaks
+    #         ^callpath
+    #             ^dyninst
+    #                 ^libelf@0.8.13     # or latest, really
+    #                 ^libdwarf
+    #         ^mpich
+    #     libelf@0.8.10
+    #     a~bvv
+    #         ^b
+    #     a
+    #         ^b
+    e = ev.create('test')
+    e.add('mpileaks')
+    e.add('libelf@0.8.10')  # so env has both root and dep libelf specs
+    e.add('a')
+    e.add('a ~bvv')
+    e.concretize()
+    env_specs = e.all_specs()
+
+    a_spec = None
+    b_spec = None
+    mpi_spec = None
+
+    # First find and remember some target concrete specs in the environment
+    for e_spec in env_specs:
+        if e_spec.satisfies(Spec('a ~bvv')):
+            a_spec = e_spec
+        elif e_spec.name == 'b':
+            b_spec = e_spec
+        elif e_spec.satisfies(Spec('mpi')):
+            mpi_spec = e_spec
+
+    assert(a_spec)
+    assert(a_spec.concrete)
+
+    assert(b_spec)
+    assert(b_spec.concrete)
+    assert(b_spec not in e.roots())
+
+    assert(mpi_spec)
+    assert(mpi_spec.concrete)
+
+    # Activate the environment
+    with e:
+        # Assert using --no-add with a spec not in the env fails
+        inst_out = install(
+            '--no-add', 'boost', fail_on_error=False, output=str)
+
+        assert('no such spec exists in environment' in inst_out)
+
+        # Ensure using --no-add with an ambiguous spec fails
+        with pytest.raises(ev.SpackEnvironmentError) as err:
+            inst_out = install(
+                '--no-add', 'a', output=str)
+
+        assert('a matches multiple specs in the env' in str(err))
+
+        # With "--no-add", install an unambiguous dependency spec (that already
+        # exists as a dep in the environment) using --no-add and make sure it
+        # gets installed (w/ deps), but is not added to the environment.
+        install('--no-add', 'dyninst')
+
+        find_output = find('-l', output=str)
+        assert('dyninst' in find_output)
+        assert('libdwarf' in find_output)
+        assert('libelf' in find_output)
+        assert('callpath' not in find_output)
+
+        post_install_specs = e.all_specs()
+        assert all([s in env_specs for s in post_install_specs])
+
+        # Make sure we can install a concrete dependency spec from a spec.yaml
+        # file on disk, using the ``--no-add` option, and the spec is installed
+        # but not added as a root
+        mpi_spec_yaml_path = tmpdir.join('{0}.yaml'.format(mpi_spec.name))
+        with open(mpi_spec_yaml_path.strpath, 'w') as fd:
+            fd.write(mpi_spec.to_yaml(hash=ht.full_hash))
+
+        install('--no-add', '-f', mpi_spec_yaml_path.strpath)
+        assert(mpi_spec not in e.roots())
+
+        find_output = find('-l', output=str)
+        assert(mpi_spec.name in find_output)
+
+        # Without "--no-add", install an unambiguous depependency spec (that
+        # already exists as a dep in the environment) without --no-add and make
+        # sure it is added as a root of the environment as well as installed.
+        assert(b_spec not in e.roots())
+
+        install('b')
+
+        assert(b_spec in e.roots())
+        assert(b_spec not in e.uninstalled_specs())
+
+        # Without "--no-add", install a novel spec and make sure it is added
+        # as a root and installed.
+        install('bowtie')
+
+        assert(any([s.name == 'bowtie' for s in e.roots()]))
+        assert(not any([s.name == 'bowtie' for s in e.uninstalled_specs()]))
+
+
 def test_install_help_does_not_show_cdash_options(capsys):
     """
     Make sure `spack install --help` does not describe CDash arguments
@@ -741,6 +848,25 @@ def test_cdash_auth_token(tmpdir, install_mockery, capfd):
                 '--log-format=cdash',
                 'a')
             assert 'Using CDash auth token from environment' in out
+
+
+@pytest.mark.disable_clean_stage_check
+def test_cdash_configure_warning(tmpdir, mock_fetch, install_mockery, capfd):
+    # capfd interferes with Spack's capturing of e.g., Build.xml output
+    with capfd.disabled():
+        with tmpdir.as_cwd():
+            # Test would fail if install raised an error.
+            install(
+                '--log-file=cdash_reports',
+                '--log-format=cdash',
+                'configure-warning')
+            # Verify Configure.xml exists with expected contents.
+            report_dir = tmpdir.join('cdash_reports')
+            assert report_dir in tmpdir.listdir()
+            report_file = report_dir.join('Configure.xml')
+            assert report_file in report_dir.listdir()
+            content = report_file.open().read()
+            assert 'foo: No such file or directory' in content
 
 
 def test_compiler_bootstrap(

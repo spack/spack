@@ -73,6 +73,16 @@ class Git(AutotoolsPackage):
             'sha256_manpages': '22b2380842ef75e9006c0358de250ead449e1376d7e5138070b9a3073ef61d44'
         },
         {
+            'version': '2.23.0',
+            'sha256': 'e3396c90888111a01bf607346db09b0fbf49a95bc83faf9506b61195936f0cfe',
+            'sha256_manpages': 'a5b0998f95c2290386d191d34780d145ea67e527fac98541e0350749bf76be75'
+        },
+        {
+            'version': '2.22.0',
+            'sha256': 'a4b7e4365bee43caa12a38d646d2c93743d755d1cea5eab448ffb40906c9da0b',
+            'sha256_manpages': 'f6a5750dfc4a0aa5ec0c0cc495d4995d1f36ed47591c3941be9756c1c3a1aa0a'
+        },
+        {
             'version': '2.21.0',
             'sha256': '85eca51c7404da75e353eba587f87fea9481ba41e162206a6f70ad8118147bee',
             'sha256_manpages': '14c76ebb4e31f9e55cf5338a04fd3a13bced0323cd51794ccf45fc74bd0c1080'
@@ -212,7 +222,7 @@ class Git(AutotoolsPackage):
                 release['version']),
             sha256=release['sha256_manpages'],
             placement='git-manpages',
-            when='@{0}'.format(release['version']))
+            when='@{0} +man'.format(release['version']))
 
     variant('tcltk', default=False,
             description='Gitk: provide Tcl/Tk in the run environment')
@@ -220,10 +230,14 @@ class Git(AutotoolsPackage):
             description='Provide SVN Perl dependency in run environment')
     variant('perl', default=True,
             description='Do not use Perl scripts or libraries at all')
+    variant('nls', default=True,
+            description='Enable native language support')
+    variant('man', default=True,
+            description='Install manual pages')
 
     depends_on('curl')
     depends_on('expat')
-    depends_on('gettext')
+    depends_on('gettext', when='+nls')
     depends_on('iconv')
     depends_on('libidn2')
     depends_on('openssl')
@@ -276,7 +290,7 @@ class Git(AutotoolsPackage):
         # The test avoids failures when git is an external package.
         # In that case the node in the DAG gets truncated and git DOES NOT
         # have a gettext dependency.
-        if 'gettext' in self.spec:
+        if '+nls' in self.spec:
             if 'intl' in self.spec['gettext'].libs.names:
                 env.append_flags('EXTLIBS', '-L{0} -lintl'.format(
                     self.spec['gettext'].prefix.lib))
@@ -323,12 +337,27 @@ class Git(AutotoolsPackage):
     def check(self):
         make('test')
 
+    def build(self, spec, prefix):
+        args = []
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
+    def install(self, spec, prefix):
+        args = ["install"]
+        if '~nls' in self.spec:
+            args.append('NO_GETTEXT=1')
+        make(*args)
+
     @run_after('install')
     def install_completions(self):
         install_tree('contrib/completion', self.prefix.share)
 
     @run_after('install')
     def install_manpages(self):
+        if '~man' in self.spec:
+            return
+
         prefix = self.prefix
 
         with working_dir('git-manpages'):

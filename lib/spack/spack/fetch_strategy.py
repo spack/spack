@@ -292,7 +292,15 @@ class URLFetchStrategy(FetchStrategy):
 
     @property
     def candidate_urls(self):
-        return [self.url] + (self.mirrors or [])
+        urls = []
+
+        for url in [self.url] + (self.mirrors or []):
+            if url.startswith('file://'):
+                path = urllib_parse.quote(url[len('file://'):])
+                url = 'file://' + path
+            urls.append(url)
+
+        return urls
 
     @_needs_stage
     def fetch(self):
@@ -467,6 +475,8 @@ class URLFetchStrategy(FetchStrategy):
         tarball_container = os.path.join(self.stage.path,
                                          "spack-expanded-archive")
 
+        # Below we assume that the command to decompress expand the
+        # archive in the current working directory
         mkdirp(tarball_container)
         with working_dir(tarball_container):
             decompress(self.archive_file)

@@ -47,15 +47,10 @@ class Xtensor(CMakePackage):
     # untested: conflicts('%pgi@:14')
 
     def cmake_args(self):
-        spec = self.spec
-
         args = [
-            '-DBUILD_TESTS:BOOL={0}'.format(
-                'ON' if self.run_tests else 'OFF'),
-            '-DXTENSOR_USE_XSIMD:BOOL={0}'.format(
-                'ON' if '+xsimd' in spec else 'OFF'),
-            '-DXTENSOR_USE_TBB:BOOL={0}'.format(
-                'ON' if '+tbb' in spec else 'OFF')
+            self.define('BUILD_TESTS', self.run_tests),
+            self.define_from_variant('XTENSOR_USE_XSIMD', 'xsimd'),
+            self.define_from_variant('XTENSOR_USE_TBB', 'tbb')
         ]
 
         return args
