@@ -95,7 +95,7 @@ class IntelTbb(CMakePackage):
             description='Enable use of transactional memory on x86')
 
     variant('python', default=False,
-            description='Enable Intel(R) oneAPI Threading Building ' + 
+            description='Enable Intel(R) oneAPI Threading Building ' +
                         'Blocks (oneTBB) Python module build')
 
     variant('cpf', default=False,
@@ -184,16 +184,16 @@ class IntelTbb(CMakePackage):
                     define('TBB_TEST', 'False')]
 
         if self.spec['hwloc'].version >= Version('2.0'):
-            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', 
-                               join_path(self.spec['hwloc'].prefix.lib, 
+            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH',
+                               join_path(self.spec['hwloc'].prefix.lib,
                                          'libhwloc.' + dso_suffix)),
-                        define('CMAKE_HWLOC_2_INCLUDE_PATH', 
+                        define('CMAKE_HWLOC_2_INCLUDE_PATH',
                                self.spec['hwloc'].prefix.include)]
         else:
-            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', 
-                               join_path(self.spec['hwloc'].prefix.lib, 
+            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH',
+                               join_path(self.spec['hwloc'].prefix.lib,
                                          'libhwloc.' + dso_suffix)),
-                        define('CMAKE_HWLOC_1_11_INCLUDE_PATH', 
+                        define('CMAKE_HWLOC_1_11_INCLUDE_PATH',
                                self.spec['hwloc'].prefix.include)]
 
         return options
