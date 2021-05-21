@@ -9,6 +9,8 @@ import inspect
 import platform
 import sys
 
+from spack.build_environment import dso_suffix
+ 
 
 class IntelTbb(CMakePackage):
     """Widely used C++ template library for task parallelism.
@@ -182,10 +184,10 @@ class IntelTbb(CMakePackage):
 
 
         if self.spec['hwloc'].version >= Version('2.0'):
-            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc')),
+            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc.' + dso_suffix)),
                         define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
         else:
-            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc')),
+            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc.' + dso_suffix)),
                         define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
 
         return options
