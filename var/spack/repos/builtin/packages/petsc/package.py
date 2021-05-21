@@ -378,7 +378,7 @@ class Petsc(Package, CudaPackage, ROCmPackage):
 
         for library in (
                 'cuda',
-                ('rocm', 'hip'),
+                'hip',
                 'metis',
                 'hypre',
                 'parmetis',
