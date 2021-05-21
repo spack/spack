@@ -34,6 +34,7 @@ class PyAstroid(PythonPackage):
     depends_on('python@2.7:2.8,3.4:', when='@:1.999', type=('build', 'run'))
     depends_on('python@3.4:', when='@2.0.0:', type=('build', 'run'))
     depends_on('python@3.5:', when='@2.3.3:', type=('build', 'run'))
+    depends_on('python@3.6:', when='@2.5.6:', type=('build', 'run'))
     depends_on('py-lazy-object-proxy', type=('build', 'run'))
     # Starting with astroid 2.3.1, astroid's dependencies were restricted
     # to a given minor version, c.f. commit e1b4e11.
@@ -41,7 +42,7 @@ class PyAstroid(PythonPackage):
     depends_on('py-six', type=('build', 'run'))
     depends_on('py-six@1.12:1.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-wrapt', when='@:2.2.999', type=('build', 'run'))
-    depends_on('py-wrapt@1.11:1.11.999', when='@2.3.3:', type=('build', 'run'))
+    depends_on('py-wrapt@1.11:1.12.999', when='@2.3.3:', type=('build', 'run'))
     depends_on('py-enum34@1.1.3:', when='^python@:3.3.99', type=('build', 'run'))
     depends_on('py-singledispatch', when='^python@:3.3.99', type=('build', 'run'))
     depends_on('py-backports-functools-lru-cache', when='^python@:3.2.99', type=('build', 'run'))
