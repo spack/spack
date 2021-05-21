@@ -88,17 +88,17 @@ class IntelTbb(CMakePackage):
             values=('default', '98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
-            
+
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
-           
+
     variant('tbb4py', default=False,
             description='Enable  Intel(R) oneAPI Threading Building Blocks (oneTBB) Python module build')
-            
+
     variant('cpf', default=False,
             description='Enable preview features of the library')
-    
-            
+
+
     conflicts('~shared', when='@2021.1.0:', msg='~shared Not yet implemented for >= 2021.1.1')
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
@@ -107,7 +107,7 @@ class IntelTbb(CMakePackage):
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.
     depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
-    
+
     depends_on('cmake@3.1:', type='build', when='@2021.1.1:')
     depends_on('hwloc@1.11:', when='@2021.1.1:')
 
@@ -169,29 +169,29 @@ class IntelTbb(CMakePackage):
     @when('@:2021.1.0')
     def cmake(self, spec, prefix):
         return
-        
+
     def cmake_args(self):
         define_from_variant = self.define_from_variant
         define = self.define
         options = []
-        
-        options += define_from_variant('TBB4PY_BUILD', 'tbb4py')
-        options += define_from_variant('TBB_CPF', 'cpf')
-        options += define('TBB_TEST', 'False')
-        
+
+        options += [define_from_variant('TBB4PY_BUILD', 'tbb4py'),
+                    define_from_variant('TBB_CPF', 'cpf'),
+                    define('TBB_TEST', 'False')]
+
         if self.spec['hwloc'].version >= Version('2.0'):
-            options += define('CMAKE_HWLOC_2_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
-            options += define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)
+            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', self.spec['hwloc'].prefix.lib),
+                        define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
         else:
-            options += define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
-            options += define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)
-            
+            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
+                        define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
+
         return options
- 
+
     @when('@:2021.1.0')
     def build(self, spec, prefix):
         return
-        
+
     @when('@:2021.1.0')
     def install(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
