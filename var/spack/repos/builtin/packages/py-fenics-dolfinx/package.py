@@ -11,11 +11,12 @@ class PyFenicsDolfinx(PythonPackage):
     environment"""
 
     homepage = "https://github.com/FEniCS/dolfinx"
+    url = "https://github.com/FEniCS/dolfinx/archive/0.1.0.tar.gz"
     git = "https://github.com/FEniCS/dolfinx.git"
     maintainers = ["js947", "chrisrichardson"]
 
     version("main", branch="main")
-    # version("0.1.0", sha256="")
+    version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
     depends_on("cmake@3.9:", type="build")
     depends_on("pkgconfig", type=("build", "run"))

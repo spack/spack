@@ -11,10 +11,11 @@ class FenicsDolfinx(CMakePackage):
 
     homepage = "https://github.com/FEniCS/dolfinx"
     git = "https://github.com/FEniCS/dolfinx.git"
+    url = "https://github.com/FEniCS/dolfinx/archive/0.1.0.tar.gz"
     maintainers = ["js947", "chrisrichardson"]
 
     version("main", branch="main")
-#    version("0.1.0", sha256="")
+    version("0.1.0", sha256="0269379769b5b6d4d1864ded64402ecaea08054c2a5793c8685ea15a59af5e33")
 
     variant("kahip", default=False, description="kahip support")
     variant("parmetis", default=False, description="parmetis support")
@@ -25,7 +26,8 @@ class FenicsDolfinx(CMakePackage):
     depends_on("mpi")
     depends_on("hdf5")
     depends_on("boost@1.7.0:+filesystem+program_options+timer")
-    depends_on("petsc+mpi+shared")
+    depends_on("petsc+mpi+shared", when="@main")
+    depends_on("petsc+mpi+shared@3.15.0", when="@0.1.0")
     depends_on("scotch+mpi")
 
     depends_on("kahip", when="+kahip")
