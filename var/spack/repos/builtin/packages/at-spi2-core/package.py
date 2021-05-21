@@ -21,7 +21,7 @@ class AtSpi2Core(MesonPackage):
     version('2.36.0', sha256='88da57de0a7e3c60bc341a974a80fdba091612db3547c410d6deab039ca5c05a')
     version('2.28.0', sha256='42a2487ab11ce43c288e73b2668ef8b1ab40a0e2b4f94e80fca04ad27b6f1c87')
 
-    depends_on('meson@0.46.0:', type='build')
+    depends_on('meson@0.46.0:', type='build', when='@2.36.0:')
     depends_on('glib@2.56.1:')
     depends_on('dbus@1.12.8:')
     depends_on('gettext')
