@@ -40,6 +40,7 @@ class VisitCgns(CMakePackage):
     depends_on('cmake', type='build')
     depends_on('cgns@3.3.1+int64~scoping~legacy', when='@2.10.1:3.1.4')
     depends_on('cgns+int64~scoping~legacy')
+    depends_on('visit@3.2.0:', when='@3.2.0:')
     depends_on('visit')
 
     extends('visit')
