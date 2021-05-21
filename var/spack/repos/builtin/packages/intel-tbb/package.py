@@ -185,6 +185,8 @@ class IntelTbb(CMakePackage):
         else:
             options += define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
             options += define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)
+            
+        return options
  
     @when('@:2021.1.0')
     def build(self, spec, prefix):
