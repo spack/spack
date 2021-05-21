@@ -172,11 +172,12 @@ class IntelTbb(CMakePackage):
         
     def cmake_args(self):
         define_from_variant = self.define_from_variant
+        define = self.define
         options = []
         
         options += define_from_variant('TBB4PY_BUILD', 'tbb4py')
         options += define_from_variant('TBB_CPF', 'cpf')
-        options += self.define('TBB_TEST', 'False')
+        options += define('TBB_TEST', 'False')
         
         if self.spec['hwloc'].version >= Version('2.0'):
             options += define('CMAKE_HWLOC_2_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
