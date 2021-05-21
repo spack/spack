@@ -60,7 +60,7 @@ class Libunwind(AutotoolsPackage):
                 wrapper_flags.append(self.compiler.cc_pic_flag)
 
         elif name == 'ldflags':
-            if self.spec.satisfies('%cce'):
+            if self.spec.satisfies('%cce') and self.spec.satisfies('@1.4.0:'):
                 wrapper_flags.append('-Wl,-z,muldefs')
 
         return (wrapper_flags, None, flags)
