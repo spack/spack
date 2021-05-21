@@ -80,65 +80,42 @@ class Hiop(CMakePackage, CudaPackage):
             '-DLAPACK_LIBRARIES={0}'.format(lapack_blas_libs)
         ])
 
-        args.append('-DHIOP_BUILD_STATIC=ON')
-        if '+shared' in spec:
-            args.append('-DHIOP_BUILD_SHARED=ON')
-        else:
-            args.append('-DHIOP_BUILD_SHARED=OFF')
+        args.append(self.define_from_variant('HIOP_BUILD_SHARED', 'shared'))
+        args.append(self.define_from_variant('HIOP_USE_MPI', 'mpi'))
+        args.append(self.define_from_variant('HIOP_DEEPCHECKS', 'deepchecking'))
+        args.append(self.define_from_variant('HIOP_USE_GPU', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_CUDA', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_MAGMA', 'cuda'))
+        args.append(self.define_from_variant('HIOP_USE_RAJA', 'raja'))
+        args.append(self.define_from_variant('HIOP_USE_UMPIRE', 'raja'))
+        args.append(self.define_from_variant('HIOP_WITH_KRON_REDUCTION', 'kron'))
+        args.append(self.define_from_variant('HIOP_SPARSE', 'sparse'))
+        args.append(self.define_from_variant('HIOP_USE_COINHSL', 'sparse'))
+        args.append(self.define_from_variant('HIOP_TEST_WITH_BSUB', 'jsrun'))
 
         if '+mpi' in spec:
-            args.append(
-                "-DHIOP_USE_MPI=ON -DMPI_HOME={0}".format(spec['mpi'].prefix))
+            args.append('-DMPI_HOME={0}'.format(spec['mpi'].prefix))
             args.append('-DMPI_C_COMPILER={0}'.format(spec['mpi'].mpicc))
             args.append('-DMPI_CXX_COMPILER={0}'.format(spec['mpi'].mpicxx))
             args.append('-DMPI_Fortran_COMPILER={0}'.format(spec['mpi'].mpifc))
-        else:
-            args.append("-DHIOP_USE_MPI=OFF")
-
-        if '+deepchecking' in spec:
-            args.append("-DHIOP_DEEPCHECKS=ON")
-        else:
-            args.append("-DHIOP_DEEPCHECKS=OFF")
 
         # HIP flags are a part of the buildsystem, but full support is not
         # yet ready for public release
         args.append("-DHIOP_USE_HIP=OFF")
 
         if '+cuda' in spec:
-            args.append("-DHIOP_USE_GPU=ON")
-
             cuda_arch_list = spec.variants['cuda_arch'].value
             cuda_arch = cuda_arch_list[0]
             if cuda_arch != 'none':
                 args.append("-DHIOP_NVCC_ARCH=sm_{0}".format(cuda_arch))
                 args.append("-DCMAKE_CUDA_ARCHITECTURES={0}".format(cuda_arch))
-            args.append("-DHIOP_USE_CUDA=ON")
-
-            args.append('-DHIOP_USE_MAGMA=ON')
             if '+magma' in spec:
                 args.append(
                     "-DHIOP_MAGMA_DIR={0}".format(spec['magma'].prefix))
 
-        else:
-            args.append("-DHIOP_USE_GPU=OFF")
-            args.append("-DHIOP_USE_CUDA=OFF")
-            args.append("-DHIOP_USE_MAGMA=OFF")
-
-        if '+raja' in spec:
-            args.append("-DHIOP_USE_RAJA=ON")
-            args.append("-DHIOP_USE_UMPIRE=ON")
-            args.append("-Dumpire_DIR={0}".format(spec['umpire'].prefix))
-            args.append("-DRAJA_DIR={0}".format(spec['raja'].prefix))
-        else:
-            args.append("-DHIOP_USE_RAJA=OFF")
-            args.append("-DHIOP_USE_UMPIRE=OFF")
-
         if '+kron' in spec:
-            args.append("-DHIOP_WITH_KRON_REDUCTION=ON")
             args.append(
                 "-DHIOP_UMFPACK_DIR={0}".format(spec['suite-sparse'].prefix))
-        else:
-            args.append("-DHIOP_WITH_KRON_REDUCTION=OFF")
 
         # Unconditionally disable strumpack, even when +sparse. This may be
         # used in place of COINHSL for sparse interface, however this is not
@@ -146,18 +123,7 @@ class Hiop(CMakePackage, CudaPackage):
         args.append("-DHIOP_USE_STRUMPACK=OFF")
 
         if '+sparse' in spec:
-            args.append("-DHIOP_SPARSE=ON")
-            args.append("-DHIOP_USE_COINHSL=ON")
             args.append(
                 "-DHIOP_COINHSL_DIR={0}".format(spec['coinhsl'].prefix))
-        else:
-            args.append("-DHIOP_SPARSE=OFF")
-            args.append("-DHIOP_USE_COINHSL=OFF")
-
-        # Enable CTest tests to use jsrun for easier testing on IBM systems
-        if '+jsrun' in spec:
-            args.append("-DHIOP_TEST_WITH_BSUB=ON")
-        else:
-            args.append("-DHIOP_TEST_WITH_BSUB=OFF")
 
         return args

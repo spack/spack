@@ -37,10 +37,12 @@ class Conduit(CMakePackage):
     url      = "https://github.com/LLNL/conduit/releases/download/v0.3.0/conduit-v0.3.0-src-with-blt.tar.gz"
     git      = "https://github.com/LLNL/conduit.git"
 
-    version('develop', branch='develop', submodules=True, preferred=True)
+    version('develop', branch='develop', submodules=True)
     # note: the main branch in conduit was renamed to develop, this next entry
     # is to bridge any spack dependencies that are still using the name master
     version('master', branch='develop', submodules=True)
+    # note: 2021-05-05 latest tagged release is now preferred instead of develop
+    version('0.7.2', sha256='359fd176297700cdaed2c63e3b72d236ff3feec21a655c7c8292033d21d5228a')
     version('0.7.1', sha256='460a480cf08fedbf5b38f707f94f20828798327adadb077f80dbab048fd0a07d')
     version('0.7.0', sha256='ecaa9668ebec5d4efad19b104d654a587c0adbd5f502128f89601408cb4d7d0c')
     version('0.6.0', sha256='078f086a13b67a97e4ab6fe1063f2fef2356df297e45b43bb43d74635f80475d')
@@ -162,12 +164,6 @@ class Conduit(CMakePackage):
     # build phases used by this package
     ###################################
     phases = ['hostconfig', 'cmake', 'build', 'install']
-
-    def flag_handler(self, name, flags):
-        if name in ('cflags', 'cxxflags', 'fflags'):
-            # the package manages these flags in another way
-            return (None, None, None)
-        return (flags, None, None)
 
     def setup_build_environment(self, env):
         env.set('CTEST_OUTPUT_ON_FAILURE', '1')
@@ -353,6 +349,8 @@ class Conduit(CMakePackage):
         if cxxflags:
             cfg.write(cmake_cache_entry("CMAKE_CXX_FLAGS", cxxflags))
         fflags = ' '.join(spec.compiler_flags['fflags'])
+        if self.spec.satisfies('%cce'):
+            fflags += " -ef"
         if fflags:
             cfg.write(cmake_cache_entry("CMAKE_Fortran_FLAGS", fflags))
 

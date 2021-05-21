@@ -16,6 +16,8 @@ class Root(CMakePackage):
     url      = "https://root.cern/download/root_v6.16.00.source.tar.gz"
     git      = "https://github.com/root-project/root.git"
 
+    executables = ['^root$', '^root-config$']
+
     tags = ['hep']
 
     maintainers = ['chissg', 'HadrienG2', 'drbenmorgan', 'vvolkl']
@@ -90,6 +92,8 @@ class Root(CMakePackage):
             description='Enable Aqua interface')
     variant('davix', default=True,
             description='Compile with external Davix')
+    variant('dcache', default=False,
+            description='Enable support for dCache')
     variant('emacs', default=False,
             description='Enable Emacs support')
     variant('examples', default=True,
@@ -127,6 +131,8 @@ class Root(CMakePackage):
     variant('mysql', default=False)
     variant('opengl', default=True,
             description='Enable OpenGL support')
+    variant('oracle', default=False,
+            description='Enable support for Oracle databases')
     variant('postgres', default=False,
             description='Enable postgres support')
     variant('pythia6', default=False,
@@ -234,6 +240,7 @@ class Root(CMakePackage):
 
     # Optional dependencies
     depends_on('davix @0.7.1:', when='+davix')
+    depends_on('dcap',      when='+dcache')
     depends_on('cfitsio',   when='+fits')
     depends_on('fftw',      when='+fftw')
     depends_on('graphviz',  when='+graphviz')
@@ -242,6 +249,7 @@ class Root(CMakePackage):
     depends_on('mysql-client',   when='+mysql')
     depends_on('openssl',   when='+ssl')
     depends_on('openssl',   when='+davix')  # Also with davix
+    depends_on('oracle-instant-client@19.10.0.0.0', when='+oracle @:6.24.01')
     depends_on('postgresql', when='+postgres')
     depends_on('pythia6+root', when='+pythia6')
     depends_on('pythia8',   when='+pythia8')
@@ -296,6 +304,25 @@ class Root(CMakePackage):
     for pkg in ('memstat', 'qt4', 'table'):
         conflicts('+' + pkg, when='@6.18.00:',
                   msg='Obsolete option +{0} selected.'.format(pkg))
+
+    @classmethod
+    def filter_detected_exes(cls, prefix, exes_in_prefix):
+        result = []
+        for exe in exes_in_prefix:
+            # no need to check the root executable itself
+            # we can get all information from root-config
+            if exe.endswith('root'):
+                continue
+            result.append(exe)
+        return result
+
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        # turn the output of root-config --version
+        # (something like 6.22/06)
+        # into the format used in this recipe (6.22.06)
+        return output.strip().replace('/', '.')
 
     def cmake_args(self):
         spec = self.spec
@@ -370,7 +397,7 @@ class Root(CMakePackage):
             define_from_variant('cocoa', 'aqua'),
             define('dataframe', True),
             define_from_variant('davix'),
-            define('dcache', False),
+            define_from_variant('dcache'),
             define_from_variant('fftw3', 'fftw'),
             define_from_variant('fitsio', 'fits'),
             define_from_variant('ftgl', 'opengl'),
@@ -399,7 +426,7 @@ class Root(CMakePackage):
             define_from_variant('mysql'),
             define('odbc', False),
             define_from_variant('opengl'),
-            define('oracle', False),
+            define_from_variant('oracle'),
             define_from_variant('pgsql', 'postgres'),
             define_from_variant('pythia6'),
             define_from_variant('pythia8'),

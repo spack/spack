@@ -191,7 +191,7 @@ class Openmpi(AutotoolsPackage):
     patch('use_mpi_tkr_sizeof/step_2.patch', when='@1.8.4:2.1.3,3:3.0.1')
     # To fix performance regressions introduced while fixing a bug in older
     # gcc versions on x86_64, Refs. open-mpi/ompi#8603
-    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.1')
+    patch('opal_assembly_arch.patch', when='@4.0.0:4.1.0')
 
     variant(
         'fabrics',
@@ -949,14 +949,29 @@ class Openmpi(AutotoolsPackage):
             self.run_test(exe, '--version', expected, installed=True,
                           purpose=purpose, skip_missing=True)
 
-    def _test_examples(self):
-        # First build the examples
-        self.run_test('make', ['all'], [],
-                      purpose='test: ensuring ability to build the examples',
-                      work_dir=join_path(self.install_test_root,
-                                         self.extra_install_tests))
+    def _test_build_examples(self):
+        # Build the examples copied during installation and return "status"
+        reason = 'test: ensuring ability to build the examples'
+        return self.run_test('make', ['all'], [],
+                             purpose=reason,
+                             work_dir=join_path(self.install_test_root,
+                                                self.extra_install_tests))
 
-        # Now run those with known results
+    def _test_clean_examples(self):
+        # Clean up any example build files
+        reason = 'test: ensuring copied examples cleaned up'
+        return self.run_test('make', ['clean'], [],
+                             purpose=reason,
+                             work_dir=join_path(self.install_test_root,
+                                                self.extra_install_tests))
+
+    def _test_examples(self):
+        # First ensure can build copied examples
+        if not self._test_build_examples():
+            self._test_clean_examples()
+            return
+
+        # Now run examples with known, simple-to-verify results
         have_spml = self.spec.satisfies('@2.0.0:2.1.6')
 
         hello_world = (['Hello, world', 'I am', '0 of', '1'], 0)
@@ -995,10 +1010,15 @@ class Openmpi(AutotoolsPackage):
         }
 
         for exe in checks:
-            expected = checks[exe]
-            reason = 'test: checking example {0} output'.format(exe)
-            self.run_test(exe, [], expected, 0, installed=True,
-                          purpose=reason, skip_missing=True)
+            expected, status = checks[exe]
+            reason = 'test: checking {0} example output and status ({1})' \
+                .format(exe, status)
+            self.run_test(exe, [], expected, status, installed=False,
+                          purpose=reason, skip_missing=True,
+                          work_dir=join_path(self.install_test_root,
+                                             self.extra_install_tests))
+
+        self._test_clean_examples()
 
     def test(self):
         """Perform smoke tests on the installed package."""

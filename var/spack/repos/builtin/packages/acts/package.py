@@ -36,7 +36,11 @@ class Acts(CMakePackage, CudaPackage):
     tags = ['hep']
 
     # Supported Acts versions
-    version('master', branch='master')
+    version('main', branch='main')
+    version('master', branch='main', deprecated=True)  # For compatibility
+    version('8.02.0', commit='f25cf639915fc2ac65b03882ad3eb11fb037ed00')
+    version('8.01.0', commit='ccc8c77bbc011f3adc020c565a509815be0ea029')
+    version('8.00.0', commit='50c972823144c007b406ae12d7ca25a1e0c35532')
     version('7.00.0', commit='e663df7ab023bdb5ef206202efc2e54ccb71d416')
     version('6.00.0', commit='a5cf04acd4b1a2c625e0826189109472a3392558')
     version('5.00.0', commit='df77b91a7d37b8db6ed028a4d737014b5ad86bb7')

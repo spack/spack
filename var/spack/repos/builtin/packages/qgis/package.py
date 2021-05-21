@@ -191,8 +191,7 @@ class Qgis(CMakePackage):
                 'TRUE' if '+gui' in spec else 'FALSE'),
             '-DWITH_INTERNAL_MDAL={0}'.format(
                 'TRUE' if '+internal_mdal' in spec else 'FALSE'),
-            '-DWITH_INTERNAL_O2={0}'.format(
-                'ON' if '+internal_o2' in spec else 'OFF'),
+            self.define_from_variant('WITH_INTERNAL_O2', 'internal_o2'),
             '-DWITH_OAUTH2_PLUGIN={0}'.format(
                 'TRUE' if '+oauth2_plugin' in spec else 'FALSE'),
             '-DWITH_ORACLE={0}'.format(
@@ -203,14 +202,12 @@ class Qgis(CMakePackage):
                 'TRUE' if '+py_compile' in spec else 'FALSE'),
             '-DWITH_QSCIAPI={0}'.format(
                 'TRUE' if '+qsciapi' in spec else 'FALSE'),
-            '-DWITH_QSPATIALITE={0}'.format(
-                'ON' if '+qspatialite' in spec else 'OFF'),
+            self.define_from_variant('WITH_QSPATIALITE', 'qspatialite'),
             '-DWITH_QT5SERIALPORT={0}'.format(
                 'TRUE' if '+qt5serialport' in spec else 'FALSE'),
             '-DWITH_QTMOBILITY={0}'.format(
                 'TRUE' if '+qtmobility' in spec else 'FALSE'),
-            '-DWITH_QTWEBKIT={0}'.format(
-                'ON' if '+qtwebkit' in spec else 'OFF'),
+            self.define_from_variant('WITH_QTWEBKIT', 'qtwebkit'),
             '-DWITH_QUICK={0}'.format(
                 'TRUE' if '+quick' in spec else 'FALSE'),
             '-DWITH_QWTPOLAR={0}'.format(

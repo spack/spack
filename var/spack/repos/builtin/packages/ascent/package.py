@@ -43,10 +43,14 @@ class Ascent(Package, CudaPackage):
             branch='develop',
             submodules=True)
 
-    version('0.7.0',
-            tag='v0.7.0',
+    version('0.7.1',
+            tag='v0.7.1',
             submodules=True,
             preferred=True)
+
+    version('0.7.0',
+            tag='v0.7.0',
+            submodules=True)
 
     version('0.6.0',
             tag='v0.6.0',
@@ -197,6 +201,8 @@ class Ascent(Package, CudaPackage):
                 for arg in std_cmake_args:
                     if arg.count("RPATH") == 0:
                         cmake_args.append(arg)
+            if self.spec.satisfies('%cce'):
+                cmake_args.extend(["-DCMAKE_Fortran_FLAGS=-ef"])
             cmake_args.extend(["-C", host_cfg_fname, "../src"])
             print("Configuring Ascent...")
             cmake(*cmake_args)

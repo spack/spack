@@ -31,7 +31,7 @@ from copy import deepcopy
 cli = None
 
 
-def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
+def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False, tags=None):
     """
     Get a monitor client for a particular host and prefix.
 
@@ -46,7 +46,8 @@ def get_client(host, prefix="ms1", disable_auth=False, allow_fail=False):
     the monitor use it.
     """
     global cli
-    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail)
+    cli = SpackMonitorClient(host=host, prefix=prefix, allow_fail=allow_fail,
+                             tags=tags)
 
     # If we don't disable auth, environment credentials are required
     if not disable_auth:
@@ -85,6 +86,9 @@ def get_monitor_group(subparser):
         '--monitor-no-auth', action='store_true', dest='monitor_disable_auth',
         default=False, help="the monitoring server does not require auth.")
     monitor_group.add_argument(
+        '--monitor-tags', dest='monitor_tags', default=None,
+        help="One or more (comma separated) tags for a build.")
+    monitor_group.add_argument(
         '--monitor-keep-going', action='store_true', dest='monitor_keep_going',
         default=False, help="continue the build if a request to monitor fails.")
     monitor_group.add_argument(
@@ -106,7 +110,7 @@ class SpackMonitorClient:
     to the client on init.
     """
 
-    def __init__(self, host=None, prefix="ms1", allow_fail=False):
+    def __init__(self, host=None, prefix="ms1", allow_fail=False, tags=None):
         self.host = host or "http://127.0.0.1"
         self.baseurl = "%s/%s" % (self.host, prefix.strip("/"))
         self.token = os.environ.get("SPACKMON_TOKEN")
@@ -115,6 +119,7 @@ class SpackMonitorClient:
         self.allow_fail = allow_fail
         self.spack_version = spack.main.get_version()
         self.capture_build_environment()
+        self.tags = tags
 
         # We keey lookup of build_id by full_hash
         self.build_ids = {}
@@ -201,7 +206,8 @@ class SpackMonitorClient:
         # Always reset headers for new request.
         self.reset()
 
-        headers = headers or {}
+        # Preserve previously used auth token
+        headers = headers or self.headers
 
         # The calling function can provide a full or partial url
         if not endpoint.startswith("http"):
@@ -228,7 +234,7 @@ class SpackMonitorClient:
         except URLError as e:
 
             # If we have an authorization request, retry once with auth
-            if e.code == 401 and retry:
+            if hasattr(e, "code") and e.code == 401 and retry:
                 if self.authenticate_request(e):
                     request = self.prepare_request(
                         e.url,
@@ -366,6 +372,10 @@ class SpackMonitorClient:
         # Prepare build environment data (including spack version)
         data = self.build_environment.copy()
         data['full_hash'] = full_hash
+
+        # If the build should be tagged, add it
+        if self.tags:
+            data['tags'] = self.tags
 
         # If we allow the spec to not exist (meaning we create it) we need to
         # include the full spec.yaml here
