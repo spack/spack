@@ -99,7 +99,7 @@ class IntelTbb(CMakePackage):
             description='Enable preview features of the library')
     
             
-    conflicts('~shared', when='@2021.1.0:', message='~shared Not yet implemented for >= 2021.1.1')
+    conflicts('~shared', when='@2021.1.0:', msg='~shared Not yet implemented for >= 2021.1.1')
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
