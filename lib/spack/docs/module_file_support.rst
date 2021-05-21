@@ -130,9 +130,8 @@ list of environment modifications.
   to the corresponding environment variables:
 
   ================== =================================
-   LIBRARY_PATH       ``self.prefix/rlib/R/lib``
    LD_LIBRARY_PATH    ``self.prefix/rlib/R/lib``
-   CPATH              ``self.prefix/rlib/R/include``
+   PKG_CONFIG_PATH    ``self.prefix/rlib/pkgconfig``
   ================== =================================
 
   with the following snippet:
