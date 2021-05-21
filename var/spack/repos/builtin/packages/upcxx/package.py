@@ -25,7 +25,7 @@ class Upcxx(Package):
     homepage = "https://upcxx.lbl.gov"
     maintainers = ['bonachea']
 
-    git = 'https://bonachea@bitbucket.org/berkeleylab/upcxx.git'
+    git = 'https://bitbucket.org/berkeleylab/upcxx.git'
     version('develop', branch='develop')
     version('master',  branch='master')
 
@@ -169,6 +169,8 @@ class Upcxx(Package):
             make()
 
             make('install')
+
+        install_tree('example', prefix.example)
 
     @run_after('install')
     @on_package_attributes(run_tests=True)
