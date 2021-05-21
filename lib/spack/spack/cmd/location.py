@@ -119,8 +119,8 @@ def location(parser, args):
     if args.build_dir:
         # Out of source builds have build_directory defined
         if hasattr(pkg, 'build_directory'):
-            # build_directory can be either absolute or relative to the stage path
-            # in either case os.path.join makes it absolute
+            # build_directory can be either absolute or relative to the
+            # stage path in either case os.path.join makes it absolute
             print(os.path.normpath(os.path.join(
                 pkg.stage.path,
                 pkg.build_directory

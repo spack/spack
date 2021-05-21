@@ -258,7 +258,8 @@ def use_store(store_or_path):
     """Use the store passed as argument within the context manager.
 
     Args:
-        store_or_path: either a Store object ot a path to where the store resides
+        store_or_path: either a Store object ot a path to where the
+            store resides
 
     Returns:
         Store object associated with the context manager's store

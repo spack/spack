@@ -943,7 +943,8 @@ def environment_after_sourcing_files(*files, **kwargs):
             concatenate_on_success, dump_environment,
         ])
         output = shell(
-            source_file_arguments, output=str, env=environment, ignore_quotes=True
+            source_file_arguments, output=str, env=environment,
+            ignore_quotes=True
         )
         environment = json.loads(output)
 

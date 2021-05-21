@@ -492,7 +492,9 @@ class SpackSolverSetup(object):
 
     def conflict_rules(self, pkg):
         for trigger, constraints in pkg.conflicts.items():
-            trigger_id = self.condition(spack.spec.Spec(trigger), name=pkg.name)
+            trigger_id = self.condition(
+                spack.spec.Spec(trigger), name=pkg.name
+            )
             self.gen.fact(fn.conflict_trigger(trigger_id))
 
             for constraint, _ in constraints:
