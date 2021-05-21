@@ -21,7 +21,6 @@ class Alpaka(CMakePackage, CudaPackage):
     version('0.5.0', sha256='0ba08ea19961dd986160219ba00d6162fe7758980d88a606eff6494d7b3a6cd1')
     version('0.4.0', sha256='ad7905b13c22abcee4344ba225a65078e3f452ad45a9eda907e7d27c08315e46')
 
-
     variant("backend", multi=True, values=('serial', 'threads', 'fiber', 'tbb', 'omp2_gridblock', 'omp2_blockthread', 'omp5', 'oacc', 'cuda', 'cuda_only', 'hip', 'hip_only'), description="Backends to enable", default='serial')
 
     variant("examples", default=False, description="Build alpaka examples")
@@ -36,7 +35,7 @@ class Alpaka(CMakePackage, CudaPackage):
         conflicts('backend=hip_only,%s' % v)
     conflicts('backend=cuda_only,hip_only')
     for v in ('omp2_blockthread', 'omp2_blockthread', 'omp5'):
-      conflicts('backend=oacc,%s' % v)
+        conflicts('backend=oacc,%s' % v)
 
     # todo: add conflict between cuda 11.3 and gcc 10.3.0
     # see https://github.com/alpaka-group/alpaka/issues/1297
