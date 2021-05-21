@@ -86,7 +86,7 @@ class Fortrilinos(CMakePackage):
     def test(self):
         example_src_dir = join_path(self.install_test_root,
                                     self.examples_src_dir)
-        test_build_dir = join_path(self.test_suite.current_test_data_dir,
+        test_build_dir = join_path(self.test_suite.stage,
                                    'build_example')
         with working_dir(test_build_dir, create=True):
             cmake(
