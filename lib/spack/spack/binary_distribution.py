@@ -729,9 +729,9 @@ def generate_package_index(cache_prefix):
             _, _, spec_file = web_util.read_from_url(spec_url)
             spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
             # Need full spec.json name or this gets confused with database.
-            if spec_file.file.name.endswith('spec.json'):
+            if spec_url.endswith('spec.json'):
                 s = Spec.from_json(spec_file_contents)
-            elif spec_file.file.name.endswith('yaml'):
+            elif spec_url.endswith('yaml'):
                 obj = syaml.load(spec_file_contents)
                 s = Spec.from_yaml(obj)
             else:
