@@ -10,7 +10,7 @@ import platform
 import sys
 
 from spack.build_environment import dso_suffix
- 
+
 
 class IntelTbb(CMakePackage):
     """Widely used C++ template library for task parallelism.
@@ -94,14 +94,15 @@ class IntelTbb(CMakePackage):
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
 
-    variant('tbb4py', default=False,
-            description='Enable  Intel(R) oneAPI Threading Building Blocks (oneTBB) Python module build')
+    variant('python', default=False,
+            description='Enable Intel(R) oneAPI Threading Building ' + 
+                        'Blocks (oneTBB) Python module build')
 
     variant('cpf', default=False,
             description='Enable preview features of the library')
 
-
-    conflicts('~shared', when='@2021.1.0:', msg='~shared Not yet implemented for >= 2021.1.1')
+    conflicts('~shared', when='@2021.1.0:')
+    conflicts('+python', when='@:2021.0.999')
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
@@ -112,6 +113,7 @@ class IntelTbb(CMakePackage):
 
     depends_on('cmake@3.1:', type='build', when='@2021.1.1:')
     depends_on('hwloc@1.11:', when='@2021.1.1:')
+    depends_on('python@3.5:', when='@2021.1.1: +python')
 
     # Patch for pedantic warnings (#10836).  This was fixed in the TBB
     # source tree in 2019.6.
@@ -177,18 +179,22 @@ class IntelTbb(CMakePackage):
         define = self.define
         options = []
 
-        options += [define_from_variant('TBB4PY_BUILD', 'tbb4py'),
+        options += [define_from_variant('TBB4PY_BUILD', 'python'),
                     define_from_variant('TBB_CPF', 'cpf'),
                     define('TBB_TEST', 'False')]
 
-
-
         if self.spec['hwloc'].version >= Version('2.0'):
-            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc.' + dso_suffix)),
-                        define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
+            options += [define('CMAKE_HWLOC_2_LIBRARY_PATH', 
+                               join_path(self.spec['hwloc'].prefix.lib, 
+                                         'libhwloc.' + dso_suffix)),
+                        define('CMAKE_HWLOC_2_INCLUDE_PATH', 
+                               self.spec['hwloc'].prefix.include)]
         else:
-            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', join_path(self.spec['hwloc'].prefix.lib, 'libhwloc.' + dso_suffix)),
-                        define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)]
+            options += [define('CMAKE_HWLOC_1_11_LIBRARY_PATH', 
+                               join_path(self.spec['hwloc'].prefix.lib, 
+                                         'libhwloc.' + dso_suffix)),
+                        define('CMAKE_HWLOC_1_11_INCLUDE_PATH', 
+                               self.spec['hwloc'].prefix.include)]
 
         return options
 
