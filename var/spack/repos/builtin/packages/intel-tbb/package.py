@@ -10,7 +10,7 @@ import platform
 import sys
 
 
-class IntelTbb(Package):
+class IntelTbb(CMakePackage):
     """Widely used C++ template library for task parallelism.
     Intel Threading Building Blocks (Intel TBB) lets you easily write parallel
     C++ programs that take full advantage of multicore performance, that are
@@ -23,8 +23,9 @@ class IntelTbb(Package):
     # Note: when adding new versions, please check and update the
     # patches, filters and url_for_version() below as needed.
 
-    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3',
+    version('2021.2.0', sha256='cee20b0a71d977416f3e3b4ec643ee4f38cedeb2a9ff015303431dd9d8d79854',
             preferred=True)
+    version('2020.3', sha256='ebc4f6aa47972daed1f7bf71d100ae5bf6931c2e3144cf299c8cc7d041dca2f3')
     version('2020.2', sha256='4804320e1e6cbe3a5421997b52199e3c1a3829b2ecb6489641da4b8e32faf500')
     version('2020.1', sha256='7c96a150ed22bc3c6628bc3fef9ed475c00887b26d37bca61518d76a56510971')
     version('2020.0', sha256='57714f2d2cf33935db33cee93af57eb3ecd5a7bef40c1fb7ca4a41d79684b118')
@@ -87,9 +88,18 @@ class IntelTbb(Package):
             values=('default', '98', '11', '14', '17'),
             multi=False,
             description='Use the specified C++ standard when building.')
-
+            
     variant('tm', default=True,
             description='Enable use of transactional memory on x86')
+           
+    variant('tbb4py', default=False,
+            description='Enable  Intel(R) oneAPI Threading Building Blocks (oneTBB) Python module build')
+            
+    variant('cpf', default=False,
+            description='Enable preview features of the library')
+    
+            
+    conflicts('~shared', when='@2021.1.0:', message='~shared Not yet implemented for >= 2021.1.1')
 
     # Testing version ranges inside when clauses was fixed in e9ee9eaf.
     # See: #8957 and #13989.
@@ -97,6 +107,9 @@ class IntelTbb(Package):
     # Build and install CMake config files if we're new enough.
     # CMake support started in 2017.7.
     depends_on('cmake@3.0.0:', type='build', when='@2017.7:')
+    
+    depends_on('cmake@3.1:', type='build', when='@2021.1.1:')
+    depends_on('hwloc@1.11:', when='@2021.1.1:')
 
     # Patch for pedantic warnings (#10836).  This was fixed in the TBB
     # source tree in 2019.6.
@@ -111,7 +124,8 @@ class IntelTbb(Package):
     patch("makefile-debug.patch", when="@2020:2021.0")
 
     # Some very old systems don't support transactional memory.
-    patch("disable-tm.patch", when='~tm')
+    patch("disable-tm.patch", when='~tm @:2021.1.0')
+    patch("disable-tm-2021.patch", when='~tm @2021.1.1:')
 
     # Add support for building on arm64 macOS,
     # also included in hombrew and already available upstream:
@@ -152,6 +166,30 @@ class IntelTbb(Package):
                     else:
                         of.write(lin)
 
+    @when('@:2021.1.0')
+    def cmake(self, spec, prefix):
+        return
+        
+    def cmake_args(self):
+        define_from_variant = self.define_from_variant
+        options = []
+        
+        options += define_from_variant('TBB4PY_BUILD', 'tbb4py')
+        options += define_from_variant('TBB_CPF', 'cpf')
+        options += self.define('TBB_TEST', 'False')
+        
+        if self.spec['hwloc'].version >= Version('2.0'):
+            options += define('CMAKE_HWLOC_2_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
+            options += define('CMAKE_HWLOC_2_INCLUDE_PATH', self.spec['hwloc'].prefix.include)
+        else:
+            options += define('CMAKE_HWLOC_1_11_LIBRARY_PATH', self.spec['hwloc'].prefix.lib)
+            options += define('CMAKE_HWLOC_1_11_INCLUDE_PATH', self.spec['hwloc'].prefix.include)
+ 
+    @when('@:2021.1.0')
+    def build(self, spec, prefix):
+        return
+        
+    @when('@:2021.1.0')
     def install(self, spec, prefix):
         # Deactivate use of RTM with GCC when on an OS with a very old
         # assembler.
