@@ -49,7 +49,9 @@ class GdkPixbuf(Package):
 
     # Replace the docbook stylesheet URL with the one that our
     # docbook-xsl package uses/recognizes.
-    patch('docbook-cdn.patch', when='+man')
+    # Pach modifies meson build files, so it only applies to versions that
+    # depend on meson.
+    patch('docbook-cdn.patch', when='@2.37.0:+man')
 
     def url_for_version(self, version):
         url = "https://ftp.acc.umu.se/pub/gnome/sources/gdk-pixbuf/{0}/gdk-pixbuf-{1}.tar.xz"
