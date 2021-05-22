@@ -4800,10 +4800,10 @@ Filtering functions
 
      .. code-block:: python
 
-        filter_file(r'^CC\s*=.*',  spack_cc,  'Makefile')
-        filter_file(r'^CXX\s*=.*', spack_cxx, 'Makefile')
-        filter_file(r'^F77\s*=.*', spack_f77, 'Makefile')
-        filter_file(r'^FC\s*=.*',  spack_fc,  'Makefile')
+        filter_file(r'^\s*CC\s*=.*',  'CC = '  + spack_cc,  'Makefile')
+        filter_file(r'^\s*CXX\s*=.*', 'CXX = ' + spack_cxx, 'Makefile')
+        filter_file(r'^\s*F77\s*=.*', 'F77 = ' + spack_f77, 'Makefile')
+        filter_file(r'^\s*FC\s*=.*',  'FC = '  + spack_fc,  'Makefile')
 
   #. Replacing ``#!/usr/bin/perl`` with ``#!/usr/bin/env perl`` in ``bib2xhtml``:
 
