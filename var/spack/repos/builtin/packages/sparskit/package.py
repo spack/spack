@@ -63,7 +63,7 @@ class Sparskit(MakefilePackage):
 
     def build(self, spec, prefix):
         make('clean')
-        make('F77=fc')
+        make('F77={0}'.format(spack_fc))
 
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
