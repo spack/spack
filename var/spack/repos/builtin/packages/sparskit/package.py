@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class Sparsekit(MakefilePackage):
+class Sparskit(MakefilePackage):
     """SPARSKIT: A basic tool-kit for sparse matrix computations (Version 2).
 
     Made by Yousef Saad, University of Minnesota.
@@ -57,6 +57,11 @@ class Sparsekit(MakefilePackage):
 
     def edit(self, spec, prefix):
         mkfile = FileFilter('makefile')
+        # https://spack.readthedocs.io/en/latest/packaging_guide.html#filtering-functions
+        # It seems the makefile is stubborn and refuses to use the spack compiler
+        # https://spack.readthedocs.io/en/latest/build_systems/makefilepackage.html#edit-makefile
+        # so either remove this line, or, since spack provides F77=spack_fc, we
+        # may use the make -R feature when we want to compile outside of spack:
         mkfile.filter(r'^(F90|F77|FC).*=.+', r'\1 ?= {0}'.format(self.compiler.fc))
         mkfile.filter(r'^(OPT).*=.+', r'\1= -c $(FFLAGS)')
         if os.path.exists('libskit.a'):
