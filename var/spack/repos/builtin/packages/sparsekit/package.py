@@ -7,9 +7,9 @@ from spack import *
 import os
 
 
-class Skit(MakefilePackage):
-    """SPARSKIT:
-    A basic tool-kit for sparse matrix computations (Version 2).
+class Sparsekit(MakefilePackage):
+    """SPARSKIT: A basic tool-kit for sparse matrix computations (Version 2).
+
     Made by Yousef Saad, University of Minnesota.
     """
 
@@ -57,7 +57,7 @@ class Skit(MakefilePackage):
 
     def edit(self, spec, prefix):
         mkfile = FileFilter('makefile')
-        mkfile.filter(r'^(F90|F77|FC).*=.+', r'\1={0}'.format(self.compiler.fc))
+        mkfile.filter(r'^(F90|F77|FC).*=.+', r'\1 ?= {0}'.format(self.compiler.fc))
         mkfile.filter(r'^(OPT).*=.+', r'\1= -c $(FFLAGS)')
         if os.path.exists('libskit.a'):
             os.unlink('libskit.a')
@@ -69,3 +69,9 @@ class Skit(MakefilePackage):
     def install(self, spec, prefix):
         mkdirp(prefix.lib)
         install('libskit.*', prefix.lib)
+
+    @property
+    def libs(self):
+        return find_libraries(
+            "libskit*", root=self.prefix, shared=False, recursive=True
+        )
