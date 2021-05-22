@@ -7,13 +7,13 @@ import os
 
 
 class Qucs(AutotoolsPackage):
-    """QUCS - Quite Universal Circuit Simulator:
-       Qucs is an integrated circuit simulator which means you are able to
-       setup a circuit with a graphical user interface (GUI) and simulate
-       the large-signal, small-signal and noise behaviour of the circuit.
-       After that simulation has finished you can view the simulation results
-       on a presentation page or window.
-       This is the complete environment as provided at Sourceforge, the main repository.
+    """QUCS - Quite Universal Circuit Simulator
+
+    Qucs is an integrated circuit simulator which means you are able to
+    setup a circuit with a graphical user interface (GUI) and simulate
+    the large-signal, small-signal and noise behaviour of the circuit.
+    After that simulation has finished you can view the simulation results
+    on a presentation page or window.
     """
 
     homepage = "http://qucs.sourceforge.net/"
