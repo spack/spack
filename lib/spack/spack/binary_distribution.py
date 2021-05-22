@@ -1374,40 +1374,40 @@ def try_direct_fetch(spec, full_hash_match=False, mirrors=None):
     """
     Try to find the spec directly on the configured mirrors
     """
-    specfile_name_yaml = tarball_name(spec, '.spec.yaml')
-    specfile_name_json = tarball_name(spec, '.spec.json')
-    is_json = True
+    deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
+    specfile_name = tarball_name(spec, '.spec.json')
+    specfile_is_json = True
     lenient = not full_hash_match
     found_specs = []
     spec_full_hash = spec.full_hash()
 
     for mirror in spack.mirror.MirrorCollection(mirrors=mirrors).values():
         buildcache_fetch_url_yaml = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, specfile_name_yaml)
+            mirror.fetch_url, _build_cache_relative_path, deprecated_specfile_name)
         buildcache_fetch_url_json = url_util.join(
-            mirror.fetch_url, _build_cache_relative_path, specfile_name_json)
+            mirror.fetch_url, _build_cache_relative_path, specfile_name)
         try:
             if web_util.url_exists(buildcache_fetch_url_json):
                 _, _, fs = web_util.read_from_url(buildcache_fetch_url_json)
             elif web_util.url_exists(buildcache_fetch_url_yaml):
                 _, _, fs = web_util.read_from_url(buildcache_fetch_url_yaml)
-                is_json = False
+                specfile_is_json = False
             else:
                 raise URLError('')
             specfile_contents = codecs.getreader('utf-8')(fs).read()
         except (URLError, web_util.SpackWebError, HTTPError) as url_err:
-            if is_json:
+            if specfile_is_json:
                 tty.debug('Did not find {0} on {1}'.format(
-                    specfile_name_json, buildcache_fetch_url_json), url_err)
+                    specfile_name, buildcache_fetch_url_json), url_err)
             else:
                 tty.debug('Did not find {0} on {1}'.format(
-                    specfile_name_yaml, buildcache_fetch_url_yaml), url_err)
+                    deprecated_specfile_name, buildcache_fetch_url_yaml), url_err)
             continue
 
         # read the spec from the build cache file. All specs in build caches
         # are concrete (as they are built) so we need to mark this spec
         # concrete on read-in.
-        if is_json:
+        if specfile_is_json:
             fetched_spec = Spec.from_yaml(specfile_contents)
         else:
             fetched_spec = Spec.from_json(specfile_contents)
@@ -1637,21 +1637,22 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
     # format of the name, in order to determine if the package
     # needs to be rebuilt.
     cache_prefix = build_cache_prefix(mirror_url)
-    is_json = True
-    spec_json_file_name = tarball_name(spec, '.spec.json')
-    spec_yaml_file_name = tarball_name(spec, '.spec.yaml')
-    json_path = os.path.join(cache_prefix, spec_json_file_name)
-    yaml_path = os.path.join(cache_prefix, spec_yaml_file_name)
+    specfile_is_json = True
+    specfile_name = tarball_name(spec, '.spec.json')
+    deprecated_specfile_name = tarball_name(spec, '.spec.yaml')
+    specfile_path = os.path.join(cache_prefix, specfile_name)
+    deprecated_specfile_path = os.path.join(cache_prefix,
+        deprecated_specfile_name)
 
     result_of_error = 'Package ({0}) will {1}be rebuilt'.format(
         spec.short_spec, '' if rebuild_on_errors else 'not ')
 
     try:
-        if web_util.url_exists(yaml_path):
-            _, _, spec_file = web_util.read_from_url(yaml_path)
-            is_json = False
-        elif web_util.url_exists(json_path):
-            _, _, spec_file = web_util.read_from_url(json_path)
+        if web_util.url_exists(deprecated_specfile_path):
+            _, _, spec_file = web_util.read_from_url(deprecated_specfile_path)
+            specfile_is_json = False
+        elif web_util.url_exists(specfile_path):
+            _, _, spec_file = web_util.read_from_url(specfile_path)
         else:
             raise URLError('')
         spec_file_contents = codecs.getreader('utf-8')(spec_file).read()
@@ -1660,20 +1661,20 @@ def needs_rebuild(spec, mirror_url, rebuild_on_errors=False):
             'Unable to determine whether {0} needs rebuilding,',
             ' caught exception attempting to read from {1}.',
         ]
-        tty.error(''.join(err_msg).format(spec.short_spec, yaml_path))
+        tty.error(''.join(err_msg).format(spec.short_spec,
+            specfile_path if specfile_is_json else deprecated_specfile_path))
         tty.debug(url_err)
         tty.warn(result_of_error)
         return rebuild_on_errors
 
     if not spec_file_contents:
-        tty.error('Reading {0} returned nothing'.format(yaml_path))
+        tty.error('Reading {0} returned nothing'.format(
+            specfile_path if specfile_is_json else deprecated_specfile_path))
         tty.warn(result_of_error)
         return rebuild_on_errors
 
-    if is_json:
-        spec_dict = sjson.load(spec_file_contents)
-    else:
-        spec_dict = syaml.load(spec_file_contents)
+    spec_dict = (sjson.load(spec_file_contents) 
+        if specfile_is_json else syaml.load(spec_file_contents))
 
     nodes = spec_dict['spec']['nodes']
     name = spec.name
