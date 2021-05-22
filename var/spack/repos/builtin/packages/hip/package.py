@@ -17,7 +17,7 @@ class Hip(CMakePackage):
     git      = "https://github.com/ROCm-Developer-Tools/HIP.git"
     url      = "https://github.com/ROCm-Developer-Tools/HIP/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('4.2.0', sha256='ecb929e0fc2eaaf7bbd16a1446a876a15baf72419c723734f456ee62e70b4c24')
     version('4.1.0', sha256='e21c10b62868ece7aa3c8413ec0921245612d16d86d81fe61797bf9a64bc37eb')
@@ -38,8 +38,7 @@ class Hip(CMakePackage):
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('comgr@' + ver, type=('build', 'link', 'run'), when='@' + ver)
-        depends_on('llvm-amdgpu@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'link', 'run'), when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type='build', when='@' + ver)
         depends_on('rocminfo@' + ver, type=('build', 'run'), when='@' + ver)
 
     # hipcc likes to add `-lnuma` by default :(
@@ -86,8 +85,7 @@ class Hip(CMakePackage):
                 'rocm-path': rocm_prefix,
                 'llvm-amdgpu': rocm_prefix.llvm,
                 'hsa-rocr-dev': rocm_prefix.hsa,
-                'rocminfo': rocm_prefix,
-                'rocm-device-libs': rocm_prefix,
+                'rocminfo': rocm_prefix
             }
         else:
             paths = {
@@ -95,14 +93,13 @@ class Hip(CMakePackage):
                 'llvm-amdgpu': self.spec['llvm-amdgpu'].prefix,
                 'hsa-rocr-dev': self.spec['hsa-rocr-dev'].prefix,
                 'rocminfo': self.spec['rocminfo'].prefix,
-                'rocm-device-libs': self.spec['rocm-device-libs'].prefix,
             }
 
         # `device_lib_path` is the path to the bitcode directory
         if '@:3.8.0' in self.spec:
-            paths['device_lib_path'] = paths['rocm-device-libs'].lib
+            paths['device_lib_path'] = paths['llvm-amdgpu'].lib
         else:
-            paths['device_lib_path'] = paths['rocm-device-libs'].amdgcn.bitcode
+            paths['device_lib_path'] = paths['llvm-amdgpu'].amdgcn.bitcode
 
         return paths
 

@@ -14,7 +14,7 @@ class Rocblas(CMakePackage):
     git      = "https://github.com/ROCmSoftwarePlatform/rocBLAS.git"
     url      = "https://github.com/ROCmSoftwarePlatform/rocBLAS/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('4.2.0', sha256='547f6d5d38a41786839f01c5bfa46ffe9937b389193a8891f251e276a1a47fb0')
     version('4.1.0', sha256='8be20c722bab169bc4badd79a9eab9a1aa338e0e5ff58ad85ba6bf09e8ac60f4')
@@ -34,7 +34,6 @@ class Rocblas(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0']:
         depends_on('rocm-cmake@' + ver, type='build', when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type='build', when='@' + ver)
         depends_on('hip@' + ver, when='@' + ver)
         depends_on('comgr@' + ver, type='build', when='@' + ver)
         # used in Tensile
@@ -42,6 +41,7 @@ class Rocblas(CMakePackage):
 
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
         depends_on('rocm-smi@' + ver, type='build', when='@' + ver)
+
     for ver in ['4.1.0', '4.2.0']:
         depends_on('hip-rocclr@' + ver, type='link', when='@' + ver)
 
@@ -55,44 +55,20 @@ class Rocblas(CMakePackage):
     depends_on('py-wheel', type='build')
     depends_on('py-msgpack', type='build')
 
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='f842a1a4427624eff6cbddb2405c36dec9a210cd',
-             when='@3.5.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='af71ea890a893e647bf2cf4571a90297d65689ca',
-             when='@3.7.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='9123205f9b5f95c96ff955695e942d2c3b321cbf',
-             when='@3.8.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='b68edc65aaeed08c71b2b8622f69f83498b57d7a',
-             when='@3.9.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
-             when='@3.10.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='ab44bf46b609b5a40053f310bef2ab7511f726ae',
-             when='@4.0.0')
-
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='d175277084d3253401583aa030aba121e8875bfd',
-             when='@4.1.0')
-    resource(name='Tensile',
-             git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-             commit='3438af228dc812768b20a068b0285122f327fa5b',
-             when='@4.2.0')
+    for t_version, t_commit in [
+        ('3.5.0',  'f842a1a4427624eff6cbddb2405c36dec9a210cd'),
+        ('3.7.0',  'af71ea890a893e647bf2cf4571a90297d65689ca'),
+        ('3.8.0',  '9123205f9b5f95c96ff955695e942d2c3b321cbf'),
+        ('3.9.0',  'b68edc65aaeed08c71b2b8622f69f83498b57d7a'),
+        ('3.10.0', 'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
+        ('4.0.0',  'ab44bf46b609b5a40053f310bef2ab7511f726ae'),
+        ('4.1.0',  'd175277084d3253401583aa030aba121e8875bfd'),
+        ('4.2.0',  '3438af228dc812768b20a068b0285122f327fa5b')
+    ]:
+        resource(name='Tensile',
+                 git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
+                 commit=t_version,
+                 when='@{0}'.format(t_version))
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
     # Not yet landed in 3.7.0, nor 3.8.0.

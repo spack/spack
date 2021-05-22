@@ -17,7 +17,7 @@ class HsaRocrDev(CMakePackage):
     git      = "https://github.com/RadeonOpenCompute/ROCR-Runtime.git"
     url      = "https://github.com/RadeonOpenCompute/ROCR-Runtime/archive/rocm-4.1.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
     version('4.2.0', sha256='fa0e7bcd64e97cbff7c39c9e87c84a49d2184dc977b341794770805ec3f896cc')
@@ -40,10 +40,7 @@ class HsaRocrDev(CMakePackage):
     for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
                 '4.2.0', 'master']:
         depends_on('hsakmt-roct@' + ver, type=('link', 'run'), when='@' + ver)
-        depends_on('rocm-device-libs@' + ver, type=('build', 'link'), when='@' + ver)
-
-    for ver in ['3.7.0', '3.8.0', '3.9.0', '4.0.0', '4.1.0', '4.2.0', 'master']:
-        depends_on('llvm-amdgpu@' + ver, type=('link', 'run'), when='@' + ver)
+        depends_on('llvm-amdgpu@{0} +rocm-device-libs'.format(ver), type=('link', 'run'), when='@' + ver)
 
     # Both 3.5.0 and 3.7.0 force INSTALL_RPATH in different ways
     patch('0001-Do-not-set-an-explicit-rpath-by-default-since-packag.patch', when='@3.5.0')
@@ -63,6 +60,6 @@ class HsaRocrDev(CMakePackage):
 
         if '@4.2.0:' in self.spec:
             bitcode_dir = self.spec['rocm-device-libs'].prefix.amdgcn.bitcode
-            args.append('-DBITCODE_DIR={0}'.format(bitcode_dir))
+            args.append(self.define('BITCODE_DIR', bitcode_dir))
 
         return args

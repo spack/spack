@@ -14,7 +14,7 @@ class Rocminfo(CMakePackage):
     git      = "https://github.com/RadeonOpenCompute/rocminfo.git"
     url      = "https://github.com/RadeonOpenCompute/rocminfo/archive/rocm-4.2.0.tar.gz"
 
-    maintainers = ['srekolam', 'arjun-raj-kuppala']
+    maintainers = ['srekolam', 'arjun-raj-kuppala', 'haampie']
 
     version('master', branch='master')
 
@@ -35,5 +35,4 @@ class Rocminfo(CMakePackage):
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
 
     def cmake_args(self):
-        args = ['-DROCM_DIR={0}'.format(self.spec['hsa-rocr-dev'].prefix)]
-        return args
+        return [self.define('ROCM_DIR', self.spec['hsa-rocr-dev'].prefix)]
