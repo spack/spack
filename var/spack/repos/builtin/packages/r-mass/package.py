@@ -1,42 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RMass(Package):
-    """Functions and datasets to support Venables and Ripley, "Modern Applied
+class RMass(RPackage):
+    """Support Functions and Datasets for Venables and Ripley's MASS
+
+    Functions and datasets to support Venables and Ripley, "Modern Applied
     Statistics with S" (4th edition, 2002)."""
 
-    homepage = "http://www.stats.ox.ac.uk/pub/MASS4/"
-    url      = "https://cran.r-project.org/src/contrib/MASS_7.3-45.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/MASS"
+    homepage = "https://cloud.r-project.org/package=MASS"
+    url      = "https://cloud.r-project.org/src/contrib/MASS_7.3-47.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/MASS"
 
-    version('7.3-45', 'aba3d12fab30f1793bee168a1efea88b')
+    version('7.3-53', sha256='41824e70ada302a620226c0f17b1b2c880c6d1a3a100b53bd6df8e8c97e64b38')
+    version('7.3-51.5', sha256='464c0615cef01820cde2bb8457e81575d6755ae9b3ac99f3bfaaac47d43d15cc')
+    version('7.3-51.4', sha256='844270a2541eaed420871dfb61d681aa67ee57126645fb6b144b436c25698eeb')
+    version('7.3-51.3', sha256='5b0e0e7704d43a94b08dcc4b3fe600b9723d1b3e446dd393e82d39ddf66608b6')
+    version('7.3-47',   sha256='ed44cdabe84fff3553122267ade61d5cc68071c435f7645d36c8f2e4e9f9c6bf')
 
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.1.0:', type=('build', 'run'))

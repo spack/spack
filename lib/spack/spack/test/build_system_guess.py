@@ -1,81 +1,59 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import os
-import shutil
-import tempfile
-import unittest
-
-from llnl.util.filesystem import *
-from spack.cmd.create import BuildSystemGuesser
-from spack.stage import Stage
-from spack.test.mock_packages_test import *
-from spack.util.executable import which
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-class InstallTest(unittest.TestCase):
-    """Tests the build system guesser in spack create"""
+import pytest
+import spack.cmd.create
+import spack.util.executable
+import spack.stage
 
-    def setUp(self):
-        self.tar = which('tar')
-        self.tmpdir = tempfile.mkdtemp()
-        self.orig_dir = os.getcwd()
-        os.chdir(self.tmpdir)
-        self.stage = None
 
-    def tearDown(self):
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-        os.chdir(self.orig_dir)
+@pytest.fixture(
+    scope='function',
+    params=[
+        ('configure',      'autotools'),
+        ('CMakeLists.txt', 'cmake'),
+        ('project.pro',    'qmake'),
+        ('pom.xml',        'maven'),
+        ('SConstruct',     'scons'),
+        ('waf',            'waf'),
+        ('setup.py',       'python'),
+        ('NAMESPACE',      'r'),
+        ('WORKSPACE',      'bazel'),
+        ('Makefile.PL',    'perlmake'),
+        ('Build.PL',       'perlbuild'),
+        ('foo.gemspec',    'ruby'),
+        ('Rakefile',       'ruby'),
+        ('setup.rb',       'ruby'),
+        ('GNUmakefile',    'makefile'),
+        ('makefile',       'makefile'),
+        ('Makefile',       'makefile'),
+        ('meson.build',    'meson'),
+        ('configure.py',   'sip'),
+        ('foobar',         'generic')
+    ]
+)
+def url_and_build_system(request, tmpdir):
+    """Sets up the resources to be pulled by the stage with
+    the appropriate file name and returns their url along with
+    the correct build-system guess
+    """
+    tar = spack.util.executable.which('tar')
+    orig_dir = tmpdir.chdir()
+    filename, system = request.param
+    tmpdir.ensure('archive', filename)
+    tar('czf', 'archive.tar.gz', 'archive')
+    url = 'file://' + str(tmpdir.join('archive.tar.gz'))
+    yield url, system
+    orig_dir.chdir()
 
-    def check_archive(self, filename, system):
-        mkdirp('archive')
-        touch(join_path('archive', filename))
-        self.tar('czf', 'archive.tar.gz', 'archive')
 
-        url = 'file://' + join_path(os.getcwd(), 'archive.tar.gz')
-        print url
-        with Stage(url) as stage:
-            stage.fetch()
-
-            guesser = BuildSystemGuesser()
-            guesser(stage, url)
-            self.assertEqual(system, guesser.build_system)
-
-    def test_autotools(self):
-        self.check_archive('configure', 'autotools')
-
-    def test_cmake(self):
-        self.check_archive('CMakeLists.txt', 'cmake')
-
-    def test_scons(self):
-        self.check_archive('SConstruct', 'scons')
-
-    def test_python(self):
-        self.check_archive('setup.py', 'python')
-
-    def test_R(self):
-        self.check_archive('NAMESPACE', 'R')
-
-    def test_unknown(self):
-        self.check_archive('foobar', 'unknown')
+def test_build_systems(url_and_build_system):
+    url, build_system = url_and_build_system
+    with spack.stage.Stage(url) as stage:
+        stage.fetch()
+        guesser = spack.cmd.create.BuildSystemGuesser()
+        guesser(stage, url)
+        assert build_system == guesser.build_system

@@ -1,0 +1,61 @@
+2017-04-20  Bruno Haible  <bruno@clisp.org>
+
+        verify tests: Fix spurious failure with parallel make.
+        * tests/test-verify.sh: Build test-verify-try.o, not test-verify.o.
+        * tests/test-verify-try.c: New file.
+        Reported by Adam James Stewart <ajstewart@anl.gov>.
+
+diff --git a/gettext-tools/gnulib-tests/test-verify.sh b/gettext-tools/gnulib-tests/test-verify.sh
+index 3e76761..1e75d55 100755
+--- a/gettext-tools/gnulib-tests/test-verify.sh
++++ b/gettext-tools/gnulib-tests/test-verify.sh
+@@ -7,8 +7,9 @@ unset MALLOC_PERTURB_
+ 
+ # Rather than figure out how to invoke the compiler with the right
+ # include path ourselves, we let make do it:
+-(cd "$initial_cwd_" && rm -f test-verify.o \
+-    && $MAKE test-verify.o >/dev/null 2>&1) \
++(cd "$initial_cwd_" \
++ && rm -f test-verify-try.o \
++ && $MAKE test-verify-try.o >/dev/null 2>&1) \
+   || skip_ "cannot compile error-free"
+ 
+ # Now, prove that we encounter all expected compilation failures:
+@@ -16,8 +17,8 @@ unset MALLOC_PERTURB_
+ : >err
+ for i in 1 2 3 4 5; do
+   (cd "$initial_cwd_"
+-   rm -f test-verify.o
+-   $MAKE CFLAGS=-DEXP_FAIL=$i test-verify.o) >>out 2>>err \
++   rm -f test-verify-try.o
++   $MAKE CFLAGS=-DEXP_FAIL=$i test-verify-try.o) >>out 2>>err \
+   && { warn_ "compiler didn't detect verification failure $i"; fail=1; }
+ done
+ 
+diff --git a/gettext-tools/gnulib-tests/test-verify-try.c b/gettext-tools/gnulib-tests/test-verify-try.c
+new file mode 100644
+index 0000000..362fb01
+--- /dev/null
++++ b/tests/test-verify-try.c
+@@ -0,0 +1,21 @@
++/* Test the "verify" module.
++
++   Copyright (C) 2017 Free Software Foundation, Inc.
++
++   This program is free software: you can redistribute it and/or modify
++   it under the terms of the GNU General Public License as published by
++   the Free Software Foundation; either version 3 of the License, or
++   (at your option) any later version.
++
++   This program is distributed in the hope that it will be useful,
++   but WITHOUT ANY WARRANTY; without even the implied warranty of
++   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++   GNU General Public License for more details.
++
++   You should have received a copy of the GNU General Public License
++   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
++
++/* This is a separate source file, so that the execution of test-verify.sh
++   does not interfere with the building of the 'test-verify' program.  */
++
++#include "test-verify.c"

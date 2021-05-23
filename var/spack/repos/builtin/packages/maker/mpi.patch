@@ -1,0 +1,38 @@
+diff -ruN a/src/Build.PL b/src/Build.PL
+--- a/src/Build.PL	2014-12-01 16:37:10.000000000 -0600
++++ b/src/Build.PL	2019-09-15 18:30:56.940787669 -0500
+@@ -129,9 +129,10 @@
+ }
+ 
+ #ask for MPI
+-my $go = $build->y_n("\nMAKER supports distributed parallelization via MPI.\n".
+-		     "Would you like to configure MAKER for MPI (This\n".
+-		     "requires that you have an MPI client installed)?", 'N');
++#my $go = $build->y_n("\nMAKER supports distributed parallelization via MPI.\n".
++#		     "Would you like to configure MAKER for MPI (This\n".
++#		     "requires that you have an MPI client installed)?", 'N');
++my $go = 0;
+ $build->feature(mpi_support => $go);
+ $build->config_mpi() if($go);
+ 
+diff -ruN a/src/inc/lib/MAKER/Build.pm b/src/inc/lib/MAKER/Build.pm
+--- a/src/inc/lib/MAKER/Build.pm	2014-12-01 16:37:10.000000000 -0600
++++ b/src/inc/lib/MAKER/Build.pm	2019-09-15 18:30:25.439863837 -0500
+@@ -108,7 +108,7 @@
+     $mpicc = $self->config('cc') if(! $mpicc && $self->config('cc') =~ /(^|[\/])mpicc$/);
+     ($mpicc) = File::Which::where('mpicc') if(!$mpicc || ! -f $mpicc);
+ 
+-    $mpicc = $self->prompt("\nPlease specify the path to 'mpicc' on your system:", $mpicc);
++    #$mpicc = $self->prompt("\nPlease specify the path to 'mpicc' on your system:", $mpicc);
+ 
+     while(!$mpicc || $mpicc !~ /(^|[\/])mpicc$/ || ! -f $mpicc){
+ 	$mpicc = $self->prompt("\nCannot find 'mpicc'.\n".
+@@ -139,7 +139,7 @@
+ 
+     my ($MPIDIR) = grep {-f "$_/mpi.h"} @includes;
+ 
+-    $MPIDIR = $self->prompt("\nPlease specify the path to the directory containing 'mpi.h':", $MPIDIR);
++    #$MPIDIR = $self->prompt("\nPlease specify the path to the directory containing 'mpi.h':", $MPIDIR);
+ 
+     while(!$MPIDIR || ! -f "$MPIDIR/mpi.h"){
+ 	$MPIDIR = $self->prompt("\nCannot find 'mpi.h'\n.".

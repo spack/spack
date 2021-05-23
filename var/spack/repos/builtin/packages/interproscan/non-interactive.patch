@@ -1,0 +1,165 @@
+--- a/Config.pl	2019-09-21 20:28:01.980128054 -0500
++++ b/Config.pl	2019-09-21 21:45:50.926522289 -0500
+@@ -75,11 +75,12 @@
+     close INS;
+ }
+ 
+-$insDone =  get_user_prompt('Reconfigure everything? (first time install)', $insDone, '(y|n)');
++$insDone = 'y';
+ 
+ $Tip = "!\n! InterProScan needs to know where it is installed and where perl is installed\n!";
+ 
+ undef($set_path);
++$set_path = 'y';
+ 
+ while(!defined($set_path)){
+     $set_path = get_user_prompt('Do you want to set paths to perl and the installation directory?', $insDone, 'y|n', $Tip);
+@@ -106,7 +107,7 @@
+ 	  $suggest_path = $HOME if($HOME ne "");
+ 	  chomp($suggest_path);
+ 	  
+-	  $install_path = get_user_prompt('Please enter the full path for the InterProScan installation', $suggest_path, '.+', $Tip);
++	  $install_path = $suggest_path;
+ 	  
+ 	  unless ( -d $install_path )
+ 	    {
+@@ -121,7 +122,7 @@
+     #Setting the iprscan home installation path
+     for(@homechange){
+ 	my $file = $install_path . $ARG;
+-	patch_file($file, "\\\$ENV{IPRSCAN_HOME}", "$install_path");
++	patch_file($file, "\\\$ENV\\\{IPRSCAN_HOME\\\}", "$install_path");
+ 	patch_file($file, "IPRSCAN_HOME", "$install_path", 1);
+     }
+     
+@@ -133,7 +134,7 @@
+     undef($res);
+     
+     while(!defined($res)){
+-	$res = get_user_prompt("Do you want to set another Perl command in place of [$PERL_CMD]?", 'n' , 'y|n');
++	$res = $PERL_CMD;
+ 	unless(defined($res)){
+ 	    print STDOUT "WARNING: The input is not valid must be \'y\' or \'n\', try again\n";
+ 	    undef($res);
+@@ -174,7 +175,7 @@
+ 	unless(open(MOD, ">$PWD/test.pl")){
+ 	    die "FATAL: Could not open $PWD/test.pl in writing mode to test for presence of modules :$!\n";
+ 	}
+-	print MOD "#!$PERL_CMD\n";
++	print MOD "#!/usr/bin/env perl\n";
+ 	print MOD "use $ARG;\n";
+ 	print MOD "1;\n";
+ 	close MOD;
+@@ -203,7 +204,7 @@
+ $Tip = "!\n! To cope with bulk jobs and to enable efficient parallelization, InterProScan splits input files\n"
+ 	."! with FASTA formatted sequences into smaller parts (chunks). Default size is \"100\" sequences per chunk\n!";
+ 
+-$setcnk = get_user_prompt('Do you want to setup chunk size', $insDone, '(y|n)', $Tip);
++$setcnk = 'y';
+ my $chunkz;
+ 
+ if ($setcnk eq "y")
+@@ -211,7 +212,7 @@
+       $Tip = "!\n! Here you should specify the maximum number of sequences allowed in each part (chunk).  Please note\n"
+            ."! it is not recommended to have more then 3000 chunks.\n!";
+ 
+-      $chunkz = get_user_prompt('Enter chunk size', '100', '[0-9]+', $Tip);
++      $chunkz = '100';
+   }
+ print STDOUT "\n";
+ 
+@@ -225,7 +226,7 @@
+ 
+ my($maxinaa, $maxinnt, $maxlennt, $minlenaa, $minorflen, $cdntable) = (undef, undef, undef, undef, undef, undef);
+ 
+-my $setseq = get_user_prompt('Do you want to configure this?', $insDone, '(y|n)', $Tip);
++my $setseq = 'y';
+ 
+ if($setseq eq 'y'){
+     $maxinaa   = '1000';
+@@ -234,13 +235,6 @@
+     $minlenaa  = '5';
+     $minorflen = '50';
+     $cdntable  = '0';
+-
+-    $maxinaa = get_user_prompt('Enter the maximum number of input protein sequences allowed', $maxinaa, '\d+');
+-    $maxinnt = get_user_prompt('Enter the maximum number of input nucleic sequences allowed', $maxinnt, '\d+');
+-    $maxlennt = get_user_prompt('Enter the maximum length (in nucleic acids) for a nucleotide sequence', $maxlennt, '\d+');
+-    $minlenaa = get_user_prompt('Enter the minimum length (in amino acids) for a protein sequence', $minlenaa, '\d+');
+-    $minorflen = get_user_prompt('Enter the minimum allowed length of a translated orf', $minorflen, '\d+');
+-    $cdntable = get_user_prompt('Enter the default codon table value to use to translate dna/rna in six frames', $cdntable, '\d+');
+ }
+ print STDOUT "\n";
+ 
+@@ -249,7 +243,7 @@
+ 	."! set up a particular search tool against a database and how exactly that application will be configured to run\n"
+ 	."! in this next section. You will configure the queue systems (if any) you will use, first\n!";
+ 
+-$applset = get_user_prompt('Do you want to setup applications (if you don\'t, no applications will be included in InterProScan by default)?', $insDone, '(y|n)', $Tip);
++$applset = 'y';
+ my @setAppl = ();
+ 
+ if($applset eq "y"){
+@@ -258,7 +252,7 @@
+ 	."! Currently, we mainly support LSF (which is used at EBI) however, we also provide configuration files for other systems\n"
+ 	."! which are listed in the documentation\n!";
+ 
+-    $UseQ = get_user_prompt('Do you wish to use a queue system?', 'n', '(y|n)', $Tip);
++    $UseQ = 'n';
+     $Qsys = undef;
+     
+     my $cluster = 'foo';
+@@ -395,7 +389,7 @@
+ 
+     #Defining local host name and arch
+     my $supported_arch = 'OSF1|IRIX64|Linux|SunOS|Darwin|AIX';
+-    ($local_server = `hostname`);
++    ($local_server = 'localhost');
+     ($local_arch = `uname`);
+     ($serv = $local_server);
+     $local_server =~ s/\n//g;
+@@ -416,7 +410,7 @@
+ 	
+ 	my $rep = ($ARG eq "tmhmm" || $ARG eq "signalp" ? 'n' : 'y');
+ 	$Tip = "! ".ucfirst($ARG) . " " . $appldesc->{$ARG};
+-	my $useappl = get_user_prompt("Do you want to use $ARG ?", $rep, '(y|n)', $Tip);
++	my $useappl = 'y';
+ 	my $linkdone = "$HOME/bin/binaries";
+ 	my $arch = `uname`;
+ 	$arch =~ s/\n//g;
+@@ -502,7 +496,7 @@
+ 		
+ 		SERVER : while(!defined($res_server)){
+ 		    
+-		    $res_server = get_user_prompt("\nPlease enter the execution host name of $ARG (or if you want to run locally, enter \'localhost\')", $serv, '\S+');
++		    $res_server = 'localhost';
+ 		    chomp($res_server);
+ 		    if($local_server ne $res_server){
+ 			# rsh command has different behavior depending on the shell type.
+@@ -658,7 +652,7 @@
+     $Tip = "!\n! You can specify an email address for the administrator. By default it will be you ($ENV{USER})\n"
+ 	."! Administrators receive an email when a problem occurs in InterProScan.\n!";
+ 
+-    $user = get_user_prompt("Do you want to set an administrator email address?", 'y', 'y|n', $Tip);
++    $user = 'n';
+     if($user eq 'y'){
+ 	$user = get_user_prompt("Please enter the email address of the administrator:", '', '[\w\.\-]+\@[\w\.\-]+');
+     }else{
+@@ -735,7 +729,7 @@
+ 
+ $Tip = "!\n! InterProScan can be launched through a web interface. It can also be launched through secure HTTP (https)\n!";
+ 
+-my $useWeb = get_user_prompt("Do you want to run InterProScan using a web interface?", 'n', 'y|n', $Tip);
++my $useWeb = 'n';
+ my $HTTPProto;
+ if($useWeb eq 'y'){
+     
+@@ -816,7 +810,7 @@
+ $Tip = "!\n!  We would appreciate it if you would register your installation of InterProScan.  This will allow us to notify you\n"
+ 	."! of bug fixes and new releases of the software. We will not use your email address for any other purpose.\n!";
+ 
+-my $register = get_user_prompt("Would you like to register InterProScan?", $insDone, '(y|n)', $Tip); 
++my $register = 'n';
+ if ($register eq "y")
+   {
+       my $org_name = get_user_prompt("What is the name of your organization?", '', '\S+'); 

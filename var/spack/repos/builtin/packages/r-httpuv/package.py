@@ -1,32 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RHttpuv(Package):
-    """Provides low-level socket and protocol support for handling HTTP and
+class RHttpuv(RPackage):
+    """HTTP and WebSocket Server Library
+
+    Provides low-level socket and protocol support for handling HTTP and
     WebSocket requests directly from within R. It is primarily intended as a
     building block for other packages, rather than making it particularly easy
     to create complete web applications using httpuv alone. httpuv is built on
@@ -35,15 +18,18 @@ class RHttpuv(Package):
     information.)"""
 
     homepage = "https://github.com/rstudio/httpuv"
-    url      = "https://cran.r-project.org/src/contrib/httpuv_1.3.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/httpuv"
+    url      = "https://cloud.r-project.org/src/contrib/httpuv_1.3.5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/httpuv"
 
-    version('1.3.3', 'c78ae068cf59e949b9791be987bb4489')
+    version('1.5.5', sha256='0be6c98927c7859d4bbfbbec8822c9f5e95352077d87640a76bc2ade07c83117')
+    version('1.5.1', sha256='b5bb6b3b2f1a6d792568a70f3f357d6b3a35a5e26dd0c668c61a31f2ae8f5710')
+    version('1.3.5', sha256='4336b993afccca2a194aca577b1975b89a35ac863423b18a11cdbb3f8470e4e9')
+    version('1.3.3', sha256='bb37452ddc4d9381bee84cdf524582859af6a988e291debb71c8a2e120d02b2a')
 
-    extends('R')
-
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.15.1:', type=('build', 'run'))
+    depends_on('r-rcpp@0.11.0:', type=('build', 'run'))
+    depends_on('r-r6', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-promises', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-later@0.8.0:', when='@1.5.0:', type=('build', 'run'))
+    depends_on('r-bh', when='@1.5.5:', type=('build', 'run'))
+    depends_on('gmake', type='build')

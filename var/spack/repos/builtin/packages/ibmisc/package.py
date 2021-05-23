@@ -1,3 +1,8 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -5,9 +10,11 @@ class Ibmisc(CMakePackage):
     """Misc. reusable utilities used by IceBin."""
 
     homepage = "https://github.com/citibeth/ibmisc"
-    url      = "https://github.com/citibeth/ibmisc/tarball/123"
+    url      = "https://github.com/citibeth/ibmisc/archive/v0.1.0.tar.gz"
 
-    version('0.1.0', '12f2a32432a11db48e00217df18e59fa')
+    maintainers = ['citibeth']
+
+    version('0.1.0', sha256='38481a8680aad4b40eca6723b2898b344cf0ef891ebc3581f5e99fbe420fa0d8')
 
     variant('everytrace', default=False,
             description='Report errors through Everytrace')
@@ -30,26 +37,25 @@ class Ibmisc(CMakePackage):
 
     depends_on('eigen')
     depends_on('everytrace', when='+everytrace')
-    depends_on('proj', when='+proj')
+    depends_on('proj@:4', when='+proj')
     depends_on('blitz', when='+blitz')
     depends_on('netcdf-cxx4', when='+netcdf')
-    depends_on('udunits2', when='+udunits2')
-    depends_on('googletest', when='+googletest')
-    depends_on('py-cython', when='+python', type=nolink)
-    depends_on('py-numpy', when='+python', type=nolink)
+    depends_on('udunits', when='+udunits2')
+    depends_on('googletest', when='+googletest', type='build')
+    depends_on('py-cython', when='+python', type=('build', 'run'))
+    depends_on('py-numpy', when='+python', type=('build', 'run'))
     depends_on('boost', when='+boost')
 
     # Build dependencies
-    depends_on('cmake', type='build')
     depends_on('doxygen', type='build')
 
-    def configure_args(self):
-        spec = self.spec
+    def cmake_args(self):
         return [
-            '-DUSE_EVERYTRACE=%s' % ('YES' if '+everytrace' in spec else 'NO'),
-            '-DUSE_PROJ4=%s' % ('YES' if '+proj' in spec else 'NO'),
-            '-DUSE_BLITZ=%s' % ('YES' if '+blitz' in spec else 'NO'),
-            '-DUSE_NETCDF=%s' % ('YES' if '+netcdf' in spec else 'NO'),
-            '-DUSE_BOOST=%s' % ('YES' if '+boost' in spec else 'NO'),
-            '-DUSE_UDUNITS2=%s' % ('YES' if '+udunits2' in spec else 'NO'),
-            '-DUSE_GTEST=%s' % ('YES' if '+googletest' in spec else 'NO')]
+            self.define_from_variant('USE_EVERYTRACE', 'everytrace'),
+            self.define_from_variant('USE_PROJ4', 'proj'),
+            self.define_from_variant('USE_BLITZ', 'blitz'),
+            self.define_from_variant('USE_NETCDF', 'netcdf'),
+            self.define_from_variant('USE_BOOST', 'boost'),
+            self.define_from_variant('USE_UDUNITS2', 'udunits2'),
+            self.define_from_variant('USE_GTEST', 'googletest'),
+        ]

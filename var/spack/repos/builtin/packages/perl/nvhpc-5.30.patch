@@ -1,0 +1,88 @@
+--- a/Configure	2020-10-08 12:20:33.969182412 -0700
++++ b/Configure	2020-10-08 12:20:47.835314546 -0700
+@@ -4971,7 +4971,7 @@
+ # and usrinc directly from the compiler.
+ # Note that ccname for clang is also gcc.
+ case "$ccname" in
+-    gcc)
++    XXX)
+ 	$echo 'extern int foo;' > try.c
+ 	set X `$cppstdin -v try.c 2>&1 | $awk '/^#include </,/^End of search /'|$cppfilter $grep '/include'`
+ 	shift
+--- a/cflags.SH	2020-10-08 12:20:58.992420850 -0700
++++ b/cflags.SH	2020-10-08 12:24:29.783426846 -0700
+@@ -179,8 +179,6 @@
+ # -pedantic* before -Werror=d-a-s
+ #
+ *)  for opt in -std=c89 -ansi $pedantic \
+-		-Werror=declaration-after-statement \
+-	        -Werror=pointer-arith \
+ 		-Wextra -W \
+ 		-Wc++-compat -Wwrite-strings
+     do
+@@ -354,9 +352,7 @@
+   #
+   # -Werror=d-a-s option is valid for g++, by definition,
+   # but we remove it just for cleanliness and shorter command lines.
+-  for f in -Wdeclaration-after-statement \
+-		-Werror=declaration-after-statement \
+-		-Wc++-compat \
++  for f in -Wc++-compat \
+ 		-std=c89
+   do
+     case "$ccflags$warn" in
+@@ -370,8 +366,8 @@
+   ;;
+ esac
+ 
+-for f in -Wdeclaration-after-statement -Werror=declaration-after-statement \
+-         -Wpointer-arith -Werror=pointer-arith
++for f in -Wdeclaration-after-statement \
++         -Wpointer-arith
+ do
+   case "$cppflags" in
+   *"$f"*)
+--- a/ext/XS-APItest/Makefile.PL	2020-10-08 13:07:33.804290877 -0700
++++ b/ext/XS-APItest/Makefile.PL	2020-10-08 13:09:18.154336339 -0700
+@@ -15,7 +15,7 @@
+     'OBJECT'            => '$(BASEEXT)$(OBJ_EXT) XSUB-undef-XS_VERSION$(OBJ_EXT) XSUB-redefined-macros$(OBJ_EXT) $(O_FILES)'. $dtrace_o,
+     realclean => {FILES	=> 'const-c.inc const-xs.inc'},
+     ($Config{gccversion} && $Config{d_attribute_deprecated} ?
+-      (CCFLAGS => $Config{ccflags} . ' -Wno-deprecated-declarations') : ()),
++      (CCFLAGS => $Config{ccflags}) : ()),
+     depend => { 'core.o' => 'core_or_not.inc',
+ 		'notcore.o' => 'core_or_not.inc' },
+ );
+--- a/Makefile.SH	2020-10-08 15:24:40.457848934 -0700
++++ b/Makefile.SH	2020-10-08 15:25:21.289415093 -0700
+@@ -1140,8 +1140,8 @@
+ # $(PERL_EXE) and ext because pod_lib.pl needs Digest::MD5
+ # But also this ensures that all extensions are built before we try to scan
+ # them, which picks up Devel::PPPort's documentation.
+-pod/perltoc.pod: $(perltoc_pod_prereqs) $(PERL_EXE) $(ext) pod/buildtoc
+-	$(RUN_PERL) -f pod/buildtoc -q
++pod/perltoc.pod: $(perltoc_pod_prereqs) $(PERL_EXE) $(ext) $(MINIPERL_EXE) pod/buildtoc
++	$(MINIPERL) -f pod/buildtoc -q
+ 
+ pod/perlapi.pod: pod/perlintern.pod
+
+@@ -1198,8 +1198,8 @@
+         $spitshell >>$Makefile <<EOT
+ 
+ install_$name install-$name: \$(INSTALL_DEPENDENCE) installperl all installman
+-	\$(RUN_PERL) installperl --destdir=\$(DESTDIR) $flags \$(INSTALLFLAGS) \$(STRIPFLAGS)
+-	\$(RUN_PERL) installman --destdir=\$(DESTDIR) $flags
++	\$(MINIPERL) installperl --destdir=\$(DESTDIR) $flags \$(INSTALLFLAGS) \$(STRIPFLAGS)
++	\$(MINIPERL) installman --destdir=\$(DESTDIR) $flags
+ EOT
+     fi
+ 
+@@ -1217,7 +1217,7 @@
+ 	LOCAL_PERL='$(RUN_PERL)'
+ 	$spitshell >>$Makefile <<'!NO!SUBS!'
+ install.perl:	$(INSTALL_DEPENDENCE) installperl
+-	$(RUN_PERL) installperl --destdir=$(DESTDIR) $(INSTALLFLAGS) $(STRIPFLAGS)
++	$(MINIPERL) installperl --destdir=$(DESTDIR) $(INSTALLFLAGS) $(STRIPFLAGS)
+ 	-@test ! -s extras.lst || PATH="`pwd`:\${PATH}" PERL5LIB="`pwd`/lib" \$(RUN_PERL) -Ilib -MCPAN -e '@ARGV&&install(@ARGV)' `cat extras.lst`
+ 
+ !NO!SUBS!

@@ -1,0 +1,20 @@
+enable:
+  - lmod
+lmod:
+  hash_length: 0
+
+  core_compilers:
+    - 'clang@3.3'
+
+  core_specs:
+    - 'mpich@3.0.1'
+
+  hierarchy:
+    - lapack
+    - blas
+    - mpi
+
+  verbose: false
+
+  all:
+    autoload: 'all'

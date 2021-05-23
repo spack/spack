@@ -1,41 +1,18 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Graphlib(Package):
+class Graphlib(CMakePackage):
     """Library to create, manipulate, and export graphs Graphlib."""
-    homepage = "http://https://github.com/lee218llnl/graphlib"
-    url      = "https://github.com/lee218llnl/graphlib/archive/v2.0.0.tar.gz"
+    homepage = "https://github.com/LLNL/graphlib"
+    url      = "https://github.com/LLNL/graphlib/archive/v2.0.0.tar.gz"
+    maintainers = ['lee218llnl']
 
-    version('2.0.0', '43c6df84f1d38ba5a5dce0ae19371a70')
+    version('2.0.0', sha256='4f4aa1193167c41c8491dec3cf22b1e52a8f0842faab88b7945972f02d2adbcd')
+    version('3.0.0', sha256='c3d889f7bc25b9662426605e52f14cd16f9c05b034738a343890707f5f5681f1')
 
-    depends_on('cmake', type='build')
-
-    def install(self, spec, prefix):
-        cmake(".", *std_cmake_args)
-
-        make()
-        make("install")
+    depends_on('cmake@2.6:', type='build')

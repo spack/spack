@@ -1,56 +1,33 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
 
-class Psi4(Package):
+class Psi4(CMakePackage):
     """Psi4 is an open-source suite of ab initio quantum chemistry
     programs designed for efficient, high-accuracy simulations of
     a variety of molecular properties."""
 
     homepage = "http://www.psicode.org/"
-    url      = "https://github.com/psi4/psi4/archive/0.5.tar.gz"
+    url = "https://github.com/psi4/psi4/archive/v1.3.2.tar.gz"
 
-    version('0.5', '53041b8a9be3958384171d0d22f9fdd0')
+    version('1.3.2', sha256='ed76c67803b6420f35f57a6dd31c47108b9145b8c9fced5c94cdc179f6b5fbf3')
+
+    variant('build_type', default='Release',
+            description='The build type to build',
+            values=('Debug', 'Release'))
 
     # Required dependencies
     depends_on('blas')
     depends_on('lapack')
-    depends_on('boost'
-               '+chrono'
-               '+filesystem'
-               '+python'
-               '+regex'
-               '+serialization'
-               '+system'
-               '+timer'
-               '+thread')
+    depends_on('boost+chrono+filesystem+python+regex+serialization+system+timer+thread')
     depends_on('python')
-    depends_on('cmake', type='build')
-    depends_on('py-numpy', type=nolink)
+    depends_on('cmake@3.3:', type='build')
+    depends_on('py-numpy', type=('build', 'run'))
 
     # Optional dependencies
     # TODO: add packages for these
@@ -59,28 +36,22 @@ class Psi4(Package):
     # depends_on('pcm-solver')
     # depends_on('chemps2')
 
-    def install(self, spec, prefix):
-        cmake_args = [
+    def cmake_args(self):
+        spec = self.spec
+
+        return [
             '-DBLAS_TYPE={0}'.format(spec['blas'].name.upper()),
-            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].blas_shared_lib),
+            '-DBLAS_LIBRARIES={0}'.format(spec['blas'].libs.joined()),
             '-DLAPACK_TYPE={0}'.format(spec['lapack'].name.upper()),
-            '-DLAPACK_LIBRARIES={0}'.format(spec['lapack'].lapack_shared_lib),
+            '-DLAPACK_LIBRARIES={0}'.format(
+                spec['lapack'].libs.joined()),
             '-DBOOST_INCLUDEDIR={0}'.format(spec['boost'].prefix.include),
             '-DBOOST_LIBRARYDIR={0}'.format(spec['boost'].prefix.lib),
             '-DENABLE_CHEMPS2=OFF'
         ]
 
-        cmake_args.extend(std_cmake_args)
-
-        with working_dir('spack-build', create=True):
-            cmake('..', *cmake_args)
-
-            make()
-            make('install')
-
-        self.filter_compilers(spec, prefix)
-
-    def filter_compilers(self, spec, prefix):
+    @run_after('install')
+    def filter_compilers(self):
         """Run after install to tell the configuration files to
         use the compilers that Spack built the package with.
 
@@ -88,11 +59,14 @@ class Psi4(Package):
         Spack's generic cxx. We want it to be bound to
         whatever compiler it was built with."""
 
+        spec = self.spec
+        prefix = spec.prefix
+
         kwargs = {'ignore_absent': True, 'backup': False, 'string': True}
 
-        cc_files  = ['bin/psi4-config']
+        cc_files = ['bin/psi4-config']
         cxx_files = ['bin/psi4-config', 'include/psi4/psiconfig.h']
-        template  = 'share/psi4/plugin/Makefile.template'
+        template = 'share/psi4/plugin/Makefile.template'
 
         for filename in cc_files:
             filter_file(os.environ['CC'], self.compiler.cc,
@@ -114,8 +88,7 @@ class Psi4(Package):
             ' -I'.join([
                 os.path.join(spec['psi4'].prefix.include, 'psi4'),
                 os.path.join(spec['boost'].prefix.include, 'boost'),
-                os.path.join(spec['python'].prefix.include, 'python{0}'.format(
-                    spec['python'].version.up_to(2))),
+                os.path.join(spec['python'].headers.directories[0]),
                 spec['lapack'].prefix.include,
                 spec['blas'].prefix.include,
                 '/usr/include'

@@ -1,33 +1,34 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
-import spack.compiler as cpr
-from spack.compiler import *
-from spack.util.executable import *
-import llnl.util.tty as tty
+import sys
+
+import llnl.util.lang
+
+from spack.compiler import Compiler, UnsupportedCompilerFlag
 from spack.version import ver
+
+
+#: compiler symlink mappings for mixed f77 compilers
+f77_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf_r', 'xl_r/xlf_r'),
+    ('xlf', 'xl/xlf'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
+
+#: compiler symlink mappings for mixed f90/fc compilers
+fc_mapping = [
+    ('gfortran', 'clang/gfortran'),
+    ('xlf90_r', 'xl_r/xlf90_r'),
+    ('xlf90', 'xl/xlf90'),
+    ('pgfortran', 'pgi/pgfortran'),
+    ('ifort', 'intel/ifort')
+]
 
 
 class Clang(Compiler):
@@ -38,73 +39,146 @@ class Clang(Compiler):
     cxx_names = ['clang++']
 
     # Subclasses use possible names of Fortran 77 compiler
-    f77_names = []
+    f77_names = ['flang', 'gfortran', 'xlf_r']
 
     # Subclasses use possible names of Fortran 90 compiler
-    fc_names = []
+    fc_names = ['flang', 'gfortran', 'xlf90_r']
 
-    # Named wrapper links within spack.build_env_path
-    link_paths = {'cc': 'clang/clang',
-                  'cxx': 'clang/clang++',
-                  # Use default wrappers for fortran, in case provided in
-                  # compilers.yaml
-                  'f77': 'f77',
-                  'fc': 'f90'}
+    version_argument = '--version'
 
     @property
-    def is_apple(self):
-        ver_string = str(self.version)
-        return ver_string.endswith('-apple')
+    def debug_flags(self):
+        return ['-gcodeview', '-gdwarf-2', '-gdwarf-3', '-gdwarf-4',
+                '-gdwarf-5', '-gline-tables-only', '-gmodules', '-gz', '-g']
 
     @property
-    def openmp_flag(self):
-        if self.is_apple:
-            tty.die("Clang from Apple does not support Openmp yet.")
+    def opt_flags(self):
+        return ['-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og',
+                '-O', '-O4']
+
+    # Clang has support for using different fortran compilers with the
+    # clang executable.
+    @property
+    def link_paths(self):
+        # clang links are always the same
+        link_paths = {'cc': 'clang/clang',
+                      'cxx': 'clang/clang++'}
+
+        # fortran links need to look at the actual compiler names from
+        # compilers.yaml to figure out which named symlink to use
+        for compiler_name, link_path in f77_mapping:
+            if self.f77 and compiler_name in self.f77:
+                link_paths['f77'] = link_path
+                break
         else:
-            return "-fopenmp"
+            link_paths['f77'] = 'clang/flang'
+
+        for compiler_name, link_path in fc_mapping:
+            if self.fc and compiler_name in self.fc:
+                link_paths['fc'] = link_path
+                break
+        else:
+            link_paths['fc'] = 'clang/flang'
+
+        return link_paths
+
+    @property
+    def verbose_flag(self):
+        return "-v"
+
+    openmp_flag = "-fopenmp"
 
     @property
     def cxx11_flag(self):
-        if self.is_apple:
-            # FIXME: figure out from which version Apple's clang supports c++11
-            return "-std=c++11"
+        if self.real_version < ver('3.3'):
+            raise UnsupportedCompilerFlag(
+                self, "the C++11 standard", "cxx11_flag", "< 3.3"
+            )
+        return "-std=c++11"
+
+    @property
+    def cxx14_flag(self):
+        if self.real_version < ver('3.4'):
+            raise UnsupportedCompilerFlag(
+                self, "the C++14 standard", "cxx14_flag", "< 3.5"
+            )
+        elif self.real_version < ver('3.5'):
+            return "-std=c++1y"
+
+        return "-std=c++14"
+
+    @property
+    def cxx17_flag(self):
+        if self.real_version < ver('3.5'):
+            raise UnsupportedCompilerFlag(
+                self, "the C++17 standard", "cxx17_flag", "< 3.5"
+            )
+        elif self.real_version < ver('5.0'):
+            return "-std=c++1z"
+
+        return "-std=c++17"
+
+    @property
+    def c99_flag(self):
+        return '-std=c99'
+
+    @property
+    def c11_flag(self):
+        if self.real_version < ver('6.1.0'):
+            raise UnsupportedCompilerFlag(self,
+                                          "the C11 standard",
+                                          "c11_flag",
+                                          "< 6.1.0")
         else:
-            if self.version < ver('3.3'):
-                tty.die("Only Clang 3.3 and above support c++11.")
-            else:
-                return "-std=c++11"
+            return "-std=c11"
+
+    @property
+    def cc_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def cxx_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def f77_pic_flag(self):
+        return "-fPIC"
+
+    @property
+    def fc_pic_flag(self):
+        return "-fPIC"
+
+    required_libs = ['libclang']
 
     @classmethod
-    def default_version(cls, comp):
-        """The '--version' option works for clang compilers.
-           On most platforms, output looks like this::
+    @llnl.util.lang.memoized
+    def extract_version_from_output(cls, output):
+        ver = 'unknown'
+        if ('Apple' in output) or ('AMD' in output):
+            return ver
 
-               clang version 3.1 (trunk 149096)
-               Target: x86_64-unknown-linux-gnu
-               Thread model: posix
+        match = re.search(
+            # Normal clang compiler versions are left as-is
+            r'clang version ([^ )\n]+)-svn[~.\w\d-]*|'
+            # Don't include hyphenated patch numbers in the version
+            # (see https://github.com/spack/spack/pull/14365 for details)
+            r'clang version ([^ )\n]+?)-[~.\w\d-]*|'
+            r'clang version ([^ )\n]+)',
+            output
+        )
+        if match:
+            ver = match.group(match.lastindex)
+        return ver
 
-          On Mac OS X, it looks like this:
+    @classmethod
+    def fc_version(cls, fc):
+        # We could map from gcc/gfortran version to clang version, but on macOS
+        # we normally mix any version of gfortran with any version of clang.
+        if sys.platform == 'darwin':
+            return cls.default_version('clang')
+        else:
+            return cls.default_version(fc)
 
-               Apple LLVM version 7.0.2 (clang-700.1.81)
-               Target: x86_64-apple-darwin15.2.0
-               Thread model: posix
-
-        """
-        if comp not in cpr._version_cache:
-            compiler = Executable(comp)
-            output = compiler('--version', output=str, error=str)
-
-            ver = 'unknown'
-            match = re.search(r'^Apple LLVM version ([^ )]+)', output)
-            if match:
-                # Apple's LLVM compiler has its own versions, so suffix them.
-                ver = match.group(1) + '-apple'
-            else:
-                # Normal clang compiler versions are left as-is
-                match = re.search(r'^clang version ([^ )]+)', output)
-                if match:
-                    ver = match.group(1)
-
-            cpr._version_cache[comp] = ver
-
-        return cpr._version_cache[comp]
+    @classmethod
+    def f77_version(cls, f77):
+        return cls.fc_version(f77)

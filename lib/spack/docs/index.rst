@@ -1,10 +1,20 @@
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. Spack documentation master file, created by
    sphinx-quickstart on Mon Dec  9 15:32:41 2013.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Spack Documentation
-=================================
+===================
+Spack
+===================
+
+.. epigraph::
+
+   `These are docs for the Spack package manager. For sphere packing, see` `pyspack <https://pyspack.readthedocs.io>`_.
 
 Spack is a package management tool designed to support multiple
 versions and configurations of software on a wide variety of platforms
@@ -24,35 +34,73 @@ maintain a single file for many different builds of the same package.
 See the :doc:`features` for examples and highlights.
 
 Get spack from the `github repository
-<https://github.com/llnl/spack>`_ and install your first
+<https://github.com/spack/spack>`_ and install your first
 package:
 
-.. code-block:: sh
+.. code-block:: console
 
-   $ git clone https://github.com/llnl/spack.git
+   $ git clone https://github.com/spack/spack.git
    $ cd spack/bin
    $ ./spack install libelf
 
 If you're new to spack and want to start using it, see :doc:`getting_started`,
 or refer to the full manual below.
 
-Table of Contents
----------------------
 
 .. toctree::
    :maxdepth: 2
+   :caption: Basics
 
    features
    getting_started
    basic_usage
-   packaging_guide
-   mirrors
+   workflows
+   Tutorial: Spack 101 <https://spack-tutorial.readthedocs.io>
+   known_issues
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Reference
+
    configuration
-   developer_guide
+   config_yaml
+   build_settings
+   environments
+   containers
+   monitoring
+   mirrors
+   module_file_support
+   repositories
+   binary_caches
    command_index
    package_list
-   API Docs <spack>
+   chain
+   extensions
+   pipelines
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Research
+
+   analyze
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contributing
+
+   contribution_guide
+   packaging_guide
+   build_systems
+   developer_guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Docs
+
+   Spack API Docs <spack>
+   LLNL API Docs <llnl>
+
+==================
 Indices and tables
 ==================
 

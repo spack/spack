@@ -1,0 +1,34 @@
+From a91ea68d6771ed7d6b03bcbffd891489dc77e574 Mon Sep 17 00:00:00 2001
+From: Krishnendu Ghosh
+Date: Thu, 22 Feb 2018 14:24:14 -0500
+Subject: [PATCH] added extern "C"
+
+---
+ src/spglib.h | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/spglib.h b/src/spglib.h
+index e1746b1..530dfa4 100644
+--- a/src/spglib.h
++++ b/src/spglib.h
+@@ -35,6 +35,9 @@
+ #ifndef __spglib_H__
+ #define __spglib_H__
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
+ /* SPGCONST is used instead of 'const' so to avoid gcc warning. */
+ /* However there should be better way than this way.... */
+ #ifndef SPGCONST
+@@ -481,4 +484,7 @@ void spg_get_neighboring_grid_points(int relative_grid_points[],
+ /* Return 0 if failed */
+ int spg_niggli_reduce(double lattice[3][3], const double symprec);
+ 
++#ifdef __cplusplus
++}
++#endif
+ #endif
+-- 
+2.7.4.1.g5468f9e
+

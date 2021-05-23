@@ -1,45 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RGeosphere(Package):
+class RGeosphere(RPackage):
     """Spherical trigonometry for geographic applications. That is, compute
     distances and related measures for angular (longitude/latitude)
     locations."""
 
-    homepage = "https://cran.r-project.org/package=geosphere"
-    url      = "https://cran.r-project.org/src/contrib/geosphere_1.5-5.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/geosphere"
+    homepage = "https://cloud.r-project.org/package=geosphere"
+    url      = "https://cloud.r-project.org/src/contrib/geosphere_1.5-5.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/geosphere"
 
-    version('1.5-5', '28efb7a8e266c7f076cdbcf642455f3e')
+    version('1.5-10', sha256='56cd4f787101e2e18f19ddb83794154b58697e63cad81168f0936f60ab7eb497')
+    version('1.5-7', sha256='9d9b555e2d59a5ae174ae654652121f169fbc3e9cf66c2491bfbe0684b6dd8a0')
+    version('1.5-5', sha256='8b6fe012744fc45b88e0ef6f20e60e103ef013e761e99dcff3f9dceeedbdce6d')
 
-    extends('R')
-
-    depends_on('r-sp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-sp', type=('build', 'run'))

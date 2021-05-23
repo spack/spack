@@ -1,0 +1,12 @@
+*** lib/src/BoxTools/HDF5Portable.H	2017-05-02 13:57:57.000000000 -0700
+--- lib/src/BoxTools/HDF5Portable.H.patched	2017-05-02 13:55:30.000000000 -0700
+***************
+*** 15,20 ****
+--- 15,21 ----
+  extern "C"
+  {
+  #ifdef CH_USE_HDF5
++ #define H5_USE_16_API
+  #include <hdf5.h>
+  #else
+    typedef long hid_t;

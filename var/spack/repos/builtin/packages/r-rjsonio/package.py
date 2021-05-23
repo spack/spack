@@ -1,32 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RRjsonio(Package):
-    """This is a package that allows conversion to and from data in Javascript
+class RRjsonio(RPackage):
+    """Serialize R Objects to JSON, JavaScript Object Notation
+
+    This is a package that allows conversion to and from data in Javascript
     object notation (JSON) format. This allows R objects to be inserted into
     Javascript/ECMAScript/ActionScript code and allows R programmers to read
     and convert JSON content to R objects. This is an alternative to rjson
@@ -42,14 +25,11 @@ class RRjsonio(Package):
     aim is to support other general projects by building on their work,
     providing feedback and benefit from their ongoing development."""
 
-    homepage = "https://cran.r-project.org/package=RJSONIO"
-    url      = "https://cran.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RJSONIO"
+    homepage = "https://cloud.r-project.org/package=RJSONIO"
+    url      = "https://cloud.r-project.org/src/contrib/RJSONIO_1.3-0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RJSONIO"
 
-    version('1.3-0', '72c395622ba8d1435ec43849fd32c830')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    version('1.3-1.4', sha256='54142c931e15eca278a02dad5734026bb49d960471eb085008af825352953190')
+    version('1.3-1.2', sha256='550e18f7c04186376d67747b8258f529d205bfc929da9194fe45ec384e092d7e')
+    version('1.3-1.1', sha256='c72493b441758cd1e3e9d91296b9ea31068e71104649f46ad84c854a02c09693')
+    version('1.3-0', sha256='119334b7761c6c1c3cec52fa17dbc1b72eaebb520c53e68d873dea147cf48fb7')

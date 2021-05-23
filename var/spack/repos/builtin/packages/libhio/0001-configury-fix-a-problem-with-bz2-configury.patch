@@ -1,0 +1,38 @@
+From 3a7b7432a7354661d0a971b074c30529f5db457c Mon Sep 17 00:00:00 2001
+From: Howard Pritchard <howardp@lanl.gov>
+Date: Sat, 10 Mar 2018 13:51:41 -0800
+Subject: [PATCH] configury: fix a problem with bz2 configury
+
+turns out by default spack wants to use a non-default
+location bz2, or we have to turn it off.  either way
+the bz2 configury is wrong and needs to be fixed.
+
+Signed-off-by: Howard Pritchard <howardp@lanl.gov>
+
+diff --git a/m4/hio_check_bz2.m4 b/m4/hio_check_bz2.m4
+index 3a373ad1..b7dfdb75 100644
+--- a/m4/hio_check_bz2.m4
++++ b/m4/hio_check_bz2.m4
+@@ -1,9 +1,9 @@
+ # -*- mode: shell-script -*-
+-# Copyright 2015-2016 Los Alamos National Security, LLC. All rights
++# Copyright 2015-2018 Los Alamos National Security, LLC. All rights
+ #                     reserved.
+ 
+ AC_DEFUN([HIO_CHECK_BZ2],[
+-    AC_ARG_WITH(bz2, [AS_HELP_STRING([--with-external-bz2=PATH],
++    AC_ARG_WITH(external-bz2, [AS_HELP_STRING([--with-external_bz2=PATH],
+                                      [use external bzip2. pass yes to use default version @<:@default=no@:>@])],
+                 [], [with_external_bz2=no])
+ 
+@@ -14,6 +14,7 @@ AC_DEFUN([HIO_CHECK_BZ2],[
+             else
+                 LDFLAGS="$LDFLAGS -L$with_external_bz2/lib64"
+             fi
++            LIBS="$LIBS -lbz2"
+         fi
+ 
+         AC_CHECK_LIB([bz2],[BZ2_bzBuffToBuffCompress],[hio_have_bz2=1])
+-- 
+2.4.0.rc3.16.g0ab00b9
+

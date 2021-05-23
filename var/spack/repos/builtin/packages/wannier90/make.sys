@@ -1,0 +1,7 @@
+F90 = @F90
+COMMS=mpi
+MPIF90=@MPIF90
+FCOPTS=-O2 -fpic
+LDOPTS=-O2 -fpic
+
+LIBS = @LIBS

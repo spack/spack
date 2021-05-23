@@ -1,0 +1,13 @@
+--- a/Makefile	2019-07-30 00:12:13.030672681 -0500
++++ b/Makefile	2019-07-30 00:14:16.535602616 -0500
+@@ -370,10 +370,8 @@
+ 
+ # --- Static library archiver rules for libflame ---
+ $(MK_ALL_FLAMEC_LIB): $(MK_ALL_FLAMEC_OBJS)
+-define EOL
+ 
+ 
+-endef
+ ifeq ($(FLA_ENABLE_VERBOSE_MAKE_OUTPUT),yes)
+ ifeq ($(FLA_ENABLE_MAX_ARG_LIST_HACK),yes)
+ 	@$(eval ar_args:=)

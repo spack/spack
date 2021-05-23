@@ -1,0 +1,12 @@
+diff -Naru rope-0.10.5.orig/README.rst rope-0.10.5/README.rst
+--- rope-0.10.5.orig/README.rst	2018-11-22 13:47:38.880373715 -0700
++++ rope-0.10.5/README.rst	2018-11-22 13:47:50.484375982 -0700
+@@ -19,7 +19,7 @@
+ ============
+ 
+ * Nick Smith <nicks@fastmail.fm> takes over maintaining rope. Many thanks to
+-  Matěj Cepl for his work maintaining rope for the past few years!!
++  Matej Cepl for his work maintaining rope for the past few years!!
+ * Full python3 support is in progress... stay tuned
+ 
+ Getting Started

@@ -1,0 +1,15 @@
+Disable transactional memory.  This is needed for some AMD or very old
+Intel systems.  See issue #6090.
+
+diff -Naurb tbb-2018_U4.orig/include/tbb/tbb_config.h tbb-2018_U4/include/tbb/tbb_config.h
+--- tbb-2018_U4.orig/include/tbb/tbb_config.h	2018-05-30 07:35:25.000000000 -0500
++++ tbb-2018_U4/include/tbb/tbb_config.h	2018-07-24 16:26:11.662673434 -0500
+@@ -98,7 +98,7 @@
+ #define __TBB_DEFINE_MIC 1
+ #endif
+ 
+-#define __TBB_TSX_AVAILABLE  ((__TBB_x86_32 || __TBB_x86_64) && !__TBB_DEFINE_MIC)
++#define __TBB_TSX_AVAILABLE  0
+ 
+ /** Presence of compiler features **/
+ 

@@ -1,0 +1,52 @@
+Submitted By: Bruce Dubbs <bdubbs at linuxfromscratch dot org>
+Date: 2016-06-01
+Initial Package Version: 1.12
+Upstream Status: Not Committed
+Origin: https://lists.freedesktop.org/archives/xcb/2016-February/010676.html
+Description: Fixes make check
+
+
+--- a/src/xcb.xsd
++++ b/src/xcb.xsd
+@@ -44,6 +44,15 @@ authorization from the authors.
+     <xsd:complexType>
+       <xsd:attribute name="bytes" type="xsd:integer" use="optional" />
+       <xsd:attribute name="align" type="xsd:integer" use="optional" />
++      <xsd:attribute name="serialize" type="xsd:boolean" use="optional" />
++    </xsd:complexType>
++  </xsd:element>
++
++  <!-- Alignment -->
++  <xsd:element name="required_start_align" >
++    <xsd:complexType>
++      <xsd:attribute name="align" type="xsd:integer" use="required" />
++      <xsd:attribute name="offset" type="xsd:integer" use="optional" />
+     </xsd:complexType>
+   </xsd:element>
+ 
+@@ -76,14 +85,13 @@ authorization from the authors.
+     <xsd:sequence>
+       <!-- switch(expression) -->
+       <xsd:group ref="expression" minOccurs="1" maxOccurs="1" />
++      <xsd:element ref="required_start_align" minOccurs="0" maxOccurs="1" />
+       <xsd:choice>
+         <!-- bitcase expression - bit test -->
+         <xsd:element name="bitcase" type="caseexpr" minOccurs="0" maxOccurs="unbounded" />
+         <!-- case expression - value test -->
+         <xsd:element name="case" type="caseexpr" minOccurs="0" maxOccurs="unbounded" />
+       </xsd:choice>
+-      <!-- default: -->
+-      <xsd:group ref="fields" minOccurs="0" maxOccurs="1" />
+     </xsd:sequence>
+     <xsd:attribute name="name" type="xsd:string" use="required" />
+   </xsd:complexType>
+@@ -201,6 +209,7 @@ authorization from the authors.
+       <xsd:element ref="field" />
+       <xsd:element ref="list" />
+       <xsd:element ref="fd" />
++      <xsd:element ref="required_start_align" />
+     </xsd:choice>
+   </xsd:group>
+ 
+
+

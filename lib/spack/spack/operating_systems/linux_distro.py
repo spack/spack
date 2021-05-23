@@ -1,5 +1,9 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
-import platform as py_platform
 from spack.architecture import OperatingSystem
 
 
@@ -12,13 +16,24 @@ class LinuxDistro(OperatingSystem):
     """
 
     def __init__(self):
-        distname, version, _ = py_platform.linux_distribution(
-            full_distribution_name=False)
+        try:
+            # This will throw an error if imported on a non-Linux platform.
+            from external.distro import linux_distribution
+            distname, version, _ = linux_distribution(
+                full_distribution_name=False)
+            distname, version = str(distname), str(version)
+        except ImportError:
+            distname, version = 'unknown', ''
 
         # Grabs major version from tuple on redhat; on other platforms
         # grab the first legal identifier in the version field.  On
         # debian you get things like 'wheezy/sid'; sid means unstable.
         # We just record 'wheezy' and don't get quite so detailed.
-        version = re.split(r'[^\w-]', version)[0]
+        version = re.split(r'[^\w-]', version)
+
+        if 'ubuntu' in distname:
+            version = '.'.join(version[0:2])
+        else:
+            version = version[0]
 
         super(LinuxDistro, self).__init__(distname, version)

@@ -1,0 +1,12 @@
+--- a/fortran/Makefile.in	2019-09-18 12:29:45.000000000 -0500
++++ b/fortran/Makefile.in	2020-01-24 10:56:03.660035265 -0600
+@@ -1095,6 +1095,9 @@
+ @USE_LOGGING_TRUE@	echo '      integer nf_set_log_level' >> netcdf.inc
+ @USE_LOGGING_TRUE@	echo '      external nf_set_log_level' >> netcdf.inc
+ 
++# Turn off parallel builds in this directory.
++.NOTPARALLEL:
++
+ # Tell versions [3.59,3.63) of GNU make to not export all variables.
+ # Otherwise a system limit (for SysV at least) may be exceeded.
+ .NOEXPORT:

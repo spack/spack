@@ -1,0 +1,28 @@
+From 44250379632ace94b08ff2dba17c69d3f36d5ffb Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Martin=20Aumu=CC=88ller?= <aumuell@reserv.at>
+Date: Sun, 27 Sep 2020 20:23:42 +0200
+Subject: [PATCH] don't assume that ncurses & zlib are system libraries
+
+---
+ CMakeLists.txt | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 2bb4a7e6..53239a88 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -473,7 +473,10 @@ else()
+         if (ISPC_STATIC_LINK)
+             target_link_libraries(${PROJECT_NAME} pthread z.a tinfo.a curses.a)
+         else()
+-            target_link_libraries(${PROJECT_NAME} pthread z tinfo curses)
++            find_package(Curses REQUIRED)
++            find_package(ZLIB REQUIRED)
++            find_library(NCURSES_TINFO_LIBRARY tinfo)
++            target_link_libraries(${PROJECT_NAME} pthread ${ZLIB_LIBRARIES} ${NCURSES_TINFO_LIBRARY} ${CURSES_LIBRARIES})
+         endif()
+     endif()
+ endif()
+-- 
+2.29.0
+

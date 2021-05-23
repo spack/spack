@@ -1,0 +1,16 @@
+--- spack-src/tp/Texinfo/Parser.pm.org	2019-11-18 15:02:20.184202910 +0900
++++ spack-src/tp/Texinfo/Parser.pm	2019-11-18 15:02:46.927022528 +0900
+@@ -5478,11 +5478,11 @@
+     }
+   } elsif ($command eq 'clickstyle') {
+     # REMACRO
+-    if ($line =~ /^\s+@([[:alnum:]][[:alnum:]\-]*)({})?\s*/) {
++    if ($line =~ /^\s+@([[:alnum:]][[:alnum:]\-]*)(\{\})?\s*/) {
+       $args = ['@'.$1];
+       $self->{'clickstyle'} = $1;
+       $remaining = $line;
+-      $remaining =~ s/^\s+@([[:alnum:]][[:alnum:]\-]*)({})?\s*(\@(c|comment)((\@|\s+).*)?)?//;
++      $remaining =~ s/^\s+@([[:alnum:]][[:alnum:]\-]*)(\{\})?\s*(\@(c|comment)((\@|\s+).*)?)?//;
+       $has_comment = 1 if (defined($4));
+     } else {
+       $self->line_error (sprintf($self->__(

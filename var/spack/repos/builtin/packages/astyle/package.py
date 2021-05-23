@@ -1,52 +1,40 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Astyle(Package):
-    """
-    A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
+class Astyle(MakefilePackage):
+    """A Free, Fast, and Small Automatic Formatter for C, C++, C++/CLI,
     Objective-C, C#, and Java Source Code.
     """
+
     homepage = "http://astyle.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/astyle/astyle/astyle%202.04/astyle_2.04_linux.tar.gz"
+    url = "https://sourceforge.net/projects/astyle/files/astyle/astyle%203.0.1/astyle_3.0.1_linux.tar.gz"
+    # Gentoo alternative
+    # url = "http://distfiles.gentoo.org/distfiles/astyle_3.0.1_linux.tar.gz"
 
-    version('2.04', '30b1193a758b0909d06e7ee8dd9627f6')
+    version('3.1',    sha256='cbcc4cf996294534bb56f025d6f199ebfde81aa4c271ccbd5ee1c1a3192745d7')
+    version('3.0.1',  sha256='6c3ab029e0e4a75e2e603d449014374aa8269218fdd03a4aaa46ab743b1912fd')
+    version('2.06',   sha256='3b7212210dc139e8f648e004b758c0be1b3ceb1694b22a879202d2b833db7c7e')
+    version('2.05.1', sha256='fbdfc6f1966a972d19a215927266c76d4183eee235ed1e2bd7ec551c2a270eac')
+    version('2.04',   sha256='70b37f4853c418d1e2632612967eebf1bdb93dfbe558c51d7d013c9b4e116b60')
 
-    def install(self, spec, prefix):
+    parallel = False
 
-        with working_dir('src'):
-            # we need to edit the makefile in place to set compiler:
-            make_file = join_path(self.stage.source_path,
-                                  'build', 'gcc', 'Makefile')
-            filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, make_file)
+    @property
+    def build_directory(self):
+        return join_path(self.stage.source_path, 'build', self.compiler.name)
 
-            make('-f',
-                 make_file,
-                 parallel=False)
+    def edit(self, spec, prefix):
+        makefile = join_path(self.build_directory, 'Makefile')
+        filter_file(r'^CXX\s*=.*', 'CXX=%s' % spack_cxx, makefile)
+        # If the group is not a user account, the installation will fail,
+        # so remove the -o $ (USER) -g $ (USER) parameter.
+        filter_file(r'^INSTALL=.*', 'INSTALL=install', makefile)
 
-            mkdirp(self.prefix.bin)
-            install(join_path(self.stage.source_path, 'src', 'bin', 'astyle'),
-                    self.prefix.bin)
+    @property
+    def install_targets(self):
+        return ['install', 'prefix={0}'.format(self.prefix)]

@@ -1,0 +1,8 @@
+enable:
+  - tcl
+tcl:
+  projections:
+    all: '{name}/{version}-{compiler.name}'
+  all:
+    conflict:
+      - '{name}/{compiler.name}'

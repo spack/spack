@@ -1,3 +1,8 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
@@ -11,6 +16,3 @@ class Dtlink3(Package):
 
     depends_on('dtbuild2', type='build')
     depends_on('dtlink4')
-
-    def install(self, spec, prefix):
-        pass

@@ -1,0 +1,17 @@
+diff -Naur a/setup.py b/setup.py
+--- a/setup.py	2019-01-13 18:59:14.000000000 -0600
++++ b/setup.py	2019-01-13 19:00:31.000000000 -0600
+@@ -1787,13 +1787,6 @@
+         if self.detect_tkinter_explicitly():
+             return
+ 
+-        # Rather than complicate the code below, detecting and building
+-        # AquaTk is a separate method. Only one Tkinter will be built on
+-        # Darwin - either AquaTk, if it is found, or X11 based Tk.
+-        if (host_platform == 'darwin' and
+-            self.detect_tkinter_darwin(inc_dirs, lib_dirs)):
+-            return
+-
+         # Assume we haven't found any of the libraries or include files
+         # The versions with dots are used on Unix, and the versions without
+         # dots on Windows, for detection by cygwin.

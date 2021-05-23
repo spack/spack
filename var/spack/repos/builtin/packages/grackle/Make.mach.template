@@ -1,0 +1,71 @@
+MACH_TEXT  = Generic Linux
+MACH_VALID = 1
+MACH_FILE  = Make.mach.@ARCHITECTURE
+
+#-----------------------------------------------------------------------
+# Install paths (local variables)
+#-----------------------------------------------------------------------
+
+LOCAL_HDF5_INSTALL = @HDF5_ROOT
+
+#-----------------------------------------------------------------------
+# Compiler settings
+#-----------------------------------------------------------------------
+
+MACH_CC_NOMPI  = @CC # C compiler
+MACH_CXX_NOMPI = @CXX # C++ compiler
+MACH_FC_NOMPI  = @F77 # Fortran 77
+MACH_F90_NOMPI = @FC # Fortran 90
+MACH_LD_NOMPI  = @FC # Linker
+@LINK_VARIABLES_DEFINITION
+
+#-----------------------------------------------------------------------
+# Machine-dependent defines
+#-----------------------------------------------------------------------
+
+MACH_DEFINES   = -DLINUX -DH5_USE_16_API -fPIC
+
+#-----------------------------------------------------------------------
+# Compiler flag settings
+#-----------------------------------------------------------------------
+
+MACH_CPPFLAGS = -P -traditional
+MACH_CFLAGS   = 
+MACH_CXXFLAGS = 
+MACH_FFLAGS   = -fno-second-underscore -ffixed-line-length-132
+MACH_F90FLAGS = -fno-second-underscore
+MACH_LDFLAGS  = @STDCXX_LIB
+
+#-----------------------------------------------------------------------
+# Optimization flags
+#-----------------------------------------------------------------------
+
+MACH_OPT_WARN        = -Wall -g
+MACH_OPT_DEBUG       = -g
+MACH_OPT_HIGH        = -O2
+MACH_OPT_AGGRESSIVE  = -O3 -g
+
+#-----------------------------------------------------------------------
+# Includes
+#-----------------------------------------------------------------------
+
+LOCAL_INCLUDES_HDF5   = -I@HDF5_ROOT/include # HDF5 includes
+
+MACH_INCLUDES         = $(LOCAL_INCLUDES_HDF5)
+
+#-----------------------------------------------------------------------
+# Libraries
+#-----------------------------------------------------------------------
+
+LOCAL_LIBS_HDF5   = -L@HDF5_ROOT/lib -lhdf5 # HDF5 libraries
+LOCAL_LIBS_MACH   =  # Machine-dependent libraries
+
+MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
+
+#-----------------------------------------------------------------------
+# Installation
+#-----------------------------------------------------------------------
+
+MACH_INSTALL_PREFIX = @PREFIX
+MACH_INSTALL_LIB_DIR =
+MACH_INSTALL_INCLUDE_DIR =

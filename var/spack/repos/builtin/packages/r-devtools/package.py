@@ -1,50 +1,79 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RDevtools(Package):
-    """Collection of package development tools."""
+class RDevtools(RPackage):
+    """Tools to Make Developing R Packages Easier
+
+    Collection of package development tools."""
 
     homepage = "https://github.com/hadley/devtools"
-    url      = "https://cran.r-project.org/src/contrib/devtools_1.11.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/devtools"
+    url      = "https://cloud.r-project.org/src/contrib/devtools_1.12.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/devtools"
 
-    version('1.11.1', '242672ee27d24dddcbdaac88c586b6c2')
+    version('2.3.2', sha256='e5086106baef6bb925445dfdddb3cd5ff4f8fff96353365b135aba5618d1986d')
+    version('2.3.0', sha256='4fc375c171335c67bd71df4e0b1b3dff2ae3aa17b3e0566b790ba0808b39dcd0')
+    version('2.1.0', sha256='c1f75346a90adf0669b5508fe68cc78bd3b114c1303fa7d22bf90991edd9230d')
+    version('2.0.2', sha256='99a2fa957068254b8ecdb3fc2d50e2950230910ea31c314fc0e7d934e4bd1709')
+    version('1.12.0', sha256='8a3e2ca3988dffe29341e45a160bb588995eae43485d6a811a9ae4836d37afd4')
+    version('1.11.1', sha256='51c876f9ddbfdf611f6ea0b06c0b46da8cefcb8cc98d60e06d576b61f0a06346')
 
-    extends('R')
-
-    depends_on('r-httr', type=nolink)
-    depends_on('r-memoise', type=nolink)
-    depends_on('r-whisker', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-rstudioapi', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-git2r', type=nolink)
-    depends_on('r-withr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r-usethis@1.5.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-usethis@1.6.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-usethis@1.6.3:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-callr', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-callr@3.4.3:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-callr@3.4.4:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-cli', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-cli@2.0.2:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-covr@3.5.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-covr@3.5.1:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-desc@1.2.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-dt@0.13:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-dt@0.15:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-ellipsis@0.3.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-ellipsis@0.3.1:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-httr@0.4:', type=('build', 'run'))
+    depends_on('r-httr@1.4.1:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-httr@1.4.2:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-jsonlite@1.6.1:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-jsonlite@1.7.1:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-memoise@1.0.0:', type=('build', 'run'))
+    depends_on('r-memoise@1.1.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-pkgbuild@1.0.3:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-pkgbuild@1.0.6:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-pkgbuild@1.1.0:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-pkgload@1.0.2:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-pkgload@1.1.0:', when='@2.0.2:', type=('build', 'run'))
+    depends_on('r-rcmdcheck@1.3.3:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-remotes@2.1.0:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-remotes@2.1.1:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-remotes@2.2.0:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.5:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-rlang@0.4.7:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-roxygen2@6.1.1:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-roxygen2@7.1.0:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-roxygen2@7.1.1:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.7.0:', type=('build', 'run'))
+    depends_on('r-rstudioapi@0.11:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-rversions@2.0.1:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-rversions@2.0.2:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-sessioninfo@1.1.1:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-testthat@2.1.1:', when='@2.0.0:', type=('build', 'run'))
+    depends_on('r-testthat@2.3.2:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-withr', type=('build', 'run'))
+    depends_on('r-withr@2.1.2:', when='@2.3.0:', type=('build', 'run'))
+    depends_on('r-withr@2.2.0:', when='@2.3.2:', type=('build', 'run'))
+    depends_on('r-crayon@1.3.4:', when='@2.3.0', type=('build', 'run'))
+    depends_on('r-digest', when='@:2.3.0', type=('build', 'run'))
+    depends_on('r-digest@0.6.25:', when='@2.3.0', type=('build', 'run'))
+    depends_on('r-glue@1.4.0:', when='@2.3.0', type=('build', 'run'))
+    depends_on('r-git2r@0.23.0:', when='@:2.3.0', type=('build', 'run'))
+    depends_on('r-git2r@0.26.1:', when='@2.3.0', type=('build', 'run'))
+    depends_on('r-whisker', when='@:1.9.9', type=('build', 'run'))

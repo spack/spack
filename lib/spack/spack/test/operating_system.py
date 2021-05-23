@@ -1,75 +1,75 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-""" Test checks if the operating_system class is created correctly and that
-the functions are using the correct operating_system. Also checks whether
-the operating_system correctly uses the compiler_strategy
-"""
-import unittest
-from spack.platforms.cray_xc import CrayXc
-from spack.platforms.linux import Linux
-from spack.platforms.darwin import Darwin
-from spack.operating_system.linux_distro import LinuxDistro
-from spack.operating_system.cnl import ComputeNodeLinux
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import spack.operating_systems.cray_backend as cray_backend
 
 
-class TestOperatingSystem(unittest.TestCase):
+def test_read_cle_release_file(tmpdir, monkeypatch):
+    """test reading the Cray cle-release file"""
+    cle_release_path = tmpdir.join('cle-release')
+    with cle_release_path.open('w') as f:
+        f.write("""\
+RELEASE=6.0.UP07
+BUILD=6.0.7424
+DATE=20190611
+ARCH=noarch
+NETWORK=ari
+PATCHSET=35-201906112304
+DUMMY=foo=bar
+""")
 
-    def setUp(self):
-        cray_xc = CrayXc()
-        linux   = Linux()
-        darwin  = Darwin()
-        self.cray_operating_sys = cray_xc.operating_system('front_os')
-        self.cray_default_os = cray_xc.operating_system('default_os')
-        self.cray_back_os = cray_xc.operating_system('back_os')
-        self.darwin_operating_sys = darwin.operating_system('default_os')
-        self.linux_operating_sys  = linux.operating_system('default_os')
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
+                        str(cle_release_path))
+    attrs = cray_backend.read_cle_release_file()
 
-    def test_cray_front_end_operating_system(self):
-        self.assertIsInstance(self.cray_operating_sys, LinuxDistro)
+    assert attrs['RELEASE'] == '6.0.UP07'
+    assert attrs['BUILD'] == '6.0.7424'
+    assert attrs['DATE'] == '20190611'
+    assert attrs['ARCH'] == 'noarch'
+    assert attrs['NETWORK'] == 'ari'
+    assert attrs['PATCHSET'] == '35-201906112304'
+    assert attrs['DUMMY'] == 'foo=bar'
 
-    def test_cray_front_end_compiler_strategy(self):
-        self.assertEquals(self.cray_operating_sys.compiler_strategy, "PATH")
+    assert cray_backend.CrayBackend._detect_crayos_version() == 6
 
-    def test_cray_back_end_operating_system(self):
-        self.assertIsInstance(self.cray_back_os, ComputeNodeLinux)
 
-    def test_cray_back_end_compiler_strategy(self):
-        self.assertEquals(self.cray_back_os.compiler_strategy, "MODULES")
+def test_read_clerelease_file(tmpdir, monkeypatch):
+    """test reading the Cray clerelease file"""
+    clerelease_path = tmpdir.join('clerelease')
+    with clerelease_path.open('w') as f:
+        f.write('5.2.UP04\n')
 
-    def test_linux_operating_system(self):
-        self.assertIsInstance(self.linux_operating_sys, LinuxDistro)
+    monkeypatch.setattr(cray_backend, '_clerelease_file', str(clerelease_path))
+    v = cray_backend.read_clerelease_file()
 
-    def test_linux_compiler_strategy(self):
-        self.assertEquals(self.linux_operating_sys.compiler_strategy, "PATH")
+    assert v == '5.2.UP04'
 
-    def test_cray_front_end_compiler_list(self):
-        """ Operating systems will now be in charge of finding compilers.
-            So, depending on which operating system you want to build for
-            or which operating system you are on, then you could detect
-            compilers in a certain way. Cray linux environment on the front
-            end is just a regular linux distro whereas the Cray linux compute
-            node is a stripped down version which modules are important
-        """
-        self.assertEquals(True, False)
+    assert cray_backend.CrayBackend._detect_crayos_version() == 5
+
+
+def test_cle_release_precedence(tmpdir, monkeypatch):
+    """test that cle-release file takes precedence over clerelease file."""
+    cle_release_path = tmpdir.join('cle-release')
+    clerelease_path = tmpdir.join('clerelease')
+
+    with cle_release_path.open('w') as f:
+        f.write("""\
+RELEASE=6.0.UP07
+BUILD=6.0.7424
+DATE=20190611
+ARCH=noarch
+NETWORK=ari
+PATCHSET=35-201906112304
+DUMMY=foo=bar
+""")
+
+    with clerelease_path.open('w') as f:
+        f.write('5.2.UP04\n')
+
+    monkeypatch.setattr(cray_backend, '_clerelease_file', str(clerelease_path))
+    monkeypatch.setattr(cray_backend, '_cle_release_file',
+                        str(cle_release_path))
+
+    assert cray_backend.CrayBackend._detect_crayos_version() == 6

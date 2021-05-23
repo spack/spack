@@ -1,0 +1,30 @@
+diff -Naur spack-src/SConstruct spack-src.patched/SConstruct
+--- spack-src/SConstruct	2017-07-25 08:41:27.000000000 -0400
++++ spack-src.patched/SConstruct	2020-07-21 13:26:11.212509775 -0400
+@@ -55,11 +55,11 @@
+ 
+   env = Environment(options=opts, ENV=os.environ)
+   if not env['variant'] in ['optimized','optimized_output','debug']:
+-    print 'Illegal value for variant: %s' % env['variant']
++    print('Illegal value for variant: %s' % env['variant'])
+     sys.exit(1)
+   
+   if not env['program'] in ['kaffpa', 'kaffpaE', 'partition_to_vertex_separator','improve_vertex_separator','library','graphchecker','label_propagation','evaluator','node_separator']:
+-    print 'Illegal value for program: %s' % env['program']
++    print('Illegal value for program: %s' % env['program'])
+     sys.exit(1)
+ 
+   # Special configuration for 64 bit machines.
+@@ -104,10 +104,10 @@
+ 
+ #by D. Luxen
+ #if not conf.CheckLibWithHeader('argtable2', 'argtable2.h', 'CXX'):
+-        #print "argtable library not found. Exiting"
++        #print("argtable library not found. Exiting")
+         #Exit(-1)
+ #if not conf.CheckCXXHeader('mpi.h'):
+-        #print "openmpi header not found. Exiting"
++        #print("openmpi header not found. Exiting")
+         #Exit(-1)
+ #
+ #

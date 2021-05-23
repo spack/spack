@@ -1,0 +1,26 @@
+diff --git a/libpcap_stuff.c b/libpcap_stuff.c
+index 26f9993..aaa0d40 100644
+--- a/libpcap_stuff.c
++++ b/libpcap_stuff.c
+@@ -16,7 +16,7 @@
+ #include <string.h>
+ #include <stdlib.h>
+ #include <sys/ioctl.h>
+-#include <net/bpf.h>
++#include <pcap-bpf.h>
+ #include <pcap.h>
+ 
+ #include "globals.h"
+diff --git a/script.c b/script.c
+index 124370c..6c5fb1e 100644
+--- a/script.c
++++ b/script.c
+@@ -23,7 +23,7 @@
+ #include <sched.h>
+ 
+ #include <sys/ioctl.h>
+-#include <net/bpf.h>
++#include <pcap-bpf.h>
+ #include <pcap.h>
+ 
+ #include "release.h"

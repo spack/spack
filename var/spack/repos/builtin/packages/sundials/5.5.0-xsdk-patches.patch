@@ -1,0 +1,75 @@
+From 0e197ce186ffae8213c297786811401861d249c1 Mon Sep 17 00:00:00 2001
+From: "Cody J. Balos" <balos1@llnl.gov>
+Date: Wed, 4 Nov 2020 10:43:36 -0800
+Subject: [PATCH 1/2] fix expansion of generator expression
+
+---
+ src/sunlinsol/superludist/CMakeLists.txt | 2 +-
+ src/sunmatrix/slunrloc/CMakeLists.txt    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/sunlinsol/superludist/CMakeLists.txt b/src/sunlinsol/superludist/CMakeLists.txt
+index ac1ece36c..5b59d6bfd 100644
+--- a/src/sunlinsol/superludist/CMakeLists.txt
++++ b/src/sunlinsol/superludist/CMakeLists.txt
+@@ -32,7 +32,7 @@ sundials_add_library(sundials_sunlinsolsuperludist
+     sundials_generic_obj
+   LINK_LIBRARIES
+   PUBLIC sundials_sunmatrixslunrloc SUNDIALS::SUPERLUDIST
+-    $<IF:$<BOOL:SUPERLUDIST_OpenMP>,OpenMP::OpenMP_C,>
++    $<IF:$<BOOL:${SUPERLUDIST_OpenMP}>,OpenMP::OpenMP_C,>
+   COMPILE_OPTIONS
+     PRIVATE ${_compile_options}
+   OUTPUT_NAME
+diff --git a/src/sunmatrix/slunrloc/CMakeLists.txt b/src/sunmatrix/slunrloc/CMakeLists.txt
+index 25ee00dd3..7713435d9 100644
+--- a/src/sunmatrix/slunrloc/CMakeLists.txt
++++ b/src/sunmatrix/slunrloc/CMakeLists.txt
+@@ -34,7 +34,7 @@ sundials_add_library(sundials_sunmatrixslunrloc
+     sundials_generic_obj
+   LINK_LIBRARIES
+     PUBLIC SUNDIALS::SUPERLUDIST
+-    $<IF:$<BOOL:SUPERLUDIST_OpenMP>,OpenMP::OpenMP_C,>
++    $<IF:$<BOOL:${SUPERLUDIST_OpenMP}>,OpenMP::OpenMP_C,>
+   COMPILE_OPTIONS
+     PRIVATE ${_compile_options}
+   OUTPUT_NAME
+-- 
+2.29.1
+
+
+From 09cd3ab587f8999d068946d8be180da0a3c6ad32 Mon Sep 17 00:00:00 2001
+From: "Cody J. Balos" <balos1@llnl.gov>
+Date: Tue, 3 Nov 2020 11:43:58 -0800
+Subject: [PATCH 2/2] dont use NULL in ltest for Hypre
+
+---
+ cmake/tpl/SundialsHypre.cmake | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/cmake/tpl/SundialsHypre.cmake b/cmake/tpl/SundialsHypre.cmake
+index 9633f1c11..19d4bf201 100644
+--- a/cmake/tpl/SundialsHypre.cmake
++++ b/cmake/tpl/SundialsHypre.cmake
+@@ -78,15 +78,14 @@ if(HYPRE_FOUND AND (NOT HYPRE_WORKS))
+   "ADD_EXECUTABLE(ltest ltest.c)\n"
+   "TARGET_LINK_LIBRARIES(ltest ${HYPRE_LIBRARIES})\n")
+ 
+-  # Create a C source file which calls a hypre function
+   file(WRITE ${HYPRE_TEST_DIR}/ltest.c
+   "\#include \"HYPRE_parcsr_ls.h\"\n"
+   "int main(){\n"
+   "HYPRE_ParVector par_b;\n"
+   "HYPRE_IJVector b;\n"
+-  "par_b = NULL;\n"
+-  "b = NULL;\n"
+-  "if (par_b != NULL || b != NULL) return(1);\n"
++  "par_b = 0;\n"
++  "b = 0;\n"
++  "if (par_b != 0 || b != 0) return(1);\n"
+   "else return(0);\n"
+   "}\n")
+ 
+-- 
+2.29.1
+

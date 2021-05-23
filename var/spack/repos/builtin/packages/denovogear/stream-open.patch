@@ -1,0 +1,12 @@
+diff -ru spack-src.org/src/dng-dnm.cc spack-src/src/dng-dnm.cc
+--- spack-src.org/src/dng-dnm.cc	2015-04-21 09:16:59.000000000 +0900
++++ spack-src/src/dng-dnm.cc	2019-10-02 15:08:28.892042247 +0900
+@@ -161,7 +161,7 @@
+ int writeVCFHeader(std::ofstream& fo_vcf, string op_vcf_f, string bcf_file, string ped_file, string sample)
+ {
+   fo_vcf.open(op_vcf_f.c_str());
+-  if(fo_vcf == NULL) {
++  if(fo_vcf.fail()) {
+     cerr<<"Unable to open vcf file for writing output. Exiting !"<<endl;
+   }
+   fo_vcf<<"##fileformat=VCFv4.1\n";

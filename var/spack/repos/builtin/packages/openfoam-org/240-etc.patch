@@ -1,0 +1,88 @@
+--- OpenFOAM-2.4.x.orig/etc/bashrc	2016-10-16 16:11:45.000000000 +0200
++++ OpenFOAM-2.4.x/etc/bashrc	2017-03-24 12:41:25.233267894 +0100
+@@ -55,6 +55,8 @@
+ # overridden from the prefs.sh file or from command-line specification
+ #
+ #- note the location for later use (eg, in job scripts)
++rc="${BASH_SOURCE:-${ZSH_NAME:+$0}}"
++[ -n "$rc" ] && FOAM_INST_DIR=$(\cd $(dirname $rc)/../.. && \pwd -L) || \
+ : ${FOAM_INST_DIR:=$foamInstall}; export FOAM_INST_DIR
+ 
+ #- Compiler location:
+--- OpenFOAM-2.4.x.orig/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L	2018-04-05 14:18:12.112228183 +0100
++++ OpenFOAM-2.4.x/applications/utilities/mesh/conversion/ansysToFoam/ansysToFoam.L	2018-04-05 14:19:20.795393577 +0100
+@@ -77,7 +77,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L	2018-04-05 14:18:19.137347383 +0100
++++ OpenFOAM-2.4.x/src/thermophysicalModels/reactionThermo/chemistryReaders/chemkinReader/chemkinLexer.L	2018-04-05 14:19:27.556508297 +0100
+@@ -54,7 +54,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L	2018-04-05 14:18:45.689797916 +0100
++++ OpenFOAM-2.4.x/applications/utilities/mesh/conversion/gambitToFoam/gambitToFoam.L	2018-04-05 14:19:43.195773659 +0100
+@@ -80,7 +80,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L	2018-04-05 14:18:50.432878396 +0100
++++ OpenFOAM-2.4.x/src/triSurface/triSurface/interfaces/STL/readSTLASCII.L	2018-04-05 14:19:46.299826328 +0100
+@@ -55,7 +55,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L	2018-04-05 14:18:57.064990927 +0100
++++ OpenFOAM-2.4.x/src/surfMesh/surfaceFormats/stl/STLsurfaceFormatASCII.L	2018-04-05 14:19:49.258876536 +0100
+@@ -50,7 +50,7 @@
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+ //! \cond dummy
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L	2018-04-05 14:18:27.152483381 +0100
++++ OpenFOAM-2.4.x/applications/utilities/mesh/conversion/fluent3DMeshToFoam/fluent3DMeshToFoam.L	2018-04-05 14:19:32.180586757 +0100
+@@ -123,7 +123,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()
+--- OpenFOAM-2.4.x.orig/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L.	2018-04-05 14:18:35.049617377 +0100
++++ OpenFOAM-2.4.x/applications/utilities/mesh/conversion/fluentMeshToFoam/fluentMeshToFoam.L	2018-04-05 14:19:38.493693876 +0100
+@@ -100,7 +100,7 @@
+ // Dummy yywrap to keep yylex happy at compile time.
+ // It is called by yylex but is not used as the mechanism to change file.
+ // See <<EOF>>
+-#if YY_FLEX_SUBMINOR_VERSION < 34
++#if YY_FLEX_MINOR_VERSION < 6 && YY_FLEX_SUBMINOR_VERSION < 34
+ extern "C" int yywrap()
+ #else
+ int yyFlexLexer::yywrap()int yyFlexLexer::yywrap()

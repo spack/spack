@@ -1,0 +1,225 @@
+From 34de0ccf556ba75d35c9687dae5d9f666a1b2a18 Mon Sep 17 00:00:00 2001
+From: Walter Spector <wws@sgi.com>
+Date: Tue, 22 Nov 2016 10:57:53 -0800
+Subject: [PATCH] Detect and use libmpifort when available in mvaphich2
+ configurations.
+
+---
+ build_config/Darwin.absoft.default/build_rules.mk        |  1 +
+ build_config/Darwin.g95.default/build_rules.mk           |  1 +
+ build_config/Darwin.gfortran.default/build_rules.mk      |  1 +
+ build_config/Darwin.gfortranclang.default/build_rules.mk |  1 +
+ build_config/Darwin.intel.default/build_rules.mk         |  1 +
+ build_config/Darwin.nag.default/build_rules.mk           |  1 +
+ build_config/Linux.absoft.default/build_rules.mk         |  1 +
+ build_config/Linux.g95.default/build_rules.mk            |  1 +
+ build_config/Linux.gfortran.default/build_rules.mk       |  1 +
+ build_config/Linux.gfortranclang.default/build_rules.mk  |  1 +
+ build_config/Linux.intel.default/build_rules.mk          |  1 +
+ build_config/Linux.intelgcc.default/build_rules.mk       |  1 +
+ build_config/Linux.lahey.default/build_rules.mk          |  1 +
+ build_config/Linux.nag.default/build_rules.mk            |  1 +
+ build_config/Linux.pgi.default/build_rules.mk            |  1 +
+ scripts/libs.mvapich2f90                                 | 10 ++++++++++
+ 16 files changed, 25 insertions(+)
+ create mode 100755 scripts/libs.mvapich2f90
+
+diff --git a/build_config/Darwin.absoft.default/build_rules.mk b/build_config/Darwin.absoft.default/build_rules.mk
+index 059ff82..88a95fe 100644
+--- a/build_config/Darwin.absoft.default/build_rules.mk
++++ b/build_config/Darwin.absoft.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Darwin.g95.default/build_rules.mk b/build_config/Darwin.g95.default/build_rules.mk
+index 9789b26..a7bf89c 100644
+--- a/build_config/Darwin.g95.default/build_rules.mk
++++ b/build_config/Darwin.g95.default/build_rules.mk
+@@ -54,6 +54,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Darwin.gfortran.default/build_rules.mk b/build_config/Darwin.gfortran.default/build_rules.mk
+index 96a2a4f..2e05248 100644
+--- a/build_config/Darwin.gfortran.default/build_rules.mk
++++ b/build_config/Darwin.gfortran.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Darwin.gfortranclang.default/build_rules.mk b/build_config/Darwin.gfortranclang.default/build_rules.mk
+index da52f08..cf90636 100644
+--- a/build_config/Darwin.gfortranclang.default/build_rules.mk
++++ b/build_config/Darwin.gfortranclang.default/build_rules.mk
+@@ -56,6 +56,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Darwin.intel.default/build_rules.mk b/build_config/Darwin.intel.default/build_rules.mk
+index f6593f1..b851691 100644
+--- a/build_config/Darwin.intel.default/build_rules.mk
++++ b/build_config/Darwin.intel.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Darwin.nag.default/build_rules.mk b/build_config/Darwin.nag.default/build_rules.mk
+index 4ee8689..1dd172d 100644
+--- a/build_config/Darwin.nag.default/build_rules.mk
++++ b/build_config/Darwin.nag.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.absoft.default/build_rules.mk b/build_config/Linux.absoft.default/build_rules.mk
+index 7a2314e..43231c9 100644
+--- a/build_config/Linux.absoft.default/build_rules.mk
++++ b/build_config/Linux.absoft.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.g95.default/build_rules.mk b/build_config/Linux.g95.default/build_rules.mk
+index 5f45593..5d71e59 100644
+--- a/build_config/Linux.g95.default/build_rules.mk
++++ b/build_config/Linux.g95.default/build_rules.mk
+@@ -54,6 +54,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.gfortran.default/build_rules.mk b/build_config/Linux.gfortran.default/build_rules.mk
+index 47b55de..2954eab 100644
+--- a/build_config/Linux.gfortran.default/build_rules.mk
++++ b/build_config/Linux.gfortran.default/build_rules.mk
+@@ -61,6 +61,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.gfortranclang.default/build_rules.mk b/build_config/Linux.gfortranclang.default/build_rules.mk
+index 4c58349..6a68841 100644
+--- a/build_config/Linux.gfortranclang.default/build_rules.mk
++++ b/build_config/Linux.gfortranclang.default/build_rules.mk
+@@ -64,6 +64,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.intel.default/build_rules.mk b/build_config/Linux.intel.default/build_rules.mk
+index abb2873..55dd61a 100644
+--- a/build_config/Linux.intel.default/build_rules.mk
++++ b/build_config/Linux.intel.default/build_rules.mk
+@@ -60,6 +60,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.intelgcc.default/build_rules.mk b/build_config/Linux.intelgcc.default/build_rules.mk
+index 7c0e5c9..135c822 100644
+--- a/build_config/Linux.intelgcc.default/build_rules.mk
++++ b/build_config/Linux.intelgcc.default/build_rules.mk
+@@ -60,6 +60,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.lahey.default/build_rules.mk b/build_config/Linux.lahey.default/build_rules.mk
+index 9959bda..7a83264 100644
+--- a/build_config/Linux.lahey.default/build_rules.mk
++++ b/build_config/Linux.lahey.default/build_rules.mk
+@@ -57,6 +57,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_F90LINKERDEFAULT   = mpicxx
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.nag.default/build_rules.mk b/build_config/Linux.nag.default/build_rules.mk
+index 0fd6435..41a7e60 100644
+--- a/build_config/Linux.nag.default/build_rules.mk
++++ b/build_config/Linux.nag.default/build_rules.mk
+@@ -53,6 +53,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/build_config/Linux.pgi.default/build_rules.mk b/build_config/Linux.pgi.default/build_rules.mk
+index f6380b1..052a1cb 100644
+--- a/build_config/Linux.pgi.default/build_rules.mk
++++ b/build_config/Linux.pgi.default/build_rules.mk
+@@ -80,6 +80,7 @@ ifeq ($(ESMF_COMM),mvapich2)
+ # Mvapich2 ---------------------------------------------------
+ ESMF_F90DEFAULT         = mpif90
+ ESMF_CXXDEFAULT         = mpicxx
++ESMF_CXXLINKLIBS       += $(shell $(ESMF_DIR)/scripts/libs.mvapich2f90)
+ ESMF_MPIRUNDEFAULT      = mpirun $(ESMF_MPILAUNCHOPTIONS)
+ ESMF_MPIMPMDRUNDEFAULT  = mpiexec $(ESMF_MPILAUNCHOPTIONS)
+ else
+diff --git a/scripts/libs.mvapich2f90 b/scripts/libs.mvapich2f90
+new file mode 100755
+index 0000000..e4b6f27
+--- /dev/null
++++ b/scripts/libs.mvapich2f90
+@@ -0,0 +1,10 @@
++#!/bin/sh
++# this scripts determines the correct MVAPICH2 Fortran bindings library to
++# use when mpicxx is used for linking.  If libmpifort, use it.
++PATHEXE=`which mpicxx`
++MVAPICH2_LIBDIR=`dirname ${PATHEXE}`/../lib*
++ls -1 ${MVAPICH2_LIBDIR} | grep mpifort > /dev/null 2>&1
++if [ $? = 0 ]; then
++  echo -lmpifort;
++fi
++
+-- 
+2.7.4
+

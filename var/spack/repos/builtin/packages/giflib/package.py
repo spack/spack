@@ -1,41 +1,41 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Giflib(Package):
+class Giflib(MakefilePackage, SourceforgePackage):
     """The GIFLIB project maintains the giflib service library, which has
     been pulling images out of GIFs since 1989."""
 
     homepage = "http://giflib.sourceforge.net/"
-    url      = "https://downloads.sourceforge.net/project/giflib/giflib-5.1.4.tar.bz2"
+    sourceforge_mirror_path = "giflib/giflib-5.1.4.tar.gz"
 
-    version('5.1.4', '2c171ced93c0e83bb09e6ccad8e3ba2b')
+    version('5.2.1', sha256='31da5562f44c5f15d63340a09a4fd62b48c45620cd302f77a6d9acf0077879bd')
+    version('5.2.0', sha256='dc7257487c767137602d86c17098ec97065a718ff568a61cfcf1a9466f197b1f')
+    version('5.1.4', sha256='df27ec3ff24671f80b29e6ab1c4971059c14ac3db95406884fc26574631ba8d5', extension='tar.bz2')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
+    depends_on('automake', type='build', when='@:5.2.0')
+    depends_on('autoconf', type='build', when='@:5.2.0')
+    depends_on('m4', type='build', when='@:5.2.0')
+    depends_on('libtool', type='build', when='@:5.2.0')
 
-        make()
-        make("install")
+    patch('bsd-head.patch')
+
+    @property
+    def install_targets(self):
+        targets = ['install']
+        if self.spec.satisfies('@5.2.0:'):
+            targets.append('PREFIX={0}'.format(self.spec.prefix))
+
+        return targets
+
+    def check(self):
+        make('check', parallel=False)
+
+    def edit(self, spec, prefix):
+        if spec.satisfies('@:5.2.0'):
+            configure = Executable('./configure')
+            configure('--prefix={0}'.format(prefix))

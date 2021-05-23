@@ -1,44 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RMemoise(Package):
+class RMemoise(RPackage):
     """Cache the results of a function so that when you call it again with the
     same arguments it returns the pre-computed value."""
 
     homepage = "https://github.com/hadley/memoise"
-    url      = "https://cran.r-project.org/src/contrib/memoise_1.0.0.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/memoise"
+    url      = "https://cloud.r-project.org/src/contrib/memoise_1.1.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/memoise"
+    version('1.1.0', sha256='b276f9452a26aeb79e12dd7227fcc8712832781a42f92d70e86040da0573980c')
+    version('1.0.0', sha256='fd1b6cf12929890db7819f74a44a1dbe3d6f25c8a608a956d827f8be2f6c026b')
 
-    version('1.0.0', 'd31145292e2a88ae9a504cab1602e4ac')
-
-    extends('R')
-
-    depends_on('r-digest', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-digest@0.6.3:', type=('build', 'run'))

@@ -1,47 +1,29 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RRgooglemaps(Package):
-    """This package serves two purposes: (i) Provide a comfortable R interface
+class RRgooglemaps(RPackage):
+    """Overlays on Static Maps
+
+    This package serves two purposes: (i) Provide a comfortable R interface
     to query the Google server for static maps, and (ii) Use the map as a
     background image to overlay plots within R. This requires proper coordinate
     scaling."""
 
-    homepage = "https://cran.r-project.org/package=RgoogleMaps"
-    url      = "https://cran.r-project.org/src/contrib/RgoogleMaps_1.2.0.7.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RgoogleMaps"
+    homepage = "https://cloud.r-project.org/package=RgoogleMaps"
+    url      = "https://cloud.r-project.org/src/contrib/RgoogleMaps_1.2.0.7.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RgoogleMaps"
 
-    version('1.2.0.7', '2e1df804f0331b4122d841105f0c7ea5')
+    version('1.4.5.3', sha256='d1d5ad8db841754af175d4104a05c5c31e5cc445be314a3ac70483c31798680b')
+    version('1.4.3', sha256='44cb62bcd23e5b4807e91c5825352eb8d38aaaeb3b38a8271ca9f21c1e1d4b19')
+    version('1.4.2', sha256='b479996fcb72f067644a7ea7f00325e44e76efd202e84aaab022753c4a6d5584')
+    version('1.2.0.7', sha256='9c268a5a554ad6da69fb560d88dea9c86ec9e9a56b691f1b63faedfe20826712')
 
-    extends('R')
-
-    depends_on('r-png', type=nolink)
-    depends_on('r-rjsonio', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-png', type=('build', 'run'))
+    depends_on('r-sp', when='@1.4.5.3:', type=('build', 'run'))
+    depends_on('r-rjsonio', when='@1.2.0.5:1.2.0.7', type=('build', 'run'))

@@ -1,0 +1,10 @@
+--- a/src/libscotchmetis/metis_graph_part.c	2018-07-13 14:25:50.000000000 -0500
++++ b/src/libscotchmetis/metis_graph_part.c	2018-07-13 14:21:08.000000000 -0500
+@@ -298,7 +298,7 @@
+
+     edgenbr = xadj[vertnbr] - baseval;
+     if ((edlotax = memAlloc (edgenbr * sizeof (SCOTCH_Num))) == NULL)
+-      return;
++      return (METIS_ERROR);
+     edlotax -= baseval;                           /* Base access to edlotax */
+     vsiztax  = vsize2 - baseval;

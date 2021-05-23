@@ -1,0 +1,16 @@
+--- oclint-scripts/bundle	2017-09-29 10:27:37.000000000 -0700
++++ oclint-scripts/bundle	2018-01-26 03:49:31.000000000 -0800
+@@ -92,7 +92,7 @@
+ 
+ def install_cpp_headers():
+     if environment.is_darwin():
+-        install_dir = path.build.clang_install_dir
++        install_dir = (path.build.clang_install_dir if not args.llvm_root else args.llvm_root)
+         clang_cpp_headers_dir = os.path.join(install_dir, 'include', 'c++')
+         oclint_cpp_headers_dir = os.path.join(bundle_include_dir, 'c++')
+         path.mkdir_p(bundle_include_dir)
+@@ -141,4 +141,3 @@
+ 
+ if args.archive:
+     archive(args.release)
+-

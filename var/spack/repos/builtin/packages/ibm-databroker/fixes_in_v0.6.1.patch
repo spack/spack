@@ -1,0 +1,39 @@
+From f89161c15d3c84cd9b661740aaf803cc9acbb1a2 Mon Sep 17 00:00:00 2001
+From: Harsh Bhatia <bhatia4@llnl.gov>
+Date: Thu, 16 Jul 2020 14:57:37 -0700
+Subject: [PATCH] small fixes
+
+---
+ bindings/python/CMakeLists.txt | 2 +-
+ bindings/python/setup.py.in    | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/bindings/python/CMakeLists.txt b/bindings/python/CMakeLists.txt
+index 6a203ce..7e61668 100644
+--- a/bindings/python/CMakeLists.txt
++++ b/bindings/python/CMakeLists.txt
+@@ -45,7 +45,7 @@ if (PYTHON)
+                    COMMAND ${CMAKE_COMMAND} -E touch ${OUTPUT}
+                    DEPENDS ${DEPS})
+ 
+-	set( INSTALL_CMD "${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/${SETUP_PY} install")
++    set( INSTALL_CMD "${PYTHON} ${CMAKE_CURRENT_BINARY_DIR}/${SETUP_PY} install --prefix ${CMAKE_INSTALL_PREFIX}")
+    
+ 	add_custom_target(pydbr ALL DEPENDS ${OUTPUT})
+ 	FILE(COPY examples DESTINATION .)
+diff --git a/bindings/python/setup.py.in b/bindings/python/setup.py.in
+index 0d61f1d..3501c78 100644
+--- a/bindings/python/setup.py.in
++++ b/bindings/python/setup.py.in
+@@ -17,7 +17,7 @@ from setuptools import setup, find_packages
+ import os, sys
+ 
+ setup(name='PyDBR',
+-      version='0.5.1',
++      version='0.6.1',
+       description='Python wrapper to the Data Broker C API',
+       author='Claudia Misale',
+       author_email='c.misale@ibm.com',
+-- 
+1.8.3.1
+

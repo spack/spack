@@ -1,41 +1,104 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import shutil
+import re
 
 
-class Ghostscript(Package):
-    """an interpreter for the PostScript language and for PDF. """
+class Ghostscript(AutotoolsPackage):
+    """An interpreter for the PostScript language and for PDF."""
+
     homepage = "http://ghostscript.com/"
-    url      = "http://downloads.ghostscript.com/public/old-gs-releases/ghostscript-9.18.tar.gz"
+    url = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs926/ghostscript-9.26.tar.gz"
 
-    version('9.18', '33a47567d7a591c00a253caddd12a88a')
+    executables = [r'^gs$']
 
-    parallel = False
+    version('9.54.0', sha256='0646bb97f6f4d10a763f4919c54fa28b4fbdd3dff8e7de3410431c81762cade0')
+    version('9.53.3', sha256='6eaf422f26a81854a230b80fd18aaef7e8d94d661485bd2e97e695b9dce7bf7f')
+    version('9.50', sha256='0f53e89fd647815828fc5171613e860e8535b68f7afbc91bf89aee886769ce89')
+    version('9.27', sha256='9760e8bdd07a08dbd445188a6557cb70e60ccb6a5601f7dbfba0d225e28ce285')
+    version('9.26', sha256='831fc019bd477f7cc2d481dc5395ebfa4a593a95eb2fe1eb231a97e450d7540d')
+    version('9.21', sha256='02bceadbc4dddeb6f2eec9c8b1623d945d355ca11b8b4df035332b217d58ce85')
+    version('9.18', sha256='5fc93079749a250be5404c465943850e3ed5ffbc0d5c07e10c7c5ee8afbbdb1b')
+
+    # https://www.ghostscript.com/ocr.html
+    variant('tesseract', default=False, description='Use the Tesseract library for OCR')
+
+    depends_on('pkgconfig', type='build')
+    depends_on('krb5', type='link')
+
+    depends_on('freetype@2.4.2:')
+    depends_on('jpeg')
+    depends_on('lcms')
+    depends_on('libpng')
+    depends_on('libtiff')
+    depends_on('zlib')
+    depends_on('libxext')
+    depends_on('gtkplus')
+
+    # https://www.ghostscript.com/doc/9.53.0/News.htm
+    conflicts('+tesseract', when='@:9.52', msg='Tesseract OCR engine added in 9.53.0')
+
+    # https://trac.macports.org/ticket/62832
+    conflicts('+tesseract', when='platform=darwin', msg='Tesseract does not build correctly on macOS')
+
+    patch('nogoto.patch', when='%fj@:4.1.0')
+
+    # Related bug report: https://bugs.ghostscript.com/show_bug.cgi?id=702985
+    patch("https://github.com/ArtifexSoftware/ghostpdl/commit/41ef9a0bc36b9db7115fbe9623f989bfb47bbade.patch",
+          when='@:9.53.3^freetype@2.10.3:',
+          sha256="49c353106d97c40b3b2c78f72ce34e3eef66e6b04861c313f87bad11ab4189e6")
+
+    def url_for_version(self, version):
+        baseurl = "https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs{0}/ghostscript-{1}.tar.gz"
+        return baseurl.format(version.joined, version.dotted)
+
+    def patch(self):
+        """Ghostscript comes with all of its dependencies vendored.
+        In order to build with Spack versions of these dependencies,
+        we have to remove these vendored dependencies.
+
+        Note that this approach is also recommended by Linux from Scratch:
+        http://www.linuxfromscratch.org/blfs/view/svn/pst/gs.html
+        """
+        directories = ['freetype', 'jpeg', 'libpng', 'zlib']
+        if self.spec.satisfies('@:9.21'):
+            directories.append('lcms2')
+        else:
+            directories.append('lcms2mt')
+        for directory in directories:
+            shutil.rmtree(directory)
+
+        filter_file('ZLIBDIR=src',
+                    'ZLIBDIR={0}'.format(self.spec['zlib'].prefix.include),
+                    'configure.ac', 'configure',
+                    string=True)
+
+    def configure_args(self):
+        args = [
+            '--disable-compile-inits',
+            '--enable-dynamic',
+            '--with-system-libtiff',
+        ]
+
+        if self.spec.satisfies('@9.53:'):
+            args.extend(self.with_or_without('tesseract'))
+
+        return args
+
+    def build(self, spec, prefix):
+        make()
+        make('so')
 
     def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix, "--enable-shared")
+        make('install')
+        make('soinstall')
 
-        make()
-        make("install")
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--help', output=str, error=str)
+        match = re.search(r'GPL Ghostscript (\S+)', output)
+        return match.group(1) if match else None

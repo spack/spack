@@ -1,0 +1,13 @@
+diff --git a/TESTING/LIN/alahd.f b/TESTING/LIN/alahd.f
+index 8f4cd58d..6a4946e0 100644
+--- a/TESTING/LIN/alahd.f
++++ b/TESTING/LIN/alahd.f
+@@ -1036,7 +1036,7 @@
+  9929 FORMAT( ' Test ratios (1-3: ', A1, 'TZRZF):' )
+  9920 FORMAT( 3X, ' 7-10: same as 3-6', 3X, ' 11-14: same as 3-6' )
+  9921 FORMAT( ' Test ratios:', / '    (1-2: ', A1, 'GELS, 3-6: ', A1,
+-     $      'GELSY, 7-10: ', A1, 'GELSS, 11-14: ', A1, 'GELSD, 15-16: '
++     $      'GELSY, 7-10: ', A1, 'GELSS, 11-14: ', A1, 'GELSD, 15-16: ',
+      $        A1, 'GETSLS)')
+  9928 FORMAT( 7X, 'where ALPHA = ( 1 + SQRT( 17 ) ) / 8' )
+  9927 FORMAT( 3X, I2, ': ABS( Largest element in L )', / 12X,

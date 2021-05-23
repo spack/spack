@@ -1,41 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class BppCore(Package):
+class BppCore(CMakePackage):
     """Bio++ core library."""
 
     homepage = "http://biopp.univ-montp2.fr/wiki/index.php/Installation"
     url      = "http://biopp.univ-montp2.fr/repos/sources/bpp-core-2.2.0.tar.gz"
 
-    version('2.2.0', '5789ed2ae8687d13664140cd77203477')
+    version('2.4.1', sha256='1150b8ced22cff23dd4770d7c23fad11239070b44007740e77407f0d746c0af6')
+    version('2.2.0', sha256='aacd4afddd1584ab6bfa1ff6931259408f1d39958a0bdc5f78bf1f9ee4e98b79')
 
-    depends_on('cmake')
+    depends_on('cmake@2.6:', type='build')
 
-    def install(self, spec, prefix):
-        cmake('-DBUILD_TESTING=FALSE', '.', *std_cmake_args)
-        make()
-        make('install')
+    # Clarify isnan's namespace, because Fujitsu compiler can't
+    # resolve ambiguous of 'isnan' function.
+    patch('clarify_isnan.patch', when='%fj')
+
+    def cmake_args(self):
+        return ['-DBUILD_TESTING=FALSE']

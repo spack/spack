@@ -1,0 +1,16 @@
+diff -ru a/plugins/fixploidy.mk b/plugins/fixploidy.mk
+--- a/plugins/fixploidy.mk	2014-10-09 04:01:22.000000000 -0500
++++ b/plugins/fixploidy.mk	2020-01-13 21:55:28.926309796 -0600
+@@ -1,2 +1,2 @@
+-plugins/fixploidy.so: plugins/fixploidy.c version.h version.c ploidy.h ploidy.c $(HTSDIR)/libhts.so
+-	$(CC) $(CFLAGS) $(INCLUDES) -fPIC -shared -o $@ ploidy.c version.c $< -L$(HTSDIR) -lhts
++plugins/fixploidy.so: plugins/fixploidy.c version.h version.c ploidy.h ploidy.c
++	$(CC) $(CFLAGS) $(INCLUDES) -fPIC -shared -o $@ ploidy.c version.c $< $(HTSLIB)
+diff -ru a/plugins/vcf2sex.mk b/plugins/vcf2sex.mk
+--- a/plugins/vcf2sex.mk	2014-10-09 04:01:22.000000000 -0500
++++ b/plugins/vcf2sex.mk	2020-01-13 21:55:55.056277406 -0600
+@@ -1,2 +1,2 @@
+-plugins/vcf2sex.so: plugins/vcf2sex.c version.h version.c ploidy.h ploidy.c $(HTSDIR)/libhts.so
+-	$(CC) $(CFLAGS) $(INCLUDES) -fPIC -shared -o $@ ploidy.c version.c $< -L$(HTSDIR) -lhts
++plugins/vcf2sex.so: plugins/vcf2sex.c version.h version.c ploidy.h ploidy.c
++	$(CC) $(CFLAGS) $(INCLUDES) -fPIC -shared -o $@ ploidy.c version.c $< $(HTSLIB)

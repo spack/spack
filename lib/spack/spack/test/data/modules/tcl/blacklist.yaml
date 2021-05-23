@@ -1,0 +1,10 @@
+enable:
+  - tcl
+tcl:
+  whitelist:
+    - zmpi
+  blacklist:
+    - callpath
+    - mpi
+  all:
+    autoload: 'direct'

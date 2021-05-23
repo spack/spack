@@ -1,46 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RMagic(Package):
+class RMagic(RPackage):
     """A collection of efficient, vectorized algorithms for the creation and
     investigation of magic squares and hypercubes, including a variety of
     functions for the manipulation and analysis of arbitrarily dimensioned
     arrays."""
 
-    homepage = "https://cran.r-project.org/"
-    url      = "https://cran.r-project.org/src/contrib/magic_1.5-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/magic"
+    homepage = "https://cloud.r-project.org/package=magic"
+    url      = "https://cloud.r-project.org/src/contrib/magic_1.5-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/magic"
 
-    version('1.5-6', 'a68e5ced253b2196af842e1fc84fd029')
+    version('1.5-9', sha256='fa1d5ef2d39e880f262d31b77006a2a7e76ea38e306aae4356e682b90d6cd56a')
+    version('1.5-8', sha256='7f8bc26e05003168e9d2dadf64eb9a34b51bc41beba482208874803dee7d6c20')
+    version('1.5-6', sha256='1b6c3f5bef0ddc28c4b68894051df5d9c0d4985d9e6ad81892369d0f7fe0298d')
 
-    extends('R')
-
-    depends_on('r-abind', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.10:', type=('build', 'run'))
+    depends_on('r-abind', type=('build', 'run'))

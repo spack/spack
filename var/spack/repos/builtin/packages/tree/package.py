@@ -1,28 +1,10 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import sys
 
 
 class Tree(Package):
@@ -36,11 +18,32 @@ class Tree(Package):
     homepage = "http://mama.indstate.edu/users/ice/tree/"
     url      = "http://mama.indstate.edu/users/ice/tree/src/tree-1.7.0.tgz"
 
-    version('1.7.0', 'abe3e03e469c542d8e157cdd93f4d8a6')
+    version('1.8.0', sha256='715d5d4b434321ce74706d0dd067505bb60c5ea83b5f0b3655dae40aa6f9b7c2')
+    version('1.7.0', sha256='6957c20e82561ac4231638996e74f4cfa4e6faabc5a2f511f0b4e3940e8f7b12')
 
     def install(self, spec, prefix):
-        filter_file(r'^prefix =.*', 'prefix = %s' % prefix, 'Makefile')
-        filter_file(r'^CFLAGS', '# use spack settings instead... CFLAGS',
-                    'Makefile')
-        make()
-        make('install')
+        objs = [
+            'tree.o',
+            'unix.o',
+            'html.o',
+            'xml.o',
+            'json.o',
+            'hash.o',
+            'color.o'
+        ]
+        # version 1.8.0 added file.c
+        if spec.version >= Version('1.8.0'):
+            objs.append('file.o')
+
+        if (sys.platform == 'darwin'):
+            objs.append('strverscmp.o')
+
+        args = [
+            'prefix=%s' % prefix,
+            'CC=%s' % spack_cc,
+            'CFLAGS=',
+            'OBJS=%s' % ' '.join(objs),
+            'install'
+        ]
+
+        make(*args)

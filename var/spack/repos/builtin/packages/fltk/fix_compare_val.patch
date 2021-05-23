@@ -1,0 +1,11 @@
+--- fltk-1.3.3/src/Fl_Tree_Item.cxx	2014-09-05 11:59:00.000000000 +0900
++++ fltk-1.3.3/src/Fl_Tree_Item_b.cxx	2019-08-05 19:10:28.620960943 +0900
+@@ -549,7 +549,7 @@
+   } else {					// different parent?
+     if ( to > to_parent->children() )		// try to prevent a reparent() error
+       return -4;
+-    if ( from_parent->deparent(from) < 0 )	// deparent self from current parent
++    if ( from_parent->deparent(from) == NULL )	// deparent self from current parent
+       return -5;
+     if ( to_parent->reparent(this, to) < 0 ) {	// reparent self to new parent at position 'to'
+       to_parent->reparent(this, 0);		// failed? shouldn't happen, reparent at 0

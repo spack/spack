@@ -1,0 +1,22 @@
+diff --git a/src/transforms/adios_transform_zfp_common.h b/src/transforms/adios_transform_zfp_common.h
+index e453d078..681198ee 100644
+--- a/src/transforms/adios_transform_zfp_common.h
++++ b/src/transforms/adios_transform_zfp_common.h
+@@ -146,7 +146,7 @@ static void zfp_initialize(void* array, struct zfp_buffer* zbuff)
+ 			zbuff->error = true;
+ 			return;
+ 		}
+-	       	zfp_stream_set_accuracy(zbuff->zstream, tol, zbuff->type);
++	       	zfp_stream_set_accuracy(zbuff->zstream, tol);
+ 	}
+ 	else if (zbuff->mode == 1) 	// precision
+ 	{
+@@ -172,7 +172,7 @@ static void zfp_initialize(void* array, struct zfp_buffer* zbuff)
+ 		tol = (uint) ct;
+ 
+ 
+-		zfp_stream_set_precision(zbuff->zstream, tol, zbuff->type);
++		zfp_stream_set_precision(zbuff->zstream, tol);
+ 	}
+ 	else if (zbuff->mode == 2) 	// rate
+ 	{

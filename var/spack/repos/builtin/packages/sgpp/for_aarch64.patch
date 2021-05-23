@@ -1,0 +1,49 @@
+--- spack-src/SConstruct.bak	2020-03-24 03:25:47.000000000 +0900
++++ spack-src/SConstruct	2020-09-25 15:35:55.458303510 +0900
+@@ -106,7 +106,7 @@
+                     converter=Helper.multiParamPathConverter)
+ vars.Add("ARCH", "Set the architecture, the possible values are compiler-dependent, " +
+                  "for COMPILER=gnu, e.g., the following values are possible: " +
+-                 "sse3, sse42, avx, fma4, avx2, avx512", "sse3")
++                 "sse3, sse42, avx, fma4, avx2, avx512", "aarch64")
+ vars.Add("COMPILER", "Set the compiler, \"gnu\" means using gcc with standard configuration, " +
+                      "the following values are possible: " +
+                      "gnu, clang, intel, openmpi, mpich, intel.mpi; " +
+--- spack-src/site_scons/SGppConfigure.py.bak	2020-03-24 03:25:47.000000000 +0900
++++ spack-src/site_scons/SGppConfigure.py	2020-09-25 15:25:30.168317321 +0900
+@@ -454,7 +454,7 @@
+   #     ensure you also compile with -fno-strict-aliasing"
+   config.env.Append(CPPFLAGS=allWarnings + [
+       "-fno-strict-aliasing",
+-      "-funroll-loops", "-mfpmath=sse"])
++      "-funroll-loops"])
+ 
+   # Mitigation for old Ubuntu (should probably be also applied to Debian?):
+   # Package 'libomp-dev' installs a symlink 'libgomp.so' to 'libomp.so' in /usr/lib/x86_64-linux.
+@@ -520,6 +520,8 @@
+     config.env.AppendUnique(CPPFLAGS=["-mavx512f"])
+     config.env.AppendUnique(CPPFLAGS=["-mavx512cd"])
+     config.env.AppendUnique(CPPFLAGS=["-mfma"])
++  elif config.env["ARCH"] == "aarch64":
++    config.env.AppendUnique(CPPFLAGS=[""])
+   else:
+     Helper.printErrorAndExit("You must specify a valid ARCH value for gnu.",
+                              "Available configurations are: sse3, sse42, avx, fma4, avx2, avx512")
+@@ -586,6 +588,8 @@
+     config.env.AppendUnique(CPPFLAGS=["-mavx512f"])
+     config.env.AppendUnique(CPPFLAGS=["-mavx512cd"])
+     config.env.AppendUnique(CPPFLAGS=["-mfma"])
++  elif config.env["ARCH"] == "aarch64":
++    config.env.AppendUnique(CPPFLAGS=[""])
+   else:
+     Helper.printErrorAndExit("You must specify a valid ARCH value for clang.",
+                              "Available configurations are: sse3, sse4.2, avx, fma4, avx2, avx512")
+@@ -639,6 +643,8 @@
+     config.env.AppendUnique(CPPFLAGS=["-mmic"])
+     config.env.AppendUnique(LINKFLAGS=["-mmic"])
+     config.env["CPPDEFINES"]["USEMIC"] = "1"
++  elif config.env["ARCH"] == "aarch64":
++    config.env.AppendUnique(CPPFLAGS=[""])
+   else:
+     Helper.printErrorAndExit("You must specify a valid ARCH value for intel.",
+                              "Available configurations are: sse3, sse4.2, avx, avx2, avx512, mic")

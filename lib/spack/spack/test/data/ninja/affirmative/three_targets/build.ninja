@@ -1,0 +1,6 @@
+# Tests that Spack detects a target if it is in the middle of a list
+
+rule cc
+  command = true
+
+build foo check bar: cc

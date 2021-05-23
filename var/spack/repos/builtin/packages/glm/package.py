@@ -1,46 +1,38 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Glm(Package):
+class Glm(CMakePackage):
     """OpenGL Mathematics (GLM) is a header only C++ mathematics library for
-       graphics software based on the OpenGL Shading Language (GLSL)
-       specification.
-
+    graphics software based on the OpenGL Shading Language (GLSL) specification
     """
 
     homepage = "https://github.com/g-truc/glm"
-    url = "https://github.com/g-truc/glm/archive/0.9.7.1.tar.gz"
+    url = "https://github.com/g-truc/glm/archive/0.9.9.8.tar.gz"
 
-    version('0.9.7.1', '61af6639cdf652d1cdd7117190afced8')
+    version('0.9.9.8', sha256='7d508ab72cb5d43227a3711420f06ff99b0a0cb63ee2f93631b162bfe1fe9592')
+    version('0.9.7.1', sha256='285a0dc8f762b4e523c8710fbd97accaace0c61f45bc8be2bdb0deed07b0e6f3')
 
-    depends_on('cmake', type='build')
+    depends_on('cmake@2.6:', type='build')
+    depends_on('cmake@3.2:', type='build', when='@0.9.9.0:')
 
+    # CMake install target was removed in version 0.9.9.6
+    @when('@0.9.9.6:')
+    def cmake(self, spec, prefix):
+        pass
+
+    @when('@0.9.9.6:')
+    def build(self, spec, prefix):
+        pass
+
+    @when('@0.9.9.6:')
     def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('..', *std_cmake_args)
-            make()
-            make("install")
+        mkdirp(prefix.include.glm)
+        ignore_cmakelists = lambda p: p.endswith('CMakeLists.txt')
+        install_tree('glm', prefix.include.glm, ignore=ignore_cmakelists)
+        mkdirp(prefix.lib64.cmake)
+        install_tree('cmake', prefix.lib64.cmake)

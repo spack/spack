@@ -1,47 +1,28 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RVisnetwork(Package):
-    """Provides an R interface to the 'vis.js' JavaScript charting library. It
+class RVisnetwork(RPackage):
+    """Network Visualization using 'vis.js' Library
+
+    Provides an R interface to the 'vis.js' JavaScript charting library. It
     allows an interactive visualization of networks."""
 
     homepage = "https://github.com/datastorm-open/visNetwork"
-    url      = "https://cran.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/visNetwork"
+    url      = "https://cloud.r-project.org/src/contrib/visNetwork_1.0.1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/visNetwork"
 
-    version('1.0.1', 'dfc9664a5165134d8dbdcd949ad73cf7')
+    version('2.0.9', sha256='5e0b3dc3a91e66e0a359433f03cc856d04b981b0f9ad228d8fa9c96b7fcaa420')
+    version('2.0.7', sha256='15ad01636a3a19e1901be6743052805a5b6a9ac1240fb3dab765252b1e865128')
+    version('2.0.6', sha256='ec2478e6a2af446569ef2d5210a2bc6b2600bcb7fd9908cef8f8c80b01e9c8aa')
+    version('1.0.1', sha256='13aacf58d3bf9e78c7fb3af180062762bf22aec1777c829715c5b00396639a70')
 
-    extends('R')
-
-    depends_on('r-htmlwidgets', type=nolink)
-    depends_on('r-htmltools', type=nolink)
-    depends_on('r-jsonlite', type=nolink)
-    depends_on('r-magrittr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0:', type=('build', 'run'))
+    depends_on('r-htmlwidgets', type=('build', 'run'))
+    depends_on('r-htmltools', type=('build', 'run'))
+    depends_on('r-jsonlite', type=('build', 'run'))
+    depends_on('r-magrittr', type=('build', 'run'))

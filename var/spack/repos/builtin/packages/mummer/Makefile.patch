@@ -1,0 +1,24 @@
+--- a/Makefile	2017-05-15 17:33:05.132803923 -0700
++++ b/Makefile	2017-05-16 16:01:29.264842369 -0700
+@@ -35,6 +35,13 @@
+ TIGR_SRC_DIR  := $(TOP_DIR)/src/tigr
+ KURTZ_SRC_DIR := $(TOP_DIR)/src/kurtz
+ 
++ifndef INSTALL_TOP_DIR
++INSTALL_TOP_DIR     := $(TOP_DIR)
++endif
++INSTALL_BIN_DIR := $(INSTALL_TOP_DIR)/bin
++INSTALL_AUX_BIN_DIR := $(INSTALL_TOP_DIR)/aux_bin
++INSTALL_SCRIPT_DIR    := $(INSTALL_TOP_DIR)/scripts
++
+ CC   := $(filter /%,$(shell /bin/sh -c 'type gcc'))
+ CXX  := $(filter /%,$(shell /bin/sh -c 'type g++'))
+ SED  := $(filter /%,$(shell /bin/sh -c 'type sed'))
+@@ -52,6 +59,7 @@
+ 
+ #-- EXPORT THESE VARIABLES TO OTHER MAKEFILES
+ export BIN_DIR AUX_BIN_DIR CXX CC CFLAGS CXXFLAGS LDFLAGS
++export INSTALL_BIN_DIR INSTALL_AUX_BIN_DIR INSTALL_SCRIPT_DIR
+ 
+ 
+ 

@@ -1,0 +1,53 @@
+--- a/Src/configure	2017-11-23 12:42:40.909339915 +0100
++++ b/Src/configure	2017-11-23 12:42:59.911416449 +0100
+@@ -6000,7 +6000,7 @@
+   withval="$with_netcdf"
+ 
+ fi;
+-if test x$with_netcdf != xno; then
++if test "x$with_netcdf" != xno; then
+ 
+ tw_netcdf_ok=no
+ ac_ext=${FC_SRCEXT-f}
+@@ -6069,7 +6069,7 @@
+   LIBS="$save_LIBS"
+ fi
+ if test $tw_netcdf_ok = yes; then
+-  DEFS="$DEFS CDF";NETCDF_INTERFACE="libnetcdf_f90.a"
++  DEFS="$DEFS CDF";
+ else
+   NETCDF_LIBS="";tw_netcdf_ok=no;if test ! -z "$with_netcdf"; then { { echo "$as_me:$LINENO: error: Could not find NetCDF library." >&5
+ echo "$as_me: error: Could not find NetCDF library." >&2;}
+--- a/Util/TBTrans_rep/Makefile	2017-12-08 09:49:02.307877000 +0100
++++ b/Util/TBTrans_rep/Makefile	2017-12-08 09:49:44.385288000 +0100
+@@ -14,7 +14,7 @@
+ # Please see note about Linear-Algebra libraries below
+ #
+ 
+-default: what tbtrans 
++default: what tbtrans_rep 
+ 
+ VPATH:=$(shell pwd)/../../Src
+ OBJDIR=Obj
+@@ -91,16 +91,16 @@
+                           "ARCH_MAKE=../$(ARCH_MAKE)" \
+                           "INCFLAGS=$(LINALG_INCFLAGS)" "FFLAGS=$(FFLAGS:$(IPO_FLAG)=)" $(LINALG))
+ 
+-tbtrans: FPPFLAGS+=$(DEFS_PREFIX) -DTBTRANS
+-tbtrans: DEFS+=$(DEFS_PREFIX) -DTBTRANS
+-tbtrans: $(MPI_INTERFACE) $(FDF) $(TBTOBJS) $(SYSOBJ) $(LINALG)
+-	$(FC) $(FFLAGS) $(LDFLAGS) -o tbtrans \
++tbtrans_rep: FPPFLAGS+=$(DEFS_PREFIX) -DTBTRANS
++tbtrans_rep: DEFS+=$(DEFS_PREFIX) -DTBTRANS
++tbtrans_rep: $(MPI_INTERFACE) $(FDF) $(TBTOBJS) $(SYSOBJ) $(LINALG)
++	$(FC) $(FFLAGS) $(LDFLAGS) -o tbtrans_rep \
+               $(TBTOBJS) $(MPI_INTERFACE)  \
+               $(FDF) $(LIBS) $(LINALG)  || echo "***Please see top of Makefile"
+ 
+ clean: 
+ 	@echo "==> Cleaning object, library, and executable files"
+-	rm -f tbtrans *.o *.a *.mod
++	rm -f tbtrans_rep *.o *.a *.mod
+ 	rm -rf ./fdf
+ 	rm -rf ./MPI
+ 	rm -rf ./Libs

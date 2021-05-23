@@ -1,97 +1,88 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import os
-import spack
 
+import pytest
+
+from llnl.util.filesystem import working_dir, touch, mkdirp
+
+import spack.repo
+import spack.config
+from spack.spec import Spec
+from spack.stage import Stage
 from spack.version import ver
-from spack.test.mock_repo import MockHgRepo
-from llnl.util.filesystem import *
-from spack.test.mock_packages_test import *
+from spack.fetch_strategy import HgFetchStrategy
+from spack.util.executable import which
 
 
-class HgFetchTest(MockPackagesTest):
-    """Tests fetching from a dummy hg repository."""
+pytestmark = pytest.mark.skipif(
+    not which('hg'), reason='requires mercurial to be installed')
 
-    def setUp(self):
-        """Create a hg repository with master and two other branches,
-           and one tag, so that we can experiment on it."""
-        super(HgFetchTest, self).setUp()
 
-        self.repo = MockHgRepo()
+@pytest.mark.parametrize("type_of_test", ['default', 'rev0'])
+@pytest.mark.parametrize("secure", [True, False])
+def test_fetch(
+        type_of_test,
+        secure,
+        mock_hg_repository,
+        config,
+        mutable_mock_repo
+):
+    """Tries to:
 
-        spec = Spec('hg-test')
-        spec.concretize()
-        self.pkg = spack.repo.get(spec, new=True)
+    1. Fetch the repo using a fetch strategy constructed with
+       supplied args (they depend on type_of_test).
+    2. Check if the test_file is in the checked out repository.
+    3. Assert that the repository is at the revision supplied.
+    4. Add and remove some files, then reset the repo, and
+       ensure it's all there again.
+    """
+    # Retrieve the right test parameters
+    t = mock_hg_repository.checks[type_of_test]
+    h = mock_hg_repository.hash
 
-    def tearDown(self):
-        """Destroy the stage space used by this test."""
-        super(HgFetchTest, self).tearDown()
-        self.repo.destroy()
+    # Construct the package under test
+    spec = Spec('hg-test')
+    spec.concretize()
+    pkg = spack.repo.get(spec)
+    pkg.versions[ver('hg')] = t.args
 
-    def try_fetch(self, rev, test_file, args):
-        """Tries to:
-           1. Fetch the repo using a fetch strategy constructed with
-              supplied args.
-           2. Check if the test_file is in the checked out repository.
-           3. Assert that the repository is at the revision supplied.
-           4. Add and remove some files, then reset the repo, and
-              ensure it's all there again.
-        """
-        self.pkg.versions[ver('hg')] = args
+    # Enter the stage directory and check some properties
+    with pkg.stage:
+        with spack.config.override('config:verify_ssl', secure):
+            pkg.do_stage()
 
-        with self.pkg.stage:
-            self.pkg.do_stage()
-            self.assertEqual(self.repo.get_rev(), rev)
+        with working_dir(pkg.stage.source_path):
+            assert h() == t.revision
 
-            file_path = join_path(self.pkg.stage.source_path, test_file)
-            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-            self.assertTrue(os.path.isfile(file_path))
+            file_path = os.path.join(pkg.stage.source_path, t.file)
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
             os.unlink(file_path)
-            self.assertFalse(os.path.isfile(file_path))
+            assert not os.path.isfile(file_path)
 
-            untracked = 'foobarbaz'
-            touch(untracked)
-            self.assertTrue(os.path.isfile(untracked))
-            self.pkg.do_restage()
-            self.assertFalse(os.path.isfile(untracked))
+            untracked_file = 'foobarbaz'
+            touch(untracked_file)
+            assert os.path.isfile(untracked_file)
+            pkg.do_restage()
+            assert not os.path.isfile(untracked_file)
 
-            self.assertTrue(os.path.isdir(self.pkg.stage.source_path))
-            self.assertTrue(os.path.isfile(file_path))
+            assert os.path.isdir(pkg.stage.source_path)
+            assert os.path.isfile(file_path)
 
-            self.assertEqual(self.repo.get_rev(), rev)
+            assert h() == t.revision
 
-    def test_fetch_default(self):
-        """Test a default hg checkout with no commit or tag specified."""
-        self.try_fetch(self.repo.r1, self.repo.r1_file, {
-            'hg': self.repo.path
-        })
 
-    def test_fetch_rev0(self):
-        """Test fetching a branch."""
-        self.try_fetch(self.repo.r0, self.repo.r0_file, {
-            'hg': self.repo.path,
-            'revision': self.repo.r0
-        })
+def test_hg_extra_fetch(tmpdir):
+    """Ensure a fetch after expanding is effectively a no-op."""
+    testpath = str(tmpdir)
+
+    fetcher = HgFetchStrategy(hg='file:///not-a-real-hg-repo')
+    with Stage(fetcher, path=testpath) as stage:
+        source_path = stage.source_path
+        mkdirp(source_path)
+        fetcher.fetch()

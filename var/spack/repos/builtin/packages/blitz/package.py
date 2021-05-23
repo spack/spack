@@ -1,40 +1,25 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Blitz(Package):
+class Blitz(AutotoolsPackage):
     """N-dimensional arrays for C++"""
     homepage = "http://github.com/blitzpp/blitz"
-    url      = "https://github.com/blitzpp/blitz/tarball/1.0.0"
+    url = "https://github.com/blitzpp/blitz/archive/1.0.2.tar.gz"
 
-    version('1.0.0', '9f040b9827fe22228a892603671a77af')
+    version('1.0.2', sha256='500db9c3b2617e1f03d0e548977aec10d36811ba1c43bb5ef250c0e3853ae1c2')
+    version('1.0.1', sha256='b62fc3f07b64b264307b01fec5e4f2793e09a68dcb5378984aedbc2e4b3adcef')
+    version('1.0.0', sha256='79c06ea9a0585ba0e290c8140300e3ad19491c45c1d90feb52819abc3b58a0c1')
 
-    # No dependencies
+    depends_on('python@:2.7.999', type='build', when='@:1.0.1')
+    depends_on('python@3:', type='build', when='@1.0.2:')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+    build_targets = ['lib']
+
+    def check(self):
+        make('check-testsuite')
+        make('check-examples')

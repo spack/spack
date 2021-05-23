@@ -1,39 +1,22 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Meep(Package):
+class Meep(AutotoolsPackage):
     """Meep (or MEEP) is a free finite-difference time-domain (FDTD) simulation
     software package developed at MIT to model electromagnetic systems."""
 
     homepage = "http://ab-initio.mit.edu/wiki/index.php/Meep"
+    url      = "http://ab-initio.mit.edu/meep/meep-1.3.tar.gz"
+    list_url = "http://ab-initio.mit.edu/meep/old"
 
-    version('1.3',   '18a5b9e18008627a0411087e0bb60db5')
-    version('1.2.1', '9be2e743c3a832ae922de9d955d016c5')
-    version('1.1.1', '415e0cd312b6caa22b5dd612490e1ccf')
+    version('1.3',   sha256='564c1ff1b413a3487cf81048a45deabfdac4243a1a37ce743f4fcf0c055fd438')
+    version('1.2.1', sha256='f1f0683e5688d231f7dd1863939677148fc27a6744c03510e030c85d6c518ea5')
+    version('1.1.1', sha256='7a97b5555da1f9ea2ec6eed5c45bd97bcd6ddbd54bdfc181f46c696dffc169f2')
 
     variant('blas',    default=True, description='Enable BLAS support')
     variant('lapack',  default=True, description='Enable LAPACK support')
@@ -54,16 +37,10 @@ class Meep(Package):
     depends_on('hdf5+mpi',    when='+hdf5+mpi')
     depends_on('gsl',         when='+gsl')
 
-    def url_for_version(self, version):
-        base_url = "http://ab-initio.mit.edu/meep"
-        if version > Version('1.1.1'):
-            return "{0}/meep-{1}.tar.gz".format(base_url, version)
-        else:
-            return "{0}/old/meep-{1}.tar.gz".format(base_url, version)
+    def configure_args(self):
+        spec = self.spec
 
-    def install(self, spec, prefix):
         config_args = [
-            '--prefix={0}'.format(prefix),
             '--enable-shared'
         ]
 
@@ -95,15 +72,14 @@ class Meep(Package):
         else:
             config_args.append('--without-hdf5')
 
-        configure(*config_args)
+        return config_args
 
-        make()
+    def check(self):
+        spec = self.spec
 
         # aniso_disp test fails unless installed with harminv
         # near2far test fails unless installed with gsl
-        if self.run_tests and '+harminv' in spec and '+gsl' in spec:
+        if '+harminv' in spec and '+gsl' in spec:
             # Most tests fail when run in parallel
             # 2D_convergence tests still fails to converge for unknown reasons
             make('check', parallel=False)
-
-        make('install')

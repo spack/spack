@@ -1,43 +1,60 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Gl2ps(Package):
+class Gl2ps(CMakePackage):
     """GL2PS is a C library providing high quality vector output for any
     OpenGL application."""
 
     homepage = "http://www.geuz.org/gl2ps/"
     url      = "http://geuz.org/gl2ps/src/gl2ps-1.3.9.tgz"
 
-    version('1.3.9', '377b2bcad62d528e7096e76358f41140')
+    version('1.4.0', sha256='03cb5e6dfcd87183f3b9ba3b22f04cd155096af81e52988cc37d8d8efe6cf1e2')
+    version('1.3.9', sha256='8a680bff120df8bcd78afac276cdc38041fed617f2721bade01213362bcc3640')
 
-    depends_on("libpng")
+    variant('png',  default=True, description='Enable PNG support')
+    variant('zlib', default=True, description='Enable compression using ZLIB')
+    variant('doc', default=False,
+            description='Generate documentation using pdflatex')
 
-    def install(self, spec, prefix):
-        cmake('.', *std_cmake_args)
+    depends_on('cmake@2.4:', type='build')
 
-        make()
-        make("install")
+    # X11 libraries:
+    depends_on('freeglut')
+    depends_on('gl')
+    depends_on('libice')
+    depends_on('libsm')
+    depends_on('libxau')
+    depends_on('libxdamage')
+    depends_on('libxdmcp')
+    depends_on('libxext')
+    depends_on('libxfixes')
+    depends_on('libxi')
+    depends_on('libxmu')
+    depends_on('libxt')
+    depends_on('libxxf86vm')
+    depends_on('libxcb')
+    depends_on('libdrm')
+    depends_on('expat')
+
+    depends_on('libpng', when='+png')
+    depends_on('zlib',   when='+zlib')
+    depends_on('texlive', type='build', when='+doc')
+
+    def variant_to_bool(self, variant):
+        return 'ON' if variant in self.spec else 'OFF'
+
+    def cmake_args(self):
+        options = [
+            self.define_from_variant('ENABLE_PNG', 'png'),
+            self.define_from_variant('ENABLE_ZLIB', 'zlib'),
+        ]
+        if '~doc' in self.spec:
+            # Make sure we don't look.
+            options.append('-DCMAKE_DISABLE_FIND_PACKAGE_LATEX:BOOL=ON')
+
+        return options

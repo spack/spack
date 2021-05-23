@@ -1,31 +1,12 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RBh(Package):
+class RBh(RPackage):
     """Boost provides free peer-reviewed portable C++ source libraries. A large
     part of Boost is provided as C++ template code which is resolved entirely
     at compile-time without linking. This package aims to provide the most
@@ -41,14 +22,11 @@ class RBh(Package):
     'pending' 'phoenix' 'preprocessor' 'random' 'range' 'smart_ptr' 'spirit'
     'tuple' 'type_trains' 'typeof' 'unordered' 'utility' 'uuid'."""
 
-    homepage = "https://cran.r-project.org/web/packages/BH/index.html"
-    url      = "https://cran.r-project.org/src/contrib/BH_1.60.0-2.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/BH"
+    homepage = "https://cloud.r-project.org/package=BH"
+    url      = "https://cloud.r-project.org/src/contrib/BH_1.65.0-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/BH"
 
-    version('1.60.0-2', 'b50fdc85285da05add4e9da664a2d551')
-
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    version('1.72.0-3', sha256='888ec1a3316bb69e1ba749b08ba7e0903ebc4742e3a185de8d148c13cddac8ab')
+    version('1.69.0-1', sha256='a0fd4364b7e368f09c56dec030823f52c16da0787580af7e4615eddeb99baca2')
+    version('1.65.0-1', sha256='82baa78afe8f1edc3c7e84e1c9924321047e14c1e990df9b848407baf3f7cb58')
+    version('1.60.0-2', sha256='e441aede925d760dc0142be77079ebd7a46f2392772b875cde6ca567dd49c48c')

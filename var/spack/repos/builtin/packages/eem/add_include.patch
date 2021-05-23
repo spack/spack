@@ -1,0 +1,22 @@
+diff -ruN eemParallel_1.0.1.org/src/utility/Date.cpp eemParallel_1.0.1/src/utility/Date.cpp
+--- eemParallel_1.0.1.org/src/utility/Date.cpp	2014-07-20 21:48:22.000000000 +0900
++++ eemParallel_1.0.1/src/utility/Date.cpp	2019-08-08 09:58:18.768020679 +0900
+@@ -7,6 +7,7 @@
+ #include <sys/types.h>
+ #include <iostream>
+ #include <sstream>
++#include <ctime>
+ #endif
+ 
+ #ifdef VC
+diff -ruN eemParallel_1.0.1.org/src/utility/MyFunc.cpp eemParallel_1.0.1/src/utility/MyFunc.cpp
+--- eemParallel_1.0.1.org/src/utility/MyFunc.cpp	2014-07-20 21:48:22.000000000 +0900
++++ eemParallel_1.0.1/src/utility/MyFunc.cpp	2019-08-08 09:57:58.945943754 +0900
+@@ -11,6 +11,7 @@
+ #include <iomanip>
+ #include <cmath>
+ #include <cassert>
++#include <random>
+ 
+ #include "HypergeometricDistributionImpl.h"
+ 

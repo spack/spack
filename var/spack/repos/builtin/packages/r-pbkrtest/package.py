@@ -1,49 +1,42 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RPbkrtest(Package):
-    """Test in mixed effects models. Attention is on mixed effects models as
-    implemented in the 'lme4' package. This package implements a parametric
-    bootstrap test and a Kenward Roger modification of F-tests for linear mixed
-    effects models and a parametric bootstrap test for generalized linear mixed
-    models."""
+class RPbkrtest(RPackage):
+    """Parametric Bootstrap, Kenward-Roger and Satterthwaite Based Methods for
+    Test in Mixed Models
+
+    Test in mixed effects models. Attention is on mixed effects models as
+    implemented in the 'lme4' package. For linear mixed models, this package
+    implements (1) a parametric bootstrap test, (2) a Kenward-Roger-typ
+    modification of F-tests for linear mixed effects models and (3) a
+    Satterthwaite-type modification of F-tests for linear mixed effects models.
+    The package also implements a parametric bootstrap test for generalized
+    linear mixed models.  The facilities of the package are documented in the
+    paper by Halehoh and Hojsgaard, (2012, <doi:10.18637/jss.v059.i09>).
+    Please see 'citation("pbkrtest")' for citation details."""
 
     homepage = "http://people.math.aau.dk/~sorenh/software/pbkrtest/"
-    url      = "https://cran.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/pbkrtest"
+    url      = "https://cloud.r-project.org/src/contrib/pbkrtest_0.4-6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/pbkrtest"
 
-    version('0.4-6', '0a7d9ff83b8d131af9b2335f35781ef9')
+    version('0.5-0.1', sha256='f56525488c6efe4a5cbf849bf9a82747041478605b166c29bad54e464e46f469')
+    version('0.4-7', sha256='5cbb03ad2b2468720a5a610a0ebda48ac08119a34fca77810a85f554225c23ea')
+    version('0.4-6', sha256='9d28b8916fea3ffec8d5958bb8c531279b1e273f21fdbeb2fcad6d7e300a9c01')
+    version('0.4-4', sha256='a685392ef3fca0ddc2254f6cc9bba6bc22b298fa823359fc4515e64e753abd31')
 
-    extends('R')
-
-    depends_on('r-lme4', type=nolink)
-    depends_on('r-matrix', type=nolink)
-    depends_on('r-mass', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.2:', type=('build', 'run'))
+    depends_on('r@3.2.3:', when='@0.4-6:', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-lme4@1.1.10:', type=('build', 'run'))
+    depends_on('r-broom', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-dplyr', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-magrittr', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-mass', type=('build', 'run'))
+    depends_on('r-matrix@1.2.3:', type=('build', 'run'))
+    depends_on('r-numderiv', when='@0.5-0.1:', type=('build', 'run'))
+    depends_on('r-knitr', when='@0.5-0.1:', type=('build', 'run'))

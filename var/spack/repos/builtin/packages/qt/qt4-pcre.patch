@@ -1,0 +1,16 @@
+diff -U5 -Nru qt-everywhere-opensource-src-4.8.6/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexJIT.h qt-everywhere-opensource-src-4.8.6.pcre/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexJIT.h
+--- qt-everywhere-opensource-src-4.8.6/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexJIT.h	2014-04-10 14:37:12.000000000 -0400
++++ qt-everywhere-opensource-src-4.8.6.pcre/src/3rdparty/javascriptcore/JavaScriptCore/yarr/RegexJIT.h	2016-08-29 15:30:02.216546252 -0400
+@@ -32,11 +32,11 @@
+ 
+ #include "MacroAssembler.h"
+ #include "RegexPattern.h"
+ #include <UString.h>
+ 
+-#include <pcre.h>
++#include <pcre/pcre.h>
+ struct JSRegExp; // temporary, remove when fallback is removed.
+ 
+ #if CPU(X86) && !COMPILER(MSVC)
+ #define YARR_CALL __attribute__ ((regparm (3)))
+ #else

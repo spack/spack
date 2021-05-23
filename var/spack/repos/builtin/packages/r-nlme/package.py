@@ -1,43 +1,28 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RNlme(Package):
-    """Fit and compare Gaussian linear and nonlinear mixed-effects models."""
+class RNlme(RPackage):
+    """Fit and compare Gaussian linear and nonlinear mixed-effects models
 
-    homepage = "https://cran.r-project.org/package=nlme"
-    url      = "https://cran.r-project.org/src/contrib/nlme_3.1-128.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/nlme"
+    Fit and compare Gaussian linear and nonlinear mixed-effects models."""
 
-    version('3.1-128', '3d75ae7380bf123761b95a073eb55008')
+    homepage = "https://cloud.r-project.org/package=nlme"
+    url      = "https://cloud.r-project.org/src/contrib/nlme_3.1-130.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/nlme"
 
-    extends('R')
+    version('3.1-151', sha256='a2c626bad68bf582663005170d1b9d844a10dca8efb13597f15ffb4b1fe886ca')
+    version('3.1-141', sha256='910046260a03d8f776ac7b0766b5adee91556829d0d8a70165b2c695ce038056')
+    version('3.1-139', sha256='0460fc69d85122177e7ef01bad665d56bcaf63d31bdbfdbdfdcba2c082085739')
+    version('3.1-131', sha256='79daa167eb9bc7d8dba506da4b24b5250665b051d4e0a51dfccbb0087fdb564c')
+    version('3.1-130', sha256='ec576bd906ef2e1c79b6a4382743d425846f63be2a43de1cce6aa397b40e290e')
 
-    depends_on('r-lattice', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.2:', when='@:3.1-131', type=('build', 'run'))
+    depends_on('r@3.3.0:', when='@3.1-131.1', type=('build', 'run'))
+    depends_on('r@3.4.0:', when='@3.1-135.5:', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@3.1-134:3.1-135', type=('build', 'run'))
+    depends_on('r-lattice', type=('build', 'run'))

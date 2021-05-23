@@ -1,41 +1,20 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class PyMako(Package):
+class PyMako(PythonPackage):
     """A super-fast templating language that borrows the best
        ideas from the existing templating languages."""
 
-    homepage = "https://pypi.python.org/pypi/mako"
-    url = "https://pypi.python.org/packages/source/M/Mako/Mako-1.0.1.tar.gz"
+    pypi = "Mako/Mako-1.0.1.tar.gz"
 
-    version('1.0.1', '9f0aafd177b039ef67b90ea350497a54')
+    version('1.1.4', sha256='17831f0b7087c313c0ffae2bcbbd3c1d5ba9eeac9c38f2eb7b50e8c99fe9d5ab')
+    version('1.0.4', sha256='fed99dbe4d0ddb27a33ee4910d8708aca9ef1fe854e668387a9ab9a90cbf9059')
+    version('1.0.1', sha256='45f0869febea59dab7efd256fb451c377cbb7947bef386ff0bb44627c31a8d1c')
 
     depends_on('py-setuptools', type='build')
-    extends('python')
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    depends_on('py-markupsafe@0.9.2:', type=('build', 'run'))

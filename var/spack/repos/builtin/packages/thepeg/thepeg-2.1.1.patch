@@ -1,0 +1,14 @@
+--- m4/rivet.m4.orig	2013-10-16 10:50:05.000000000 +0200
++++ m4/rivet.m4	2017-08-02 12:26:22.897894696 +0200
+@@ -33,10 +33,7 @@
+ else
+ 	AC_MSG_RESULT([$with_rivet])
+ 	RIVETINCLUDE="$( $with_rivet/bin/rivet-config --cppflags )"
+-	RIVETLIBS="-L$with_rivet/lib -R$with_rivet/lib -lRivet"
+-	if test "${host_cpu}" == "x86_64" -a -e $with_rivet/lib64/libRivet.so ; then
+-	  RIVETLIBS="-L$with_rivet/lib64 -R$with_rivet/lib64 -lRivet"
+-	fi
++        RIVETLIBS="$( $with_rivet/bin/rivet-config --libs ) -lYODA"
+ fi
+ 
+ if test "x$with_rivet" != "xno"; then

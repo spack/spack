@@ -1,46 +1,21 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Taskd(Package):
+class Taskd(CMakePackage):
     """TaskWarrior task synchronization daemon"""
-    # FIXME: add a proper url for your package's homepage here.
+
     homepage = "http://www.taskwarrior.org"
     url      = "http://taskwarrior.org/download/taskd-1.1.0.tar.gz"
 
-    version('1.1.0', 'ac855828c16f199bdbc45fbc227388d0')
+    version('1.1.0', sha256='7b8488e687971ae56729ff4e2e5209ff8806cf8cd57718bfd7e521be130621b4')
 
-    depends_on('cmake', type='build')
-    depends_on("libuuid")
-    depends_on("gnutls")
+    depends_on('uuid')
+    depends_on('gnutls')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
-        with working_dir('spack-build', create=True):
-            cmake('-DCMAKE_BUILD_TYPE=release',
-                  '..',
-                  *std_cmake_args)
-            make()
-            make("install")
+    conflicts('%gcc@:4.7')

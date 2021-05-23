@@ -1,0 +1,106 @@
+diff --git a/cmake/modules/CheckCompiler.cmake b/cmake/modules/CheckCompiler.cmake
+index 71f628f7f6..56d64fee43 100644
+--- a/cmake/modules/CheckCompiler.cmake
++++ b/cmake/modules/CheckCompiler.cmake
+@@ -130,10 +130,10 @@ if(cxx17)
+ endif()
+ if(root7)
+   if(cxx11)
+-    message(STATUS "ROOT7 interfaces require >= cxx14 which is disabled. Switching OFF root7 option")
+-    set(root7 OFF CACHE BOOL "" FORCE)
++    message(FATAL ERROR "ROOT 7 requires C++14 or higher")
++  elseif(NOT http)
++    set(http ON CACHE BOOL "(Enabled since it's needed by ROOT 7)" FORCE)
+   endif()
+-    set(http ON CACHE BOOL "" FORCE)
+ endif()
+ 
+ #---Check for libcxx option------------------------------------------------------------
+diff --git a/cmake/modules/RootBuildOptions.cmake b/cmake/modules/RootBuildOptions.cmake
+index f1e6237592..4406549367 100644
+--- a/cmake/modules/RootBuildOptions.cmake
++++ b/cmake/modules/RootBuildOptions.cmake
+@@ -156,6 +156,7 @@ ROOT_BUILD_OPTION(qt5web OFF "Enable support for Qt5 web-based display (requires
+ ROOT_BUILD_OPTION(r OFF "Enable support for R bindings (requires R, Rcpp, and RInside)")
+ ROOT_BUILD_OPTION(rfio OFF "Enable support for RFIO (Remote File IO) for CASTOR")
+ ROOT_BUILD_OPTION(roofit ON "Build RooFit advanced fitting package")
++ROOT_BUILD_OPTION(webui ON "Build Web-based UI components of ROOT (requires C++14 standard or higher)")
+ ROOT_BUILD_OPTION(root7 OFF "Build ROOT 7 components of ROOT (requires C++14 standard or higher)")
+ ROOT_BUILD_OPTION(rpath OFF "Link libraries with built-in RPATH (run-time search path)")
+ ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules")
+@@ -317,6 +318,17 @@ endforeach()
+ #---Apply root7 versus language------------------------------------------------------------------
+ if(cxx14 OR cxx17 OR cxx14_defval OR cxx17_defval)
+   set(root7_defvalue ON)
++else()
++  set(root7_defvalue OFF)
++  set(webui_defvalue OFF)
++endif()
++
++if(webui)
++  if(cxx11)
++    message(FATAL_ERROR "WebUI requires C++14 or higher")
++  elseif(NOT http)
++    set(http ON CACHE BOOL "(Enabled since it's needed by webui)" FORCE)
++  endif()
+ endif()
+ 
+ #---roottest option implies testing
+diff --git a/cmake/modules/SearchInstalledSoftware.cmake b/cmake/modules/SearchInstalledSoftware.cmake
+index 8273d5e382..7598ccaaeb 100644
+--- a/cmake/modules/SearchInstalledSoftware.cmake
++++ b/cmake/modules/SearchInstalledSoftware.cmake
+@@ -1599,14 +1599,16 @@ endif()
+ 
+ 
+ #------------------------------------------------------------------------------------
+-ExternalProject_Add(
+-   OPENUI5
+-   URL ${CMAKE_SOURCE_DIR}/net/http/openui5/openui5.tar.gz
+-   URL_HASH SHA256=32e50e3e8808295c67ecb7561ea9cd9beb76dd934263170fbbd05ff59b6d501d
+-   CONFIGURE_COMMAND ""
+-   BUILD_COMMAND ""
+-   INSTALL_COMMAND ""
+-   SOURCE_DIR ${CMAKE_BINARY_DIR}/etc/http/openui5dist)
++if(webui)
++  ExternalProject_Add(
++    OPENUI5
++    URL ${CMAKE_SOURCE_DIR}/net/http/openui5/openui5.tar.gz
++    URL_HASH SHA256=32e50e3e8808295c67ecb7561ea9cd9beb76dd934263170fbbd05ff59b6d501d
++    CONFIGURE_COMMAND ""
++    BUILD_COMMAND ""
++    INSTALL_COMMAND ""
++    SOURCE_DIR ${CMAKE_BINARY_DIR}/etc/http/openui5dist)
++endif()
+ 
+ #---Report removed options---------------------------------------------------
+ foreach(opt afs glite sapdb srp chirp ios)
+diff --git a/gui/CMakeLists.txt b/gui/CMakeLists.txt
+index 499c427180..38b73b29cd 100644
+--- a/gui/CMakeLists.txt
++++ b/gui/CMakeLists.txt
+@@ -6,7 +6,7 @@ add_subdirectory(guihtml)
+ add_subdirectory(recorder)
+ add_subdirectory(sessionviewer)
+ 
+-if(cxx14 OR cxx17 OR root7)
++if(webui)
+    add_subdirectory(webdisplay)
+    if(cefweb)
+       add_subdirectory(cefdisplay)
+@@ -15,11 +15,10 @@ if(cxx14 OR cxx17 OR root7)
+       add_subdirectory(qt5webdisplay)
+    endif()
+    add_subdirectory(webgui6)
+-endif()
+-
+-if(root7)
+-  add_subdirectory(canvaspainter)
+-  add_subdirectory(fitpanelv7)
++   if(root7)
++     add_subdirectory(canvaspainter)
++     add_subdirectory(fitpanelv7)
++   endif()
+ endif()
+ if(qtgsi)
+   add_subdirectory(qtgsi)

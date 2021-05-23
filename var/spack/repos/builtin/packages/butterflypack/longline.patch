@@ -1,0 +1,502 @@
+diff -u -r a/EXAMPLE/EMSURF_Module.f90 b/EXAMPLE/EMSURF_Module.f90
+--- a/EXAMPLE/EMSURF_Module.f90	2020-07-13 09:36:52.000000000 +0900
++++ b/EXAMPLE/EMSURF_Module.f90	2020-07-16 17:39:15.000000000 +0900
+@@ -1414,7 +1414,8 @@
+ 	quant%maxedgelength = 0
+ 	do edge=1,Maxedge
+ 		quant%maxedgelength = max(quant%maxedgelength,sqrt(sum(abs(quant%xyz(:,quant%info_unk(1,edge))-quant%xyz(:,quant%info_unk(2,edge)))**2)))
+-		if(sqrt(sum(abs(quant%xyz(:,quant%info_unk(1,edge))-quant%xyz(:,quant%info_unk(2,edge)))**2))>0.9d0)write(*,*)edge,sqrt(sum(abs(quant%xyz(:,quant%info_unk(1,edge))-quant%xyz(:,quant%info_unk(2,edge)))**2)),quant%info_unk(1,edge),quant%info_unk(2,edge),quant%xyz(:,quant%info_unk(1,edge)),quant%xyz(:,quant%info_unk(2,edge))
++		if(sqrt(sum(abs(quant%xyz(:,quant%info_unk(1,edge))-quant%xyz(:,quant%info_unk(2,edge)))**2))>0.9d0)write(*,*)edge,&
++		sqrt(sum(abs(quant%xyz(:,quant%info_unk(1,edge))-quant%xyz(:,quant%info_unk(2,edge)))**2)),quant%info_unk(1,edge),quant%info_unk(2,edge),quant%xyz(:,quant%info_unk(1,edge)),quant%xyz(:,quant%info_unk(2,edge))
+ 	end do
+ 
+ 
+diff -u -r a/SRC/BPACK_constr.f90 b/SRC/BPACK_constr.f90
+--- a/SRC/BPACK_constr.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_constr.f90	2020-07-17 14:25:38.000000000 +0900
+@@ -536,13 +536,13 @@
+ 						level_butterfly=ho_bf1%levels(level_c)%BP(ii)%LL(1)%matrices_block(1)%level_butterfly
+ 
+ 						t1=OMP_GET_WTIME()
+-						call BF_randomized(ho_bf1%levels(level_c)%BP(ii)%LL(1)%matrices_block(1)%pgno,level_butterfly,rank0_outter,rankrate_outter,ho_bf1%levels(level_c)%BP(ii)%LL(1)%matrices_block(1),ho_bf1%levels(level_c)%BP(ii),Bplus_block_MVP_Exact_dat,error,'Exact',option,stats,ptree,msh)
++						call BF_randomized(ho_bf1%levels(level_c)%BP(ii)%LL(1)%matrices_block(1)%pgno,&
++                                                        level_butterfly,rank0_outter,rankrate_outter,ho_bf1%levels(level_c)%BP(ii)%LL(1)%matrices_block(1),ho_bf1%levels(level_c)%BP(ii),Bplus_block_MVP_Exact_dat,error,'Exact',option,stats,ptree,msh)
+ 
+ 						t2=OMP_GET_WTIME()
+ 						tim_tmp = tim_tmp + t2 - t1
+ 
+ 
+-						! call Bplus_randomized_constr(level_butterfly,ho_bf1%levels(level_c)%BP(ii),ho_bf1%levels(level_c)%BP(ii),rank0_inner,rankrate_inner,Bplus_block_MVP_Exact_dat,rank0_outter,rankrate_outter,Bplus_block_MVP_Outter_Exact_dat,error,'Exact',option,stats,ptree,msh)
+ 
+ 
+ 						if(ptree%MyID==Main_ID .and. option%verbosity>=0)write (*,*)'time_tmp',time_tmp,'randomized_bf time,', tim_tmp,'stats%Time_random,',stats%Time_random
+diff -u -r a/SRC/BPACK_defs.f90 b/SRC/BPACK_defs.f90
+--- a/SRC/BPACK_defs.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_defs.f90	2020-07-17 14:24:58.000000000 +0900
+@@ -245,7 +245,7 @@
+          ! integer data_type  ! the block data_type, need better documentation later
+ 		 ! integer nested_num ! depreciated
+ 		 integer,allocatable :: ipiv(:)	! permutation of the LU of the dense diagonal blocks
+-		 integer blockinfo_MPI(MPI_Header) ! high-level data extracted from the index message: 1. level 2. row_group 3. col_group 4. nested_num(depreciated) 5. style 6. prestyle(depreciated) 7. data_type(depreciated) 8. level_butterfly 9. length_Butterfly_index_MPI 10. length_Butterfly_data_MPI 11. memory (depreciated)
++		 integer blockinfo_MPI(MPI_Header)
+          integer length_Butterfly_index_MPI ! length of the index message, the first INDEX_Header integers are 1. decpreciated 2. rankmax 3. level_butterfly. 4. num_blocks
+          integer length_Butterfly_data_MPI ! length of the value message
+          DT,allocatable :: fullmat_MPI(:) ! massage for the dense blocks
+@@ -379,7 +379,7 @@
+ 		integer forwardN15flag ! 1 use N^1.5 algorithm. 0: use NlogN pseudo skeleton algorithm
+ 		real(kind=8) tol_comp      ! matrix construction tolerance
+ 		integer::Nmin_leaf ! leaf sizes of HODLR tree
+-		integer nogeo ! 1: no geometrical information available to hodlr, use NATUTAL or TM_GRAM clustering	0: geometrical points are available for TM or CKD clustering 2: no geometrical information available, but a user-defined distance function and compressibility function is provided. 3: no geometrical information available, but an array of knn*N indicating the knn neighbours of each element is provided
++		integer nogeo
+ 		integer xyzsort ! clustering methods given geometrical points: CKD: cartesian kd tree SKD: spherical kd tree (only for 3D points) TM: (2 mins no recursive)
+ 		integer::RecLR_leaf ! bottom level operations in a recursive merge-based LR compression: SVD, RRQR, ACA, BACA
+ 		real(kind=8):: near_para ! parameters used to determine whether two groups are nearfield or farfield pair
+diff -u -r a/SRC/BPACK_factor.f90 b/SRC/BPACK_factor.f90
+--- a/SRC/BPACK_factor.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_factor.f90	2020-07-16 17:41:25.000000000 +0900
+@@ -271,7 +271,8 @@
+ 			endif
+ 
+ 			if(stats%Add_random_CNT(level)+stats%Mul_random_CNT(level)+stats%XLUM_random_CNT(level)/=0)then
+-            write (*,'(A7,I5,A17,I5,A7,I8,Es10.2,A7,I8,Es10.2,A12,I8,Es10.2)') " level:",level,'level_butterfly:',level_butterfly,'add:',stats%Add_random_CNT(level),stats%Add_random_Time(level),'mul:',stats%Mul_random_CNT(level),stats%Mul_random_Time(level),'XLUM:',stats%XLUM_random_CNT(level),stats%XLUM_random_time(level)
++            write (*,'(A7,I5,A17,I5,A7,I8,Es10.2,A7,I8,Es10.2,A12,I8,Es10.2)') " level:",level,'level_butterfly:',level_butterfly,&
++                    'add:',stats%Add_random_CNT(level),stats%Add_random_Time(level),'mul:',stats%Mul_random_CNT(level),stats%Mul_random_Time(level),'XLUM:',stats%XLUM_random_CNT(level),stats%XLUM_random_time(level)
+ 			endif
+ 		enddo
+ 		! write(*,*)'max inverse butterfly rank:', butterflyrank_inverse
+diff -u -r a/SRC/BPACK_randomized.f90 b/SRC/BPACK_randomized.f90
+--- a/SRC/BPACK_randomized.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_randomized.f90	2020-07-16 17:43:00.000000000 +0900
+@@ -997,7 +997,8 @@
+ 			call Full_block_MVP_dat(block_rand(bb_inv-Bidxs+1),'N',idx_end_loc-idx_start_loc+1,num_vect,&
+ 			&RandomVectors_InOutput(1)%vector(idx_start_loc:idx_end_loc,1:num_vect),RandomVectors_InOutput(2)%vector(idx_start_loc:idx_end_loc,1:num_vect),cone,czero)
+ 		else
+-			call BF_block_MVP_twoforward_dat(ho_bf1,level_c,bb_inv,block_rand,'N',idx_end_loc-idx_start_loc+1,num_vect,RandomVectors_InOutput(1)%vector(idx_start_loc:idx_end_loc,1:num_vect),RandomVectors_InOutput(2)%vector(idx_start_loc:idx_end_loc,1:num_vect),cone,czero,ptree,stats)
++			call BF_block_MVP_twoforward_dat(ho_bf1,level_c,bb_inv,block_rand,'N',idx_end_loc-idx_start_loc+1,&
++                                num_vect,RandomVectors_InOutput(1)%vector(idx_start_loc:idx_end_loc,1:num_vect),RandomVectors_InOutput(2)%vector(idx_start_loc:idx_end_loc,1:num_vect),cone,czero,ptree,stats)
+ 		endif
+ 	end do
+ 
+@@ -1324,13 +1325,13 @@
+ 
+ 
+ !!!!!***** this subroutine is part of the randomized HODLR_BF.
+-! The difference between this subroutine and BF_Resolving_Butterfly_LL_dat is that this subroutine requires redistribution of RandVectIn and RandVectOut to match the data layout of block_rand(bb_inv*2-1-Bidxs+1) and block_rand(bb_inv*2-Bidxs+1). Therefore this subroutine reconstructs two neighbouring butterflies together.
+ subroutine BF_Resolving_Butterfly_LL_dat_twoforward(ho_bf1,level_c,num_vect_sub,nth_s,nth_e,Ng,level,Bidxs,bb_inv,block_rand,RandVectIn,RandVectOut,option,ptree,msh,stats)
+    use BPACK_DEFS
+    implicit none
+    integer level,level_c, ii, bb,bb_inv
+    DT :: RandVectIn(:,:),RandVectOut(:,:)
+-   DT,pointer :: mat1(:,:),mat2(:,:),mat(:,:),matQ1(:,:),matQ2(:,:),matQ(:,:),matQ2D(:,:),matQcA_trans1(:,:),matQcA_trans2(:,:),matQcA_trans(:,:),matQcA_trans2D(:,:),matQUt2D(:,:),UU(:,:),VV(:,:),mattemp(:,:),matOut1(:,:),matOut2(:,:),matOut(:,:),matIn1(:,:),matIn2(:,:),matIn(:,:)
++   DT,pointer :: mat1(:,:),mat2(:,:),mat(:,:),matQ1(:,:),matQ2(:,:),matQ(:,:),matQ2D(:,:),matQcA_trans1(:,:),matQcA_trans2(:,:),&
++           matQcA_trans(:,:),matQcA_trans2D(:,:),matQUt2D(:,:),UU(:,:),VV(:,:),mattemp(:,:),matOut1(:,:),matOut2(:,:),matOut(:,:),matIn1(:,:),matIn2(:,:),matIn(:,:)
+    type(matrixblock),pointer::block_o,block_inv,block_schur,block_off1,block_off2,block_off
+    integer groupn,groupm,mm(2),nn(2),ierr,nin1,nout1,nin2,nout2,offM(2),offN(2),offout1,offout2,rank
+    type(hobf)::ho_bf1
+@@ -1419,13 +1420,13 @@
+ 
+ 
+ !!!!!***** this subroutine is part of the randomized HODLR_BF.
+-! The difference between this subroutine and BF_Resolving_Butterfly_RR_dat is that this subroutine requires redistribution of RandVectIn and RandVectOut to match the data layout of block_rand(bb_inv*2-1-Bidxs+1) and block_rand(bb_inv*2-Bidxs+1). Therefore this subroutine reconstructs two neighbouring butterflies together.
+ subroutine BF_Resolving_Butterfly_RR_dat_twoforward(ho_bf1,level_c,num_vect_sub,nth_s,nth_e,Ng,level,Bidxs,bb_inv,block_rand,RandVectIn,RandVectOut,option,ptree,msh,stats)
+    use BPACK_DEFS
+    implicit none
+    integer level,level_c, ii, bb,bb_inv
+    DT :: RandVectIn(:,:),RandVectOut(:,:)
+-   DT,pointer :: mat1(:,:),mat2(:,:),mat(:,:),matQ1(:,:),matQ2(:,:),matQ(:,:),matQ2D(:,:),matQcA_trans1(:,:),matQcA_trans2(:,:),matQcA_trans(:,:),matQcA_trans2D(:,:),matQUt2D(:,:),UU(:,:),VV(:,:),mattemp(:,:),matOut1(:,:),matOut2(:,:),matOut(:,:),matIn1(:,:),matIn2(:,:),matIn(:,:)
++   DT,pointer :: mat1(:,:),mat2(:,:),mat(:,:),matQ1(:,:),matQ2(:,:),matQ(:,:),matQ2D(:,:),matQcA_trans1(:,:),matQcA_trans2(:,:),&
++           matQcA_trans(:,:),matQcA_trans2D(:,:),matQUt2D(:,:),UU(:,:),VV(:,:),mattemp(:,:),matOut1(:,:),matOut2(:,:),matOut(:,:),matIn1(:,:),matIn2(:,:),matIn(:,:)
+    type(matrixblock),pointer::block_o,block_inv,block_schur,block_off1,block_off2,block_off
+    integer groupn,groupm,mm(2),nn(2),ierr,nin1,nout1,nin2,nout2,offM(2),offN(2),offout1,offout2,rank
+    type(hobf)::ho_bf1
+diff -u -r a/SRC/BPACK_structure.f90 b/SRC/BPACK_structure.f90
+--- a/SRC/BPACK_structure.f90	2020-07-10 16:23:52.000000000 +0900
++++ b/SRC/BPACK_structure.f90	2020-07-17 14:22:48.000000000 +0900
+@@ -1612,7 +1612,6 @@
+ 				! do ll=1,ho_bf1%levels(level_c)%BP(ii)%Lplus
+ 				! ! write(*,*)ho_bf1%levels(level_c)%BP(ii)%LL(ll)%Nbound,'ddd'
+ 					! do bb = 1,ho_bf1%levels(level_c)%BP(ii)%LL(ll)%Nbound
+-						! write(177,'(I3,I7,I3,I3,'//TRIM(strings)//'Es16.7)')level_c,ii,ll,ho_bf1%levels(level_c)%BP(ii)%LL(ll)%matrices_block(bb)%level,msh%basis_group(ho_bf1%levels(level_c)%BP(ii)%LL(ll)%matrices_block(bb)%row_group)%center(1:dimn),msh%basis_group(ho_bf1%levels(level_c)%BP(ii)%LL(ll)%matrices_block(bb)%col_group)%center(1:dimn)
+ 					! end do
+ 				! end do
+ 				! ! end if
+diff -u -r a/SRC/Bplus_compress.f90 b/SRC/Bplus_compress.f90
+--- a/SRC/Bplus_compress.f90	2020-07-10 15:50:51.000000000 +0900
++++ b/SRC/Bplus_compress.f90	2020-07-16 17:47:42.000000000 +0900
+@@ -3399,7 +3399,8 @@
+ 	DT,allocatable:: UU(:,:), VV(:,:),matU(:,:),matV(:,:),matU1(:,:),matV1(:,:),matU2(:,:),matV2(:,:),tmp(:,:),matU1D(:,:),matV1D(:,:),Vin(:,:),Vout1(:,:),Vout2(:,:),Vinter(:,:),Fullmat(:,:),QQ1(:,:),matU2D(:,:),matV2D(:,:)
+ 	real(kind=8),allocatable::Singular(:)
+ 	integer nsproc1,nsproc2,nprow,npcol,nprow1D,npcol1D,myrow,mycol,nprow1,npcol1,myrow1,mycol1,nprow2,npcol2,myrow2,mycol2,myArows,myAcols,M1,N1,M2,N2,rank1,rank2,ierr
+-	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
++	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),&
++                descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
+ 	integer dims(6),dims_tmp(6) ! M1,N1,rank1,M2,N2,rank2
+ 	DT:: TEMP(1)
+ 	integer LWORK,mnmax,mnmin,rank_new
+@@ -3820,7 +3821,8 @@
+ 	DT,allocatable:: UU(:,:), VV(:,:),matU(:,:),matV(:,:),matU1(:,:),matV1(:,:),matU2(:,:),matV2(:,:),tmp(:,:),matU1D(:,:),matV1D(:,:),Vin(:,:),Vout1(:,:),Vout2(:,:),Vinter(:,:),Fullmat(:,:),QQ1(:,:),matU2D(:,:),matV2D(:,:)
+ 	real(kind=8),allocatable::Singular(:)
+ 	integer nsproc1,nsproc2,nprow,npcol,nprow1D,npcol1D,myrow,mycol,nprow1,npcol1,myrow1,mycol1,nprow2,npcol2,myrow2,mycol2,myArows,myAcols,M1,N1,M2,N2,rank1,rank2,ierr
+-	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
++	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),&
++                descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
+ 	integer dims(6),dims_tmp(6) ! M1,N1,rank1,M2,N2,rank2
+ 	DT:: TEMP(1)
+ 	integer LWORK,mnmax,mnmin,rank_new
+diff -u -r a/SRC/Bplus_factor.f90 b/SRC/Bplus_factor.f90
+--- a/SRC/Bplus_factor.f90	2020-07-10 15:50:51.000000000 +0900
++++ b/SRC/Bplus_factor.f90	2020-07-16 17:48:41.000000000 +0900
+@@ -309,7 +309,6 @@
+ 	allocate(matU(block_o%M_loc,rank))
+ 	matU = block_o%ButterflyU%blocks(1)%matrix
+ 
+-	! write(*,*)fnorm(block_o%ButterflyV%blocks(1)%matrix,size(block_o%ButterflyV%blocks(1)%matrix,1),size(block_o%ButterflyV%blocks(1)%matrix,2)),fnorm(block_o%ButterflyU%blocks(1)%matrix,size(block_o%ButterflyU%blocks(1)%matrix,1),size(block_o%ButterflyU%blocks(1)%matrix,2)),ptree%MyID,'re',shape(block_o%ButterflyV%blocks(1)%matrix),shape(block_o%ButterflyU%blocks(1)%matrix),shape(matrixtemp),isnanMat(block_o%ButterflyV%blocks(1)%matrix,size(block_o%ButterflyV%blocks(1)%matrix,1),size(block_o%ButterflyV%blocks(1)%matrix,2)),isnanMat(block_o%ButterflyU%blocks(1)%matrix,size(block_o%ButterflyU%blocks(1)%matrix,1),size(block_o%ButterflyU%blocks(1)%matrix,2))
+ 
+ 	call gemmf90(block_o%ButterflyV%blocks(1)%matrix,block_o%M_loc,block_o%ButterflyU%blocks(1)%matrix,block_o%M_loc,matrixtemp,rank,'T','N',rank,rank,block_o%M_loc,cone,czero,flop=flop)
+ 	stats%Flop_Factor = stats%Flop_Factor + flop
+@@ -1360,10 +1359,12 @@
+ 	type(grid),pointer::gd
+ 	type(grid),pointer::gdc1,gdc2
+ 	integer:: cridx,info
+-	DT,allocatable:: UU(:,:),UU1(:,:),UU2(:,:), VV(:,:),VV1(:,:),VV2(:,:),SS1(:,:),TT1(:,:),matU(:,:),matV(:,:),matU1(:,:),matV1(:,:),matU2(:,:),matV2(:,:),tmp(:,:),matU1D(:,:),matV1D(:,:),Vin(:,:),Vout1(:,:),Vout2(:,:),Vinter(:,:),Fullmat(:,:),QQ1(:,:),matU2D(:,:),matV2D(:,:)
++	DT,allocatable:: UU(:,:),UU1(:,:),UU2(:,:),VV(:,:),VV1(:,:),VV2(:,:),SS1(:,:),TT1(:,:),matU(:,:),matV(:,:),matU1(:,:),matV1(:,:),matU2(:,:),matV2(:,:),tmp(:,:),matU1D(:,:),matV1D(:,:),&
++                Vin(:,:),Vout1(:,:),Vout2(:,:),Vinter(:,:),Fullmat(:,:),QQ1(:,:),matU2D(:,:),matV2D(:,:)
+ 	real(kind=8),allocatable::Singular(:)
+ 	integer nsproc1,nsproc2,nprow,npcol,nprow1D,npcol1D,myrow,mycol,nprow1,npcol1,myrow1,mycol1,nprow2,npcol2,myrow2,mycol2,myArows,myAcols,M1,N1,M2,N2,rank1,rank2,ierr
+-	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
++	integer::descsmatU(9),descsmatV(9),descsmatU1(9),descsmatV1(9),descsmatU2(9),descsmatV2(9),descUU(9),descVV(9),descsmatU1c(9),descsmatU2c(9),descsmatV1c(9),descsmatV2c(9),&
++                descButterflyV(9),descButterflyU(9),descButterU1D(9),descButterV1D(9),descVin(9),descVout(9),descVinter(9),descFull(9)
+ 	integer dims(6),dims_tmp(6) ! M1,N1,rank1,M2,N2,rank2
+ 	DT:: TEMP(1)
+ 	integer LWORK,mnmax,mnmin,rank_new
+@@ -2363,7 +2364,8 @@
+ 			rank_new_max = max(rank_new_max,Bplus%LL(ll)%rankmax)
+ 		end do
+ 
+-		if(option%verbosity>=1 .and. ptree%myid==ptree%pgrp(Bplus%LL(1)%matrices_block(1)%pgno)%head)write(*,'(A10,I5,A6,I3,A8,I3,A11,Es14.7)')'Mult No. ',rowblock,' rank:',rank_new_max,' L_butt:',Bplus%LL(1)%matrices_block(1)%level_butterfly,' error:',error_inout
++		if(option%verbosity>=1 .and. ptree%myid==ptree%pgrp(Bplus%LL(1)%matrices_block(1)%pgno)%head)&
++                        write(*,'(A10,I5,A6,I3,A8,I3,A11,Es14.7)')'Mult No. ',rowblock,' rank:',rank_new_max,' L_butt:',Bplus%LL(1)%matrices_block(1)%level_butterfly,' error:',error_inout
+ 
+ 	endif
+ 
+diff -u -r a/SRC/Bplus_randomized.f90 b/SRC/Bplus_randomized.f90
+--- a/SRC/Bplus_randomized.f90	2020-07-10 15:50:51.000000000 +0900
++++ b/SRC/Bplus_randomized.f90	2020-07-16 17:49:25.000000000 +0900
+@@ -821,7 +821,8 @@
+ 		call MPI_ALLREDUCE(MPI_IN_PLACE, error_inout, 1,MPI_double_precision, MPI_MAX, ptree%pgrp(pgno_large)%Comm,ierr)
+ 		call MPI_ALLREDUCE(MPI_IN_PLACE, block_rand(1)%rankmax, 1,MPI_integer, MPI_MAX, ptree%pgrp(pgno_large)%Comm,ierr)
+ 
+-		if(ptree%MyID==ptree%pgrp(blocks_o%pgno)%head .and. option%verbosity>=2)write(*,'(A38,A6,I3,A8,I2,A8,I3,A7,Es14.7,A9,I5,A8,I5)')' '//TRIM(strings)//' ',' rank:',block_rand(1)%rankmax,' Ntrial:',tt,' L_butt:',block_rand(1)%level_butterfly,' error:',error_inout,' #sample:',rank_pre_max,' #nproc:',ptree%pgrp(block_rand(1)%pgno)%nproc
++		if(ptree%MyID==ptree%pgrp(blocks_o%pgno)%head .and. option%verbosity>=2)write(*,'(A38,A6,I3,A8,I2,A8,I3,A7,Es14.7,A9,I5,A8,I5)')' '//TRIM(strings)//' ','&
++                        rank:',block_rand(1)%rankmax,' Ntrial:',tt,' L_butt:',block_rand(1)%level_butterfly,' error:',error_inout,' #sample:',rank_pre_max,' #nproc:',ptree%pgrp(block_rand(1)%pgno)%nproc
+ 
+ 		!!!!*** terminate if 1. error small enough or 2. rank smaller than num_vec
+ 		if(error_inout>option%tol_rand .and. block_rand(1)%rankmax==rank_pre_max)then
+@@ -4379,7 +4380,8 @@
+ 			allocate(Bplus_randomized%LL(ll)%matrices_block(Bplus_randomized%LL(ll)%Nbound))
+ 
+ 			do bb =1,Bplus_randomized%LL(ll)%Nbound
+-				call BF_Init_randomized(Bplus%LL(ll)%matrices_block(bb)%level_butterfly,Bplus%LL(ll)%rankmax,Bplus%LL(ll)%matrices_block(bb)%row_group,Bplus%LL(ll)%matrices_block(bb)%col_group,Bplus%LL(ll)%matrices_block(bb),Bplus_randomized%LL(ll)%matrices_block(bb),msh,ptree,option,1)
++				call BF_Init_randomized(Bplus%LL(ll)%matrices_block(bb)%level_butterfly,Bplus%LL(ll)%rankmax,Bplus%LL(ll)%matrices_block(bb)%row_group,&
++                                        Bplus%LL(ll)%matrices_block(bb)%col_group,Bplus%LL(ll)%matrices_block(bb),Bplus_randomized%LL(ll)%matrices_block(bb),msh,ptree,option,1)
+ 			end do
+ 
+ 
+diff -u -r a/SRC/Bplus_utilities.f90 b/SRC/Bplus_utilities.f90
+--- a/SRC/Bplus_utilities.f90	2020-07-10 15:50:51.000000000 +0900
++++ b/SRC/Bplus_utilities.f90	2020-07-16 17:57:34.000000000 +0900
+@@ -1411,7 +1411,8 @@
+ 					allocate(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix(rank,dimension_n))
+ 					! call gemmNT_omp(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j-1)%matrix, block_i%ButterflyV%blocks(2*index_j-1)%matrix, &
+ 					! &block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank,dimension_n,nn)
+-					call gemmf90(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j-1)%matrix,rank, block_i%ButterflyV%blocks(2*index_j-1)%matrix,dimension_n, block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank, 'N','T',rank,dimension_n,nn,cone,czero)
++					call gemmf90(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j-1)%matrix,rank, block_i%ButterflyV%blocks(2*index_j-1)%matrix,dimension_n, &
++                                                block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j-1)%matrix,rank, 'N','T',rank,dimension_n,nn,cone,czero)
+ 
+ 
+ 
+@@ -1427,7 +1428,8 @@
+ 					allocate(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix(rank,dimension_n))
+ 					! call gemmNT_omp(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j)%matrix, block_i%ButterflyV%blocks(2*index_j)%matrix, &
+ 					! &block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,dimension_n,nn)
+-					call gemmf90(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j)%matrix,rank, block_i%ButterflyV%blocks(2*index_j)%matrix,dimension_n, block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank, 'N','T',rank,dimension_n,nn,cone,czero)
++					call gemmf90(block_i%ButterflyKerl(level)%blocks(index_i,2*index_j)%matrix,rank, block_i%ButterflyV%blocks(2*index_j)%matrix,dimension_n,&
++                                                block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank, 'N','T',rank,dimension_n,nn,cone,czero)
+ 
+ 					if(isnan(fnorm(block_o%ButterflyKerl(level_butterfly-level_butterfly_loc+level)%blocks(index_i+index_i_start,2*index_j)%matrix,rank,dimension_n)))then
+ 						write(*,*)'NAN in L 2'
+@@ -1494,7 +1496,8 @@
+ 					! call gemm_omp(block_i%ButterflyU%blocks(2*index_i-1)%matrix, block_i%ButterflyKerl(level)%blocks(2*index_i-1,index_j)%matrix,&
+ 					! &block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,dimension_m,rank,mm)
+ 
+-					call gemmf90(block_i%ButterflyU%blocks(2*index_i-1)%matrix,dimension_m,block_i%ButterflyKerl(level)%blocks(2*index_i-1,index_j)%matrix,mm,block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,dimension_m,'N','N',dimension_m,rank,mm,cone,czero)
++					call gemmf90(block_i%ButterflyU%blocks(2*index_i-1)%matrix,dimension_m,block_i%ButterflyKerl(level)%blocks(2*index_i-1,index_j)%matrix,mm,&
++                                                block_o%ButterflyKerl(level)%blocks(2*index_i-1,index_j+index_j_start)%matrix,dimension_m,'N','N',dimension_m,rank,mm,cone,czero)
+ 
+ ! write(*,*)'good 1.1'
+ 
+@@ -1510,7 +1513,8 @@
+ 					! call gemm_omp(block_i%ButterflyU%blocks(2*index_i)%matrix, block_i%ButterflyKerl(level)%blocks(2*index_i,index_j)%matrix,&
+ 					! &block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,rank,mm)
+ 
+-					call gemmf90(block_i%ButterflyU%blocks(2*index_i)%matrix,dimension_m,block_i%ButterflyKerl(level)%blocks(2*index_i,index_j)%matrix,mm,block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,'N','N',dimension_m,rank,mm,cone,czero)
++					call gemmf90(block_i%ButterflyU%blocks(2*index_i)%matrix,dimension_m,block_i%ButterflyKerl(level)%blocks(2*index_i,index_j)%matrix,mm,&
++                                                block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,'N','N',dimension_m,rank,mm,cone,czero)
+ 
+ ! write(*,*)'good 2'
+ 					if(isnan(fnorm(block_o%ButterflyKerl(level)%blocks(2*index_i,index_j+index_j_start)%matrix,dimension_m,rank)))then
+@@ -3018,7 +3022,8 @@
+ 		mode='C'
+ 	endif
+ 
+-	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
++	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or.&
++                (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
+ 
+ 
+ 	call GetLocalBlockRange(ptree,pgno_o,level_o,level_butterfly_o,idx_r,inc_r,nr,idx_c,inc_c,nc,mode)
+@@ -3562,7 +3567,8 @@
+ 		mode='C'
+ 	endif
+ 
+-	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
++	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or.&
++                (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
+ 
+ 
+ 	num_row=2**level_o
+@@ -3952,7 +3958,8 @@
+ 		mode='C'
+ 	endif
+ 
+-	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
++	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or.&
++                (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
+ 
+ 
+ 	call GetLocalBlockRange(ptree,pgno_o,level_o,level_butterfly_o,idx_r,inc_r,nr,idx_c,inc_c,nc,mode)
+@@ -4308,7 +4315,8 @@
+ 		level_c_o=level_butterfly_c_o+1
+ 	endif
+ 
+-	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
++	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or.&
++                (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
+ 
+ 
+ 	call GetLocalBlockRange(ptree,pgno_o,level_c_o,level_butterfly_c_o,idx_r,inc_r,nr,idx_c,inc_c,nc,mode)
+@@ -4705,7 +4713,8 @@
+ 		level_c_o=level_butterfly_c_o+1
+ 	endif
+ 
+-	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
++	call assert((ptree%pgrp(pgno_i)%head<=ptree%pgrp(pgno_o)%head .and. ptree%pgrp(pgno_i)%tail>=ptree%pgrp(pgno_o)%tail) .or. &
++        (ptree%pgrp(pgno_o)%head<=ptree%pgrp(pgno_i)%head .and. ptree%pgrp(pgno_o)%tail>=ptree%pgrp(pgno_i)%tail),'pgno_i or pgno_o should be contained in the other')
+ 
+ 
+ 	call GetLocalBlockRange(ptree,pgno_o,level_c_o,level_butterfly_c_o,idx_r,inc_r,nr,idx_c,inc_c,nc,mode)
+@@ -5211,7 +5220,8 @@
+ 					stats%Flop_Tmp = stats%Flop_Tmp + flops
+ 				else
+ 					flops=0
+-					!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,index_i_loc_s,index_i_loc_k, index_j_loc,index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++					!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,&
++					!$omp index_i_loc_s,index_i_loc_k, index_j_loc,index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 
+ 					do index_ij=1, nr*nc
+ 						index_j_loc = (index_ij-1)/nr+1
+@@ -5237,10 +5247,12 @@
+ 						allocate (BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix(mm,num_vectors))
+ 						BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 
+-						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn1,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn1,cone,cone,flop=flop)
++						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn1,&
++                                                        BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn1,cone,cone,flop=flop)
+ 						flops = flops + flop
+ 
+-						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc+1)%matrix,nn2,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn2,cone,cone,flop=flop)
++						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc+1)%matrix,nn2,&
++                                                        BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn2,cone,cone,flop=flop)
+ 						flops = flops + flop
+ 					enddo
+ 					!$omp end parallel do
+@@ -5367,7 +5379,8 @@
+ 								BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,&
++                                                                BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 
+ 							mm=size(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,1)
+@@ -5378,14 +5391,16 @@
+ 								BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,&
++                                                                BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 							enddo
+ 						enddo
+ 						!$omp end parallel do
+ 
+ 					else
+-						!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,index_i_loc_s,index_i_loc_k, index_j_loc,index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++						!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,index_i_loc_s,index_i_loc_k, &
++						!$omp index_j_loc,index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 						do index_ij=1, nr0*nc0
+ 							index_j_loc = (index_ij-1)/nr0+1       !index_i_loc is local index of column-wise ordering at current level
+ 							index_i_loc= mod(index_ij-1,nr0) + 1
+@@ -5410,7 +5425,8 @@
+ 								BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,&
++                                                                BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 
+ 							mm=size(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,1)
+@@ -5421,7 +5437,8 @@
+ 								BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn,&
++                                                                BFvec%vec(level+1)%blocks(index_i_loc_s+1,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 
+ 						enddo
+@@ -5546,7 +5563,8 @@
+ 					stats%Flop_Tmp = stats%Flop_Tmp + flops
+ 				else
+ 					flops=0
+-					!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++					!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,&
++					!$omp index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 					do index_ij=1, nr*nc
+ 						index_j_loc = (index_ij-1)/nr+1
+ 						index_i_loc= mod(index_ij-1,nr) + 1  !index_i_loc is local index of column-wise ordering at current level
+@@ -5570,9 +5588,11 @@
+ 						BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 
+ 
+-						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm1,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm1,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm1,cone,cone,flop=flop)
++						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm1,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm1,&
++                                                        BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm1,cone,cone,flop=flop)
+ 						flops = flops + flop
+-						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm2,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc+1,index_jj_loc)%matrix,mm2,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm2,cone,cone,flop=flop)
++						call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm2,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc+1,index_jj_loc)%matrix,mm2,&
++                                                        BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm2,cone,cone,flop=flop)
+ 						flops = flops + flop
+ 
+ 					enddo
+@@ -5676,7 +5696,8 @@
+ 
+ 					flops=0
+ 					if(nr0>1 .and. inc_r0==1)then ! this special treatment makes sure two threads do not write to the same address simultaneously
+-	!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,index_i_loc0,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++	!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,&
++	!$omp index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,index_i_loc0,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 						do index_ij=1, nr0*nc0/2
+ 						index_i_loc0 = (index_ij-1)/nc0+1
+ 						do ii=1,2
+@@ -5705,7 +5726,8 @@
+ 							endif
+ 							! !$omp end critical
+ 							! write(*,*)index_ii_loc,index_jj_loc,shape(BFvec%vec(level_butterfly-level+1)%blocks),index_i_loc_s,index_j_loc_s,shape(BFvec%vec(level_butterfly-level+2)%blocks),'lv:',level,shape(blocks%ButterflyKerl(level)%blocks)
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,&
++                                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 
+ 
+@@ -5717,13 +5739,15 @@
+ 								BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,&
++                                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 						enddo
+ 						enddo
+ 						!$omp end parallel do
+ 					else
+-	!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++	!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,&
++	!$omp index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 						do index_ij=1, nr0*nc0
+ 							index_j_loc = (index_ij-1)/nr0+1
+ 							index_i_loc= mod(index_ij-1,nr0) + 1  !index_i_loc is local index of row-wise ordering at current level
+@@ -5750,7 +5774,8 @@
+ 							endif
+ 							! !$omp end critical
+ 							! write(*,*)index_ii_loc,index_jj_loc,shape(BFvec%vec(level_butterfly-level+1)%blocks),index_i_loc_s,index_j_loc_s,shape(BFvec%vec(level_butterfly-level+2)%blocks),'lv:',level,shape(blocks%ButterflyKerl(level)%blocks)
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,&
++                                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 
+ 
+@@ -5762,7 +5787,8 @@
+ 								BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix=0
+ 							endif
+ 							! !$omp end critical
+-							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
++							call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm,&
++                                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s+1)%matrix,nn,'T','N',nn,num_vectors,mm,cone,cone,flop=flop)
+ 							flops = flops + flop
+ 						enddo
+ 						!$omp end parallel do
+@@ -5976,7 +6002,8 @@
+ 				stats%Flop_Tmp = stats%Flop_Tmp + flops
+ 			else
+ 				flops=0
+-				!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,index_i_loc_s,index_i_loc_k, index_j_loc,index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++				!$omp parallel do default(shared) private(index_ij,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc,index_i_loc_s,index_i_loc_k, index_j_loc,&
++				!$omp index_j_loc_s,index_j_loc_k,ij,ii,jj,kk,i,j,index_i,index_j,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 
+ 				do index_ij=1, nr*nc
+ 					index_j_loc = (index_ij-1)/nr+1
+@@ -6002,10 +6029,12 @@
+ 					allocate (BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix(mm,num_vectors))
+ 					BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 
+-					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn1,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn1,cone,cone,flop=flop)
++					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc)%matrix,nn1,&
++                                                BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn1,cone,cone,flop=flop)
+ 					flops = flops + flop
+ 
+-					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc+1)%matrix,nn2,BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn2,cone,cone,flop=flop)
++					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k+1)%matrix,mm,BFvec%vec(level)%blocks(index_ii_loc,index_jj_loc+1)%matrix,nn2,&
++                                                BFvec%vec(level+1)%blocks(index_i_loc_s,index_j_loc_s)%matrix,mm,'N','N',mm,num_vectors,nn2,cone,cone,flop=flop)
+ 					flops = flops + flop
+ 				enddo
+ 				!$omp end parallel do
+@@ -6112,7 +6141,8 @@
+ 				stats%Flop_Tmp = stats%Flop_Tmp + flops
+ 			else
+ 				flops=0
+-				!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
++				!$omp parallel do default(shared) private(index_ij,ii,jj,kk,ctemp,i,j,index_i,index_j,index_i_loc,index_j_loc,index_ii,index_jj,&
++				!$omp index_ii_loc,index_jj_loc,index_i_loc_s,index_j_loc_s,index_i_loc_k,index_j_loc_k,mm,mm1,mm2,nn,nn1,nn2,flop) reduction(+:flops)
+ 				do index_ij=1, nr*nc
+ 					index_j_loc = (index_ij-1)/nr+1
+ 					index_i_loc= mod(index_ij-1,nr) + 1  !index_i_loc is local index of column-wise ordering at current level
+@@ -6136,9 +6166,11 @@
+ 					BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix=0
+ 
+ 
+-					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm1,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm1,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm1,cone,cone,flop=flop)
++					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k,index_j_loc_k)%matrix,mm1,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc,index_jj_loc)%matrix,mm1,&
++                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm1,cone,cone,flop=flop)
+ 					flops = flops + flop
+-					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm2,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc+1,index_jj_loc)%matrix,mm2,BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm2,cone,cone,flop=flop)
++					call gemmf90(blocks%ButterflyKerl(level)%blocks(index_i_loc_k+1,index_j_loc_k)%matrix,mm2,BFvec%vec(level_butterfly-level+1)%blocks(index_ii_loc+1,index_jj_loc)%matrix,mm2,&
++                                                BFvec%vec(level_butterfly-level+2)%blocks(index_i_loc_s,index_j_loc_s)%matrix,nn,'T','N',nn,num_vectors,mm2,cone,cone,flop=flop)
+ 					flops = flops + flop
+ 
+ 				enddo

@@ -1,0 +1,19 @@
+*** launchmon-v1.0.2/launchmon/src/linux/lmon_api/lmon_coloc_spawner.cxx.orig	Wed Jul 31 10:44:44 2019
+--- launchmon-v1.0.2/launchmon/src/linux/lmon_api/lmon_coloc_spawner.cxx	Wed Jul 31 10:45:04 2019
+***************
+*** 122,128 ****
+        memcpy(lmonpl, (*iter).c_str(), (*iter).size() + 1);
+        lmonpl += (*iter).size() + 1;
+      }
+!   lmonpl = '\0'; /* ending null */
+  
+    if (write_lmonp_long_msg(m_be_master_sockfd, msg, msgsize) < 0)
+      {
+--- 122,128 ----
+        memcpy(lmonpl, (*iter).c_str(), (*iter).size() + 1);
+        lmonpl += (*iter).size() + 1;
+      }
+!   *lmonpl = '\0'; /* ending null */
+  
+    if (write_lmonp_long_msg(m_be_master_sockfd, msg, msgsize) < 0)
+      {

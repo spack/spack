@@ -1,32 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
 
-class HoomdBlue(Package):
+class HoomdBlue(CMakePackage):
     """HOOMD-blue is a general-purpose particle simulation toolkit. It scales
     from a single CPU core to thousands of GPUs.
 
@@ -36,28 +17,54 @@ class HoomdBlue(Package):
     to create custom initialization routines, control simulation parameters,
     and perform in situ analysis."""
 
-    homepage = "https://codeblue.umich.edu/hoomd-blue/index.html"
-    url      = "https://bitbucket.org/glotzer/hoomd-blue/get/v1.3.3.tar.bz2"
+    homepage = "http://glotzerlab.engin.umich.edu/hoomd-blue/"
+    git      = "https://bitbucket.org/glotzer/hoomd-blue.git"
 
-    version('1.3.3', '1469ef4531dc14b579c0acddbfe6a273')
+    version('develop', submodules=True)
 
-    variant('mpi',  default=True, description='Compile with MPI enabled')
-    variant('cuda', default=True, description='Compile with CUDA Toolkit')
-    variant('doc',  default=True, description='Generate documentation')
+    # Bitbucket has tarballs for each release, but they cannot be built.
+    # The tarball doesn't come with the git submodules, nor does it come
+    # with a .git directory, causing the build to fail. As a workaround,
+    # clone a specific tag from Bitbucket instead of using the tarballs.
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/238
+    version('2.2.2', tag='v2.2.2', submodules=True)
+    version('2.1.6', tag='v2.1.6', submodules=True)
+
+    variant('mpi',  default=True,  description='Compile with MPI enabled')
+    variant('cuda', default=True,  description='Compile with CUDA Toolkit')
+    variant('doc',  default=False, description='Generate documentation')
+
+    # HOOMD-blue requires C++11 support, which is only available in GCC 4.7+
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/238
+    # https://gcc.gnu.org/projects/cxx-status.html
+    conflicts('%gcc@:4.6')
+
+    # HOOMD-blue 2.1.6 uses hexadecimal floats, which are not technically
+    # part of the C++11 standard. GCC 6.0+ produces an error when this happens.
+    # https://bitbucket.org/glotzer/hoomd-blue/issues/239
+    # https://bugzilla.redhat.com/show_bug.cgi?id=1321986
+    conflicts('%gcc@6.0:', when='@2.1.6')
+
+    # HOOMD-blue GCC 7+ is not yet supported
+    conflicts('%gcc@7.0:')
 
     extends('python')
-    depends_on('py-numpy', type=nolink)
-    depends_on('boost+python')
-    depends_on('cmake', type='build')
+    depends_on('python@2.7:')
+    depends_on('py-numpy@1.7:', type=('build', 'run'))
+    depends_on('cmake@2.8.0:3.9.6', type='build')
+    depends_on('pkgconfig', type='build')
     depends_on('mpi', when='+mpi')
-    depends_on('cuda', when='+cuda')
-    depends_on('doxygen', when='+doc', type='build')
+    depends_on('cuda@7.0:', when='+cuda')
+    depends_on('doxygen@1.8.5:', when='+doc', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
+        spec = self.spec
+        install_dir = spec['python'].package.site_packages_dir
+        install_path = os.path.join(spec.prefix, install_dir)
 
         cmake_args = [
-            '-DPYTHON_EXECUTABLE=%s/python' % spec['python'].prefix.bin,
-            '-DBOOST_ROOT=%s'               % spec['boost'].prefix
+            '-DPYTHON_EXECUTABLE={0}'.format(spec['python'].command.path),
+            '-DCMAKE_INSTALL_PREFIX={0}'.format(install_path)
         ]
 
         # MPI support
@@ -90,9 +97,4 @@ class HoomdBlue(Package):
         else:
             cmake_args.append('-DENABLE_DOXYGEN=OFF')
 
-        cmake_args.extend(std_cmake_args)
-        cmake('.', *cmake_args)
-
-        make()
-        make("test")
-        make("install")
+        return cmake_args

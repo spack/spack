@@ -1,36 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack.compiler import *
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from typing import List  # novm
+
+import spack.compiler
 
 
-class Nag(Compiler):
+class Nag(spack.compiler.Compiler):
     # Subclasses use possible names of C compiler
-    cc_names = []
+    cc_names = []  # type: List[str]
 
     # Subclasses use possible names of C++ compiler
-    cxx_names = []
+    cxx_names = []  # type: List[str]
 
     # Subclasses use possible names of Fortran 77 compiler
     f77_names = ['nagfor']
@@ -38,7 +21,7 @@ class Nag(Compiler):
     # Subclasses use possible names of Fortran 90 compiler
     fc_names = ['nagfor']
 
-    # Named wrapper links within spack.build_env_path
+    # Named wrapper links within build_env_path
     # Use default wrappers for C and C++, in case provided in compilers.yaml
     link_paths = {
         'cc': 'cc',
@@ -46,9 +29,50 @@ class Nag(Compiler):
         'f77': 'nag/nagfor',
         'fc': 'nag/nagfor'}
 
+    version_argument = '-V'
+    version_regex = r'NAG Fortran Compiler Release ([0-9.]+)'
+
+    @property
+    def verbose_flag(self):
+        # NAG does not support a flag that would enable verbose output and
+        # compilation/linking at the same time (with either '-#' or '-dryrun'
+        # the compiler only prints the commands but does not run them).
+        # Therefore, the only thing we can do is to pass the '-v' argument to
+        # the underlying GCC. In order to get verbose output from the latter
+        # at both compile and linking stages, we need to call NAG with two
+        # additional flags: '-Wc,-v' and '-Wl,-v'. However, we return only
+        # '-Wl,-v' for the following reasons:
+        #   1) the interface of this method does not support multiple flags in
+        #      the return value and, at least currently, verbose output at the
+        #      linking stage has a higher priority for us;
+        #   2) NAG is usually mixed with GCC compiler, which also accepts
+        #      '-Wl,-v' and produces meaningful result with it: '-v' is passed
+        #      to the linker and the latter produces verbose output for the
+        #      linking stage ('-Wc,-v', however, would break the compilation
+        #      with a message from GCC that the flag is not recognized).
+        #
+        # This way, we at least enable the implicit rpath detection, which is
+        # based on compilation of a C file (see method
+        # spack.compiler._get_compiler_link_paths): in the case of a mixed
+        # NAG/GCC toolchain, the flag will be passed to g++ (e.g.
+        # 'g++ -Wl,-v ./main.c'), otherwise, the flag will be passed to nagfor
+        # (e.g. 'nagfor -Wl,-v ./main.c' - note that nagfor recognizes '.c'
+        # extension and treats the file accordingly). The list of detected
+        # rpaths will contain only GCC-related directories and rpaths to
+        # NAG-related directories are injected by nagfor anyway.
+        return "-Wl,-v"
+
     @property
     def openmp_flag(self):
         return "-openmp"
+
+    @property
+    def debug_flags(self):
+        return ['-g', '-gline', '-g90']
+
+    @property
+    def opt_flags(self):
+        return ['-O', '-O0', '-O1', '-O2', '-O3', '-O4']
 
     @property
     def cxx11_flag(self):
@@ -56,24 +80,35 @@ class Nag(Compiler):
         # However, it can be mixed with a compiler that does support it
         return "-std=c++11"
 
+    @property
+    def f77_pic_flag(self):
+        return "-PIC"
+
+    @property
+    def fc_pic_flag(self):
+        return "-PIC"
+
     # Unlike other compilers, the NAG compiler passes options to GCC, which
     # then passes them to the linker. Therefore, we need to doubly wrap the
     # options with '-Wl,-Wl,,'
     @property
     def f77_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
     @property
     def fc_rpath_arg(self):
-        return '-Wl,-Wl,,-rpath,'
+        return '-Wl,-Wl,,-rpath,,'
 
-    @classmethod
-    def default_version(self, comp):
-        """The '-V' option works for nag compilers.
-           Output looks like this::
+    @property
+    def linker_arg(self):
+        return '-Wl,-Wl,,'
 
-           NAG Fortran Compiler Release 6.0(Hibiya) Build 1037
-           Product NPL6A60NA for x86-64 Linux
-        """
-        return get_compiler_version(
-            comp, '-V', r'NAG Fortran Compiler Release ([0-9.]+)')
+    @property
+    def disable_new_dtags(self):
+        # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
+        return ''
+
+    @property
+    def enable_new_dtags(self):
+        # Disable RPATH/RUNPATH forcing for NAG/GCC mixed toolchains:
+        return ''

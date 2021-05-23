@@ -1,40 +1,17 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class LibpthreadStubs(Package):
+class LibpthreadStubs(AutotoolsPackage):
     """The libpthread-stubs package provides weak aliases for pthread
-       functions not provided in libc or otherwise available by
-       default. """
-    homepage = "http://xcb.freedesktop.org/"
-    url      = "http://xcb.freedesktop.org/dist/libpthread-stubs-0.1.tar.bz2"
+    functions not provided in libc or otherwise available by default."""
 
-    version('0.3', 'e8fa31b42e13f87e8f5a7a2b731db7ee')
+    homepage = "https://xcb.freedesktop.org/"
+    url      = "https://xcb.freedesktop.org/dist/libpthread-stubs-0.4.tar.gz"
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+    version('0.4', sha256='50d5686b79019ccea08bcbd7b02fe5a40634abcfd4146b6e75c6420cc170e9d9')
+    version('0.3', sha256='3031f466cf0b06de6b3ccbf2019d15c4fcf75229b7d226a711bc1885b3a82cde')

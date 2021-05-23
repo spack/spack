@@ -1,0 +1,12 @@
+diff --git a/src/stc/scintilla/src/Editor.cxx b/src/stc/scintilla/src/Editor.cxx
+index cd72953ae7..8c19154313 100644
+--- a/src/stc/scintilla/src/Editor.cxx
++++ b/src/stc/scintilla/src/Editor.cxx
+@@ -10,6 +10,7 @@
+ #include <stdio.h>
+ #include <ctype.h>
+ #include <assert.h>
++#include <math.h>
+
+ #include <string>
+ #include <vector>
