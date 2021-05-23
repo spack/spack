@@ -1,45 +1,50 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+import re
+
 from spack import *
 
 
-class Tar(Package):
+class Tar(AutotoolsPackage, GNUMirrorPackage):
     """GNU Tar provides the ability to create tar archives, as well as various
     other kinds of manipulation."""
+
     homepage = "https://www.gnu.org/software/tar/"
-    url      = "https://ftp.gnu.org/gnu/tar/tar-1.28.tar.gz"
+    gnu_mirror_path = "tar/tar-1.32.tar.gz"
 
-    version('1.29', 'cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')
-    version('1.28', '6ea3dbea1f2b0409b234048e021a9fd7')
+    executables = [r'^tar$']
 
-    # see http://lists.gnu.org/archive/html/bug-tar/2014-08/msg00001.html and
-    # https://github.com/Homebrew/homebrew-core/commit/aef9a1792de4648d0322b4b04d32287532f046bb
-    # TODO: when=sys.platform=='darwin' ?
+    version('1.34', sha256='03d908cf5768cfe6b7ad588c921c6ed21acabfb2b79b788d1330453507647aed')
+    version('1.32', sha256='b59549594d91d84ee00c99cf2541a3330fed3a42c440503326dab767f2fbb96c')
+    version('1.31', sha256='b471be6cb68fd13c4878297d856aebd50551646f4e3074906b1a74549c40d5a2')
+    version('1.30', sha256='4725cc2c2f5a274b12b39d1f78b3545ec9ebb06a6e48e8845e1995ac8513b088')
+    version('1.29', sha256='cae466e6e58c7292355e7080248f244db3a4cf755f33f4fa25ca7f9a7ed09af0')
+    version('1.28', sha256='6a6b65bac00a127a508533c604d5bf1a3d40f82707d56f20cefd38a05e8237de')
+
+    depends_on('iconv')
+
+    patch('tar-pgi.patch',    when='@1.29')
+    patch('config-pgi.patch', when='@:1.29')
+    patch('se-selinux.patch', when='@:1.29')
+    patch('argp-pgi.patch',   when='@:1.29')
     patch('gnutar-configure-xattrs.patch', when='@1.28')
+    # The NVIDIA compilers do not currently support some GNU builtins.
+    # Detect this case and use the fallback path.
+    patch('nvhpc-1.30.patch', when='@1.30:1.32 %nvhpc')
+    patch('nvhpc-1.34.patch', when='@1.34 %nvhpc')
+    # Workaround bug where __LONG_WIDTH__ is not defined
+    patch('nvhpc-long-width.patch', when='@1.34 %nvhpc')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
-        make()
-        make('install')
+    @classmethod
+    def determine_version(cls, exe):
+        output = Executable(exe)('--version', output=str, error=str)
+        match = re.search(r'tar \(GNU tar\) (\S+)', output)
+        return match.group(1) if match else None
+
+    def configure_args(self):
+        return [
+            '--with-libiconv-prefix={0}'.format(self.spec['iconv'].prefix),
+        ]

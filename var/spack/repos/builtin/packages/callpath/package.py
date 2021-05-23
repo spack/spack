@@ -1,49 +1,36 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Callpath(Package):
+class Callpath(CMakePackage):
     """Library for representing callpaths consistently in
        distributed-memory performance tools."""
 
     homepage = "https://github.com/llnl/callpath"
     url      = "https://github.com/llnl/callpath/archive/v1.0.1.tar.gz"
 
-    version('1.0.2', 'b1994d5ee7c7db9d27586fc2dcf8f373')
-    version('1.0.1', '0047983d2a52c5c335f8ba7f5bab2325')
+    version('1.0.4', sha256='4949974d60f18bb34e44e5a4e60032c39624dde5c3f16d557b3a6845eead4e2e')
+    version('1.0.2', sha256='cbe42bba8b9dda259dcbe7e16ebd7ecd005eabf7e9ccf169535b03110df75c84')
+    version('1.0.1', sha256='9bd9723126f80d0b518c28e5298ad0fa8d8dbc6a3f03fee5ae5449cf4c9a550f')
 
-    depends_on("libelf")
-    depends_on("libdwarf")
-    depends_on("dyninst")
-    depends_on("adept-utils")
-    depends_on("mpi")
-    depends_on('cmake', type='build')
+    depends_on('elf', type='link')
+    depends_on('libdwarf')
+    depends_on('dyninst')
+    depends_on('adept-utils')
+    depends_on('mpi')
+    depends_on('cmake@2.8:', type='build')
 
-    def install(self, spec, prefix):
+    def cmake_args(self):
         # TODO: offer options for the walker used.
-        cmake('.', "-DCALLPATH_WALKER=dyninst", *std_cmake_args)
-        make()
-        make("install")
+        args = ["-DCALLPATH_WALKER=dyninst"]
+
+        if self.spec.satisfies("^dyninst@9.3.0:"):
+            std_flag = self.compiler.cxx11_flag
+            args.append("-DCMAKE_CXX_FLAGS='{0} -fpermissive'".format(
+                std_flag))
+
+        return args

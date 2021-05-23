@@ -1,63 +1,49 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import os
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Lmdb(Package):
-    """Read-only mirror of official repo on openldap.org. Issues and
-    pull requests here are ignored. Use OpenLDAP ITS for issues.
-    http://www.openldap.org/software/repo.html"""
+class Lmdb(MakefilePackage):
+    """Symas LMDB is an extraordinarily fast, memory-efficient database we
+    developed for the Symas OpenLDAP Project. With memory-mapped files, it
+    has the read performance of a pure in-memory database while retaining
+    the persistence of standard disk-based databases."""
 
-    homepage = "http://www.openldap.org/software/repo.html"
-    url      = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.16.tar.gz"
+    homepage = "https://lmdb.tech/"
+    url      = "https://github.com/LMDB/lmdb/archive/LMDB_0.9.21.tar.gz"
 
-    version('0.9.16', '0de89730b8f3f5711c2b3a4ba517b648')
+    version('0.9.29', sha256='22054926b426c66d8f2bc22071365df6e35f3aacf19ad943bc6167d4cae3bebb')
+    version('0.9.24', sha256='44602436c52c29d4f301f55f6fd8115f945469b868348e3cddaf91ab2473ea26')
+    version('0.9.22', sha256='f3927859882eb608868c8c31586bb7eb84562a40a6bf5cc3e13b6b564641ea28')
+    version('0.9.21', sha256='1187b635a4cc415bb6972bba346121f81edd996e99b8f0816151d4090f90b559')
+    version('0.9.16', sha256='49d7b40949f2ced9bc8b23ea6a89e75471a1c9126537a8b268c318a00b84322b')
 
-    def install(self, spec, prefix):
-        os.chdir('libraries/liblmdb')
+    build_directory = 'libraries/liblmdb'
 
-        make()
+    @property
+    def build_targets(self):
+        return ['CC={0}'.format(spack_cc)]
 
-        mkdirp(prefix.bin)
-        mkdirp(prefix + '/man/man1')
-        mkdirp(prefix.lib)
-        mkdirp(prefix.include)
+    @property
+    def install_targets(self):
+        return ['prefix={0}'.format(self.prefix), 'install']
 
-        bins = ['mdb_stat', 'mdb_copy', 'mdb_dump', 'mdb_load']
-        for f in bins:
-            install(f, prefix.bin)
+    @run_after('install')
+    def install_pkgconfig(self):
+        mkdirp(self.prefix.lib.pkgconfig)
 
-        mans = ['mdb_stat.1', 'mdb_copy.1', 'mdb_dump.1', 'mdb_load.1']
-        for f in mans:
-            install(f, prefix + '/man/man1')
-
-        libs = ['liblmdb.a', 'liblmdb.so']
-        for f in libs:
-            install(f, prefix.lib)
-
-        includes = ['lmdb.h']
-        for f in includes:
-            install(f, prefix.include)
+        with open(join_path(self.prefix.lib.pkgconfig, 'lmdb.pc'), 'w') as f:
+            f.write('prefix={0}\n'.format(self.prefix))
+            f.write('exec_prefix=${prefix}\n')
+            f.write('libdir={0}\n'.format(self.prefix.lib))
+            f.write('includedir={0}\n'.format(self.prefix.include))
+            f.write('\n')
+            f.write('Name: LMDB\n')
+            f.write('Description: Symas LMDB is an extraordinarily fast, '
+                    'memory-efficient database.\n')
+            f.write('Version: {0}\n'.format(self.spec.version))
+            f.write('Cflags: -I${includedir}\n')
+            f.write('Libs: -L${libdir} -llmdb\n')

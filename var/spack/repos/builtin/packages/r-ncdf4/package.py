@@ -1,32 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RNcdf4(Package):
-    """Provides a high-level R interface to data files written using Unidata's
+class RNcdf4(RPackage):
+    """Interface to Unidata netCDF (Version 4 or Earlier) Format Data Files
+
+    Provides a high-level R interface to data files written using Unidata's
     netCDF library (version 4 or earlier), which are binary data files that are
     portable across platforms and include metadata information in addition to
     the data sets. Using this package, netCDF files (either version 4 or
@@ -42,15 +25,12 @@ class RNcdf4(Package):
     package does not provide an interface for netcdf version 4 files."""
 
     homepage = "http://cirrus.ucsd.edu/~pierce/ncdf"
-    url      = "https://cran.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/ncdf4"
+    url      = "https://cloud.r-project.org/src/contrib/ncdf4_1.15.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/ncdf4"
 
-    version('1.15', 'cd60dadbae3be31371e1ed40ddeb420a')
+    version('1.17', sha256='db95c4729d3187d1a56dfd019958216f442be6221bd15e23cd597e6129219af6')
+    version('1.16.1', sha256='0dde2d6d1e8474f4abd15a61af8a2f7de564f13da00f1a01d7a479ab88587a20')
+    version('1.16', sha256='edd5731a805bbece3a8f6132c87c356deafc272351e1dd07256ca00574949253')
+    version('1.15', sha256='d58298f4317c6c80a041a70216126492fd09ba8ecde9da09d5145ae26f324d4d')
 
-    extends('R')
-
-    depends_on('netcdf')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('netcdf-c@4.1:')

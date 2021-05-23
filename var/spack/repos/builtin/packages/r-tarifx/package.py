@@ -1,44 +1,23 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RTarifx(Package):
-    """A collection of various utility and convenience functions."""
+class RTarifx(RPackage):
+    """Collection of Utility and Convenience Functions
 
-    homepage = "https://cran.r-project.org/package=taRifx"
-    url      = "https://cran.r-project.org/src/contrib/taRifx_1.0.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/taRifx"
+    A collection of various utility and convenience functions."""
 
-    version('1.0.6', '7e782e04bd69d929b29f91553382e6a2')
+    homepage = "https://cloud.r-project.org/package=taRifx"
+    url      = "https://cloud.r-project.org/src/contrib/taRifx_1.0.6.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/taRifx"
 
-    extends('R')
+    version('1.0.6.2', sha256='89d031db00a94ae57c7ace0d9aa39ba2f960f96fd48d2d1e4c7ebb62a2969b15')
+    version('1.0.6.1', sha256='d4c832b26d476a395ddf8349c42613270023c8bbf52a274d280be6284c11d7e2')
+    version('1.0.6', sha256='3dc70ac9c828d904cbac9fc9465918cd58cb5e9e35e92fe0cf38f436a1017782')
 
-    depends_on('r-reshape2', type=nolink)
-    depends_on('r-plyr', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-plyr', type=('build', 'run'))

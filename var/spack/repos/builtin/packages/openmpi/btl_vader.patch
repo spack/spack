@@ -1,0 +1,24 @@
+diff --git a/opal/mca/btl/vader/btl_vader_fbox.h b/opal/mca/btl/vader/btl_vader_fbox.h
+index 17239ce8ef..ee5c913551 100644
+--- a/opal/mca/btl/vader/btl_vader_fbox.h
++++ b/opal/mca/btl/vader/btl_vader_fbox.h
+@@ -138,9 +138,6 @@ static inline bool mca_btl_vader_fbox_sendi (mca_btl_base_endpoint_t *ep, unsign
+         memcpy (data + header_size, payload, payload_size);
+     }
+ 
+-    /* write out part of the header now. the tag will be written when the data is available */
+-    mca_btl_vader_fbox_set_header (MCA_BTL_VADER_FBOX_HDR(dst), tag, ep->fbox_out.seq++, data_size);
+-
+     end += size;
+ 
+     if (OPAL_UNLIKELY(fbox_size == end)) {
+@@ -152,6 +149,9 @@ static inline bool mca_btl_vader_fbox_sendi (mca_btl_base_endpoint_t *ep, unsign
+         MCA_BTL_VADER_FBOX_HDR(ep->fbox_out.buffer + end)->ival = 0;
+     }
+ 
++    /* write out part of the header now. the tag will be written when the data is available */
++    mca_btl_vader_fbox_set_header (MCA_BTL_VADER_FBOX_HDR(dst), tag, ep->fbox_out.seq++, data_size);
++
+     /* align the buffer */
+     ep->fbox_out.end = ((uint32_t) hbs << 31) | end;
+     opal_atomic_wmb ();

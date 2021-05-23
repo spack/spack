@@ -1,45 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RJpeg(Package):
-    """This package provides an easy and simple way to read, write and display
+class RJpeg(RPackage):
+    """Read and write JPEG images
+
+    This package provides an easy and simple way to read, write and display
     bitmap images stored in the JPEG format. It can read and write both files
     and in-memory raw vectors."""
 
     homepage = "http://www.rforge.net/jpeg/"
-    url      = "https://cran.r-project.org/src/contrib/jpeg_0.1-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/jpeg"
+    url      = "https://cloud.r-project.org/src/contrib/jpeg_0.1-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/jpeg"
 
-    version('0.1-8', '696007451d14395b1ed1d0e9af667a57')
+    version('0.1-8.1', sha256='1db0a4976fd9b2ae27a37d3e856cca35bc2909323c7a40724846a5d3c18915a9')
+    version('0.1-8', sha256='d032befeb3a414cefdbf70ba29a6c01541c54387cc0a1a98a4022d86cbe60a16')
 
-    extends('R')
-
+    depends_on('r@2.9.0:', type=('build', 'run'))
     depends_on('jpeg')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)

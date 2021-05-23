@@ -1,44 +1,46 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
+import llnl.util.tty as tty
+import os
 
 
-class Libsodium(Package):
+class Libsodium(AutotoolsPackage):
     """Sodium is a modern, easy-to-use software library for encryption,
     decryption, signatures, password hashing and more."""
     homepage = "https://download.libsodium.org/doc/"
-    url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.3.tar.gz"
+    url      = "https://download.libsodium.org/libsodium/releases/libsodium-1.0.13.tar.gz"
+    list_url = "https://download.libsodium.org/libsodium/releases/old"
 
-    version('1.0.3', 'b3bcc98e34d3250f55ae196822307fab')
-    version('1.0.2', 'dc40eb23e293448c6fc908757738003f')
-    version('1.0.1', '9a221b49fba7281ceaaf5e278d0f4430')
-    version('1.0.0', '3093dabe4e038d09f0d150cef064b2f7')
-    version('0.7.1', 'c224fe3923d1dcfe418c65c8a7246316')
+    version('1.0.18', sha256='6f504490b342a4f8a4c4a02fc9b866cbef8622d5df4e5452b46be121e46636c1')
+    version('1.0.17', sha256='0cc3dae33e642cc187b5ceb467e0ad0e1b51dcba577de1190e9ffa17766ac2b1')
+    version('1.0.16', sha256='eeadc7e1e1bcef09680fb4837d448fbdf57224978f865ac1c16745868fbd0533')
+    version('1.0.15', sha256='fb6a9e879a2f674592e4328c5d9f79f082405ee4bb05cb6e679b90afe9e178f4')
+    version('1.0.13', sha256='9c13accb1a9e59ab3affde0e60ef9a2149ed4d6e8f99c93c7a5b97499ee323fd')
+    version('1.0.3', sha256='cbcfc63cc90c05d18a20f229a62c7e7054a73731d0aa858c0517152c549b1288')
+    version('1.0.2', sha256='961d8f10047f545ae658bcc73b8ab0bf2c312ac945968dd579d87c768e5baa19')
+    version('1.0.1', sha256='c3090887a4ef9e2d63af1c1e77f5d5a0656fadb5105ebb9fb66a302210cb3af5')
+    version('1.0.0', sha256='ced1fe3d2066953fea94f307a92f8ae41bf0643739a44309cbe43aa881dbc9a5')
+    version('0.7.1', sha256='ef46bbb5bac263ef6d3fc00ccc11d4690aea83643412919fe15369b9870280a7')
 
-    def install(self, spec, prefix):
-        configure("--prefix=%s" % prefix)
+    def url_for_version(self, version):
+        url = 'https://download.libsodium.org/libsodium/releases/'
+        if version < Version('1.0.16'):
+            url += 'old/unsupported/'
+        elif version < Version('1.0.17'):
+            url += 'old/'
+        return url + 'libsodium-{0}.tar.gz'.format(version)
 
-        make()
-        make("install")
+    def patch(self):
+        # Necessary on ppc64le / aarch64, because Spack tries to execute these scripts
+        # to check if they work (see lib/spack/spack/build_systems/autotools.py).
+        try:
+            os.chmod("build-aux/config.guess", 0o755)
+            os.chmod("build-aux/config.sub", 0o755)
+        except OSError:
+            # Old versions of libsodium don't have these files.
+            tty.debug("Couldn't chmod config.guess or config.sub: file not found")
+            pass

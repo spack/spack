@@ -1,0 +1,16 @@
+coverage:
+  precision: 2
+  round: nearest
+  range: 60...90
+  status:
+    project:
+      default:
+        threshold: 0.2%
+
+ignore:
+  - lib/spack/spack/test/.*
+  - lib/spack/docs/.*
+  - lib/spack/external/.*
+  - share/spack/qa/.*
+
+comment: off

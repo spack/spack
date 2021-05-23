@@ -1,0 +1,23 @@
+--- old/src/Makefile.spack
++++ new/src/Makefile.spack
+@@ -0,0 +1,20 @@
++# Set PREFIX to the install location for both building and installing
++
++all: valid xporta
++
++valid: common.lo arith.lo inout.lo log.lo valid.lo
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++
++xporta: common.lo arith.lo inout.lo log.lo				\
++		porta.lo four_mot.lo portsort.lo largecalc.lo mp.lo
++	libtool --mode=link --tag=CC cc -g -O3 -o $@ $^
++
++%.lo: %.c
++	libtool --mode=compile --tag=CC cc -g -O3 -c $*.c
++
++install:
++	mkdir -p $(PREFIX)/bin
++	libtool --mode=install cp valid $(PREFIX)/bin/valid
++	libtool --mode=install cp xporta $(PREFIX)/bin/xporta
++
++.PHONY: all install

@@ -1,0 +1,11 @@
+--- a/cmake/ecbuild_append_to_rpath.cmake
++++ b/cmake/ecbuild_append_to_rpath.cmake
+@@ -31,7 +31,7 @@ function( _path_append var path )
+ 	else()
+ 		list( FIND ${var} ${path} _found )
+ 		if( _found EQUAL "-1" )
+-			set( ${var} "${${var}}:${path}" PARENT_SCOPE )
++			set( ${var} "${${var}};${path}" PARENT_SCOPE )
+ 		endif()
+ 	endif()
+ endfunction()

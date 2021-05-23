@@ -1,0 +1,29 @@
+diff --git a/math/mathmore/inc/Math/QuantFuncMathMore.h b/math/mathmore/inc/Math/QuantFuncMathMore.h
+index fd6679c..03ccc03 100644
+--- a/math/mathmore/inc/Math/QuantFuncMathMore.h
++++ b/math/mathmore/inc/Math/QuantFuncMathMore.h
+@@ -25,17 +25,6 @@
+   **********************************************************************/
+ 
+ 
+-#if defined(__CINT__) && !defined(__MAKECINT__)
+-// avoid to include header file when using CINT
+-#ifndef _WIN32
+-#include "../lib/libMathMore.so"
+-#else
+-#include "../bin/libMathMore.dll"
+-#endif
+-
+-#else
+-
+-
+ #ifndef ROOT_Math_QuantFuncMathMore
+ #define ROOT_Math_QuantFuncMathMore
+ 
+@@ -190,5 +179,3 @@ namespace MathMore {
+ 
+ 
+ #endif // ROOT_Math_QuantFuncMathMore
+-
+-#endif // if defined (__CINT__) && !defined(__MAKECINT__)
+

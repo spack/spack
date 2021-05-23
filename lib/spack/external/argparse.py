@@ -1,25 +1,6 @@
-# argparse is (c) 2006-2009 Steven J. Bethard <steven.bethard@gmail.com>.
-#
-# The argparse module was contributed to Python as of Python 2.7 and thus
-# was licensed under the Python license. Same license applies to all files in
-# the argparse package project.
-#
-# For details about the Python License, please see doc/Python-License.txt.
-#
-# History
-# -------
-#
-# Before (and including) argparse 1.1, the argparse package was licensed under
-# Apache License v2.0.
-#
-# After argparse 1.1, all project files from the argparse project were deleted
-# due to license compatibility issues between Apache License 2.0 and GNU GPL v2.
-#
-# The project repository then had a clean start with some files taken from
-# Python 2.7.1, so definitely all files are under Python License now.
-#
 # Author: Steven J. Bethard <steven.bethard@gmail.com>.
-#
+# Maintainer: Thomas Waldmann <tw@waldmann-edv.de>
+
 """Command-line parsing library
 
 This module is an optparse-inspired command-line parsing library that:
@@ -81,7 +62,12 @@ considered public as object names -- the API of the formatter objects is
 still considered an implementation detail.)
 """
 
-__version__ = '1.2.1'
+__version__ = '1.4.0'  # we use our own version number independant of the
+                       # one in stdlib and we release this on pypi.
+
+__external_lib__ = True  # to make sure the tests really test THIS lib,
+                         # not the builtin one in Python stdlib
+
 __all__ = [
     'ArgumentParser',
     'ArgumentError',
@@ -370,8 +356,6 @@ class HelpFormatter(object):
                 pos_usage = format(positionals, groups)
                 opt_parts = _re.findall(part_regexp, opt_usage)
                 pos_parts = _re.findall(part_regexp, pos_usage)
-                assert ' '.join(opt_parts) == opt_usage
-                assert ' '.join(pos_parts) == pos_usage
 
                 # helper for wrapping lines
                 def get_lines(parts, indent, prefix=None):
@@ -1073,7 +1057,7 @@ class _SubParsersAction(Action):
                 metavar += ' (%s)' % ', '.join(aliases)
             sup = super(_SubParsersAction._ChoicesPseudoAction, self)
             sup.__init__(option_strings=[], dest=dest, help=help,
-                         metavar=metavar)
+                        metavar=metavar)
 
     def __init__(self,
                  option_strings,
@@ -1134,9 +1118,8 @@ class _SubParsersAction(Action):
         try:
             parser = self._name_parser_map[parser_name]
         except KeyError:
-            args = {'parser_name': parser_name,
-                    'choices': ', '.join(self._name_parser_map)}
-            msg = _('unknown parser %(parser_name)r (choices: %(choices)s)') % args
+            tup = parser_name, ', '.join(self._name_parser_map)
+            msg = _('unknown parser %r (choices: %s)' % tup)
             raise ArgumentError(self, msg)
 
         # parse all the remaining options into the namespace
@@ -1180,11 +1163,16 @@ class FileType(object):
                 msg = _('argument "-" with mode %r' % self._mode)
                 raise ValueError(msg)
 
-        # all other arguments are used as file names
-        if self._bufsize:
-            return open(string, self._mode, self._bufsize)
-        else:
-            return open(string, self._mode)
+        try:
+            # all other arguments are used as file names
+            if self._bufsize:
+                return open(string, self._mode, self._bufsize)
+            else:
+                return open(string, self._mode)
+        except IOError:
+            err = _sys.exc_info()[1]
+            message = _("can't open '%s': %s")
+            raise ArgumentTypeError(message % (string, err))
 
     def __repr__(self):
         args = [self._mode, self._bufsize]
@@ -1720,21 +1708,6 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
             self._positionals._add_action(action)
         return action
 
-
-    def get_subparser(self, name):
-        """Gets a subparser added with the supplied name.
-           This is an extension to the standard argparse API.
-        """
-        subpasrsers_actions = [
-            action for action in self._actions
-            if isinstance(action, _SubParsersAction)]
-        for action in subpasrsers_actions:
-            for choice, subparser in action.choices.items():
-                if choice == name:
-                    return subparser
-        return None
-
-
     def _get_optional_actions(self):
         return [action
                 for action in self._actions
@@ -1769,10 +1742,7 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
             if action.dest is not SUPPRESS:
                 if not hasattr(namespace, action.dest):
                     if action.default is not SUPPRESS:
-                        default = action.default
-                        if isinstance(action.default, basestring):
-                            default = self._get_value(action, default)
-                        setattr(namespace, action.dest, default)
+                        setattr(namespace, action.dest, action.default)
 
         # add any parser defaults that aren't present
         for dest in self._defaults:
@@ -2000,12 +1970,23 @@ class ArgumentParser(_AttributeHolder, _ActionsContainer):
         if positionals:
             self.error(_('too few arguments'))
 
-        # make sure all required actions were present
+        # make sure all required actions were present, and convert defaults.
         for action in self._actions:
-            if action.required:
-                if action not in seen_actions:
+            if action not in seen_actions:
+                if action.required:
                     name = _get_action_name(action)
                     self.error(_('argument %s is required') % name)
+                else:
+                    # Convert action default now instead of doing it before
+                    # parsing arguments to avoid calling convert functions
+                    # twice (which may fail) if the argument was given, but
+                    # only if it was defined already in the namespace
+                    if (action.default is not None and
+                            isinstance(action.default, basestring) and
+                            hasattr(namespace, action.dest) and
+                            action.default is getattr(namespace, action.dest)):
+                        setattr(namespace, action.dest,
+                                self._get_value(action, action.default))
 
         # make sure all required groups had one option present
         for group in self._mutually_exclusive_groups:

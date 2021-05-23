@@ -1,35 +1,16 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+import sys
 import os
 import re
+import shlex
 import subprocess
-import inspect
+from six import string_types, text_type
 
 import llnl.util.tty as tty
-import spack
+
 import spack.error
 
 __all__ = ['Executable', 'which', 'ProcessError']
@@ -39,116 +20,171 @@ class Executable(object):
     """Class representing a program that can be run on the command line."""
 
     def __init__(self, name):
-        self.exe = name.split(' ')
+        self.exe = shlex.split(str(name))
+        self.default_env = {}
+        from spack.util.environment import EnvironmentModifications  # no cycle
+        self.default_envmod = EnvironmentModifications()
         self.returncode = None
 
         if not self.exe:
             raise ProcessError("Cannot construct executable for '%s'" % name)
 
     def add_default_arg(self, arg):
+        """Add a default argument to the command."""
         self.exe.append(arg)
+
+    def add_default_env(self, key, value):
+        """Set an environment variable when the command is run.
+
+        Parameters:
+            key: The environment variable to set
+            value: The value to set it to
+        """
+        self.default_env[key] = value
+
+    def add_default_envmod(self, envmod):
+        """Set an EnvironmentModifications to use when the command is run."""
+        self.default_envmod.extend(envmod)
 
     @property
     def command(self):
+        """The command-line string.
+
+        Returns:
+            str: The executable and default arguments
+        """
         return ' '.join(self.exe)
+
+    @property
+    def name(self):
+        """The executable name.
+
+        Returns:
+            str: The basename of the executable
+        """
+        return os.path.basename(self.path)
+
+    @property
+    def path(self):
+        """The path to the executable.
+
+        Returns:
+            str: The path to the executable
+        """
+        return self.exe[0]
 
     def __call__(self, *args, **kwargs):
         """Run this executable in a subprocess.
 
-        Arguments
-          args
-            command line arguments to the executable to run.
+        Parameters:
+            *args (str): Command-line arguments to the executable to run
 
-        Optional arguments
+        Keyword Arguments:
+            _dump_env (dict): Dict to be set to the environment actually
+                used (envisaged for testing purposes only)
+            env (dict or EnvironmentModifications): The environment with which
+                to run the executable
+            extra_env (dict or EnvironmentModifications): Extra items to add to
+                the environment (neither requires nor precludes env)
+            fail_on_error (bool): Raise an exception if the subprocess returns
+                an error. Default is True. The return code is available as
+                ``exe.returncode``
+            ignore_errors (int or list): A list of error codes to ignore.
+                If these codes are returned, this process will not raise
+                an exception even if ``fail_on_error`` is set to ``True``
+            ignore_quotes (bool): If False, warn users that quotes are not needed
+                as Spack does not use a shell. Defaults to False.
+            input: Where to read stdin from
+            output: Where to send stdout
+            error: Where to send stderr
 
-          fail_on_error
+        Accepted values for input, output, and error:
 
-            Raise an exception if the subprocess returns an
-            error. Default is True.  When not set, the return code is
-            avaiale as `exe.returncode`.
+        * python streams, e.g. open Python file objects, or ``os.devnull``
+        * filenames, which will be automatically opened for writing
+        * ``str``, as in the Python string type. If you set these to ``str``,
+          output and error will be written to pipes and returned as a string.
+          If both ``output`` and ``error`` are set to ``str``, then one string
+          is returned containing output concatenated with error. Not valid
+          for ``input``
+        * ``str.split``, as in the ``split`` method of the Python string type.
+          Behaves the same as ``str``, except that value is also written to
+          ``stdout`` or ``stderr``.
 
-          ignore_errors
-
-            An optional list/tuple of error codes that can be
-            *ignored*.  i.e., if these codes are returned, this will
-            not raise an exception when `fail_on_error` is `True`.
-
-          output, error
-
-            These arguments allow you to specify new stdout and stderr
-            values.  They default to `None`, which means the
-            subprocess will inherit the parent's file descriptors.
-
-            You can set these to:
-            - python streams, e.g. open Python file objects, or os.devnull;
-            - filenames, which will be automatically opened for writing; or
-            - `str`, as in the Python string type. If you set these to `str`,
-               output and error will be written to pipes and returned as
-               a string.  If both `output` and `error` are set to `str`,
-               then one string is returned containing output concatenated
-               with error.
-
-          input
-
-            Same as output, error, but `str` is not an allowed value.
-
-        Deprecated arguments
-
-          return_output[=False]
-
-            Setting this to True is the same as setting output=str.
-            This argument may be removed in future Spack versions.
+        By default, the subprocess inherits the parent's file descriptors.
 
         """
-        fail_on_error = kwargs.pop("fail_on_error", True)
-        ignore_errors = kwargs.pop("ignore_errors", ())
+        # Environment
+        env_arg = kwargs.get('env', None)
 
-        env = kwargs.get('env', None)
+        # Setup default environment
+        env = os.environ.copy() if env_arg is None else {}
+        self.default_envmod.apply_modifications(env)
+        env.update(self.default_env)
 
-        # TODO: This is deprecated.  Remove in a future version.
-        return_output = kwargs.pop("return_output", False)
+        from spack.util.environment import EnvironmentModifications  # no cycle
+        # Apply env argument
+        if isinstance(env_arg, EnvironmentModifications):
+            env_arg.apply_modifications(env)
+        elif env_arg:
+            env.update(env_arg)
 
-        # Default values of None says to keep parent's file descriptors.
-        if return_output:
-            output = str
+        # Apply extra env
+        extra_env = kwargs.get('extra_env', {})
+        if isinstance(extra_env, EnvironmentModifications):
+            extra_env.apply_modifications(env)
         else:
-            output = kwargs.pop("output", None)
+            env.update(extra_env)
 
-        error = kwargs.pop("error", None)
-        input = kwargs.pop("input", None)
+        if '_dump_env' in kwargs:
+            kwargs['_dump_env'].clear()
+            kwargs['_dump_env'].update(env)
+
+        fail_on_error = kwargs.pop('fail_on_error', True)
+        ignore_errors = kwargs.pop('ignore_errors', ())
+        ignore_quotes = kwargs.pop('ignore_quotes', False)
+
+        # If they just want to ignore one error code, make it a tuple.
+        if isinstance(ignore_errors, int):
+            ignore_errors = (ignore_errors, )
+
+        input  = kwargs.pop('input',  None)
+        output = kwargs.pop('output', None)
+        error  = kwargs.pop('error',  None)
+
         if input is str:
-            raise ValueError("Cannot use `str` as input stream.")
+            raise ValueError('Cannot use `str` as input stream.')
 
         def streamify(arg, mode):
-            if isinstance(arg, basestring):
+            if isinstance(arg, string_types):
                 return open(arg, mode), True
-            elif arg is str:
+            elif arg in (str, str.split):
                 return subprocess.PIPE, False
             else:
                 return arg, False
 
         ostream, close_ostream = streamify(output, 'w')
-        estream, close_estream = streamify(error, 'w')
-        istream, close_istream = streamify(input, 'r')
+        estream, close_estream = streamify(error,  'w')
+        istream, close_istream = streamify(input,  'r')
 
-        # if they just want to ignore one error code, make it a tuple.
-        if isinstance(ignore_errors, int):
-            ignore_errors = (ignore_errors, )
-
-        quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
-        if quoted_args:
-            tty.warn(
-                "Quotes in command arguments can confuse scripts like"
-                " configure.",
-                "The following arguments may cause problems when executed:",
-                str("\n".join(["    " + arg for arg in quoted_args])),
-                "Quotes aren't needed because spack doesn't use a shell.",
-                "Consider removing them")
+        if not ignore_quotes:
+            quoted_args = [arg for arg in args if re.search(r'^"|^\'|"$|\'$', arg)]
+            if quoted_args:
+                tty.warn(
+                    "Quotes in command arguments can confuse scripts like"
+                    " configure.",
+                    "The following arguments may cause problems when executed:",
+                    str("\n".join(["    " + arg for arg in quoted_args])),
+                    "Quotes aren't needed because spack doesn't use a shell. "
+                    "Consider removing them.",
+                    "If multiple levels of quotation are required, use "
+                    "`ignore_quotes=True`.")
 
         cmd = self.exe + list(args)
 
         cmd_line = "'%s'" % "' '".join(
             map(lambda arg: arg.replace("'", "'\"'\"'"), cmd))
+
         tty.debug(cmd_line)
 
         try:
@@ -160,39 +196,55 @@ class Executable(object):
                 env=env)
             out, err = proc.communicate()
 
+            result = None
+            if output in (str, str.split) or error in (str, str.split):
+                result = ''
+                if output in (str, str.split):
+                    outstr = text_type(out.decode('utf-8'))
+                    result += outstr
+                    if output is str.split:
+                        sys.stdout.write(outstr)
+                if error in (str, str.split):
+                    errstr = text_type(err.decode('utf-8'))
+                    result += errstr
+                    if error is str.split:
+                        sys.stderr.write(errstr)
+
             rc = self.returncode = proc.returncode
             if fail_on_error and rc != 0 and (rc not in ignore_errors):
-                raise ProcessError("Command exited with status %d:" %
-                                   proc.returncode, cmd_line)
+                long_msg = cmd_line
+                if result:
+                    # If the output is not captured in the result, it will have
+                    # been stored either in the specified files (e.g. if
+                    # 'output' specifies a file) or written to the parent's
+                    # stdout/stderr (e.g. if 'output' is not specified)
+                    long_msg += '\n' + result
 
-            if output is str or error is str:
-                result = ''
-                if output is str:
-                    result += out
-                if error is str:
-                    result += err
-                return result
+                raise ProcessError('Command exited with status %d:' %
+                                   proc.returncode, long_msg)
 
-        except OSError, e:
+            return result
+
+        except OSError as e:
             raise ProcessError(
-                "%s: %s" % (self.exe[0], e.strerror), "Command: " + cmd_line)
+                '%s: %s' % (self.exe[0], e.strerror), 'Command: ' + cmd_line)
 
-        except subprocess.CalledProcessError, e:
+        except subprocess.CalledProcessError as e:
             if fail_on_error:
                 raise ProcessError(
-                    str(e), "\nExit status %d when invoking command: %s" %
+                    str(e), '\nExit status %d when invoking command: %s' %
                     (proc.returncode, cmd_line))
 
         finally:
             if close_ostream:
-                output.close()
+                ostream.close()
             if close_estream:
-                error.close()
+                estream.close()
             if close_istream:
-                input.close()
+                istream.close()
 
     def __eq__(self, other):
-        return self.exe == other.exe
+        return hasattr(other, 'exe') and self.exe == other.exe
 
     def __neq__(self, other):
         return not (self == other)
@@ -201,99 +253,61 @@ class Executable(object):
         return hash((type(self), ) + tuple(self.exe))
 
     def __repr__(self):
-        return "<exe: %s>" % self.exe
+        return '<exe: %s>' % self.exe
 
     def __str__(self):
         return ' '.join(self.exe)
 
 
-def which(name, **kwargs):
-    """Finds an executable in the path like command-line which."""
-    path = kwargs.get('path', os.environ.get('PATH', '').split(os.pathsep))
+def which_string(*args, **kwargs):
+    """Like ``which()``, but return a string instead of an ``Executable``."""
+    path = kwargs.get('path', os.environ.get('PATH', ''))
     required = kwargs.get('required', False)
 
-    if not path:
-        path = []
+    if isinstance(path, string_types):
+        path = path.split(os.pathsep)
 
-    for dir in path:
-        exe = os.path.join(dir, name)
-        if os.path.isfile(exe) and os.access(exe, os.X_OK):
-            return Executable(exe)
+    for name in args:
+        if os.path.sep in name:
+            exe = os.path.abspath(name)
+            if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                return exe
+        else:
+            for directory in path:
+                exe = os.path.join(directory, name)
+                if os.path.isfile(exe) and os.access(exe, os.X_OK):
+                    return exe
 
     if required:
-        tty.die("spack requires %s.  Make sure it is in your path." % name)
+        raise CommandNotFoundError(
+            "spack requires '%s'. Make sure it is in your path." % args[0])
+
     return None
 
 
-class ProcessError(spack.error.SpackError):
+def which(*args, **kwargs):
+    """Finds an executable in the path like command-line which.
 
-    def __init__(self, msg, long_message=None):
-        # These are used for detailed debugging information for
-        # package builds.  They're built up gradually as the exception
-        # propagates.
-        self.package_context = _get_package_context()
-        self.build_log = None
+    If given multiple executables, returns the first one that is found.
+    If no executables are found, returns None.
 
-        super(ProcessError, self).__init__(msg, long_message)
+    Parameters:
+        *args (str): One or more executables to search for
 
-    @property
-    def long_message(self):
-        msg = self._long_message
-        if msg:
-            msg += "\n\n"
+    Keyword Arguments:
+        path (:func:`list` or str): The path to search. Defaults to ``PATH``
+        required (bool): If set to True, raise an error if executable not found
 
-        if self.build_log:
-            msg += "See build log for details:\n"
-            msg += "  %s" % self.build_log
-
-        if self.package_context:
-            if msg:
-                msg += "\n\n"
-            msg += '\n'.join(self.package_context)
-
-        return msg
-
-
-def _get_package_context():
-    """Return some context for an error message when the build fails.
-
-    This should be called within a ProcessError when the exception is
-    thrown.
-
-    Args:
-    process_error -- A ProcessError raised during install()
-
-    This function inspects the stack to find where we failed in the
-    package file, and it adds detailed context to the long_message
-    from there.
-
+    Returns:
+        Executable: The first executable that is found in the path
     """
-    lines = []
+    exe = which_string(*args, **kwargs)
+    return Executable(exe) if exe else None
 
-    # Walk up the stack
-    for f in inspect.stack():
-        frame = f[0]
 
-        # Find a frame with 'self' in the local variables.
-        if 'self' not in frame.f_locals:
-            continue
+class ProcessError(spack.error.SpackError):
+    """ProcessErrors are raised when Executables exit with an error code."""
 
-        # Look only at a frame in a subclass of spack.Package
-        obj = frame.f_locals['self']
-        if type(obj) != spack.Package and isinstance(obj, spack.Package):
-            break
-    else:
-        # Didn't find anything
-        return lines
 
-    # Build a message showing where in install we failed.
-    lines.append("%s:%d, in %s:" % (
-        inspect.getfile(frame.f_code), frame.f_lineno, frame.f_code.co_name
-    ))
-
-    sourcelines, start = inspect.getsourcelines(frame)
-    for i, line in enumerate(sourcelines):
-        mark = ">> " if start + i == frame.f_lineno else "   "
-        lines.append("  %s%-5d%s" % (mark, start + i, line.rstrip()))
-
-    return lines
+class CommandNotFoundError(spack.error.SpackError):
+    """Raised when ``which()`` can't find a required executable."""

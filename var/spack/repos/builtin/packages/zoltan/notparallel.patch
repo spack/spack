@@ -1,0 +1,23 @@
+--- a/src/Makefile.in	2013-10-28 14:05:33.000000000 -0600
++++ b/src/Makefile.in	2019-01-23 17:18:00.419423207 -0700
+@@ -3858,6 +3858,9 @@
+ 
+ include $(top_builddir)/Makefile.export.zoltan
+ 
++
++@BUILD_ZOLTAN_F90_INTERFACE_TRUE@.NOTPARALLEL:
++
+ # Tell versions [3.59,3.63) of GNU make to not export all variables.
+ # Otherwise a system limit (for SysV at least) may be exceeded.
+ .NOEXPORT:
+--- a/src/fdriver/Makefile.in	2013-10-28 14:05:33.000000000 -0600
++++ b/src/fdriver/Makefile.in	2019-01-23 17:38:28.024843139 -0700
+@@ -683,6 +683,8 @@
+ 
+ include $(top_builddir)/Makefile.export.zoltan
+ 
++.NOTPARALLEL:
++
+ # Tell versions [3.59,3.63) of GNU make to not export all variables.
+ # Otherwise a system limit (for SysV at least) may be exceeded.
+ .NOEXPORT:

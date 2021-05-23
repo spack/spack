@@ -1,0 +1,13 @@
+--- spack-src/tools/seismic_2D-tools/m_getopt.f90.org	2020-05-13 10:14:41.822006522 +0900
++++ spack-src/tools/seismic_2D-tools/m_getopt.f90	2020-05-13 10:17:01.102690012 +0900
+@@ -80,7 +80,9 @@
+     character(256), allocatable :: argv(:)
+     integer :: i
+     character(256) :: optkey
+-    
++
++    integer, external :: iargc
++
+     narg = iargc()
+     allocate( argv(1:narg) )
+     

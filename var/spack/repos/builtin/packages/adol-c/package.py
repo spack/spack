@@ -1,86 +1,113 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class AdolC(Package):
+class AdolC(AutotoolsPackage):
     """A package for the automatic differentiation of first and higher
     derivatives of vector functions in C and C++ programs by operator
     overloading."""
-    homepage = "https://projects.coin-or.org/ADOL-C"
-    url      = "http://www.coin-or.org/download/source/ADOL-C/ADOL-C-2.6.1.tgz"
 
-    version('head',  svn='https://projects.coin-or.org/svn/ADOL-C/trunk/')
-    version('2.6.1', '1032b28427d6e399af4610e78c0f087b')
+    homepage = "https://github.com/coin-or/ADOL-C"
+    url      = "https://github.com/coin-or/ADOL-C/archive/releases/2.7.2.tar.gz"
+    git      = "https://github.com/coin-or/ADOL-C.git"
+    version('master',  branch='master')
+    version('2.7.2', sha256='701e0856baae91b98397960d5e0a87a549988de9d4002d0e9a56fa08f5455f6e')
+    version('2.7.1', sha256='a05422cc7faff5700e134e113822d1934fb540ad247e63778524d5d6d75bb0ef')
+    version('2.7.0', sha256='a75cfa6240de8692b2a3e8e782319efefc316f1e595234fcee972ab0e7afa3cd')
+    version('2.6.3', sha256='9750a0a06dcab9a0dba2010f07872ea9057ed29781e9e7d571691c27aa559b04')
+    version('2.6.2', sha256='4ef6ff15b4691235c0ea6580917c7eb17d09ded485ac524a0a33ac7e99ab004b')
+    version('2.6.1', sha256='48b41c40d1c8437fb98eeed4b24deaf3e59da804f34ac9c848da1b049b3b071a')
+    version('2.6.0', sha256='26a1fcb8561f15781f645d245fc345c83497147ec7bb64d4bfc96e32c34c6c1c')
+    version('2.5.2', sha256='390edb1513f749b2dbf6fb90db12ce786f6532af80e589f161ff43646b3a78a6')
+    version('2.5.1', sha256='dedb93c3bb291366d799014b04b6d1ec63ca4e7216edf16167776c07961e3b4a')
+    version('2.5.0', sha256='9d51c426d831884aac8f418be410c001eb62f3a11cb8f30c66af0b842edffb96')
 
+    variant('advanced_branching', default=False,
+            description='Enable advanced branching to reduce retaping')
+    variant('atrig_erf', default=True,
+            description='Enable arc-trig and error functions')
     variant('doc',      default=True,  description='Install documentation')
     variant('openmp',   default=False, description='Enable OpenMP support')
     variant('sparse',   default=False, description='Enable sparse drivers')
-    variant('tests',    default=True,
-            description='Build all included examples as a test case')
+    variant('examples', default=True,  description='Install examples')
+    variant('boost',    default=False, description='Enable boost')
 
-    patch('openmp_exam.patch')
+    # Build dependencies
+    depends_on('automake', type='build', when='@develop')
+    depends_on('autoconf', type='build', when='@develop')
+    depends_on('libtool',  type='build', when='@develop')
+    depends_on('m4',       type='build', when='@develop')
 
-    def install(self, spec, prefix):
-        make_args = ['--prefix=%s' % prefix]
+    # Link dependencies
+    depends_on('boost+system', when='+boost')
 
-        # --with-cflags=FLAGS     use CFLAGS=FLAGS (default: -O3 -Wall -ansi)
-        # --with-cxxflags=FLAGS   use CXXFLAGS=FLAGS (default: -O3 -Wall)
+    # FIXME: add
+    #  --with-colpack=DIR      path to the colpack library and headers
+    #                       [default=system libraries]
+    #  --with-mpi-root=MPIROOT absolute path to the MPI root directory
+    #  --with-mpicc=MPICC      name of the MPI C++ compiler (default mpicc)
+    #  --with-mpicxx=MPICXX    name of the MPI C++ compiler (default mpicxx)
+    #  --with-ampi=AMPI_DIR    full path to the installation of adjoinable MPI
+    #                           (AMPI)
+
+    patch('openmp_exam_261.patch', when='@2.6.1')
+
+    def configure_args(self):
+        spec = self.spec
+
+        configure_args = []
+
+        if '+boost' in spec:
+            configure_args.append(
+                '--with-boost={0}'.format(spec['boost'].prefix)
+            )
+        else:
+            configure_args.append(
+                '--with-boost=no'
+            )
+
+        if '+advanced_branching' in spec:
+            configure_args.append(
+                '--enable-advanced-branching'
+            )
+
+        if '+atrig_erf' in spec:
+            configure_args.append(
+                '--enable-atrig-erf'
+            )
 
         if '+openmp' in spec:
-            if spec.satisfies('%gcc'):
-                make_args.extend([
-                    # FIXME: Is this required? -I <path to omp.h> -L <LLVM
-                    # OpenMP library path>
-                    '--with-openmp-flag=-fopenmp'
-                ])
-            else:
-                raise InstallError(
-                    "OpenMP flags for compilers other than GCC "
-                    "are not implemented.")
+            configure_args.append(
+                '--with-openmp-flag={0}'.format(self.compiler.openmp_flag)
+            )
 
         if '+sparse' in spec:
-            make_args.extend([
+            configure_args.append(
                 '--enable-sparse'
-            ])
+            )
 
         # We can simply use the bundled examples to check
         # whether Adol-C works as expected
-        if '+tests' in spec:
-            make_args.extend([
-                '--enable-docexa',  # Documeted examples
+        if '+examples' in spec:
+            configure_args.extend([
+                '--enable-docexa',  # Documented examples
                 '--enable-addexa'  # Additional examples
             ])
             if '+openmp' in spec:
-                make_args.extend([
+                configure_args.append(
                     '--enable-parexa'  # Parallel examples
-                ])
+                )
 
-        configure(*make_args)
-        make()
-        make("install")
+        return configure_args
+
+    @run_after('install')
+    def install_additional_files(self):
+        spec = self.spec
+        prefix = self.prefix
 
         # Copy the config.h file, as some packages might require it
         source_directory = self.stage.source_path
@@ -93,7 +120,7 @@ class AdolC(Package):
                          join_path(prefix.share, 'doc'))
 
         # Install examples to {prefix}/share
-        if '+tests' in spec:
+        if '+examples' in spec:
             install_tree(join_path('ADOL-C', 'examples'),
                          join_path(prefix.share, 'examples'))
 

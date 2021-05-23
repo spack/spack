@@ -1,52 +1,57 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 import re
 import os
 from itertools import product
 from spack.util.executable import which
 
 # Supported archive extensions.
-PRE_EXTS = ["tar"]
-EXTS     = ["gz", "bz2", "xz", "Z", "zip", "tgz"]
+PRE_EXTS   = ["tar", "TAR"]
+EXTS       = ["gz", "bz2", "xz", "Z"]
+NOTAR_EXTS = ["zip", "tgz", "tbz2", "txz"]
 
 # Add PRE_EXTS and EXTS last so that .tar.gz is matched *before* .tar or .gz
-ALLOWED_ARCHIVE_TYPES = [".".join(l) for l in product(
-    PRE_EXTS, EXTS)] + PRE_EXTS + EXTS
+ALLOWED_ARCHIVE_TYPES = [".".join(ext) for ext in product(
+    PRE_EXTS, EXTS)] + PRE_EXTS + EXTS + NOTAR_EXTS
 
 
 def allowed_archive(path):
     return any(path.endswith(t) for t in ALLOWED_ARCHIVE_TYPES)
 
 
-def decompressor_for(path):
+def _gunzip(archive_file):
+    """Like gunzip, but extracts in the current working directory
+    instead of in-place.
+
+    Args:
+        archive_file (str): absolute path of the file to be decompressed
+    """
+    import gzip
+    decompressed_file = os.path.basename(archive_file.strip('.gz'))
+    working_dir = os.getcwd()
+    destination_abspath = os.path.join(working_dir, decompressed_file)
+    with gzip.open(archive_file, "rb") as f_in:
+        with open(destination_abspath, "wb") as f_out:
+            f_out.write(f_in.read())
+
+
+def decompressor_for(path, extension=None):
     """Get the appropriate decompressor for a path."""
-    if path.endswith(".zip"):
+    if ((extension and re.match(r'\.?zip$', extension)) or
+            path.endswith('.zip')):
         unzip = which('unzip', required=True)
+        unzip.add_default_arg('-q')
         return unzip
+    if extension and re.match(r'gz', extension):
+        return _gunzip
+    if extension and re.match(r'bz2', extension):
+        bunzip2 = which('bunzip2', required=True)
+        return bunzip2
     tar = which('tar', required=True)
-    tar.add_default_arg('-xf')
+    tar.add_default_arg('-oxf')
     return tar
 
 

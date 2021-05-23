@@ -1,39 +1,19 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-import spack
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Elk(Package):
-    '''An all-electron full-potential linearised augmented-plane wave
-    (FP-LAPW) code with many advanced features.'''
+class Elk(MakefilePackage):
+    """An all-electron full-potential linearised augmented-plane wave
+    (FP-LAPW) code with many advanced features."""
 
     homepage = 'http://elk.sourceforge.net/'
     url      = 'https://sourceforge.net/projects/elk/files/elk-3.3.17.tgz'
 
-    version('3.3.17', 'f57f6230d14f3b3b558e5c71f62f0592')
+    version('3.3.17', sha256='c9b87ae4ef367ed43afc2d43eb961745668e40670995e8e24c13db41b7e85d73')
 
     # Elk provides these libraries, but allows you to specify your own
     variant('blas',   default=True,
@@ -60,7 +40,7 @@ class Elk(Package):
     # Cannot be built in parallel
     parallel = False
 
-    def configure(self, spec):
+    def edit(self, spec, prefix):
         # Dictionary of configuration options
         config = {
             'MAKE': 'make',
@@ -87,12 +67,12 @@ class Elk(Package):
         # BLAS/LAPACK support
         # Note: BLAS/LAPACK must be compiled with OpenMP support
         # if the +openmp variant is chosen
-        blas   = 'blas.a'
+        blas = 'blas.a'
         lapack = 'lapack.a'
         if '+blas' in spec:
-            blas   = spec['blas'].blas_shared_lib
+            blas = spec['blas'].libs.joined()
         if '+lapack' in spec:
-            lapack = spec['lapack'].lapack_shared_lib
+            lapack = spec['lapack'].libs.joined()
         # lapack must come before blas
         config['LIB_LPK'] = ' '.join([lapack, blas])
 
@@ -110,8 +90,8 @@ class Elk(Package):
             config['F90'] = spec['mpi'].mpifc
             config['F77'] = spec['mpi'].mpif77
         else:
-            config['F90'] = join_path(spack.build_env_path, 'f90')
-            config['F77'] = join_path(spack.build_env_path, 'f77')
+            config['F90'] = spack_fc
+            config['F77'] = spack_f77
             config['SRC_MPI'] = 'mpi_stub.f90'
 
         # OpenMP support
@@ -141,14 +121,8 @@ class Elk(Package):
                 inc.write('{0} = {1}\n'.format(key, config[key]))
 
     def install(self, spec, prefix):
-        # Elk only provides an interactive setup script
-        self.configure(spec)
-
-        make()
-        make('test')
-
         # The Elk Makefile does not provide an install target
-        mkdirp(prefix.bin)
+        mkdir(prefix.bin)
 
         install('src/elk',                   prefix.bin)
         install('src/eos/eos',               prefix.bin)

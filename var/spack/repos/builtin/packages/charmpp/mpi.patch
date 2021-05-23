@@ -1,0 +1,19 @@
+--- old/src/scripts/configure
++++ new/src/scripts/configure
+@@ -3293,10 +3293,16 @@
+         test_link "whether -lmpi" "ok" "no" "-lmpi"
+         if test $pass -eq 1
+         then
+                 add_flag CMK_SYSLIBS='"$CMK_SYSLIBS -lmpi"' "mpi lib"
+         else
++          test_link "whether -lmpi -lmpi_cxx" "ok" "no" "-lmpi -lmpi_cxx"
++          if test $pass -eq 1
++          then
++            add_flag CMK_SYSLIBS='"$CMK_SYSLIBS -lmpi -lmpi_cxx"' "mpi lib"
++          else
+                 echo "Error: can not find mpi library"
+                 test_finish 1
++          fi
+         fi
+       fi
+     else

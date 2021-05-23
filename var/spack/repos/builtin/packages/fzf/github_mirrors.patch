@@ -1,0 +1,16 @@
+--- a/Makefile 	2019-03-29 08:58:38.934257084 -0600
++++ b/Makefile	2019-03-29 08:58:38.934257084 -0600
+@@ -99,7 +99,12 @@
+ 	ln -sf $(ROOT_DIR)/vendor $(VENDOR_LINK)
+ 
+ vendor: $(GLIDE_YAML)
+-	go get -u github.com/Masterminds/glide && $(GOPATH)/bin/glide install && touch $@
++	go get -u github.com/Masterminds/glide
++	$(GOPATH)/bin/glide $(if ${GLIDE_HOME}, --home ${GLIDE_HOME},) mirror set https://golang.org/x/crypto https://github.com/golang/crypto --vcs git
++	$(GOPATH)/bin/glide $(if ${GLIDE_HOME}, --home ${GLIDE_HOME},) mirror set https://golang.org/x/text https://github.com/golang/text --vcs git
++	$(GOPATH)/bin/glide $(if ${GLIDE_HOME}, --home ${GLIDE_HOME},) mirror set https://golang.org/x/sys https://github.com/golang/sys --vcs git
++	$(GOPATH)/bin/glide $(if ${GLIDE_HOME}, --home ${GLIDE_HOME},) mirror set https://gopkg.in/yaml.v2 https://github.com/go-yaml/yaml.git --vcs git
++	$(GOPATH)/bin/glide $(if ${GLIDE_HOME}, --home ${GLIDE_HOME},) install && touch $@
+ 
+ test: $(SOURCES) vendor
+ 	SHELL=/bin/sh GOOS= go test -v -tags "$(TAGS)" \

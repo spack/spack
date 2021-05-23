@@ -1,67 +1,111 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
-import llnl.util.tty as tty
+
+import sys
 
 
-class Emacs(Package):
+class Emacs(AutotoolsPackage, GNUMirrorPackage):
     """The Emacs programmable text editor."""
 
     homepage = "https://www.gnu.org/software/emacs"
-    url      = "http://ftp.gnu.org/gnu/emacs/emacs-24.5.tar.gz"
+    git      = "git://git.savannah.gnu.org/emacs.git"
+    gnu_mirror_path = "emacs/emacs-24.5.tar.gz"
 
-    version('24.5', 'd74b597503a68105e61b5b9f6d065b44')
+    version('master', branch='master')
+    version('27.2', sha256='80ff6118fb730a6d8c704dccd6915a6c0e0a166ab1daeef9fe68afa9073ddb73')
+    version('27.1', sha256='ffbfa61dc951b92cf31ebe3efc86c5a9d4411a1222b8a4ae6716cfd0e2a584db')
+    version('26.3', sha256='09c747e048137c99ed35747b012910b704e0974dde4db6696fde7054ce387591')
+    version('26.2', sha256='4f99e52a38a737556932cc57479e85c305a37a8038aaceb5156625caf102b4eb')
+    version('26.1', sha256='760382d5e8cdc5d0d079e8f754bce1136fbe1473be24bb885669b0e38fc56aa3')
+    version('25.3', sha256='f72c6a1b48b6fbaca2b991eed801964a208a2f8686c70940013db26cd37983c9')
+    version('25.2', sha256='505bbd6ea6c197947001d0f80bfccb6b30e1add584d6376f54d4fd6e4de72d2d')
+    version('25.1', sha256='763344b90db4d40e9fe90c5d14748a9dbd201ce544e2cf0835ab48a0aa4a1c67')
+    version('24.5', sha256='2737a6622fb2d9982e9c47fb6f2fb297bda42674e09db40fc9bcc0db4297c3b6')
 
-    variant('X', default=True, description="Enable a X toolkit (GTK+)")
-    variant('gtkplus', default=False,
-            description="Enable a GTK+ as X toolkit (ignored if ~X)")
+    variant('X', default=False, description="Enable an X toolkit")
+    variant(
+        'toolkit',
+        default='gtk',
+        values=('gtk', 'athena'),
+        description="Select an X toolkit (gtk, athena)"
+    )
+    variant('tls', default=False, description="Build Emacs with gnutls")
+    variant('native', default=False, description="enable native compilation of elisp")
+
+    depends_on('pkgconfig', type='build')
 
     depends_on('ncurses')
+    depends_on('pcre')
+    depends_on('zlib')
+    depends_on('libxml2')
     depends_on('libtiff', when='+X')
     depends_on('libpng', when='+X')
     depends_on('libxpm', when='+X')
     depends_on('giflib', when='+X')
-    depends_on('gtkplus', when='+X+gtkplus')
+    depends_on('libx11', when='+X')
+    depends_on('libxaw', when='+X toolkit=athena')
+    depends_on('gtkplus', when='+X toolkit=gtk')
+    depends_on('gnutls', when='+tls')
+    depends_on('jpeg')
+    depends_on('m4', type='build', when="@master:")
+    depends_on('autoconf', type='build', when="@master:")
+    depends_on('automake', type='build', when="@master:")
+    depends_on('libtool', type='build', when="@master:")
+    depends_on('texinfo', type='build', when="@master:")
+    depends_on('gcc@11: +strip languages=jit', when="+native")
 
-    def install(self, spec, prefix):
-        args = []
+    conflicts('@:26.3', when='platform=darwin os=catalina')
+    conflicts('+native', when='@:27.99.99', msg="native compilation require @master")
+
+    @when('platform=darwin')
+    def setup_build_environment(self, env):
+        # on macOS, emacs' config does search hard enough for ncurses'
+        # termlib `-ltinfo` lib, which results in linker errors
+        if '+termlib' in self.spec['ncurses']:
+            env.append_flags('LDFLAGS', '-ltinfo')
+
+    def configure_args(self):
+        spec = self.spec
+
+        toolkit = spec.variants['toolkit'].value
         if '+X' in spec:
-            if '+gtkplus' in spec:
-                toolkit = 'gtk{0}'.format(spec['gtkplus'].version.up_to(1))
-            else:
-                toolkit = 'no'
             args = [
                 '--with-x',
                 '--with-x-toolkit={0}'.format(toolkit)
             ]
         else:
             args = ['--without-x']
-            if '+gtkplus' in spec:
-                tty.warn('The variant +gtkplus is ignored if ~X is selected.')
 
-        configure('--prefix={0}'.format(prefix), *args)
+        # On OS X/macOS, do not build "nextstep/Emacs.app", because
+        # doing so throws an error at build-time
+        if sys.platform == 'darwin':
+            args.append('--without-ns')
 
-        make()
-        make("install")
+        if '+native' in spec:
+            args.append('--with-native-compilation')
+
+        if '+tls' in spec:
+            args.append('--with-gnutls')
+        else:
+            args.append('--without-gnutls')
+
+        return args
+
+    def _test_check_versions(self):
+        """Perform version checks on installed package binaries."""
+        checks = ['ctags', 'ebrowse', 'emacs', 'emacsclient', 'etags']
+
+        for exe in checks:
+            expected = str(self.spec.version)
+            reason = 'test version of {0} is {1}'.format(exe, expected)
+            self.run_test(exe, ['--version'], expected, installed=True,
+                          purpose=reason, skip_missing=True)
+
+    def test(self):
+        """Perform smoke tests on the installed package."""
+        # Simple version check tests on known binaries
+        self._test_check_versions()

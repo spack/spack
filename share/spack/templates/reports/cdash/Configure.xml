@@ -1,0 +1,8 @@
+  <Configure>
+    <StartConfigureTime>{{ configure.starttime }}</StartConfigureTime>
+    <ConfigureCommand>{{ install_command }}</ConfigureCommand>
+    <Log>{{ configure.log }}</Log>
+    <ConfigureStatus>{{ configure.status }}</ConfigureStatus>
+    <EndConfigureTime>{{ configure.endtime }}</EndConfigureTime>
+  </Configure>
+</Site>

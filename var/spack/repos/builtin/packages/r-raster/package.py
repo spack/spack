@@ -1,46 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RRaster(Package):
-    """Reading, writing, manipulating, analyzing and modeling of gridded
-    spatial data. The package implements basic and high-level functions.
-    Processing of very large files is supported."""
+class RRaster(RPackage):
+    """Geographic Data Analysis and Modeling
 
-    homepage = "http://cran.r-project.org/package=raster"
-    url      = "https://cran.r-project.org/src/contrib/raster_2.5-8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/raster"
+    Reading, writing, manipulating, analyzing and modeling of spatial data. The
+    package implements basic and high-level functions for raster data and for
+    vector data operations such as intersections. See the manual and tutorials
+    on <https://rspatial.org/> to get started."""
 
-    version('2.5-8', '2a7db931c74d50516e82d04687c0a577')
+    homepage = "https://cloud.r-project.org/package=raster"
+    url      = "https://cloud.r-project.org/src/contrib/raster_2.5-8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/raster"
 
-    extends('R')
+    version('3.4-5', sha256='c6620d790b3aba1b64aec31325f726e63f26a14a1b48c1a0f9167a0b1a64e4a5')
+    version('2.9-23', sha256='90aaec9e3b1e3e6015d9993ea7491e008f2f71990f8abb8610f979c4e28b38af')
+    version('2.9-22', sha256='8107d95f1aa85cea801c8101c6aa391becfef4b5b915d9bc7a323531fee26128')
+    version('2.5-8', sha256='47992abd783450513fbce3770298cc257030bf0eb77e42aa3a4b3924b16264cc')
 
-    depends_on('r-sp', type=nolink)
-    depends_on('r-rcpp', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r@3.5.0:', when='@3.4-5:', type=('build', 'run'))
+    depends_on('r-sp@1.2-0:', type=('build', 'run'))
+    depends_on('r-sp@1.4.1:', when='@3.4-5:', type=('build', 'run'))
+    depends_on('r-rcpp', type=('build', 'run'))

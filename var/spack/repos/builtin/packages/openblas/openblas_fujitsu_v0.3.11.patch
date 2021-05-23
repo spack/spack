@@ -1,0 +1,14 @@
+--- spack-src/f_check.org	2020-11-11 10:48:18.827643938 +0900
++++ spack-src/f_check	2020-11-11 10:51:46.448618264 +0900
+@@ -69,7 +69,10 @@
+ 	    $bu       = "_";
+ 	}
+ 
+-	if ($data =~ /GNU/ || $data =~ /GCC/ ) {
++        if ($data =~ /Fujitsu/) {
++            $vendor = FUJITSU;
++            $openmp = "-Kopenmp";
++        } elsif ($data =~ /GNU/ || $data =~ /GCC/ ) {
+ 
+ 	    $data =~ /(\d+)\.(\d+).(\d+)/;
+ 	    $major = $1;

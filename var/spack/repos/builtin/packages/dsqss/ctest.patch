@@ -1,0 +1,24 @@
+diff -u -r -N a/test/dla/CMakeLists.txt b/test/dla/CMakeLists.txt
+--- a/test/dla/CMakeLists.txt	2020-10-23 17:48:19.000000000 +0900
++++ b/test/dla/CMakeLists.txt	2020-10-23 17:49:46.000000000 +0900
+@@ -2,7 +2,7 @@
+ configure_file(test.py ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+ file(GLOB jsons "*.json")
+ set(BUILD_TOOL_DIR ${CMAKE_BINARY_DIR}/tool)
+-set(PYTHONPATH "${BUILD_TOOL_DIR}:${pythonpath_build}")
++set(PYTHONPATH "${BUILD_TOOL_DIR}:${pythonpath_build}:$ENV{PYTHONPATH}")
+ foreach(json ${jsons})
+   configure_file(${json} ${CMAKE_CURRENT_BINARY_DIR} COPYONLY)
+   file(RELATIVE_PATH jsonfilename ${CMAKE_CURRENT_SOURCE_DIR} ${json})
+diff -u -r -N a/test/pmwa/CMakeLists.txt b/test/pmwa/CMakeLists.txt
+--- a/test/pmwa/CMakeLists.txt	2020-10-28 14:22:18.000000000 +0900
++++ b/test/pmwa/CMakeLists.txt	2020-10-28 14:22:57.000000000 +0900
+@@ -10,7 +10,7 @@
+   file(RELATIVE_PATH jsonfilename ${CMAKE_CURRENT_SOURCE_DIR} ${json})
+ 
+   add_test(NAME "pmwa/${jsonfilename}"
+-    COMMAND env PYTHONPATH=${pythonpath_build} ${PYTHON_EXECUTABLE} test.py ${CMAKE_BINARY_DIR}/src/pmwa ${CMAKE_CURRENT_BINARY_DIR}/${jsonfilename}
++    COMMAND env PYTHONPATH=${pythonpath_build}:$ENV{PYTHONPATH} ${PYTHON_EXECUTABLE} test.py ${CMAKE_BINARY_DIR}/src/pmwa ${CMAKE_CURRENT_BINARY_DIR}/${jsonfilename}
+     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/
+     )
+ endforeach(json)

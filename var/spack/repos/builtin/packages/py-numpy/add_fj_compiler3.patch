@@ -1,0 +1,56 @@
+diff -urN spack-src.org/numpy/distutils/fcompiler/fujitsu.py spack-src/numpy/distutils/fcompiler/fujitsu.py
+--- spack-src.org/numpy/distutils/fcompiler/fujitsu.py	1970-01-01 09:00:00.000000000 +0900
++++ spack-src/numpy/distutils/fcompiler/fujitsu.py	2020-11-16 18:30:06.698641953 +0900
+@@ -0,0 +1,40 @@
++from numpy.distutils.fcompiler import FCompiler
++
++compilers = ['FujitsuFCompiler']
++
++class FujitsuFCompiler(FCompiler):
++    compiler_type = 'fujitsu'
++    description = 'Fujitsu Fortran Compiler'
++
++    possible_executables = ['frt']
++    version_pattern = r'frt \(FRT\) (?P<version>[a-z\d.]+)'
++    # $ frt --version
++    # frt (FRT) x.x.x yyyymmdd
++
++    executables = {
++        'version_cmd'  : ["<F77>", "--version"],
++        'compiler_f77' : ["frt", "-Fixed"],
++        'compiler_fix' : ["frt", "-Fixed"],
++        'compiler_f90' : ["frt"],
++        'linker_so'    : ["frt", "-shared"],
++        'archiver'     : ["ar", "-cr"],
++        'ranlib'       : ["ranlib"]
++        }
++    pic_flags = ['-KPIC']
++    module_dir_switch = '-M'
++    module_include_switch = '-I'
++
++    def get_flags_opt(self):
++        return ['-O3']
++    def get_flags_debug(self):
++        return ['-g']
++    def runtime_library_dir_option(self, dir):
++        return '-Wl,-rpath=%s' %dir
++    def get_libraries(self):
++        return ['fj90f', 'fj90i', 'fjsrcinfo']
++
++if __name__ == '__main__':
++    from distutils import log
++    from numpy.distutils import customized_fcompiler
++    log.set_verbosity(2)
++    print(customized_fcompiler('fujitsu').get_version())
+diff -urN spack-src.org/numpy/distutils/fcompiler/__init__.py spack-src/numpy/distutils/fcompiler/__init__.py
+--- spack-src.org/numpy/distutils/fcompiler/__init__.py	2020-11-16 18:25:26.087294181 +0900
++++ spack-src/numpy/distutils/fcompiler/__init__.py	2020-11-16 18:26:19.987553070 +0900
+@@ -750,7 +750,7 @@
+                'intelvem', 'intelem', 'flang')),
+     ('cygwin.*', ('gnu', 'intelv', 'absoft', 'compaqv', 'intelev', 'gnu95', 'g95')),
+     ('linux.*', ('gnu95', 'intel', 'lahey', 'pg', 'absoft', 'nag', 'vast', 'compaq',
+-                 'intele', 'intelem', 'gnu', 'g95', 'pathf95', 'nagfor')),
++                 'intele', 'intelem', 'gnu', 'g95', 'pathf95', 'nagfor', 'fujitsu')),
+     ('darwin.*', ('gnu95', 'nag', 'absoft', 'ibm', 'intel', 'gnu', 'g95', 'pg')),
+     ('sunos.*', ('sun', 'gnu', 'gnu95', 'g95')),
+     ('irix.*', ('mips', 'gnu', 'gnu95',)),

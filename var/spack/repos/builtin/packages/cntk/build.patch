@@ -1,0 +1,386 @@
+From 6ee89684a8e7b509f977bab00573c73563df4bc6 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Wed, 5 Apr 2017 16:52:54 +0800
+Subject: [PATCH 1/1] Refine the build process to allow reuse pre-installed
+ packages: multiverso 1bit-sgd kaldi openfst.
+
+---
+ Makefile  |  69 +++++++++++++++---------------
+ configure | 144 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 2 files changed, 178 insertions(+), 35 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 0586fd94b..bbd75e08c 100644
+--- a/Makefile
++++ b/Makefile
+@@ -25,14 +25,18 @@
+ #     If not specified, GPU will not be enabled
+ #   CUB_PATH= path to NVIDIA CUB installation, so $(CUB_PATH)/cub/cub.cuh exists
+ #     defaults to /usr/local/cub-1.4.1
+-#   CUDNN_PATH= path to NVIDIA cuDNN installation so $(CUDNN_PATH)/cuda/include/cudnn.h exists
++#   CUDNN_PATH= path to NVIDIA cuDNN installation so $(CUDNN_PATH)/include/cudnn.h exists
+ #     CuDNN version needs to be 5.0 or higher.
+ #   KALDI_PATH= Path to Kaldi
+ #     If not specified, Kaldi plugins will not be built
++#   OPENFST_PATH= Path to OpenFST
++#     OpenFST is required by Kaldi Reader.
+ #   OPENCV_PATH= path to OpenCV 3.1.0 installation, so $(OPENCV_PATH) exists
+ #     defaults to /usr/local/opencv-3.1.0
+ #   PROTOBUF_PATH= path to Protocol Buffers 3.1.0 installation, so $(PROTOBUF_PATH) exists
+ #     defaults to /usr/local/protobuf-3.1.0
++#   MULTIVERSO_PATH= path to Multiverso installation or source code, so $(MULTIVERSO_PATH) exists
++#     defaults to Source/Multiverso
+ #   LIBZIP_PATH= path to libzip installation, so $(LIBZIP_PATH) exists
+ #     defaults to /usr/local/
+ #   BOOST_PATH= path to Boost installation, so $(BOOST_PATH)/include/boost/test/unit_test.hpp
+@@ -149,8 +153,8 @@ ifdef CUDA_PATH
+ 
+ # Set up cuDNN if needed
+   ifdef CUDNN_PATH
+-    INCLUDEPATH += $(CUDNN_PATH)/cuda/include
+-    LIBPATH += $(CUDNN_PATH)/cuda/lib64
++    INCLUDEPATH += $(CUDNN_PATH)/include
++    LIBPATH += $(CUDNN_PATH)/lib64
+     LIBS_LIST += cudnn
+     COMMON_FLAGS +=-DUSE_CUDNN
+   endif
+@@ -188,16 +192,11 @@ ifeq ("$(MATHLIB)","openblas")
+   CPPFLAGS += -DUSE_OPENBLAS
+ endif
+ 
+-
++# Set up kaldi and openfst for Kaldi2Reader if needed
+ ifdef KALDI_PATH
+-  ########## Copy includes and defines from $(KALDI_PATH)/src/kaldi.mk ##########
+-  FSTROOT = $(KALDI_PATH)/tools/openfst
+-  ATLASINC = $(KALDI_PATH)/tools/ATLAS/include
+-
+-  INCLUDEPATH += $(KALDI_PATH)/src $(ATLASINC) $(FSTROOT)/include
++  INCLUDEPATH += $(KALDI_PATH)/include $(OPENFST_PATH)/incldue
+   CPPFLAGS += -DKALDI_DOUBLEPRECISION=0 -DHAVE_POSIX_MEMALIGN -DHAVE_EXECINFO_H=1 -DHAVE_CXXABI_H -DHAVE_ATLAS -DHAVE_OPENFST_GE_10400
+-
+-  KALDI_LIBPATH += $(KALDI_PATH)/src/lib
++  KALDI_LIBPATH += $(KALDI_PATH)/lib $(OPENFST_PATH)/lib
+   KALDI_LIBS_LIST := kaldi-util kaldi-matrix kaldi-base kaldi-hmm kaldi-cudamatrix kaldi-nnet kaldi-lat
+   KALDI_LIBS := $(addprefix -l,$(KALDI_LIBS_LIST))
+ endif
+@@ -316,7 +315,7 @@ SRC += $(PP_SRC)
+ $(PERF_PROFILER_LIB): $(PP_OBJ)
+ 	@echo $(SEPARATOR)
+ 	@echo creating $@ for $(ARCH) with build type $(BUILDTYPE)
+-	@mkdir -p $(dir $@)
++	-@mkdir -p $(dir $@)
+ 	$(CXX) $(LDFLAGS) -shared $(patsubst %,$(RPATH)%, $(ORIGINDIR)) -o $@ $^
+ 
+ 
+@@ -920,17 +919,13 @@ endif
+ 
+ ifeq ("$(CNTK_ENABLE_1BitSGD)","true")
+ 
+-ifeq (,$(wildcard Source/1BitSGD/*.h))
+-  $(error Build with 1bit-SGD was requested but cannot find the code. Please check https://github.com/Microsoft/CNTK/wiki/Enabling-1bit-SGD for instructions)
+-endif
+-
+-  INCLUDEPATH += $(SOURCEDIR)/1BitSGD 
++  INCLUDEPATH += $(ONEBITSGD_PATH)
+ 
+   COMMON_FLAGS += -DCNTK_PARALLEL_TRAINING_SUPPORT
+   # temporarily adding to 1bit, need to work with others to fix it
+ endif
+ 
+- 
++
+ ########################################
+ # ASGD(multiverso) setup
+ ########################################
+@@ -938,13 +933,9 @@ endif
+ 
+ ifeq ("$(CNTK_ENABLE_ASGD)","true")
+ 
+-ifeq (,$(wildcard Source/Multiverso/include/multiverso/*.h))
+-  $(error Build with Multiverso was requested but cannot find the code. Please check https://github.com/Microsoft/CNTK/wiki/Multiple-GPUs-and-machines#24-data-parallel-asgd to learn more.)
+-endif
+-
+ lMULTIVERSO:=-lmultiverso
+ 
+-INCLUDEPATH += $(SOURCEDIR)/Multiverso/include
++INCLUDEPATH += $(MULTIVERSO_PATH)/include
+ COMMON_FLAGS += -DASGD_PARALLEL_SUPPORT
+ 
+ MULTIVERSO_LIB:=$(LIBDIR)/libmultiverso.so
+@@ -958,11 +949,16 @@ MULTIVERSO_CMAKE_BUILDTYPE=Debug
+ endif
+ 
+ # TODO need to align Multiverso OpenMP with the one we use (libiomp). For now, disabled.
+-$(MULTIVERSO_LIB): 
++$(MULTIVERSO_LIB):
++ifneq ("$(wildcard $(MULTIVERSO_PATH)/lib/libmultiverso.so)","")
++	# reuse pre-installed multiverso library to $(LIBDIR) then skip building $(MULTIVERSO_LIB) when possible
++	@mkdir -p $(LIBDIR)
++	cp $(MULTIVERSO_PATH)/lib/libmultiverso.so $(LIBDIR)
++else
+ 	@echo "Build Multiverso lib"
+ 	@mkdir -p $(LIBDIR)
+ 	@mkdir -p $(BINDIR)
+-	@mkdir -p $(SOURCEDIR)/Multiverso/build/$(BUILDTYPE)
++	@mkdir -p $(MULTIVERSO_PATH)/build/$(BUILDTYPE)
+ 	@cmake -DCMAKE_VERBOSE_MAKEFILE=TRUE \
+ 		-DCMAKE_CXX_COMPILER=$(CXX) \
+ 		-DOpenMP_CXX_FLAGS="" \
+@@ -976,17 +972,22 @@ $(MULTIVERSO_LIB):
+ 		-DCMAKE_BUILD_TYPE=$(MULTIVERSO_CMAKE_BUILDTYPE) \
+ 		-B./Source/Multiverso/build/$(BUILDTYPE) -H./Source/Multiverso
+ 	@make VERBOSE=1 -C ./Source/Multiverso/build/$(BUILDTYPE) -j multiverso
++endif
+ 
+ UNITTEST_MULTIVERSO_SRC = \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_array.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_blob.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_kv.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_message.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_multiverso.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_node.cpp \
+-	$(SOURCEDIR)/Multiverso/Test/unittests/test_sync.cpp \
+-
+-UNITTEST_MULTIVERSO_OBJ := $(patsubst %.cpp, $(OBJDIR)/%.o, $(UNITTEST_MULTIVERSO_SRC))
++	$(MULTIVERSO_PATH)/Test/unittests/test_array.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_blob.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_kv.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_message.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_multiverso.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_node.cpp \
++	$(MULTIVERSO_PATH)/Test/unittests/test_sync.cpp \
++
++UNITTEST_MULTIVERSO_OBJ := $(patsubst $(MULTIVERSO_PATH)/Test/unittests/%.cpp, $(OBJDIR)/Source/Multiverso/Test/unittests/%.o, $(UNITTEST_MULTIVERSO_SRC))
++
++$(OBJDIR)/Source/Multiverso/Test/unittests/%.o: $(MULTIVERSO_PATH)/Test/unittests/%.cpp
++	-@ mkdir -p $(OBJDIR)/Source/Multiverso/Test/unittests
++	$(CXX) -c $< -o $@ $(COMMON_FLAGS) $(CPPFLAGS) $(CXXFLAGS) $(INCLUDEPATH:%=-I%)
+ 
+ UNITTEST_MULTIVERSO := $(BINDIR)/multiversotests
+ 
+diff --git a/configure b/configure
+index 2c2e5cee7..c9c0072c9 100755
+--- a/configure
++++ b/configure
+@@ -41,6 +41,14 @@ boost_check=include/boost/test/unit_test.hpp
+ protobuf_path=
+ protobuf_check=lib/libprotobuf.a
+ 
++# Multiverso library
++multiverso_path=
++multiverso_check=include/multiverso/multiverso.h
++
++# 1bitsgd library
++onebitsgd_path=
++onebitsgd_check=BlockMomentumSGD.h
++
+ # MPI library
+ mpi_path=
+ mpi_check=include/mpi.h
+@@ -49,6 +57,10 @@ have_kaldi=no
+ kaldi_path=
+ kaldi_check=src/kaldi.mk
+ 
++have_openfst=no
++openfst_path=
++openfst_check=include/fst/fst.h
++
+ have_buildtype=no
+ buildtype=
+ default_buildtype=release
+@@ -67,7 +79,7 @@ cub_check=cub/cub.cuh
+ 
+ have_cudnn=no
+ cudnn_path=
+-cudnn_check=cuda/include/cudnn.h
++cudnn_check=include/cudnn.h
+ 
+ have_opencv=no
+ opencv_path=
+@@ -112,6 +124,7 @@ default_boost="boost-1.60.0"
+ default_cudas="cuda-8.0 cuda-7.5"
+ default_nccls="nccl"
+ default_kaldis="kaldi-trunk kaldi-c024e8aa"
++default_openfst="openfst-1.6"
+ default_gdk_includes="include/nvidia/gdk"
+ default_gdk_nvml_libs="src/gdk/nvml/lib"
+ default_cubs="cub-1.4.1"
+@@ -121,6 +134,8 @@ default_protobuf="protobuf-3.1.0"
+ default_libzips="libzip-1.1.2"
+ default_swig="swig-3.0.10"
+ default_mpi="mpi"
++default_multiverso=Source/Multiverso
++default_onebitsgd=Source/1BitSGD
+ 
+ function default_paths ()
+ {
+@@ -178,6 +193,16 @@ function find_protobuf ()
+     find_dir "$default_protobuf" "$protobuf_check"
+ }
+ 
++function find_multiverso ()
++{
++    find_dir "$default_multiverso" "$multiverso_check"
++}
++
++function find_onebitsgd ()
++{
++    find_dir "$default_onebitsgd" "$onebitsgd_check"
++}
++
+ function find_nccl ()
+ {
+     find_dir "$default_nccls" "$nccl_check"
+@@ -193,6 +218,11 @@ function find_kaldi ()
+     find_dir "$default_kaldis" "$kaldi_check"
+ }
+ 
++function find_openfst ()
++{
++    find_dir "$default_openfst" "$openfst_check"
++}
++
+ function find_gdk_include ()
+ {
+     find_dir "$default_gdk_includes" "$gdk_include_check"
+@@ -751,6 +784,46 @@ do
+                 fi
+              fi
+              ;;
++        --with-multiverso*)
++            if test x$optarg = x
++            then
++                multiverso_path=$(find_multiverso)
++                if test x$multiverso_path = x
++                then
++                    echo "Cannot find Multiverso directory"
++                    echo "Please specify a value for --with-multiverso"
++                    exit 1
++                fi
++            else
++                if test $(check_dir $optarg $multiverso_check) = yes
++                then
++                    multiverso_path=$optarg
++                else
++                    echo "Invalid Multiverso directory $optarg"
++                    exit 1
++                fi
++             fi
++             ;;
++        --with-1bitsgd*)
++            if test x$optarg = x
++            then
++                onebitsgd_path=$(find_onebitsgd)
++                if test x$onebitsgd_path = x
++                then
++                    echo "Cannot find 1BitSGD directory"
++                    echo "Please specify a value for --with-1bitsgd"
++                    exit 1
++                fi
++            else
++                if test $(check_dir $optarg $onebitsgd_check) = yes
++                then
++                    onebitsgd_path=$optarg
++                else
++                    echo "Invalid 1BitSGD directory $optarg"
++                    exit 1
++                fi
++             fi
++             ;;
+         --with-buildtype*)
+             have_buildtype=yes
+             case $optarg in
+@@ -784,6 +857,27 @@ do
+                 fi
+             fi
+             ;;
++        --with-openfst*)
++            have_openfst=yes
++            if test x$optarg = x
++            then
++                openfst_path=$(find_openfst)
++                if test x$openfst_path = x
++                then
++                    echo "Cannot find openfst directory"
++                    echo "Please specify a value for --with-openfst"
++                    exit 1
++                fi
++            else
++                if test $(check_dir $optarg $openfst_check)
++                then
++                    openfst_path=$optarg
++                else
++                    echo "Invalid openfst directory $optarg"
++                    exit 1
++                fi
++            fi
++            ;;
+         --with-opencv*)
+             have_opencv=yes
+             if test x$optarg = x
+@@ -1049,6 +1143,48 @@ then
+     fi
+ fi
+ 
++if test x$kaldi_path != x && test x$openfst_path = x
++then
++    openfst_path=$(find_openfst)
++    if test x$openfst_path = x
++    then
++        echo CNTK KaldiReader requires OpenFST library. Please check
++        echo https://github.com/Microsoft/CNTK/blob/master/Source/Readers/KaldiReaderReadme
++        echo to learn more.
++        exit 1
++    else
++        echo Found OpenFST library at $openfst_path
++    fi
++fi
++
++if test $enable_1bitsgd = yes && test x$onebitsgd_path = x
++then
++    onebitsgd_path=$(find_onebitsgd)
++    if test x$onebitsgd_path = x
++    then
++        echo Cannot locate 1BitSGD library. See
++        echo   https://github.com/Microsoft/CNTK/wiki/Enabling-1bit-SGD
++        echo for installation instructions.
++        exit 1
++    else
++        echo Found 1BitSGD library at $onebitsgd_path
++    fi
++fi
++
++if test $enable_asgd = yes && test x$multiverso_path = x
++then
++    multiverso_path=$(find_multiverso)
++    if test x$multiverso_path = x
++    then
++        echo Build with Multiverso was requested but cannot find the code. Please check
++        echo https://github.com/Microsoft/CNTK/wiki/Multiple-GPUs-and-machines#24-data-parallel-asgd 
++        echo to learn more.
++        exit 1
++    else
++        echo Found Multiverso library at $multiverso_path
++    fi
++fi
++
+ if test x$mpi_path = x
+ then
+     mpi_path=$(find_mpi)
+@@ -1123,6 +1259,12 @@ fi
+ if test x$protobuf_path != x; then
+     echo PROTOBUF_PATH=$protobuf_path >> $config
+ fi
++if test x$multiverso_path != x; then
++    echo MULTIVERSO_PATH=$multiverso_path >> $config
++fi
++if test x$onebitsgd_path != x; then
++    echo ONEBITSGD_PATH=$onebitsgd_path >> $config
++fi
+ if test x$mpi_path != x; then
+     echo MPI_PATH=$mpi_path >> $config
+ fi
+-- 
+2.11.1
+

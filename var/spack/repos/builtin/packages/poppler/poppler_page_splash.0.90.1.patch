@@ -1,0 +1,20 @@
+diff --git a/qt5/src/poppler-page.cc b/qt5/src/poppler-page.cc
+index c4d00a6..e72c26b 100644
+--- a/qt5/src/poppler-page.cc
++++ b/qt5/src/poppler-page.cc
+@@ -103,6 +103,8 @@ public:
+   QVariant payload;
+ };
+ 
++#if defined(HAVE_SPLASH)
++
+ class Qt5SplashOutputDev : public SplashOutputDev, public OutputDevCallbackHelper
+ {
+ public:
+@@ -163,5 +156,6 @@ private:
+   bool ignorePaperColor;
+ };
++#endif
+ 
+ class QImageDumpingArthurOutputDev : public ArthurOutputDev, public OutputDevCallbackHelper
+ {

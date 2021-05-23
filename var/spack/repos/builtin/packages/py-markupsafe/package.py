@@ -1,50 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import depends_on, extends, version
-from spack import Package
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
 
 
-class PyMarkupsafe(Package):
-    """
-    MarkupSafe is a library for Python that implements a unicode
-    string that is aware of HTML escaping rules and can be used
-    to implement automatic string escaping. It is used by Jinja 2,
-    the Mako templating engine, the Pylons web framework and many more.
-    """
+class PyMarkupsafe(PythonPackage):
+    """MarkupSafe is a library for Python that implements a unicode
+    string that is aware of HTML escaping rules and can be used to
+    implement automatic string escaping. It is used by Jinja 2, the
+    Mako templating engine, the Pylons web framework and many more."""
 
     homepage = "http://www.pocoo.org/projects/markupsafe/"
-    url      = "https://github.com/pallets/markupsafe/archive/0.23.tar.gz"
+    pypi = "MarkupSafe/MarkupSafe-1.1.1.tar.gz"
 
-    version('0.23', '1a0dadc95169832367c9dcf142155cde')
-    version('0.22', '7a2ac7427b58def567628d06dc328396')
-    version('0.21', 'aebcd93ee05269773c8b80bb6c86fc2f')
-    version('0.20', '0c1fef97c8fd6a986d708f08d7f84a02')
-    version('0.19', '64b05361adb92c11839fc470e308c593')
+    version('1.1.1', sha256='29872e92839765e546828bb7754a68c418d927cd064fd4708fab9fe9c8bb116b')
+    version('1.0',   sha256='a6be69091dac236ea9c6bc7d012beab42010fa914c459791d627dad4910eb665')
+    version('0.23',  sha256='a4ec1aff59b95a14b45eb2e23761a0179e98319da5a7eb76b56ea8cdc7b871c3')
+    version('0.22',  sha256='7642852b6d1e55c9e12e00a552c0b8943880f2172e55141ccb41eb5f8675dfa5')
+    version('0.21',  sha256='c6465cd6ed2b96509ef0100e7fff8718ed52c2affab1860ed5a9b67f604dd59a')
+    version('0.20',  sha256='f6cf3bd233f9ea6147b21c7c02cac24e5363570ce4fd6be11dab9f499ed6a7d8')
+    version('0.19',  sha256='62fcc5d641df8b5ad271ebbd6b77a19cd92eceba1e1a990de4e96c867789f037')
 
-    extends("python")
-    depends_on("py-setuptools", type='build')
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    depends_on('python@2.7:2.8,3.4:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')

@@ -1,92 +1,117 @@
-![image](share/spack/logo/spack-logo-text-64.png "Spack")
-============
+# <img src="https://cdn.rawgit.com/spack/spack/develop/share/spack/logo/spack-logo.svg" width="64" valign="middle" alt="Spack"/> Spack
 
-[![Build Status](https://travis-ci.org/LLNL/spack.svg?branch=develop)](https://travis-ci.org/LLNL/spack)
-[![Coverage Status](https://coveralls.io/repos/github/LLNL/spack/badge.svg?branch=develop)](https://coveralls.io/github/LLNL/spack?branch=develop)
+[![Unit Tests](https://github.com/spack/spack/workflows/linux%20tests/badge.svg)](https://github.com/spack/spack/actions)
+[![Linux Builds](https://github.com/spack/spack/workflows/linux%20builds/badge.svg)](https://github.com/spack/spack/actions)
+[![macOS Builds (nightly)](https://github.com/spack/spack/workflows/macOS%20builds%20nightly/badge.svg?branch=develop)](https://github.com/spack/spack/actions?query=workflow%3A%22macOS+builds+nightly%22)
+[![codecov](https://codecov.io/gh/spack/spack/branch/develop/graph/badge.svg)](https://codecov.io/gh/spack/spack)
+[![Read the Docs](https://readthedocs.org/projects/spack/badge/?version=latest)](https://spack.readthedocs.io)
+[![Slack](https://spackpm.herokuapp.com/badge.svg)](https://spackpm.herokuapp.com)
 
-Spack is a package management tool designed to support multiple
-versions and configurations of software on a wide variety of platforms
-and environments. It was designed for large supercomputing centers,
-where many users and application teams share common installations of
-software on clusters with exotic architectures, using libraries that
-do not have a standard ABI. Spack is non-destructive: installing a new
-version does not break existing installations, so many configurations
-can coexist on the same system.
+Spack is a multi-platform package manager that builds and installs
+multiple versions and configurations of software. It works on Linux,
+macOS, and many supercomputers. Spack is non-destructive: installing a
+new version of a package does not break existing installations, so many
+configurations of the same package can coexist.
 
-Most importantly, Spack is simple. It offers a simple spec syntax so
-that users can specify versions and configuration options
-concisely. Spack is also simple for package authors: package files are
-written in pure Python, and specs allow package authors to write a
-single build script for many different builds of the same package.
+Spack offers a simple "spec" syntax that allows users to specify versions
+and configuration options. Package files are written in pure Python, and
+specs allow package authors to write a single script for many different
+builds of the same package.  With Spack, you can build your software
+*all* the ways you want to.
 
 See the
-[Feature Overview](http://software.llnl.gov/spack/features.html)
+[Feature Overview](https://spack.readthedocs.io/en/latest/features.html)
 for examples and highlights.
 
-To install spack and install your first package:
+To install spack and your first package, make sure you have Python.
+Then:
 
-    $ git clone https://github.com/llnl/spack.git
+    $ git clone https://github.com/spack/spack.git
     $ cd spack/bin
-    $ ./spack install libelf
+    $ ./spack install zlib
 
 Documentation
 ----------------
 
-[**Full documentation**](http://software.llnl.gov/spack) for Spack is
-the first place to look.
+[**Full documentation**](https://spack.readthedocs.io/) is available, or
+run `spack help` or `spack help --all`.
 
-See also:
-  * [Technical paper](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf) and
-    [slides](https://tgamblin.github.io/files/Gamblin-Spack-SC15-Talk.pdf) on Spack's design and implementation.
-  * [Short presentation](https://tgamblin.github.io/files/Gamblin-Spack-Lightning-Talk-BOF-SC15.pdf) from the *Getting Scientific Software Installed* BOF session at Supercomputing 2015.
+Tutorial
+----------------
 
+We maintain a
+[**hands-on tutorial**](https://spack.readthedocs.io/en/latest/tutorial.html).
+It covers basic to advanced usage, packaging, developer features, and large HPC
+deployments.  You can do all of the exercises on your own laptop using a
+Docker container.
 
-Get Involved!
+Feel free to use these materials to teach users at your organization
+about Spack.
+
+Community
 ------------------------
 
 Spack is an open source project.  Questions, discussion, and
 contributions are welcome. Contributions can be anything from new
-packages to bugfixes, or even new core features.
+packages to bugfixes, documentation, or even new core features.
 
-### Mailing list
+Resources:
 
-If you are interested in contributing to spack, the first step is to
-join the mailing list.  We're using a Google Group for this, and you
-can join it here:
+* **Slack workspace**: [spackpm.slack.com](https://spackpm.slack.com).
+  To get an invitation, [**click here**](https://spackpm.herokuapp.com).
+* **Mailing list**: [groups.google.com/d/forum/spack](https://groups.google.com/d/forum/spack)
+* **Twitter**: [@spackpm](https://twitter.com/spackpm). Be sure to
+  `@mention` us!
 
-  * [Spack Google Group](https://groups.google.com/d/forum/spack)
-
-### Contributions
-
-Contributing to Spack is relatively.  Just send us a
+Contributing
+------------------------
+Contributing to Spack is relatively easy.  Just send us a
 [pull request](https://help.github.com/articles/using-pull-requests/).
 When you send your request, make ``develop`` the destination branch on the
-[Spack repository](https://github.com/LLNL/spack).
+[Spack repository](https://github.com/spack/spack).
 
-Before you send a PR, your code should pass the following checks:
+Your PR must pass Spack's unit tests and documentation tests, and must be
+[PEP 8](https://www.python.org/dev/peps/pep-0008/) compliant.  We enforce
+these guidelines with our CI process. To run these tests locally, and for 
+helpful tips on git, see our
+[Contribution Guide](https://spack.readthedocs.io/en/latest/contribution_guide.html).
 
-* Your contribution will need to pass the `spack test` command.
-  Run this before submitting your PR.
+Spack's `develop` branch has the latest contributions. Pull requests
+should target `develop`, and users who want the latest package versions,
+features, etc. can use `develop`.
 
-* Also run the `share/spack/qa/run-flake8` script to check for PEP8 compliance.
-  To encourage contributions and readability by a broad audience,
-  Spack uses the [PEP8](https://www.python.org/dev/peps/pep-0008/) coding
-  standard with [a few exceptions](https://github.com/LLNL/spack/blob/develop/.flake8).
+Releases
+--------
 
-We enforce these guidelines with [Travis CI](https://travis-ci.org/LLNL/spack).
+For multi-user site deployments or other use cases that need very stable
+software installations, we recommend using Spack's
+[stable releases](https://github.com/spack/spack/releases).
 
-Spack uses a rough approximation of the [Git
-Flow](http://nvie.com/posts/a-successful-git-branching-model/)
-branching model.  The ``develop`` branch contains the latest
-contributions, and ``master`` is always tagged and points to the
-latest stable release.
+Each Spack release series also has a corresponding branch, e.g.
+`releases/v0.14` has `0.14.x` versions of Spack, and `releases/v0.13` has
+`0.13.x` versions. We backport important bug fixes to these branches but
+we do not advance the package versions or make other changes that would
+change the way Spack concretizes dependencies within a release branch.
+So, you can base your Spack deployment on a release branch and `git pull`
+to get fixes, without the package churn that comes with `develop`.
 
+The latest release is always available with the `releases/latest` tag.
+
+See the [docs on releases](https://spack.readthedocs.io/en/latest/developer_guide.html#releases)
+for more details.
+
+Code of Conduct
+------------------------
+
+Please note that Spack has a
+[**Code of Conduct**](.github/CODE_OF_CONDUCT.md). By participating in
+the Spack community, you agree to abide by its rules.
 
 Authors
 ----------------
-Many thanks go to Spack's [contributors](https://github.com/llnl/spack/graphs/contributors).
+Many thanks go to Spack's [contributors](https://github.com/spack/spack/graphs/contributors).
 
-Spack was originally written by Todd Gamblin, tgamblin@llnl.gov.
+Spack was created by Todd Gamblin, tgamblin@llnl.gov.
 
 ### Citing Spack
 
@@ -94,12 +119,24 @@ If you are referencing Spack in a publication, please cite the following paper:
 
  * Todd Gamblin, Matthew P. LeGendre, Michael R. Collette, Gregory L. Lee,
    Adam Moody, Bronis R. de Supinski, and W. Scott Futral.
-   [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](http://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
+   [**The Spack Package Manager: Bringing Order to HPC Software Chaos**](https://www.computer.org/csdl/proceedings/sc/2015/3723/00/2807623.pdf).
    In *Supercomputing 2015 (SC’15)*, Austin, Texas, November 15-20 2015. LLNL-CONF-669890.
 
-Release
+License
 ----------------
-Spack is released under an LGPL license.  For more details see the
-LICENSE file.
 
-``LLNL-CODE-647188``
+Spack is distributed under the terms of both the MIT license and the
+Apache License (Version 2.0). Users may choose either license, at their
+option.
+
+All new contributions must be made under both the MIT and Apache-2.0
+licenses.
+
+See [LICENSE-MIT](https://github.com/spack/spack/blob/develop/LICENSE-MIT),
+[LICENSE-APACHE](https://github.com/spack/spack/blob/develop/LICENSE-APACHE),
+[COPYRIGHT](https://github.com/spack/spack/blob/develop/COPYRIGHT), and
+[NOTICE](https://github.com/spack/spack/blob/develop/NOTICE) for details.
+
+SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+LLNL-CODE-811652

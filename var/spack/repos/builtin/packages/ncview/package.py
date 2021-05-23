@@ -1,45 +1,30 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Ncview(Package):
+class Ncview(AutotoolsPackage):
     """Simple viewer for NetCDF files."""
     homepage = "http://meteora.ucsd.edu/~pierce/ncview_home_page.html"
     url      = "ftp://cirrus.ucsd.edu/pub/ncview/ncview-2.1.7.tar.gz"
 
-    version('2.1.7', 'debd6ca61410aac3514e53122ab2ba07')
+    version('2.1.8', sha256='e8badc507b9b774801288d1c2d59eb79ab31b004df4858d0674ed0d87dfc91be')
+    version('2.1.7', sha256='a14c2dddac0fc78dad9e4e7e35e2119562589738f4ded55ff6e0eca04d682c82')
 
-    depends_on("netcdf")
-    depends_on("udunits2")
+    depends_on('netcdf-c')
+    depends_on('udunits')
+    depends_on('libpng')
+    depends_on('libxaw')
 
-    # OS Dependencies
-    # Ubuntu: apt-get install libxaw7-dev
-    # CentOS 7: yum install libXaw-devel
+    def configure_args(self):
+        spec = self.spec
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+        config_args = []
+
+        if spec.satisfies('^netcdf-c+mpi'):
+            config_args.append('CC={0}'.format(spec['mpi'].mpicc))
+
+        return config_args

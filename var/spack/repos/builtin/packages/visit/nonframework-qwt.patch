@@ -1,0 +1,11 @@
+--- a/src/CMake/FindQwt.cmake	2019-02-15 18:31:27.000000000 -0500
++++ b/src/CMake/FindQwt.cmake	2019-08-11 09:18:38.000000000 -0400
+@@ -51,7 +51,7 @@
+ include(${VISIT_SOURCE_DIR}/CMake/SetUpThirdParty.cmake)
+ 
+ if(APPLE)
+-    if(VISIT_STATIC)
++    if ("TRUE")
+         SET_UP_THIRD_PARTY(QWT lib include qwt)
+     else()
+         SET_UP_THIRD_PARTY(QWT lib lib/qwt.framework/Versions/Current/Headers qwt)

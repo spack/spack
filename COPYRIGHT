@@ -1,0 +1,95 @@
+Intellectual Property Notice
+------------------------------
+
+Spack is licensed under the Apache License, Version 2.0 (LICENSE-APACHE
+or http://www.apache.org/licenses/LICENSE-2.0) or the MIT license,
+(LICENSE-MIT or http://opensource.org/licenses/MIT), at your option.
+
+Copyrights and patents in the Spack project are retained by contributors.
+No copyright assignment is required to contribute to Spack.
+
+Spack was originally distributed under the LGPL-2.1 license. Consent from
+contributors to relicense to Apache-2.0/MIT is documented at
+https://github.com/spack/spack/issues/9137.
+
+
+SPDX usage
+------------
+
+Individual files contain SPDX tags instead of the full license text.
+This enables machine processing of license information based on the SPDX
+License Identifiers that are available here: https://spdx.org/licenses/
+
+Files that are dual-licensed as Apache-2.0 OR MIT contain the following
+text in the license header:
+
+    SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+
+External Packages
+-------------------
+
+Spack bundles most external dependencies in lib/spack/external. It also
+includes the sbang tool directly in bin/sbang. These packages are covered
+by various permissive licenses. A summary listing follows. See the
+license included with each package for full details.
+
+PackageName: argparse
+PackageHomePage: https://pypi.python.org/pypi/argparse
+PackageLicenseDeclared: Python-2.0
+
+PackageName: ctest_log_parser
+PackageHomePage: https://github.com/Kitware/CMake
+PackageLicenseDeclared: BSD-3-Clause
+
+PackageName: distro
+PackageHomePage: https://pypi.python.org/pypi/distro
+PackageLicenseDeclared: Apache-2.0
+
+PackageName: functools
+PackageHomePage: https://github.com/python/cpython/blob/2.7/Lib/functools.py
+PackageLicenseDeclared: Python-2.0
+
+PackageName: jinja2
+PackageHomePage: https://pypi.python.org/pypi/Jinja2
+PackageLicenseDeclared: BSD-3-Clause
+
+PackageName: jsonschema
+PackageHomePage: https://pypi.python.org/pypi/jsonschema
+PackageLicenseDeclared: MIT
+
+PackageName: markupsafe
+PackageHomePage: https://pypi.python.org/pypi/MarkupSafe
+PackageLicenseDeclared: BSD-3-Clause
+
+PackageName: orderddict
+Homepage: https://pypi.org/project/ordereddict/
+PackageLicenseDeclared: MIT
+
+PackageName: py
+PackageHomePage: https://pypi.python.org/pypi/py
+PackageLicenseDeclared: MIT
+
+PackageName: pytest
+PackageHomePage: https://pypi.python.org/pypi/pytest
+PackageLicenseDeclared: MIT
+
+PackageName: ruamel.yaml
+PackageHomePage: https://yaml.readthedocs.io/
+PackageLicenseDeclared: MIT
+
+PackageName: sbang
+PackageHomePage: https://github.com/spack/sbang
+PackageLicenseDeclared: Apache-2.0 OR MIT
+
+PackageName: six
+PackageHomePage: https://pypi.python.org/pypi/six
+PackageLicenseDeclared: MIT
+
+PackageName: macholib
+PackageHomePage: https://macholib.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT
+
+PackageName: altgraph
+PackageHomePage: https://altgraph.readthedocs.io/en/latest/index.html
+PackageLicenseDeclared: MIT

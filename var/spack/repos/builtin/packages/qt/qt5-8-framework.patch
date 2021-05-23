@@ -1,0 +1,17 @@
+diff --git a/mkspecs/features/qt_module.prf b/mkspecs/features/qt_module.prf
+index f6cbf99..ec31e45 100644
+--- a/qtbase/mkspecs/features/qt_module.prf
++++ b/qtbase/mkspecs/features/qt_module.prf
+@@ -68,9 +68,9 @@ load(qt_build_paths)
+ 
+ header_module {
+     TEMPLATE     = aux
+-    CONFIG      += \
+-        force_qt \  # Needed for the headers_clean tests.
+-        qt_no_install_library
++    CONFIG      += force_qt  # Needed for the headers_clean tests.
++    !lib_bundle: \
++        CONFIG  += qt_no_install_library
+ } else {
+     TEMPLATE     = lib
+ }

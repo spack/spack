@@ -1,15 +1,17 @@
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
+#
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class PyPep8(Package):
-    """python pep8 format checker"""
-    homepage = "https://github.com/PyCQA/pycodestyle"
-    url      = "https://github.com/PyCQA/pycodestyle/archive/1.7.0.tar.gz"
+class PyPep8(PythonPackage):
+    """Python style guide checker (deprecated, use py-pycodestyle instead)."""
 
-    version('1.7.0', '31070a3a6391928893cbf5fa523eb8d9')
+    homepage = "https://pep8.readthedocs.org/"
+    pypi = "pep8/pep8-1.7.1.tar.gz"
 
-    extends('python')
-    depends_on('py-setuptools', type='build')
+    version('1.7.1', sha256='fe249b52e20498e59e0b5c5256aa52ee99fc295b26ec9eaa85776ffdb9fe6374')
 
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    depends_on('py-setuptools', type=('build', 'run'))

@@ -1,0 +1,1 @@
+This directory tree is made up to test that search functions wil return a stable ordered sequence.

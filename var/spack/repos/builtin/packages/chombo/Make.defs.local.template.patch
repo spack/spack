@@ -1,0 +1,23 @@
+*** lib/mk/Make.defs.local.template	2017-05-02 16:00:16.000000000 -0700
+--- lib/mk/Make.defs.local.template.patched	2017-05-02 18:50:36.000000000 -0700
+***************
+*** 129,135 ****
+--- 129,137 ----
+  #HDFMPILIBFLAGS= -L<hdf_parallel_dir>/lib -lhdf5 -lz
+  #USE_MF        =
+  #USE_MT        =
++ #USE_LAPACK    =
+  #USE_SETVAL    =
++ #USE_TIMER     =
+  #CH_AR         =
+  #CH_CPP        =
+  #DOXYGEN       =
+***************
+*** 151,155 ****
+--- 153,158 ----
+  #ldoptflags    =
+  #ldprofflags   =
+  #syslibflags   =
++ #lapackincflags =
+  
+  #end  -- dont change this line

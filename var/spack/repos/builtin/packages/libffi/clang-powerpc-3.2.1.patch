@@ -1,0 +1,24 @@
+diff --git a/src/powerpc/linux64.S b/src/powerpc/linux64.S
+index d2acb70..921e9cb 100644
+--- a/src/powerpc/linux64.S
++++ b/src/powerpc/linux64.S
+@@ -83,6 +83,7 @@ ffi_call_LINUX64:
+ 	mr	%r4, %r1
+ # if defined _CALL_LINUX || _CALL_ELF == 2
+ 	bl	ffi_prep_args64
++	nop
+ # else
+ 	bl	.ffi_prep_args64
+ # endif
+diff --git a/src/powerpc/linux64_closure.S b/src/powerpc/linux64_closure.S
+index 97421a4..3c62d5f 100644
+--- a/src/powerpc/linux64_closure.S
++++ b/src/powerpc/linux64_closure.S
+@@ -152,6 +152,7 @@ ffi_closure_LINUX64:
+ 	# make the call
+ # if defined _CALL_LINUX || _CALL_ELF == 2
+ 	bl ffi_closure_helper_LINUX64
++	nop
+ # else
+ 	bl .ffi_closure_helper_LINUX64
+ # endif

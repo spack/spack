@@ -1,0 +1,583 @@
+diff -ruN RECON1.05/00README RECON-1.08/00README
+--- RECON1.05/00README	2002-04-08 14:31:59.000000000 -0500
++++ RECON-1.08/00README	2014-02-05 16:05:18.000000000 -0600
+@@ -1,6 +1,7 @@
+ RECON -- finding repeat families from biological sequences
+-Version 1.03 (Mar 2002)
++Version 1.08 (Jan 2014)
+ Copyright (C) 2001 Washington University School of Medicine
++Copyright (C) 2011-2014 Institute for Systems Biology
+ ------------------------------------------------------------------
+ 
+ 
+@@ -28,8 +29,26 @@
+ 
+ What's new?
+ 
++RECON1.08: Wed Feb  5 14:04:25 PST 2014 - Robert Hubley ISB
++  - New checks in eleredef.c for failed memory allocation/file operations.
++  - A buffer overrun bug fix provided by Stephen Ficklin in eledef.c.
++
++RECON1.07: Wed Jun  8 10:00:55 PDT 2011 - Robert Hubley ISB
++  - Another problem with the eleredef program has appeared a couple
++    of times.  A divide by zero error in one of Zhirong's routines.
++    I have applied a workaround to the divide by zero but not a fix
++    to the real problem.  The program will now warn the user if
++    the workaround was exercised during a run.
++
++RECON1.06: Tue May 20 15:19:30 PDT 2008 - Robert Hubley ISB
++ - 64 bit compiler fixes:  Previous versions of RECON used the "long"
++   data type under the assumption that was 32bits.  This caused the 
++   program to crash or lock up during analysis.   
++
+ Bug fix for RECON1.02 in the eleredef program.
+ 
++
++
+ Programs and input
+ 
+ The RECON algorithm defines repeat families on the basis of pairwise
+@@ -50,7 +69,6 @@
+ multiple times and concatenate the result into one MSP file.
+ 
+ 
+-
+ The recon script drives the running of the package.  The command
+ line format is as follows:
+ 
+diff -ruN RECON1.05/src/bolts.h RECON-1.08/src/bolts.h
+--- RECON1.05/src/bolts.h	2002-01-10 15:19:09.000000000 -0600
++++ RECON-1.08/src/bolts.h	2014-02-05 16:05:18.000000000 -0600
+@@ -10,5 +10,5 @@
+ 
+ 
+ 
+-long seq_no;
++int32_t seq_no;
+ char **seq_names;
+diff -ruN RECON1.05/src/edgeredef.c RECON-1.08/src/edgeredef.c
+--- RECON1.05/src/edgeredef.c	2002-07-19 10:42:03.000000000 -0500
++++ RECON-1.08/src/edgeredef.c	2014-02-05 16:05:18.000000000 -0600
+@@ -58,6 +58,10 @@
+   }
+ 
+   log_file = fopen("tmp2/log", "w");
++  if (!log_file) {
++    printf("Can not open log_file.  Exiting\n");
++    exit(1);
++  }
+ 
+   while (fgets(line, 15, ele_no)) {
+     ele_ct = atoi(line);
+@@ -191,7 +195,7 @@
+   } else {
+     ele_info->stat = 'y';
+     ele_cleanup(&ele_info->ele);
+-    command = (char *) malloc(30*sizeof(char));
++    command = (char *) malloc(80*sizeof(char));
+     sprintf(command, "cp tmp/e%d tmp2/.", ele_info->index);
+     system(command);
+     free(command);
+diff -ruN RECON1.05/src/eledef.c RECON-1.08/src/eledef.c
+--- RECON1.05/src/eledef.c	2002-01-10 15:19:10.000000000 -0600
++++ RECON-1.08/src/eledef.c	2014-02-05 16:05:18.000000000 -0600
+@@ -385,7 +385,7 @@
+ 
+ void img_charge(IPROT_t **shadow, int ct, FILE *input) {
+   int i=0, pos=0;
+-  char line[100];
++  char line[151];
+   int scan_flag;
+   MSP_t msp;
+ 
+diff -ruN RECON1.05/src/ele.h RECON-1.08/src/ele.h
+--- RECON1.05/src/ele.h	2002-01-10 15:19:09.000000000 -0600
++++ RECON-1.08/src/ele.h	2014-02-05 16:05:18.000000000 -0600
+@@ -1,7 +1,6 @@
+ #include "msps.h"
+ 
+ 
+-
+ #define SIZE_LIMIT 500
+ #define TANDEM 5
+ 
+@@ -9,13 +8,13 @@
+ 
+ 
+ typedef struct cp_list {
+-  long cp;
++  int32_t cp;
+   struct ele_info *contributor;
+   struct cp_list *next;
+ } CP_t;
+ 
+ typedef struct bd_list {
+-  long bd;
++  int32_t bd;
+   int support;
+   struct bd_list *next;
+ } BD_t;
+@@ -24,7 +23,7 @@
+   int index;
+   char type; /* 'p', 's', 'c' */
+   int direction; /* for clustering elements in consistent directions */
+-  long score; /* for edge_filt, to solve the PPS problem */
++  int32_t score; /* for edge_filt, to solve the PPS problem */
+   struct ele_info *ele1_info, *ele2_info;
+ } EDGE_t;
+ 
+@@ -67,6 +66,7 @@
+   struct ele_list *next;
+ } ELE_DATA_t;
+ 
++
+ typedef struct family {
+   int index;
+   char name[10];
+@@ -139,21 +139,45 @@
+ void frag_data_free(FRAG_DATA_t **);
+ void frag_data_cleanup(FRAG_DATA_t **);
+ 
+-
++void print_ele_info(ELE_INFO_t *rt);
++void print_ele_data(ELE_DATA_t *rt);
+ 
+ /*MSP_DATA_t *all_msps=NULL;
+   EDGE_t *efav=NULL;*/
+ ELE_INFO_t **all_ele;
+ int ele_ct, ele_array_size, fam_ct;
+ int clan_size, clan_core_size;
+-long msp_in_mem, msp_left, msp_ct, msp_index;
+-long edge_index, edge_in_mem, edge_left, edge_ct;
+-long  files_read, clan_ct, err_no;
++int32_t msp_in_mem, msp_left, msp_ct, msp_index;
++int32_t edge_index, edge_in_mem, edge_left, edge_ct;
++int32_t  files_read, clan_ct, err_no;
+ ELE_INFO_t *ele_info_data, *ele_info_tail;
+ FAM_DATA_t *FAMs;
+ FILE *err, *new_msps, *eles, *unproc, *combo, *obs, *fams, *log_file;
+ 
+ 
++/***************
++ * DEBUG       *
++ ***************/
++
++void print_ele_data(ELE_DATA_t *rt) {
++  if (!rt) return;
++  print_ele_info( rt->ele_info );
++  if (rt->next) 
++    print_ele_data(rt->next);
++}
++
++void print_ele_info(ELE_INFO_t *rt) {
++  if (!rt) return;
++  printf("ele: index=%d, stat=%c, file_update=%d", rt->index, rt->stat, 
++         rt->file_updated );
++  if ( rt->to_family ) 
++    printf(" family_index=%d,", rt->to_family->index );
++  if ( rt->ele )
++    printf(" ele_index=%d", rt->ele->index );
++  else 
++    printf(" ele=NULL");
++  printf("\n");
++}
+ 
+ 
+ 
+@@ -1341,7 +1365,7 @@
+ 
+ 
+ 
+-
++/* Unused */
+ void msp_data_free(MSP_DATA_t **md) {
+   MSP_DATA_t *cur, *next;
+ 
+diff -ruN RECON1.05/src/eleredef.c RECON-1.08/src/eleredef.c
+--- RECON1.05/src/eleredef.c	2002-03-22 14:01:54.000000000 -0600
++++ RECON-1.08/src/eleredef.c	2014-02-05 16:05:18.000000000 -0600
+@@ -51,7 +51,7 @@
+ BD_t *CP_cluster(CP_t *);
+ void CP_sort(CP_t **);
+ void BD_sort(BD_t **);
+-int span(ELEMENT_t *, long);
++int span(ELEMENT_t *, int32_t);
+ void TBD_merge(ELEMENT_t *);
+ 
+ void dissect(ELE_INFO_t *);
+@@ -67,16 +67,16 @@
+ 
+ void edges_and_cps(ELE_INFO_t *, IMAGE_t **);
+ int full_length(IMAGE_t *, float);
+-void add_CP(CP_t **, long, ELE_INFO_t *);
+-void add_edge(ELE_INFO_t *, ELE_INFO_t *, char, long, short);
++void add_CP(CP_t **, int32_t, ELE_INFO_t *);
++void add_edge(ELE_INFO_t *, ELE_INFO_t *, char, int32_t, short);
+ void adjust_edge_tree(ELE_INFO_t *);
+ int charge_edge_array(EDGE_t **, EDGE_TREE_t *, int);
+ int consis_tree_build(IMG_NODE_t *, IMAGE_t *, int);
+ int consis(IMAGE_t *, IMAGE_t *, float);
+ IMG_NODE_t **node_entry(IMG_NODE_t **);
+ void consis_tree_free(IMG_NODE_t *);
+-/*int find_prim(struct img_node *, float, long, long, short, long *, short *);*/
+-int find_prim(IMG_NODE_t *, float, long, long, long, long, long, long, long, int *, long *, short *);
++/*int find_prim(struct img_node *, float, int32_t, int32_t, short, int32_t *, short *);*/
++int find_prim(IMG_NODE_t *, float, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int32_t, int *, int32_t *, short *);
+ 
+ void combo_output(ELE_INFO_t *);
+ void obs_output(ELE_INFO_t *);
+@@ -90,9 +90,6 @@
+ 
+ 
+ 
+-
+-
+-
+ int main (int argc, char *argv[]) {
+   ELE_INFO_t *cur_ele_info;
+   int i, ele_march, ei, rounds=0, start;
+@@ -125,7 +122,6 @@
+     printf("Can not open naive_ele_no.  Exiting\n");
+     exit(1);
+   }
+-
+   msp_no = fopen("summary/redef_msp_no", "r");
+   if (!msp_no) msp_no = fopen("summary/ori_msp_no", "r");
+   if (!msp_no) {
+@@ -133,15 +129,46 @@
+     exit(1);
+   }
+ 
++  // May or may not exist.  All uses of edge_no first check for
++  // its existence.
+   edge_no = fopen("summary/naive_edge_no", "r");
++
++  // May or may not exist.  All uses are checked.
+   size_list = fopen("tmp/size_list", "r");
++
++  // May or may not exist.  All uses are checked.
+   new_stat = fopen("tmp2/redef_stat", "r");
+ 
+   new_msps = fopen("summary/new_msps", "a");
++  if ( !new_msps )
++  {
++    printf("Can not open summary/new_msps for writing! Exiting\n");
++    exit(1);
++  }
+   unproc = fopen("summary/unproc", "a");
++  if ( !unproc )
++  {
++    printf("Can not open summary/unproc for writing! Exiting\n");
++    exit(1);
++  }
+   combo = fopen("summary/combo", "a");
++  if ( !combo )
++  {
++    printf("Can not open summary/combo for writing! Exiting\n");
++    exit(1);
++  }
+   obs = fopen("summary/obsolete", "a");
++  if ( !obs )
++  {
++    printf("Can not open summary/obsolete for writing! Exiting\n");
++    exit(1);
++  }
+   log_file = fopen("tmp2/log", "a");
++  if ( !log_file )
++  {
++    printf("Can not open tmp2/log for writing! Exiting\n");
++    exit(1);
++  }
+ 
+   while (fgets(line, 15, ele_no)) {
+     ele_ct = atoi(line);
+@@ -170,7 +197,7 @@
+   if (size_list && !new_stat) outthrow_big_tandems(size_list);
+   fclose(unproc);
+ 
+-  /* set file_updated for ele_info's */
++  /* set file_updated / stat for ele_info's */
+   if (new_stat) {
+     ele_ct = 0;
+     while (fgets(line, 35, new_stat)) {
+@@ -207,6 +234,12 @@
+   /* re-define elements using the syntopy algorithm, and build edges */
+   img_ptr = (IMAGE_t **) malloc(MAX_IMG*sizeof(IMAGE_t *));
+ 
++  if ( ! img_ptr )
++  {
++    printf("eleredef: Error! Could not allocate memory for img_ptr: %d bytes requested\n", ( MAX_IMG*sizeof(IMAGE_t *) ) );
++    exit(-1);
++  }
++
+   to_march = 1;
+   while (to_march) {
+     to_march = 0;
+@@ -529,6 +562,11 @@
+     fprintf(log_file, "new clan: %d for ele %d\n", clan_ct, ele_info->index);
+     fflush(log_file);
+     build_local_network(ele_info, &local_net, &local_net_tail, img_ptr);
++    if ( ele_info->index == 362 || ele_info->index == 10 )
++    {
++      printf("Printing local net for 362\n");
++      print_ele_data( local_net );
++    }
+     fprintf(log_file, "clan size: %d, clan core size: %d\n", clan_size, clan_core_size);
+     fflush(log_file);
+     /* redefining elements in the local network */
+@@ -1136,7 +1174,7 @@
+ 
+ #if 0
+ BD_t *CP_cluster(CP_t *cps) {
+-  long first = cps->cp, last = cps->cp, sum = 0;
++  int32_t first = cps->cp, last = cps->cp, sum = 0;
+   int cpct = 0;
+   BD_t *bds = NULL, *bd_tmp;
+ 
+@@ -1171,7 +1209,7 @@
+ 
+ 
+ BD_t *CP_cluster(CP_t *cps) {
+-  long first = cps->cp, last = cps->cp, sum = 0;
++  int32_t first = cps->cp, last = cps->cp, sum = 0;
+   CP_t *begin = cps;
+   int cpct = 0;
+   BD_t *bds = NULL, *bd_tmp;
+@@ -1276,7 +1314,7 @@
+ 
+ 
+ 
+-int span(ELEMENT_t *ele, long cut) {
++int span(ELEMENT_t *ele, int32_t cut) {
+   /* span requires PCP sorted according to cp_cmp and images sorted according to frag_cmp */
+   int left=0, rite=0;
+   IMG_DATA_t *id;
+@@ -1348,18 +1386,20 @@
+       dissected = 0;
+       img_partner = partner(cur_img_data->to_image);
+       ele_partner = img_partner->ele_info->ele;
+-      if (full_length(img_partner, CUTOFF2)) ele_partner->flimg_no --;
++      if (full_length(img_partner, CUTOFF2)){
++        ele_partner->flimg_no --;
++      }
+       tbd_tmp = cur_ele->TBD;
+       while (tbd_tmp != NULL) {
+ 	if (tbd_tmp->bd > cur_img_data->to_image->frag.lb || !tbd_tmp->next) {
+ 	  if (tbd_tmp->bd > cur_img_data->to_image->frag.lb && tbd_tmp->bd < cur_img_data->to_image->frag.rb) {
+ 	    if (tbd_tmp->bd - cur_img_data->to_image->frag.lb <= TOO_SHORT) {
+-	      cur_img_data->to_image->to_msp->score = (long) (cur_img_data->to_image->frag.rb-tbd_tmp->bd+1.)/(cur_img_data->to_image->frag.rb-cur_img_data->to_image->frag.lb+1.)*cur_img_data->to_image->to_msp->score;
++	      cur_img_data->to_image->to_msp->score = (int32_t) (cur_img_data->to_image->frag.rb-tbd_tmp->bd+1.)/(cur_img_data->to_image->frag.rb-cur_img_data->to_image->frag.lb+1.)*cur_img_data->to_image->to_msp->score;
+ 	      if (cur_img_data->to_image->to_msp->direction == 1) img_partner->frag.lb += tbd_tmp->bd - cur_img_data->to_image->frag.lb;
+ 	      else img_partner->frag.rb -= tbd_tmp->bd - cur_img_data->to_image->frag.lb;
+ 	      cur_img_data->to_image->frag.lb = tbd_tmp->bd;
+ 	    } else if (tbd_tmp->bd - cur_img_data->to_image->frag.rb >= -TOO_SHORT) {
+-	      cur_img_data->to_image->to_msp->score = (long) (tbd_tmp->bd-cur_img_data->to_image->frag.lb+1.)/(cur_img_data->to_image->frag.rb-cur_img_data->to_image->frag.lb+1.)*cur_img_data->to_image->to_msp->score;
++	      cur_img_data->to_image->to_msp->score = (int32_t) (tbd_tmp->bd-cur_img_data->to_image->frag.lb+1.)/(cur_img_data->to_image->frag.rb-cur_img_data->to_image->frag.lb+1.)*cur_img_data->to_image->to_msp->score;
+ 	      if (cur_img_data->to_image->to_msp->direction == 1) img_partner->frag.rb -= cur_img_data->to_image->frag.rb - tbd_tmp->bd;
+ 	      else img_partner->frag.lb += cur_img_data->to_image->frag.rb - tbd_tmp->bd;
+ 	      cur_img_data->to_image->frag.rb = tbd_tmp->bd;
+@@ -1375,8 +1415,11 @@
+ 		target_img = &msp_tmp->sbjct;
+ 		target_partner = &msp_tmp->query;
+ 	      }
+-	      msp_tmp->score = (long) (tbd_tmp->bd-target_img->frag.lb+1.)/(target_img->frag.rb-target_img->frag.lb+1.)*msp_tmp->score;
++	      msp_tmp->score = (int32_t) (tbd_tmp->bd-target_img->frag.lb+1.)/(target_img->frag.rb-target_img->frag.lb+1.)*msp_tmp->score;
+ 	      if (msp_tmp->direction == 1) {
++                // RMH: When tracking down the divide by zero problem I ended up signaling this 
++                //      spot in the code as the likely place where things went initially wrong. 
++                //      Explore further.
+ 		target_partner->frag.rb -= target_img->frag.rb - tbd_tmp->bd;
+ 	      }
+ 	      else {
+@@ -1715,7 +1758,7 @@
+     ELE_DATA_t *ele_data_tmp;
+     IMG_DATA_t *scovs;
+ 
+-    long max_score=0;
++    int32_t max_score=0;
+     short dir;
+ 
+     /* sort unprocessed images according to their partner element, and then their left bounds */
+@@ -1862,7 +1905,10 @@
+ 
+ 
+ 
+-
++/* NOTE: Due to the difference in computational precesion between 32bit
++ *       and 64 bit processors the following function may return differing
++ *       results.
++ */
+ int full_length(IMAGE_t *i, float cutoff) {
+   if (!i->ele_info->ele) {
+     err_no ++;
+@@ -1879,7 +1925,7 @@
+ 
+ 
+ 
+-void add_CP(CP_t **CP_ptr, long cp, ELE_INFO_t *cont) {
++void add_CP(CP_t **CP_ptr, int32_t cp, ELE_INFO_t *cont) {
+   CP_t *new = (CP_t *) malloc(sizeof(CP_t));
+   new->cp = cp;
+   new->contributor = cont;
+@@ -1889,7 +1935,7 @@
+ 
+ 
+ 
+-void add_edge(ELE_INFO_t *ele1_info, ELE_INFO_t *ele2_info, char type, long score, short dir) {
++void add_edge(ELE_INFO_t *ele1_info, ELE_INFO_t *ele2_info, char type, int32_t score, short dir) {
+   EDGE_t *new = EDGE_malloc();
+   int ct;
+ 
+@@ -2078,7 +2124,7 @@
+ */
+ 
+ #if 0
+-int find_prim(IMG_NODE_t *nd, float cutoff, long score, long hist, short which, long *sc, short *d) {
++int find_prim(IMG_NODE_t *nd, float cutoff, int32_t score, int32_t hist, short which, int32_t *sc, short *d) {
+   IMG_NODE_t *nex_node;
+   int sum = 0;
+   short level, further = 0;
+@@ -2143,9 +2189,9 @@
+ 
+ 
+ 
+-int find_prim(IMG_NODE_t *nd, float cutoff, long end1, long end2, long efl1, long efl2, long al1, long al2, long score, int *pmarkp, long *sc, short *d) {
++int find_prim(IMG_NODE_t *nd, float cutoff, int32_t end1, int32_t end2, int32_t efl1, int32_t efl2, int32_t al1, int32_t al2, int32_t score, int *pmarkp, int32_t *sc, short *d) {
+   int sum = 0, mark=0;
+-  long skip1, skip2, len1, len2;
++  int32_t skip1, skip2, len1, len2;
+   IMAGE_t *ipt;
+ 
+   if (nd->sib) sum += find_prim(nd->sib, cutoff, end1, end2, efl1, efl2, al1, al2, score, pmarkp, sc, d);
+@@ -2169,7 +2215,7 @@
+   efl2 += len2;
+   al1 += len1;
+   al2 += len2;
+-  score += ((long) nd->to_image->to_msp->iden)*(len1+len2)/2;
++  score += ((int32_t) nd->to_image->to_msp->iden)*(len1+len2)/2;
+ 
+   if (nd->children) {
+     end1 = nd->to_image->frag.rb;
+@@ -2188,6 +2234,16 @@
+     if ( (1.0*al1/efl1 > cutoff || 1.0*al2/efl2 > cutoff) && (efl1-al1 < 30 || efl2-al2 < 30) ) {
+       sum = 1;
+       mark = 1;
++      if ( (al1+al2) == 0 )
++      {
++         // RMH: A divide by zero error has occured a few times at this point. 
++         //      I looked extensively through the code and cannot determine what
++         //      is causing this -- although I have a reliable test case to 
++         //      explore this further.  For now this is the only workaround.
++         //      If al1 & al2 are zero then simply set them to 1.  
++         printf("eleredef warning: Divide by zero averted -- setting al1 to 1.\n");
++         al1 = 1;
++      }
+       score = score*2/(al1+al2);
+       if (score > *sc) {
+ 	*sc = score;
+diff -ruN RECON1.05/src/Makefile RECON-1.08/src/Makefile
+--- RECON1.05/src/Makefile	2002-01-10 15:48:02.000000000 -0600
++++ RECON-1.08/src/Makefile	2014-02-05 16:05:18.000000000 -0600
+@@ -1,9 +1,7 @@
+ # Makefile for ReCon
+ #
+ #
+-
+-VERSION = 1.0
+-VDATE   = JUL 2001
++VERSION = 1.08
+ 
+ ## where you want things installed
+ BINDIR  = ../bin
+@@ -13,8 +11,8 @@
+ #SRCDIR = .
+ 
+ ## your compiler
+-CC = gcc
+ #CC = cc    # for SGI Origin200 compiler#
++CC = gcc
+ 
+ ## any special compiler flags you want
+ #  -pedantic clashes with -DMEMDEBUG??
+@@ -121,7 +119,5 @@
+ 
+ 
+ 
+-
+-
+ 
+ 
+diff -ruN RECON1.05/src/msps.h RECON-1.08/src/msps.h
+--- RECON1.05/src/msps.h	2002-01-10 15:19:10.000000000 -0600
++++ RECON-1.08/src/msps.h	2014-02-05 16:05:18.000000000 -0600
+@@ -3,14 +3,13 @@
+ #include "bolts.h"
+ #include "seqlist.h"
+ 
+-
+ /* A collection of structures and functions to handle MSPs */
+ 
+ /* BASIC structures */
+ 
+ typedef struct frag {
+   char *seq_name;
+-  long lb, rb;
++  int32_t lb, rb;
+ /*  char lst, rst;    type of ends, can be used to mark physical ends */
+ } FRAG_t;
+ 
+@@ -44,7 +43,7 @@
+ typedef struct msp {
+   /*struct msp_list *hanger;*/
+   char stat; /* 'p', 's' */
+-  long score;
++  int32_t score;
+   float iden;
+   int direction;
+   IMAGE_t query, sbjct;
+@@ -110,7 +109,7 @@
+ 
+ 
+ int scan_msp(MSP_t *m, char *line) {
+-    long bd_tmp;
++    int32_t bd_tmp;
+     char qname[NAME_LEN], sname[NAME_LEN];
+     int pos;
+ 
+@@ -153,7 +152,7 @@
+ /* archaine */
+ #if 0
+ int merge_msp(MSP_t *m1, MSP_t *m2) { /* merge two MSPs into the first one */
+-  long l1, l2;
++  int32_t l1, l2;
+ 
+   /* no need for changing direction */
+   /* iden */
+@@ -195,7 +194,7 @@
+ 
+ 
+ int sing_cov(FRAG_t *f1, FRAG_t *f2, float cutoff) {
+-  long l1, l2, l, lb, rb;
++  int32_t l1, l2, l, lb, rb;
+   if (f1->seq_name == f2->seq_name /*!strncmp(f1->seq_name, f2->seq_name, NAME_LEN)*/) {
+     l1 = f1->rb - f1->lb;
+     l2 = f2->rb - f2->lb;
+@@ -211,7 +210,7 @@
+ 
+ 
+ int doub_cov(FRAG_t *f1, FRAG_t *f2, float cutoff) {
+-  long l1, l2, l, lb, rb;
++  int32_t l1, l2, l, lb, rb;
+   if (f1->seq_name == f2->seq_name /*!strncmp(f1->seq_name, f2->seq_name, NAME_LEN)*/) {
+     l1 = f1->rb - f1->lb;
+     l2 = f2->rb - f2->lb;
+diff -ruN RECON1.05/src/seqlist.h RECON-1.08/src/seqlist.h
+--- RECON1.05/src/seqlist.h	2002-01-10 15:19:10.000000000 -0600
++++ RECON-1.08/src/seqlist.h	2014-02-05 16:05:18.000000000 -0600
+@@ -1,5 +1,6 @@
+ 
+ #include "bolts.h"
++#include "string.h"
+ 
+ #ifndef _seqlist_h
+ #define _seqlist_h

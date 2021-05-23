@@ -1,0 +1,29 @@
+From e125b22536eadcaba3c1f765c83f7bb687f9f51a Mon Sep 17 00:00:00 2001
+From: Chris Green <artists@fnal.gov>
+Date: Thu, 7 Mar 2019 11:16:00 -0600
+Subject: [PATCH] Remove superfluous semicolons to satisfy -pedantic.
+
+---
+ include/tbb/machine/gcc_generic.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/include/tbb/machine/gcc_generic.h b/include/tbb/machine/gcc_generic.h
+index 740cfd3..6a8d4b7 100644
+--- a/include/tbb/machine/gcc_generic.h
++++ b/include/tbb/machine/gcc_generic.h
+@@ -216,9 +216,9 @@ struct machine_load_store_seq_cst {
+ 
+ // __builtin_clz counts the number of leading zeroes
+ namespace tbb{ namespace internal { namespace gcc_builtins {
+-    inline int clz(unsigned int x){ return __builtin_clz(x); };
+-    inline int clz(unsigned long int x){ return __builtin_clzl(x); };
+-    inline int clz(unsigned long long int x){ return __builtin_clzll(x); };
++    inline int clz(unsigned int x){ return __builtin_clz(x); }
++    inline int clz(unsigned long int x){ return __builtin_clzl(x); }
++    inline int clz(unsigned long long int x){ return __builtin_clzll(x); }
+ }}}
+ // logarithm is the index of the most significant non-zero bit
+ static inline intptr_t __TBB_machine_lg( uintptr_t x ) {
+-- 
+2.20.1
+

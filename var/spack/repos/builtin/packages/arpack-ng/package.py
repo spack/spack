@@ -1,34 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
 class ArpackNg(Package):
-    """
-    ARPACK-NG is a collection of Fortran77 subroutines designed to solve large
-    scale eigenvalue problems.
+    """ARPACK-NG is a collection of Fortran77 subroutines designed to solve
+    large scale eigenvalue problems.
 
     Important Features:
 
@@ -53,15 +33,24 @@ class ArpackNg(Package):
 
     arpack-ng is replacing arpack almost everywhere.
     """
-    homepage = 'https://github.com/opencollab/arpack-ng'
-    url = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
 
-    version('3.4.0', 'ae9ca13f2143a7ea280cb0e2fd4bfae4')
-    version('3.3.0', 'ed3648a23f0a868a43ef44c97a21bad5')
+    homepage = 'https://github.com/opencollab/arpack-ng'
+    url      = 'https://github.com/opencollab/arpack-ng/archive/3.3.0.tar.gz'
+    git      = 'https://github.com/opencollab/arpack-ng.git'
+
+    version('develop', branch='master')
+    version('3.8.0', sha256='ada5aeb3878874383307239c9235b716a8a170c6d096a6625bfd529844df003d')
+    version('3.7.0', sha256='972e3fc3cd0b9d6b5a737c9bf6fd07515c0d6549319d4ffb06970e64fa3cc2d6')
+    version('3.6.3', sha256='64f3551e5a2f8497399d82af3076b6a33bf1bc95fc46bbcabe66442db366f453')
+    version('3.6.2', sha256='673c8202de996fd3127350725eb1818e534db4e79de56d5dcee8c00768db599a')
+    version('3.6.0', sha256='3c88e74cc10bba81dc2c72c4f5fff38a800beebaa0b4c64d321c28c9203b37ea')
+    version('3.5.0', sha256='50f7a3e3aec2e08e732a487919262238f8504c3ef927246ec3495617dde81239')
+    version('3.4.0', sha256='69e9fa08bacb2475e636da05a6c222b17c67f1ebeab3793762062248dd9d842f')
+    version('3.3.0', sha256='ad59811e7d79d50b8ba19fd908f92a3683d883597b2c7759fdcc38f6311fe5b3', deprecated=True)
 
     variant('shared', default=True,
             description='Enables the build of shared libraries')
-    variant('mpi', default=False, description='Activates MPI support')
+    variant('mpi', default=True, description='Activates MPI support')
 
     # The function pdlamch10 does not set the return variable.
     # This is fixed upstream
@@ -70,6 +59,10 @@ class ArpackNg(Package):
 
     patch('make_install.patch', when='@3.4.0')
     patch('parpack_cmake.patch', when='@3.4.0')
+
+    # Fujitsu compiler does not support 'isnan' function.
+    # isnan: function that determines whether it is NaN.
+    patch('incompatible_isnan_fix.patch', when='%fj')
 
     depends_on('blas')
     depends_on('lapack')
@@ -80,6 +73,25 @@ class ArpackNg(Package):
 
     depends_on('mpi', when='+mpi')
 
+    @property
+    def libs(self):
+        # TODO: do we need spec['arpack-ng:parallel'].libs ?
+        # query_parameters = self.spec.last_query.extra_parameters
+        libraries = ['libarpack']
+
+        if '+mpi' in self.spec:
+            libraries = ['libparpack'] + libraries
+
+        return find_libraries(
+            libraries, root=self.prefix, shared=True, recursive=True
+        )
+
+    @when('@:3.7.0 %gcc@10:')
+    def setup_build_environment(self, env):
+        # version up to and including 3.7.0 are not ported to gcc 10
+        # https://github.com/opencollab/arpack-ng/issues/242
+        env.set('FFLAGS', '-fallow-argument-mismatch')
+
     @when('@3.4.0:')
     def install(self, spec, prefix):
 
@@ -88,23 +100,26 @@ class ArpackNg(Package):
         options.append('-DCMAKE_INSTALL_NAME_DIR:PATH=%s/lib' % prefix)
 
         # Make sure we use Spack's blas/lapack:
+        lapack_libs = spec['lapack'].libs.joined(';')
+        blas_libs = spec['blas'].libs.joined(';')
+
         options.extend([
             '-DLAPACK_FOUND=true',
-            '-DLAPACK_INCLUDE_DIRS=%s' % spec['lapack'].prefix.include,
-            '-DLAPACK_LIBRARIES=%s' % (
-                spec['lapack'].lapack_shared_lib if '+shared' in spec else
-                spec['lapack'].lapack_static_lib),
+            '-DLAPACK_INCLUDE_DIRS={0}'.format(spec['lapack'].prefix.include),
+            '-DLAPACK_LIBRARIES={0}'.format(lapack_libs),
             '-DBLAS_FOUND=true',
-            '-DBLAS_INCLUDE_DIRS=%s' % spec['blas'].prefix.include,
-            '-DBLAS_LIBRARIES=%s' % (
-                spec['blas'].blas_shared_lib if '+shared' in spec else
-                spec['blas'].blas_static_lib)
+            '-DBLAS_INCLUDE_DIRS={0}'.format(spec['blas'].prefix.include),
+            '-DBLAS_LIBRARIES={0}'.format(blas_libs)
         ])
 
         if '+mpi' in spec:
             options.append('-DMPI=ON')
 
-        # TODO: -DINTERFACE64=ON
+        # If 64-bit BLAS is used:
+        if (spec.satisfies('^openblas+ilp64') or
+            spec.satisfies('^intel-mkl+ilp64') or
+            spec.satisfies('^intel-parallel-studio+mkl+ilp64')):
+            options.append('-DINTERFACE64=1')
 
         if '+shared' in spec:
             options.append('-DBUILD_SHARED_LIBS=ON')
@@ -115,7 +130,7 @@ class ArpackNg(Package):
             make('test')
         make('install')
 
-    @when('@3.3.0')
+    @when('@3.3.0')  # noqa
     def install(self, spec, prefix):
         # Apparently autotools are not bootstrapped
         which('libtoolize')()
@@ -129,19 +144,12 @@ class ArpackNg(Package):
                 'F77=%s' % spec['mpi'].mpif77
             ])
 
-        if '+shared' in spec:
-            options.extend([
-                '--with-blas=%s' % to_link_flags(
-                    spec['blas'].blas_shared_lib),
-                '--with-lapack=%s' % to_link_flags(
-                    spec['lapack'].lapack_shared_lib)
-            ])
-        else:
-            options.extend([
-                '--with-blas=%s' % spec['blas'].blas_static_lib,
-                '--with-lapack=%s' % spec['lapack'].lapack_static_lib,
-                '--enable-shared=no'
-            ])
+        options.extend([
+            '--with-blas={0}'.format(spec['blas'].libs.ld_flags),
+            '--with-lapack={0}'.format(spec['lapack'].libs.ld_flags)
+        ])
+        if '+shared' not in spec:
+            options.append('--enable-shared=no')
 
         bootstrap()
         configure(*options)

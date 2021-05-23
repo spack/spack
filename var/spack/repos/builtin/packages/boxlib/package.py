@@ -1,50 +1,36 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Boxlib(Package):
+class Boxlib(CMakePackage):
     """BoxLib, a software framework for massively parallel
        block-structured adaptive mesh refinement (AMR) codes."""
 
     homepage = "https://ccse.lbl.gov/BoxLib/"
-    url = "https://ccse.lbl.gov/pub/Downloads/BoxLib.git"
+    url = "https://github.com/BoxLib-Codes/BoxLib/archive/16.12.2.tar.gz"
 
-    # TODO: figure out how best to version this.  No tags in the repo!
-    version('master', git='https://ccse.lbl.gov/pub/Downloads/BoxLib.git')
+    version('16.12.2', sha256='e87faeccfcb14b3436d36c45fcd9f46ea20f65298d35c6db2a80d6332b036dd2')
 
     depends_on('mpi')
-    depends_on('cmake', type='build')
 
-    def install(self, spec, prefix):
-        args = std_cmake_args
-        args += ['-DCCSE_ENABLE_MPI=1',
-                 '-DCMAKE_C_COMPILER=%s' % which('mpicc'),
-                 '-DCMAKE_CXX_COMPILER=%s' % which('mpicxx'),
-                 '-DCMAKE_Fortran_COMPILER=%s' % which('mpif90')]
+    variant('dims', default='3', values=('1', '2', '3'), multi=False,
+            description='Number of spatial dimensions')
 
-        cmake('.', *args)
-        make()
-        make("install")
+    def cmake_args(self):
+        spec = self.spec
+        options = []
+
+        options.extend([
+            '-DBL_SPACEDIM=%d' % int(spec.variants['dims'].value),
+            '-DCMAKE_POSITION_INDEPENDENT_CODE:BOOL=ON',
+            '-DENABLE_FBASELIB=ON',
+            '-DCMAKE_C_COMPILER=%s' % spec['mpi'].mpicc,
+            '-DCMAKE_CXX_COMPILER=%s' % spec['mpi'].mpicxx,
+            '-DCMAKE_Fortran_COMPILER=%s' % spec['mpi'].mpifc
+        ])
+
+        return options

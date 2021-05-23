@@ -28,3 +28,20 @@ def total_ordering(cls):
             opfunc.__doc__ = getattr(int, opname).__doc__
             setattr(cls, opname, opfunc)
     return cls
+
+
+@total_ordering
+class reverse_order(object):
+    """Helper for creating key functions.
+
+       This is a wrapper that inverts the sense of the natural
+       comparisons on the object.
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        return other.value == self.value
+
+    def __lt__(self, other):
+        return other.value < self.value

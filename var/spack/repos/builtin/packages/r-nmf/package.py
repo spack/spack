@@ -1,60 +1,41 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RNmf(Package):
-    """Provides a framework to perform Non-negative Matrix Factorization (NMF).
+class RNmf(RPackage):
+    """Algorithms and Framework for Nonnegative Matrix Factorization (NMF)
+
+    Provides a framework to perform Non-negative Matrix Factorization (NMF).
     The package implements a set of already published algorithms and seeding
     methods, and provides a framework to test, develop and plug new/custom
     algorithms. Most of the built-in algorithms have been optimized in C++, and
     the main interface function provides an easy way of performing parallel
-    computations on multicore machines.."""
+    computations on multicore machines."""
 
     homepage = "http://renozao.github.io/NMF"
-    url      = "https://cran.r-project.org/src/contrib/NMF_0.20.6.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/NMF"
+    url      = "https://cloud.r-project.org/src/contrib/NMF_0.21.0.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/NMF"
 
-    version('0.20.6', '81df07b3bf710a611db5af24730ff3d0')
+    version('0.23.0', sha256='0f0cca01b37bf46fce90d2e951df609d3d377908aa607825083fd0c47cc24753')
+    version('0.21.0', sha256='3b30c81c66066fab4a63c5611a0313418b840d8b63414db31ef0e932872d02e3')
 
-    extends('R')
-
-    depends_on('r-pkgmaker', type=nolink)
-    depends_on('r-registry', type=nolink)
-    depends_on('r-rngtools', type=nolink)
-    depends_on('r-cluster', type=nolink)
-    depends_on('r-stringr', type=nolink)
-    depends_on('r-digest', type=nolink)
-    depends_on('r-gridbase', type=nolink)
-    depends_on('r-colorspace', type=nolink)
-    depends_on('r-rcolorbrewer', type=nolink)
-    depends_on('r-foreach', type=nolink)
-    depends_on('r-doparallel', type=nolink)
-    depends_on('r-ggplot2', type=nolink)
-    depends_on('r-reshape2', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@3.0.0:', type=('build', 'run'))
+    depends_on('r-pkgmaker@0.20:', type=('build', 'run'))
+    depends_on('r-registry', type=('build', 'run'))
+    depends_on('r-rngtools@1.2.3:', type=('build', 'run'))
+    depends_on('r-cluster', type=('build', 'run'))
+    depends_on('r-stringr@1.0.0:', type=('build', 'run'))
+    depends_on('r-digest', type=('build', 'run'))
+    depends_on('r-gridbase', type=('build', 'run'))
+    depends_on('r-colorspace', type=('build', 'run'))
+    depends_on('r-rcolorbrewer', type=('build', 'run'))
+    depends_on('r-foreach', type=('build', 'run'))
+    depends_on('r-doparallel', type=('build', 'run'))
+    depends_on('r-ggplot2', type=('build', 'run'))
+    depends_on('r-reshape2', type=('build', 'run'))
+    depends_on('r-biocmanager', when='@0.23.0', type=('build', 'run'))
+    depends_on('r-biobase', when='@0.23.0', type=('build', 'run'))

@@ -1,0 +1,32 @@
+From a5cdb4fdce55813b79e3ee6300f282ba6d7b6b85 Mon Sep 17 00:00:00 2001
+From: Jianwen WEI <weijianwen@gmail.com>
+Date: Fri, 14 Apr 2017 12:40:44 +0800
+Subject: [PATCH 1/1] Replace ATLAS with OpenBLAS in KaldiReader.
+
+---
+ Makefile | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index bbd75e08c..909457963 100644
+--- a/Makefile
++++ b/Makefile
+@@ -189,13 +189,13 @@ ifeq ("$(MATHLIB)","openblas")
+   INCLUDEPATH += $(OPENBLAS_PATH)/include
+   LIBPATH += $(OPENBLAS_PATH)/lib
+   LIBS_LIST += openblas m pthread
+-  CPPFLAGS += -DUSE_OPENBLAS
++  CPPFLAGS += -DUSE_OPENBLAS -DHAVE_OPENBLAS
+ endif
+ 
+ # Set up kaldi and openfst for Kaldi2Reader if needed
+ ifdef KALDI_PATH
+   INCLUDEPATH += $(KALDI_PATH)/include $(OPENFST_PATH)/incldue
+-  CPPFLAGS += -DKALDI_DOUBLEPRECISION=0 -DHAVE_POSIX_MEMALIGN -DHAVE_EXECINFO_H=1 -DHAVE_CXXABI_H -DHAVE_ATLAS -DHAVE_OPENFST_GE_10400
++  CPPFLAGS += -DKALDI_DOUBLEPRECISION=0 -DHAVE_POSIX_MEMALIGN -DHAVE_EXECINFO_H=1 -DHAVE_CXXABI_H -DHAVE_OPENFST_GE_10400
+   KALDI_LIBPATH += $(KALDI_PATH)/lib $(OPENFST_PATH)/lib
+   KALDI_LIBS_LIST := kaldi-util kaldi-matrix kaldi-base kaldi-hmm kaldi-cudamatrix kaldi-nnet kaldi-lat
+   KALDI_LIBS := $(addprefix -l,$(KALDI_LIBS_LIST))
+-- 
+2.11.1
+

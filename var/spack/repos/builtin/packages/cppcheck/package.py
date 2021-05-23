@@ -1,40 +1,38 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Cppcheck(Package):
+class Cppcheck(MakefilePackage):
     """A tool for static C/C++ code analysis."""
     homepage = "http://cppcheck.sourceforge.net/"
-    url      = "http://downloads.sourceforge.net/project/cppcheck/cppcheck/1.68/cppcheck-1.68.tar.bz2"
+    url      = "https://downloads.sourceforge.net/project/cppcheck/cppcheck/1.78/cppcheck-1.78.tar.bz2"
 
-    version('1.68', 'c015195f5d61a542f350269030150708')
+    version('2.1', sha256='ab26eeef039e5b58aac01efb8cb664f2cc16bf9879c61bc93cd00c95be89a5f7')
+    version('2.0', sha256='5f77d36a37ed9ef58ea8b499e4b1db20468114c9ca12b5fb39b95906cab25a3f')
+    version('1.90', sha256='43758d56613596c29440e55ea96a5a13e36f81ca377a8939648b5242faf61883')
+    version('1.89', sha256='5f02389cb24554f5a7ac3d29db8ac19c740f23c92e97eb7fec3881fe86c26f2c')
+    version('1.88', sha256='bb25441749977713476dc630dfe7617b3d9e95c46fec0edbec4ff8ff6fda38ca')
+    version('1.87', sha256='e3b0a46747822471df275417d4b74b56ecac88367433e7428f39288a32c581ca')
+    version('1.81', sha256='bb694f37ae0b5fed48c6cdc2fb5e528daf32cefc64e16b1a520c5411323cf27e')
+    version('1.78', sha256='e42696f7d6321b98cb479ad9728d051effe543b26aca8102428f60b9850786b1')
+    version('1.72', sha256='9460b184ff2d8dd15344f3e2f42f634c86e4dd3303e1e9b3f13dc67536aab420')
+    version('1.68', sha256='add6e5e12b05ca02b356cd0ec7420ae0dcafddeaef183b4dfbdef59c617349b1')
+
+    variant('htmlreport', default=False, description="Install cppcheck-htmlreport")
+
+    depends_on('py-pygments', when='+htmlreport', type='run')
+
+    def build(self, spec, prefix):
+        make('CFGDIR={0}'.format(prefix.cfg))
 
     def install(self, spec, prefix):
-        # cppcheck does not have a configure script
-        make()
-        # manually install the final cppcheck binary
+        # Manually install the final cppcheck binary
         mkdirp(prefix.bin)
         install('cppcheck', prefix.bin)
+        install_tree('cfg', prefix.cfg)
+        if spec.satisfies('+htmlreport'):
+            install('htmlreport/cppcheck-htmlreport', prefix.bin)

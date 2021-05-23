@@ -1,29 +1,13 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from __future__ import print_function
+
 import argparse
 import sys
+from six import iteritems
 
 import llnl.util.tty as tty
 import spack.compilers
@@ -32,50 +16,56 @@ import spack.spec
 from llnl.util.lang import index_by
 from llnl.util.tty.colify import colify
 from llnl.util.tty.color import colorize
-from spack.spec import CompilerSpec
-from spack.util.environment import get_path
+from spack.spec import CompilerSpec, ArchSpec
 
-description = "Manage compilers"
+description = "manage compilers"
+section = "system"
+level = "long"
 
 
 def setup_parser(subparser):
     sp = subparser.add_subparsers(
         metavar='SUBCOMMAND', dest='compiler_command')
 
-    scopes = spack.config.config_scopes
+    scopes = spack.config.scopes()
+    scopes_metavar = spack.config.scopes_metavar
 
     # Find
     find_parser = sp.add_parser(
         'find', aliases=['add'],
-        help='Search the system for compilers to add to Spack configuration.')
+        help='search the system for compilers to add to Spack configuration')
     find_parser.add_argument('add_paths', nargs=argparse.REMAINDER)
     find_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('compilers'),
+        help="configuration scope to modify")
 
     # Remove
     remove_parser = sp.add_parser(
-        'remove', aliases=['rm'], help='Remove compiler by spec.')
+        'remove', aliases=['rm'], help='remove compiler by spec')
     remove_parser.add_argument(
         '-a', '--all', action='store_true',
-        help='Remove ALL compilers that match spec.')
+        help='remove ALL compilers that match spec')
     remove_parser.add_argument('compiler_spec')
     remove_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_modify_scope,
-        help="Configuration scope to modify.")
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_modify_scope('compilers'),
+        help="configuration scope to modify")
 
     # List
     list_parser = sp.add_parser('list', help='list available compilers')
     list_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_list_scope(),
+        help="configuration scope to read from")
 
     # Info
-    info_parser = sp.add_parser('info', help='Show compiler paths.')
+    info_parser = sp.add_parser('info', help='show compiler paths')
     info_parser.add_argument('compiler_spec')
     info_parser.add_argument(
-        '--scope', choices=scopes, default=spack.cmd.default_list_scope,
-        help="Configuration scope to read from.")
+        '--scope', choices=scopes, metavar=scopes_metavar,
+        default=spack.config.default_list_scope(),
+        help="configuration scope to read from")
 
 
 def compiler_find(args):
@@ -83,27 +73,38 @@ def compiler_find(args):
        add them to Spack's configuration.
 
     """
-    paths = args.add_paths
-    if not paths:
-        paths = get_path('PATH')
+    # None signals spack.compiler.find_compilers to use its default logic
+    paths = args.add_paths or None
 
     # Don't initialize compilers config via compilers.get_compiler_config.
     # Just let compiler_find do the
     # entire process and return an empty config from all_compilers
     # Default for any other process is init_config=True
-    compilers = [c for c in spack.compilers.find_compilers(*paths)
-                 if c.spec not in spack.compilers.all_compilers(
-                     scope=args.scope, init_config=False)]
-    if compilers:
-        spack.compilers.add_compilers_to_config(compilers, scope=args.scope,
+    compilers = [c for c in spack.compilers.find_compilers(paths)]
+    new_compilers = []
+    for c in compilers:
+        arch_spec = ArchSpec((None, c.operating_system, c.target))
+        same_specs = spack.compilers.compilers_for_spec(
+            c.spec, arch_spec, init_config=False)
+
+        if not same_specs:
+            new_compilers.append(c)
+
+    if new_compilers:
+        spack.compilers.add_compilers_to_config(new_compilers,
+                                                scope=args.scope,
                                                 init_config=False)
-        n = len(compilers)
+        n = len(new_compilers)
         s = 's' if n > 1 else ''
-        filename = spack.config.get_config_filename(args.scope, 'compilers')
+
+        config = spack.config.config
+        filename = config.get_config_filename(args.scope, 'compilers')
         tty.msg("Added %d new compiler%s to %s" % (n, s, filename))
-        colify(reversed(sorted(c.spec for c in compilers)), indent=4)
+        colify(reversed(sorted(c.spec for c in new_compilers)), indent=4)
     else:
         tty.msg("Found no new compilers")
+    tty.msg("Compilers are defined in the following files:")
+    colify(spack.compilers.compiler_config_files(), indent=4)
 
 
 def compiler_remove(args):
@@ -132,25 +133,55 @@ def compiler_info(args):
         tty.error("No compilers match spec %s" % cspec)
     else:
         for c in compilers:
-            print str(c.spec) + ":"
-            print "\tcc  = %s" % c.cc
-            print "\tcxx = %s" % c.cxx
-            print "\tf77 = %s" % c.f77
-            print "\tfc  = %s" % c.fc
-            print "\tmodules  = %s" % c.modules
-            print "\toperating system  = %s" % c.operating_system
+            print(str(c.spec) + ":")
+            print("\tpaths:")
+            for cpath in ['cc', 'cxx', 'f77', 'fc']:
+                print("\t\t%s = %s" % (cpath, getattr(c, cpath, None)))
+            if c.flags:
+                print("\tflags:")
+                for flag, flag_value in iteritems(c.flags):
+                    print("\t\t%s = %s" % (flag, flag_value))
+            if len(c.environment) != 0:
+                if len(c.environment.get('set', {})) != 0:
+                    print("\tenvironment:")
+                    print("\t    set:")
+                    for key, value in iteritems(c.environment['set']):
+                        print("\t        %s = %s" % (key, value))
+            if c.extra_rpaths:
+                print("\tExtra rpaths:")
+                for extra_rpath in c.extra_rpaths:
+                    print("\t\t%s" % extra_rpath)
+            print("\tmodules  = %s" % c.modules)
+            print("\toperating system  = %s" % c.operating_system)
 
 
 def compiler_list(args):
     tty.msg("Available compilers")
-    index = index_by(spack.compilers.all_compilers(scope=args.scope), 'name')
-    for i, (name, compilers) in enumerate(index.items()):
-        if i >= 1:
-            print
+    index = index_by(spack.compilers.all_compilers(scope=args.scope),
+                     lambda c: (c.spec.name, c.operating_system, c.target))
 
-        cname = "%s{%s}" % (spack.spec.compiler_color, name)
+    # For a container, take each element which does not evaluate to false and
+    # convert it to a string. For elements which evaluate to False (e.g. None)
+    # convert them to '' (in which case it still evaluates to False but is a
+    # string type). Tuples produced by this are guaranteed to be comparable in
+    # Python 3
+    convert_str = (
+        lambda tuple_container:
+        tuple(str(x) if x else '' for x in tuple_container))
+
+    index_str_keys = list(
+        (convert_str(x), y) for x, y in index.items())
+    ordered_sections = sorted(index_str_keys, key=lambda item: item[0])
+    for i, (key, compilers) in enumerate(ordered_sections):
+        if i >= 1:
+            print()
+        name, os, target = key
+        os_str = os
+        if target:
+            os_str += "-%s" % target
+        cname = "%s{%s} %s" % (spack.spec.compiler_color, name, os_str)
         tty.hline(colorize(cname), char='-')
-        colify(reversed(sorted(compilers)))
+        colify(reversed(sorted(c.spec for c in compilers)))
 
 
 def compiler(parser, args):

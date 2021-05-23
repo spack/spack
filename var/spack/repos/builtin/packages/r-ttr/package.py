@@ -1,44 +1,27 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RTtr(Package):
-    """Functions and data to construct technical trading rules with R."""
+class RTtr(RPackage):
+    """Technical Trading Rules
+
+    A collection of over 50 technical indicators for creating technical trading
+    rules. The package also provides fast implementations of common
+    rolling-window functions, and several volatility calculations."""
 
     homepage = "https://github.com/joshuaulrich/TTR"
-    url      = "https://cran.r-project.org/src/contrib/TTR_0.23-1.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/TTR"
+    url      = "https://cloud.r-project.org/src/contrib/TTR_0.23-1.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/TTR"
 
-    version('0.23-1', '35f693ac0d97e8ec742ebea2da222986')
+    version('0.24.2', sha256='2587b988d9199474a19470b9b999b99133d0d8aa45410813e05c5f0ed763711b')
+    version('0.23-4', sha256='eb17604da986213b3b924f0af65c3d089502a658a253ee34f6b8f6caccf6bfa2')
+    version('0.23-3', sha256='2136032c7a2cd2a82518a4412fc655ecb16597b123dbdebe5684caef9f15261f')
+    version('0.23-1', sha256='699798f06ceae9663da47b67d1bc8679fc1c0776d12afd054d6ac4d19e05b2ae')
 
-    extends('R')
-
-    depends_on('r-xts', type=nolink)
-    depends_on('r-zoo', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r-xts@0.10-0:', type=('build', 'run'))
+    depends_on('r-zoo', type=('build', 'run'))
+    depends_on('r-curl', when='@0.23-4:', type=('build', 'run'))

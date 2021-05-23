@@ -1,33 +1,14 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import platform
 
 
-class Hpl(Package):
+class Hpl(AutotoolsPackage):
     """HPL is a software package that solves a (random) dense linear system
     in double precision (64 bits) arithmetic on distributed-memory computers.
     It can thus be regarded as a portable as well as freely available
@@ -36,16 +17,31 @@ class Hpl(Package):
     homepage = "http://www.netlib.org/benchmark/hpl/"
     url      = "http://www.netlib.org/benchmark/hpl/hpl-2.2.tar.gz"
 
-    version('2.2', '0eb19e787c3dc8f4058db22c9e0c5320')
+    # Note: HPL uses autotools starting with 2.3
+
+    version('2.3', sha256='32c5c17d22330e6f2337b681aded51637fb6008d3f0eb7c277b163fadd612830')
+    version('2.2', sha256='ac7534163a09e21a5fa763e4e16dfc119bc84043f6e6a807aba666518f8df440')
 
     variant('openmp', default=False, description='Enable OpenMP support')
 
     depends_on('mpi@1.1:')
     depends_on('blas')
 
+    # 2.3 adds support for openmpi 4
+    conflicts('^openmpi@4.0.0:', when='@:2.2')
+
     parallel = False
 
-    def configure(self, spec, arch):
+    arch = '{0}-{1}'.format(platform.system(), platform.processor())
+    build_targets = ['arch={0}'.format(arch)]
+
+    @when('@:2.2')
+    def autoreconf(self, spec, prefix):
+        # Prevent sanity check from killing the build
+        touch('configure')
+
+    @when('@:2.2')
+    def configure(self, spec, prefix):
         # List of configuration options
         # Order is important
         config = []
@@ -66,7 +62,7 @@ class Hpl(Package):
             'RM           = /bin/rm -f',
             'TOUCH        = touch',
             # Platform identifier
-            'ARCH         = {0}'.format(arch),
+            'ARCH         = {0}'.format(self.arch),
             # HPL Directory Structure / HPL library
             'TOPdir       = {0}'.format(os.getcwd()),
             'INCdir       = $(TOPdir)/include',
@@ -74,11 +70,11 @@ class Hpl(Package):
             'LIBdir       = $(TOPdir)/lib/$(ARCH)',
             'HPLlib       = $(LIBdir)/libhpl.a',
             # Message Passing library (MPI)
-            'MPinc        = -I{0}'.format(spec['mpi'].prefix.include),
+            'MPinc        = {0}'.format(spec['mpi'].prefix.include),
             'MPlib        = -L{0}'.format(spec['mpi'].prefix.lib),
             # Linear Algebra library (BLAS or VSIPL)
             'LAinc        = {0}'.format(spec['blas'].prefix.include),
-            'LAlib        = {0}'.format(spec['blas'].blas_shared_lib),
+            'LAlib        = {0}'.format(spec['blas'].libs.joined()),
             # F77 / C interface
             'F2CDEFS      = -DAdd_ -DF77_INTEGER=int -DStringSunStyle',
             # HPL includes / libraries / specifics
@@ -99,21 +95,42 @@ class Hpl(Package):
         ])
 
         # Write configuration options to include file
-        with open('Make.{0}'.format(arch), 'w') as makefile:
+        with open('Make.{0}'.format(self.arch), 'w') as makefile:
             for var in config:
                 makefile.write('{0}\n'.format(var))
 
+    @when('@2.3:')
+    def configure_args(self):
+        filter_file(
+            r"^libs10=.*", "libs10=%s" % self.spec["blas"].libs.ld_flags,
+            "configure"
+        )
+
+        if '+openmp' in self.spec:
+            config = ['CFLAGS=-O3 ' + self.compiler.openmp_flag]
+        else:
+            config = ['CFLAGS=-O3']
+
+        if (self.spec.satisfies('^intel-mkl') or
+            self.spec.satisfies('^intel-oneapi-mkl') or
+            self.spec.satisfies('^intel-parallel-studio+mkl')):
+            config.append('LDFLAGS={0}'.format(
+                self.spec['blas'].libs.ld_flags))
+
+        return config
+
+    @when('@:2.2')
     def install(self, spec, prefix):
-        # Arch used for file naming purposes only
-        arch = '{0}-{1}'.format(platform.system(), platform.processor())
-
-        # Generate Makefile include
-        self.configure(spec, arch)
-
-        make('arch={0}'.format(arch))
-
         # Manual installation
-        install_tree(join_path('bin', arch), prefix.bin)
-        install_tree(join_path('lib', arch), prefix.lib)
-        install_tree(join_path('include', arch), prefix.include)
+        install_tree(join_path('bin', self.arch), prefix.bin)
+        install_tree(join_path('lib', self.arch), prefix.lib)
+        install_tree(join_path('include', self.arch), prefix.include)
         install_tree('man', prefix.man)
+
+    @run_after('install')
+    def copy_dat(self):
+        if self.spec.satisfies('@2.3:'):
+            # The pre-2.3 makefile would include a default HPL.dat config
+            # file in the bin directory
+            install('./testing/ptest/HPL.dat',
+                    join_path(self.prefix.bin, 'HPL.dat'))

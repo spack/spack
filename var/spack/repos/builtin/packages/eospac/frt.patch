@@ -1,0 +1,63 @@
+diff -u -r -N a/Source/config/Makefile.-linux-gnu.detect b/Source/config/Makefile.-linux-gnu.detect
+--- a/Source/config/Makefile.-linux-gnu.detect	2020-08-07 14:05:03.000000000 +0900
++++ b/Source/config/Makefile.-linux-gnu.detect	2020-08-07 14:09:43.000000000 +0900
+@@ -18,7 +18,7 @@
+ ##################################################################
+ # Compiler suite configurations based upon F90                 ###
+ ##################################################################
+-F90_List = gfortran pgfortran pgf90 lf95 f90 ifort g95 ftn pathf90 flang
++F90_List = gfortran pgfortran pgf90 lf95 f90 ifort g95 ftn pathf90 flang frt
+ 
+ # Default: use the first F90 compiler found from F90_List
+ F90_Found_List = $(call memoize,create_F90_Found_List_once,$(F90_List))
+diff -u -r -N a/Source/config/Makefile.-linux-gnu.hashes b/Source/config/Makefile.-linux-gnu.hashes
+--- a/Source/config/Makefile.-linux-gnu.hashes	2020-08-07 14:05:03.000000000 +0900
++++ b/Source/config/Makefile.-linux-gnu.hashes	2020-08-07 14:24:53.000000000 +0900
+@@ -33,6 +33,7 @@
+ $(call set,_CC,gfortran,   gcc                       )   # gfortran
+ $(call set,_CC,ftn,        cc        gcc             )   # Cray Computing Environment (cce)
+ $(call set,_CC,flang,      clang     gcc             )   # flang/clang
++$(call set,_CC,frt,        fcc       gcc             )   # Fujitsu
+ 
+ $(call set,_CXX,pgfortran, pgCC      pgc++     g++   )   # PGI
+ $(call set,_CXX,pgf90,     pgCC      pgc++     g++   )   # PGI
+@@ -44,6 +45,7 @@
+ $(call set,_CXX,gfortran,  g++                       )   # gfortran
+ $(call set,_CXX,ftn,       CC        g++             )   # Cray Computing Environment (cce)
+ $(call set,_CXX,flang,     clang++   g++             )   # flang/clang++
++$(call set,_CXX,frt,       FCC       g++             )   # Fujitsu
+ 
+ $(call set,_F77,pgfortran, pgfortran pgf77     pgf90 )   # PGI
+ $(call set,_F77,pgf90,     pgfortran pgf77     pgf90 )   # PGI
+@@ -55,6 +57,7 @@
+ $(call set,_F77,gfortran,  $(F90)                    )   # gfortran
+ $(call set,_F77,ftn,       $(F90)                    )   # Cray Computing Environment (cce)
+ $(call set,_F77,flang,     flang                     )   # flang
++$(call set,_F77,frt,       frt                       )   # Fujitsu
+ 
+ ##################################################################
+ ### Define CC, CXX and  F77 according to $(F90_Key).           ###
+@@ -101,6 +104,7 @@
+ $(call set,_COMP_FLAGS,ppu-gfortran, -I"$(INCDIR)"                    )   # ppu-gfortran
+ $(call set,_COMP_FLAGS,ftn,          -e m -I"$(INCDIR)" -hfp0         )   # Cray Computing Environment (cce)
+ $(call set,_COMP_FLAGS,flang,        -I"$(INCDIR)"                    )   # flang
++$(call set,_COMP_FLAGS,frt,          -I"$(INCDIR)"                    )   # Fujitsu
+ 
+ # define define_module_subdir script options
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,f90,)           # Absoft f90
+@@ -113,6 +117,7 @@
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,gfortran,)      # gfortran
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,ftn,)           # Cray Computing Environment (cce)
+ $(call set,_DEFINE_MODULE_SUBDIR_FLAGS,flang,)         # flang
++$(call set,_DEFINE_MODULE_SUBDIR_FLAGS,frt,)           # Fujitsu
+ 
+ # define define_module_subdir script patterns
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,f90,absoft)           # Absoft f90
+@@ -125,6 +130,7 @@
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,gfortran,gcc)         # gfortran
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,ftn,cce)              # Cray Computing Environment (cce)
+ $(call set,_DEFINE_MODULE_SUBDIR_PATTS,flang,flang)          # flang
++$(call set,_DEFINE_MODULE_SUBDIR_PATTS,frt,frt)              # Fujitsu
+ 
+ # define optional modules for cross-compiling
+ X_Compile_Module_List = craype-haswell craype-mic-knl

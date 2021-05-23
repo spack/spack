@@ -1,0 +1,11 @@
+diff --git a/Modules/FindMKL.cmake b/Modules/FindMKL.cmake
+--- a/Modules/FindMKL.cmake
++++ b/Modules/FindMKL.cmake
+@@ -33,6 +33,7 @@
+       set(MATH_LIB "-lm")
+    endif ()
+   set(CMAKE_REQUIRED_LIBRARIES ${BLAS_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${MATH_LIB})
++  include(CheckSymbolExists)
+   check_symbol_exists(cblas_cgemm mkl.h MKL_WORKS)
+   unset(CMAKE_REQUIRED_INCLUDES)
+   unset(CMAKE_REQUIRED_LIBRARIES)

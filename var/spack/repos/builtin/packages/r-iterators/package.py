@@ -1,42 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RIterators(Package):
-    """Support for iterators, which allow a programmer to traverse through all
+class RIterators(RPackage):
+    """Provides Iterator Construct
+
+    Support for iterators, which allow a programmer to traverse through all
     the elements of a vector, list, or other collection of data."""
 
-    homepage = "https://cran.r-project.org/web/packages/iterators/index.html"
-    url      = "https://cran.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/iterators"
+    homepage = "https://cloud.r-project.org/package=iterators"
+    url      = "https://cloud.r-project.org/src/contrib/iterators_1.0.8.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/iterators"
 
-    version('1.0.8', '2ded7f82cddd8174f1ec98607946c6ee')
+    version('1.0.13', sha256='778e30e4c292da9f94d62acc637cf55273dae258199d847e62658f44840f11a4')
+    version('1.0.12', sha256='96bf31d60ebd23aefae105d9b7790715e63327eec0deb2ddfb3d543994ea9f4b')
+    version('1.0.9', sha256='de001e063805fdd124953b571ccb0ed2838c55e40cca2e9d283d8a90b0645e9b')
+    version('1.0.8', sha256='ae4ea23385776eb0c06c992a3da6b0256a6c84558c1061034c5a1fbdd43d05b8')
 
-    extends('R')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.5.0:', type=('build', 'run'))

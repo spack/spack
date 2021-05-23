@@ -1,27 +1,8 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 import subprocess
@@ -29,21 +10,22 @@ import subprocess
 
 class Turbomole(Package):
     """TURBOMOLE: Program Package for ab initio Electronic Structure
-       Calculations. NB: Requires a license to download."""
+    Calculations.
 
-    # NOTE: Turbomole requires purchase of a license to download. Go to the
-    # NOTE: Turbomole home page, http://www.turbomole-gmbh.com, for details.
-    # NOTE: Spack will search the current directory for this file. It is
-    # NOTE: probably best to add this file to a Spack mirror so that it can be
-    # NOTE: found from anywhere.  For information on setting up a Spack mirror
-    # NOTE: see http://software.llnl.gov/spack/mirrors.html
+    Note: Turbomole requires purchase of a license to download. Go to the
+    Turbomole home page, http://www.turbomole-gmbh.com, for details.
+    Spack will search the current directory for this file. It is
+    probably best to add this file to a Spack mirror so that it can be
+    found from anywhere.  For information on setting up a Spack mirror
+    see http://spack.readthedocs.io/en/latest/mirrors.html"""
 
     homepage = "http://www.turbomole-gmbh.com/"
+    manual_download = True
 
     version('7.0.2', '92b97e1e52e8dcf02a4d9ac0147c09d6',
             url="file://%s/turbolinux702.tar.gz" % os.getcwd())
 
-    variant('mpi', default=False, description='Set up MPI environment')
+    variant('mpi', default=True, description='Set up MPI environment')
     variant('smp', default=False, description='Set up SMP environment')
 
     # Turbomole's install is odd. There are three variants
@@ -70,9 +52,8 @@ class Turbomole(Package):
             return
 
     def install(self, spec, prefix):
-        if spec.satisfies('@:7.0.2'):
-            calculate_version = 'calculate_2.4_linux64'
-            molecontrol_version = 'MoleControl_2.5'
+        calculate_version = 'calculate_2.4_linux64'
+        molecontrol_version = 'MoleControl_2.5'
 
         tm_arch = self.get_tm_arch()
 
@@ -132,33 +113,25 @@ class Turbomole(Package):
             install('mpirun_scripts/ricc2', join_path(dst, 'mpirun_scripts'))
             install('mpirun_scripts/ridft', join_path(dst, 'mpirun_scripts'))
 
-    def setup_environment(self, spack_env, run_env):
-        if self.spec.satisfies('@:7.0.2'):
-            molecontrol_version = 'MoleControl_2.5'
+    def setup_run_environment(self, env):
+        molecontrol_version = 'MoleControl_2.5'
 
         tm_arch = self.get_tm_arch()
 
-        run_env.set('TURBODIR', join_path(self.prefix, 'TURBOMOLE'))
-        run_env.set('MOLE_CONTROL',
-                    join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
+        env.set('TURBODIR', self.prefix.TURBOMOLE)
+        env.set('MOLE_CONTROL',
+                join_path(self.prefix, 'TURBOMOLE', molecontrol_version))
 
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'TURBOMOLE', 'thermocalc'))
-        run_env.prepend_path('PATH',
-                             join_path(self.prefix, 'TURBOMOLE', 'scripts'))
+        env.prepend_path('PATH', self.prefix.TURBOMOLE.thermocalc)
+        env.prepend_path('PATH', self.prefix.TURBOMOLE.scripts)
         if '+mpi' in self.spec:
-            run_env.set('PARA_ARCH', 'MPI')
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', '%s_mpi'
-                                           % tm_arch))
+            env.set('PARA_ARCH', 'MPI')
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', '%s_mpi' % tm_arch))
         elif '+smp' in self.spec:
-            run_env.set('PARA_ARCH', 'SMP')
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', '%s_smp'
-                                           % tm_arch))
+            env.set('PARA_ARCH', 'SMP')
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', '%s_smp' % tm_arch))
         else:
-            run_env.prepend_path('PATH',
-                                 join_path(self.prefix,
-                                           'TURBOMOLE', 'bin', tm_arch))
+            env.prepend_path('PATH', join_path(
+                self.prefix, 'TURBOMOLE', 'bin', tm_arch))

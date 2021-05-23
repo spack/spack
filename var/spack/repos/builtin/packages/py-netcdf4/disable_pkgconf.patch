@@ -1,0 +1,6 @@
+--- a/setup.py
++++ b/setup.py
+@@ -309,2 +309,3 @@ except OSError:
+     HAS_PKG_CONFIG = False
++HAS_PKG_CONFIG = False
+ 

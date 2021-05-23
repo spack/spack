@@ -1,0 +1,43 @@
+From 0c20dbf05973368339aeae0c4e106560e2dcf76b Mon Sep 17 00:00:00 2001
+From: Nicholas Guriev <guriev-ns@ya.ru>
+Date: Sat, 27 Apr 2019 09:10:38 +0300
+Subject: [PATCH] Improve check of -Wno-* compiler flags
+
+The GCC documentation says that unrecognized warning options in
+the -Wno-* form do not cause errors unless other diagnostics are issued.
+And thus unsupported flags may be appended. This results in a failed
+build when there are some false positive warnings. So to check warning
+options, we strip "no-" prefix.
+
+The ranges_append_flag macro is no longer variadic and it takes only the
+first two arguments. Use quotes if you need flags separated by spaces.
+Example: ranges_append_flag(TEST "-X val").
+---
+ cmake/ranges_flags.cmake | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/ranges_flags.cmake b/cmake/ranges_flags.cmake
+index 00e23179..714968e9 100644
+--- a/cmake/ranges_flags.cmake
++++ b/cmake/ranges_flags.cmake
+@@ -8,10 +8,14 @@
+ 
+ # Compilation flags
+ include(CheckCXXCompilerFlag)
+-macro(ranges_append_flag testname flag ${ARGN})
+-    check_cxx_compiler_flag("${flag} ${ARGN}" ${testname})
++macro(ranges_append_flag testname flag)
++    # As -Wno-* flags do not lead to build failure when there are no other
++    # diagnostics, we check positive option to determine their applicability.
++    # Of course, we set the original flag that is requested in the parameters.
++    string(REGEX REPLACE "^-Wno-" "-W" alt ${flag})
++    check_cxx_compiler_flag(${alt} ${testname})
+     if (${testname})
+-        add_compile_options(${flag} ${ARGN})
++        add_compile_options(${flag})
+     endif()
+ endmacro()
+ 
+-- 
+2.20.1
+

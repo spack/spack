@@ -1,43 +1,37 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 import os
 
 
-class PyPyside(Package):
+class PyPyside(PythonPackage):
     """Python bindings for Qt."""
-    homepage = "https://pypi.python.org/pypi/pyside"
-    url      = "https://pypi.python.org/packages/source/P/PySide/PySide-1.2.2.tar.gz"
+    pypi = "PySide/PySide-1.2.2.tar.gz"
 
-    version('1.2.2', 'c45bc400c8a86d6b35f34c29e379e44d')
+    # More recent versions of PySide2 (for Qt5) have been taken under
+    # the offical Qt umbrella.  For more information, see:
+    # http://wiki.qt.io/Qt_for_Python_Development_Getting_Started
+
+    # Version 1.2.4 claims to not work with Python 3.5, mostly
+    # because it hasn't been tested.  Otherwise, it's the same as v1.2.3
+    # https://github.com/PySide/pyside-setup/issues/58
+    # Meanwhile, developers have moved onto pyside2 (for Qt5),
+    # and show little interest in certifying PySide 1.2.4 for Python.
+    version('1.2.4', sha256='1421bc1bf612c396070de9e1ffe227c07c1f3129278bc7d30c754b5146be2433')  # rpath problems
+
+    # v1.2.2 does not work with Python3
+    version('1.2.2', sha256='53129fd85e133ef630144c0598d25c451eab72019cdcb1012f2aec773a3f25be', preferred=True)
 
     depends_on('cmake', type='build')
 
-    extends('python')
     depends_on('py-setuptools', type='build')
-    depends_on('qt@:4')
+    depends_on('py-sphinx', type=('build', 'run'))
+    depends_on('qt@4.5:4.9')
+    depends_on('libxml2@2.6.32:')
+    depends_on('libxslt@1.1.19:')
 
     def patch(self):
         """Undo PySide RPATH handling and add Spack RPATH."""
@@ -46,6 +40,17 @@ class PyPyside(Package):
         rpath = self.rpath
         rpath.append(os.path.join(
             self.prefix, pypkg.site_packages_dir, 'PySide'))
+
+        # Fix subprocess.mswindows check for Python 3.5
+        # https://github.com/pyside/pyside-setup/pull/55
+        filter_file(
+            '^if subprocess.mswindows:',
+            'mswindows = (sys.platform == "win32")\r\nif mswindows:',
+            "popenasync.py")
+        filter_file(
+            '^    if subprocess.mswindows:',
+            '    if mswindows:',
+            "popenasync.py")
 
         # Add Spack's standard CMake args to the sub-builds.
         # They're called BY setup.py so we have to patch it.
@@ -58,12 +63,23 @@ class PyPyside(Package):
 
         # PySide tries to patch ELF files to remove RPATHs
         # Disable this and go with the one we set.
-        filter_file(
-            r'^\s*rpath_cmd\(pyside_path, srcpath\)',
-            r'#rpath_cmd(pyside_path, srcpath)',
-            'pyside_postinstall.py')
+        if self.spec.satisfies('@1.2.4:'):
+            rpath_file = 'setup.py'
+        else:
+            rpath_file = 'pyside_postinstall.py'
 
-    def install(self, spec, prefix):
-        python('setup.py', 'install',
-               '--prefix=%s' % prefix,
-               '--jobs=%s' % make_jobs)
+        filter_file(r'(^\s*)(rpath_cmd\(.*\))', r'\1#\2', rpath_file)
+
+        # TODO: rpath handling for PySide 1.2.4 still doesn't work.
+        # PySide can't find the Shiboken library, even though it comes
+        # bundled with it and is installed in the same directory.
+
+        # PySide does not provide official support for
+        # Python 3.5, but it should work fine
+        filter_file("'Programming Language :: Python :: 3.4'",
+                    "'Programming Language :: Python :: 3.4',\r\n        "
+                    "'Programming Language :: Python :: 3.5'",
+                    "setup.py")
+
+    def build_args(self, spec, prefix):
+        return ['--jobs={0}'.format(make_jobs)]

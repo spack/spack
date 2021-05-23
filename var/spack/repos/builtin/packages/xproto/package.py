@@ -1,42 +1,31 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Xproto(Package):
-    """The Xorg protocol headers provide the header files required to
-       build the system, and to allow other applications to build against
-       the installed X Window system."""
-    homepage = "http://www.x.org/"
-    url      = "https://www.x.org/archive//individual/proto/xproto-7.0.29.tar.gz"
+class Xproto(AutotoolsPackage, XorgPackage):
+    """X Window System Core Protocol.
 
-    version('7.0.29', '16a78dd2c5ad73011105c96235f6a0af')
+    This package provides the headers and specification documents defining
+    the X Window System Core Protocol, Version 11.
 
-    depends_on("xorg-util-macros")
+    It also includes a number of headers that aren't purely protocol related,
+    but are depended upon by many other X Window System packages to provide
+    common definitions and porting layer."""
+
+    homepage = "http://cgit.freedesktop.org/xorg/proto/x11proto"
+    xorg_mirror_path = "proto/xproto-7.0.31.tar.gz"
+
+    version('7.0.31', sha256='6d755eaae27b45c5cc75529a12855fed5de5969b367ed05003944cf901ed43c7')
+    version('7.0.29', sha256='628243b3a0fa9b65eda804810ab7238cb88af92fe89efdbc858f25ee5e93a324')
+
+    depends_on('pkgconfig', type='build')
+    depends_on('util-macros', type='build')
 
     def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-        make()
-        make("install")
+        # Installation fails in parallel
+        # See https://github.com/spack/spack/issues/4805
+        make('install', parallel=False)

@@ -1,0 +1,10 @@
+--- a/src/MnUserTransformation.cpp	2018-06-22 11:35:34.476798087 +0200
++++ b/src/MnUserTransformation.cpp	2018-06-22 11:08:01.729725829 +0200
+@@ -2,6 +2,7 @@
+ #include "Minuit/MnUserCovariance.h"
+ 
+ #include <algorithm>
++#include <cstdio>
+ 
+ class MnParStr {
+ 

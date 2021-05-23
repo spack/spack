@@ -1,0 +1,20 @@
+--- a/lib/Process/MpiChunk.pm	2014-12-01 16:40:29.000000000 -0600
++++ b/lib/Process/MpiChunk.pm	2019-09-23 13:23:19.779213006 -0500
+@@ -744,7 +744,7 @@
+ 	    my $safe_seq_id = $VARS->{safe_seq_id};
+ 	    my $q_seq_length = $VARS->{q_seq_length};
+ 
+-	    my $TMP = GI::get_global_temp;
++	    my $TMP = GI::get_global_temp::;
+ 	    if($CTL_OPT{go_gffdb} && GI::is_NFS_mount($dbfile) && !GI::is_NFS_mount($TMP)){
+ 		$dbfile = GI::localize_file($dbfile);
+ 	    }
+@@ -3167,7 +3167,7 @@
+ 	    my $LOG = $VARS->{LOG};
+ 	    my %CTL_OPT = %{$VARS->{CTL_OPT}};
+ 
+-	    my $TMP = GI::get_global_temp;
++	    my $TMP = GI::get_global_temp::;
+ 	    if($CTL_OPT{go_gffdb} && GI::is_NFS_mount($dbfile) && !GI::is_NFS_mount($TMP)){
+ 		$dbfile = GI::localize_file($dbfile);
+ 	    }

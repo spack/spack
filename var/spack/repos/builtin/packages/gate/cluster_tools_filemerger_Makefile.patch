@@ -1,0 +1,16 @@
+Common subdirectories: a/cluster_tools/filemerger/include and b/cluster_tools/filemerger/include
+diff -u a/cluster_tools/filemerger/Makefile b/cluster_tools/filemerger/Makefile
+--- a/cluster_tools/filemerger/Makefile	2020-03-25 04:30:34.000000000 -0500
++++ b/cluster_tools/filemerger/Makefile	2020-10-10 14:52:07.181712970 -0500
+@@ -49,8 +49,8 @@
+ 
+ install:
+ 	@echo Installing ...
+-	@$(CP) $(TARGET) /usr/local/bin
++	@$(CP) $(TARGET) $(PREFIX)/bin
+ 
+ uninstall:
+ 	@echo Uninstalling...
+-	@$(RM) /usr/local/bin/$(TARGET)
++	@$(RM) $(PREFIX)/bin/$(TARGET)
+Common subdirectories: a/cluster_tools/filemerger/src and b/cluster_tools/filemerger/src

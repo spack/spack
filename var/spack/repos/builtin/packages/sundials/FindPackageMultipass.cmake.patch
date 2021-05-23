@@ -1,0 +1,69 @@
+diff --git a/config/FindPackageMultipass.cmake b/config/FindPackageMultipass.cmake
+index 128eee9..847c246 100644
+--- a/config/FindPackageMultipass.cmake
++++ b/config/FindPackageMultipass.cmake
+@@ -138,7 +138,10 @@ macro (MULTIPASS_SOURCE_RUNS includes libraries source runs language)
+   math (EXPR _tmp "${MULTIPASS_TEST_COUNT} + 1") # Why can't I add to a cache variable?
+   set (MULTIPASS_TEST_COUNT ${_tmp} CACHE INTERNAL "Unique test ID")
+   set (testname MULTIPASS_TEST_${MULTIPASS_TEST_COUNT}_${runs})
+-  set (testdir ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp)
++  set (testdir ${PROJECT_BINARY_DIR}/PETSC_test)
++  if (NOT EXISTS ${testdir})
++    file(MAKE_DIRECTORY ${testdir})
++  endif ()
+   set (CMAKE_REQUIRED_INCLUDES ${includes})
+   set (CMAKE_REQUIRED_LIBRARIES ${libraries})
+   # if MPI is available, use it for the test
+@@ -148,24 +151,38 @@ macro (MULTIPASS_SOURCE_RUNS includes libraries source runs language)
+     set (REQUIRED_COMPILER ${CMAKE_${language}_COMPILER})
+   endif ()
+   if(${language} STREQUAL "C")
+-    file(WRITE ${testdir}/src.c "${source}")
+-    try_run(${testname} _compiles ${testdir} ${testdir}/src.c
+-            CMAKE_FLAGS -DCMAKE_C_COMPILER=${REQUIRED_COMPILER} -DINCLUDE_DIRECTORIES=${CMAKE_REQUIRED_INCLUDES}
+-            LINK_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+-  elseif(${language} STREQUAL "CXX")
+-    file(WRITE ${testdir}/src.cxx "${source}")
+-    try_run(${testname} _compiles ${testdir} ${testdir}/src.cxx
+-            CMAKE_FLAGS -DCMAKE_CXX_COMPILER=${REQUIRED_COMPILER} -DINCLUDE_DIRECTORIES=${CMAKE_REQUIRED_INCLUDES}
+-            LINK_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
+-  endif()
+-  # ${testname} is the exit code returned by try_run,
+-  # so 0 is success and anything else is a failure.
+-  if (${testname})
+-    set (${runs} FALSE)
++    set (extension c)
+   else ()
++    set (extension cxx)
++  endif ()
++  # Create simple test code
++  file(WRITE ${testdir}/src.${extension} "${source}")
++  # Create a CMakeLists.txt file for the test code
++  file(WRITE ${testdir}/CMakeLists.txt
++    "cmake_minimum_required(VERSION 3.5)\n"
++    "project(ctest ${language})\n"
++    "set(CMAKE_VERBOSE_MAKEFILE ON)\n"
++    "set(CMAKE_${language}_COMPILER \"${REQUIRED_COMPILER}\")\n"
++    "set(CMAKE_${language}_FLAGS \"${CMAKE_${language}_FLAGS}\")\n"
++    "include_directories(${CMAKE_REQUIRED_INCLUDES})\n"
++    "add_executable(ctest src.${extension})\n"
++    "target_link_libraries(ctest ${CMAKE_REQUIRED_LIBRARIES})\n")
++  # Attempt to compile the test code
++  try_compile(${testname} ${testdir} ${testdir} ctest
++    OUTPUT_VARIABLE _output)
++  # Write output compiling the test code
++  file(WRITE ${testdir}/src.out "${_output}")
++  # To ensure we do not use stuff from the previous attempts,
++  # we must remove the CMakeFiles directory.
++  file(REMOVE_RECURSE ${testdir}/CMakeFiles)
++  # Process test result
++  if (${testname})
+     set (${runs} TRUE)
++  else ()
++    set (${runs} FALSE)
+   endif ()
+   unset (_compiles)
++  unset (_output)
+ endmacro (MULTIPASS_SOURCE_RUNS)
+ 
+ 

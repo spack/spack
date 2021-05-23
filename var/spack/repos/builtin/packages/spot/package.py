@@ -1,43 +1,24 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class Spot(Package):
+class Spot(AutotoolsPackage):
     """Spot is a C++11 library for omega-automata manipulation and model
        checking."""
-    homepage = "https://spot.lrde.epita.fr/index.html"
+    homepage = "https://spot.lrde.epita.fr/"
     url      = "http://www.lrde.epita.fr/dload/spot/spot-1.99.3.tar.gz"
 
-    version('1.99.3', 'd53adcb2d0fe7c69f45d4e595a58254e')
+    version('2.9.4', sha256='e11208323baabe9b5f98098d4b9bb39803fb102a68abbbaf900f1fcd578f0f85')
+    version('1.99.3', sha256='86964af559994af4451a8dca663a9e1db6e869ed60e747ab60ce72dddc31b61b')
+    version('1.2.6', sha256='360678c75f6741f697e8e56cdbc9937f104eb723a839c3629f0dc5dc6de11bfc')
 
-    # depends_on("gcc@4.8:", type='build')
-    depends_on("python@3.2:")
+    variant('python', default=True, description='Enable python API')
 
-    def install(self, spec, prefix):
-        configure('--prefix=%s' % prefix)
-
-        make()
-        make("install")
+    depends_on("python@3.3:", when='@1.99.5: +python')
+    depends_on("python@3.2:", when='@1.99: +python')
+    depends_on("python@2:", when='+python')
+    depends_on('boost', when='@:1.2.6')

@@ -1,236 +1,564 @@
+.. Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+   Spack Project Developers. See the top-level COPYRIGHT file for details.
+
+   SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 .. _configuration:
 
-Configuration
-===================================
+===================
+Configuration Files
+===================
 
-.. _temp-space:
+Spack has many configuration files.  Here is a quick list of them, in
+case you want to skip directly to specific docs:
 
-Temporary space
-----------------------------
+* :ref:`compilers.yaml <compiler-config>`
+* :ref:`config.yaml <config-yaml>`
+* :ref:`mirrors.yaml <mirrors>`
+* :ref:`modules.yaml <modules>`
+* :ref:`packages.yaml <build-settings>`
+* :ref:`repos.yaml <repositories>`
 
-.. warning:: Temporary space configuration will eventually be moved to
-   configuration files, but currently these settings are in
-   ``lib/spack/spack/__init__.py``
+-----------
+YAML Format
+-----------
 
-By default, Spack will try to do all of its building in temporary
-space.  There are two main reasons for this.  First, Spack is designed
-to run out of a user's home directory, and on may systems the home
-directory is network mounted and potentially not a very fast
-filesystem.  We create build stages in a temporary directory to avoid
-this.  Second, many systems impose quotas on home directories, and
-``/tmp`` or similar directories often have more available space.  This
-helps conserve space for installations in users' home directories.
-
-You can customize temporary directories by editing
-``lib/spack/spack/__init__.py``.  Specifically, find this part of the file:
-
-.. code-block:: python
-
-   # Whether to build in tmp space or directly in the stage_path.
-   # If this is true, then spack will make stage directories in
-   # a tmp filesystem, and it will symlink them into stage_path.
-   use_tmp_stage = True
-
-   # Locations to use for staging and building, in order of preference
-   # Use a %u to add a username to the stage paths here, in case this
-   # is a shared filesystem.  Spack will use the first of these paths
-   # that it can create.
-   tmp_dirs = ['/nfs/tmp2/%u/spack-stage',
-               '/var/tmp/%u/spack-stage',
-               '/tmp/%u/spack-stage']
-
-The ``use_tmp_stage`` variable controls whether Spack builds
-**directly** inside the ``var/spack/`` directory.  Normally, Spack
-will try to find a temporary directory for a build, then it *symlinks*
-that temporary directory into ``var/spack/`` so that you can keep
-track of what temporary directories Spack is using.
-
-The ``tmp_dirs`` variable is a list of paths Spack should search when
-trying to find a temporary directory.  They can optionally contain a
-``%u``, which will substitute the current user's name into the path.
-The list is searched in order, and Spack will create a temporary stage
-in the first directory it finds to which it has write access.  Add
-more elements to the list to indicate where your own site's temporary
-directory is.
-
-.. _sec-external_packages:
-
-External Packages
-----------------------------
-Spack can be configured to use externally-installed
-packages rather than building its own packages. This may be desirable
-if machines ship with system packages, such as a customized MPI
-that should be used instead of Spack building its own MPI.
-
-External packages are configured through the ``packages.yaml`` file found
-in a Spack installation's ``etc/spack/`` or a user's ``~/.spack/``
-directory. Here's an example of an external configuration:
+Spack configuration files are written in YAML.  We chose YAML because
+it's human readable, but also versatile in that it supports dictionaries,
+lists, and nested sections. For more details on the format, see `yaml.org
+<http://yaml.org>`_ and `libyaml <http://pyyaml.org/wiki/LibYAML>`_.
+Here is an example ``config.yaml`` file:
 
 .. code-block:: yaml
+
+   config:
+     install_tree: $spack/opt/spack
+     module_roots:
+       lmod: $spack/share/spack/lmod
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+Each Spack configuration file is nested under a top-level section
+corresponding to its name. So, ``config.yaml`` starts with ``config:``,
+``mirrors.yaml`` starts with ``mirrors:``, etc.
+
+.. _configuration-scopes:
+
+--------------------
+Configuration Scopes
+--------------------
+
+Spack pulls configuration data from files in several directories. There
+are six configuration scopes. From lowest to highest:
+
+#. **defaults**: Stored in ``$(prefix)/etc/spack/defaults/``. These are
+   the "factory" settings. Users should generally not modify the settings
+   here, but should override them in other configuration scopes. The
+   defaults here will change from version to version of Spack.
+
+#. **system**: Stored in ``/etc/spack/``. These are settings for this
+   machine, or for all machines on which this file system is
+   mounted. The site scope can be used for settings idiosyncratic to a
+   particular machine, such as the locations of compilers or external
+   packages. These settings are presumably controlled by someone with
+   root access on the machine. They override the defaults scope.
+
+#. **site**: Stored in ``$(prefix)/etc/spack/``. Settings here affect
+   only *this instance* of Spack, and they override the defaults and system
+   scopes.  The site scope can can be used for per-project settings (one
+   Spack instance per project) or for site-wide settings on a multi-user
+   machine (e.g., for a common Spack instance).
+
+#. **user**: Stored in the home directory: ``~/.spack/``. These settings
+   affect all instances of Spack and take higher precedence than site,
+   system, or defaults scopes.
+
+#. **custom**: Stored in a custom directory specified by ``--config-scope``.
+   If multiple scopes are listed on the command line, they are ordered
+   from lowest to highest precedence.
+
+#. **environment**: When using Spack :ref:`environments`, Spack reads
+   additional configuration from the environment file. See
+   :ref:`environment-configuration` for further details on these
+   scopes. Environment scopes can be referenced from the command line
+   as ``env:name`` (to reference environment ``foo``, use
+   ``env:foo``).
+
+#. **command line**: Build settings specified on the command line take
+   precedence over all other scopes.
+
+Each configuration directory may contain several configuration files,
+such as ``config.yaml``, ``compilers.yaml``, or ``mirrors.yaml``.  When
+configurations conflict, settings from higher-precedence scopes override
+lower-precedence settings.
+
+Commands that modify scopes (e.g., ``spack compilers``, ``spack repo``,
+etc.) take a ``--scope=<name>`` parameter that you can use to control
+which scope is modified.  By default, they modify the highest-precedence
+scope.
+
+.. _custom-scopes:
+
+^^^^^^^^^^^^^
+Custom scopes
+^^^^^^^^^^^^^
+
+In addition to the ``defaults``, ``system``, ``site``, and ``user``
+scopes, you may add configuration scopes directly on the command
+line with the ``--config-scope`` argument, or ``-C`` for short.
+
+For example, the following adds two configuration scopes, named
+``scopea`` and ``scopeb``, to a ``spack spec`` command:
+
+.. code-block:: console
+
+   $ spack -C ~/myscopes/scopea -C ~/myscopes/scopeb spec ncurses
+
+Custom scopes come *after* the ``spack`` command and *before* the
+subcommand, and they specify a single path to a directory full of
+configuration files. You can add the same configuration files to that
+directory that you can add to any other scope (``config.yaml``,
+``packages.yaml``, etc.).
+
+If multiple scopes are provided:
+
+#. Each must be preceded with the ``--config-scope`` or ``-C`` flag.
+#. They must be ordered from lowest to highest precedence.
+
+"""""""""""""""""""""""""""""""""""""""""""
+Example: scopes for release and development
+"""""""""""""""""""""""""""""""""""""""""""
+
+Suppose that you need to support simultaneous building of release and
+development versions of ``mypackage``, where ``mypackage`` -> ``A`` -> ``B``.
+You could create The following files:
+
+.. code-block:: yaml
+   :caption: ~/myscopes/release/packages.yaml
 
    packages:
-      openmpi:
-         paths:
-            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-            openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-            openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
+       mypackage:
+           version: [1.7]
+       A:
+           version: [2.3]
+       B:
+           version: [0.8]
 
-This example lists three installations of OpenMPI, one built with gcc,
-one built with gcc and debug information, and another built with Intel.
-If Spack is asked to build a package that uses one of these MPIs as a
-dependency, it will use the the pre-installed OpenMPI in
-the given directory. Packages.yaml can also be used to specify modules
+.. code-block:: yaml
+   :caption: ~/myscopes/develop/packages.yaml
 
-Each ``packages.yaml`` begins with a ``packages:`` token, followed
-by a list of package names.  To specify externals, add a ``paths`` or ``modules``
-token under the package name, which lists externals in a
-``spec: /path`` or ``spec: module-name`` format.  Each spec should be as
-well-defined as reasonably possible.  If a
-package lacks a spec component, such as missing a compiler or
-package version, then Spack will guess the missing component based
-on its most-favored packages, and it may guess incorrectly.
+   packages:
+       mypackage:
+           version: [develop]
+       A:
+           version: [develop]
+       B:
+           version: [develop]
 
-Each package version and compilers listed in an external should
-have entries in Spack's packages and compiler configuration, even
-though the package and compiler may not every be built.
+You can switch between ``release`` and ``develop`` configurations using
+configuration arguments.  You would type ``spack -C ~/myscopes/release``
+when you want to build the designated release versions of ``mypackage``,
+``A``, and ``B``, and you would type ``spack -C ~/myscopes/develop`` when
+you want to build all of these packages at the ``develop`` version.
 
-The packages configuration can tell Spack to use an external location
-for certain package versions, but it does not restrict Spack to using
-external packages.  In the above example, if an OpenMPI 1.8.4 became
-available Spack may choose to start building and linking with that version
-rather than continue using the pre-installed OpenMPI versions.
+"""""""""""""""""""""""""""""""
+Example: swapping MPI providers
+"""""""""""""""""""""""""""""""
 
-To prevent this, the ``packages.yaml`` configuration also allows packages
-to be flagged as non-buildable.  The previous example could be modified to
-be:
+Suppose that you need to build two software packages, ``packagea`` and
+``packageb``. ``packagea`` is Python 2-based and ``packageb`` is Python
+3-based. ``packagea`` only builds with OpenMPI and ``packageb`` only builds
+with MPICH. You can create different configuration scopes for use with
+``packagea`` and ``packageb``:
+
+.. code-block:: yaml
+   :caption: ~/myscopes/packgea/packages.yaml
+
+   packages:
+       python:
+           version: [2.7.11]
+       all:
+           providers:
+               mpi: [openmpi]
+
+.. code-block:: yaml
+   :caption: ~/myscopes/packageb/packages.yaml
+
+   packages:
+       python:
+           version: [3.5.2]
+       all:
+           providers:
+               mpi: [mpich]
+
+
+.. _platform-scopes:
+
+------------------------
+Platform-specific Scopes
+------------------------
+
+For each scope above (excluding environment scopes), there can also be
+platform-specific settings.  For example, on most platforms, GCC is
+the preferred compiler.  However, on macOS (darwin), Clang often works
+for more packages, and is set as the default compiler. This
+configuration is set in
+``$(prefix)/etc/spack/defaults/darwin/packages.yaml``. It will take
+precedence over settings in the ``defaults`` scope, but can still be
+overridden by settings in ``system``, ``system/darwin``, ``site``,
+``site/darwin``, ``user``, ``user/darwin``, ``custom``, or
+``custom/darwin``. So, the full scope precedence is:
+
+#. ``defaults``
+#. ``defaults/<platform>``
+#. ``system``
+#. ``system/<platform>``
+#. ``site``
+#. ``site/<platform>``
+#. ``user``
+#. ``user/<platform>``
+#. ``custom``
+#. ``custom/<platform>``
+
+You can get the name to use for ``<platform>`` by running ``spack arch
+--platform``. The system config scope has a ``<platform>`` section for
+sites at which ``/etc`` is mounted on multiple heterogeneous machines.
+
+----------------
+Scope Precedence
+----------------
+
+When spack queries for configuration parameters, it searches in
+higher-precedence scopes first. So, settings in a higher-precedence file
+can override those with the same key in a lower-precedence one. For
+list-valued settings, Spack *prepends* higher-precedence settings to
+lower-precedence settings. Completely ignoring higher-level configuration
+options is supported with the ``::`` notation for keys (see
+:ref:`config-overrides` below).
+
+^^^^^^^^^^^
+Simple keys
+^^^^^^^^^^^
+
+Let's look at an example of overriding a single key in a Spack file. If
+your configurations look like this:
+
+.. code-block:: yaml
+   :caption: $(prefix)/etc/spack/defaults/config.yaml
+
+   config:
+     install_tree: $spack/opt/spack
+     module_roots:
+       lmod: $spack/share/spack/lmod
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+.. code-block:: yaml
+   :caption: ~/.spack/config.yaml
+
+   config:
+     install_tree: /some/other/directory
+
+
+Spack will only override ``install_tree`` in the ``config`` section, and
+will take the site preferences for other settings. You can see the
+final, combined configuration with the ``spack config get <configtype>``
+command:
+
+.. code-block:: console
+   :emphasize-lines: 3
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory
+     module_roots:
+       lmod: $spack/share/spack/lmod
+     build_stage:
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+.. _config-overrides:
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Overriding entire sections
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Above, the user ``config.yaml`` only overrides specific settings in the
+default ``config.yaml``. Sometimes, it is useful to *completely*
+override lower-precedence settings. To do this, you can use *two* colons
+at the end of a key in a configuration file. For example:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   config::
+     install_tree: /some/other/directory
+
+Spack will ignore all lower-precedence configuration under the
+``config::`` section:
+
+.. code-block:: console
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory
+
+
+^^^^^^^^^^^^^^^^^^^^
+List-valued settings
+^^^^^^^^^^^^^^^^^^^^
+
+Let's revisit the ``config.yaml`` example one more time. The
+``build_stage`` setting's value is an ordered list of directories:
+
+.. code-block:: yaml
+   :caption: $(prefix)/etc/spack/defaults/config.yaml
+
+   build_stage:
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
+
+
+Suppose the user configuration adds its *own* list of ``build_stage``
+paths:
+
+.. code-block:: yaml
+   :caption: ~/.spack/config.yaml
+
+   build_stage:
+     - /lustre-scratch/$user/spack
+     - ~/mystage
+
+
+Spack will first look at the paths in the defaults ``config.yaml``, then the
+paths in the user's ``~/.spack/config.yaml``. The list in the
+higher-precedence scope is *prepended* to the defaults. ``spack config
+get config`` shows the result:
+
+.. code-block:: console
+   :emphasize-lines: 7-10
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory
+     module_roots:
+       lmod: $spack/share/spack/lmod
+     build_stage:
+       - /lustre-scratch/$user/spack
+       - ~/mystage
+       - $tempdir/$user/spack-stage
+       - ~/.spack/stage
+
+
+As in :ref:`config-overrides`, the higher-precedence scope can
+*completely* override the lower-precedence scope using ``::``. So if the
+user config looked like this:
+
+.. code-block:: yaml
+   :emphasize-lines: 1
+   :caption: ~/.spack/config.yaml
+
+   build_stage::
+     - /lustre-scratch/$user/spack
+     - ~/mystage
+
+
+The merged configuration would look like this:
+
+.. code-block:: console
+   :emphasize-lines: 7-8
+
+   $ spack config get config
+   config:
+     install_tree: /some/other/directory
+     module_roots:
+       lmod: $spack/share/spack/lmod
+     build_stage:
+       - /lustre-scratch/$user/spack
+       - ~/mystage
+
+
+.. _config-file-variables:
+
+---------------------
+Config File Variables
+---------------------
+
+Spack understands several variables which can be used in config file
+paths wherever they appear. There are three sets of these variables:
+Spack-specific variables, environment variables, and user path
+variables. Spack-specific variables and environment variables are both
+indicated by prefixing the variable name with ``$``. User path variables
+are indicated at the start of the path with ``~`` or ``~user``.
+
+^^^^^^^^^^^^^^^^^^^^^^^^
+Spack-specific variables
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Spack understands several special variables. These are:
+
+* ``$spack``: path to the prefix of this Spack installation
+* ``$tempdir``: default system temporary directory (as specified in
+  Python's `tempfile.tempdir
+  <https://docs.python.org/2/library/tempfile.html#tempfile.tempdir>`_
+  variable.
+* ``$user``: name of the current user
+
+Note that, as with shell variables, you can write these as ``$varname``
+or with braces to distinguish the variable from surrounding characters:
+``${varname}``. Their names are also case insensitive, meaning that
+``$SPACK`` works just as well as ``$spack``. These special variables are
+substituted first, so any environment variables with the same name will
+not be used.
+
+^^^^^^^^^^^^^^^^^^^^^
+Environment variables
+^^^^^^^^^^^^^^^^^^^^^
+
+After Spack-specific variables are evaluated, environment variables are
+expanded. These are formatted like Spack-specific variables, e.g.,
+``${varname}``. You can use this to insert environment variables in your
+Spack configuration.
+
+^^^^^^^^^^^^^^^^^^^^^
+User home directories
+^^^^^^^^^^^^^^^^^^^^^
+
+Spack performs Unix-style tilde expansion on paths in configuration
+files. This means that tilde (``~``) will expand to the current user's
+home directory, and ``~user`` will expand to a specified user's home
+directory. The ``~`` must appear at the beginning of the path, or Spack
+will not expand it.
+
+.. _configuration_environment_variables:
+
+-------------------------
+Environment Modifications
+-------------------------
+
+Spack allows to prescribe custom environment modifications in a few places
+within its configuration files. Every time these modifications are allowed
+they are specified as a dictionary, like in the following example:
 
 .. code-block:: yaml
 
-  packages:
-    openmpi:
-      paths:
-        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7: /opt/openmpi-1.4.3
-        openmpi@1.4.3%gcc@4.4.7 arch=linux-x86_64-debian7+debug: /opt/openmpi-1.4.3-debug
-        openmpi@1.6.5%intel@10.1 arch=linux-x86_64-debian7: /opt/openmpi-1.6.5-intel
-      buildable: False
+   environment:
+     set:
+       LICENSE_FILE: '/path/to/license'
+     unset:
+     - CPATH
+     - LIBRARY_PATH
+     append_path:
+       PATH: '/new/bin/dir'
 
-The addition of the ``buildable`` flag tells Spack that it should never build
-its own version of OpenMPI, and it will instead always rely on a pre-built
-OpenMPI.  Similar to ``paths``, ``buildable`` is specified as a property under
-a package name.
+The possible actions that are permitted are ``set``, ``unset``, ``append_path``,
+``prepend_path`` and finally ``remove_path``. They all require a dictionary
+of variable names mapped to the values used for the modification.
+The only exception is ``unset`` that requires just a list of variable names.
+No particular order is ensured on the execution of each of these modifications.
 
-If an external module is specified as not buildable, then Spack will load the
-external module into the build environment which can be used for linking.
+----------------------------
+Seeing Spack's Configuration
+----------------------------
 
-The ``buildable`` does not need to be paired with external packages.
-It could also be used alone to forbid packages that may be
-buggy or otherwise undesirable.
+With so many scopes overriding each other, it can sometimes be difficult
+to understand what Spack's final configuration looks like.
 
+Spack provides two useful ways to view the final "merged" version of any
+configuration file: ``spack config get`` and ``spack config blame``.
 
-Concretization Preferences
---------------------------------
+.. _cmd-spack-config-get:
 
-Spack can be configured to prefer certain compilers, package
-versions, depends_on, and variants during concretization.
-The preferred configuration can be controlled via the
-``~/.spack/packages.yaml`` file for user configuations, or the
-``etc/spack/packages.yaml`` site configuration.
+^^^^^^^^^^^^^^^^^^^^
+``spack config get``
+^^^^^^^^^^^^^^^^^^^^
 
+``spack config get`` shows a fully merged configuration file, taking into
+account all scopes. For example, to see the fully merged
+``config.yaml``, you can type:
 
-Here's an example packages.yaml file that sets preferred packages:
+.. code-block:: console
 
-.. code-block:: sh
+   $ spack config get config
+   config:
+     debug: false
+     checksum: true
+     verify_ssl: true
+     dirty: false
+     build_jobs: 8
+     install_tree: $spack/opt/spack
+     template_dirs:
+     - $spack/templates
+     directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
+     module_roots:
+       tcl: $spack/share/spack/modules
+       lmod: $spack/share/spack/lmod
+     build_stage:
+     - $tempdir/$user/spack-stage
+     - ~/.spack/stage
+     - $spack/var/spack/stage
+     source_cache: $spack/var/spack/cache
+     misc_cache: ~/.spack/cache
+     locks: true
 
-    packages:
-      opencv:
-        compiler: [gcc@4.9]
-        variants: +debug
-      gperftools:
-        version: [2.2, 2.4, 2.3]
-      all:
-        compiler: [gcc@4.4.7, gcc@4.6:, intel, clang, pgi]
-        providers:
-          mpi: [mvapich, mpich, openmpi]
+Likewise, this will show the fully merged ``packages.yaml``:
 
+.. code-block:: console
 
-At a high level, this example is specifying how packages should be
-concretized.  The opencv package should prefer using gcc 4.9 and
-be built with debug options.  The gperftools package should prefer version
-2.2 over 2.4.  Every package on the system should prefer mvapich for
-its MPI and gcc 4.4.7 (except for opencv, which overrides this by preferring gcc 4.9).
-These options are used to fill in implicit defaults.  Any of them can be overwritten
-on the command line if explicitly requested.
+   $ spack config get packages
 
-Each packages.yaml file begins with the string ``packages:`` and
-package names are specified on the next level. The special string ``all``
-applies settings to each package. Underneath each package name is
-one or more components: ``compiler``, ``variants``, ``version``,
-or ``providers``.  Each component has an ordered list of spec
-``constraints``, with earlier entries in the list being preferred over
-later entries.
+You can use this in conjunction with the ``-C`` / ``--config-scope`` argument to
+see how your scope will affect Spack's configuration:
 
-Sometimes a package installation may have constraints that forbid
-the first concretization rule, in which case Spack will use the first
-legal concretization rule.  Going back to the example, if a user
-requests gperftools 2.3 or later, then Spack will install version 2.4
-as the 2.4 version of gperftools is preferred over 2.3.
+.. code-block:: console
 
-An explicit concretization rule in the preferred section will always
-take preference over unlisted concretizations.  In the above example,
-xlc isn't listed in the compiler list.  Every listed compiler from
-gcc to pgi will thus be preferred over the xlc compiler.
-
-The syntax for the ``provider`` section differs slightly from other
-concretization rules.  A provider lists a value that packages may
-``depend_on`` (e.g, mpi) and a list of rules for fulfilling that
-dependency.
+   $ spack -C /path/to/my/scope config get packages
 
 
-Profiling
-------------------
+.. _cmd-spack-config-blame:
 
-Spack has some limited built-in support for profiling, and can report
-statistics using standard Python timing tools.  To use this feature,
-supply ``-p`` to Spack on the command line, before any subcommands.
+^^^^^^^^^^^^^^^^^^^^^^
+``spack config blame``
+^^^^^^^^^^^^^^^^^^^^^^
 
-.. _spack-p:
+``spack config blame`` functions much like ``spack config get``, but it
+shows exactly which configuration file each preference came from. If you
+do not know why Spack is behaving a certain way, this can help you track
+down the problem:
 
-``spack -p``
-~~~~~~~~~~~~~~~~~
+.. code-block:: console
 
-``spack -p`` output looks like this:
+   $ spack --insecure -C ./my-scope -C ./my-scope-2 config blame config
+   ==> Warning: You asked for --insecure. Will NOT check SSL certificates.
+   ---                                                   config:
+   _builtin                                                debug: False
+   /home/myuser/spack/etc/spack/defaults/config.yaml:72    checksum: True
+   command_line                                            verify_ssl: False
+   ./my-scope-2/config.yaml:2                              dirty: False
+   _builtin                                                build_jobs: 8
+   ./my-scope/config.yaml:2                                install_tree: /path/to/some/tree
+   /home/myuser/spack/etc/spack/defaults/config.yaml:23    template_dirs:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:24    - $spack/templates
+   /home/myuser/spack/etc/spack/defaults/config.yaml:28    directory_layout: {architecture}/{compiler.name}-{compiler.version}/{name}-{version}-{hash}
+   /home/myuser/spack/etc/spack/defaults/config.yaml:32    module_roots:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:33      tcl: $spack/share/spack/modules
+   /home/myuser/spack/etc/spack/defaults/config.yaml:34      lmod: $spack/share/spack/lmod
+   /home/myuser/spack/etc/spack/defaults/config.yaml:49    build_stage:
+   /home/myuser/spack/etc/spack/defaults/config.yaml:50    - $tempdir/$user/spack-stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:51    - ~/.spack/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:52    - $spack/var/spack/stage
+   /home/myuser/spack/etc/spack/defaults/config.yaml:57    source_cache: $spack/var/spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:62    misc_cache: ~/.spack/cache
+   /home/myuser/spack/etc/spack/defaults/config.yaml:86    locks: True
 
-.. code-block:: sh
-
-   $ spack -p graph dyninst
-   o  dyninst
-   |\
-   | |\
-   | o |  libdwarf
-   |/ /
-   o |  libelf
-    /
-   o  boost
-
-         307670 function calls (305943 primitive calls) in 0.127 seconds
-
-   Ordered by: internal time
-
-   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-      853    0.021    0.000    0.066    0.000 inspect.py:472(getmodule)
-    51197    0.011    0.000    0.018    0.000 inspect.py:51(ismodule)
-    73961    0.010    0.000    0.010    0.000 {isinstance}
-     1762    0.006    0.000    0.053    0.000 inspect.py:440(getsourcefile)
-    32075    0.006    0.000    0.006    0.000 {hasattr}
-     1760    0.004    0.000    0.004    0.000 {posix.stat}
-     2240    0.004    0.000    0.004    0.000 {posix.lstat}
-     2602    0.004    0.000    0.011    0.000 inspect.py:398(getfile)
-      771    0.004    0.000    0.077    0.000 inspect.py:518(findsource)
-     2656    0.004    0.000    0.004    0.000 {method 'match' of '_sre.SRE_Pattern' objects}
-    30772    0.003    0.000    0.003    0.000 {method 'get' of 'dict' objects}
-    ...
-
-The bottom of the output shows the top most time consuming functions,
-slowest on top.  The profiling support is from Python's built-in tool,
-`cProfile
-<https://docs.python.org/2/library/profile.html#module-cProfile>`_.
+You can see above that the ``build_jobs`` and ``debug`` settings are
+built in and are not overridden by a configuration file. The
+``verify_ssl`` setting comes from the ``--insceure`` option on the
+command line. ``dirty`` and ``install_tree`` come from the custom
+scopes ``./my-scope`` and ``./my-scope-2``, and all other configuration
+options come from the default configuration files that ship with Spack.

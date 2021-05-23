@@ -1,4 +1,0 @@
-packages:
-  all:
-    providers:
-      mpi: [intelmpi]

@@ -1,32 +1,15 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RForeach(Package):
-    """Support for the foreach looping construct. Foreach is an idiom that
+class RForeach(RPackage):
+    """Provides Foreach Looping Construct
+
+    Support for the foreach looping construct. Foreach is an idiom that
     allows for iterating over elements in a collection, without the use of an
     explicit loop counter. This package in particular is intended to be used
     for its return value, rather than for its side effects. In that sense, it
@@ -34,17 +17,14 @@ class RForeach(Package):
     evaluation of a function. Using foreach without side effects also
     facilitates executing the loop in parallel."""
 
-    homepage = "https://cran.r-project.org/web/packages/foreach/index.html"
-    url      = "https://cran.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/foreach"
+    homepage = "https://cloud.r-project.org/package=foreach"
+    url      = "https://cloud.r-project.org/src/contrib/foreach_1.4.3.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/foreach"
 
-    version('1.4.3', 'ef45768126661b259f9b8994462c49a0')
+    version('1.5.1', sha256='fb5ad69e295618c52b2ac7dff84a0771462870a97345374d43b3de2dc31a68e1')
+    version('1.4.7', sha256='95632c0b1182fc01490718d82fa3b2bce864f2a011ae53282431c7c2a3f5f160')
+    version('1.4.3', sha256='1ef03f770f726a62e3753f2402eb26b226245958fa99d570d003fc9e47d35881')
 
-    extends('R')
-
-    depends_on('r-codetools', type=nolink)
-    depends_on('r-iterators', type=nolink)
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.5.0:', type=('build', 'run'))
+    depends_on('r-codetools', type=('build', 'run'))
+    depends_on('r-iterators', type=('build', 'run'))

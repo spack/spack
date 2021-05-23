@@ -1,50 +1,31 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
-from spack import depends_on, extends, version, nolink
-from spack import Package
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
+from spack import *
 
 
-class PyJinja2(Package):
-    """
-    Jinja2 is a template engine written in pure Python. It provides
+class PyJinja2(PythonPackage):
+    """Jinja2 is a template engine written in pure Python. It provides
     a Django inspired non-XML syntax but supports inline expressions
-    and an optional sandboxed environment.
-    """
+    and an optional sandboxed environment."""
 
-    homepage = "http://jinja.pocoo.org/"
-    url      = "https://github.com/pallets/jinja/archive/2.8.tar.gz"
+    homepage = "https://palletsprojects.com/p/jinja/"
+    pypi = "Jinja2/Jinja2-2.10.3.tar.gz"
 
-    version('2.8', '4114200650d7630594e3bc70af23f59e')
-    version('2.7.3', '55b87bdc8e585b8b5b86734eefce2621')
-    version('2.7.2', '8e8f226809ae6363009b9296e30adf30')
-    version('2.7.1', '69b6675553c81b1087f95cae7f2179bb')
-    version('2.7', 'ec70433f325051dcedacbb2465028a35')
+    version('2.11.3', sha256='a6d58433de0ae800347cab1fa3043cebbabe8baa9d29e668f1c768cb87a333c6')
+    version('2.10.3', sha256='9fe95f19286cfefaa917656583d020be14e7859c6b0252588391e47db34527de')
+    version('2.10.1', sha256='065c4f02ebe7f7cf559e49ee5a95fb800a9e4528727aec6f24402a5374c65013')
+    version('2.10',   sha256='f84be1bb0040caca4cea721fcbbbbd61f9be9464ca236387158b0feea01914a4')
+    version('2.9.6',  sha256='ddaa01a212cd6d641401cb01b605f4a4d9f37bfc93043d7f760ec70fb99ff9ff')
+    version('2.8',    sha256='bc1ff2ff88dbfacefde4ddde471d1417d3b304e8df103a7a9437d47269201bf4')
+    version('2.7.3',  sha256='2e24ac5d004db5714976a04ac0e80c6df6e47e98c354cb2c0d82f8879d4f8fdb')
+    version('2.7.2',  sha256='310a35fbccac3af13ebf927297f871ac656b9da1d248b1fe6765affa71b53235')
+    version('2.7.1',  sha256='5cc0a087a81dca1c08368482fb7a92fe2bdd8cfbb22bc0fccfe6c85affb04c8b')
+    version('2.7',    sha256='474f1518d189ae7e318b139fecc1d30b943f124448cfa0f09582ca23e069fa4d')
 
-    extends("python")
-    depends_on("py-setuptools", type='build')
-    depends_on("py-markupsafe", type=nolink)
-
-    def install(self, spec, prefix):
-        python('setup.py', 'install', '--prefix=%s' % prefix)
+    depends_on('python@2.7:2.8,3.5:', type=('build', 'run'))
+    depends_on('py-setuptools', type='build')
+    depends_on('py-markupsafe@0.23:', type=('build', 'run'))
+    depends_on('py-babel@0.8:', type=('build', 'run'))  # optional, required for i18n

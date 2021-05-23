@@ -1,44 +1,26 @@
-##############################################################################
-# Copyright (c) 2013-2016, Lawrence Livermore National Security, LLC.
-# Produced at the Lawrence Livermore National Laboratory.
+# Copyright 2013-2021 Lawrence Livermore National Security, LLC and other
+# Spack Project Developers. See the top-level COPYRIGHT file for details.
 #
-# This file is part of Spack.
-# Created by Todd Gamblin, tgamblin@llnl.gov, All rights reserved.
-# LLNL-CODE-647188
-#
-# For details, see https://github.com/llnl/spack
-# Please also see the LICENSE file for our notice and the LGPL.
-#
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU Lesser General Public License (as
-# published by the Free Software Foundation) version 2.1, February 1999.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the IMPLIED WARRANTY OF
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the terms and
-# conditions of the GNU Lesser General Public License for more details.
-#
-# You should have received a copy of the GNU Lesser General Public
-# License along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-##############################################################################
+# SPDX-License-Identifier: (Apache-2.0 OR MIT)
+
 from spack import *
 
 
-class RRmysql(Package):
-    """Implements 'DBI' Interface to 'MySQL' and 'MariaDB' Databases."""
+class RRmysql(RPackage):
+    """Database Interface and 'MySQL' Driver for R
+
+    Legacy 'DBI' interface to 'MySQL' / 'MariaDB' based on old code ported from
+    S-PLUS. A modern 'MySQL' client based on 'Rcpp' is available  from the
+    'RMariaDB' package."""
 
     homepage = "https://github.com/rstats-db/rmysql"
-    url      = "https://cran.r-project.org/src/contrib/RMySQL_0.10.9.tar.gz"
-    list_url = "https://cran.r-project.org/src/contrib/Archive/RMySQL"
+    url      = "https://cloud.r-project.org/src/contrib/RMySQL_0.10.9.tar.gz"
+    list_url = "https://cloud.r-project.org/src/contrib/Archive/RMySQL"
 
-    version('0.10.9', '3628200a1864ac3005cfd55cc7cde17a')
+    version('0.10.21', sha256='3a6bf06d32d66c7c958d4f89ed517614171a7fd254ef6f4d40f4c5982c2d6b31')
+    version('0.10.17', sha256='754df4fce159078c1682ef34fc96aa5ae30981dc91f4f2bada8d1018537255f5')
+    version('0.10.9', sha256='41289c743dc8ee2e0dea8b8f291d65f0a7cd11e799b713d94840406ff296fd42')
 
-    extends('R')
-
-    depends_on('r-dbi', type=nolink)
-    depends_on('mariadb')
-
-    def install(self, spec, prefix):
-        R('CMD', 'INSTALL', '--library={0}'.format(self.module.r_lib_dir),
-          self.stage.source_path)
+    depends_on('r@2.8.0:', type=('build', 'run'))
+    depends_on('r-dbi@0.4:', type=('build', 'run'))
+    depends_on('mysql')

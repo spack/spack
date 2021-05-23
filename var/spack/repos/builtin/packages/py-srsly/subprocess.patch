@@ -1,0 +1,12 @@
+diff -Naur a/srsly/tests/cloudpickle/testutils.py b/srsly/tests/cloudpickle/testutils.py
+--- a/srsly/tests/cloudpickle/testutils.py	2020-04-24 16:10:43.000000000 -0500
++++ b/srsly/tests/cloudpickle/testutils.py	2020-04-24 16:11:02.000000000 -0500
+@@ -5,7 +5,7 @@
+ from subprocess import Popen, check_output, PIPE, STDOUT, CalledProcessError
+ from srsly.cloudpickle.cloudpickle import dumps
+ from pickle import loads
+-from suprocess import TimeoutExpired
++from subprocess import TimeoutExpired
+ 
+ 
+ TEST_GLOBALS = "a test value"

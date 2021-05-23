@@ -1,0 +1,34 @@
+From 3b60cbcab167f8f1cf450f0319850bfa88f39d3a Mon Sep 17 00:00:00 2001
+From: eugeneswalker <eugenesunsetwalker@gmail.com>
+Date: Thu, 4 Jun 2020 06:12:41 -0700
+Subject: [PATCH] check for unwind_dir/lib and unwind_dir/lib64
+
+---
+ configure | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index 3bd7430..b673cdf 100755
+--- a/configure
++++ b/configure
+@@ -1662,8 +1662,15 @@ for arg in "$@"; do
+ 	-unwind=*)
+ 	    unwind_dir=`echo $arg | sed -e 's/-unwind=//'`
+         if [ $unwind_dir != "/usr" ]; then
+-	      unwind_inc="$unwind_dir/include"
+-	      unwind_lib="$unwind_dir/lib"
++	        unwind_inc="$unwind_dir/include"
++	        unwind_lib=""
++	        if [[ -d "$unwind_dir/lib" ]] ; then
++	          unwind_lib="$unwind_dir/lib"
++	        elif [[ -d "$unwind_dir/lib64" ]] ; then
++	          unwind_lib="$unwind_dir/lib64"
++	        else
++	          exit 1
++	        fi
+         fi
+ 	    # So that the user doesn't have to specify the unwinder,
+ 	    # use libunwind as the default.
+-- 
+2.24.2 (Apple Git-127)
+

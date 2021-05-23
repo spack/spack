@@ -1,0 +1,127 @@
+--- config/Makelib.orig	2019-10-29 01:07:48.000000000 +0100
++++ config/Makelib	2021-01-27 15:09:05.473365100 +0100
+@@ -3,7 +3,7 @@
+ 
+ 
+ # Default target
+-all : obj dict lib
++all : lib
+ 
+ 
+ # ----- Rules for source compilation ----------
+@@ -20,7 +20,14 @@
+ 
+ $(TARGET)Dict.cxx : $(incl) include/$(TARGET)LinkDef.h
+ 	@echo 'Generating dictionary' $@ '...'
++ifneq ($(strip $(RLIBMAP)),)
++# ROOTv5 
+ 	@rootcint -f $@ -c $(INCDIR) $^
++else
++#ROOT v6
++	@rootcling -f $@ -rmf $(TOPDIR)/lib/lib$(TARGET).rootmap -rml lib$(TARGET) -s lib$(TARGET) $(INCDIR) $^
++	@mv lib$(TARGET)_rdict.pcm $(TOPDIR)/lib/lib$(TARGET)_rdict.pcm
++endif 
+ # -----------------------------------------------
+ 
+ 
+@@ -96,6 +103,7 @@
+ 	@rm -f $(TOPDIR)/lib/lib$(TARGET).so
+ 	@rm -f $(TOPDIR)/lib/lib$(TARGET).a
+ 	@rm -f $(TOPDIR)/lib/lib$(TARGET).rootmap
++	@rm -f $(TOPDIR)/lib/lib$(TARGET)_rdict.pcm
+ 
+ htmldoc :
+ 	@echo 'Building class documentation...'
+@@ -106,8 +114,10 @@
+ install_lib : lib
+ 	@echo 'Installing library ...'
+ 	mkdir -p -m 0755 $(DESTDIR)/lib
++	mkdir -p -m 0755 $(DESTDIR)/include/unigen 
+ 	install -m 0755 $(TOPDIR)/lib/lib$(TARGET).so $(DESTDIR)/lib
+-ifneq ($(strip $(RLIBMAP)),)
+ 	install -m 0644 $(TOPDIR)/lib/lib$(TARGET).rootmap $(DESTDIR)/lib
++ifeq ($(strip $(RLIBMAP)),)
++	install -m 0644 $(TOPDIR)/lib/lib$(TARGET)_rdict.pcm $(DESTDIR)/lib 
+ endif
+-
++	install -m 0644 include/*.h $(DESTDIR)/include/unigen 
+--- converters/urqmd2u.cpp.orig	2019-10-29 01:07:48.000000000 +0100
++++ converters/urqmd2u.cpp	2021-01-27 15:04:37.547010300 +0100
+@@ -93,7 +93,6 @@
+   char *inpfile;
+   char *outfile;
+   char c;
+-  int nevents;
+   string dust;
+ 
+   URun *ru = 0;
+@@ -101,7 +100,7 @@
+   int filetype, eos, aproj, zproj, atarg, ztarg, nr;
+   double beta, b, bmin, bmax, sigma, elab, plab, sqrts, time, dtime;
+ 
+-  if (argc != 4) {
++  if (argc < 3 || argc > 4) {
+     cout << "usage:   " << argv[0] << " inpfile outfile nevents\n";
+     cout << "example: " << argv[0] << " ftn14 ftn14.root 10\n";
+     exit(0);
+@@ -109,7 +108,7 @@
+ 
+   inpfile = argv[1];
+   outfile = argv[2];
+-  nevents = atoi(argv[3]);
++  const int nevents = (argc == 4) ? atoi(argv[3]) : 1e8; 
+ 
+   int nout=0;
+   in.open(inpfile);
+@@ -141,15 +140,14 @@
+     in.ignore(777,'\n'); // ignore the rest of the line
+ 
+     comment.clear();
+-    // read 3 lines of options and 4 lines of params
+-    for (int i=0; i<100; i++) {
+-      getline(in,line);
+-      if(0 == line.substr(0, 4).compare("pvec"))
+-      {
+-          break;
+-      }
+-      comment.append(line);
+-      comment.append("\n");
++     // read options and parameters
++     while (true) {
++       getline(in, line); 
++       if (TString(line).BeginsWith("op") || TString(line).BeginsWith("pa")) {
++         comment.append(line);
++         comment.append("\n");
++       } else
++         break; 
+     }
+     //in.ignore(777,'\n'); 
+ 
+@@ -207,9 +205,15 @@
+   double m = 0.938271998;
+   double ecm = sqrts/2; // energy per nucleon in cm
+   double pcm = sqrt(ecm*ecm-m*m); // momentum per nucleon in cm
+-  double gamma = 1.0/sqrt(1-beta*beta); 
+-  double pproj = gamma*(+pcm-beta*ecm);
+-  double ptarg = gamma*(-pcm-beta*ecm);
++  double pproj = 0.0;
++  double ptarg = 0.0;
++  if (fabs(beta) < 1e-8) { // we are in CM
++    pproj = pcm;
++    ptarg = -pcm;
++  } else {
++    pproj = plab;
++    ptarg = 0.0;
++  } 
+   ru = new URun(generator.data(), comment.data(), 
+ 		aproj, zproj, pproj, 
+ 		atarg, ztarg, ptarg, 
+@@ -217,7 +221,7 @@
+   ru->Write();
+   fi->Write();
+   fi->Close();
+-  return nout;
++
+   return 0;
+ }
+ /*****************************************************************************/
