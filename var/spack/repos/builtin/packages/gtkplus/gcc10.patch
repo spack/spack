@@ -1,0 +1,49 @@
+From 334ae580bbfe10906c49e805596eeb13ebd281af Mon Sep 17 00:00:00 2001
+From: Peter Bloomfield <PeterBloomfield@bellsouth.net>
+Date: Wed, 31 Mar 2021 18:47:13 -0400
+Subject: [PATCH] gtktext{child,segment}: Build with array-bounds
+
+Do not under-allocate structures, so that building with
+-Werror=array-bounds does not fail.
+
+Fixes https://gitlab.gnome.org/GNOME/gtk/-/issues/3776
+---
+ gtk/gtktextchild.c   | 7 ++-----
+ gtk/gtktextsegment.c | 3 +--
+ 2 files changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/gtk/gtktextchild.c b/gtk/gtktextchild.c
+index 2ff7de2394..7706ec3949 100644
+--- a/gtk/gtktextchild.c
++++ b/gtk/gtktextchild.c
+@@ -73,11 +73,8 @@
+       }                                                                 \
+   } G_STMT_END
+ 
+-#define PIXBUF_SEG_SIZE ((unsigned) (G_STRUCT_OFFSET (GtkTextLineSegment, body) \
+-        + sizeof (GtkTextPixbuf)))
+-
+-#define WIDGET_SEG_SIZE ((unsigned) (G_STRUCT_OFFSET (GtkTextLineSegment, body) \
+-        + sizeof (GtkTextChildBody)))
++#define PIXBUF_SEG_SIZE ((unsigned) (sizeof (GtkTextLineSegment)))
++#define WIDGET_SEG_SIZE ((unsigned) (sizeof (GtkTextLineSegment)))
+ 
+ static GtkTextLineSegment *
+ pixbuf_segment_cleanup_func (GtkTextLineSegment *seg,
+diff --git a/gtk/gtktextsegment.c b/gtk/gtktextsegment.c
+index 8539db5297..0b84afbcd3 100644
+--- a/gtk/gtktextsegment.c
++++ b/gtk/gtktextsegment.c
+@@ -155,8 +155,7 @@ gtk_text_line_segment_split (const GtkTextIter *iter)
+ 
+ #define CSEG_SIZE(chars) ((unsigned) (G_STRUCT_OFFSET (GtkTextLineSegment, body) \
+         + 1 + (chars)))
+-#define TSEG_SIZE ((unsigned) (G_STRUCT_OFFSET (GtkTextLineSegment, body) \
+-        + sizeof (GtkTextToggleBody)))
++#define TSEG_SIZE ((unsigned) (sizeof (GtkTextLineSegment)))
+ 
+ /*
+  * Type functions
+-- 
+GitLab
+
