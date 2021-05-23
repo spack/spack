@@ -106,6 +106,12 @@ class Superlu(CMakePackage):
     def cache_test_sources(self):
         """Copy the example source files after the package is installed to an
         install test subdirectory for use during `spack test run`."""
+        if self.version == Version('5.2.2'):
+            # Include dir was hardcoded din 5.2.2
+            filter_file(r'INCLUDEDIR  = -I\.\./SRC',
+                        'INCLUDEDIR = -I' + self.prefix.include,
+                        join_path(self.examples_src_dir, 'Makefile'))
+
         self.cache_extra_test_sources(self.examples_src_dir)
 
     def _generate_make_hdr_for_test(self):
@@ -165,10 +171,14 @@ class Superlu(CMakePackage):
             for option in config_args:
                 inc.write('{0}\n'.format(option))
 
+        args = []
+        if self.version < Version('5.2.2'):
+            args.append('HEADER=' + self.prefix.include)
+        args.append('superlu')
+
         test_dir = join_path(self.install_test_root, self.examples_src_dir)
         with working_dir(test_dir, create=False):
-            make('HEADER={0}'.format(self.prefix.include), 'superlu',
-                 parallel=False)
+            make(*args, parallel=False)
             self.run_test('./superlu', purpose='Smoke test for superlu',
                           work_dir='.')
             make('clean')
