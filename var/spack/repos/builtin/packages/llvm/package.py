@@ -67,6 +67,11 @@ class Llvm(CMakePackage, CudaPackage):
         description="Build the LLVM C/C++/Objective-C compiler frontend",
     )
     variant(
+        "clang-tools-extra",
+        default=False,
+        description="Clang Tools",
+    )
+    variant(
         "flang",
         default=False,
         description="Build the LLVM Fortran compiler frontend "
@@ -483,8 +488,9 @@ class Llvm(CMakePackage, CudaPackage):
 
         if "+clang" in spec:
             projects.append("clang")
-            projects.append("clang-tools-extra")
             projects.append("openmp")
+        if "+clang-tools-extra" in spec:
+            projects.append("clang-tools-extra")
         if "+flang" in spec:
             projects.append("flang")
         if "+lldb" in spec:
