@@ -614,8 +614,20 @@ compiler_match(Package, Dependency)
      node_compiler_version(Package, Compiler, Version),
      node_compiler_version(Dependency, Compiler, Version).
 
+% these deptypes imply compiler matching
+link_reachable_deptype("link").
+link_reachable_deptype("run").
+link_reachable_deptype("test").
+
+link_reachable(Package) :- root(Package).
+link_reachable(Dependency) :-
+    depends_on(Package, Dependency, Type),
+    link_reachable(Package),
+    link_reachable_deptype(Type).
+
 compiler_mismatch(Package, Dependency)
   :- depends_on(Package, Dependency),
+     link_reachable(Dependency),
      not compiler_match(Package, Dependency).
 
 #defined node_compiler_set/2.
