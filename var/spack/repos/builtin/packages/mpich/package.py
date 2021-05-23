@@ -44,6 +44,8 @@ class Mpich(AutotoolsPackage):
     variant('verbs', default=False, description='Build support for OpenFabrics verbs.')
     variant('slurm', default=False, description='Enable SLURM support')
     variant('wrapperrpath', default=True, description='Enable wrapper rpath')
+    variant('debug', default=False, description='Build with debug symbols.')
+
     variant(
         'pmi',
         default='pmi',
@@ -268,6 +270,10 @@ spack package at this time.''',
             if match and is_enabled(match.group(1)):
                 variants += '+slurm'
 
+            match = re.search(r'--enable-g=(\S+)', output)
+            if match and is_enabled(match.group(1)):
+                variants += '+debug'
+
             if re.search(r'--enable-libxml2', output):
                 variants += '+libxml2'
             elif re.search(r'--disable-libxml2', output):
@@ -413,6 +419,9 @@ spack package at this time.''',
 
         if '~fortran' in spec:
             config_args.append('--disable-fortran')
+
+        if "+debug" in spec:
+            config_args.append("--enable-g=dbg")
 
         if '+slurm' in spec:
             config_args.append('--with-slurm=yes')
