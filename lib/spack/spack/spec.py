@@ -1503,8 +1503,8 @@ class Spec(object):
         # TODO: currently we strip build dependencies by default.  Rethink
         # this when we move to using package hashing on all specs.
         node_dict = self.to_node_dict(hash=hash)
-        yaml_text = syaml.dump(node_dict, default_flow_style=True)
-        return spack.util.hash.b32_hash(yaml_text)
+        json_text = sjson.dump(node_dict)
+        return spack.util.hash.b32_hash(json_text)
 
     def _cached_hash(self, hash, length=None):
         """Helper function for storing a cached hash on the spec.
