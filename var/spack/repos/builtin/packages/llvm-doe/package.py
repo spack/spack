@@ -251,7 +251,7 @@ class LlvmDoe(CMakePackage, CudaPackage):
                 compilers['c'] = exe
             elif 'flang' in exe:
                 variants.append('+flang')
-                compiler['fc'] = exe
+                compilers['fc'] = exe
                 compilers['f77'] = exe
             elif 'ld.lld' in exe:
                 lld_found = True
@@ -410,12 +410,12 @@ class LlvmDoe(CMakePackage, CudaPackage):
         if "+python" in spec and "+lldb" in spec:
             cmake_args.append("-DLLDB_USE_SYSTEM_SIX:Bool=TRUE")
 
+        if "+lldb" in spec and spec.satisfies("@10.0.0:,doe"):
+            cmake_args.append("-DLLDB_ENABLE_PYTHON:Bool={0}".format(
+                'ON' if '+python' in spec else 'OFF'))
         if "+lldb" in spec and spec.satisfies("@:9.9.9"):
             cmake_args.append("-DLLDB_DISABLE_PYTHON:Bool={0}".format(
                 'ON' if '~python' in spec else 'OFF'))
-        if "+lldb" in spec and spec.satisfies("@10.0.0:"):
-            cmake_args.append("-DLLDB_ENABLE_PYTHON:Bool={0}".format(
-                'ON' if '+python' in spec else 'OFF'))
 
         if "+gold" in spec:
             cmake_args.append(

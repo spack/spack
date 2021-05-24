@@ -1,0 +1,50 @@
+diff --git a/llvm/include/llvm/ADT/StringExtras.h b/llvm/include/llvm/ADT/StringExtras.h
+index 71b0e7527cb..3304a378f37 100644
+--- a/llvm/include/llvm/ADT/StringExtras.h
++++ b/llvm/include/llvm/ADT/StringExtras.h
+@@ -369,7 +369,7 @@ inline size_t join_items_size(const A1 &A, Args &&... Items) {
+ template <typename IteratorT>
+ inline std::string join(IteratorT Begin, IteratorT End, StringRef Separator) {
+   using tag = typename std::iterator_traits<IteratorT>::iterator_category;
+-  return detail::join_impl(Begin, End, Separator, tag());
++  return llvm::detail::join_impl(Begin, End, Separator, tag());
+ }
+ 
+ /// Joins the strings in the range [R.begin(), R.end()), adding Separator
+diff --git a/llvm/include/llvm/Analysis/BlockFrequencyInfoImpl.h b/llvm/include/llvm/Analysis/BlockFrequencyInfoImpl.h
+index 25b2efd33c9..40144d96044 100644
+--- a/llvm/include/llvm/Analysis/BlockFrequencyInfoImpl.h
++++ b/llvm/include/llvm/Analysis/BlockFrequencyInfoImpl.h
+@@ -186,8 +186,9 @@ public:
+   /// topological sort) and it's class is the same regardless of block type.
+   struct BlockNode {
+     using IndexType = uint32_t;
++    using IndexTypeLimits = std::numeric_limits<IndexType>;
+ 
+-    IndexType Index = std::numeric_limits<uint32_t>::max();
++    IndexType Index = IndexTypeLimits::max();
+ 
+     BlockNode() = default;
+     BlockNode(IndexType Index) : Index(Index) {}
+diff --git a/llvm/lib/ExecutionEngine/Orc/Core.cpp b/llvm/lib/ExecutionEngine/Orc/Core.cpp
+index 4325d57f73d..96e1e1d5503 100644
+--- a/llvm/lib/ExecutionEngine/Orc/Core.cpp
++++ b/llvm/lib/ExecutionEngine/Orc/Core.cpp
+@@ -1423,7 +1423,7 @@ VSO::lookupImpl(std::shared_ptr<AsynchronousSymbolQuery> &Q,
+     if (SymI->second.getAddress() != 0) {
+       Q->resolve(Name, SymI->second);
+       if (Q->isFullyResolved())
+-        ActionFlags |= NotifyFullyResolved;
++        ActionFlags = static_cast<LookupImplActionFlags>(ActionFlags | NotifyFullyResolved);
+     }
+ 
+     // If the symbol is lazy, get the MaterialiaztionUnit for it.
+@@ -1456,7 +1456,7 @@ VSO::lookupImpl(std::shared_ptr<AsynchronousSymbolQuery> &Q,
+       // continue.
+       Q->notifySymbolReady();
+       if (Q->isFullyReady())
+-        ActionFlags |= NotifyFullyReady;
++        ActionFlags = static_cast<LookupImplActionFlags>(ActionFlags | NotifyFullyReady);
+       continue;
+     }
+ 

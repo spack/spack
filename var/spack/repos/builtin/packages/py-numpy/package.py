@@ -22,6 +22,8 @@ class PyNumpy(PythonPackage):
     maintainers = ['adamjstewart']
 
     version('master', branch='master')
+    version('1.20.3', sha256='e55185e51b18d788e49fe8305fd73ef4470596b33fc2c1ceb304566b99c71a69')
+    version('1.20.2', sha256='878922bf5ad7550aa044aa9301d417e2d3ae50f0f577de92051d739ac6096cee')
     version('1.20.1', sha256='3bc63486a870294683980d76ec1e3efc786295ae00128f9ea38e2c6e74d5a60a')
     version('1.20.0', sha256='3d8233c03f116d068d5365fed4477f2947c7229582dad81e5953088989294cec')
     version('1.19.5', sha256='a76f502430dd98d7546e1ea2250a7360c065a5fdea52b2dffe8ae7180909b6f4')
@@ -252,6 +254,28 @@ class PyNumpy(PythonPackage):
                     f.write('libraries = {0}\n'.format(lapack_lib_names))
                     write_library_dirs(f, lapack_lib_dirs)
                     f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+
+            if '^fujitsu-ssl2' in spec:
+                if spec.satisfies('+blas'):
+                    f.write('[blas]\n')
+                    f.write('libraries = {0}\n'.format(spec['blas'].libs.names[0]))
+                    write_library_dirs(f, blas_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(blas_header_dirs))
+                    f.write(
+                        "extra_link_args = {0}\n".format(
+                            self.spec["blas"].libs.ld_flags
+                        )
+                    )
+                if spec.satisfies('+lapack'):
+                    f.write('[lapack]\n')
+                    f.write('libraries = {0}\n'.format(spec['lapack'].libs.names[0]))
+                    write_library_dirs(f, lapack_lib_dirs)
+                    f.write('include_dirs = {0}\n'.format(lapack_header_dirs))
+                    f.write(
+                        "extra_link_args = {0}\n".format(
+                            self.spec["lapack"].libs.ld_flags
+                        )
+                    )
 
     def setup_build_environment(self, env):
         # Tell numpy which BLAS/LAPACK libraries we want to use.

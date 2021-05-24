@@ -29,6 +29,7 @@ class Imagemagick(AutotoolsPackage):
     depends_on('ghostscript')
     depends_on('ghostscript-fonts')
     depends_on('libsm')
+    depends_on('pkgconfig', type='build')
 
     def configure_args(self):
         spec = self.spec
@@ -36,3 +37,7 @@ class Imagemagick(AutotoolsPackage):
         return [
             '--with-gs-font-dir={0}'.format(gs_font_dir)
         ]
+
+    @property
+    def libs(self):
+        return find_libraries('libMagick*', root=self.prefix, recursive=True)

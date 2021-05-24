@@ -88,12 +88,13 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
     depends_on('gnuplot',      when='+gnuplot')
     depends_on('imagemagick',  when='+magick')
     depends_on('hdf5',         when='+hdf5')
-    depends_on('java',          when='+jdk')        # TODO: requires Java 6 ?
+    depends_on('java',         when='+jdk')        # TODO: requires Java 6 ?
     depends_on('llvm',         when='+llvm')
-    # depends_on('opengl',      when='+opengl')    # TODO: add package
+    depends_on('gl',           when='+opengl')
+    depends_on('gl',           when='+fltk')
     depends_on('qhull',        when='+qhull')
     depends_on('qrupdate',     when='+qrupdate')
-    # depends_on('qscintilla',  when='+qscintilla) # TODO: add package
+    depends_on('qscintilla',   when='+qscintilla')
     depends_on('qt+opengl',    when='+qt')
     depends_on('suite-sparse', when='+suitesparse')
     depends_on('zlib',         when='+zlib')
@@ -239,7 +240,7 @@ class Octave(AutotoolsPackage, GNUMirrorPackage):
         else:
             config_args.append("--disable-java")
 
-        if '~opengl' in spec:
+        if '~opengl' and '~fltk' in spec:
             config_args.extend([
                 "--without-opengl",
                 "--without-framework-opengl"

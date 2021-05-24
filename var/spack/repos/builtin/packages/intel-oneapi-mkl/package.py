@@ -4,20 +4,29 @@
 # SPDX-License-Identifier: (Apache-2.0 OR MIT)
 
 
-from spack import *
+from sys import platform
 
-releases = {
-    '2021.1.1': {'irc_id': '17402', 'build': '52'}}
+from spack import *
 
 
 class IntelOneapiMkl(IntelOneApiLibraryPackage):
     """Intel oneAPI MKL."""
 
-    maintainers = ['rscohn2']
+    maintainers = ['rscohn2', 'danvev']
 
     homepage = 'https://software.intel.com/content/www/us/en/develop/tools/oneapi/components/onemkl.html'
 
-    version('2021.1.1', sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c', expand=False)
+    if platform == 'linux':
+        version('2021.2.0',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17757/l_onemkl_p_2021.2.0.296_offline.sh',
+                sha256='816e9df26ff331d6c0751b86ed5f7d243f9f172e76f14e83b32bf4d1d619dbae',
+                expand=False)
+        version('2021.1.1',
+                url='https://registrationcenter-download.intel.com/akdlm/irc_nas/17402/l_onemkl_p_2021.1.1.52_offline.sh',
+                sha256='818b6bd9a6c116f4578cda3151da0612ec9c3ce8b2c8a64730d625ce5b13cc0c',
+                expand=False)
+
+    depends_on('intel-oneapi-tbb')
 
     provides('fftw-api@3')
     provides('scalapack')
@@ -25,31 +34,14 @@ class IntelOneapiMkl(IntelOneApiLibraryPackage):
     provides('lapack')
     provides('blas')
 
-    def __init__(self, spec):
-        self.component_info(dir_name='mkl',
-                            components='intel.oneapi.lin.mkl.devel',
-                            releases=releases,
-                            url_name='onemkl')
-        super(IntelOneapiMkl, self).__init__(spec)
+    @property
+    def component_dir(self):
+        return 'mkl'
 
-    def _join_prefix(self, path):
-        return join_path(self.prefix, 'mkl', 'latest', path)
-
-    def _ld_library_path(self):
-        dirs = ['lib/intel64']
-        for dir in dirs:
-            yield self._join_prefix(dir)
-
-    def _library_path(self):
-        dirs = ['lib/intel64']
-        for dir in dirs:
-            yield self._join_prefix(dir)
-
-    def setup_run_environment(self, env):
-        env.prepend_path('PATH', self._join_prefix('bin/intel64'))
-        env.prepend_path('CPATH', self._join_prefix('include'))
-        for dir in self._library_path():
-            env.prepend_path('LIBRARY_PATH', dir)
-        for dir in self._ld_library_path():
-            env.prepend_path('LD_LIBRARY_PATH', dir)
-        env.set('MKLROOT', join_path(self.prefix, 'mkl', 'latest'))
+    @property
+    def libs(self):
+        lib_path = join_path(self.component_path, 'lib', 'intel64')
+        mkl_libs = ['libmkl_intel_lp64', 'libmkl_sequential', 'libmkl_core']
+        libs = find_libraries(mkl_libs, root=lib_path, shared=True, recursive=False)
+        libs += find_system_libraries(['libpthread', 'libm', 'libdl'], shared=True)
+        return libs

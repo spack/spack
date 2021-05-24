@@ -9,7 +9,9 @@ import contextlib
 import inspect
 import json
 import os
+import platform
 import re
+import socket
 import sys
 import os.path
 
@@ -137,6 +139,40 @@ def pickle_environment(path, environment=None):
     """Pickle an environment dictionary to a file."""
     cPickle.dump(dict(environment if environment else os.environ),
                  open(path, 'wb'), protocol=2)
+
+
+def get_host_environment_metadata():
+    """Get the host environment, reduce to a subset that we can store in
+    the install directory, and add the spack version.
+    """
+    import spack.main
+    environ = get_host_environment()
+    return {"host_os": environ['os'],
+            "platform": environ['platform'],
+            "host_target": environ['target'],
+            "hostname": environ['hostname'],
+            "spack_version": spack.main.get_version(),
+            "kernel_version": platform.version()}
+
+
+def get_host_environment():
+    """Return a dictionary (lookup) with host information (not including the
+    os.environ).
+    """
+    import spack.spec
+    import spack.architecture as architecture
+    arch = architecture.Arch(
+        architecture.platform(), 'default_os', 'default_target')
+    arch_spec = spack.spec.Spec('arch=%s' % arch)
+    return {
+        'target': str(arch.target),
+        'os': str(arch.os),
+        'platform': str(arch.platform),
+        'arch': arch_spec,
+        'architecture': arch_spec,
+        'arch_str': str(arch),
+        'hostname': socket.gethostname()
+    }
 
 
 @contextlib.contextmanager
@@ -528,13 +564,18 @@ class EnvironmentModifications(object):
 
         return rev
 
-    def apply_modifications(self):
+    def apply_modifications(self, env=None):
         """Applies the modifications and clears the list."""
+        # Use os.environ if not specified
+        # Do not copy, we want to modify it in place
+        if env is None:
+            env = os.environ
+
         modifications = self.group_by_name()
         # Apply modifications one variable at a time
         for name, actions in sorted(modifications.items()):
             for x in actions:
-                x.execute(os.environ)
+                x.execute(env)
 
     def shell_modifications(self, shell='sh'):
         """Return shell code to apply the modifications and clears the list."""
@@ -937,7 +978,9 @@ def environment_after_sourcing_files(*files, **kwargs):
             source_file, suppress_output,
             concatenate_on_success, dump_environment,
         ])
-        output = shell(source_file_arguments, output=str, env=environment)
+        output = shell(
+            source_file_arguments, output=str, env=environment, ignore_quotes=True
+        )
         environment = json.loads(output)
 
         # If we're in python2, convert to str objects instead of unicode

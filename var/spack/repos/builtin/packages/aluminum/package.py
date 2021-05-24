@@ -22,6 +22,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
     maintainers = ['bvanessen']
 
     version('master', branch='master')
+    version('1.0.0', sha256='028d12e271817214db5c07c77b0528f88862139c3e442e1b12f58717290f414a')
     version('0.7.0', sha256='bbb73d2847c56efbe6f99e46b41d837763938483f2e2d1982ccf8350d1148caa')
     version('0.6.0', sha256='6ca329951f4c7ea52670e46e5020e7e7879d9b56fed5ff8c5df6e624b313e925')
     version('0.5.0', sha256='dc365a5849eaba925355a8efb27005c5f22bcd1dca94aaed8d0d29c265c064c1')
@@ -42,7 +43,7 @@ class Aluminum(CMakePackage, CudaPackage, ROCmPackage):
 
     depends_on('cmake@3.17.0:', type='build')
     depends_on('mpi')
-    depends_on('nccl', when='+nccl')
+    depends_on('nccl@2.7.0-0:', when='+nccl')
     depends_on('hwloc@1.11:')
     depends_on('hwloc +cuda +nvml', when='+cuda')
     depends_on('hwloc@2.3.0:', when='+rocm')

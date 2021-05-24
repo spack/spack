@@ -19,12 +19,17 @@ version_declared(Package, Version) :- version_declared(Package, Version, _).
 1 { version(Package, Version) : version_declared(Package, Version) } 1
  :- node(Package).
 
-version_weight(Package, Weight)
+% If we select a deprecated version, mark the package as deprecated
+deprecated(Package, Version) :- version(Package, Version), deprecated_version(Package, Version).
+
+possible_version_weight(Package, Weight)
  :- version(Package, Version), version_declared(Package, Version, Weight),
     not preferred_version_declared(Package, Version, _).
 
-version_weight(Package, Weight)
+possible_version_weight(Package, Weight)
   :- version(Package, Version), preferred_version_declared(Package, Version, Weight).
+
+1 { version_weight(Package, Weight) : possible_version_weight(Package, Weight) } 1 :- node(Package).
 
 % version_satisfies implies that exactly one of the satisfying versions
 % is the package's version, and vice versa.
@@ -35,6 +40,42 @@ version_satisfies(Package, Constraint)
 
 #defined preferred_version_declared/3.
 #defined version_satisfies/3.
+#defined deprecated_version/2.
+
+%-----------------------------------------------------------------------------
+% Spec conditions and imposed constraints
+%
+% Given Spack directives like these:
+%    depends_on("foo@1.0+bar", when="@2.0+variant")
+%    provides("mpi@2:", when="@1.9:")
+%
+% The conditions are `@2.0+variant` and `@1.9:`, and the imposed constraints
+% are `@1.0+bar` on `foo` and `@2:` on `mpi`.
+%-----------------------------------------------------------------------------
+% conditions are specified with `condition_requirement` and hold when
+% corresponding spec attributes hold.
+condition_holds(ID) :-
+  condition(ID);
+  attr(Name, A1)         : condition_requirement(ID, Name, A1);
+  attr(Name, A1, A2)     : condition_requirement(ID, Name, A1, A2);
+  attr(Name, A1, A2, A3) : condition_requirement(ID, Name, A1, A2, A3).
+
+% condition_holds(ID) implies all imposed_constraints, unless do_not_impose(ID)
+% is derived. This allows imposed constraints to be canceled in special cases.
+impose(ID) :- condition_holds(ID), not do_not_impose(ID).
+
+% conditions that hold impose constraints on other specs
+attr(Name, A1)         :- impose(ID), imposed_constraint(ID, Name, A1).
+attr(Name, A1, A2)     :- impose(ID), imposed_constraint(ID, Name, A1, A2).
+attr(Name, A1, A2, A3) :- impose(ID), imposed_constraint(ID, Name, A1, A2, A3).
+
+#defined condition/1.
+#defined condition_requirement/3.
+#defined condition_requirement/4.
+#defined condition_requirement/5.
+#defined imposed_constraint/3.
+#defined imposed_constraint/4.
+#defined imposed_constraint/5.
 
 %-----------------------------------------------------------------------------
 % Dependency semantics
@@ -42,12 +83,25 @@ version_satisfies(Package, Constraint)
 % Dependencies of any type imply that one package "depends on" another
 depends_on(Package, Dependency) :- depends_on(Package, Dependency, _).
 
+% a dependency holds if its condition holds
+dependency_holds(Package, Dependency, Type) :-
+  dependency_condition(ID, Package, Dependency),
+  dependency_type(ID, Type),
+  condition_holds(ID),
+  not external(Package).
+
+% We cut off dependencies of externals (as we don't really know them).
+% Don't impose constraints on dependencies that don't exist.
+do_not_impose(ID) :-
+  not dependency_holds(Package, Dependency, _),
+  dependency_condition(ID, Package, Dependency).
+
 % declared dependencies are real if they're not virtual AND
-% the package is not an external
+% the package is not an external.
+% They're only triggered if the associated dependnecy condition holds.
 depends_on(Package, Dependency, Type)
- :- dependency_conditions(Package, Dependency, Type),
-    not virtual(Dependency),
-    not external(Package).
+ :- dependency_holds(Package, Dependency, Type),
+    not virtual(Dependency).
 
 % every root must be a node
 node(Package) :- root(Package).
@@ -69,74 +123,19 @@ path(Parent, Child) :- depends_on(Parent, Child).
 path(Parent, Descendant) :- path(Parent, A), depends_on(A, Descendant).
 :- path(A, B), path(B, A).
 
-%-----------------------------------------------------------------------------
-% Conditional dependencies
-%
-% This takes care of `when=SPEC` in `depends_on("foo@1.0+bar", when="SPEC")`.
-%-----------------------------------------------------------------------------
-% if any individual condition below is true, trigger the dependency.
-dependency_conditions(Package, Dependency, Type) :-
-  dependency_conditions_hold(ID, Package, Dependency),
-  dependency_type(ID, Type).
-
 #defined dependency_type/2.
-
-% collect all the dependency conditions into a single conditional rule
-% distinguishing between Parent and Package (Arg1) is needed to account
-% for conditions like:
-%
-% depends_on('patchelf@0.9', when='@1.0:1.1 ^python@:2')
-%
-% that include dependencies
-dependency_conditions_hold(ID, Parent, Dependency) :-
-  attr(Name, Arg1)             : required_dependency_condition(ID, Name, Arg1);
-  attr(Name, Arg1, Arg2)       : required_dependency_condition(ID, Name, Arg1, Arg2);
-  attr(Name, Arg1, Arg2, Arg3) : required_dependency_condition(ID, Name, Arg1, Arg2, Arg3);
-  dependency_condition(ID, Parent, Dependency);
-  % There must be at least a dependency type declared,
-  % otherwise the dependency doesn't hold
-  dependency_type(ID, _);
-  node(Parent);
-  not external(Parent).
-
 #defined dependency_condition/3.
-#defined required_dependency_condition/3.
-#defined required_dependency_condition/4.
-#defined required_dependency_condition/5.
-
-%-----------------------------------------------------------------------------
-% Imposed constraints on dependencies
-%
-% This handles the `@1.0+bar` in `depends_on("foo@1.0+bar", when="SPEC")`, or
-% the `mpi@2:` in `provides("mpi@2:", when="@1.9:")`.
-%-----------------------------------------------------------------------------
-% NOTE: `attr(Name, Arg1)` is omitted here b/c the only single-arg attribute is
-% NOTE: `node()`, which is handled above under "Dependency Semantics"
-
-attr(Name, Arg1, Arg2) :-
-  dependency_conditions_hold(ID, Package, Dependency),
-  imposed_dependency_condition(ID, Name, Arg1, Arg2).
-
-attr(Name, Arg1, Arg2, Arg3) :-
-  dependency_conditions_hold(ID, Package, Dependency),
-  imposed_dependency_condition(ID, Name, Arg1, Arg2, Arg3).
-
-#defined imposed_dependency_condition/4.
-#defined imposed_dependency_condition/5.
 
 %-----------------------------------------------------------------------------
 % Conflicts
 %-----------------------------------------------------------------------------
-:- not external(Package)        : conflict_condition(ID, "node", Package);
-   attr(Name, Arg1)             : conflict_condition(ID, Name, Arg1);
-   attr(Name, Arg1, Arg2)       : conflict_condition(ID, Name, Arg1, Arg2);
-   attr(Name, Arg1, Arg2, Arg3) : conflict_condition(ID, Name, Arg1, Arg2, Arg3);
-   conflict(ID, Package).
+:- node(Package),
+   not external(Package),
+   conflict(Package, TriggerID, ConstraintID),
+   condition_holds(TriggerID),
+   condition_holds(ConstraintID).
 
-#defined conflict/2.
-#defined conflict_condition/3.
-#defined conflict_condition/4.
-#defined conflict_condition/5.
+#defined conflict/3.
 
 %-----------------------------------------------------------------------------
 % Virtual dependencies
@@ -145,9 +144,14 @@ attr(Name, Arg1, Arg2, Arg3) :-
 % if a package depends on a virtual, it's not external and we have a
 % provider for that virtual then it depends on the provider
 depends_on(Package, Provider, Type)
-  :- dependency_conditions(Package, Virtual, Type),
+  :- dependency_holds(Package, Virtual, Type),
      provides_virtual(Provider, Virtual),
      not external(Package).
+
+% dependencies on virtuals also imply that the virtual is a virtual node
+virtual_node(Virtual)
+  :- dependency_holds(Package, Virtual, Type),
+     virtual(Virtual), not external(Package).
 
 % if there's a virtual node, we must select one provider
 1 { provides_virtual(Package, Virtual) : possible_provider(Package, Virtual) } 1
@@ -158,31 +162,20 @@ virtual_node(Virtual) :- virtual_root(Virtual).
 1 { root(Package) : provides_virtual(Package, Virtual) } 1
   :- virtual_root(Virtual).
 
-% all virtual providers come from provider conditions like this
-dependency_conditions_hold(ID, Provider, Virtual) :-
-  attr(Name, Arg1)             : required_provider_condition(ID, Name, Arg1);
-  attr(Name, Arg1, Arg2)       : required_provider_condition(ID, Name, Arg1, Arg2);
-  attr(Name, Arg1, Arg2, Arg3) : required_provider_condition(ID, Name, Arg1, Arg2, Arg3);
-  virtual(Virtual);
-  provider_condition(ID, Provider, Virtual).
-
 % The provider provides the virtual if some provider condition holds.
 provides_virtual(Provider, Virtual) :-
    provider_condition(ID, Provider, Virtual),
-   dependency_conditions_hold(ID, Provider, Virtual),
+   condition_holds(ID),
    virtual(Virtual).
 
 % a node that provides a virtual is a provider
 provider(Package, Virtual)
   :- node(Package), provides_virtual(Package, Virtual).
 
-% dependencies on virtuals also imply that the virtual is a virtual node
-virtual_node(Virtual)
-  :- dependency_conditions(Package, Virtual, Type),
-     virtual(Virtual), not external(Package).
-
 % for any virtual, there can be at most one provider in the DAG
 0 { node(Package) : provides_virtual(Package, Virtual) } 1 :- virtual(Virtual).
+
+#defined possible_provider/2.
 
 %-----------------------------------------------------------------------------
 % Virtual dependency weights
@@ -308,32 +301,29 @@ external(Package) :- external_only(Package), node(Package).
 % a package is a real_node if it is not external
 real_node(Package) :- node(Package), not external(Package).
 
-% if an external version is selected, the package is external and
-% we are using the corresponding spec
-external(Package) :-
-    version(Package, Version), version_weight(Package, Weight),
-    external_version_declared(Package, Version, Weight, ID).
+% a package is external if we are using an external spec for it
+external(Package) :- external_spec_selected(Package, _).
+
+% we can't use the weight for an external version if we don't use the
+% corresponding external spec.
+:- version(Package, Version),
+   version_weight(Package, Weight),
+   external_version_declared(Package, Version, Weight, ID),
+   not external(Package).
 
 % determine if an external spec has been selected
-external_spec_selected(ID, Package, LocalIndex) :-
-    version(Package, Version), version_weight(Package, Weight),
-    external_spec_index(ID, Package, LocalIndex),
-    external_version_declared(Package, Version, Weight, LocalIndex),
-    external_spec_conditions_hold(ID, Package).
+external_spec_selected(Package, LocalIndex) :-
+    external_conditions_hold(Package, LocalIndex),
+    node(Package).
 
-% determine if all the conditions on an external spec hold. If they do
-% the spec can be selected.
-external_spec_conditions_hold(ID, Package) :-
-  attr(Name, Arg1)             : external_spec_condition(ID, Name, Arg1);
-  attr(Name, Arg1, Arg2)       : external_spec_condition(ID, Name, Arg1, Arg2);
-  attr(Name, Arg1, Arg2, Arg3) : external_spec_condition(ID, Name, Arg1, Arg2, Arg3);
-  external_spec(ID, Package);
-  node(Package).
+external_conditions_hold(Package, LocalIndex) :-
+    possible_external(ID, Package, LocalIndex), condition_holds(ID).
 
 % it cannot happen that a spec is external, but none of the external specs
 % conditions hold.
-:- external(Package), not external_spec_conditions_hold(_, Package).
+:- external(Package), not external_conditions_hold(Package, _).
 
+#defined possible_external/3.
 #defined external_spec_index/3.
 #defined external_spec_condition/3.
 #defined external_spec_condition/4.
@@ -366,6 +356,15 @@ variant_set(Package, Variant) :- variant_set(Package, Variant, _).
 % A variant cannot have a value that is not also a possible value
 :- variant_value(Package, Variant, Value), not variant_possible_value(Package, Variant, Value).
 
+% Some multi valued variants accept multiple values from disjoint sets.
+% Ensure that we respect that constraint and we don't pick values from more
+% than one set at once
+:- variant_value(Package, Variant, Value1),
+   variant_value(Package, Variant, Value2),
+   variant_value_from_disjoint_sets(Package, Variant, Value1, Set1),
+   variant_value_from_disjoint_sets(Package, Variant, Value2, Set2),
+   Set1 != Set2.
+
 % variant_set is an explicitly set variant value. If it's not 'set',
 % we revert to the default value. If it is set, we force the set value
 variant_value(Package, Variant, Value)
@@ -373,32 +372,58 @@ variant_value(Package, Variant, Value)
     variant(Package, Variant),
     variant_set(Package, Variant, Value).
 
-% prefer default values.
+% The rules below allow us to prefer default values for variants
+% whenever possible. If a variant is set in a spec, or if it is
+% specified in an external, we score it as if it was a default value.
 variant_not_default(Package, Variant, Value, 1)
  :- variant_value(Package, Variant, Value),
     not variant_default_value(Package, Variant, Value),
     not variant_set(Package, Variant, Value),
+    not external_with_variant_set(Package, Variant, Value),
     node(Package).
 
+% We are using the default value for a variant
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_default_value(Package, Variant, Value),
     node(Package).
 
+% The variant is set in the spec
 variant_not_default(Package, Variant, Value, 0)
  :- variant_value(Package, Variant, Value),
     variant_set(Package, Variant, Value),
     node(Package).
 
+% The variant is set in an external spec
+external_with_variant_set(Package, Variant, Value)
+ :- variant_value(Package, Variant, Value),
+    condition_requirement(ID, "variant_value", Package, Variant, Value),
+    possible_external(ID, Package, _),
+    external(Package),
+    node(Package).
 
-% The default value for a variant in a package is what is written
-% in the package.py file, unless some preference is set in packages.yaml
+variant_not_default(Package, Variant, Value, 0)
+ :- variant_value(Package, Variant, Value),
+    external_with_variant_set(Package, Variant, Value),
+    node(Package).
+
+% The default value for a variant in a package is what is prescribed:
+%
+% 1. On the command line
+% 2. In packages.yaml (if there's no command line settings)
+% 3. In the package.py file (if there are no settings in
+%    packages.yaml and the command line)
+%
 variant_default_value(Package, Variant, Value)
  :- variant_default_value_from_package_py(Package, Variant, Value),
-    not variant_default_value_from_packages_yaml(Package, Variant, _).
+    not variant_default_value_from_packages_yaml(Package, Variant, _),
+    not variant_default_value_from_cli(Package, Variant, _).
 
 variant_default_value(Package, Variant, Value)
- :- variant_default_value_from_packages_yaml(Package, Variant, Value).
+ :- variant_default_value_from_packages_yaml(Package, Variant, Value),
+    not variant_default_value_from_cli(Package, Variant, _).
+
+variant_default_value(Package, Variant, Value) :- variant_default_value_from_cli(Package, Variant, Value).
 
 % Treat 'none' in a special way - it cannot be combined with other
 % values even if the variant is multi-valued
@@ -423,8 +448,10 @@ variant_single_value(Package, "dev_path")
 #defined variant_single_value/2.
 #defined variant_default_value/3.
 #defined variant_possible_value/3.
+#defined variant_default_value_from_cli/3.
 #defined variant_default_value_from_packages_yaml/3.
 #defined variant_default_value_from_package_py/3.
+#defined variant_value_from_disjoint_sets/4.
 
 %-----------------------------------------------------------------------------
 % Platform semantics
@@ -464,6 +491,8 @@ node_os_inherit(Dependency, OS)
   :- node_os_inherit(Package, OS), depends_on(Package, Dependency),
      not node_os_set(Dependency).
 node_os_inherit(Package) :- node_os_inherit(Package, _).
+
+node_os(Package, OS) :- node_os_inherit(Package, OS).
 
 % fall back to default if not set or inherited
 node_os(Package, OS)
@@ -520,29 +549,19 @@ node_target_weight(Package, Weight)
     node_target(Package, Target),
     target_weight(Target, Package, Weight).
 
-% compatibility rules for targets among nodes
-node_target_match_pref(Dependency, Target)
-  :- depends_on(Package, Dependency),
-     node_target_match_pref(Package, Target),
-     not node_target_set(Dependency, _).
-
-node_target_match_pref(Dependency, Target)
-  :- depends_on(Package, Dependency),
-     node_target_set(Package, Target),
-     not node_target_match_pref(Package, Target),
-     not node_target_set(Dependency, _).
-
-node_target_match_pref(Dependency, Target)
-  :- depends_on(Package, Dependency),
-     root(Package), node_target(Package, Target),
-     not node_target_match_pref(Package, _).
-
-node_target_match(Package, 1)
-  :- node_target(Package, Target), node_target_match_pref(Package, Target).
-
 derive_target_from_parent(Parent, Package)
-  :- depends_on(Parent, Package), not package_target_weight(_, Package, _).
+  :- depends_on(Parent, Package),
+     not package_target_weight(_, Package, _).
 
+% compatibility rules for targets among nodes
+node_target_match(Parent, Dependency)
+  :- depends_on(Parent, Dependency),
+     node_target(Parent, Target),
+     node_target(Dependency, Target).
+
+node_target_mismatch(Parent, Dependency)
+  :- depends_on(Parent, Dependency),
+     not node_target_match(Parent, Dependency).
 
 #defined node_target_set/2.
 #defined package_target_weight/3.
@@ -588,32 +607,16 @@ node_compiler_version(Package, Compiler, Version) :- node_compiler_version_set(P
    not compiler_supports_os(Compiler, Version, OS),
    not allow_compiler(Compiler, Version).
 
-% If the compiler is what was prescribed from command line etc.
-% or is the same as a root node, there is a version match
+% If a package and one of its dependencies don't have the
+% same compiler there's a mismatch.
+compiler_match(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     node_compiler_version(Package, Compiler, Version),
+     node_compiler_version(Dependency, Compiler, Version).
 
-% Compiler prescribed in the root spec
-node_compiler_version_match_pref(Package, Compiler, V)
- :- node_compiler_set(Package, Compiler),
-    node_compiler_version(Package, Compiler, V),
-    not external(Package).
-
-% Compiler inherited from a parent node
-node_compiler_version_match_pref(Dependency, Compiler, V)
- :- depends_on(Package, Dependency),
-    node_compiler_version_match_pref(Package, Compiler, V),
-    node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_set(Dependency, Compiler).
-
-% Compiler inherited from the root package
-node_compiler_version_match_pref(Dependency, Compiler, V)
- :- depends_on(Package, Dependency),
-    node_compiler_version(Package, Compiler, V), root(Package),
-    node_compiler_version(Dependency, Compiler, V),
-    not node_compiler_set(Dependency, Compiler).
-
-compiler_version_match(Package, 1)
- :- node_compiler_version(Package, Compiler, V),
-    node_compiler_version_match_pref(Package, Compiler, V).
+compiler_mismatch(Package, Dependency)
+  :- depends_on(Package, Dependency),
+     not compiler_match(Package, Dependency).
 
 #defined node_compiler_set/2.
 #defined node_compiler_version_set/3.
@@ -692,67 +695,101 @@ no_flags(Package, FlagType)
 %-----------------------------------------------------------------------------
 % How to optimize the spec (high to low priority)
 %-----------------------------------------------------------------------------
+% Each criterion below has:
+%   1. an opt_criterion(ID, Name) fact that describes the criterion, and
+%   2. a `#minimize{ 0@2 : #true }.` statement that ensures the criterion
+%      is displayed (clingo doesn't display sums over empty sets by default)
+
+% Minimize the number of deprecated versions being used
+opt_criterion(16, "deprecated versions used").
+#minimize{ 0@16 : #true }.
+#minimize{ 1@16,Package : deprecated(Package, _)}.
 
 % The highest priority is to minimize the:
 % 1. Version weight
 % 2. Number of variants with a non default value, if not set
 % for the root(Package)
-#minimize { Weight@15 : root(Package),version_weight(Package, Weight)}.
+opt_criterion(15, "version weight").
+#minimize{ 0@15 : #true }.
+#minimize { Weight@15 : root(Package),version_weight(Package, Weight) }.
+
+opt_criterion(14, "number of non-default variants (roots)").
+#minimize{ 0@14 : #true }.
 #minimize {
     Weight@14,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), root(Package)
 }.
+
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
+opt_criterion(13, "multi-valued variants").
+#minimize{ 0@13 : #true }.
 #maximize {
     1@13,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight),
     not variant_single_value(Package, Variant),
     root(Package)
 }.
+opt_criterion(12, "preferred providers for roots").
+#minimize{ 0@12 : #true }.
 #minimize{
-    Weight@13,Provider
+    Weight@12,Provider
     : provider_weight(Provider, Weight), root(Provider)
 }.
 
 % Try to use default variants or variants that have been set
+opt_criterion(11, "number of non-default variants (non-roots)").
+#minimize{ 0@11 : #true }.
 #minimize {
     Weight@11,Package,Variant,Value
     : variant_not_default(Package, Variant, Value, Weight), not root(Package)
 }.
+
 % Minimize the weights of the providers, i.e. use as much as
 % possible the most preferred providers
+opt_criterion(9, "number of non-default providers (non-roots)").
+#minimize{ 0@9 : #true }.
 #minimize{
     Weight@9,Provider
     : provider_weight(Provider, Weight), not root(Provider)
 }.
+
 % If the value is a multivalued variant there could be multiple
 % values set as default. Since a default value has a weight of 0 we
 % need to maximize their number below to ensure they're all set
+opt_criterion(8, "count of non-root multi-valued variants").
+#minimize{ 0@8 : #true }.
 #maximize {
     1@8,Package,Variant,Value
-    : variant_not_default(Package, Variant, Value, Weight),
+    : variant_not_default(Package, Variant, Value, _),
     not variant_single_value(Package, Variant),
     not root(Package)
 }.
 
-% Try to maximize the number of compiler matches in the DAG,
-% while minimizing the number of nodes. This is done because
-% a maximization on the number of matches for compilers is highly
-% correlated to a preference to have as many nodes as possible
-#minimize{ 1@7,Package : node(Package) }.
-#maximize{ Weight@7,Package : compiler_version_match(Package, Weight) }.
+% Try to minimize the number of compiler mismatches in the DAG.
+opt_criterion(7, "compiler mismatches").
+#minimize{ 0@7 : #true }.
+#minimize{ 1@7,Package,Dependency : compiler_mismatch(Package, Dependency) }.
 
 % Choose more recent versions for nodes
+opt_criterion(6, "version badness").
+#minimize{ 0@6 : #true }.
 #minimize{
     Weight@6,Package : version_weight(Package, Weight)
 }.
 
 % Try to use preferred compilers
+opt_criterion(5, "non-preferred compilers").
+#minimize{ 0@5 : #true }.
 #minimize{ Weight@5,Package : compiler_weight(Package, Weight) }.
 
-% Maximize the number of matches for targets in the DAG, try
+% Minimize the number of mismatches for targets in the DAG, try
 % to select the preferred target.
-#maximize{ Weight@4,Package : node_target_match(Package, Weight) }.
+opt_criterion(4, "target mismatches").
+#minimize{ 0@4 : #true }.
+#minimize{ 1@4,Package,Dependency : node_target_mismatch(Package, Dependency) }.
+
+opt_criterion(3, "non-preferred targets").
+#minimize{ 0@3 : #true }.
 #minimize{ Weight@3,Package : node_target_weight(Package, Weight) }.

@@ -74,6 +74,7 @@ class Elfutils(AutotoolsPackage, SourcewarePackage):
     # elfutils with gcc, and then link it to clang-built libraries.
     conflicts('%apple-clang')
     conflicts('%clang')
+    conflicts('%cce')
 
     # Elfutils uses -Wall and we don't want to fail the build over a
     # stray warning.

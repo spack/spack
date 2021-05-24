@@ -98,4 +98,8 @@ class Cpmd(MakefilePackage):
             exe_name = 'cpmd.x'
         opts.append(test_file)
         opts.append(test_dir)
-        self.run_test(exe_name, options=opts)
+        expected = ['2       1        H        O              1.84444     0.97604',
+                    '3       1        H        O              1.84444     0.97604',
+                    '2   1   3         H     O     H              103.8663'
+                    ]
+        self.run_test(exe_name, options=opts, expected=expected)

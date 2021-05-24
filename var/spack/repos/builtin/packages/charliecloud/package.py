@@ -15,6 +15,7 @@ class Charliecloud(AutotoolsPackage):
     git      = "https://github.com/hpc/charliecloud.git"
 
     version('master', branch='master')
+    version('0.23',   sha256='5e458b943ad0e27d1264bb089e48d4a676219179b0e96a7d761387a36c45b4d9')
     version('0.22',   sha256='f65e4111ce87e449c656032da69f3b1cfc70a5a416a5e410329c1b0b2e953907')
     version('0.21',   sha256='024884074d283c4a0387d899161610fa4ae739ac1efcc9e53d7d626ddc20359f')
     version('0.19',   sha256='99619fd86860cda18f7f7a7cf7391f702ec9ebd3193791320dea647769996447')

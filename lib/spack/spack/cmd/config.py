@@ -200,71 +200,11 @@ def config_add(args):
 
     scope, section = _get_scope_and_section(args)
 
-    # Updates from file
     if args.file:
-        # Get file as config dict
-        data = spack.config.read_config_file(args.file)
-        if any(k in data for k in spack.schema.env.keys):
-            data = ev.config_dict(data)
-
-        # update all sections from config dict
-        # We have to iterate on keys to keep overrides from the file
-        for section in data.keys():
-            if section in spack.config.section_schemas.keys():
-                # Special handling for compiler scope difference
-                # Has to be handled after we choose a section
-                if scope is None:
-                    scope = spack.config.default_modify_scope(section)
-
-                value = data[section]
-                existing = spack.config.get(section, scope=scope)
-                new = spack.config.merge_yaml(existing, value)
-
-                spack.config.set(section, new, scope)
+        spack.config.add_from_file(args.file, scope=scope)
 
     if args.path:
-        components = spack.config.process_config_path(args.path)
-
-        has_existing_value = True
-        path = ''
-        override = False
-        for idx, name in enumerate(components[:-1]):
-            # First handle double colons in constructing path
-            colon = '::' if override else ':' if path else ''
-            path += colon + name
-            if getattr(name, 'override', False):
-                override = True
-            else:
-                override = False
-
-            # Test whether there is an existing value at this level
-            existing = spack.config.get(path, scope=scope)
-
-            if existing is None:
-                has_existing_value = False
-                # We've nested further than existing config, so we need the
-                # type information for validation to know how to handle bare
-                # values appended to lists.
-                existing = spack.config.get_valid_type(path)
-
-                # construct value from this point down
-                value = syaml.load_config(components[-1])
-                for component in reversed(components[idx + 1:-1]):
-                    value = {component: value}
-                break
-
-        if has_existing_value:
-            path, _, value = args.path.rpartition(':')
-            value = syaml.load_config(value)
-            existing = spack.config.get(path, scope=scope)
-
-        # append values to lists
-        if isinstance(existing, list) and not isinstance(value, list):
-            value = [value]
-
-        # merge value into existing
-        new = spack.config.merge_yaml(existing, value)
-        spack.config.set(path, new, scope)
+        spack.config.add(args.path, scope=scope)
 
 
 def config_remove(args):

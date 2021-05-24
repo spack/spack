@@ -7,12 +7,15 @@ from spack import *
 
 
 class PyDaskXgboost(PythonPackage):
-    """Distributed training with XGBoost and Dask.distributed."""
+    """Distributed training with XGBoost and Dask.distributed.
+
+    Deprecated: use `py-xgboost+dask` instead."""
 
     homepage = "https://github.com/dask/dask-xgboost/"
     pypi = "dask-xgboost/dask-xgboost-0.1.11.tar.gz"
 
-    version('0.1.11', sha256='3fbe1bf4344dc74edfbe9f928c7e3e6acc26dc57cefd8da8ae56a15469c6941c')
+    # Deprecated, see https://github.com/dask/dask-xgboost/issues/80
+    version('0.1.11', sha256='3fbe1bf4344dc74edfbe9f928c7e3e6acc26dc57cefd8da8ae56a15469c6941c', deprecated=True)
 
     variant('sparse', default=False, description='Add sparse support')
 

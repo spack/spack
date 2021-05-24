@@ -11,10 +11,15 @@ class RocmBandwidthTest(CMakePackage):
     """Test to measure PciE bandwidth on ROCm platforms"""
 
     homepage = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test"
-    url      = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-4.0.0.tar.gz"
+    git      = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test.git"
+    url      = "https://github.com/RadeonOpenCompute/rocm_bandwidth_test/archive/rocm-4.2.0.tar.gz"
 
     maintainers = ['srekolam', 'arjun-raj-kuppala']
 
+    version('master', branch='master')
+
+    version('4.2.0', sha256='d268365e3bb8031c1201c05e705074d1fd794d236843f80064855cf31e4412f5')
+    version('4.1.0', sha256='4e34b60a7e4090d6475f0cdd86594b1b9a7b85d4e343999b9e148e196f0c2f4c')
     version('4.0.0', sha256='bde2aa743979eac195dd13ec8d0fcb7da183fff489da32c28b872eed7f6681b3')
     version('3.10.0', sha256='ad1dedad9023ccb050082c866fa5131665d9c3b50de0b78e4618730c29a07773')
     version('3.9.0', sha256='f366299b48a29b419febb2ba398d1abe4cd01425d33254777e426966b722d3b1')
@@ -26,7 +31,8 @@ class RocmBandwidthTest(CMakePackage):
 
     depends_on('cmake@3:', type='build')
 
-    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0']:
+    for ver in ['3.5.0', '3.7.0', '3.8.0', '3.9.0', '3.10.0', '4.0.0', '4.1.0',
+                '4.2.0', 'master']:
         depends_on('hsa-rocr-dev@' + ver, type='link', when='@' + ver)
         depends_on('hsakmt-roct@' + ver, type='build', when='@' + ver)
 
