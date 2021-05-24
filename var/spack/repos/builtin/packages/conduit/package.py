@@ -271,7 +271,6 @@ class Conduit(CMakePackage):
             #######
             # how do we properly locate 'cmake' and 'make' in the
             # `spack test run` environment?
-            self.run_test("/bin/echo",["hello"])
             self.run_test("cmake",opts)
             self.run_test("make", purpose="build example")
             self.run_test("conduit_example", purpose="run example")
