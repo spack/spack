@@ -203,8 +203,6 @@ class Conduit(CMakePackage):
             print("Running Conduit Unit Tests...")
             make("test")
 
-
-
     @run_after('install')
     @on_package_attributes(run_tests=True)
     def check_install(self):
@@ -249,8 +247,9 @@ class Conduit(CMakePackage):
         using-with-cmake and using-with-make examples
         (supports: spack test run)
         """
-        # can't use self.run_test with the check_install logic
-        # so looks pretty similar 
+        # Note: This looks similar to the `self.check_install` logic
+        # but there are subtle differences:
+        # (paths differ , and we use `self.run_test`)
         print("Checking Conduit installation...")
         spec = self.spec
         install_prefix = spec.prefix
@@ -264,14 +263,12 @@ class Conduit(CMakePackage):
                          create=True):
             opts = ["-DCONDUIT_DIR={0}".format(install_prefix), example_src_dir]
             opts += self.std_cmake_args
-            cmake_args = ["-DCONDUIT_DIR={0}".format(install_prefix),
-                          example_src_dir]
             #######
             # TODO
             #######
             # how do we properly locate 'cmake' and 'make' in the
-            # `spack test run` environment?
-            self.run_test("cmake",opts)
+            # `spack test run` environment ?
+            self.run_test("cmake", opts)
             self.run_test("make", purpose="build example")
             self.run_test("conduit_example", purpose="run example")
         print("Checking using-with-make example...")
@@ -290,8 +287,8 @@ class Conduit(CMakePackage):
             # TODO
             #######
             # how do we properly locate 'make' in the
-            # `spack test run` environment?
-            self.run_test('make',opts, purpose="build example")
+            # `spack test run` environment ?
+            self.run_test('make', opts, purpose="build example")
             self.run_test('./conduit_example', purpose="build example")
 
     def _get_host_config_path(self, spec):
