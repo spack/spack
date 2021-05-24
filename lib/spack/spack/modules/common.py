@@ -220,6 +220,10 @@ def root_path(name, module_set_name):
     Returns:
         root folder for module file installation
     """
+    defaults = {
+        'lmod': '$spack/share/spack/modules',
+        'tcl': '$spack/share/spack/lmod',
+    }
     # Root folders where the various module files should be written
     roots = spack.config.get('modules:%s:roots' % module_set_name, {})
 
@@ -227,6 +231,10 @@ def root_path(name, module_set_name):
     if module_set_name == 'default':
         roots = spack.config.merge_yaml(
             spack.config.get('config:module_roots', {}), roots)
+
+    # Merge config values into the defaults so we prefer configured values
+    roots = spack.config.merge_yaml(defaults, roots)
+
     path = roots.get(name, os.path.join(spack.paths.share_path, name))
     return spack.util.path.canonicalize_path(path)
 
