@@ -417,8 +417,9 @@ def set_build_environment_variables(pkg, env, dirty):
     build_link_prefixes = filter_system_paths(
         x.prefix for x in build_link_deps)
 
-    # Add dependencies to CMAKE_PREFIX_PATH
-    env.set_path('CMAKE_PREFIX_PATH', build_link_prefixes)
+    for path in reversed(build_link_prefixes):
+        # Add dependencies to CMAKE_PREFIX_PATH
+        env.prepend_path('CMAKE_PREFIX_PATH', path)
 
     # Set environment variables if specified for
     # the given compiler
