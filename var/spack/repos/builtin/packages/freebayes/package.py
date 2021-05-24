@@ -22,14 +22,14 @@ class Freebayes(MesonPackage):
     depends_on('zlib')
 
     # Deps for @1.3.5 and beyond
+    depends_on('ninja', type='build', when='@1.3.5:')
     depends_on('htslib', when='@1.3.5:')
-    depends_on('zlib', type=('build', 'run'), when='@1.3.5:')
-    depends_on('xz', type=('build', 'run'), when='@1.3.5:')
-    depends_on('parallel', type=('build', 'run'), when='@1.3.5:')
-    depends_on('ninja', type=('build', 'run'), when='@1.3.5:')
-    depends_on('vcftools', type=('build', 'run'), when='@1.3.5:')
-    depends_on('bc', type=('build', 'run'), when='@1.3.5:')
-    depends_on('samtools', type=('build', 'run'), when='@1.3.5:')
+    depends_on('zlib', when='@1.3.5:')
+    depends_on('xz', when='@1.3.5:')
+    depends_on('parallel', when='@1.3.5:')
+    depends_on('vcftools', when='@1.3.5:')
+    depends_on('bc', when='@1.3.5:')
+    depends_on('samtools', when='@1.3.5:')
 
     parallel = False
 
