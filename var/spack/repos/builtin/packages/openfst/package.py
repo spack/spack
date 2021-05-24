@@ -47,12 +47,4 @@ class Openfst(AutotoolsPackage):
     patch('openfst_gcc41up.patch', when='@1.4.1-patch')
 
     def configure_args(self):
-        args = []
-        spec = self.spec
-        if '+far' in spec:
-            args.append('--enable-far')
-        else:
-            args.append('--disable-far')
-        if '+python' in spec:
-            args.append('--enable-python')
-        return args
+         return self.enable_or_disable('far') + self.enable_or_disable('python')
