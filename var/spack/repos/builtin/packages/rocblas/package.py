@@ -67,7 +67,7 @@ class Rocblas(CMakePackage):
     ]:
         resource(name='Tensile',
                  git='https://github.com/ROCmSoftwarePlatform/Tensile.git',
-                 commit=t_version,
+                 commit=t_commit,
                  when='@{0}'.format(t_version))
 
     # Status: https://github.com/ROCmSoftwarePlatform/Tensile/commit/a488f7dadba34f84b9658ba92ce9ec5a0615a087
