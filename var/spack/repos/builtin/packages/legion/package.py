@@ -41,6 +41,7 @@ class Legion(CMakePackage):
     depends_on('mpi', when='conduit=mpi')
     depends_on('cuda@10.0:11.9', when='+cuda_unsupported_compiler')
     depends_on('cuda@10.0:11.9', when='+cuda')
+    depends_on('hip@4.1.0', when='+hip')
     depends_on('hdf5', when='+hdf5')
     depends_on('hwloc', when='+hwloc')
 
@@ -56,12 +57,10 @@ class Legion(CMakePackage):
 
     depends_on('kokkos@3.3.01~cuda', when='+kokkos~cuda')
     depends_on("kokkos@3.3.01~cuda+openmp", when='kokkos+openmp')
-
+    depends_on("kokkos@3.3.01~hip", when='+kokkos~hip')
     depends_on('python@3', when='+python')
     depends_on('papi', when='+papi')
     depends_on('zlib', when='+zlib')
-
-    # TODO: Need a AMD/HIP variant to match support landing in 21.03.0.
 
     # Network transport layer: the underlying data transport API should be used for
     # distributed data movement.  For Legion, gasnet is the currently the most
@@ -147,10 +146,15 @@ class Legion(CMakePackage):
             values=cuda_arch_list,
             description="GPU/CUDA architecture to build for.",
             multi=False)
+    conflicts('+cuda_arch', when='~cuda')
     variant('cuda_unsupported_compiler', default=False,
             description="Disable nvcc version check (--allow-unsupported-compiler).")
     conflicts('+cuda_hijack', when='~cuda')
 
+    variant('hip', default=False,
+            description="Enable HIP support.")
+    conflicts('+hip', when='+cuda')
+    
     variant('fortran', default=False,
             description="Enable Fortran bindings.")
 
@@ -253,6 +257,10 @@ class Legion(CMakePackage):
             if '+cuda_unsupported_compiler' in spec:
                 options.append('-DCUDA_NVCC_FLAGS:STRING=--allow-unsupported-compiler')
 
+        if '+hip' in spec:
+            options.append('-DLegion_USE_HIP=ON')
+            options.append('-DLegion_HIP_TARGET=ROCM')
+        
         if '+fortran' in spec:
             # default is off.
             options.append('-DLegion_USE_Fortran=ON')
