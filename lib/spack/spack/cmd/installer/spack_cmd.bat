@@ -49,6 +49,7 @@ if defined py_path (
 
 if defined py_exe (
     "%py_exe%" "%spackinstdir%\scripts\haspywin.py"
+    "%py_exe%" "%SPACK_ROOT%\bin\spack" external find python >NUL
 )
 
 set "EDITOR=notepad"
