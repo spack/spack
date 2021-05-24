@@ -20,10 +20,10 @@ class Cool(CMakePackage):
     version('3.3.4', tag='COOL_3_3_4')
     version('3.3.3', tag='COOL_3_3_3')
 
-    # Spack-specific patches: 
+    # Spack-specific patches:
     # * Create python/PyCool/_internal directory
     #   (only necessary for Spack builds, for some reason)
-    # * Explicitly request Boost components 
+    # * Explicitly request Boost components
     patch('cool.patch', level=0)
 
     variant('binary_tag', default='auto')
